@@ -1,0 +1,21 @@
+AddDefaultCharset UTF-8
+
+<Files *.ini>
+Order deny,allow
+Deny from all
+</Files>
+
+<IfModule mod_php5.c>
+php_value max_execution_time 0
+php_value max_input_time 0
+php_value memory_limit 256M
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-store, no-cache"
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "now"
+</IfModule>

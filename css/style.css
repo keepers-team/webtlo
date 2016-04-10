@@ -1,0 +1,204 @@
+/*
+ * 
+ * stylesheet web-TLO (Web Torrent List Organizer)
+ * style.css
+ * author: berkut_174 (webtlo@yandex.ru)
+ * last change: 11.02.2016
+ * 
+ */
+
+/* @import url("./reset.css"); */
+					
+body {
+	width: 100%;
+}
+
+a, button, menu, input, textarea, select {
+	text-decoration: none;
+	outline: none;
+}
+
+a:link {
+	color: #3333cc; /* 0000ff -> 0066cc, #3333cc */
+}
+
+a:visited {
+	color: #660066; /* 800080 -> #660066, 990099 */
+}
+
+h1 {
+	margin: 5px 0 20px 20px;
+	font-weight: bold;
+	font-size: x-large;
+}
+
+h2 {
+	margin: 5px 0 15px 20px;
+	font-weight: bold;
+}
+
+h3 {
+	margin: 15px 0 10px 0;
+	font-weight: bold;
+}	
+
+.sub_settings h3:first-child {
+	margin: 5px 0 10px 0;
+}
+	
+/* menu */	
+#menutabs {
+	margin: 0 20px 0 20px;
+}
+
+ul.menu.ui-tabs-nav {
+	background: #fff;
+	border: 0;
+}
+
+ul.menu.ui-tabs-nav li {
+	border-bottom-width: .055em;
+	margin: 0 .277em -.055em 0;
+	border-radius: 0;
+}
+
+ul.menu.ui-tabs-nav li:first-child {
+	margin-left: 40px;
+}
+
+li.menu.ui-tabs-active {
+	border-bottom: .055em solid #fff;
+}
+
+/* content */
+#content {
+	border: 1px solid #D3D3D3 /*#999999*/;
+	border-radius: 4px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* main */
+#btn-menu {
+	margin: 0 5px 15px 15px;
+	float: left;
+}
+
+#startreports:disabled, #update:disabled, .btn_cntrl button:disabled {
+	background: #fafafa;
+	cursor: default;
+	color: #D3D3D3;
+	border: 1px solid #D3D3D3;
+}
+
+#help {
+	height: 1.7em;
+	font-size: 1em;
+	font-weight: normal;
+	padding: /*10px 13px 0 13px;*/.555em .722em 0 .722em /*9.5px 18px*/;
+	margin: 0 0 -.055em 0;
+/*
+	-moz-border-radius: 20px;
+    -webkit-border-radius: 20px;
+    border-radius: 20px;
+*/
+}
+
+#loading {
+	margin: 5px 0 0 10px;
+}
+
+#topics {
+	clear: both;
+}
+
+/* settings */
+#savecfg {
+	margin: 0 0 0 15px;
+}
+
+.block-settings {
+	display: inline-block;
+	margin-right: 30px;
+	vertical-align: top;
+}
+
+.block-settings span {
+	display: inline-block;
+	margin: 10px 15px 0 0;	
+}
+
+label {
+	margin: 0 50px 0 0;
+}
+
+label:hover {
+	cursor: pointer;
+}
+
+.myinput {
+	margin: 8px 0;
+	display: inline-block;
+}
+
+#proxy_prop {
+	margin-top: 15px;
+}
+
+.tc-prop {
+	display: block;
+	margin: 10px 0;
+}
+
+#tc_folders {
+	margin-top: 10px;
+}
+
+.tc-folder {
+	margin-top: 5px;
+}
+
+#add_folder {
+	margin-top: 10px;
+}
+
+/* reports */
+.report {
+	font-size: small;
+}
+
+.report a, #info ul li a {
+	text-decoration: underline;
+}
+	
+.rp-header {
+	font-weight: bold;
+}
+
+/* topics */
+.seeders, .errors {
+	color: red;
+}
+
+.btn_cntrl {
+	margin-top: 5px;
+}
+
+.btn_cntrl button {
+	margin-right: 5px;
+}
+
+.btn_cntrl button span {
+	font: 13px monospace;
+}
+
+.downloading {
+	display: inline-block;
+	margin:  0 5px -2.5px -5px;
+	width: 13px;
+	height: 13px;
+}
+
+/* log */
+#log {
+	font: normal 14px monospace;
+}
