@@ -134,17 +134,4 @@ function convert_bytes($size) {
 	return $size ? round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0';
 }
 
-
-function untichunk($data){	//с небольшими изменениями, спасибо vmunt (http://phpforum.ru/txt/index.php/t58204.html)
-
-	$buffer='';
-	$pos=-2;
-	while (($size = hexdec(substr($data,$pos+2,($pnext=strpos($data, "\r\n", $pos+2)+2)-$pos-4))) != 0)
-					{
-						$buffer.=substr($data, $pnext, $size);
-						$pos = $pnext+$size;
-					}
-	return $buffer;
-}
-
 ?>

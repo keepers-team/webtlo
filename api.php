@@ -216,7 +216,7 @@ class Webtlo {
 				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
 				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
 				if(isset($tc_topics[$info['info_hash']])){
-					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']][0] == 1 ? 1 : -1);
+					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1);
 				} else {
 					$tmp['topics'][$topic_id]['dl'] = 0;
 				}

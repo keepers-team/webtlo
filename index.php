@@ -14,7 +14,7 @@ error_reporting(0); //закоментить при отладке
 mb_internal_encoding("UTF-8");
 
 include dirname(__FILE__) . '/api.php';
-include dirname(__FILE__) . '/talk_to_tcs.php';
+include dirname(__FILE__) . '/clients.php';
 include dirname(__FILE__) . '/gui.php';
 include dirname(__FILE__) . '/common.php';
 //~ include dirname(__FILE__) . '/simple_html_dom.php';
