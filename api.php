@@ -15,6 +15,7 @@ class Webtlo {
 	public $log;
 	
 	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
+		$this->log = date("H:i:s") . ' Получение данных с api.rutracker.' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
@@ -26,10 +27,10 @@ class Webtlo {
 		));
 		// прокси
 		if($proxy_activate) {
-			$this->log = date("H:i:s") . ' Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
+			$this->log .= date("H:i:s") . ' Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
 			$this->init_proxy($proxy_type, $proxy_address, $proxy_auth);
 		} else {
-			$this->log = date("H:i:s") . ' Прокси-сервер не используется.<br />';
+			$this->log .= date("H:i:s") . ' Прокси-сервер не используется.<br />';
 		}
 	}
 	
@@ -297,6 +298,8 @@ class FromDatabase {
 			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
 		}
 		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
+		if(count($subsections) == 0)
+			throw new Exception();
 		$this->log .= date("H:i:s") . ' Данные о подразделах получены.<br />';
 		return $subsections;
 	}
@@ -436,10 +439,10 @@ class Download {
 		//~ $topics = array_chunk($topics, 30, true);
 		foreach($topics as $topic_id){
 		    curl_setopt($this->ch, CURLOPT_POSTFIELDS, http_build_query(array(
-			    keeper_user_id => $user,
-			    keeper_api_key => "$this->api_key",
-			    t => $topic_id,
-			    add_retracker_url => $retracker
+			    'keeper_user_id' => $user,
+			    'keeper_api_key' => "$this->api_key",
+			    't' => $topic_id,
+			    'add_retracker_url' => $retracker
 		    )));
 			$torrent_file = $savedir . '[webtlo].t' . $topic_id . '.torrent';
 			//~ $torrent_file = mb_convert_encoding($savedir . '[webtlo].t' . $topic_id . '.torrent', 'Windows-1251', 'UTF-8');
@@ -480,6 +483,7 @@ class Download {
 				// сохраняем в файл
 				if(!file_put_contents($torrent_file, $json) === false) {
 					$q++;
+					$success[] = $topic_id;
 					//~ $this->log .= date("H:i:s") . ' Успешно сохранён торрент-файл для ' . $topic_id . '.<br />';
 				}
 				
@@ -488,6 +492,7 @@ class Download {
 		}
 		$endtime1 = microtime(true);
 		$dl_log .= 'Сохранено в каталоге "' . $savedir . '": <span class="rp-header">' . $q . '</span> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
+		return isset($success) ? $success : null;
 	}
 	
 	public function __destruct(){

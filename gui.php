@@ -230,14 +230,15 @@ function output_topics($TT_torrents, $TT_subsections, $log){
 		{
 			$output .= 
 			
-			'<div id="tabs-topic_'.$subsection['id'].'" class="report">'.
+			'<div id="tabs-topic_'.$subsection['id'].'" class="report tab-topic">'.
 			'<form action="" method="POST" id="topic_'.$subsection['id'].'">'. //форма текущей вкладки, используется для отправки данных в php
 			'<div class="btn_cntrl">'. // вывод кнопок управления: выделить все, отменить выделение и скачать выделенные //
 				//~ '<input type="button" name="select_'.$subsection['id'].'" title="Выделить все/снять выделение" value="Выделить все" data-id="select_'.$subsection['id'].'" id="select_'.$subsection['id'].'" onclick="SelAll(this)">'.
 				//~ '<input type="button" name="unselect_'.$subsection['id'].'" value="Отменить выделение" data-id="unselect_'.$subsection['id'].'" id="unselect_'.$subsection['id'].'" onclick="SelAll(this)">'.
 				//~ '<input type="button" name="dwnld_'.$subsection['id'].'" value="Скачать выделенные" data-id="dwnld_'.$subsection['id'].'" id="dwnld_'.$subsection['id'].'" onclick="DwnldSel(this)">'.
-				'<button type="button" class="tor_select" id="select_'.$subsection['id'].'" title="Выделить все топики текущего раздела" onclick="SelAll(this)">Выделить все</button>'.
-				'<button type="button" class="tor_download"  id="dwnld_'.$subsection['id'].'"title="Скачать *.torrent файлы выделенных топиков текущего раздела в каталог" onclick="DwnldSel(this)"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
+				'<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все топики текущего раздела">Выделить все</button>'.
+				'<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего раздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
+				'<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего раздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>'.
 				//~ '<button type="button" id="test" onclick="test()">text</button>'.
 			'</div><br/><div id="result_'.$subsection['id'].'">Выбрано раздач: <span id="tp_count_'.$subsection['id'].'" class="rp-header">0</span> (<span id="tp_size_'.$subsection['id'].'">0.00</span>).</div></br>'. // куда выводить результат после скачивания т.-файлов
 			'<div class="topics" id="topics_list_'.$subsection['id'].'">';
@@ -247,8 +248,9 @@ function output_topics($TT_torrents, $TT_subsections, $log){
 				{
 					// вывод топиков
 					$output .=
-							'<div><label id="topic_' . $param['id'] . '">' .
-								'<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
+							'<div id="topic_' . $param['id'] . '"><label>' .
+								//~ '<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
+								'<input type="checkbox" class="topic" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
 								'<a href="http://rutracker.org/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.$param['se'].'</span>'.
 							'</label></div>';
 				}
@@ -268,9 +270,11 @@ function output_main(){
 	// формирование списка т.-клиентов
 	$qt = $ini->read("other", "qt", "0");
 	$tcs = '';
+	$clients = '';
+	$list_clients = array();
 	for($i = 1; $i <= $qt; $i++){
 		$tcs .=
-			'<option value="'.
+			'<option value="'.$ini->read("torrent-client-$i","comment","").'" data="'.
 			$ini->read("torrent-client-$i","comment","").'|'.
 			$ini->read("torrent-client-$i","client","").'|'.
 			$ini->read("torrent-client-$i","hostname","").'|'.
@@ -279,8 +283,35 @@ function output_main(){
 			$ini->read("torrent-client-$i","password","").
 			'">'.$ini->read("torrent-client-$i","comment","").
 			'</option>';
+		$clients .= 
+			'<option value="'.
+			$ini->read("torrent-client-$i","comment","").
+			'">'.$ini->read("torrent-client-$i","comment","").
+			'</option>';
+		$list_clients[] = $ini->read("torrent-client-$i","comment","");
 	}
 	
+	$ss = explode(',', $ini->read('sections','subsections',''));
+	$subsections = '';
+	$ssclient = '';
+	if(!in_array(null, $ss)){
+		foreach($ss as $id){
+			if(is_array($list_clients))
+				$ssclient = in_array($ini->read("$id","client",""), $list_clients) ? $ini->read("$id","client","") : "";
+			$subsections .=
+				'<option value="'.$id.'" data="'.
+				$id.'|'.
+				$ini->read("$id","title","").'|'.
+				$ssclient.'|'.
+				$ini->read("$id","label","").'|'.
+				$ini->read("$id","data-folder","").
+				'">'.preg_replace('|.* » (.*)$|', '$1', $ini->read("$id","title","")).
+				'</option>';
+		}
+	}
+	
+	$rt = $ini->read('sections','rule_topics','3');
+	$rr = $ini->read('sections','rule_reports','10');
 	$proxy_activate = (($ini->read('proxy','activate',0) == 1)?"checked":"");
 	$proxy_type = $ini->read('proxy','type','http');
 	$proxy_hostname = $ini->read('proxy','hostname','195.82.146.100');
@@ -292,9 +323,6 @@ function output_main(){
 	$bt_key = $ini->read('torrent-tracker','bt_key','');
 	$api_key = $ini->read('torrent-tracker','api_key','');
 	$api_url = $ini->read('torrent-tracker','api_url','cc');
-	$ss = $ini->read('sections','subsections','');
-	$rt = $ini->read('sections','rule_topics','3');
-	$rr = $ini->read('sections','rule_reports','10');
 	$sd = $ini->read('download','savedir','C:\Temp\\');
 	$ssd = (($ini->read('download','savesubdir','') == 1)?"checked":"");
 	$retracker = (($ini->read('download','retracker','') == 1)?"checked":"");
@@ -308,7 +336,7 @@ function output_main(){
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.1.4</title>
+				<title>web-TLO-0.8.1.9</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
@@ -424,20 +452,20 @@ function output_main(){
 											<input name="del-tc" id="del-tc" type="button" value="Удалить"/>
 										</p>
 										
-										<div class="block-settings"><br />											
+										<div class="block-settings">											
 											<select id="list-tcs" size=10>
-												<option value=0 disabled>список торрент-клиентов</option>'
+												<option value=0 data="0" disabled>список торрент-клиентов</option>'
 												. $tcs .
 											'</select>
 										</div>
 										<div class="block-settings" id="tc-prop">
 											<div>
-												<div class="block-settings">
-													<span>Название (комментарий)</span>
+												<label>
+													Название (комментарий)
 													<input name="TC_comment" id="TC_comment" class="tc-prop" type="text" size="24" title="" value="">
-												</div>
-												<div class="block-settings">
-													<span>Торрент-клиент</span>
+												</label>
+												<label>
+													Торрент-клиент
 													<select name="TC_client" id="TC_client" class="tc-prop">
 														<option value="utorrent">uTorrent</option>
 														<option value="transmission">Transmission</option>
@@ -446,55 +474,67 @@ function output_main(){
 														<option value="qbittorrent">qBittorrent</option>
 														<option value="ktorrent">KTorrent</option>
 													</select>
-												</div>
+												</label>
 											</div>
 											<div>
-												<div class="block-settings">
-													<span>IP-адрес/сетевое имя:</span>
+												<label>
+													IP-адрес/сетевое имя:
 													<input name="TC_hostname" id="TC_hostname" class="tc-prop" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." value="">
-												</div>
-												<div class="block-settings">
-													<span>Порт:</span>
+												</label>
+												<label>
+													Порт:
 													<input name="TC_port" id="TC_port" class="tc-prop" type="text" size="24" title="Порт веб-интерфейса торрент-клиента." value="">
-												</div>
+												</label>
 											</div>
 											<div>
-												<div class="block-settings">
-													<span>Логин:</span>
+												<label>
+													Логин:
 													<input name="TC_login" id="TC_login" class="tc-prop" type="text" size="24" title="Логин для доступа к веб-интерфейсу торрент-клиента (необязатально)." value="">
-												</div>
-												<div class="block-settings">
-													<span>Пароль:</span>
+												</label>
+												<label>
+													Пароль:
 													<input name="TC_password" id="TC_password" class="tc-prop" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." value="">
-												</div>
+												</label>
 											</div>
-											<div id="tc_folders">
-												Используемые каталоги:
-												<div id="tc_list_folders">
-													<div id="tc_folder_1">
-														<input name="folder_1" id="folder_1" class="tc-folder" type="text" size="57" title="Каталог 1" value="/tmp/test1">
-														<input name="del_folder_1" id="del_folder_1" type="button" value="–" title="Удалить каталог из списка"/>
-													</div>
-													<div id="tc_folder_2">
-														<input name="folder_2" id="folder_2" class="tc-folder" type="text" size="57" title="Каталог 2" value="/tmp/test2">
-														<input name="del_folder_2" id="del_folder_2" type="button" value="–" title="Удалить каталог из списка"/>
-													</div>
-													<div id="tc_folder_3">
-														<input name="folder_3" id="folder_3" class="tc-folder" type="text" size="57" title="Каталог 3" value="/tmp/test3">
-														<input name="del_folder_3" id="del_folder_3" type="button" value="–" title="Удалить каталог из списка"/>
-													</div>
-												</div>
-											</div>
-											<input name="add_folder" id="add_folder" type="button" value="добавить" title="Добавить ещё каталог"/>
 										</div>
 									</div>
 									<h2>Настройки сканируемых подразделов</h2>
 									<div>
-										<h3>Индексы подразделов</h3>
-										<div>
-											<textarea name="TT_subsections" class="myinput" cols="48" rows="4" title="Вводить через запятую, без пробелов.">'
-											. $ss . '</textarea>
+										<input id="ss-add" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавление нового подраздела" value="">
+										<div class="block-settings">											
+											<select name="list-ss" id="list-ss" size=9>
+												<option value=0 data="0" disabled>список подразделов</option>'
+												. $subsections .
+											'</select>
 										</div>
+										<div class="block-settings" id="ss-prop">
+											<label>
+												Индекс:
+												<input disabled id="ss-id" class="myinput ss-prop" type="text" size="10" title="Индекс подраздела" value="">
+											</label>
+											<label>
+												Название:
+												<input disabled id="ss-title" class="myinput ss-prop" type="text" size="70" title="Полное название подраздела" value="">
+											</label>
+											<label>
+												Торрент-клиент:
+												<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
+													<option value=0 disabled>не выбран</option>'
+													. $clients .
+												'</select>
+											</label>
+											<label>
+												Метка:
+												<input id="ss-label" class="myinput ss-prop" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживается только для qBittorrent)" value="">
+											</label>
+											<label>
+												Каталог для данных:
+												<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" value="">
+											</label>
+										</div>
+									</div>
+									<h2>Настройки поиска раздач</h2>
+									<div>
 										<h3>Получать сведения о раздачах только со статусом</h3>
 										<div id="tor_status">
 											<div>
@@ -569,6 +609,7 @@ function output_main(){
 				<!-- скрипты webtlo -->
 				<script type="text/javascript" src="js/common.js"></script>
 				<script type="text/javascript" src="js/tor_clients.js"></script>
+				<script type="text/javascript" src="js/subsections.js"></script>
 				<script type="text/javascript" src="js/webtlo.js"></script>
 				<script type="text/javascript" src="js/topics.js"></script>
 				

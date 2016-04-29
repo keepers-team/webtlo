@@ -118,9 +118,14 @@ li.menu.ui-tabs-active {
 
 .block-settings {
 	display: inline-block;
-	margin-right: 30px;
 	vertical-align: top;
 }
+
+/*
+.block-settings :first-child {
+	margin-right: 30px;
+}
+*/
 
 .block-settings span {
 	display: inline-block;
@@ -138,10 +143,20 @@ label:hover {
 .myinput {
 	margin: 8px 0;
 	display: inline-block;
+	padding: 0 3px;
 }
 
 #proxy_prop {
 	margin-top: 15px;
+}
+
+#tc-prop {
+	padding-top: 8px;
+}
+
+#tc-prop label {
+	display: inline-block;
+	vertical-align: top;
 }
 
 .tc-prop {
@@ -149,16 +164,30 @@ label:hover {
 	margin: 10px 0;
 }
 
-#tc_folders {
-	margin-top: 10px;
+#list-tcs, #list-ss {
+	width: 400px;
+	padding: 0 3px;
 }
 
-.tc-folder {
-	margin-top: 5px;
+#list-tcs, #list-ss {
+	width: 500px;
+	margin: 10px 15px 0 0;
 }
 
-#add_folder {
-	margin-top: 10px;
+#ss-add {
+	display: block;
+	margin: 0 0 20px 0;
+}
+
+/*
+#ss-prop {
+	float: left;
+}
+*/
+
+#ss-prop label {
+	display: block;
+	margin: 0;
 }
 
 /* reports */
@@ -191,7 +220,7 @@ label:hover {
 	font: 13px monospace;
 }
 
-.downloading {
+.downloading, .adding {
 	display: inline-block;
 	margin:  0 5px -2.5px -5px;
 	width: 13px;

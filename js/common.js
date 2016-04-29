@@ -67,22 +67,3 @@ function block_actions(){
 		lock = 0;
 	}
 };
-
-/* вкл./выкл. полей с настройками прокси-сервера */
-//~ function OnProxyProp() {
-	//~ $("#proxy_prop .myinput").closest("div")
-	//~ .find("input[type=text]")
-	//~ .each(function() {
-		//~ if($(this).prop("disabled"))
-			//~ $(this).prop("disabled", false).addClass("disabledProp");
-	//~ });
-//~ }
-//~ 
-//~ function OffProxyProp() {
-	//~ $("#proxy_prop .myinput").closest("div")
-	//~ .find("input[type=text]")
-	//~ .each(function() {
-		//~ if($(this).hasClass("disabledProp"))
-			//~ $(this).prop("disabled", true).removeClass("disabledProp");
-	//~ });
-//~ }

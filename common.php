@@ -39,7 +39,7 @@ class TIniFileEx {
     function write($section, $key, $value){
         if (is_bool($value))
             $value = $value ? 1 : 0;
-        $this->arr[$section][$key] = $value;
+        $this->arr[$section][$key] = '"'.$value.'"';
 		if(true)return true;
 		else return false;
     }
@@ -73,11 +73,6 @@ class TIniFileEx {
         }
 		if(file_put_contents($this->filename, $result)) return date("H:i:s") . ' Настройки успешно сохранены.<br />';
 		else return date("H:i:s") . ' Ошибка при сохранении настроек.<br />';
-		//~ return false;
-    }
-    function __destruct(){
-        //~ if($this->updateFile())return date("H:i:s") . ' Настройки успешно сохранены.<br />';
-		//~ else return date("H:i:s") . ' Ошибка при сохранении настроек.<br />';
     }
 }
 
@@ -89,49 +84,71 @@ function write_config(
 
 	$q = 0;
 	$ini = new TIniFileEx($cfg);
-	//~ if($cfg == 'config.ini'){
-		// т.-клиенты
-		foreach($tcs as $cm => $tc){
-			$q++;
-			if(isset($tc['cl'])	&& $tc['cl'] != '') $ini->write("torrent-client-$q",'client',		$tc['cl']);
-			if(isset($tc['ht'])	&& $tc['ht'] != '') $ini->write("torrent-client-$q",'hostname',		$tc['ht']);
-			if(isset($tc['pt'])	&& $tc['pt'] != '') $ini->write("torrent-client-$q",'port',			$tc['pt']);
-			if(isset($tc['lg'])) $ini->write("torrent-client-$q",'login',							$tc['lg']);
-			if(isset($tc['pw'])) $ini->write("torrent-client-$q",'password',						$tc['pw']);
-			if(isset($tc['cm'])	&& $tc['cm'] != '')	$ini->write("torrent-client-$q",'comment',		$tc['cm']);
-		}
-		$ini->write('other', 'qt', $q); // кол-во т.-клиентов
-		foreach($tor_status as $status => $value){
-			if(isset($value)) $ini->write("tor_status", $status, $value);
-		}
-		// прокси
-		if(isset($proxy_activate)) $ini->write('proxy', 'activate', $proxy_activate);
-		if(isset($proxy_type)) $ini->write('proxy', 'type', $proxy_type);
-		list($proxy_hostname, $proxy_port) = explode(":", $proxy_address);
-		list($proxy_login, $proxy_paswd) = explode(":", $proxy_auth);
-		if(isset($proxy_hostname)) $ini->write('proxy','hostname',	$proxy_hostname);
-		if(isset($proxy_port)) $ini->write('proxy','port', $proxy_port);
-		if(isset($proxy_login)) $ini->write('proxy','login', $proxy_login);
-		if(isset($proxy_paswd)) $ini->write('proxy','password', $proxy_paswd);		
-		
-		if(isset($lg) && $lg != '') $ini->write('torrent-tracker','login',		$lg);
-		if(isset($pw) && $pw != '') $ini->write('torrent-tracker','password',	$pw);
-		if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key', $bt_key);
-		if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key', $api_key);
-		if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url', $api_url);
-		if(isset($ss) && $ss != '') $ini->write('sections','subsections',		$ss);
-		if(isset($rt) && $rt != '') $ini->write('sections','rule_topics',		$rt);
-		if(isset($rr) && $rr != '') $ini->write('sections','rule_reports',		$rr);
-		if(isset($sdir) && $sdir != '') $ini->write('download','savedir',		$sdir);
-		if(isset($ssdir)) $ini->write('download','savesubdir', $ssdir);
-		if(isset($retracker)) $ini->write('download','retracker', $retracker);
-	//~ }
+	
+	// т.-клиенты
+	foreach($tcs as $cm => $tc){
+		$q++;
+		if(isset($tc['cl'])	&& $tc['cl'] != '') $ini->write("torrent-client-$q",'client',		$tc['cl']);
+		if(isset($tc['ht'])	&& $tc['ht'] != '') $ini->write("torrent-client-$q",'hostname',		$tc['ht']);
+		if(isset($tc['pt'])	&& $tc['pt'] != '') $ini->write("torrent-client-$q",'port',			$tc['pt']);
+		if(isset($tc['lg'])) $ini->write("torrent-client-$q",'login',							$tc['lg']);
+		if(isset($tc['pw'])) $ini->write("torrent-client-$q",'password',						$tc['pw']);
+		if(isset($tc['cm'])	&& $tc['cm'] != '')	$ini->write("torrent-client-$q",'comment',		$tc['cm']);
+	}
+	$ini->write('other', 'qt', $q); // кол-во т.-клиентов
+	
+	// статусы раздач
+	foreach($tor_status as $status => $value){
+		if(isset($value)) $ini->write("tor_status", $status, $value);
+	}
+	// прокси
+	if(isset($proxy_activate)) $ini->write('proxy', 'activate', $proxy_activate);
+	if(isset($proxy_type)) $ini->write('proxy', 'type', $proxy_type);
+	list($proxy_hostname, $proxy_port) = explode(":", $proxy_address);
+	list($proxy_login, $proxy_paswd) = explode(":", $proxy_auth);
+	if(isset($proxy_hostname)) $ini->write('proxy','hostname',	$proxy_hostname);
+	if(isset($proxy_port)) $ini->write('proxy','port', $proxy_port);
+	if(isset($proxy_login)) $ini->write('proxy','login', $proxy_login);
+	if(isset($proxy_paswd)) $ini->write('proxy','password', $proxy_paswd);
+	
+	// подразделы
+	$ss_ids = array();
+	foreach($ss as $subsec){
+		list($ss_id, $ss_title, $ss_client, $ss_label, $ss_folder) = explode("|", $subsec);
+		if(isset($ss_title) && $ss_title != '') $ini->write("$ss_id",'title', $ss_title);
+		if(isset($ss_client)) $ini->write("$ss_id",'client', !empty($ss_client) ? $ss_client : "");
+		if(isset($ss_label)) $ini->write("$ss_id",'label', $ss_label);
+		if(isset($ss_folder)) $ini->write("$ss_id",'data-folder', $ss_folder);
+		$ss_ids[] = $ss_id;
+	}
+	if(isset($ss_ids) && $ss_ids != '') $ini->write('sections','subsections', implode(",", $ss_ids));	
+	
+	if(isset($lg) && $lg != '') $ini->write('torrent-tracker','login',		$lg);
+	if(isset($pw) && $pw != '') $ini->write('torrent-tracker','password',	$pw);
+	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key', $bt_key);
+	if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key', $api_key);
+	if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url', $api_url);
+	if(isset($rt) && $rt != '') $ini->write('sections','rule_topics',		$rt);
+	if(isset($rr) && $rr != '') $ini->write('sections','rule_reports',		$rr);
+	if(isset($sdir) && $sdir != '') $ini->write('download','savedir',		$sdir);
+	if(isset($ssdir)) $ini->write('download','savesubdir', $ssdir);
+	if(isset($retracker)) $ini->write('download','retracker', $retracker);
+	
 	echo $ini->updateFile(); // обновление файла с настройками
 }
 
 function convert_bytes($size) {
     $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
 	return $size ? round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0';
+}
+
+function rmdir_recursive($dir, $basedir = false) {
+    foreach(scandir($dir) as $file) {
+        if ('.' === $file || '..' === $file) continue;
+        if (is_dir("$dir/$file")) rmdir_recursive("$dir/$file");
+        else unlink("$dir/$file");
+    }
+    $basedir ? rmdir($dir) : false;
 }
 
 ?>

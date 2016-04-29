@@ -122,10 +122,23 @@ class utorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		//~ $this->setSetting('dir_add_label', 1);
+		$this->setSetting('dir_active_download', urlencode($savepath));
+		foreach($filename as $filename){
+			$json = $this->makeRequest("?action=add-url&s=".urlencode($filename), false);
+		}
 	}
-		
+	
+	// изменение свойств торрента
+	public function setProperties($hash, $property, $value) {
+        $this->makeRequest("?action=setprops&hash=".$hash."&s=".$property."&v=".$value, false);
+    }
+	
+	// изменение настроек
+	public function setSetting($setting, $value) {
+        $this->makeRequest("?action=setsetting&s=".$setting."&v=".$value, false);
+    }
 }
 
 // Transmission 2.82 ~ Linux x32 (режим демона)
@@ -218,8 +231,18 @@ class transmission {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		foreach($filename as $filename){
+			$json = $this->makeRequest('{
+				"method" : "torrent-add",
+				"arguments" : {
+					"filename" : "' . $filename . '",
+					"download-dir" : "' . quotemeta($savepath) . '",
+					"paused" : "false"
+				}
+			}', true);
+			//~ return $json['result']; // success
+		}
 	}
 	
 }
@@ -314,8 +337,18 @@ class vuze {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		foreach($filename as $filename){
+			$json = $this->makeRequest('{
+				"method" : "torrent-add",
+				"arguments" : {
+					"filename" : "' . $filename . '",
+					"download-dir" : "' . quotemeta($savepath) . '",
+					"paused" : "false"
+				}
+			}', true);
+			//~ retutn $json['result']; // success
+		}
 	}
 	
 }
@@ -354,7 +387,7 @@ class deluge {
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
-	        CURLOPT_POSTFIELDS => '{"method":"auth.login","params":["'.$this->paswd.'"],"id":2}',
+	        CURLOPT_POSTFIELDS => '{ "method" : "auth.login" , "params" : [ "' . $this->paswd . '" ], "id" : 2 }',
 	        CURLOPT_RETURNTRANSFER => true,
 	        CURLOPT_ENCODING => 'gzip',
 	        CURLOPT_HEADER => true
@@ -396,7 +429,7 @@ class deluge {
 	// получение списка раздач
 	public function getTorrents() {
 		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
-		$json = $this->makeRequest('{"method":"web.update_ui","params":[["name","message","progress"],{}],"id":9}');
+		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "name", "message", "progress" ], {} ], "id" : 9 }');
         foreach($json['result']['torrents'] as $hash => $torrent)
 		{
 			// скачано 100%, нет ошибок
@@ -411,8 +444,18 @@ class deluge {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		foreach($filename as $filename){
+			$localpath = $this->torrentDownload($filename);
+			$json = $this->makeRequest('{ "method" : "web.add_torrents" , "params" : [[{ "path" : "' . $localpath . '", "options" : { "download_location" : "'.$savepath.'" }}]], "id" : 1 }');
+			//~ return $json['result'] == 1 ? true : false;
+		}
+	}
+	
+	// загрузить торрент локально
+	private function torrentDownload($filename) {
+		$json = $this->makeRequest('{ "method" : "web.download_torrent_from_url" , "params" : ["' . $filename . '"], "id" : 2 }');
+		return $json['result']; // return localpath
 	}
 	
 }
@@ -472,11 +515,11 @@ class qbittorrent {
 	}
 	
 	// выполнение запроса
-	private function makeRequest($fields, $decode = true, $options = array()) {
+	private function makeRequest($fields, $url = "", $decode = true, $options = array()) {
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         curl_setopt_array($ch, array(
-	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'query/torrents'),
+	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
 	        CURLOPT_RETURNTRANSFER => true,
 	        CURLOPT_COOKIE => $this->sid,
 	        CURLOPT_POSTFIELDS => $fields
@@ -493,7 +536,7 @@ class qbittorrent {
 	// получение списка раздач
 	public function getTorrents() {
 		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
-		$json = $this->makeRequest('');
+		$json = $this->makeRequest('', 'query/torrents');
         foreach($json as $torrent)
 		{
 			// скачано 100%, не ошибка
@@ -508,8 +551,12 @@ class qbittorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		$filename = implode("\n", $filename);
+		$fields = http_build_query(array(
+            'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label
+		), '', '&', PHP_QUERY_RFC3986);
+		$json = $this->makeRequest($fields, 'command/download', false);
 	}
 	
 }
@@ -597,14 +644,13 @@ class ktorrent {
 	}
 	
 	// выполнение запроса
-	private function makeRequest($fields, $decode = true, $options = array()) {
+	private function makeRequest($url, $decode = true, $options = array(), $xml = false) {
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         curl_setopt_array($ch, array(
-	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'data/torrents.xml'),
+	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
 	        CURLOPT_RETURNTRANSFER => true,
-	        CURLOPT_COOKIE => $this->sid,
-	        CURLOPT_POST => false
+	        CURLOPT_COOKIE => $this->sid
         ));
         $req = curl_exec($ch);
         if($req === false) {
@@ -612,15 +658,17 @@ class ktorrent {
 			return false;
 		}
         curl_close($ch);
-        $req = new SimpleXMLElement($req);
-        $req = json_encode($req);
+        if($xml){
+			$req = new SimpleXMLElement($req);
+	        $req = json_encode($req);
+		}
         return ($decode ? json_decode($req, true) : $req);
 	}
 	
 	// получение списка раздач
 	public function getTorrents() {
 		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
-		$json = $this->makeRequest('');
+		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
         foreach($json['torrent'] as $torrent)
 		{
@@ -636,8 +684,10 @@ class ktorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($hash) {
-		//
+	public function torrentAdd($filename, $savepath = "", $label = "") {
+		foreach($filename as $filename){
+			$json = $this->makeRequest('action?load_torrent=' . $filename, false); // 200 OK
+		}
 	}
 	
 }

@@ -26,23 +26,19 @@
 	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
 	
 	/* отображение топикоп при запуске приложения */
+	subsec = listSubsections();
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
 		url: "index.php",
-		data: { m:'topics', cfg:$data },
+		data: { m:'topics', cfg:$data, subsec:subsec },
 		beforeSend: function() {
 			block_actions();
 		},
 		success: function(response) {
-			//~ alert(response);
-			//~ return;
 			var resp = eval( '(' + response + ')' );
-			//~ alert(response);
-			//~ return;
-			//~ var resp = $.parseJSON( response );
 			$("#topics").html(jQuery.trim(resp.topics));
-			//~ $("#log").append(resp.log);		
+			// $("#log").append(response);		
 			//инициализация горизонтальных вкладок отчетов
 			var topictabs = $("#topictabs").tabs();
 			// проверка настроек
@@ -52,7 +48,7 @@
 				$("#log").append(errors);
 			else
 				$("#log").append(nowTime() + 'Готов к работе.<br />');
-				//~ $("#log").append(nowTime() + 'Дата обновления сведений.<br />');
+				// $("#log").append(nowTime() + 'Дата обновления сведений.<br />');
 			InitControlButtons();
 		},
 		complete: function(){
@@ -63,16 +59,18 @@
 	/* инициализация кнопок управления */
 	function InitControlButtons() {
 		$(".tor_download").button();
+		$(".tor_add").button();
 		$(".tor_select").button().on("mouseenter mouseleave", function(event) {
 			if(event.ctrlKey && !event.click) {
-				var id = $(this).attr("id");
-				var subsec = id.split("_");
-				$("#" + id + " span").text(subsec[0] != "select" ? "Выделить все" : "Отменить все");
-				$("#" + id).attr("title", subsec[0] != "select" ? "Выделить все топики текущего раздела." : "Отменить выделение всех топиков текущего раздела.");
-				$("#" + id).attr("id", (subsec[0] != "select" ? "select" : "unselect") + "_" + subsec[1]);
+				action = $(this).attr("action")
+				//~ $("#" + id + " span").text(action != "select" ? "Выделить все" : "Отменить все");
+				$(this).children(" span").text(action != "select" ? "Выделить все" : "Отменить все");
+				$(this).attr("title", action != "select" ? "Выделить все топики текущего раздела." : "Отменить выделение всех топиков текущего раздела.");
+				$(this).attr("action", (action != "select" ? "select" : "unselect"));
 			}
 		});
 		$(".downloading").hide();
+		$(".adding").hide();
 	}
 	
 	/* инициализация "аккордиона" для вкладки настройки */
@@ -89,13 +87,14 @@
 	.on("click", function() {
 		tor_status = listTorStatus();
 		tcs = listTorClients();
+		subsec = listDataSubsections();
 		//~ OnProxyProp();
 		$data = $("#config").serialize();
 		//~ OffProxyProp();
 		$.ajax({
 			type: "POST",
 			url: "index.php",
-			data: { m:'savecfg', tcs:tcs, cfg:$data, tor_status:tor_status },
+			data: { m:'savecfg', tcs:tcs, cfg:$data, tor_status:tor_status, subsec:subsec },
 			beforeSend: function() {
 				$("#savecfg").prop("disabled", true);
 			},
@@ -120,12 +119,14 @@
 		}
 		// получаем список т.-клиентов
 		tcs = listTorClients(); 
+		// подразделов
+		subsec = listSubsections();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			//~ dataType: 'json',
 			url: "index.php",
-			data: { m:'reports', tcs:tcs, cfg:$data },
+			data: { m:'reports', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
 				$("#log").append(nowTime() + "Начато формирование отчётов...<br />");
@@ -192,11 +193,12 @@
 		}
 		tor_status = listTorStatus();
 		tcs = listTorClients();
+		subsec = listSubsections();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "index.php",
-			data: { m:'update', tcs:tcs, cfg:$data, tor_status:tor_status },
+			data: { m:'update', tcs:tcs, cfg:$data, tor_status:tor_status, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
 				$("#log").append(nowTime() + "Начато обновление сведений...<br />");
@@ -232,8 +234,8 @@
 		//~ if(!/^[A-Za-z0-9]*$/.test(paswd)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "пароль" в настройках торрент-трекера.<br />');
 		if(!api) errors.push(nowTime() + 'Не заполнено поле "api" в настройках торрент-трекера.<br />');
 		//~ if(!/^[A-Za-z0-9]*$/.test(api)) errors.push('Указаны недопустимые символы в поле "api" в настройках торрент-трекера.<br />');
-		if(!subsections) errors.push(nowTime() + 'Не заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
-		if(!/^[0-9\,]*$/.test(subsections)) errors.push(nowTime() + 'Некорректно заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
+		//~ if(!subsections) errors.push(nowTime() + 'Не заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
+		//~ if(!/^[0-9\,]*$/.test(subsections)) errors.push(nowTime() + 'Некорректно заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
 		if(!rule_topics) errors.push(nowTime() + 'Не заполнено поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
 		if(!/^[0-9]*$/.test(rule_topics)) errors.push(nowTime() + '<p>Указаны недопустимые символы в поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
 		if(!rule_reports) errors.push(nowTime() + 'Не заполнено поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />');
@@ -255,14 +257,12 @@ $("#savedir").on("change", function() {
 // вкл/выкл прокси
 $("#proxy_activate").on("change", function() {
 	if($(this).prop("checked")) {
-		//~ $("#proxy_prop .myinput").removeAttr("disabled");
 		$("#proxy_prop").show();
 	}
 	else {
-		//~ $("#proxy_prop .myinput").prop("disabled", true);
 		$("#proxy_prop").hide();
 	}
 });
 
-// активировать проси или нет
+// активировать прокси или нет
 $("#proxy_activate").change();

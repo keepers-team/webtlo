@@ -1,16 +1,8 @@
 <?php
-/*
- * web-TLO v.0.8.1.4 (Web Torrent List Organizer)
- * index.php
- * author: Cuser (cuser@yandex.ru)
- * previous change: 29.04.2014
- * editor: berkut_174 (webtlo@yandex.ru)
- * last change: 10.03.2016
- */ 
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 
-error_reporting(0); //закоментить при отладке
+//~ error_reporting(0); //закоментить при отладке
 mb_internal_encoding("UTF-8");
 
 include dirname(__FILE__) . '/api.php';
@@ -21,7 +13,7 @@ include dirname(__FILE__) . '/common.php';
 
 /*
  * api.php -- data from api.rutracker.org classes
- * talk_to_tcs.php -- data from torrent-client functions
+ * clients.php -- data from torrent-client functions
  * gui.php -- output to html functions
  * common.php -- usage: index.php, gui.php, api.php, talt_to_tcs.php
  * simple_html_dom.php -- parser: http://sourceforge.net/projects/simplehtmldom/
@@ -47,7 +39,11 @@ if(isset($_POST['cfg'])) {
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
 }
-	
+
+if(isset($_POST['subsec'])){
+	$TT_subsections = $_POST['subsec'];
+}
+
 // формирование списка т.-клиентов
 if(isset($_POST['tcs'])) {
 	//~ $tcs = array();
@@ -108,7 +104,7 @@ switch($_POST['m'])
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
 				'report' => '<br /><div>Нет или недостаточно данных для
-				отображения. Выполните обновление сведений.</div><br />'
+				отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />'
 			));
 		}
 		break;
@@ -123,14 +119,14 @@ switch($_POST['m'])
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
 				'topics' => '<br /><div>Нет или недостаточно данных для
-				отображения. Выполните обновление сведений.</div><br />'
+				отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />'
 			));
 		}
 		break;
 	//------------------------------------------------------------------
 	case 'download':
 		try {
-			$subsection = $_POST['subsec'];
+			//~ $subsection = $_POST['subsec'];
 			try {
 				// проверяем существование указанного каталога
 				if(!is_writable($savedir)) {
@@ -143,7 +139,7 @@ switch($_POST['m'])
 				
 				// если задействованы подкаталоги
 				if($savesubdir) {						
-					$savedir .= 'tfiles_' . $subsection . '_' .
+					$savedir .= 'tfiles_' . $TT_subsections . '_' .
 						date("(d.m.Y_H.i.s)") . '_' . $TT_rule_topics .
 						substr($savedir, -1);
 					$res = (is_writable($savedir) || mkdir($savedir)) ? true : false;
