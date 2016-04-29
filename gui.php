@@ -242,6 +242,7 @@ function output_topics($TT_torrents, $TT_subsections, $log){
 				//~ '<button type="button" id="test" onclick="test()">text</button>'.
 			'</div><br/><div id="result_'.$subsection['id'].'">Выбрано раздач: <span id="tp_count_'.$subsection['id'].'" class="rp-header">0</span> (<span id="tp_size_'.$subsection['id'].'">0.00</span>).</div></br>'. // куда выводить результат после скачивания т.-файлов
 			'<div class="topics" id="topics_list_'.$subsection['id'].'">';
+			$q = 1;
 			foreach($TT_torrents as $topic_id => &$param)
 			{
 				if(($param['dl'] == 0) && ($param['ss'] == $subsection['id']))
@@ -250,7 +251,7 @@ function output_topics($TT_torrents, $TT_subsections, $log){
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>' .
 								//~ '<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
-								'<input type="checkbox" class="topic" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
+								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
 								'<a href="http://rutracker.org/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.$param['se'].'</span>'.
 							'</label></div>';
 				}

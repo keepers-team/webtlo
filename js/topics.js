@@ -164,3 +164,35 @@ $("#topics").on("click", ".tor_select", function(){
 	$(this).attr("action", action != "select" ? "select" : "unselect");
 	
 });
+
+// выделение/снятие выделения интервала раздач
+$("#topics").on("click", ".topic", function(event){
+	subsection = $(this).attr("subsection");
+	if(!$("#topics_list_"+subsection+" .topic").hasClass("first-topic")){
+		$(this).addClass("first-topic");
+		return;
+	}
+	if(event.shiftKey){
+		tag = parseInt($(this).attr("tag")); // 2 - 20 = -18; 10 - 2 = 8;
+		tag_first = parseInt($("#topics_list_"+subsection+" .first-topic").attr("tag"));
+		direction = (tag_first - tag < 0 ? 'down' : 'up');
+		$("#topics_list_"+subsection).closest("form")
+		.find("input[type=checkbox]")
+		.each(function(){
+			if(direction == 'down'){
+				if(parseInt($(this).attr("tag")) >= tag_first && parseInt($(this).attr("tag")) <= tag){
+					if(!event.ctrlKey) $(this).prop("checked", "true");
+					else $(this).removeAttr("checked");
+				}
+			}
+			if(direction == 'up'){
+				if(parseInt($(this).attr("tag")) <= tag_first && parseInt($(this).attr("tag")) >= tag){
+					if(!event.ctrlKey) $(this).prop("checked", "true");
+					else $(this).removeAttr("checked");
+				}
+			}
+		});
+	}
+	$("#topics_list_"+subsection+" .first-topic").removeClass("first-topic");
+	$(this).addClass("first-topic");
+});
