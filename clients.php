@@ -139,6 +139,7 @@ class utorrent {
 	public function setSetting($setting, $value) {
         $this->makeRequest("?action=setsetting&s=".$setting."&v=".$value, false);
     }
+
 }
 
 // Transmission 2.82 ~ Linux x32 (режим демона)
