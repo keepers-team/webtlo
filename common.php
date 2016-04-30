@@ -39,7 +39,7 @@ class TIniFileEx {
     function write($section, $key, $value){
         if (is_bool($value))
             $value = $value ? 1 : 0;
-        $this->arr[$section][$key] = '"'.$value.'"';
+        $this->arr[$section][$key] = $value;
 		if(true)return true;
 		else return false;
     }
@@ -67,7 +67,7 @@ class TIniFileEx {
         foreach ($this->arr as $sname=>$section){
             $result .= '[' . $sname . ']' . _BR_;
             foreach ($section as $key=>$value){
-                $result .= $key .'='.$value . _BR_;
+                $result .= $key .'="'.$value .'"'._BR_;
             }
             $result .= _BR_;
         }
