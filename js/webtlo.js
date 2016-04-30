@@ -139,6 +139,7 @@
 				$("#log").append(resp.log);
 				$("#log").append(nowTime() + "Формирование отчётов завершено.<br />");
 				$("#reports").html(jQuery.trim(resp.report));
+				//~ $("#reports").html(response);
 				
 				//инициализация горизонтальных вкладок отчетов
 				var reporttabs = $("#reporttabs").tabs();

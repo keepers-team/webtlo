@@ -15,7 +15,7 @@ class Webtlo {
 	public $log;
 	
 	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
-		$this->log = date("H:i:s") . ' Получение данных с api.rutracker.' . $api_url . '...<br />';
+		$this->log = date("H:i:s") . ' Получение данных с ' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
@@ -23,6 +23,7 @@ class Webtlo {
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_RETURNTRANSFER => 1,
 		    CURLOPT_ENCODING => "gzip",
+		    CURLOPT_SSL_VERIFYPEER => 0
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 		// прокси
@@ -78,7 +79,7 @@ class Webtlo {
 	
 	// ограничение на запрашиваемые данные
 	private function get_limit(){
-		$url = 'http://api.rutracker.' . $this->api_url . '/v1/get_limit?api_key=' . $this->api_key;
+		$url = $this->api_url . '/v1/get_limit?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		return $data['result']['limit'];
 	}
@@ -87,7 +88,7 @@ class Webtlo {
 	public function get_tor_status_titles($tor_status){
 		if(!is_array($tor_status))
 			throw new Exception(date("H:i:s") . ' Не выбран ни один из статусов раздач на трекере.<br />');
-		$url = 'http://api.rutracker.' . $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
+		$url = $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$status = array();
 		foreach($data['result'] as $key => $value){
@@ -109,7 +110,7 @@ class Webtlo {
 			$db_error = $this->db->errorInfo();
 			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
 		}
-		$url = 'http://api.rutracker.' . $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
+		$url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$tmp = array();
 		$subsections_use = explode(',', $subsections_use);
@@ -155,7 +156,7 @@ class Webtlo {
 		$limit = $this->get_limit();
 		//~ $tmp = array();
 		foreach($subsections as $subsection){
-			$url = 'http://api.rutracker.' . $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
+			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);
 			$this->log .= date("H:i:s") . ' Список раздач раздела № ' . $subsection['id'] . ' получен (' . count($data['result']) . ' шт.).<br />';
 			foreach($data['result'] as $id => $val){
@@ -201,7 +202,7 @@ class Webtlo {
 		$tmp = array();
 		
 		foreach($ids as $ids){			
-			$url = 'http://api.rutracker.' . $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $ids;
+			$url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $ids;
 			$data = $this->request_exec($url);
 			
 			// разбираем полученные с api данные
@@ -365,6 +366,7 @@ class Download {
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_SSL_VERIFYPEER => 0
 			//~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 		// прокси
@@ -394,10 +396,10 @@ class Download {
 	}
 	
 	// идентификатор пользователя
-	private function get_user_id($login, $paswd){
+	private function get_user_id($forum_url, $login, $paswd){
 		$paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
 		$login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
-		curl_setopt_array($this->ch, array(CURLOPT_URL => 'http://login.rutracker.org/forum/login.php',
+		curl_setopt_array($this->ch, array(CURLOPT_URL => $forum_url . '/forum/login.php',
 			CURLOPT_POSTFIELDS => http_build_query(array(
 				'login_username' => "$login", 'login_password' => "$paswd",
 				'login' => 'Вход'
@@ -427,13 +429,13 @@ class Download {
 	}
 	
 	// скачивание т-.файлов
-	public function download_torrent_files($savedir, $login, $paswd, $topics, $retracker, &$dl_log){
+	public function download_torrent_files($savedir, $forum_url, $login, $paswd, $topics, $retracker, &$dl_log){
 		$q = 0; // кол-во успешно скачанных торрент-файлов
 		//~ $err = 0;
 		$starttime = microtime(true);
-		$user = $this->get_user_id($login, $paswd);
+		$user = $this->get_user_id($forum_url, $login, $paswd);
 		curl_setopt_array($this->ch, array(
-		    CURLOPT_URL => 'http://dl.rutracker.org/forum/dl.php',
+		    CURLOPT_URL => $forum_url . '/forum/dl.php',
 		    CURLOPT_HEADER => 0
 		));
 		//~ $topics = array_chunk($topics, 30, true);

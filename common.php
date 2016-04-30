@@ -78,7 +78,7 @@ class TIniFileEx {
 
 function write_config(
 		$cfg, &$lg, &$pw, &$ss, &$rt, &$rr, &$sdir, &$ssdir, $retracker,
-		$tcs, $bt_key, $api_key, $api_url, $tor_status, $proxy_activate,
+		$tcs, $bt_key, $api_key, $api_url, $forum_url, $tor_status, $proxy_activate,
 		$proxy_type, $proxy_address, $proxy_auth
 	){
 
@@ -128,6 +128,7 @@ function write_config(
 	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key', $bt_key);
 	if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key', $api_key);
 	if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url', $api_url);
+	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url', $forum_url);
 	if(isset($rt) && $rt != '') $ini->write('sections','rule_topics',		$rt);
 	if(isset($rr) && $rr != '') $ini->write('sections','rule_reports',		$rr);
 	if(isset($sdir) && $sdir != '') $ini->write('download','savedir',		$sdir);

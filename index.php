@@ -2,7 +2,7 @@
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 
-//~ error_reporting(0); //закоментить при отладке
+error_reporting(0); //закоментить при отладке
 mb_internal_encoding("UTF-8");
 
 include dirname(__FILE__) . '/api.php';
@@ -88,7 +88,7 @@ switch($_POST['m'])
 		write_config(
 			dirname(__FILE__) . '/config.ini', $TT_login, $TT_password, $TT_subsections,
 			$TT_rule_topics, $TT_rule_reports, $savedir, $savesubdir,
-			$retracker,	$tcs, $bt_key, $api_key, $api_url, $tor_status['save'],
+			$retracker,	$tcs, $bt_key, $api_key, $api_url, $forum_url, $tor_status['save'],
 			$proxy_activate, $proxy_type, $proxy_address, $proxy_auth
 		);
 		break;
@@ -114,7 +114,7 @@ switch($_POST['m'])
 			$db = new FromDatabase();
 			$subsections = $db->get_forums($TT_subsections);
 			$topics = $db->get_topics($TT_rule_topics, 0);
-			output_topics($topics, $subsections, $db->log);
+			output_topics($forum_url, $topics, $subsections, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
@@ -165,7 +165,7 @@ switch($_POST['m'])
 			// если нужные каталоги присутствуют,
 			// то выполняем скачивание т.-файлов
 			$dl = new Download($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-			$dl->download_torrent_files($savedir, $TT_login, $TT_password, $topics,	$retracker, $dl_log);
+			$dl->download_torrent_files($savedir, $forum_url, $TT_login, $TT_password, $topics,	$retracker, $dl_log);
 			
 		} catch (Exception $e) {
 			$dl->log .= $e->getMessage();
@@ -187,7 +187,7 @@ switch($_POST['m'])
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $status); /* получаем список раздач разделов */
 			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections); /* получаем подробные сведения о раздачах */
-			output_topics($topics, $subsections, $log . $webtlo->log);
+			output_topics($forum_url, $topics, $subsections, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();
 			echo json_encode(array('log' => $webtlo->log,

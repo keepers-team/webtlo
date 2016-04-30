@@ -24,7 +24,7 @@ function output_preparation($TT_torrents, &$TT_subsections){
 			
 			//--- START REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
-			$t = '<br/>[*][url=http://rutracker.org/forum/viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.$torrent['se'].'[/color]';
+			$t = '<br/>[*][url=viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.$torrent['se'].'[/color]';
 			
 			//--- END REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
@@ -181,13 +181,13 @@ function output_reports($TT_subsections, $TT_login, $log){
 			//~ '[b]Общий объём хранимых раздач[/b]: [color=#006699][b]'. convert_bytes($subsection['dlsi']) .' [/b][/color]<br/>'.
 			//~ '[b]Хранитель 1[/b]: [url=http://rutracker.org/forum/profile.php?mode=viewprofile&u='.$TT_login.'&name=1][u][b][color=#006699]'.$TT_login.'[/color][/b][/u][/url] [b]»[/b] [color=#006699][b]'. $subsection['dlqt'] .' шт.[/b][/color] [b]»[/b] [color=#006699][b]'. convert_bytes($subsection['dlsi']) .' [/b][/color][br]<br/><br/>'.
 			
-			'Подраздел: [url=http://rutracker.org/forum/viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.$subsection['na'].'[/u][/color][/url]'.
-			' [color=gray]~>[/color] [url=http://rutracker.org/forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br/><br/>'.
+			'Подраздел: [url=forum/viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.$subsection['na'].'[/u][/color][/url]'.
+			' [color=gray]~>[/color] [url=forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br/><br/>'.
 			'Актуально на: [color=darkblue]'. date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/color][br]<br/>'.
 			'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '<br/>'.
 			'Количество хранителей: 1<br/>'.
 			'Всего хранимых раздач в подразделе: '. $subsection['dlqt'] .' шт. / '. convert_bytes($subsection['dlsi']) .'[hr]<br/><br/>'.
-			'Хранитель 1: [url=http://rutracker.org/forum/profile.php?mode=viewprofile&u='.$TT_login.'&name=1][u][color=#006699]'.$TT_login.'[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'<br/><br/>'.
+			'Хранитель 1: [url=profile.php?mode=viewprofile&u='.$TT_login.'&name=1][u][color=#006699]'.$TT_login.'[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'<br/><br/>'.
 			
 			'<br/><div id="accordion-wtlo'.$subsection['id'].'" class="report acc">'.
 				'<h3>Сообщение 1</h3>'.
@@ -213,7 +213,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 }
 
 // вывод топиков на главной странице
-function output_topics($TT_torrents, $TT_subsections, $log){
+function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 		// заголовки вкладок
 		$output = '<div id="topictabs" class="report">'.
 			'<ul class="report">';
@@ -252,7 +252,7 @@ function output_topics($TT_torrents, $TT_subsections, $log){
 							'<div id="topic_' . $param['id'] . '"><label>' .
 								//~ '<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
 								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
-								'<a href="http://rutracker.org/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.$param['se'].'</span>'.
+								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.$param['se'].'</span>'.
 							'</label></div>';
 				}
 			}
@@ -323,7 +323,8 @@ function output_main(){
 	$pw = $ini->read('torrent-tracker','password','');
 	$bt_key = $ini->read('torrent-tracker','bt_key','');
 	$api_key = $ini->read('torrent-tracker','api_key','');
-	$api_url = $ini->read('torrent-tracker','api_url','cc');
+	$api_url = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
+	$forum_url = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
 	$sd = $ini->read('download','savedir','C:\Temp\\');
 	$ssd = (($ini->read('download','savesubdir','') == 1)?"checked":"");
 	$retracker = (($ini->read('download','retracker','') == 1)?"checked":"");
@@ -372,6 +373,28 @@ function output_main(){
 									<div>
 										<div>
 											<label>
+												Используемый адрес форума:
+												<select name="forum_url" id="forum_url" class="myinput">
+													<option value="http://rutracker.cr"' . ($forum_url == 'http://rutracker.cr' ? "selected" : "") . '>http://rutracker.cr</option>
+													<option value="http://rutracker.org"' . ($forum_url == 'http://rutracker.org' ? "selected" : "") . '>http://rutracker.org</option>
+													<option value="https://rutracker.cr"' . ($forum_url == 'https://rutracker.cr' ? "selected" : "") . '>https://rutracker.cr</option>
+													<option value="https://rutracker.org"' . ($forum_url == 'https://rutracker.org' ? "selected" : "") . '>https://rutracker.org</option>
+												</select>
+											</label>
+										</div>
+										<div>
+											<label>
+												Используемый адрес API:
+												<select name="api_url" id="api_url" class="myinput">
+													<option value="http://api.rutracker.cc"' . ($api_url == 'http://api.rutracker.cc' ? "selected" : "") . '>http://api.rutracker.cc</option>
+													<option value="http://api.rutracker.org"' . ($api_url == 'http://api.rutracker.org' ? "selected" : "") . '>http://api.rutracker.org</option>
+													<option value="https://api.rutracker.cc"' . ($api_url == 'https://api.rutracker.cc' ? "selected" : "") . '>https://api.rutracker.cc</option>
+													<option value="https://api.rutracker.org"' . ($api_url == 'https://api.rutracker.org' ? "selected" : "") . '>https://api.rutracker.org</option>
+												</select>
+											</label>
+										</div>
+										<div>
+											<label>
 												Логин:
 												<input name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="'
 												. $lg . '">
@@ -394,13 +417,6 @@ function output_main(){
 												. $api_key . '">
 											</label>
 										</div>
-										<label>
-											Используемый адрес API:
-											<select name="api_url" id="api_url" class="myinput">
-												<option value="cc"' . ($api_url == 'cc' ? "selected" : "") . '>http://api.rutracker.cc/</option>
-												<option value="org"' . ($api_url == 'org' ? "selected" : "") . '>http://api.rutracker.org/</option>
-											</select>
-										</label>
 									</div>
 									<h2>Настройки прокси-сервера</h2>
 									<div>
