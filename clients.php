@@ -124,15 +124,21 @@ class utorrent {
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
 		//~ $this->setSetting('dir_add_label', 1);
-		$this->setSetting('dir_active_download', urlencode($savepath));
-		foreach($filename as $filename){
-			$json = $this->makeRequest("?action=add-url&s=".urlencode($filename), false);
+		if(!empty($savepath))
+			$this->setSetting('dir_active_download', urlencode($savepath));
+		foreach($filename as $file){
+			$json = $this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
 		}
+		if(empty($label)) return;
+		sleep(round(count($filename) / 3) + 1); // < 3 дольше ожидание
+		$this->setProperties(array_column_common($filename, 'hash'), 'label', $label);
 	}
 	
 	// изменение свойств торрента
 	public function setProperties($hash, $property, $value) {
-        $this->makeRequest("?action=setprops&hash=".$hash."&s=".$property."&v=".$value, false);
+		$request = preg_replace('|^(.*)$|', "hash=$0&s=".$property."&v=".urlencode($value), $hash);
+        $request = implode('&', $request);
+        $this->makeRequest("?action=setprops&".$request, false);
     }
 	
 	// изменение настроек
@@ -233,14 +239,16 @@ class transmission {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
+		if(!empty($savepath))
+			$savepath = ', "download-dir" : "' . quotemeta($savepath) . '"';
 		foreach($filename as $filename){
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $filename . '",
-					"download-dir" : "' . quotemeta($savepath) . '",
-					"paused" : "false"
-				}
+					"filename" : "' . $filename['filename'] . '",
+					"paused" : "false"'
+					 . $savepath .
+				'}
 			}', true);
 			//~ return $json['result']; // success
 		}
@@ -339,14 +347,16 @@ class vuze {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
+		if(!empty($savepath))
+			$savepath = ', "download-dir" : "' . quotemeta($savepath) . '"';
 		foreach($filename as $filename){
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $filename . '",
-					"download-dir" : "' . quotemeta($savepath) . '",
-					"paused" : "false"
-				}
+					"filename" : "' . $filename['filename'] . '",
+					"paused" : "false"'
+					 . $savepath .
+				'}
 			}', true);
 			//~ retutn $json['result']; // success
 		}
@@ -446,16 +456,29 @@ class deluge {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
+		if(!empty($savepath))
+			$savepath = '"download_location" : "'.$savepath.'"';
 		foreach($filename as $filename){
-			$localpath = $this->torrentDownload($filename);
-			$json = $this->makeRequest('{ "method" : "web.add_torrents" , "params" : [[{ "path" : "' . $localpath . '", "options" : { "download_location" : "'.$savepath.'" }}]], "id" : 1 }');
+			$localpath = $this->torrentDownload($filename['filename']);
+			$json = $this->makeRequest('{
+				"method" : "web.add_torrents",
+				"params" : [[{
+					"path" : "' . $localpath . '",
+					"options" : { '.$savepath.' }
+				}]],
+				"id" : 1
+			}');
 			//~ return $json['result'] == 1 ? true : false;
 		}
 	}
 	
 	// загрузить торрент локально
 	private function torrentDownload($filename) {
-		$json = $this->makeRequest('{ "method" : "web.download_torrent_from_url" , "params" : ["' . $filename . '"], "id" : 2 }');
+		$json = $this->makeRequest('{
+			"method" : "web.download_torrent_from_url",
+			"params" : ["' . $filename . '"],
+			"id" : 2
+		}');
 		return $json['result']; // return localpath
 	}
 	
@@ -553,7 +576,7 @@ class qbittorrent {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
-		$filename = implode("\n", $filename);
+		$filename = implode("\n", array_column_common($filename, 'filename'));
 		$fields = http_build_query(array(
             'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label
 		), '', '&', PHP_QUERY_RFC3986);
@@ -687,7 +710,7 @@ class ktorrent {
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
 		foreach($filename as $filename){
-			$json = $this->makeRequest('action?load_torrent=' . $filename, false); // 200 OK
+			$json = $this->makeRequest('action?load_torrent=' . $filename['filename'], false); // 200 OK
 		}
 	}
 	

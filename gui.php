@@ -542,7 +542,7 @@ function output_main(){
 											</label>
 											<label>
 												Метка:
-												<input id="ss-label" class="myinput ss-prop" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживается только для qBittorrent)" value="">
+												<input id="ss-label" class="myinput ss-prop" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только uTorrent и qBittorrent)" value="">
 											</label>
 											<label>
 												Каталог для данных:

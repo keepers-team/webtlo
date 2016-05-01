@@ -56,10 +56,10 @@ try {
 	
 	// добавляем раздачи в торрент-клиент
 	$log .= date("H:i:s") . ' Добавление раздач в торрент-клиент...<br />';
-	$filename = preg_replace("|^(.*)|", 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($tmpdir) . '/[webtlo].t$0.torrent', $success);	
 	$client = new $cl['cl']($cl['ht'], $cl['pt'], $cl['lg'], $cl['pw']);
 	if($client->is_online()) {
-		$client->torrentAdd($filename, $subsection['sp'], $subsection['lb']);
+		$client->torrentAdd($success, $subsection['sp'], $subsection['lb']);
+		$success = array_column_common($success, 'id');
 	}  else {
 		$success = null;
 		$add_log = 'Указанный в настройках торрент-клиент недоступен.<br />';

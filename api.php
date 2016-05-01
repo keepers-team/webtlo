@@ -439,28 +439,28 @@ class Download {
 		    CURLOPT_HEADER => 0
 		));
 		//~ $topics = array_chunk($topics, 30, true);
-		foreach($topics as $topic_id){
+		foreach($topics as $topic){
 		    curl_setopt($this->ch, CURLOPT_POSTFIELDS, http_build_query(array(
 			    'keeper_user_id' => $user,
 			    'keeper_api_key' => "$this->api_key",
-			    't' => $topic_id,
+			    't' => $topic['id'],
 			    'add_retracker_url' => $retracker
 		    )));
-			$torrent_file = $savedir . '[webtlo].t' . $topic_id . '.torrent';
-			//~ $torrent_file = mb_convert_encoding($savedir . '[webtlo].t' . $topic_id . '.torrent', 'Windows-1251', 'UTF-8');
+			$torrent_file = $savedir . '[webtlo].t' . $topic['id'] . '.torrent';
+			//~ $torrent_file = mb_convert_encoding($savedir . '[webtlo].t' . $topic['id'] . '.torrent', 'Windows-1251', 'UTF-8');
 			$n = 1; // кол-во попыток
 			while(true) {
 				
 				// выходим после 3-х попыток
 				if($n >= 4) {
-					$this->log .= date("H:i:s") . ' Не удалось скачать торрент-файл для ' . $topic_id . '.<br />';
+					$this->log .= date("H:i:s") . ' Не удалось скачать торрент-файл для ' . $topic['id'] . '.<br />';
 					break;
 				}
 				
 				$json = curl_exec($this->ch);
 				
 				if($json === false) {
-					$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic_id . ').<br />';
+					$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').<br />';
 					break;
 				}
 				
@@ -468,15 +468,15 @@ class Download {
 				preg_match('|<center.*>(.*)</center>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
 				if(!empty($forbidden)) {
 					preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $title);
-					$this->log .= date("H:i:s") . ' Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic_id . ').<br />';
+					$this->log .= date("H:i:s") . ' Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').<br />';
 					break;
 				}
 				
 				// проверка "ошибка 503" и т.д.
 				preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
-					$this->log .= date("H:i:s") . ' Error: ' . $error[1] . ' (' . $topic_id . ').<br />';
-					$this->log .= date("H:i:s") . ' Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic_id . ').<br />';
+					$this->log .= date("H:i:s") . ' Error: ' . $error[1] . ' (' . $topic['id'] . ').<br />';
+					$this->log .= date("H:i:s") . ' Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').<br />';
 					sleep(40);
 					$n++;
 					continue;
@@ -484,9 +484,11 @@ class Download {
 				
 				// сохраняем в файл
 				if(!file_put_contents($torrent_file, $json) === false) {
+					$success[$q]['id'] = $topic['id'];
+					$success[$q]['hash'] = $topic['hash'];
+					$success[$q]['filename'] = 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($savedir) . '/[webtlo].t'.$topic['id'].'.torrent';
 					$q++;
-					$success[] = $topic_id;
-					//~ $this->log .= date("H:i:s") . ' Успешно сохранён торрент-файл для ' . $topic_id . '.<br />';
+					//~ $this->log .= date("H:i:s") . ' Успешно сохранён торрент-файл для ' . $topic['id'] . '.<br />';
 				}
 				
 				break;

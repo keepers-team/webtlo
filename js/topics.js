@@ -1,25 +1,31 @@
 
 /* работа с топиками */
 
-// скачивание т.-файлов выделенных топиков
-$("#topics").on("click", ".tor_download", function(){
-	subsection = $(this).attr("subsection");	
+// получить список выделенных раздач
+function listSelectedTopics(subsection){
 	var topics = [];
 	$("#topics_list_"+subsection).closest("form")
 	.find("input[type=checkbox]")
 	.each(function() {
 		if($(this).prop("checked")) {
 			id = $(this).attr("id");
-			//~ hash = $(this).attr("hash");
-			topics.push(id);
+			hash = $(this).attr("hash");
+			topics.push({id: id, hash: hash});
 		}
 	});
+	return topics;
+}
+
+// скачивание т.-файлов выделенных топиков
+$("#topics").on("click", ".tor_download", function(){
+	subsection = $(this).attr("subsection");	
+	topics = listSelectedTopics(subsection);
 	if(topics == "") return;	
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
 		url: "index.php",
-		data: { id:topics, m:'download', subsec:subsection, cfg:$data },
+		data: { topics:topics, m:'download', subsec:subsection, cfg:$data },
 		success: function(response) {
 			var resp = eval("(" + response + ")");
 			$("#log").append(resp.log);
@@ -45,16 +51,7 @@ $("#topics").on("click", ".tor_download", function(){
 // добавление раздач в торрент-клиент
 $("#topics").on("click", ".tor_add", function(){
 	subsection = $(this).attr("subsection");
-	var topics = [];
-	$("#topics_list_"+subsection).closest("form")
-	.find("input[type=checkbox]")
-	.each(function() {
-		id = $(this).attr("id");
-		//~ hash = $(this).attr("hash");
-		if($(this).prop("checked")){
-			topics.push(id);
-		}
-	});
+	topics = listSelectedTopics(subsection);
 	if(topics == "") return;
 	if(!$("#list-ss [value="+subsection+"]").val()){
 		$("#result_"+subsection).html("В настройках подразделов нет такого идентификатора: "+subsection+".<br />");
@@ -83,14 +80,10 @@ $("#topics").on("click", ".tor_add", function(){
 			//~ $("#log").append(response);
 			if(resp.success != null){
 				// удаляем с главной добавленные раздачи
-				$("#topics_list_"+subsection).closest("form")
-				.find("input[type=checkbox]")
-				.each(function() {
-					id = $(this).attr("id");
-					if($.inArray(id, resp.success) != -1){
-						$("#topic_"+id).remove();
-					}
-				});
+				for (var i in resp.success) {
+					id = resp.success[i];
+			        $("#topic_"+id).remove();
+		        }
 				// помечаем в базе добавленные раздачи
 			    $.ajax({
 				    type: "POST",
