@@ -106,23 +106,6 @@ $("#topics").on("click", ".tor_add", function(){
 	});
 })
 
-// получение данных о выделенных раздачах (объём, кол-во)
-$("#topics").on("change", ".topic", function(){
-	subsection = $(this).attr("subsection");
-	count = 0;
-	size_all = 0;
-	$("#topics_list_"+subsection).closest("form")
-	.find("input[type=checkbox]")
-	.each(function() {
-		size = $(this).attr("size");
-		if($(this).prop("checked")) {
-			count++;
-			size_all += parseInt(size);
-		}
-	});
-	showSelectedInfo(subsection, count, size_all);
-});
-
 // вывод на экран кол-во, объём выбранных раздач
 function showSelectedInfo(subsection, count, size){
 	$("#result_"+subsection).html("Выбрано раздач: <span id=\"tp_count_"+subsection+"\" class=\"rp-header\"></span> (<span id=\"tp_size_"+subsection+"\"></span>).");
@@ -188,4 +171,21 @@ $("#topics").on("click", ".topic", function(event){
 	}
 	$("#topics_list_"+subsection+" .first-topic").removeClass("first-topic");
 	$(this).addClass("first-topic");
+});
+
+// получение данных о выделенных раздачах (объём, кол-во)
+$("#topics").on("click", ".topic", function(){
+	subsection = $(this).attr("subsection");
+	count = 0;
+	size_all = 0;
+	$("#topics_list_"+subsection).closest("form")
+	.find("input[type=checkbox]")
+	.each(function() {
+		size = $(this).attr("size");
+		if($(this).prop("checked")) {
+			count++;
+			size_all += parseInt(size);
+		}
+	});
+	showSelectedInfo(subsection, count, size_all);
 });
