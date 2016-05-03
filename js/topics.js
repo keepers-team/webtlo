@@ -114,7 +114,7 @@ function showSelectedInfo(subsection, count, size){
 }
 
 // кнопка выделить все / отменить выделение
-$("#topics").on("click", ".tor_select", function(){
+$("#topics").on("click", ".tor_select, .tor_unselect", function(){
 	action = $(this).attr("action");
 	subsection = $(this).attr("subsection");
 	count = 0;
@@ -135,10 +135,6 @@ $("#topics").on("click", ".tor_select", function(){
 		}
 	});
 	showSelectedInfo(subsection, count, size_all);
-	$(this).children(" span").text(action != "select" ? "Выделить все" : "Отменить все");
-	$(this).attr("title", action != "select" ? "Выделить все топики текущего раздела." : "Отменить выделение всех топиков текущего раздела.");
-	$(this).attr("action", action != "select" ? "select" : "unselect");
-	
 });
 
 // выделение/снятие выделения интервала раздач

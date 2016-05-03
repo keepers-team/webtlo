@@ -58,19 +58,8 @@
 	
 	/* инициализация кнопок управления */
 	function InitControlButtons() {
-		$(".tor_download").button();
-		$(".tor_add").button();
-		$(".tor_select").button().on("mouseenter mouseleave", function(event) {
-			if(event.ctrlKey && !event.click) {
-				action = $(this).attr("action")
-				//~ $("#" + id + " span").text(action != "select" ? "Выделить все" : "Отменить все");
-				$(this).children(" span").text(action != "select" ? "Выделить все" : "Отменить все");
-				$(this).attr("title", action != "select" ? "Выделить все топики текущего раздела." : "Отменить выделение всех топиков текущего раздела.");
-				$(this).attr("action", (action != "select" ? "select" : "unselect"));
-			}
-		});
-		$(".downloading").hide();
-		$(".adding").hide();
+		$(".tor_download, .tor_add, .tor_select, .tor_unselect").button();
+		$(".downloading, .adding").hide();
 	}
 	
 	/* инициализация "аккордиона" для вкладки настройки */

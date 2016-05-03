@@ -236,7 +236,8 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 				//~ '<input type="button" name="select_'.$subsection['id'].'" title="Выделить все/снять выделение" value="Выделить все" data-id="select_'.$subsection['id'].'" id="select_'.$subsection['id'].'" onclick="SelAll(this)">'.
 				//~ '<input type="button" name="unselect_'.$subsection['id'].'" value="Отменить выделение" data-id="unselect_'.$subsection['id'].'" id="unselect_'.$subsection['id'].'" onclick="SelAll(this)">'.
 				//~ '<input type="button" name="dwnld_'.$subsection['id'].'" value="Скачать выделенные" data-id="dwnld_'.$subsection['id'].'" id="dwnld_'.$subsection['id'].'" onclick="DwnldSel(this)">'.
-				'<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все топики текущего раздела">Выделить все</button>'.
+				'<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все раздачи текущего подраздела">Выделить все</button>'.
+				'<button type="button" class="tor_unselect" action="unselect" subsection="'.$subsection['id'].'" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>'.
 				'<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего раздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
 				'<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего раздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>'.
 				//~ '<button type="button" id="test" onclick="test()">text</button>'.
@@ -338,7 +339,7 @@ function output_main(){
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.1.9</title>
+				<title>web-TLO-0.8.2.7</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
