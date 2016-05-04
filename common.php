@@ -67,7 +67,7 @@ class TIniFileEx {
         foreach ($this->arr as $sname=>$section){
             $result .= '[' . $sname . ']' . _BR_;
             foreach ($section as $key=>$value){
-                $result .= $key .'="'.$value .'"'._BR_;
+                $result .= $key .'="'.str_replace('\\', '\\\\', $value) .'"'._BR_;
             }
             $result .= _BR_;
         }
@@ -118,7 +118,7 @@ function write_config(
 		if(isset($ss_title) && $ss_title != '') $ini->write("$ss_id",'title', $ss_title);
 		if(isset($ss_client)) $ini->write("$ss_id",'client', !empty($ss_client) ? $ss_client : "");
 		if(isset($ss_label)) $ini->write("$ss_id",'label', $ss_label);
-		if(isset($ss_folder)) $ini->write("$ss_id",'data-folder', empty($ss_folder) ? "" : quotemeta($ss_folder));
+		if(isset($ss_folder)) $ini->write("$ss_id",'data-folder', $ss_folder);
 		$ss_ids[] = $ss_id;
 	}
 	if(isset($ss_ids) && $ss_ids != '') $ini->write('sections','subsections', implode(",", $ss_ids));	
@@ -131,7 +131,7 @@ function write_config(
 	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url', $forum_url);
 	if(isset($rt) && $rt != '') $ini->write('sections','rule_topics',		$rt);
 	if(isset($rr) && $rr != '') $ini->write('sections','rule_reports',		$rr);
-	if(isset($sdir)) $ini->write('download','savedir', empty($sdir) ? "" : quotemeta($sdir));
+	if(isset($sdir)) $ini->write('download','savedir', $sdir);
 	if(isset($ssdir)) $ini->write('download','savesubdir', $ssdir);
 	if(isset($retracker)) $ini->write('download','retracker', $retracker);
 	
