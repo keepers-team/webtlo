@@ -22,7 +22,8 @@ if(!ini_get('date.timezone'))
 	
 $starttime = microtime(true);
 
-$log = "\nОбновление сведений\n" . date('d.m.Y / H:i:s') . "\n\n ====== Начало ======\n\n";
+$log = date('H:i:s') . " Начато обновление сведений о раздачах...\n";
+$filelog =  dirname(__FILE__) . "/update.log";
 
 /* получение настроек */
 
@@ -71,36 +72,45 @@ $cfg['title'][] = (($ini->read('tor_status','tor_temporary','') == '1')?"вре�
 
 try {	
 	
-	/* проверяем настройки */
+	// проверяем настройки
 	if(in_array('', $cfg)) {
 		throw new Exception (date("H:i:s") . " Настройки некорректны.\n");
 	}	
 	
-	/* получение данных от т.-клиентов */
+	// получение данных от т.-клиентов
 	$tc_topics = get_tor_client_data($cfg['tcs'], $log);
 	
-	/* получение данных с api.rutracker.org */
+	// получение данных с api.rutracker.org
 	$webtlo = new Webtlo($cfg['api_key'], $cfg['api_url'], $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth']);
 	$status = $webtlo->get_tor_status_titles($cfg['title']); /* статусы раздач на трекере */
 	$subsections = $webtlo->get_cat_forum_tree($cfg['ss']); /* обновляем дерево разделов */
 	$ids = $webtlo->get_subsection_data($subsections, $status); /* получаем список раздач разделов */
 	$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $cfg['rt'], $cfg['ss']); /* получаем подробные сведения о раздачах */
 	
+	// переименовываем файл лога, если он больше 5 Мб
+	if(file_exists($filelog) && filesize($filelog) >= 5242880){
+		if(!rename($filelog, preg_replace('|.log$|', '.1.log', $filelog)))
+			throw new Exception (date("H:i:s") . " Не удалось переименовать файл лога.\n");
+	}
+	
+	// открываем файл лога
+	if(!$filelog = fopen($filelog, "a"))
+		throw new Exception (date("H:i:s") . " Не удалось создать файл лога.\n");
+	
+	$log .= $webtlo->log;
+	$endtime = microtime(true);
+	$log .= date('H:i:s') . " Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с).\n";
+	$log = str_replace('<br />', ''."\n".'', $log);
+	
+	// записываем в файл
+	fwrite($filelog, $log);
+	fclose($filelog);
+
 } catch (Exception $e) {
-	$webtlo->log .= $e->getMessage();
+	if(isset($webtlo->log)) $log .= $webtlo->log;
+	$log .= $e->getMessage();
+	$log = str_replace('<br />', ''."\n".'', $log);
+	echo $log;
 }
-
-$log .= $webtlo->log;
-$log .= "\n ====== Конец ======\n\nЗавершено\n" . date('d.m.Y / H:i:s');
-
-$endtime1 = microtime(true);
-
-$log .= "\n\nОбщее время выполнения: " . round($endtime1-$starttime, 1) . " с.\n";
-
-$log = str_replace('<br />', ''."\n".'', $log);
-
-$file_log = fopen(dirname(__FILE__) . "/update.log", "w");
-fwrite($file_log, $log);
-fclose($file_log);
 
 ?>
