@@ -1,5 +1,7 @@
 <?php
 
+include dirname(__FILE__) . '/../common.php';
+
 $log = get_now_datetime() . 'Обновление списка топиков для хранения...<br />';
 
 try {
