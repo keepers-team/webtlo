@@ -22,7 +22,7 @@ if(!ini_get('date.timezone'))
 	
 $starttime = microtime(true);
 
-$log = date('H:i:s') . " Начато обновление сведений о раздачах...\n";
+$log = get_now_datetime() . "Начато обновление сведений о раздачах...\n";
 $filelog =  dirname(__FILE__) . "/update.log";
 
 /* получение настроек */
@@ -74,7 +74,7 @@ try {
 	
 	// проверяем настройки
 	if(in_array('', $cfg)) {
-		throw new Exception (date("H:i:s") . " Настройки некорректны.\n");
+		throw new Exception (get_now_datetime() . "Настройки некорректны.\n");
 	}	
 	
 	// получение данных от т.-клиентов
@@ -90,16 +90,16 @@ try {
 	// переименовываем файл лога, если он больше 5 Мб
 	if(file_exists($filelog) && filesize($filelog) >= 5242880){
 		if(!rename($filelog, preg_replace('|.log$|', '.1.log', $filelog)))
-			throw new Exception (date("H:i:s") . " Не удалось переименовать файл лога.\n");
+			throw new Exception (get_now_datetime() . "Не удалось переименовать файл лога.\n");
 	}
 	
 	// открываем файл лога
 	if(!$filelog = fopen($filelog, "a"))
-		throw new Exception (date("H:i:s") . " Не удалось создать файл лога.\n");
+		throw new Exception (get_now_datetime() . "Не удалось создать файл лога.\n");
 	
 	$log .= $webtlo->log;
 	$endtime = microtime(true);
-	$log .= date('H:i:s') . " Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с).\n";
+	$log .= get_now_datetime() . "Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с).\n";
 	$log = str_replace('<br />', ''."\n".'', $log);
 	
 	// записываем в файл

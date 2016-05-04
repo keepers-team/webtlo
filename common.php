@@ -71,8 +71,8 @@ class TIniFileEx {
             }
             $result .= _BR_;
         }
-		if(file_put_contents($this->filename, $result)) return date("H:i:s") . ' Настройки успешно сохранены.<br />';
-		else return date("H:i:s") . ' Ошибка при сохранении настроек.<br />';
+		if(file_put_contents($this->filename, $result)) return get_now_datetime() . 'Настройки успешно сохранены.<br />';
+		else return get_now_datetime() . 'Ошибка при сохранении настроек.<br />';
     }
 }
 
@@ -175,6 +175,10 @@ function array_column_common(array $input, $columnKey, $indexKey = null) {
 		}
 	}
 	return $array;
+}
+
+function get_now_datetime(){
+	return date('d.m.Y H:i:s') . ' ';
 }
 
 ?>

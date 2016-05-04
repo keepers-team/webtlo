@@ -15,7 +15,7 @@ class Webtlo {
 	public $log;
 	
 	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
-		$this->log = date("H:i:s") . ' Получение данных с ' . $api_url . '...<br />';
+		$this->log = get_now_datetime() . 'Получение данных с ' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
@@ -28,10 +28,10 @@ class Webtlo {
 		));
 		// прокси
 		if($proxy_activate) {
-			$this->log .= date("H:i:s") . ' Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
+			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
 			$this->init_proxy($proxy_type, $proxy_address, $proxy_auth);
 		} else {
-			$this->log .= date("H:i:s") . ' Прокси-сервер не используется.<br />';
+			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
 		}
 	}
 	
@@ -59,18 +59,18 @@ class Webtlo {
 			$json = curl_exec($this->ch);
 			if($json === false) {
 				//~ curl_close($this->ch);
-				throw new Exception(date("H:i:s") . ' CURL ошибка: ' . curl_error($this->ch) . '<br />');
+				throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
 			}
 			$data = json_decode($json, true);
 			if(isset($data['error'])){
 				if($data['error']['code'] == '503' && $n <= 3){
-					$this->log .= date("H:i:s") . ' Повторная попытка ' . $n . '/3 получить данные.<br />';
+					$this->log .= get_now_datetime() . 'Повторная попытка ' . $n . '/3 получить данные.<br />';
 					sleep(20);
 					$n++;
 					continue;
 				}
 				//~ curl_close($this->ch);
-				throw new Exception(date("H:i:s") . ' API ошибка: ' . $data['error']['text'] . '<br />');
+				throw new Exception(get_now_datetime() . 'API ошибка: ' . $data['error']['text'] . '<br />');
 			}
 			break;
 		}
@@ -87,7 +87,7 @@ class Webtlo {
 	// статусы раздач
 	public function get_tor_status_titles($tor_status){
 		if(!is_array($tor_status))
-			throw new Exception(date("H:i:s") . ' Не выбран ни один из статусов раздач на трекере.<br />');
+			throw new Exception(get_now_datetime() . 'Не выбран ни один из статусов раздач на трекере.<br />');
 		$url = $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$status = array();
@@ -100,7 +100,7 @@ class Webtlo {
 	
 	// дерево разделов
 	public function get_cat_forum_tree($subsections_use){
-		$this->log .= date("H:i:s"). ' Получение дерева разделов...<br />';
+		$this->log .= get_now_datetime() . 'Получение дерева разделов...<br />';
 		// готовим таблицу
 		$this->db->exec('CREATE TABLE IF NOT EXISTS `Forums` (
 				id INT NOT NULL PRIMARY KEY,
@@ -108,7 +108,7 @@ class Webtlo {
 		)');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
 		$url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
@@ -137,7 +137,7 @@ class Webtlo {
 			$this->db->prepare($sql);
 			if($this->db->errorCode() != '0000') {
 				$db_error = $this->db->errorInfo();
-				throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 			}
 		}
 		$this->db->query('DELETE FROM `Forums`');
@@ -150,7 +150,7 @@ class Webtlo {
 	
 	// список раздач раздела
 	public function get_subsection_data($subsections, $status){
-		$this->log .= date("H:i:s") . ' Получение списка раздач...<br />';
+		$this->log .= get_now_datetime() . 'Получение списка раздач...<br />';
 		$ids = array();
 		// узнаём лимит на кол-во запросов
 		$limit = $this->get_limit();
@@ -158,7 +158,7 @@ class Webtlo {
 		foreach($subsections as $subsection){
 			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);
-			$this->log .= date("H:i:s") . ' Список раздач раздела № ' . $subsection['id'] . ' получен (' . count($data['result']) . ' шт.).<br />';
+			$this->log .= get_now_datetime() . 'Список раздач раздела № ' . $subsection['id'] . ' получен (' . count($data['result']) . ' шт.).<br />';
 			foreach($data['result'] as $id => $val){
 				// только раздачи с выбранными статусами
 				if((isset($val[0])) && (in_array($val[0], $status))){
@@ -180,7 +180,7 @@ class Webtlo {
 	
 	// сведения о каждой раздаче
 	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsections_use){
-		$this->log .= date("H:i:s") . ' Получение подробных сведений о раздачах...<br />';
+		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
 		$topics = array();
 		// готовим БД
 		$this->db->exec('CREATE TABLE IF NOT EXISTS `Topics` (
@@ -196,7 +196,7 @@ class Webtlo {
 		)');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
 		
 		$tmp = array();
@@ -263,7 +263,7 @@ class Webtlo {
 			$this->db->prepare($sql);
 			if($this->db->errorCode() != '0000') {
 				$db_error = $this->db->errorInfo();
-				throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 			}
 		}
 		$this->db->query('DELETE FROM `Topics` WHERE `ss` IN(' . $subsections_use . ')'); // удаляем все старые данные	
@@ -296,12 +296,12 @@ class FromDatabase {
 		$query = $this->db->query('SELECT * FROM `Forums` WHERE `id` IN(' . $subsections_use . ')');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
 		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
 		if(count($subsections) == 0)
 			throw new Exception();
-		$this->log .= date("H:i:s") . ' Данные о подразделах получены.<br />';
+		$this->log .= get_now_datetime() . 'Данные о подразделах получены.<br />';
 		return $subsections;
 	}
 	
@@ -310,13 +310,13 @@ class FromDatabase {
 		$query = $this->db->prepare('SELECT * FROM `Topics` WHERE `se` <= :se AND `dl` = :dl ORDER BY `ss`, `na`');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
 		$query->bindValue(':se', $seeders);
 		$query->bindValue(':dl', $status);
 		$query->execute();
 		$topics = $query->fetchAll(PDO::FETCH_ASSOC);
-		$this->log .= date("H:i:s") . ' Данные о раздачах получены.<br />';
+		$this->log .= get_now_datetime() . 'Данные о раздачах получены.<br />';
 		return $topics;
 	}
 	
@@ -325,14 +325,14 @@ class FromDatabase {
 		$query = $this->db->query('SELECT * FROM `Forums` WHERE `id` IN('.$subsections_use.')');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
 		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
 		foreach($subsections as $id => $subsection){
 			$query = $this->db->prepare('SELECT SUM(`si`) FROM `Topics` WHERE `ss` = :id');
 			if($this->db->errorCode() != '0000') {
 				$db_error = $this->db->errorInfo();
-				throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 			}
 			$query->bindValue(':id', $subsection['id']);
 			$query->execute();
@@ -340,7 +340,7 @@ class FromDatabase {
 			$query = $this->db->prepare('SELECT COUNT() FROM `Topics` WHERE `ss` = :id');
 			if($this->db->errorCode() != '0000') {
 				$db_error = $this->db->errorInfo();
-				throw new Exception(date("H:i:s") . " SQL ошибка: " . $db_error[2] . '<br />');
+				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 			}
 			$query->bindValue(':id', $subsection['id']);
 			$query->execute();			
@@ -348,7 +348,7 @@ class FromDatabase {
 			$subsections[$id]['si'] = $size[0];
 			$subsections[$id]['qt'] = $qt[0];
 		}
-		$this->log .= date("H:i:s") . ' Данные о подразделах получены.<br />';
+		$this->log .= get_now_datetime() . 'Данные о подразделах получены.<br />';
 		return $subsections;
 	}
 		
@@ -361,7 +361,7 @@ class Download {
 	public $log;
 	
 	public function __construct($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
-		$this->log = date("H:i:s") . ' Скачивание торрент-файлов...<br />';
+		$this->log = get_now_datetime() . 'Скачивание торрент-файлов...<br />';
 		$this->api_key = $api_key;
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
@@ -371,10 +371,10 @@ class Download {
 		));
 		// прокси
 		if($proxy_activate) {
-			$this->log .= date("H:i:s") . ' Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
+			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
 			$this->init_proxy($proxy_type, $proxy_address, $proxy_auth);
 		} else {
-			$this->log .= date("H:i:s") . ' Прокси-сервер не используется.<br />';
+			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
 		}
 	}
 	
@@ -408,7 +408,7 @@ class Download {
 		));
 		$json = curl_exec($this->ch);
 		if($json === false)
-			throw new Exception(date("H:i:s") . ' CURL ошибка: ' . curl_error($this->ch) . '<br />');
+			throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
 		preg_match("/.*Set-Cookie: [^-]*-([0-9]*)/", $json, $tmp);
 		if(!ctype_digit($tmp[1])){
 			preg_match('|<title>(.*)</title>|sei', $json, $title);
@@ -416,12 +416,12 @@ class Download {
 				if($title[1] == 'rutracker.org'){
 					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $json, $text);
 					if(!empty($text))
-						$this->log .= date("H:i:s") . ' Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.<br />';
+						$this->log .= get_now_datetime() . 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.<br />';
 				} else
-					$this->log .= date("H:i:s") . ' Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.<br />';
+					$this->log .= get_now_datetime() . 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.<br />';
 			throw new Exception(				
-				date("H:i:s") .
-				' Получен некорректный идентификатор пользователя: "' .
+				get_now_datetime() .
+				'Получен некорректный идентификатор пользователя: "' .
 				(isset($tmp[1]) ? $tmp[1] : 'null') . '".<br />'
 			);
 		}
@@ -453,14 +453,14 @@ class Download {
 				
 				// выходим после 3-х попыток
 				if($n >= 4) {
-					$this->log .= date("H:i:s") . ' Не удалось скачать торрент-файл для ' . $topic['id'] . '.<br />';
+					$this->log .= get_now_datetime() . 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.<br />';
 					break;
 				}
 				
 				$json = curl_exec($this->ch);
 				
 				if($json === false) {
-					$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').<br />';
+					$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').<br />';
 					break;
 				}
 				
@@ -468,15 +468,15 @@ class Download {
 				preg_match('|<center.*>(.*)</center>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
 				if(!empty($forbidden)) {
 					preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $title);
-					$this->log .= date("H:i:s") . ' Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').<br />';
+					$this->log .= get_now_datetime() . 'Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').<br />';
 					break;
 				}
 				
 				// проверка "ошибка 503" и т.д.
 				preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
-					$this->log .= date("H:i:s") . ' Error: ' . $error[1] . ' (' . $topic['id'] . ').<br />';
-					$this->log .= date("H:i:s") . ' Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').<br />';
+					$this->log .= get_now_datetime() . 'Error: ' . $error[1] . ' (' . $topic['id'] . ').<br />';
+					$this->log .= get_now_datetime() . 'Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').<br />';
 					sleep(40);
 					$n++;
 					continue;
@@ -488,7 +488,7 @@ class Download {
 					$success[$q]['hash'] = $topic['hash'];
 					$success[$q]['filename'] = 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($savedir) . '/[webtlo].t'.$topic['id'].'.torrent';
 					$q++;
-					//~ $this->log .= date("H:i:s") . ' Успешно сохранён торрент-файл для ' . $topic['id'] . '.<br />';
+					//~ $this->log .= get_now_datetime() . 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.<br />';
 				}
 				
 				break;

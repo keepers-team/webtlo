@@ -35,14 +35,14 @@ $topics = $_POST['topics'];
 
 $tmpdir = dirname(dirname(__FILE__)) . '/tfiles/';
 
-$log = date("H:i:s") . ' Запущен процесс добавления раздач в торрент-клиент "' . $cl['cm'] . '"...<br />';
+$log = get_now_datetime() . 'Запущен процесс добавления раздач в торрент-клиент "' . $cl['cm'] . '"...<br />';
 
 try {	
 	// создаём временный каталог
 	if(is_dir($tmpdir))
 		rmdir_recursive($tmpdir);
 	elseif(!mkdir($tmpdir))
-		throw new Exception(date("H:i:s") . ' Не удалось создать каталог: "' . $tmpdir . '".<br />');
+		throw new Exception(get_now_datetime() . 'Не удалось создать каталог: "' . $tmpdir . '".<br />');
 	
 	// скачиваем торрент-файлы
 	$dl = new Download($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
@@ -55,7 +55,7 @@ try {
 	}
 	
 	// добавляем раздачи в торрент-клиент
-	$log .= date("H:i:s") . ' Добавление раздач в торрент-клиент...<br />';
+	$log .= get_now_datetime() . 'Добавление раздач в торрент-клиент...<br />';
 	$client = new $cl['cl']($cl['ht'], $cl['pt'], $cl['lg'], $cl['pw']);
 	if($client->is_online()) {
 		$client->torrentAdd($success, $subsection['sp'], $subsection['lb']);
@@ -67,7 +67,7 @@ try {
 	}
 	$add_log = 'Добавлено в торрент-клиент "' . $cl['cm'] . '": <span class="rp-header">'. $q . '</span> шт.<br />';
 	$log .= str_replace('{cm}', $cl['cm'], $client->log) .
-		date("H:i:s") . ' Добавление торрент-файлов завершено.<br />';
+		get_now_datetime() . 'Добавление торрент-файлов завершено.<br />';
 	
 	// выводим на экран
 	echo json_encode(array('log' => $log, 'add_log' => $add_log, 'success' => $success));

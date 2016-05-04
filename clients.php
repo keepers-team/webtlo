@@ -2,8 +2,8 @@
 
 function get_tor_client_data($tcs, &$log) {
 	
-	$log .= date("H:i:s") . ' Получение данных от торрент-клиентов...<br />';
-	$log .= date("H:i:s") . ' Количество торрент-клиентов: ' . count($tcs) . '.<br />';
+	$log .= get_now_datetime() . 'Получение данных от торрент-клиентов...<br />';
+	$log .= get_now_datetime() . 'Количество торрент-клиентов: ' . count($tcs) . '.<br />';
 	$tc_topics = array();
 	
 	foreach($tcs as $cm => $tc) {
@@ -13,7 +13,7 @@ function get_tor_client_data($tcs, &$log) {
 			$tc_topics += $tmp;
 		} else $tmp = null;
 		$log .= str_replace('{cm}', $tc['cm'], $client->log);
-		$log .= date("H:i:s") . ' ' . $tc['cm'] . ' (' . $tc['cl'] .
+		$log .= get_now_datetime() . $tc['cm'] . ' (' . $tc['cl'] .
 			') - получено раздач: ' . count($tmp) . '<br />';
 	}
 	
@@ -45,7 +45,7 @@ class utorrent {
 	
 	public function is_online() {
 		if (!$this->getToken()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -53,7 +53,7 @@ class utorrent {
 	
 	// получение токена
 	private function getToken() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'token.html'),
@@ -63,7 +63,7 @@ class utorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         $info = curl_getinfo($ch);
@@ -94,7 +94,7 @@ class utorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -103,7 +103,7 @@ class utorrent {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest("?list=1");
         foreach($json['torrents'] as $torrent)
 		{
@@ -170,7 +170,7 @@ class transmission {
 	
 	public function is_online() {
 		if (!$this->getSID()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -178,7 +178,7 @@ class transmission {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -188,7 +188,7 @@ class transmission {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -213,7 +213,7 @@ class transmission {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -222,7 +222,7 @@ class transmission {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
@@ -278,7 +278,7 @@ class vuze {
 	
 	public function is_online() {
 		if (!$this->getSID()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -286,7 +286,7 @@ class vuze {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -296,7 +296,7 @@ class vuze {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -321,7 +321,7 @@ class vuze {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -330,7 +330,7 @@ class vuze {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
@@ -386,7 +386,7 @@ class deluge {
 	
 	public function is_online() {
 		if (!$this->getSID()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -394,7 +394,7 @@ class deluge {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -405,7 +405,7 @@ class deluge {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -430,7 +430,7 @@ class deluge {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -439,7 +439,7 @@ class deluge {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "name", "message", "progress" ], {} ], "id" : 9 }');
         foreach($json['result']['torrents'] as $hash => $torrent)
 		{
@@ -506,7 +506,7 @@ class qbittorrent {
 	
 	public function is_online() {
 		if (!$this->getSID()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -514,7 +514,7 @@ class qbittorrent {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login'),
@@ -526,7 +526,7 @@ class qbittorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -550,7 +550,7 @@ class qbittorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -559,7 +559,7 @@ class qbittorrent {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('', 'query/torrents');
         foreach($json as $torrent)
 		{
@@ -608,7 +608,7 @@ class ktorrent {
 	
 	public function is_online() {
 		if (!$this->getChallenge()) {
-            $this->log .= date("H:i:s") . ' Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
+            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
         return true;
@@ -616,7 +616,7 @@ class ktorrent {
 	
 	// получение challenge
 	private function getChallenge() {
-		$this->log .= date("H:i:s") . ' Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login/challenge.xml'),
@@ -628,7 +628,7 @@ class ktorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -655,7 +655,7 @@ class ktorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -678,7 +678,7 @@ class ktorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= date("H:i:s") . ' CURL ошибка: ' . curl_error($ch) . '<br />';
+			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
 			return false;
 		}
         curl_close($ch);
@@ -691,7 +691,7 @@ class ktorrent {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= date("H:i:s") . ' Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
         foreach($json['torrent'] as $torrent)
