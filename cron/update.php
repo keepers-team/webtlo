@@ -55,6 +55,7 @@ $cfg['api_key'] = $ini->read('torrent-tracker','api_key','');
 $cfg['api_url'] = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
 $cfg['ss'] = $ini->read('sections','subsections','');
 $cfg['rt'] = $ini->read('sections','rule_topics',3);
+$cfg['avg_seeders'] = $ini->read('sections','avg_seeders',0);
 $cfg['retracker'] = $ini->read('download','retracker',0);
 $cfg['title'][] = (($ini->read('tor_status','tor_checked',1) == '1')?"проверено":"");
 $cfg['title'][] = (($ini->read('tor_status','tor_not_checked','') == '1')?"не проверено":"");
@@ -85,7 +86,7 @@ try {
 	$status = $webtlo->get_tor_status_titles($cfg['title']); /* статусы раздач на трекере */
 	$subsections = $webtlo->get_cat_forum_tree($cfg['ss']); /* обновляем дерево разделов */
 	$ids = $webtlo->get_subsection_data($subsections, $status); /* получаем список раздач разделов */
-	$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $cfg['rt'], $cfg['ss']); /* получаем подробные сведения о раздачах */
+	$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $cfg['rt'], $cfg['ss'], true); /* получаем подробные сведения о раздачах */
 	
 	// переименовываем файл лога, если он больше 5 Мб
 	if(file_exists($filelog) && filesize($filelog) >= 5242880){

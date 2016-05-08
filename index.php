@@ -35,6 +35,7 @@ if(isset($_POST['cfg'])) {
 	parse_str($_POST['cfg']); 
 	$savesubdir = isset($savesubdir) ? 1 : 0;
 	$retracker = isset($retracker) ? 1 : 0;
+	$avg_seeders = isset($avg_seeders) ? 1 : 0;
 	$proxy_activate = isset($proxy_activate) ? 1 : 0;
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
@@ -87,7 +88,7 @@ switch($_POST['m'])
 		//~ print_r($proxy_address . $proxy_auth);
 		write_config(
 			dirname(__FILE__) . '/config.ini', $TT_login, $TT_password, $TT_subsections,
-			$TT_rule_topics, $TT_rule_reports, $savedir, $savesubdir,
+			$TT_rule_topics, $TT_rule_reports, $savedir, $savesubdir, $avg_seeders,
 			$retracker,	$tcs, $bt_key, $api_key, $api_url, $forum_url, $tor_status['save'],
 			$proxy_activate, $proxy_type, $proxy_address, $proxy_auth
 		);
@@ -185,7 +186,7 @@ switch($_POST['m'])
 			$status = $webtlo->get_tor_status_titles($tor_status['title']); /* статусы раздач на трекере */
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $status); /* получаем список раздач разделов */
-			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections); /* получаем подробные сведения о раздачах */
+			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders); /* получаем подробные сведения о раздачах */
 			output_topics($forum_url, $topics, $subsections, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();

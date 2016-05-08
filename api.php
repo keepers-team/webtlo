@@ -179,7 +179,7 @@ class Webtlo {
 	}	
 	
 	// сведения о каждой раздаче
-	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsections_use){
+	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsections_use, $avg_seeders){
 		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
 		$topics = array();
 		// готовим БД
@@ -192,11 +192,23 @@ class Webtlo {
 				si VARCHAR NOT NULL,
 				st INT NOT NULL,
 				rg VARCHAR NOT NULL,
-				dl INT NOT NULL
+				dl INT NOT NULL DEFAULT 0,
+				rt INT NOT NULL DEFAULT 1
 		)');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
 			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+		}
+		$this->db->exec('ALTER TABLE `Topics` ADD COLUMN `rt` INT NOT NULL DEFAULT 1');
+		
+		if($avg_seeders){
+			$this->log .= get_now_datetime() . 'Поиск среднего значения количества сидов...<br />';
+			$query = $this->db->query('SELECT `id`,`se`,`rt` FROM `Topics` WHERE `ss` IN(' . $subsections_use . ')');
+			if($this->db->errorCode() != '0000') {
+				$db_error = $this->db->errorInfo();
+				$this->log .= get_now_datetime() . 'Данные последнего обновления сведений не получены: ' . $db_error[2] . '<br />';
+			}
+			$topics_old = $query->fetchAll(PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
 		}
 		
 		$tmp = array();
@@ -212,10 +224,17 @@ class Webtlo {
 				$tmp['topics'][$topic_id]['ss'] = $info['forum_id'];
 				$tmp['topics'][$topic_id]['na'] = $info['topic_title'];
 				$tmp['topics'][$topic_id]['hs'] = $info['info_hash'];
-				$tmp['topics'][$topic_id]['se'] = $info['seeders'];
 				$tmp['topics'][$topic_id]['si'] = $info['size'];
 				$tmp['topics'][$topic_id]['st'] = $info['tor_status'];
 				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
+				// средние сиды
+				if(isset($topics_old[$topic_id])){
+					$tmp['topics'][$topic_id]['se'] = round(($topics_old[$topic_id][0]['se'] + $info['seeders']) / 2, 3);
+					$tmp['topics'][$topic_id]['rt'] = $topics_old[$topic_id][0]['rt'] + 1;
+				} else {
+					$tmp['topics'][$topic_id]['se'] = $info['seeders'];
+					$tmp['topics'][$topic_id]['rt'] = 1;
+				}
 				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
 				if(isset($tc_topics[$info['info_hash']])){
 					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1);
@@ -228,28 +247,16 @@ class Webtlo {
 				    {$info['forum_id']},
 				    {$this->db->quote($info['topic_title'])},
 				    '{$info['info_hash']}',
-				    {$info['seeders']},
+				    {$tmp['topics'][$topic_id]['se']},
 				    '{$info['size']}',
 				    {$info['tor_status']},
 				    '{$info['reg_time']}',
-				    {$tmp['topics'][$topic_id]['dl']}" .
+				    {$tmp['topics'][$topic_id]['dl']},
+				    {$tmp['topics'][$topic_id]['rt']}" .
 			    " UNION ALL";
-				//~ $tmp['insert'][] = "SELECT " . 
-				    //~ $topic_id . ',' .
-				    //~ $info['forum_id'] . ',' .
-				    //~ $this->db->quote($info['topic_title']) . ',' .
-				    //~ $this->db->quote($info['info_hash']) . ',' .
-				    //~ $info['seeders'] . ',' .
-				    //~ $this->db->quote($info['size']) . ',' .
-				    //~ $info['tor_status'] . ',' .
-				    //~ $this->db->quote($info['reg_time']) . ',' .
-				    //~ $tmp['topics'][$topic_id]['dl'] . '.' .
-			    //~ " UNION ALL";
 			}
 						
 		}
-		
-		//~ $insert = array();
 		
 		// разбираем $tmp
 		$insert = array_chunk($tmp['insert'], 500, false);
@@ -259,7 +266,7 @@ class Webtlo {
 		
 		// пишем в БД
 		foreach($insert as $value){
-			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`) ' . rtrim(implode(' ', $value), ' UNION ALL');
+			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`) ' . rtrim(implode(' ', $value), ' UNION ALL');
 			$this->db->prepare($sql);
 			if($this->db->errorCode() != '0000') {
 				$db_error = $this->db->errorInfo();
@@ -268,7 +275,7 @@ class Webtlo {
 		}
 		$this->db->query('DELETE FROM `Topics` WHERE `ss` IN(' . $subsections_use . ')'); // удаляем все старые данные	
 		foreach($insert as $value){
-			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`) ' . rtrim(implode(' ', $value), ' UNION ALL');
+			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`) ' . rtrim(implode(' ', $value), ' UNION ALL');
 			$this->db->query($sql);
 		}
 		

@@ -24,7 +24,7 @@ function output_preparation($TT_torrents, &$TT_subsections){
 			
 			//--- START REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
-			$t = '<br/>[*][url=viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.$torrent['se'].'[/color]';
+			$t = '<br/>[*][url=viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.round($torrent['se']).'[/color]';
 			
 			//--- END REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
@@ -249,11 +249,12 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 				if(($param['dl'] == 0) && ($param['ss'] == $subsection['id']))
 				{
 					// вывод топиков
+					$ratio = isset($param['rt']) ? $param['rt'] : '1';
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>' .
 								//~ '<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
 								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
-								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.$param['se'].'</span>'.
+								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.round($param['se']).'</span> / <span class="ratio">'.$ratio.'</span>'.
 							'</label></div>';
 				}
 			}
@@ -314,6 +315,7 @@ function output_main(){
 	
 	$rt = $ini->read('sections','rule_topics','3');
 	$rr = $ini->read('sections','rule_reports','10');
+	$avg_seeders = ($ini->read('sections','avg_seeders','0') == 1 ? "checked" : "");
 	$proxy_activate = (($ini->read('proxy','activate',0) == 1)?"checked":"");
 	$proxy_type = $ini->read('proxy','type','http');
 	$proxy_hostname = $ini->read('proxy','hostname','195.82.146.100');
@@ -591,6 +593,10 @@ function output_main(){
 											<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="'
 											. $rt . '">
 										</div>
+										<label>										
+											<input name="avg_seeders" type="checkbox" size="24" title="При поиске использовать среднее значение количества сидов." '.$avg_seeders.'>
+											средние сиды
+										</label>
 										<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
 										<div>
 											<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="'
