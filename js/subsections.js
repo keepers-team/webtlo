@@ -99,7 +99,15 @@ function listDataSubsections(){
 	var list = [];
 	$("#list-ss option").each(function(){
 		if($(this).attr("data") != 0) {
-			list.push($(this).attr("data"));
+			data = $(this).attr("data");
+			data = data.split("|");
+			list.push({
+				id: data[0],
+				na: data[1],
+				cl: data[2],
+				lb: data[3],
+				fd: data[4]
+			});
 		}
 	});
 	return list;

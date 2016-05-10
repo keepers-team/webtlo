@@ -76,67 +76,125 @@ class TIniFileEx {
     }
 }
 
-function write_config(
-		$cfg, &$lg, &$pw, &$ss, &$rt, &$rr, &$sdir, &$ssdir, $avg_seeders, $retracker,
-		$tcs, $bt_key, $api_key, $api_url, $forum_url, $tor_status, $proxy_activate,
-		$proxy_type, $proxy_address, $proxy_auth
-	){
+function write_config($filename, $cfg, $subsections, $tcs){
 
-	$q = 0;
-	$ini = new TIniFileEx($cfg);
+	parse_str($cfg);
+	$ini = new TIniFileEx($filename);
 	
 	// т.-клиенты
-	foreach($tcs as $cm => $tc){
-		$q++;
-		if(isset($tc['cl'])	&& $tc['cl'] != '') $ini->write("torrent-client-$q",'client',		$tc['cl']);
-		if(isset($tc['ht'])	&& $tc['ht'] != '') $ini->write("torrent-client-$q",'hostname',		$tc['ht']);
-		if(isset($tc['pt'])	&& $tc['pt'] != '') $ini->write("torrent-client-$q",'port',			$tc['pt']);
-		if(isset($tc['lg'])) $ini->write("torrent-client-$q",'login',							$tc['lg']);
-		if(isset($tc['pw'])) $ini->write("torrent-client-$q",'password',						$tc['pw']);
-		if(isset($tc['cm'])	&& $tc['cm'] != '')	$ini->write("torrent-client-$q",'comment',		$tc['cm']);
+	if(is_array($tcs)){
+		$q = 0;
+		foreach($tcs as $cm => $tc){
+			$q++;
+			if(isset($tc['cl'])	&& $tc['cl'] != '') $ini->write("torrent-client-$q",'client',$tc['cl']);
+			if(isset($tc['ht'])	&& $tc['ht'] != '') $ini->write("torrent-client-$q",'hostname',$tc['ht']);
+			if(isset($tc['pt'])	&& $tc['pt'] != '') $ini->write("torrent-client-$q",'port',$tc['pt']);
+			if(isset($tc['lg'])) $ini->write("torrent-client-$q",'login',$tc['lg']);
+			if(isset($tc['pw'])) $ini->write("torrent-client-$q",'password',$tc['pw']);
+			if(isset($tc['cm'])	&& $tc['cm'] != '')	$ini->write("torrent-client-$q",'comment',$tc['cm']);
+		}
+		$ini->write('other', 'qt', $q); // кол-во т.-клиентов
 	}
-	$ini->write('other', 'qt', $q); // кол-во т.-клиентов
 	
 	// статусы раздач
-	foreach($tor_status as $status => $value){
-		if(isset($value)) $ini->write("tor_status", $status, $value);
-	}
+	if(isset($topics_status)) $ini->write('sections','topics_status',implode(',', $topics_status));
+	
 	// прокси
-	if(isset($proxy_activate)) $ini->write('proxy', 'activate', $proxy_activate);
-	if(isset($proxy_type)) $ini->write('proxy', 'type', $proxy_type);
-	list($proxy_hostname, $proxy_port) = explode(":", $proxy_address);
-	list($proxy_login, $proxy_paswd) = explode(":", $proxy_auth);
-	if(isset($proxy_hostname)) $ini->write('proxy','hostname',	$proxy_hostname);
-	if(isset($proxy_port)) $ini->write('proxy','port', $proxy_port);
-	if(isset($proxy_login)) $ini->write('proxy','login', $proxy_login);
-	if(isset($proxy_paswd)) $ini->write('proxy','password', $proxy_paswd);
+	$ini->write('proxy', 'activate', isset($proxy_activate) ? 1 : 0);
+	if(isset($proxy_type)) $ini->write('proxy','type',$proxy_type);
+	if(isset($proxy_hostname)) $ini->write('proxy','hostname',$proxy_hostname);
+	if(isset($proxy_port)) $ini->write('proxy','port',$proxy_port);
+	if(isset($proxy_login)) $ini->write('proxy','login',$proxy_login);
+	if(isset($proxy_paswd)) $ini->write('proxy','password',$proxy_paswd);
 	
 	// подразделы
-	$ss_ids = array();
-	foreach($ss as $subsec){
-		list($ss_id, $ss_title, $ss_client, $ss_label, $ss_folder) = explode("|", $subsec);
-		if(isset($ss_title) && $ss_title != '') $ini->write("$ss_id",'title', $ss_title);
-		if(isset($ss_client)) $ini->write("$ss_id",'client', !empty($ss_client) ? $ss_client : "");
-		if(isset($ss_label)) $ini->write("$ss_id",'label', $ss_label);
-		if(isset($ss_folder)) $ini->write("$ss_id",'data-folder', $ss_folder);
-		$ss_ids[] = $ss_id;
+	if(is_array($subsections)){
+		foreach($subsections as $subsec){
+			if(isset($subsec['na']) && $subsec['na'] != '') $ini->write($subsec['id'],'title',$subsec['na']);
+			if(isset($subsec['cl'])) $ini->write($subsec['id'],'client',!empty($subsec['cl']) ? $subsec['cl'] : '');
+			if(isset($subsec['lb'])) $ini->write($subsec['id'],'label',$subsec['lb']);
+			if(isset($subsec['fd'])) $ini->write($subsec['id'],'data-folder',$subsec['fd']);
+		}
+		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
 	}
-	if(isset($ss_ids) && $ss_ids != '') $ini->write('sections','subsections', implode(",", $ss_ids));	
 	
-	if(isset($lg) && $lg != '') $ini->write('torrent-tracker','login',		$lg);
-	if(isset($pw) && $pw != '') $ini->write('torrent-tracker','password',	$pw);
-	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key', $bt_key);
-	if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key', $api_key);
-	if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url', $api_url);
-	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url', $forum_url);
-	if(isset($rt) && $rt != '') $ini->write('sections','rule_topics',		$rt);
-	if(isset($rr) && $rr != '') $ini->write('sections','rule_reports',		$rr);
-	if(isset($avg_seeders)) $ini->write('sections', 'avg_seeders', $avg_seeders);
-	if(isset($sdir)) $ini->write('download','savedir', $sdir);
-	if(isset($ssdir)) $ini->write('download','savesubdir', $ssdir);
-	if(isset($retracker)) $ini->write('download','retracker', $retracker);
+	if(isset($TT_login) && $TT_login != '') $ini->write('torrent-tracker','login',$TT_login);
+	if(isset($TT_password) && $TT_password != '') $ini->write('torrent-tracker','password',$TT_password);
+	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key',$bt_key);
+	if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key',$api_key);
+	if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url',$api_url);
+	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url',$forum_url);
+	if(isset($TT_rule_topics) && $TT_rule_topics != '') $ini->write('sections','rule_topics',$TT_rule_topics);
+	if(isset($TT_rule_reports) && $TT_rule_reports != '') $ini->write('sections','rule_reports',$TT_rule_reports);
+	if(isset($savedir)) $ini->write('download','savedir',$savedir);
+	$ini->write('download','savesubdir',isset($savesubdir) ? 1 : 0);
+	$ini->write('sections', 'avg_seeders',isset($avg_seeders) ? 1 : 0);
+	$ini->write('download','retracker',isset($retracker) ? 1 : 0);
 	
 	echo $ini->updateFile(); // обновление файла с настройками
+}
+
+function get_settings(){
+	
+	$config = array();
+	
+	$ini = new TIniFileEx(dirname(__FILE__) . '/config.ini');
+	
+	// торрент-клиенты
+	$qt = $ini->read('other','qt','0');
+	for($i = 1; $i <= $qt; $i++){
+		$comment = $ini->read("torrent-client-$i","comment","");
+		$config['clients'][$comment]['cm'] = $comment;
+		$config['clients'][$comment]['cl'] = $ini->read("torrent-client-$i","client","");
+		$config['clients'][$comment]['ht'] = $ini->read("torrent-client-$i","hostname","");
+		$config['clients'][$comment]['pt'] = $ini->read("torrent-client-$i","port","");
+		$config['clients'][$comment]['lg'] = $ini->read("torrent-client-$i","login","");
+		$config['clients'][$comment]['pw'] = $ini->read("torrent-client-$i","password","");
+	}
+	
+	// подразделы
+	$config['subsections_line'] = $ini->read('sections','subsections','');
+	if(!empty($config['subsections_line'])) $subsections = explode(',', $config['subsections_line']);
+	if(isset($subsections)){
+		foreach($subsections as $id){
+			$config['subsections'][$id]['title'] = $ini->read("$id","title","");
+			$config['subsections'][$id]['client'] = $ini->read("$id","client","utorrent");
+			$config['subsections'][$id]['label'] = $ini->read("$id","label","");
+			$config['subsections'][$id]['data-folder'] = $ini->read("$id","data-folder","");
+		}
+	}
+	
+	// раздачи
+	$config['rule_topics'] = $ini->read('sections','rule_topics',3);
+	$config['rule_reports'] = $ini->read('sections','rule_reports',10);
+	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
+	$config['topics_status'] = explode(',', $ini->read('sections','topics_status','2,8'));
+	
+	// прокси
+	$config['proxy_activate'] = $ini->read('proxy','activate',0);
+	$config['proxy_type'] = $ini->read('proxy','type','http');
+	$config['proxy_hostname'] = $ini->read('proxy','hostname','195.82.146.100');
+	$config['proxy_port'] = $ini->read('proxy','port',3128);
+	$config['proxy_login'] = $ini->read('proxy','login','');
+	$config['proxy_paswd'] = $ini->read('proxy','password','');
+	$config['proxy_address'] = $config['proxy_hostname'] . ':' . $config['proxy_port'];
+	$config['proxy_auth'] = $config['proxy_login'] . ':' . $config['proxy_paswd'];
+	
+	// авторизация
+	$config['tracker_login'] = $ini->read('torrent-tracker','login','');
+	$config['tracker_paswd'] = $ini->read('torrent-tracker','password','');
+	$config['bt_key'] = $ini->read('torrent-tracker','bt_key','');
+	$config['api_key'] = $ini->read('torrent-tracker','api_key','');
+	$config['api_url'] = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
+	$config['forum_url'] = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
+	
+	// загрузки
+	$config['save_dir'] = $ini->read('download','savedir','C:\Temp\\');
+	$config['savesub_dir'] = $ini->read('download','savesubdir',0);
+	$config['retracker'] = $ini->read('download','retracker',0);
+	
+	return $config;
+	
 }
 
 function convert_bytes($size) {

@@ -122,8 +122,19 @@ function listTorClients(){
 	var list = [];
 	$("#list-tcs option").each(function(){
 		if($(this).val() != 0) {
-			list.push($(this).attr("data"));
+			data = $(this).attr("data");
+			data = data.split("|");
+			list.push({
+				cm: data[0],
+				cl: data[1],
+				ht: data[2],
+				pt: data[3],
+				lg: data[4],
+				pw: data[5]
+			});
 		}
 	});
 	return list;
 }
+
+window.onload=listClientsRefresh();

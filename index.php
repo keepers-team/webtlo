@@ -41,32 +41,14 @@ if(isset($_POST['cfg'])) {
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
 }
 
+// подразделы
 if(isset($_POST['subsec'])){
 	$TT_subsections = $_POST['subsec'];
 }
 
-// формирование списка т.-клиентов
+// торрент-клиенты
 if(isset($_POST['tcs'])) {
-	//~ $tcs = array();
-	foreach($_POST['tcs'] as $tc){
-		list($comment, $client, $host, $port, $login, $paswd) = explode("|", $tc);
-		$tcs[$comment]['cm'] = $comment;
-		$tcs[$comment]['cl'] = $client;
-		$tcs[$comment]['ht'] = $host;
-		$tcs[$comment]['pt'] = $port;
-		$tcs[$comment]['lg'] = $login;
-		$tcs[$comment]['pw'] = $paswd;
-	}
-}
-
-// статусы раздач
-if(isset($_POST['tor_status'])) {
-	foreach($_POST['tor_status'] as $value){
-		list($status_name, $status_title, $status_value) = explode("|", $value);
-		$tor_status['save'][$status_name] = $status_value;
-		if($status_value)
-			$tor_status['title'][] = $status_title;
-	}
+	$tcs = $_POST['tcs'];
 }
 
 /* конец получения настроек */
@@ -85,13 +67,7 @@ switch($_POST['m'])
 {
 	//------------------------------------------------------------------
 	case 'savecfg':
-		//~ print_r($proxy_address . $proxy_auth);
-		write_config(
-			dirname(__FILE__) . '/config.ini', $TT_login, $TT_password, $TT_subsections,
-			$TT_rule_topics, $TT_rule_reports, $savedir, $savesubdir, $avg_seeders,
-			$retracker,	$tcs, $bt_key, $api_key, $api_url, $forum_url, $tor_status['save'],
-			$proxy_activate, $proxy_type, $proxy_address, $proxy_auth
-		);
+		write_config(dirname(__FILE__) . '/config.ini', $_POST['cfg'], $TT_subsections, $tcs);
 		break;
 	//------------------------------------------------------------------
 	case 'reports':
@@ -183,9 +159,8 @@ switch($_POST['m'])
 			$log = '';
 			$tc_topics = get_tor_client_data($tcs, $log); /* обновляем сведения от т.-клиентов */
 			$webtlo = new Webtlo($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-			$status = $webtlo->get_tor_status_titles($tor_status['title']); /* статусы раздач на трекере */
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
-			$ids = $webtlo->get_subsection_data($subsections, $status); /* получаем список раздач разделов */
+			$ids = $webtlo->get_subsection_data($subsections, $topics_status); /* получаем список раздач разделов */
 			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders); /* получаем подробные сведения о раздачах */
 			output_topics($forum_url, $topics, $subsections, $log . $webtlo->log);
 		} catch (Exception $e) {

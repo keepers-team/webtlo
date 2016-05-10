@@ -131,14 +131,6 @@ function output_reports($TT_subsections, $TT_login, $log){
 	$ti_max_len = 0;
 	$ti_curr_len = 0;
 	
-	//для красивого вывода: макс длина заголовка подраздела
-	//~ foreach($TT_subsections as $subsection)
-	//~ {
-		//~ $ti_curr_len = mb_substr($subsection['na'],mb_strrpos($subsection['na'], ' » ')+3);
-		//~ $ti_curr_len = strlen($subsection['na']);
-		//~ if($ti_curr_len > $ti_max_len) $ti_max_len = $ti_curr_len;
-	//~ }
-	
 	$output .= '<div id="tabs-wtlocommon" class="report">'.
 		'<span class="report">'.
 			'Актуально на: [b]' . date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/b]<br/><br/>';
@@ -154,7 +146,6 @@ function output_reports($TT_subsections, $TT_login, $log){
 	{
 		$output .= '<br/>'. $subsection['na'] . ' — ' .
 			$subsection['dlqt'] .' шт. ('. convert_bytes($subsection['dlsi']) . ')';
-			//~ '[[url=http://rutracker.org/forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=#993399][size=10]check[/size][/color][/url]]';
 	}
 	
 	$output .= 
@@ -168,18 +159,8 @@ function output_reports($TT_subsections, $TT_login, $log){
 		$output .= 
 		
 		'<div id="tabs-wtlo'.$subsection['id'].'" class="report">'.
-			//~ '<p>'.mb_substr($subsection['ti'],mb_stripos($subsection['ti'],'&raquo;')+8).'</p><br/>'.
 						
 	//--- START REWRITE Your output representation here --- Блок задания формата вывода заголовка отчета (данные, bb коды и прочее)
-			
-			//~ оформление от berkut_174
-			//~ '[br][b]Подраздел[/b]: [url=http://rutracker.org/forum/viewforum.php?f='.$subsection['id'].'][u][b][color=#006699]'.$subsection['na'].'[/color][/b][/u][/url] '.
-			//~ '[b]»[/b] [url=http://rutracker.org/forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][b][u][color=#006699]Проверка сидов[/color][/u][/b][/url]<br/>'.
-			//~ '[b]Всего раздач в подразделе на '. date('d.m.Y', $ini->read('other', 'update_time', '')) .'[/b]: [color=#006699][b]'. $subsection['qt'] .' шт.[/b][/color] [b]/[/b] [color=#006699][b]'.convert_bytes($subsection['si']).' [/b][/color]<br/>'.
-			//~ '[b]Количество хранителей[/b]: [color=#006699][b]1[/b][/color]<br/>'.
-			//~ '[b]Общее количество хранимых раздач[/b]: [color=#006699][b]'. $subsection['dlqt'] .' шт.[/b][/color]<br/>'.
-			//~ '[b]Общий объём хранимых раздач[/b]: [color=#006699][b]'. convert_bytes($subsection['dlsi']) .' [/b][/color]<br/>'.
-			//~ '[b]Хранитель 1[/b]: [url=http://rutracker.org/forum/profile.php?mode=viewprofile&u='.$TT_login.'&name=1][u][b][color=#006699]'.$TT_login.'[/color][/b][/u][/url] [b]»[/b] [color=#006699][b]'. $subsection['dlqt'] .' шт.[/b][/color] [b]»[/b] [color=#006699][b]'. convert_bytes($subsection['dlsi']) .' [/b][/color][br]<br/><br/>'.
 			
 			'Подраздел: [url=forum/viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.$subsection['na'].'[/u][/color][/url]'.
 			' [color=gray]~>[/color] [url=forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br/><br/>'.
@@ -193,9 +174,6 @@ function output_reports($TT_subsections, $TT_login, $log){
 				'<h3>Сообщение 1</h3>'.
 					'<div title="double click me">'.
 		
-						
-						//~ оформление от berkut_174
-						//~ '[b]Список актуален на [color=#006699]' . date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/color][/b][br]<br/>'.
 						'Актуально на: [color=darkblue]' . date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/color]<br/>'.
 						'Всего хранимых раздач в подразделе: ' . $subsection['dlqt'] . ' шт. / ' . convert_bytes($subsection['dlsi']) . '<br />' .
 						$subsection['dlte'] . '<br/>'.					// отформатированный список хранимых раздач раздела
@@ -233,14 +211,10 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 			'<div id="tabs-topic_'.$subsection['id'].'" class="report tab-topic">'.
 			'<form action="" method="POST" id="topic_'.$subsection['id'].'">'. //форма текущей вкладки, используется для отправки данных в php
 			'<div class="btn_cntrl">'. // вывод кнопок управления: выделить все, отменить выделение и скачать выделенные //
-				//~ '<input type="button" name="select_'.$subsection['id'].'" title="Выделить все/снять выделение" value="Выделить все" data-id="select_'.$subsection['id'].'" id="select_'.$subsection['id'].'" onclick="SelAll(this)">'.
-				//~ '<input type="button" name="unselect_'.$subsection['id'].'" value="Отменить выделение" data-id="unselect_'.$subsection['id'].'" id="unselect_'.$subsection['id'].'" onclick="SelAll(this)">'.
-				//~ '<input type="button" name="dwnld_'.$subsection['id'].'" value="Скачать выделенные" data-id="dwnld_'.$subsection['id'].'" id="dwnld_'.$subsection['id'].'" onclick="DwnldSel(this)">'.
 				'<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все раздачи текущего подраздела">Выделить все</button>'.
 				'<button type="button" class="tor_unselect" action="unselect" subsection="'.$subsection['id'].'" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>'.
-				'<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего раздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
-				'<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего раздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>'.
-				//~ '<button type="button" id="test" onclick="test()">text</button>'.
+				'<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
+				'<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>'.
 			'</div><br/><div id="result_'.$subsection['id'].'">Выбрано раздач: <span id="tp_count_'.$subsection['id'].'" class="rp-header">0</span> (<span id="tp_size_'.$subsection['id'].'">0.00</span>).</div></br>'. // куда выводить результат после скачивания т.-файлов
 			'<div class="topics" id="topics_list_'.$subsection['id'].'">';
 			$q = 1;
@@ -252,7 +226,6 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 					$ratio = isset($param['rt']) ? $param['rt'] : '1';
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>' .
-								//~ '<input type="checkbox" id="topic_'.$subsection['id'].'_'.$param['id'].'_'.$param['si'].'" onclick="SelTopic(this)">'.
 								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
 								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.round($param['se']).'</span> / <span class="ratio">'.$ratio.'</span>'.
 							'</label></div>';
@@ -268,80 +241,42 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 
 // вывод основного интерфейса
 function output_main(){
-	$ini = new TIniFileEx(dirname(__FILE__) . '/config.ini');
 	
-	// формирование списка т.-клиентов
-	$qt = $ini->read("other", "qt", "0");
-	$tcs = '';
-	$clients = '';
-	$list_clients = array();
-	for($i = 1; $i <= $qt; $i++){
-		$tcs .=
-			'<option value="'.$ini->read("torrent-client-$i","comment","").'" data="'.
-			$ini->read("torrent-client-$i","comment","").'|'.
-			$ini->read("torrent-client-$i","client","").'|'.
-			$ini->read("torrent-client-$i","hostname","").'|'.
-			$ini->read("torrent-client-$i","port","").'|'.
-			$ini->read("torrent-client-$i","login","").'|'.
-			$ini->read("torrent-client-$i","password","").
-			'">'.$ini->read("torrent-client-$i","comment","").
-			'</option>';
-		$clients .= 
-			'<option value="'.
-			$ini->read("torrent-client-$i","comment","").
-			'">'.$ini->read("torrent-client-$i","comment","").
-			'</option>';
-		$list_clients[] = $ini->read("torrent-client-$i","comment","");
-	}
+	$cfg = get_settings();
 	
-	$ss = explode(',', $ini->read('sections','subsections',''));
-	$subsections = '';
-	$ssclient = '';
-	if(!in_array(null, $ss)){
-		foreach($ss as $id){
-			if(is_array($list_clients))
-				$ssclient = in_array($ini->read("$id","client",""), $list_clients) ? $ini->read("$id","client","") : "";
-			$subsections .=
-				'<option value="'.$id.'" data="'.
-				$id.'|'.
-				$ini->read("$id","title","").'|'.
-				$ssclient.'|'.
-				$ini->read("$id","label","").'|'.
-				$ini->read("$id","data-folder","").
-				'">'.preg_replace('|.* » (.*)$|', '$1', $ini->read("$id","title","")).
-				'</option>';
+	// торрент-клиенты
+	if(isset($cfg['clients'])){
+		foreach($cfg['clients'] as $tc){
+			$tcs[] = '<option value="'.$tc['cm'].'" data="'.implode('|', $tc).'">'.$tc['cm'].'</option>';
 		}
-	}
+		$tcs = implode('', $tcs);
+	} else $tcs = '';
 	
-	$rt = $ini->read('sections','rule_topics','3');
-	$rr = $ini->read('sections','rule_reports','10');
-	$avg_seeders = ($ini->read('sections','avg_seeders','0') == 1 ? "checked" : "");
-	$proxy_activate = (($ini->read('proxy','activate',0) == 1)?"checked":"");
-	$proxy_type = $ini->read('proxy','type','http');
-	$proxy_hostname = $ini->read('proxy','hostname','195.82.146.100');
-	$proxy_port = $ini->read('proxy','port','3128');
-	$proxy_login = $ini->read('proxy','login','');
-	$proxy_paswd = $ini->read('proxy','password','');
-	$lg = $ini->read('torrent-tracker','login','');
-	$pw = $ini->read('torrent-tracker','password','');
-	$bt_key = $ini->read('torrent-tracker','bt_key','');
-	$api_key = $ini->read('torrent-tracker','api_key','');
-	$api_url = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
-	$forum_url = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
-	$sd = $ini->read('download','savedir','C:\Temp\\');
-	$ssd = (($ini->read('download','savesubdir','') == 1)?"checked":"");
-	$retracker = (($ini->read('download','retracker','') == 1)?"checked":"");
-	$tor_checked = (($ini->read('tor_status','tor_checked',1) == 1)?"checked":"");
-	$tor_not_checked = (($ini->read('tor_status','tor_not_checked','') == 1)?"checked":"");
-	$tor_not_decoration = (($ini->read('tor_status','tor_not_decoration','') == 1)?"checked":"");
-	$tor_doubtfully = (($ini->read('tor_status','tor_doubtfully',1) == 1)?"checked":"");
-	$tor_temporary = (($ini->read('tor_status','tor_temporary','') == 1)?"checked":"");
+	// подразделы
+	if(isset($cfg['subsections'])){
+		foreach($cfg['subsections'] as $id => $ss){
+			$subsections[] = '<option value="'.$id.'" data="'.$id.'|'.
+				implode('|', $ss).'">'.preg_replace('|.* » (.*)$|', '$1', $ss['title']).'</option>';
+		}
+		$subsections = implode('', $subsections);
+	} else $subsections = '';
+	
+	// чекбоксы
+	$savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
+	$retracker = ($cfg['retracker'] == 1 ? "checked" : "");
+	$proxy_activate = ($cfg['proxy_activate'] == 1 ? "checked" : "");
+	$avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
+	$topic_checked = (in_array(2, $cfg['topics_status']) ? "checked" : "");
+	$topic_not_checked = (in_array(0, $cfg['topics_status']) ? "checked" : "");
+	$topic_not_decoration = (in_array(3, $cfg['topics_status']) ? "checked" : "");
+	$topic_doubtfully = (in_array(8, $cfg['topics_status']) ? "checked" : "");
+	$topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 	
 	echo '	
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.2.10</title>
+				<title>web-TLO-0.8.2.11</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
@@ -378,10 +313,10 @@ function output_main(){
 											<label>
 												Используемый адрес форума:
 												<select name="forum_url" id="forum_url" class="myinput">
-													<option value="http://rutracker.cr"' . ($forum_url == 'http://rutracker.cr' ? "selected" : "") . '>http://rutracker.cr</option>
-													<option value="http://rutracker.org"' . ($forum_url == 'http://rutracker.org' ? "selected" : "") . '>http://rutracker.org</option>
-													<option value="https://rutracker.cr"' . ($forum_url == 'https://rutracker.cr' ? "selected" : "") . '>https://rutracker.cr</option>
-													<option value="https://rutracker.org"' . ($forum_url == 'https://rutracker.org' ? "selected" : "") . '>https://rutracker.org</option>
+													<option value="http://rutracker.cr"' . ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") . '>http://rutracker.cr</option>
+													<option value="http://rutracker.org"' . ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") . '>http://rutracker.org</option>
+													<option value="https://rutracker.cr"' . ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") . '>https://rutracker.cr</option>
+													<option value="https://rutracker.org"' . ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") . '>https://rutracker.org</option>
 												</select>
 											</label>
 										</div>
@@ -389,10 +324,10 @@ function output_main(){
 											<label>
 												Используемый адрес API:
 												<select name="api_url" id="api_url" class="myinput">
-													<option value="http://api.rutracker.cc"' . ($api_url == 'http://api.rutracker.cc' ? "selected" : "") . '>http://api.rutracker.cc</option>
-													<option value="http://api.rutracker.org"' . ($api_url == 'http://api.rutracker.org' ? "selected" : "") . '>http://api.rutracker.org</option>
-													<option value="https://api.rutracker.cc"' . ($api_url == 'https://api.rutracker.cc' ? "selected" : "") . '>https://api.rutracker.cc</option>
-													<option value="https://api.rutracker.org"' . ($api_url == 'https://api.rutracker.org' ? "selected" : "") . '>https://api.rutracker.org</option>
+													<option value="http://api.rutracker.cc"' . ($cfg['api_url'] == 'http://api.rutracker.cc' ? "selected" : "") . '>http://api.rutracker.cc</option>
+													<option value="http://api.rutracker.org"' . ($cfg['api_url'] == 'http://api.rutracker.org' ? "selected" : "") . '>http://api.rutracker.org</option>
+													<option value="https://api.rutracker.cc"' . ($cfg['api_url'] == 'https://api.rutracker.cc' ? "selected" : "") . '>https://api.rutracker.cc</option>
+													<option value="https://api.rutracker.org"' . ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") . '>https://api.rutracker.org</option>
 												</select>
 											</label>
 										</div>
@@ -400,31 +335,32 @@ function output_main(){
 											<label>
 												Логин:
 												<input name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="'
-												. $lg . '">
+												. $cfg['tracker_login'] . '">
 											</label>
 											<label>
 												Пароль:
 												<input name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="'
-												. $pw . '">
+												. $cfg['tracker_paswd'] . '">
 											</label>
 										</div>																			
 										<div>
 											<label>
 												Ключ bt:
 												<input name="bt_key" class="myinput" type="password" size="24" title="Хранительский ключ bt" value="'
-												. $bt_key . '">
+												. $cfg['bt_key'] . '">
 											</label>
 											<label>
 												Ключ api:
 												<input name="api_key" class="myinput" type="password" size="24" title="Хранительский ключ api" value="'
-												. $api_key . '">
+												. $cfg['api_key'] . '">
 											</label>
 										</div>
 									</div>
 									<h2>Настройки прокси-сервера</h2>
 									<div>
 										<div>
-											<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки." ' . $proxy_activate . '>
+											<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки." '
+											. $proxy_activate . '>
 											<label for="proxy_activate">использовать прокси-сервер (например, для обхода блокировки)</label>											
 										</div>
 										<div id="proxy_prop">
@@ -432,10 +368,10 @@ function output_main(){
 												<label>
 													Тип прокси-сервера:
 													<select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
-														<option value="http" ' . ($proxy_type == 'http' ? "selected" : "") . '>HTTP</option>
-														<option value="socks4" ' . ($proxy_type == 'socks4' ? "selected" : "") . '>SOCKS4</option>
-														<option value="socks4a" ' . ($proxy_type == 'socks4a' ? "selected" : "") . '>SOCKS4A</option>
-														<option value="socks5" ' . ($proxy_type == 'socks5' ? "selected" : "") . '>SOCKS5</option>
+														<option value="http" ' . ($cfg['proxy_type'] == 'http' ? "selected" : "") . '>HTTP</option>
+														<option value="socks4" ' . ($cfg['proxy_type'] == 'socks4' ? "selected" : "") . '>SOCKS4</option>
+														<option value="socks4a" ' . ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") . '>SOCKS4A</option>
+														<option value="socks5" ' . ($cfg['proxy_type'] == 'socks5' ? "selected" : "") . '>SOCKS5</option>
 													</select>
 												</label>
 											</div>
@@ -443,24 +379,24 @@ function output_main(){
 												<label>
 													IP-адрес/сетевое имя:
 													<input name="proxy_hostname" id="proxy_hostname" class="myinput" type="text" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="'
-													. $proxy_hostname . '">
+													. $cfg['proxy_hostname'] . '">
 												</label>
 												<label>
 													Порт:
 													<input name="proxy_port" id="proxy_port" class="myinput" type="text" size="24" title="Порт прокси-сервера." value="'
-													. $proxy_port . '">
+													. $cfg['proxy_port'] . '">
 												</label>
 											</div>
 											<div>
 												<label>
 													Логин:
 													<input name="proxy_login" id="proxy_login" class="myinput" type="text" size="24" title="Имя пользователя для доступа к прокси-серверу (необязательно)." value="'
-													. $proxy_login . '">
+													. $cfg['proxy_login'] . '">
 												</label>
 												<label>
 													Пароль:
 													<input name="proxy_paswd" id="proxy_paswd" class="myinput" type="text" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="'
-													. $proxy_paswd . '">
+													. $cfg['proxy_paswd'] . '">
 												</label>
 											</div>
 										</div>
@@ -540,7 +476,7 @@ function output_main(){
 												Торрент-клиент:
 												<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
 													<option value=0 disabled>не выбран</option>'
-													. $clients .
+													.//~ . $clientsclients .
 												'</select>
 											</label>
 											<label>
@@ -559,31 +495,31 @@ function output_main(){
 										<div id="tor_status">
 											<div>
 												<label>
-													<input class="tor_status" name="tor_not_checked" type="checkbox" size="24" title="не проверено" '.$tor_not_checked.'>
+													<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" title="не проверено" '.$topic_not_checked.'>
 													не проверено
 												</label>
 											</div>
 											<div>
 												<label>
-													<input class="tor_status" name="tor_checked" type="checkbox" size="24" title="проверено" '.$tor_checked.'>
+													<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" title="проверено" '.$topic_checked.'>
 													проверено
 												</label>
 											</div>
 											<div>
 												<label>
-													<input class="tor_status" name="tor_not_decoration" type="checkbox" size="24" title="недооформлено" '.$tor_not_decoration.'>
+													<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" title="недооформлено" '.$topic_not_decoration.'>
 													недооформлено
 												</label>
 											</div>
 											<div>
 												<label>
-													<input class="tor_status" name="tor_doubtfully" type="checkbox" size="24" title="сомнительно" '.$tor_doubtfully.'>
+													<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" title="сомнительно" '.$topic_doubtfully.'>
 													сомнительно
 												</label>
 											</div>
 											<div>
 												<label>
-													<input class="tor_status" name="tor_temporary" type="checkbox" size="24" title="временная" '.$tor_temporary.'>
+													<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" title="временная" '.$topic_temporary.'>
 													временная
 												</label>
 											</div>											
@@ -591,7 +527,7 @@ function output_main(){
 										<h3>Предлагать для хранения раздачи с кол-вом сидов не более</h3>
 										<div>
 											<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="'
-											. $rt . '">
+											. $cfg['rule_topics'] . '">
 										</div>
 										<label>										
 											<input name="avg_seeders" type="checkbox" size="24" title="При поиске использовать среднее значение количества сидов." '.$avg_seeders.'>
@@ -600,7 +536,7 @@ function output_main(){
 										<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
 										<div>
 											<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="'
-											. $rr . '">
+											. $cfg['rule_reports'] . '">
 										</div>
 									</div>
 									<h2>Настройки загрузки торрент-файлов</h2>
@@ -608,10 +544,11 @@ function output_main(){
 										<h3>Каталог для скачиваемых *.torrent файлов</h3>
 										<div>
 											<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="'
-											. $sd . '">
+											. $cfg['save_dir'] . '">
 										</div>
 										<label>										
-											<input name="savesubdir" type="checkbox" size="24" title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог." '.$ssd.'>
+											<input name="savesubdir" type="checkbox" size="24" title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог." '
+											. $savesubdir . '>
 											создавать подкаталоги
 										</label>
 										<h3>Настройки retracker.local</h3>

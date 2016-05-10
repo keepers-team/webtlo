@@ -74,7 +74,6 @@
 	$( "#savecfg" )
 	.button()
 	.on("click", function() {
-		tor_status = listTorStatus();
 		tcs = listTorClients();
 		subsec = listDataSubsections();
 		//~ OnProxyProp();
@@ -83,7 +82,7 @@
 		$.ajax({
 			type: "POST",
 			url: "index.php",
-			data: { m:'savecfg', tcs:tcs, cfg:$data, tor_status:tor_status, subsec:subsec },
+			data: { m:'savecfg', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				$("#savecfg").prop("disabled", true);
 			},
@@ -181,14 +180,13 @@
 			$("#log").append(errors);
 			return;
 		}
-		tor_status = listTorStatus();
 		tcs = listTorClients();
 		subsec = listSubsections();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "index.php",
-			data: { m:'update', tcs:tcs, cfg:$data, tor_status:tor_status, subsec:subsec },
+			data: { m:'update', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
 				$("#log").append(nowTime() + "Начато обновление сведений...<br />");

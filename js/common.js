@@ -23,17 +23,6 @@ function сonvertBytes(size){
 	return size ? (size / Math.pow(1024, (i = Math.floor(Math.log(size) / Math.log(1024))))).toFixed(2) + filesizename[i] : '0.00';
 }
 
-/* список статусов раздач на трекере */
-function listTorStatus(){
-	var status = [];
-	$("#tor_status").closest("div")
-		.find("input[type=checkbox]")
-		.each(function(){
-			status.push($(this).attr('name') + '|' + $(this).attr('title') + '|' + Number($(this).prop('checked')));
-	});
-	return status;
-}
-
 /* проверка закрывающего слеша в конце */
 function CheckSlash(e){
 	var path = $(e).val();
