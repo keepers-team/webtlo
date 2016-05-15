@@ -229,12 +229,15 @@ class Webtlo {
 				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
 				// средние сиды
 				if(isset($topics_old[$topic_id])){
-					$tmp['topics'][$topic_id]['se'] = round(($topics_old[$topic_id][0]['se'] + $info['seeders']) / 2, 3);
-					$tmp['topics'][$topic_id]['rt'] = $topics_old[$topic_id][0]['rt'] + 1;
+					$sum_ratio = $topics_old[$topic_id][0]['rt'] + 1;
+					$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
+					$tmp['topics'][$topic_id]['se'] = $sum_seeders / $sum_ratio;
 				} else {
-					$tmp['topics'][$topic_id]['se'] = $info['seeders'];
-					$tmp['topics'][$topic_id]['rt'] = 1;
+					$sum_ratio = 1;
+					$sum_seeders = $info['seeders'];
+					$tmp['topics'][$topic_id]['se'] = $sum_seeders;
 				}
+				$tmp['topics'][$topic_id]['rt'] = $sum_ratio;
 				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
 				if(isset($tc_topics[$info['info_hash']])){
 					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1);
@@ -247,12 +250,12 @@ class Webtlo {
 				    {$info['forum_id']},
 				    {$this->db->quote($info['topic_title'])},
 				    '{$info['info_hash']}',
-				    {$tmp['topics'][$topic_id]['se']},
+				    {$sum_seeders},
 				    '{$info['size']}',
 				    {$info['tor_status']},
 				    '{$info['reg_time']}',
 				    {$tmp['topics'][$topic_id]['dl']},
-				    {$tmp['topics'][$topic_id]['rt']}" .
+				    {$sum_ratio}" .
 			    " UNION ALL";
 			}
 						
@@ -314,13 +317,13 @@ class FromDatabase {
 	
 	// ... из базы топики
 	public function get_topics($seeders, $status){
-		$query = $this->db->prepare('SELECT * FROM `Topics` WHERE `se` <= :se AND `dl` = :dl ORDER BY `ss`, `na`');
+		$query = $this->db->prepare('SELECT `id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,(`se` * 1.) / `rt` as `avg` FROM `Topics` WHERE `avg` <= :se AND `dl` = :dl ORDER BY `ss`, `na`');
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
 			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
-		$query->bindValue(':se', $seeders);
-		$query->bindValue(':dl', $status);
+		$query->bindValue(':se', $seeders, PDO::PARAM_INT);
+		$query->bindValue(':dl', $status, PDO::PARAM_INT);
 		$query->execute();
 		$topics = $query->fetchAll(PDO::FETCH_ASSOC);
 		$this->log .= get_now_datetime() . 'Данные о раздачах получены.<br />';
