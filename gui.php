@@ -24,7 +24,7 @@ function output_preparation($TT_torrents, &$TT_subsections){
 			
 			//--- START REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
-			$t = '<br/>[*][url=viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.round($torrent['se']).'[/color]';
+			$t = '<br/>[*][url=viewtopic.php?t='.$torrent['id'].']'.$torrent['na'].'[/url] '.convert_bytes($torrent['si']).' -  [color=red]'.round($torrent['avg']).'[/color]';
 			
 			//--- END REWRITE Your output representation here --- Блок задания формата вывода строки торрента в отчете (данные, bb коды и прочее)
 			
@@ -227,7 +227,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>' .
 								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
-								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders">'.round($param['se']).'</span> / <span class="ratio">'.$ratio.'</span>'.
+								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="средние сиды">'.round($param['avg'], 1).'</span> / <span class="ratio" title="показатель средних сидов">'.$ratio.'</span>'.
 							'</label></div>';
 				}
 			}
@@ -276,7 +276,7 @@ function output_main(){
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.2.11</title>
+				<title>web-TLO-0.8.2.12</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
@@ -359,9 +359,11 @@ function output_main(){
 									<h2>Настройки прокси-сервера</h2>
 									<div>
 										<div>
-											<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки." '
-											. $proxy_activate . '>
-											<label for="proxy_activate">использовать прокси-сервер (например, для обхода блокировки)</label>											
+											<label title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
+												<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" '
+												. $proxy_activate . '>
+												использовать прокси-сервер (например, для обхода блокировки)
+											</label>											
 										</div>
 										<div id="proxy_prop">
 											<div>
@@ -475,9 +477,8 @@ function output_main(){
 											<label>
 												Торрент-клиент:
 												<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
-													<option value=0 disabled>не выбран</option>'
-													.//~ . $clientsclients .
-												'</select>
+													<option value=0 disabled>не выбран</option>
+												</select>
 											</label>
 											<label>
 												Метка:
@@ -494,32 +495,32 @@ function output_main(){
 										<h3>Получать сведения о раздачах только со статусом</h3>
 										<div id="tor_status">
 											<div>
-												<label>
-													<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" title="не проверено" '.$topic_not_checked.'>
+												<label title="не проверено">
+													<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" '.$topic_not_checked.'>
 													не проверено
 												</label>
 											</div>
 											<div>
-												<label>
-													<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" title="проверено" '.$topic_checked.'>
+												<label title="проверено">
+													<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" '.$topic_checked.'>
 													проверено
 												</label>
 											</div>
 											<div>
-												<label>
-													<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" title="недооформлено" '.$topic_not_decoration.'>
+												<label title="недооформлено">
+													<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" '.$topic_not_decoration.'>
 													недооформлено
 												</label>
 											</div>
 											<div>
-												<label>
-													<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" title="сомнительно" '.$topic_doubtfully.'>
+												<label title="сомнительно">
+													<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" '.$topic_doubtfully.'>
 													сомнительно
 												</label>
 											</div>
 											<div>
-												<label>
-													<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" title="временная" '.$topic_temporary.'>
+												<label title="временная">
+													<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" '.$topic_temporary.'>
 													временная
 												</label>
 											</div>											
@@ -529,8 +530,8 @@ function output_main(){
 											<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="'
 											. $cfg['rule_topics'] . '">
 										</div>
-										<label>										
-											<input name="avg_seeders" type="checkbox" size="24" title="При поиске использовать среднее значение количества сидов." '.$avg_seeders.'>
+										<label title="При поиске раздач использовать среднее значение количества сидов.">										
+											<input name="avg_seeders" type="checkbox" size="24" '.$avg_seeders.'>
 											средние сиды
 										</label>
 										<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
@@ -546,14 +547,14 @@ function output_main(){
 											<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="'
 											. $cfg['save_dir'] . '">
 										</div>
-										<label>										
-											<input name="savesubdir" type="checkbox" size="24" title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог." '
+										<label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">										
+											<input name="savesubdir" type="checkbox" size="24" '
 											. $savesubdir . '>
 											создавать подкаталоги
 										</label>
 										<h3>Настройки retracker.local</h3>
-										<label>
-											<input name="retracker" type="checkbox" size="24" title="Добавлять retracker.local в скачиваемые *.torrent-файлы." '.$retracker.'>
+										<label title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
+											<input name="retracker" type="checkbox" size="24" '.$retracker.'>
 											добавлять retracker.local в скачиваемые *.torrent-файлы
 										</label>
 									</div>		
