@@ -226,6 +226,7 @@ function getFilteredTopics(){
 			if(resp.log != null){
 				$("#topics_list_"+subsec).append(resp.log);
 			}
+			showSelectedInfo(subsec, 0, 0.00);
 		},
 		beforeSend: function() {
 			block_actions();
@@ -242,6 +243,6 @@ $("#topics").on("spin input", ".topics_filter input[type=text]", function(){
 	delay (getFilteredTopics, this);
 });
 
-$("#topics").on("change", ".topics_filter input[type=radio],[type=checkbox]", function(){
+$("#topics").on("change", ".topics_filter input[type=radio], .topics_filter input[type=checkbox]", function(){
 	delay (getFilteredTopics, this);
 });
