@@ -66,7 +66,11 @@ try {
 	if(isset($webtlo->log)) $log .= $webtlo->log;
 	$log .= $e->getMessage();
 	$log = str_replace('<br />', ''."\n".'', $log);
-	echo $log;
+	// пытаемся записать в файл
+	if($filelog = fopen($filelog, "a")){
+		fwrite($filelog, $log);
+		fclose($filelog);
+	}
 }
 
 ?>
