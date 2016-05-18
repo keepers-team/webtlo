@@ -132,7 +132,7 @@ li.menu.ui-tabs-active {
 	margin: 10px 15px 0 0;	
 }
 
-label {
+#settings label {
 	margin: 0 50px 0 0;
 }
 
@@ -208,6 +208,7 @@ label:hover {
 	color: red;
 }
 
+/* topics control */
 .btn_cntrl {
 	margin-top: 5px;
 }
@@ -220,11 +221,63 @@ label:hover {
 	font: 13px monospace;
 }
 
+.tor_filter {
+	width: 25.6px;
+}
+
+.tor_filter span {
+	margin: 0 -3px;
+}
+
 .downloading, .adding {
 	display: inline-block;
 	margin:  0 5px -2.5px -5px;
 	width: 13px;
 	height: 13px;
+}
+
+/* topics filter */
+.topics_filter {
+/*
+	border: 1px solid #D3D3D3;
+	border-radius: 4px;
+	width: 490px;
+*/
+}
+
+.topics_filter fieldset {
+	display: inline-block;
+	vertical-align: top;
+	margin-right: 15px;
+}
+
+.topics_filter fieldset legend {
+	text-align: center;
+}
+
+.filter_status, .filter_sort, .filter_rule {
+	padding: 8px 8px 0 8px;
+}
+
+.filter_sort_direction {
+	margin-bottom: 10px;
+}
+
+.filter_rule_one, .filter_rule_interval {
+	margin: 10px 0;
+}
+
+.filter_rule_interval label {
+	margin-right: 10px;
+}
+
+.filter_rule_direction {
+	margin-bottom: 2px;
+}
+
+/* topics result */
+.topics_result {
+	margin-top: 15px;
 }
 
 /* log */

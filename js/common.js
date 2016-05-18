@@ -59,3 +59,14 @@ function block_actions(){
 		lock = 0;
 	}
 };
+
+// выполнить функцию с задержкой
+function makeDelay(ms){
+	var timer = 0;
+	return function (callback, scope){
+		clearTimeout (timer);
+		timer = setTimeout (function(){
+             callback.apply(scope);
+        }, ms);
+	}
+}

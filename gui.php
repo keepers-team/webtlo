@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /*
  * web-TLO (Web Torrent List Organizer)
  * gui.php
@@ -191,7 +191,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 }
 
 // вывод топиков на главной странице
-function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
+function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $log){
 		// заголовки вкладок
 		$output = '<div id="topictabs" class="report">'.
 			'<ul class="report">';
@@ -208,14 +208,96 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 		{
 			$output .= 
 			
-			'<div id="tabs-topic_'.$subsection['id'].'" class="report tab-topic">'.
-			'<form action="" method="POST" id="topic_'.$subsection['id'].'">'. //форма текущей вкладки, используется для отправки данных в php
-			'<div class="btn_cntrl">'. // вывод кнопок управления: выделить все, отменить выделение и скачать выделенные //
-				'<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все раздачи текущего подраздела">Выделить все</button>'.
-				'<button type="button" class="tor_unselect" action="unselect" subsection="'.$subsection['id'].'" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>'.
-				'<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>'.
-				'<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>'.
-			'</div><br/><div id="result_'.$subsection['id'].'">Выбрано раздач: <span id="tp_count_'.$subsection['id'].'" class="rp-header">0</span> (<span id="tp_size_'.$subsection['id'].'">0.00</span>).</div></br>'. // куда выводить результат после скачивания т.-файлов
+			'<div id="tabs-topic_'.$subsection['id'].'" class="report tab-topic" value="'.$subsection['id'].'">
+			<div class="btn_cntrl">'. // вывод кнопок управления: выделить все, отменить выделение и скачать выделенные //
+				'<button type="button" class="tor_filter" title="Отобразить/скрыть настройки фильтра">&nbsp</button>
+				<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все раздачи текущего подраздела">Выделить все</button>
+				<button type="button" class="tor_unselect" action="unselect" subsection="'.$subsection['id'].'" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
+				<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>
+				<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>
+			</div>
+			<form method="post" id="topics_filter_'.$subsection['id'].'">
+				<div class="topics_filter" style="display:none">
+					<fieldset class="filter_status" title="Статусы">
+						<label>
+							<input type="radio" name="filter_status" value="1" />
+							храню<br />
+						</label>
+						<label>
+							<input type="radio" name="filter_status" value="0" checked />
+							не храню<br />
+						</label>
+						<label>
+							<input type="radio" name="filter_status" value="-1" />
+							качаю<br />
+						</label>
+					</fieldset>
+					<fieldset class="filter_sort" title="Сортировка">
+						<div class="filter_sort_direction">
+							<label>
+								<input type="radio" name="filter_sort_direction" value="asc" checked />
+								по возрастанию<br />
+							</label>
+							<label>
+								<input type="radio" name="filter_sort_direction" value="desc" />
+								по убыванию<br />
+							</label>
+						</div>
+						<div class="filter_sort_value">
+							<label>
+								<input type="radio" name="filter_sort" value="na" checked />
+								по названию<br />
+							</label>
+							<label>
+								<input type="radio" name="filter_sort" value="si" />
+								по объёму<br />
+							</label>
+							<label>
+								<input type="radio" name="filter_sort" value="avg" />
+								по количеству сидов<br />
+							</label>
+							<label>
+								<input type="radio" name="filter_sort" value="rg" />
+								по дате регистрации<br />
+							</label>
+						</div>
+					</fieldset>
+					<fieldset class="filter_rule" title="Сиды">
+						<label title="Использовать интервал сидов">
+							<input type="checkbox" name="filter_interval" />
+							интервал
+						</label>
+						<div class="filter_rule_one">
+							<div class="filter_rule_direction">
+								<label>
+									<input type="radio" name="filter_rule_direction" value="<=" checked />
+									не более<br />
+								</label>
+								<label>
+									<input type="radio" name="filter_rule_direction" value=">=" />
+									не менее<br />
+								</label>
+							</div>
+							<div class="filter_rule">
+								<label title="Количество сидов">
+									<input type="text" name="filter_rule" size="1" value="'.$rule_topics.'" />
+								</label>
+							</div>
+						</div>
+						<div class="filter_rule_interval" style="display: none">
+							<label title="Начальное количество сидов">
+								от
+								<input type="text" name="filter_rule_interval[from]" size="1" value="0" />
+							</label>
+							<label title="Конечное количество сидов">
+								до
+								<input type="text" name="filter_rule_interval[to]" size="1" value="'.$rule_topics.'" />
+							</label>
+						</div>
+					</fieldset>
+				</div>
+			</form>
+			<div id="result_'.$subsection['id'].'" class="topics_result">Выбрано раздач: <span id="tp_count_'.$subsection['id'].'" class="rp-header">0</span> (<span id="tp_size_'.$subsection['id'].'">0.00</span>).</div></br>'. // куда выводить результат после скачивания т.-файлов
 			'<div class="topics" id="topics_list_'.$subsection['id'].'">';
 			$q = 1;
 			foreach($TT_torrents as $topic_id => &$param)
@@ -225,13 +307,13 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $log){
 					// вывод топиков
 					$ratio = isset($param['rt']) ? $param['rt'] : '1';
 					$output .=
-							'<div id="topic_' . $param['id'] . '"><label>' .
-								'<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">'.
-								'<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="средние сиды">'.round($param['avg'], 1).'</span> / <span class="ratio" title="показатель средних сидов">'.$ratio.'</span>'.
-							'</label></div>';
+							'<div id="topic_' . $param['id'] . '"><label>
+								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">
+								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="средние сиды">'.round($param['avg'], 1).'</span> / <span class="ratio" title="показатель средних сидов">'.$ratio.'</span>
+							</label></div>';
 				}
 			}
-			$output .= '</div></form></div>';
+			$output .= '</div></div>';
 		}
 		
 		$output .= '</div>';
@@ -276,10 +358,11 @@ function output_main(){
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.2.12</title>
+				<title>web-TLO-0.8.2.13</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
+				<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
 				<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
 				<link rel="stylesheet" href="jquery-ui-1.10.3.custom/css/smoothness/jquery-ui-1.10.3.custom.css" />
 				<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->

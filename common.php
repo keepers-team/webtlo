@@ -236,7 +236,8 @@ function array_column_common(array $input, $columnKey, $indexKey = null) {
 	return $array;
 }
 
-function get_now_datetime(){
+// получить текущую дату
+function get_now_datetime() {
 	return date('d.m.Y H:i:s') . ' ';
 }
 

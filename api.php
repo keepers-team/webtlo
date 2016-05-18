@@ -184,14 +184,14 @@ class Webtlo {
 		$topics = array();
 		// готовим БД
 		$this->db->exec('CREATE TABLE IF NOT EXISTS `Topics` (
-				id VARCHAR NOT NULL PRIMARY KEY,
+				id INT NOT NULL PRIMARY KEY,
 				ss INT NOT NULL,
 				na VARCHAR NOT NULL,
 				hs VARCHAR NOT NULL,
 				se INT NOT NULL,
-				si VARCHAR NOT NULL,
+				si INT NOT NULL,
 				st INT NOT NULL,
-				rg VARCHAR NOT NULL,
+				rg INT NOT NULL,
 				dl INT NOT NULL DEFAULT 0,
 				rt INT NOT NULL DEFAULT 1
 		)');
@@ -246,14 +246,14 @@ class Webtlo {
 				}
 				// для вставки в базу
 				$tmp['insert'][] = "SELECT " .
-				    "'{$topic_id}',
+				    "{$topic_id},
 				    {$info['forum_id']},
 				    {$this->db->quote($info['topic_title'])},
 				    '{$info['info_hash']}',
 				    {$sum_seeders},
-				    '{$info['size']}',
+				    {$info['size']},
 				    {$info['tor_status']},
-				    '{$info['reg_time']}',
+				    {$info['reg_time']},
 				    {$tmp['topics'][$topic_id]['dl']},
 				    {$sum_ratio}" .
 			    " UNION ALL";

@@ -91,7 +91,7 @@ switch($_POST['m'])
 			$db = new FromDatabase();
 			$subsections = $db->get_forums($TT_subsections);
 			$topics = $db->get_topics($TT_rule_topics, 0);
-			output_topics($forum_url, $topics, $subsections, $db->log);
+			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
@@ -162,7 +162,7 @@ switch($_POST['m'])
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status); /* получаем список раздач разделов */
 			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders); /* получаем подробные сведения о раздачах */
-			output_topics($forum_url, $topics, $subsections, $log . $webtlo->log);
+			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();
 			echo json_encode(array('log' => $webtlo->log,

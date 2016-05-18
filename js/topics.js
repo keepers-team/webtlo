@@ -4,7 +4,7 @@
 // получить список выделенных раздач
 function listSelectedTopics(subsection){
 	var topics = [];
-	$("#topics_list_"+subsection).closest("form")
+	$("#topics_list_"+subsection).closest("div")
 	.find("input[type=checkbox]")
 	.each(function() {
 		if($(this).prop("checked")) {
@@ -36,7 +36,7 @@ $("#topics").on("click", ".tor_download", function(){
 			$("#downloading_"+subsection).show();
 		},
 		complete: function() {
-			$("#topics_list_"+subsection).closest("form")
+			$("#topics_list_"+subsection).closest("div")
 			.find("input[type=checkbox]")
 			.each(function() {
 			    $(this).removeAttr("checked");
@@ -119,7 +119,7 @@ $("#topics").on("click", ".tor_select, .tor_unselect", function(){
 	subsection = $(this).attr("subsection");
 	count = 0;
 	size_all = 0;
-	$("#topics_list_"+subsection).closest("form")
+	$("#topics_list_"+subsection).closest("div")
 	.find("input[type=checkbox]")
 	.each(function() {
 		switch (action) {
@@ -148,7 +148,7 @@ $("#topics").on("click", ".topic", function(event){
 		tag = parseInt($(this).attr("tag")); // 2 - 20 = -18; 10 - 2 = 8;
 		tag_first = parseInt($("#topics_list_"+subsection+" .first-topic").attr("tag"));
 		direction = (tag_first - tag < 0 ? 'down' : 'up');
-		$("#topics_list_"+subsection).closest("form")
+		$("#topics_list_"+subsection).closest("div")
 		.find("input[type=checkbox]")
 		.each(function(){
 			if(direction == 'down'){
@@ -174,7 +174,7 @@ $("#topics").on("click", ".topic", function(){
 	subsection = $(this).attr("subsection");
 	count = 0;
 	size_all = 0;
-	$("#topics_list_"+subsection).closest("form")
+	$("#topics_list_"+subsection).closest("div")
 	.find("input[type=checkbox]")
 	.each(function() {
 		size = $(this).attr("size");
@@ -184,4 +184,64 @@ $("#topics").on("click", ".topic", function(){
 		}
 	});
 	showSelectedInfo(subsection, count, size_all);
+});
+
+// фильтр
+
+// отобразить/скрыть настройки фильтра
+$("#topics").on("click", ".tor_filter", function(){
+	if($(this).children("span").hasClass("ui-icon-triangle-1-s"))
+		$(this).button({ icons: { primary: "ui-icon-triangle-1-n" }})
+			.children("span")
+			.css("margin-left", "-2px");
+	else
+		$(this).button({ icons: { primary: "ui-icon-triangle-1-s" }})
+			.children("span")
+			.css("margin-left", "-3px");
+	tabs = "#"+$(this).parents(".tab-topic").attr("id");
+	$(tabs+" .topics_filter").toggle(500);
+});
+
+// вкл/выкл интервал сидов
+$("#topics").on("click", ".filter_rule input[name=filter_interval]", function(){
+	tabs = "#"+$(this).parents(".tab-topic").attr("id");
+	$(tabs+" .filter_rule_interval").toggle(500);
+	$(tabs+" .filter_rule_one").toggle(500);
+});
+
+// получение отфильтрованных раздач из базы
+function getFilteredTopics(){
+	forum_url = $("#forum_url").val();
+	subsec = $(this).parents(".tab-topic").attr("value");
+	$data = $("#topics_filter_"+subsec).serialize();
+	$.ajax({
+		type: "POST",
+		url: "php/get_filtered_list_topics.php",
+		data: { forum_url:forum_url, subsec:subsec, topics_filter:$data },
+		success: function(response) {
+			resp = $.parseJSON(response);
+			if(resp.topics != null){
+				$("#topics_list_"+subsec).html(resp.topics);
+			}
+			if(resp.log != null){
+				$("#topics_list_"+subsec).append(resp.log);
+			}
+		},
+		beforeSend: function() {
+			block_actions();
+		},
+		complete: function() {
+			block_actions();
+		},
+	});
+}
+
+// события при выборе свойств фильтра
+var delay = makeDelay (500);
+$("#topics").on("spin input", ".topics_filter input[type=text]", function(){
+	delay (getFilteredTopics, this);
+});
+
+$("#topics").on("change", ".topics_filter input[type=radio],[type=checkbox]", function(){
+	delay (getFilteredTopics, this);
 });
