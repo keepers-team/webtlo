@@ -242,6 +242,6 @@ $("#topics").on("spin input", ".topics_filter input[type=text]", function(){
 	delay (getFilteredTopics, this);
 });
 
-$("#topics").on("change", ".topics_filter input[type=radio],[type=checkbox]", function(){
+$("#topics").on("change", ".topics_filter input[type=radio], .topics_filter input[type=checkbox]", function(){
 	delay (getFilteredTopics, this);
 });
