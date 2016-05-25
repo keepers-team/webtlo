@@ -30,7 +30,7 @@
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
-		url: "index.php",
+		url: "actions.php",
 		data: { m:'topics', cfg:$data, subsec:subsec },
 		beforeSend: function() {
 			block_actions();
@@ -38,7 +38,7 @@
 		success: function(response) {
 			var resp = eval( '(' + response + ')' );
 			$("#topics").html(jQuery.trim(resp.topics));
-			// $("#log").append(response);		
+			//~ $("#log").append(response);
 			//инициализация горизонтальных вкладок отчетов
 			var topictabs = $("#topictabs").tabs();
 			// проверка настроек
@@ -59,7 +59,6 @@
 	/* инициализация кнопок управления */
 	function InitControlButtons() {
 		$(".tor_download, .tor_add, .tor_select, .tor_unselect, .torrent_action").button();
-		$(".tor_filter").button({ icons: { primary: "ui-icon-triangle-1-s" }});
 		$(".filter_rule input[type=text]").spinner({ min: 0, mouseWheel: true });
 		$(".loading").hide();
 	}
@@ -83,7 +82,7 @@
 		//~ OffProxyProp();
 		$.ajax({
 			type: "POST",
-			url: "index.php",
+			url: "actions.php",
 			data: { m:'savecfg', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				$("#savecfg").prop("disabled", true);
@@ -102,28 +101,23 @@
 	.click(function() {
 		var errors = [];
 		if(!FormConfigCheck(errors)){
-			//~ $("#reports").html("Отчёты не сформированы, есть ошибки. Для получения подробностей обратитесь к журналу событий.");
 			$("#reports").html("<br /><div>Проверьте настройки.<br />Для получения подробностей обратитесь к журналу событий.</div><br />");
 			$("#log").append(errors);
 			return;
 		}
 		// получаем список т.-клиентов
-		tcs = listTorClients(); 
+		tcs = listTorClients();
 		// подразделов
 		subsec = listSubsections();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
-			//~ dataType: 'json',
-			url: "index.php",
+			url: "actions.php",
 			data: { m:'reports', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
 				$("#log").append(nowTime() + "Начато формирование отчётов...<br />");
 			},
-			//~ error: function(response){
-				//~ $("#reports").append(response);
-			//~ },
 			success: function(response) {
 				var resp = eval("(" + response + ")");
 				$("#log").append(resp.log);
@@ -187,7 +181,7 @@
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
-			url: "index.php",
+			url: "actions.php",
 			data: { m:'update', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();

@@ -256,20 +256,6 @@ $("#topics").on("click", ".topic", function(){
 
 // фильтр
 
-// отобразить/скрыть настройки фильтра
-$("#topics").on("click", ".tor_filter", function(){
-	if($(this).children("span").hasClass("ui-icon-triangle-1-s"))
-		$(this).button({ icons: { primary: "ui-icon-triangle-1-n" }})
-			.children("span")
-			.css("margin-left", "-2px");
-	else
-		$(this).button({ icons: { primary: "ui-icon-triangle-1-s" }})
-			.children("span")
-			.css("margin-left", "-3px");
-	tabs = "#"+$(this).parents(".tab-topic").attr("id");
-	$(tabs+" .topics_filter").toggle(500);
-});
-
 // вкл/выкл интервал сидов
 $("#topics").on("click", ".filter_rule input[name=filter_interval]", function(){
 	tabs = "#"+$(this).parents(".tab-topic").attr("id");

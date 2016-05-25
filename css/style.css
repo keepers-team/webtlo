@@ -48,7 +48,7 @@ h3 {
 	
 /* menu */	
 #menutabs {
-	margin: 0 20px 0 20px;
+	margin: 10px 20px 0 20px;
 }
 
 ul.menu.ui-tabs-nav {
@@ -221,14 +221,6 @@ label:hover {
 	font: 13px monospace;
 }
 
-.tor_filter {
-	width: 25.6px;
-}
-
-.tor_filter span {
-	margin: 0 -3px;
-}
-
 .loading {
 	display: inline-block;
 	margin:  0 5px -2.5px -5px;
@@ -238,6 +230,7 @@ label:hover {
 
 /* topics filter */
 .topics_filter {
+	margin: 0 -10px;
 /*
 	border: 1px solid #D3D3D3;
 	border-radius: 4px;
@@ -278,6 +271,10 @@ label:hover {
 /* topics result */
 .topics_result {
 	margin-top: 15px;
+}
+
+.topics label * {
+	vertical-align: middle;
 }
 
 /* log */
