@@ -145,7 +145,42 @@ class utorrent {
 	public function setSetting($setting, $value) {
         $this->makeRequest("?action=setsetting&s=".$setting."&v=".$value, false);
     }
-
+    
+    // "склеивание" параметров в строку
+    private function paramImplode($glue, $param) {
+        return $glue . implode($glue, is_array($param) ? $param : array($param));
+    }
+    
+    // установка метки
+    public function setLabel($hash, $label = "") {
+		$this->setProperties($hash, 'label', $label);
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		$this->makeRequest("?action=".($force ? "forcestart" : "start").$this->paramImplode("&hash=", $hash), false);
+	}
+	
+	// пауза раздач
+	public function torrentPause($hash) {
+        $this->makeRequest("?action=pause".$this->paramImplode("&hash=", $hash), false);
+    }
+	
+	// проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+        $this->makeRequest("?action=recheck".$this->paramImplode("&hash=", $hash), false);
+    }
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		$this->makeRequest("?action=stop".$this->paramImplode("&hash=", $hash), false);
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		 $this->makeRequest("?action=".($data ? "removedata" : "remove").$this->paramImplode("&hash=", $hash), false);
+	}
+	
 }
 
 // Transmission 2.82 ~ Linux x32 (режим демона)
@@ -239,19 +274,60 @@ class transmission {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
-		if(!empty($savepath))
-			$savepath = ', "download-dir" : "' . quotemeta($savepath) . '"';
 		foreach($filename as $filename){
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
 					"filename" : "' . $filename['filename'] . '",
 					"paused" : "false"'
-					 . $savepath .
+					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($savepath) . '"' : '') .
 				'}
 			}', true);
 			//~ return $json['result']; // success
 		}
+	}
+	
+	// установка метки
+    public function setLabel($hash, $label = "") {
+		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => ($force ? 'torrent-start-now' : 'torrent-start'),
+            'arguments' => array('ids' => $hash)
+        )), true);
+        //~ return $json['result'] == 'success' ? true : false;
+	}
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		$json = $this->makeRequest(json_encode(array(
+			'method' => 'torrent-stop',
+			'arguments' => array('ids' => $hash)
+		)), true);
+		//~ return $json['result'] == 'success' ? true : false;
+	}
+	
+    // проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => 'torrent-verify',
+            'arguments' => array( 'ids' => $hash )
+		)), true);
+        //~ return $json['result'] == 'success' ? true : false;
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => 'torrent-remove',
+            'arguments' => array(
+				'ids' => $hash,
+				'delete-local-data' => $data
+        ))), true);
+        //~ return $json['result'] == 'success' ? true : false;
 	}
 	
 }
@@ -347,19 +423,60 @@ class vuze {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
-		if(!empty($savepath))
-			$savepath = ', "download-dir" : "' . quotemeta($savepath) . '"';
 		foreach($filename as $filename){
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
 					"filename" : "' . $filename['filename'] . '",
 					"paused" : "false"'
-					 . $savepath .
+					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($savepath) . '"' : '') .
 				'}
 			}', true);
 			//~ retutn $json['result']; // success
 		}
+	}
+	
+	// установка метки
+    public function setLabel($hash, $label = "") {
+		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => ($force ? 'torrent-start-now' : 'torrent-start'),
+            'arguments' => array('ids' => $hash)
+        )), true);
+        //~ return $json['result'] == 'success' ? true : false;
+	}
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		$json = $this->makeRequest(json_encode(array(
+			'method' => 'torrent-stop',
+			'arguments' => array('ids' => $hash)
+		)), true);
+		//~ return $json['result'] == 'success' ? true : false;
+	}
+	
+	// проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => 'torrent-verify',
+            'arguments' => array( 'ids' => $hash )
+		)), true);
+        //~ return $json['result'] == 'success' ? true : false;
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		$json = $this->makeRequest(json_encode(array(
+            'method' => 'torrent-remove',
+            'arguments' => array(
+				'ids' => $hash,
+				'delete-local-data' => $data
+        ))), true);
+        //~ return $json['result'] == 'success' ? true : false;
 	}
 	
 }
@@ -482,6 +599,38 @@ class deluge {
 		return $json['result']; // return localpath
 	}
 	
+	// включение плагинов
+	public function enablePlugin($name = "") {
+		$json = $this->makeRequest('{ "method" : "core.enable_plugin", "params" : [ "'.$name.'" ] , "id" : 3 }');
+    }
+	
+	// установка метки
+    public function setLabel($hash, $label = "") {
+		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.resume_torrent', 'params' => array($hash), 'id' => 7 )));
+	}
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.pause_torrent', 'params' => array($hash), 'id' => 8 )));
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		foreach($hash as $hash){
+			$json = $this->makeRequest(json_encode(array( 'method' => 'core.remove_torrent', 'params' => array($hash, $data), 'id' => 6 )));
+		}
+	}
+	
+	// проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+        $json = $this->makeRequest(json_encode(array( 'method' => 'core.force_recheck', 'params' => array($hash), 'id' => 5 )));
+    }
+	
 }
 
 // qBittorrent 3.4.4 ~ Windows x32
@@ -580,7 +729,41 @@ class qbittorrent {
 		$fields = http_build_query(array(
             'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label
 		), '', '&', PHP_QUERY_RFC3986);
-		$json = $this->makeRequest($fields, 'command/download', false);
+		$this->makeRequest($fields, 'command/download', false);
+	}
+	
+	// установка метки
+    public function setLabel($hash, $label = "") {
+		$fields = http_build_query(array(
+			'hashes' => implode('|', $hash), 'label' => $label
+        ), '', '&', PHP_QUERY_RFC3986);
+		$this->makeRequest($fields, 'command/setLabel', false);
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		foreach($hash as $hash){
+			$this->makeRequest('hash='.$hash, 'command/resume', false);
+		}
+	}
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		foreach($hash as $hash){
+			$this->makeRequest('hash='.$hash, 'command/pause', false);
+		}
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		$this->makeRequest('hashes='.implode('|', $hash), 'command/delete' . ($data ? 'Perm' : ''), false);
+	}
+	
+	// проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+		foreach($hash as $hash){
+			$this->makeRequest('hash='.$hash, 'command/recheck', false);
+		}
 	}
 	
 }
@@ -690,10 +873,11 @@ class ktorrent {
 	}
 	
 	// получение списка раздач
-	public function getTorrents() {
+	public function getTorrents($full = false) {
 		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
 		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
+        if($full) return $json;
         foreach($json['torrent'] as $torrent)
 		{
 			// скачано 100%, раздача
@@ -712,6 +896,46 @@ class ktorrent {
 		foreach($filename as $filename){
 			$json = $this->makeRequest('action?load_torrent=' . $filename['filename'], false); // 200 OK
 		}
+	}
+	
+	// установка метки
+    public function setLabel($hash, $label = "") {
+		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+	}
+    
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+		$torrents = $this->getTorrents(true);
+        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        foreach($hash as $hash){
+            if(isset($hashes[strtolower($hash)]))
+                $json = $this->makeRequest('action?start=' . $hashes[strtolower($hash)]);
+        }
+	}
+	
+    // остановка раздач
+    public function torrentStop($hash) {
+		$torrents = $this->getTorrents(true);
+        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        foreach($hash as $hash){
+            if(isset($hashes[strtolower($hash)]))
+                $json = $this->makeRequest('action?stop=' . $hashes[strtolower($hash)]);
+        }
+	}
+	
+    // удаление раздач
+	public function torrentRemove($hash, $data = false) {
+		$torrents = $this->getTorrents(true);
+        $hashes = array_flip(array_column_common($torrents['torrent'], 'info_hash'));
+        foreach($hash as $hash){
+            if(isset($hashes[strtolower($hash)]))
+                $json = $this->makeRequest('action?remove=' . $hashes[strtolower($hash)]);
+        }
+	}
+	
+	// проверить локальные данные раздач
+	public function torrentRecheck($hash) {
+		return get_now_datetime() . 'Торрент-клиент не поддерживает проверку локальных данных.<br />';
 	}
 	
 }

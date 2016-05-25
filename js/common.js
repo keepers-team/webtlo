@@ -70,3 +70,6 @@ function makeDelay(ms){
         }, ms);
 	}
 }
+
+// инициализация диалога
+$('#dialog').dialog({ autoOpen: false });

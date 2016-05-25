@@ -2,7 +2,7 @@
 /* работа с топиками */
 
 // получить список выделенных раздач
-function listSelectedTopics(subsection){
+function listSelectedTopics(){
 	var topics = [];
 	$("#topics_list_"+subsection).closest("div")
 	.find("input[type=checkbox]")
@@ -18,12 +18,13 @@ function listSelectedTopics(subsection){
 
 // скачивание т.-файлов выделенных топиков
 $("#topics").on("click", ".tor_download", function(){
-	subsection = $(this).attr("subsection");	
-	topics = listSelectedTopics(subsection);
+	subsection = $(this).parents(".tab-topic").attr("value");
+	topics = listSelectedTopics.apply();
 	if(topics == "") return;	
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
+		context: this,
 		url: "index.php",
 		data: { topics:topics, m:'download', subsec:subsection, cfg:$data },
 		success: function(response) {
@@ -33,7 +34,7 @@ $("#topics").on("click", ".tor_download", function(){
 		},
 		beforeSend: function() {
 			block_actions();
-			$("#downloading_"+subsection).show();
+			$(this).children("span").children("img").show();
 		},
 		complete: function() {
 			$("#topics_list_"+subsection).closest("div")
@@ -42,69 +43,136 @@ $("#topics").on("click", ".tor_download", function(){
 			    $(this).removeAttr("checked");
 			});
 			block_actions();
-			$("#downloading_"+subsection).hide();
+			$(this).children("span").children("img").hide();
 			$("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
 		},
 	});
 });
 
-// добавление раздач в торрент-клиент
-$("#topics").on("click", ".tor_add", function(){
-	subsection = $(this).attr("subsection");
-	topics = listSelectedTopics(subsection);
-	if(topics == "") return;
+// проверка наличия, указанного в настройках подраздела, торрент-клиента
+function checkSubsectionClient() {
 	if(!$("#list-ss [value="+subsection+"]").val()){
 		$("#result_"+subsection).html("В настройках подразделов нет такого идентификатора: "+subsection+".<br />");
-		return;
+		return false;
 	}
 	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
 	tmp = ss_data.split("|");
 	if(tmp[2] == "" && tmp[2] == 0){
 		$("#result_"+subsection).html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
-		return;
+		return false;
 	}
 	if(!$("#list-tcs [value="+tmp[2]+"]").val()){
 		$("#result_"+subsection).html("Нет такого торрент-клиента: "+tmp[2]+"<br />");
-		return;
+		return false;
 	}
 	cl_data = $("#list-tcs [value="+tmp[2]+"]").attr("data");
+	return {cl: cl_data, ss: ss_data};
+}
+
+// добавление раздач в торрент-клиент
+$("#topics").on("click", ".tor_add", function(){
+	subsection = $(this).parents(".tab-topic").attr("value");
+	topics = listSelectedTopics.apply();
+	if(topics == '') return;
+	data = checkSubsectionClient.apply();
+	if(!data) return;
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
+		context: this,
 		url: "php/add_topics_to_client.php",
-		data: { topics:topics, client:cl_data, subsec:ss_data, cfg:$data },
+		data: { topics:topics, client:data.cl, subsec:data.ss, cfg:$data },
 		success: function(response) {
 			var resp = eval("(" + response + ")");
 			$("#log").append(resp.log);
 			$("#result_"+subsection).html(resp.add_log);
 			//~ $("#log").append(response);
 			if(resp.success != null){
-				// удаляем с главной добавленные раздачи
-				for (var i in resp.success) {
-					id = resp.success[i];
-			        $("#topic_"+id).remove();
-		        }
 				// помечаем в базе добавленные раздачи
 			    $.ajax({
 				    type: "POST",
-					url: "php/mark_added_topics.php",
-					data: { success:resp.success },
+				    context: this,
+					url: "php/mark_topics_in_database.php",
+					data: { success:resp.success, status:-1 },
 					success: function(response) {
 						$("#log").append(response);
+						getFilteredTopics.apply(this);
 					},
 				});
 			}
 		},
 		beforeSend: function() {
 			block_actions();
-			$("#adding_"+subsection).show();
+			$(this).children("span").children("img").show();
 		},
 		complete: function() {
 			block_actions();
-			$("#adding_"+subsection).hide();
+			$(this).children("span").children("img").hide();
 		},
 	});
 })
+
+// действия с выбранными раздачами (старт, стоп, метка, удалить)
+function execActionTopics(){
+	$("#dialog").dialog("close");
+	$.ajax({
+		type: "POST",
+		context: this,
+		url: "php/exec_actions_topics.php",
+		data: { topics:topics, client:data.cl, subsec:data.ss, action:action, remove_data:remove_data, force_start:force_start },
+		success: function(response) {
+			resp = $.parseJSON(response);
+			$("#log").append(resp.log);
+			$("#result_"+subsection).html(resp.result);
+			//~ $("#log").append(response);
+			if(resp.ids != null){
+				if(action == 'remove'){
+					// помечаем в базе удалённые раздачи
+				    $.ajax({
+					    type: "POST",
+					    context: this,
+						url: "php/mark_topics_in_database.php",
+						data: { success:resp.ids, status:0 },
+						success: function(response) {
+							$("#log").append(response);
+							getFilteredTopics.apply(this);
+						},
+					});
+				}
+			}
+		},
+		beforeSend: function() {
+			block_actions();
+			$(this).children("span").children("img").show();
+		},
+		complete: function() {
+			block_actions();
+			$(this).children("span").children("img").hide();
+		},
+	});
+}
+
+$("#topics").on("click", ".torrent_action", function(){
+	var button = this;
+	remove_data = false; force_start = false;
+	subsection = $(this).parents(".tab-topic").attr("value");
+	action = $(this).val();
+	topics = listSelectedTopics.apply();
+	if(topics == '') return;
+	data = checkSubsectionClient.apply();
+	if(!data) return;
+	if(action == 'remove'){
+		$("#dialog").dialog("open");
+		$("#dialog").dialog({
+			buttons: [{ text: "Да", click: function() { remove_data = true; execActionTopics.apply(button); }},
+				{ text: "Нет", click: function() { remove_data = false; execActionTopics.apply(button); }}],
+			modal: true,
+			resizable: false
+		}).text('Удалить при этом данные раздач с диска ?');
+		return;
+	}
+	execActionTopics.apply(this);
+});
 
 // вывод на экран кол-во, объём выбранных раздач
 function showSelectedInfo(subsection, count, size){
@@ -115,8 +183,8 @@ function showSelectedInfo(subsection, count, size){
 
 // кнопка выделить все / отменить выделение
 $("#topics").on("click", ".tor_select, .tor_unselect", function(){
-	action = $(this).attr("action");
-	subsection = $(this).attr("subsection");
+	action = $(this).val();
+	subsection = $(this).parents(".tab-topic").attr("value");
 	count = 0;
 	size_all = 0;
 	$("#topics_list_"+subsection).closest("div")

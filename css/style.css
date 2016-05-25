@@ -229,7 +229,7 @@ label:hover {
 	margin: 0 -3px;
 }
 
-.downloading, .adding {
+.loading {
 	display: inline-block;
 	margin:  0 5px -2.5px -5px;
 	width: 13px;

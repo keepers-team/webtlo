@@ -58,12 +58,10 @@
 	
 	/* инициализация кнопок управления */
 	function InitControlButtons() {
-		$(".tor_download, .tor_add, .tor_select, .tor_unselect").button();
+		$(".tor_download, .tor_add, .tor_select, .tor_unselect, .torrent_action").button();
 		$(".tor_filter").button({ icons: { primary: "ui-icon-triangle-1-s" }});
-		$(".filter_rule input[type=text]").spinner({
-			min: 0, mouseWheel: true
-		});
-		$(".downloading, .adding").hide();
+		$(".filter_rule input[type=text]").spinner({ min: 0, mouseWheel: true });
+		$(".loading").hide();
 	}
 	
 	/* инициализация "аккордиона" для вкладки настройки */

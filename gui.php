@@ -209,12 +209,16 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			$output .= 
 			
 			'<div id="tabs-topic_'.$subsection['id'].'" class="report tab-topic" value="'.$subsection['id'].'">
-			<div class="btn_cntrl">'. // вывод кнопок управления: выделить все, отменить выделение и скачать выделенные //
+			<div class="btn_cntrl">'. // вывод кнопок управления раздачами
 				'<button type="button" class="tor_filter" title="Отобразить/скрыть настройки фильтра">&nbsp</button>
-				<button type="button" class="tor_select" action="select" subsection="'.$subsection['id'].'" title="Выделить все раздачи текущего подраздела">Выделить все</button>
-				<button type="button" class="tor_unselect" action="unselect" subsection="'.$subsection['id'].'" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
-				<button type="button" class="tor_download" subsection="'.$subsection['id'].'" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img id="downloading_'.$subsection['id'].'" class="downloading" src="loading.gif" />Скачать</button>
-				<button type="button" class="tor_add" subsection="'.$subsection['id'].'" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img id="adding_'.$subsection['id'].'" class="adding" src="loading.gif" />Добавить</button>
+				<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
+				<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
+				<button type="button" class="tor_download" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img class="loading" src="loading.gif" />Скачать</button>
+				<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img class="loading" src="loading.gif" />Добавить</button>
+				<button type="button" value="remove" class="tor_remove torrent_action" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img class="loading" src="loading.gif" />Удалить</button>
+				<button type="button" value="start" class="tor_start torrent_action" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Старт</button>
+				<button type="button" value="stop" class="tor_stop torrent_action" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Стоп</button>
+				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Метка</button>
 			</div>
 			<form method="post" id="topics_filter_'.$subsection['id'].'">
 				<div class="topics_filter" style="display:none">
@@ -358,7 +362,7 @@ function output_main(){
 		<html>
 			<head>
 				<meta charset="utf-8" />
-				<title>web-TLO-0.8.2.13</title>
+				<title>web-TLO-0.8.2.14</title>
 				
 				<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 				<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
@@ -650,7 +654,7 @@ function output_main(){
 						</div>
 					</div>
 				</div>
-				
+				<div id="dialog" title="Сообщение"></div>
 				<!-- скрипты webtlo -->
 				<script type="text/javascript" src="js/common.js"></script>
 				<script type="text/javascript" src="js/tor_clients.js"></script>
