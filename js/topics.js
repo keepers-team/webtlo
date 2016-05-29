@@ -154,7 +154,7 @@ function execActionTopics(){
 
 $("#topics").on("click", ".torrent_action", function(){
 	var button = this;
-	remove_data = false; force_start = false;
+	remove_data = ""; force_start = "";
 	subsection = $(this).parents(".tab-topic").attr("value");
 	action = $(this).val();
 	topics = listSelectedTopics.apply();
@@ -162,13 +162,14 @@ $("#topics").on("click", ".torrent_action", function(){
 	data = checkSubsectionClient.apply();
 	if(!data) return;
 	if(action == 'remove'){
-		$("#dialog").dialog("open");
 		$("#dialog").dialog({
 			buttons: [{ text: "Да", click: function() { remove_data = true; execActionTopics.apply(button); }},
-				{ text: "Нет", click: function() { remove_data = false; execActionTopics.apply(button); }}],
+				{ text: "Нет", click: function() { execActionTopics.apply(button); }}],
 			modal: true,
-			resizable: false
-		}).text('Удалить при этом данные раздач с диска ?');
+			resizable: false,
+			position: [ 'center' , 200 ]
+		}).text('Удалить загруженные файлы раздач с диска ?');
+		$("#dialog").dialog("open");
 		return;
 	}
 	execActionTopics.apply(this);
