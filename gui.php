@@ -3,6 +3,8 @@
 // подготовка списка раздач в отчёты
 function output_preparation($TT_torrents, &$TT_subsections){
 	$tmp = array();
+	$ud = array_column_common($TT_torrents, 'ud');
+	$TT_subsections['ud'] = $ud[0];
 	foreach($TT_torrents as $torrent)
 	{
 		if($torrent['dl'] == 1)
@@ -98,12 +100,13 @@ function output_preparation($TT_torrents, &$TT_subsections){
 
 // вывод отчётов
 function output_reports($TT_subsections, $TT_login, $log){
-
-	$ini = new TIniFileEx(dirname(__FILE__) . '/config.ini');
-
+	
+	$time = empty($TT_subsections['ud']) ? time() : $TT_subsections['ud'];
+	unset($TT_subsections['ud']);
+	
 	// заголовки вкладок
 	
-	$output = '<h2>Отчёты - ' . date('H:i / d.m.Y', $ini->read('other', 'update_time', '')) . '</h2>'.
+	$output = '<h2>Отчёты - ' . date('H:i / d.m.Y', $time) . '</h2>'.
 		'<div id="reporttabs" class="report">'.
 		'<ul class="report">';
 	
@@ -125,7 +128,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 	
 	$output .= '<div id="tabs-wtlocommon" class="report">'.
 		'<span class="report">'.
-			'Актуально на: [b]' . date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/b]<br/><br/>';
+			'Актуально на: [b]' . date('d.m.Y', $time) . '[/b]<br/><br/>';
 	foreach($TT_subsections as $subsection)
 	{
 		$common_qt += $subsection['dlqt'];
@@ -156,7 +159,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 			
 			'Подраздел: [url=forum/viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.$subsection['na'].'[/u][/color][/url]'.
 			' [color=gray]~>[/color] [url=forum/tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br/><br/>'.
-			'Актуально на: [color=darkblue]'. date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/color][br]<br/>'.
+			'Актуально на: [color=darkblue]'. date('d.m.Y', $time) . '[/color][br]<br/>'.
 			'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '<br/>'.
 			'Количество хранителей: 1<br/>'.
 			'Всего хранимых раздач в подразделе: '. $subsection['dlqt'] .' шт. / '. convert_bytes($subsection['dlsi']) .'[hr]<br/><br/>'.
@@ -166,7 +169,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 				'<h3>Сообщение 1</h3>'.
 					'<div title="double click me">'.
 		
-						'Актуально на: [color=darkblue]' . date('d.m.Y', $ini->read('other', 'update_time', '')) . '[/color]<br/>'.
+						'Актуально на: [color=darkblue]' . date('d.m.Y', $time) . '[/color]<br/>'.
 						'Всего хранимых раздач в подразделе: ' . $subsection['dlqt'] . ' шт. / ' . convert_bytes($subsection['dlsi']) . '<br />' .
 						$subsection['dlte'] . '<br/>'.					// отформатированный список хранимых раздач раздела
 						
@@ -183,7 +186,7 @@ function output_reports($TT_subsections, $TT_login, $log){
 }
 
 // вывод топиков на главной странице
-function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $log){
+function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $time, $avg_seeders, $log){
 		// заголовки вкладок
 		$output = '<div id="topictabs" class="report">'.
 			'<ul class="report">';
@@ -204,12 +207,12 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			<div class="btn_cntrl">'. // вывод кнопок управления раздачами
 				'<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
 				<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
-				<button type="button" class="tor_download" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img class="loading" src="loading.gif" />Скачать</button>
-				<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img class="loading" src="loading.gif" />Добавить</button>
-				<button type="button" value="remove" class="tor_remove torrent_action" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img class="loading" src="loading.gif" />Удалить</button>
-				<button type="button" value="start" class="tor_start torrent_action" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Старт</button>
-				<button type="button" value="stop" class="tor_stop torrent_action" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Стоп</button>
-				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте"><img class="loading" src="loading.gif" />Метка</button>
+				<button type="button" class="tor_download" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img class="loading" src="img/loading.gif" />Скачать</button>
+				<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img class="loading" src="img/loading.gif" />Добавить</button>
+				<button type="button" value="remove" class="tor_remove torrent_action" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img class="loading" src="img/loading.gif" />Удалить</button>
+				<button type="button" value="start" class="tor_start torrent_action" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Старт</button>
+				<button type="button" value="stop" class="tor_stop torrent_action" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Стоп</button>
+				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Метка</button>
 			</div>
 			<form method="post" id="topics_filter_'.$subsection['id'].'">
 				<div class="topics_filter" title="Фильтр раздач текущего подраздела">
@@ -226,6 +229,11 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 							<input type="radio" name="filter_status" value="-1" />
 							качаю<br />
 						</label>
+						<br />
+						<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+							<input type="checkbox" name="avg_seeders_complete" />
+							"зелёные"
+						</label>
 					</fieldset>
 					<fieldset class="filter_sort" title="Сортировка">
 						<div class="filter_sort_direction">
@@ -240,7 +248,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 						</div>
 						<div class="filter_sort_value">
 							<label>
-								<input type="radio" name="filter_sort" value="na" checked />
+								<input type="radio" name="filter_sort" value="na" />
 								по названию<br />
 							</label>
 							<label>
@@ -248,7 +256,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 								по объёму<br />
 							</label>
 							<label>
-								<input type="radio" name="filter_sort" value="avg" />
+								<input type="radio" name="filter_sort" value="avg" checked />
 								по количеству сидов<br />
 							</label>
 							<label>
@@ -300,11 +308,12 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 				if(($param['dl'] == 0) && ($param['ss'] == $subsection['id']))
 				{
 					// вывод топиков
-					$ratio = isset($param['rt']) ? $param['rt'] : '1';
+					$icons = ($param['ds'] >= $time || !$avg_seeders ? 'green' : ($param['ds'] >= $time / 2 ? 'yellow' : 'red'));
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>
 								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">
-								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="средние сиды">'.round($param['avg'], 1).'</span> / <span class="ratio" title="показатель средних сидов">'.$ratio.'</span>
+								<img title="" src="img/'.$icons.'.png" />
+								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 1).'</span>
 							</label></div>';
 				}
 			}

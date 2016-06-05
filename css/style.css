@@ -190,6 +190,10 @@ label:hover {
 	margin: 0;
 }
 
+#avg_seeders_settings {
+	margin: 12px 0 5px 10px;
+}
+
 /* reports */
 .report {
 	font-size: small;

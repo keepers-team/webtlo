@@ -43,7 +43,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.8.2.14</title>		
+		<title>web-TLO-0.8.3.0</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -66,7 +66,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 						<input id="update" name="update" type="button" class="btn-lock" title="Обновить сведения о раздачах" value="Обновить сведения" />
 						<input id="startreports" name="startreports" type="button" class="btn-lock" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
 					</div>
-					<img id="loading" src="loading.gif" title="Выполняется..." />
+					<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					<div id="topics"></div>
 				</div>
 				<div id="settings" class="content">
@@ -287,10 +287,20 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 								<div>
 									<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<? echo $cfg['rule_topics'] ?>" />
 								</div>
-								<label title="При поиске раздач использовать среднее значение количества сидов.">										
-									<input name="avg_seeders" type="checkbox" size="24" <? echo $avg_seeders ?> />
-									средние сиды
-								</label>
+								<h3>Поиск среднего значения количества сидов</h3>
+								<div>
+									<label title="При поиске раздач использовать алгоритм нахождения среднего значения количества сидов">
+										<input name="avg_seeders" id="avg_seeders" type="checkbox" size="24" <? echo $avg_seeders ?> />
+										использовать алгоритм нахождения среднего значения количества сидов
+									</label>
+									<div id="avg_seeders_settings" style="display:none">
+										<label title="Укажите период хранения сведений о средних сидах (максимум 30 дней)">
+											Хранить сведения о сидах за последние
+											<input name="avg_seeders_period" class="" id="avg_seeders_period" type="text" size="2" value="<? echo $cfg['avg_seeders_period'] ?>"/>
+											дн.
+										</label>
+									</div>
+								</div>
 								<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
 								<div>
 									<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<? echo $cfg['rule_reports'] ?>" />

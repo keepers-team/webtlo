@@ -268,11 +268,13 @@ $("#topics").on("click", ".filter_rule input[name=filter_interval]", function(){
 function getFilteredTopics(){
 	forum_url = $("#forum_url").val();
 	subsec = $(this).parents(".tab-topic").attr("value");
+	time = $("#avg_seeders_period").val();
+	avg = $("#avg_seeders").prop("checked");
 	$data = $("#topics_filter_"+subsec).serialize();
 	$.ajax({
 		type: "POST",
 		url: "php/get_filtered_list_topics.php",
-		data: { forum_url:forum_url, subsec:subsec, topics_filter:$data },
+		data: { forum_url:forum_url, subsec:subsec, topics_filter:$data, time:time, avg:avg },
 		success: function(response) {
 			resp = $.parseJSON(response);
 			if(resp.topics != null){

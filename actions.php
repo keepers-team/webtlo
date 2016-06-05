@@ -19,6 +19,7 @@ if(isset($_POST['cfg'])) {
 	$proxy_activate = isset($proxy_activate) ? 1 : 0;
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
+	$time = $time == 0 ? 1 : ($time > 30 ? 30 : $time); // жёсткое ограничение на 30 дн.
 }
 
 // подразделы
@@ -52,7 +53,7 @@ switch($_POST['m'])
 		try {
 			$db = new FromDatabase();
 			$subsections = $db->get_forums_details($TT_subsections);
-			$topics = $db->get_topics($TT_rule_reports, 1);
+			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
 			output_preparation($topics, $subsections);
 			output_reports($subsections, $TT_login, $db->log);
 		} catch (Exception $e) {
@@ -68,8 +69,8 @@ switch($_POST['m'])
 		try {
 			$db = new FromDatabase();
 			$subsections = $db->get_forums($TT_subsections);
-			$topics = $db->get_topics($TT_rule_topics, 0);
-			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $db->log);
+			$topics = $db->get_topics($TT_rule_topics, 0, $avg_seeders_period);
+			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
@@ -139,11 +140,11 @@ switch($_POST['m'])
 			$webtlo = new Webtlo($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status); /* получаем список раздач разделов */
-			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders); /* получаем подробные сведения о раздачах */
-			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $log . $webtlo->log);
+			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period); /* получаем подробные сведения о раздачах */
+			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();
-			echo json_encode(array('log' => $webtlo->log,
+			echo json_encode(array('log' => $log . $webtlo->log,
 				'topics' => '<br />В процессе обновления сведений
 				были ошибки.<br />Для получения подробностей
 				обратитесь к журналу событий.<br />'

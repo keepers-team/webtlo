@@ -11,6 +11,13 @@
 	$("#update").button();
 	$("#startreports").button();
 	
+	// средние сиды в настройках
+	$("#avg_seeders_period").spinner({ min: 0, max: 30, mouseWheel: true });
+	$("#avg_seeders").on("change", function(){
+		$(this).prop("checked") ? $("#avg_seeders_settings").show() : $("#avg_seeders_settings").hide();
+	});
+	$("#avg_seeders").change();
+
 	/* кнопка справки */
 	$("#help").addClass("ui-button ui-state-default");
 	$("#help").hover(function(){
@@ -38,6 +45,7 @@
 		success: function(response) {
 			var resp = eval( '(' + response + ')' );
 			$("#topics").html(jQuery.trim(resp.topics));
+			//~ $("#log").append(resp.log);
 			//~ $("#log").append(response);
 			//инициализация горизонтальных вкладок отчетов
 			var topictabs = $("#topictabs").tabs();
@@ -59,7 +67,7 @@
 	/* инициализация кнопок управления */
 	function InitControlButtons() {
 		$(".tor_download, .tor_add, .tor_select, .tor_unselect, .torrent_action").button();
-		$(".filter_rule input[type=text]").spinner({ min: 0, mouseWheel: true });
+		$(".filter_rule input[type=text]").spinner({ min: 0, mouseWheel: true, step: 0.5 });
 		$(".loading").hide();
 	}
 	
@@ -221,7 +229,7 @@
 		//~ if(!subsections) errors.push(nowTime() + 'Не заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
 		//~ if(!/^[0-9\,]*$/.test(subsections)) errors.push(nowTime() + 'Некорректно заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
 		if(!rule_topics) errors.push(nowTime() + 'Не заполнено поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
-		if(!/^[0-9]*$/.test(rule_topics)) errors.push(nowTime() + '<p>Указаны недопустимые символы в поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
+		//~ if(!/^[0-9]*$/.test(rule_topics)) errors.push(nowTime() + '<p>Указаны недопустимые символы в поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
 		if(!rule_reports) errors.push(nowTime() + 'Не заполнено поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />');
 		if(!/^[0-9]*$/.test(rule_reports)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />');
 		//~ alert(tcs);
@@ -238,15 +246,8 @@ $("#savedir").on("change", function() {
 	}
 });
 
-// вкл/выкл прокси
+// прокси в настройках
 $("#proxy_activate").on("change", function() {
-	if($(this).prop("checked")) {
-		$("#proxy_prop").show();
-	}
-	else {
-		$("#proxy_prop").hide();
-	}
+	$(this).prop("checked") ? $("#proxy_prop").show() : $("#proxy_prop").hide();
 });
-
-// активировать прокси или нет
 $("#proxy_activate").change();

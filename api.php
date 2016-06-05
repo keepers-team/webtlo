@@ -18,7 +18,7 @@ class Webtlo {
 		$this->log = get_now_datetime() . 'Получение данных с ' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
-		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
+		$this->make_database();
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_RETURNTRANSFER => 1,
@@ -58,7 +58,6 @@ class Webtlo {
 		while(true){
 			$json = curl_exec($this->ch);
 			if($json === false) {
-				//~ curl_close($this->ch);
 				throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
 			}
 			$data = json_decode($json, true);
@@ -69,7 +68,6 @@ class Webtlo {
 					$n++;
 					continue;
 				}
-				//~ curl_close($this->ch);
 				throw new Exception(get_now_datetime() . 'API ошибка: ' . $data['error']['text'] . '<br />');
 			}
 			break;
@@ -101,15 +99,6 @@ class Webtlo {
 	// дерево разделов
 	public function get_cat_forum_tree($subsections_use){
 		$this->log .= get_now_datetime() . 'Получение дерева разделов...<br />';
-		// готовим таблицу
-		$this->db->exec('CREATE TABLE IF NOT EXISTS `Forums` (
-				id INT NOT NULL PRIMARY KEY,
-				na VARCHAR NOT NULL
-		)');
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-		}
 		$url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$tmp = array();
@@ -131,20 +120,14 @@ class Webtlo {
 		$tree = array_chunk($tmp['insert'], 500, true);
 		$subsections = $tmp['subsections'];
 		
-		// пишем в БД
+		// отправляем в базу данных
 		foreach($tree as $value){
-			$sql = 'INSERT INTO `Forums` (`id`,`na`) ' . rtrim(implode(' ', $value), ' UNION ALL');
-			$this->db->prepare($sql);
-			if($this->db->errorCode() != '0000') {
-				$db_error = $this->db->errorInfo();
-				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-			}
+			$this->query_database('INSERT INTO temp.Forums1 (`id`,`na`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
 		}
-		$this->db->query('DELETE FROM `Forums`');
-		foreach($tree as $value){
-			$sql = 'INSERT INTO `Forums` (`id`,`na`) ' . rtrim(implode(' ', $value), ' UNION ALL');
-			$this->db->query($sql);
-		}
+		
+		$this->query_database('INSERT INTO `Forums` ( `id`,`na` ) SELECT * FROM temp.Forums1');
+		$this->query_database('DELETE FROM `Forums` WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
+		
 		return $subsections;
 	}
 	
@@ -171,49 +154,46 @@ class Webtlo {
 		foreach($id_list as $num => $id){
 			$ids[] = implode(',', $id);
 		}
-		// дата обновления
-		$ini = new TIniFileEx(dirname(__FILE__) . '/config.ini');
-		$ini->write('other', 'update_time', $data['update_time']);
-		$ini->updateFile();
+		
 		return $ids;
 	}	
 	
+	private function count_days($array){
+		$i = 0;
+		foreach($array as $item){
+			if(is_numeric($item)){
+				$i++;
+			}
+		}
+		return $i;
+	}
+	
+	private function sort_topics($a, $b){
+	    if($a['avg'] == $b['avg']) return 0;
+	    return $a['avg'] < $b['avg'] ? -1 : 1;
+	}
+	
 	// сведения о каждой раздаче
-	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsections_use, $avg_seeders){
+	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsec, $avg_seeders, $time){
 		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
 		$topics = array();
-		// готовим БД
-		$this->db->exec('CREATE TABLE IF NOT EXISTS `Topics` (
-				id INT NOT NULL PRIMARY KEY,
-				ss INT NOT NULL,
-				na VARCHAR NOT NULL,
-				hs VARCHAR NOT NULL,
-				se INT NOT NULL,
-				si INT NOT NULL,
-				st INT NOT NULL,
-				rg INT NOT NULL,
-				dl INT NOT NULL DEFAULT 0,
-				rt INT NOT NULL DEFAULT 1
-		)');
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-		}
-		$this->db->exec('ALTER TABLE `Topics` ADD COLUMN `rt` INT NOT NULL DEFAULT 1');
 		
 		if($avg_seeders){
-			$this->log .= get_now_datetime() . 'Поиск среднего значения количества сидов...<br />';
-			$query = $this->db->query('SELECT `id`,`se`,`rt` FROM `Topics` WHERE `ss` IN(' . $subsections_use . ')');
-			if($this->db->errorCode() != '0000') {
-				$db_error = $this->db->errorInfo();
-				$this->log .= get_now_datetime() . 'Данные последнего обновления сведений не получены: ' . $db_error[2] . '<br />';
-			}
-			$topics_old = $query->fetchAll(PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
+			$subsec = explode(',', $subsec);
+			$in = str_repeat('?,', count($subsec) - 1) . '?';
+			$this->log .= get_now_datetime() . 'Задействован алгоритм поиска среднего значения количества сидов...<br />';
+			$this->log .= get_now_datetime() . 'Получение информации о раздачах за предыдущее обновление...<br />';
+			$topics_old = $this->query_database("SELECT Topics.id,se,rt,ds,ud FROM `Topics` INNER JOIN Other WHERE `ss` IN ($in)", $subsec, true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
+			$this->log .= get_now_datetime() . 'Получение информации о средних сидах за предыдущее обновление...<br />';
+			for($i = 0; $i <= $time - 1; $days_fields[] = 'd'.$i++);
+			$seeders = $this->query_database('SELECT `id`,`'.implode('`,`',$days_fields).'` FROM `Seeders`', array(), true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
 		}
 		
 		$tmp = array();
+		$ud_current = new DateTime('now'); // текущая дата обновления сведений
+		$ud_old = new DateTime(); // прошлое значение даты обновления сведений
 		
-		foreach($ids as $ids){			
+		foreach($ids as $ids){
 			$url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $ids;
 			$data = $this->request_exec($url);
 			
@@ -228,16 +208,38 @@ class Webtlo {
 				$tmp['topics'][$topic_id]['st'] = $info['tor_status'];
 				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
 				// средние сиды
+				$days = 0;
+				$sum_updates = 1;
+				$sum_seeders = $info['seeders'];
+				$avg_seeders = $sum_seeders / $sum_updates;
 				if(isset($topics_old[$topic_id])){
-					$sum_ratio = $topics_old[$topic_id][0]['rt'] + 1;
-					$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
-					$tmp['topics'][$topic_id]['avg'] = $sum_seeders / $sum_ratio;
-				} else {
-					$sum_ratio = 1;
-					$sum_seeders = $info['seeders'];
-					$tmp['topics'][$topic_id]['avg'] = $sum_seeders;
+					// переносим старые значения
+					$days = $topics_old[$topic_id][0]['ds'];
+					if(isset($seeders[$topic_id])) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
+					$ud_old->setTimestamp($topics_old[$topic_id][0]['ud'])->setTime(0, 0, 0);
+					if($ud_current->diff($ud_old)->format('%d') > 0){
+						$tmp['seeders'][$topic_id]['d'.$days % $time] = round($topics_old[$topic_id][0]['se'] / $topics_old[$topic_id][0]['rt'], 3);
+						$tmp['seeders'][$topic_id] += array_fill_keys($days_fields, '');
+						$seeders_insert = preg_replace('/^$/', "''", $tmp['seeders'][$topic_id]);
+						$tmp['seeders'][$topic_id][] = $avg_seeders;
+						$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
+						$days++;
+						// формирование массива для вставки средних сидов
+						$tmp['insert_seeders'][] = "SELECT " .
+						    "{$topic_id},".
+						    implode(",", $seeders_insert) . " UNION ALL";
+					} else {
+						$sum_updates = $topics_old[$topic_id][0]['rt'] + 1;
+						$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
+						$tmp['seeders'][$topic_id][] = $sum_seeders / $sum_updates;
+						$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
+					}
 				}
-				$tmp['topics'][$topic_id]['rt'] = $sum_ratio;
+				$tmp['topics'][$topic_id]['ud'] = $ud_current->format('U');
+				$tmp['topics'][$topic_id]['ds'] = $days;
+				$tmp['topics'][$topic_id]['se'] = $sum_seeders;
+				$tmp['topics'][$topic_id]['rt'] = $sum_updates;
+				$tmp['topics'][$topic_id]['avg'] = $avg_seeders;
 				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
 				if(isset($tc_topics[$info['info_hash']])){
 					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1);
@@ -245,7 +247,7 @@ class Webtlo {
 					$tmp['topics'][$topic_id]['dl'] = 0;
 				}
 				// для вставки в базу
-				$tmp['insert'][] = "SELECT " .
+				$tmp['insert_topics'][] = "SELECT " .
 				    "{$topic_id},
 				    {$info['forum_id']},
 				    {$this->db->quote($info['topic_title'])},
@@ -255,34 +257,156 @@ class Webtlo {
 				    {$info['tor_status']},
 				    {$info['reg_time']},
 				    {$tmp['topics'][$topic_id]['dl']},
-				    {$sum_ratio}" .
+				    {$sum_updates},
+				    {$days}" .
 			    " UNION ALL";
 			}
 						
 		}
 		
 		// разбираем $tmp
-		$insert = array_chunk($tmp['insert'], 500, false);
+		$insert_topics = array_chunk($tmp['insert_topics'], 500, false);
 		foreach($tmp['topics'] as $id => $topic){
 			if($topic['avg'] <= $rule) $topics[$id] = $topic;
 		}
+		// сортируем топики по кол-ву сидов по возрастанию
+		uasort($topics, array($this, 'sort_topics'));
 		
-		// пишем в БД
-		foreach($insert as $value){
-			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`) ' . rtrim(implode(' ', $value), ' UNION ALL');
-			$this->db->prepare($sql);
-			if($this->db->errorCode() != '0000') {
-				$db_error = $this->db->errorInfo();
-				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+		// отправляем в базу данных топики
+		$this->log .= get_now_datetime() . 'Запись в базу данных сведений о раздачах...<br />';
+		foreach($insert_topics as $value){
+			$this->query_database('INSERT INTO temp.Topics1 (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`,`ds`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
+		}
+		
+		$this->query_database('INSERT INTO `Topics` SELECT * FROM temp.Topics1');
+		$this->query_database('DELETE FROM `Topics` WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL )');
+
+		// отправляем в базу данных средние сиды
+		if(isset($tmp['insert_seeders'])){
+			$this->log .= get_now_datetime() . 'Запись в базу данных сведений о средних сидах...<br />';
+			$insert_seeders = array_chunk($tmp['insert_seeders'], 500, false);
+
+			foreach($insert_seeders as $value){
+				$this->query_database('INSERT INTO temp.Seeders1 (`id`,`'.implode('`,`',$days_fields).'`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
 			}
+			
+			$this->query_database('INSERT INTO `Seeders` SELECT * FROM temp.Seeders1');
 		}
-		$this->db->query('DELETE FROM `Topics` WHERE `ss` IN(' . $subsections_use . ')'); // удаляем все старые данные	
-		foreach($insert as $value){
-			$sql = 'INSERT INTO `Topics` (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`) ' . rtrim(implode(' ', $value), ' UNION ALL');
-			$this->db->query($sql);
-		}
+		
+		// время последнего обновления
+		$this->query_database('UPDATE Other SET ud = ? WHERE id = 0', array($ud_current->format('U')));
 		
 		return $topics;
+	}
+	
+	private function query_database($sql = "", $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
+		$sth = $this->db->prepare($sql);
+		if($this->db->errorCode() != '0000') {
+			$db_error = $this->db->errorInfo();
+			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+		}
+		$sth->execute($param);
+		return $fetch ? $sth->fetchAll($pdo) : true;
+	}
+	
+	private function make_database(){
+		
+		$this->log .= get_now_datetime() . 'Подготовка структуры базы данных...<br />';
+		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
+				
+		// таблицы
+		
+		// список подразделов
+		$this->query_database('CREATE TABLE IF NOT EXISTS Forums (
+				id INT NOT NULL PRIMARY KEY,
+				na VARCHAR NOT NULL
+		)');
+		
+		// разное
+		$this->query_database('CREATE TABLE IF NOT EXISTS Other AS SELECT 0 AS "id", 0 AS "ud"');
+		
+		// топики
+		$this->query_database('CREATE TABLE IF NOT EXISTS Topics (
+				id INT NOT NULL PRIMARY KEY,
+				ss INT NOT NULL,
+				na VARCHAR NOT NULL,
+				hs VARCHAR NOT NULL,
+				se INT NOT NULL,
+				si INT NOT NULL,
+				st INT NOT NULL,
+				rg INT NOT NULL,
+				dl INT NOT NULL DEFAULT 0,
+				rt INT NOT NULL DEFAULT 1,
+				ds INT NOT NULL DEFAULT 0
+		)');
+		
+		// средние сиды
+		$this->query_database('CREATE TABLE IF NOT EXISTS Seeders (
+			id INT NOT NULL PRIMARY KEY,
+			d0 REAL, d1 REAL,d2 REAL,d3 REAL,d4 REAL,d5 REAL,d6 REAL,
+			d7 REAL,d8 REAL,d9 REAL,d10 REAL,d11 REAL,d12 REAL,d13 REAL,
+			d14 REAL,d15 REAL,d16 REAL,d17 REAL,d18 REAL,d19 REAL,
+			d20 REAL,d21 REAL,d22 REAL,d23 REAL,d24 REAL,d25 REAL,
+			d26 REAL,d27 REAL,d28 REAL,d29 REAL
+		)');
+		
+		// триггеры
+		
+		// удалить сведения о средних сидах при удалении раздачи
+		$this->query_database('CREATE TRIGGER IF NOT EXISTS Seeders_delete
+			BEFORE DELETE ON Topics FOR EACH ROW
+			BEGIN
+				DELETE FROM Seeders WHERE id = OLD.id;
+			END;
+		');
+		
+		// обновить при вставке такой же записи
+		$this->query_database('CREATE TRIGGER IF NOT EXISTS Forums_update
+			BEFORE INSERT ON Forums
+	        WHEN EXISTS (SELECT id FROM Forums WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Forums SET na = NEW.na
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+		
+		$this->query_database('CREATE TRIGGER IF NOT EXISTS Topics_update
+	        BEFORE INSERT ON Topics
+	        WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Topics SET
+					ss = NEW.ss, na = NEW.na, hs = NEW.hs, se = NEW.se,
+					si = NEW.si, st = NEW.st, rg = NEW.rg, dl = NEW.dl,
+					rt = NEW.rt, ds = NEW.ds
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+	
+		$this->query_database('CREATE TRIGGER IF NOT EXISTS Seeders_update
+	        BEFORE INSERT ON Seeders
+	        WHEN EXISTS (SELECT id FROM Seeders WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Seeders SET
+				    d0 = NEW.d0, d1 = NEW.d1, d2 = NEW.d2, d3 = NEW.d3,
+				    d4 = NEW.d4, d5 = NEW.d5, d6 = NEW.d6, d7 = NEW.d7,
+				    d8 = NEW.d8, d9 = NEW.d9, d10 = NEW.d10, d11 = NEW.d11,
+				    d12 = NEW.d12, d13 = NEW.d13, d14 = NEW.d14, d15 = NEW.d15,
+				    d16 = NEW.d16, d17 = NEW.d17, d18 = NEW.d18, d19 = NEW.d19,
+				    d20 = NEW.d20, d21 = NEW.d21, d22 = NEW.d22, d23 = NEW.d23,
+				    d24 = NEW.d24, d25 = NEW.d25, d26 = NEW.d26, d27 = NEW.d27,
+				    d28 = NEW.d28, d29 = NEW.d29
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+		
+		// временные таблицы
+		$this->query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
+		$this->query_database('CREATE TEMP TABLE Topics1 AS SELECT * FROM Topics WHERE 0 = 1');
+		$this->query_database('CREATE TEMP TABLE Seeders1 AS SELECT * FROM Seeders WHERE 0 = 1');
+		
 	}
 	
 	public function __destruct(){
@@ -301,64 +425,70 @@ class FromDatabase {
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
 	}
 	
-	// ... из базы подразделы для списка раздач на главной
-	public function get_forums($subsections_use){
-		$query = $this->db->query('SELECT * FROM `Forums` WHERE `id` IN(' . $subsections_use . ')');
+	private function query_database($sql = "", $param = array(), $pdo = PDO::FETCH_ASSOC, $fetch = true){
+		$sth = $this->db->prepare($sql);
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
 			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
 		}
-		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
-		if(count($subsections) == 0)
-			throw new Exception();
-		$this->log .= get_now_datetime() . 'Данные о подразделах получены.<br />';
+		$sth->execute($param);
+		return $fetch ? $sth->fetchAll($pdo) : true;
+	}
+	
+	// ... из базы подразделы для списка раздач на главной
+	public function get_forums($subsec){
+		$this->log .= get_now_datetime() . 'Получение данных о подразделах...<br />';
+		$subsec = explode(',', $subsec);
+		$in = str_repeat('?,', count($subsec) - 1) . '?';
+		$subsections = $this->query_database("SELECT * FROM `Forums` WHERE `id` IN ($in)", $subsec);
+		if(empty($subsections)) throw new Exception();
 		return $subsections;
 	}
 	
 	// ... из базы топики
-	public function get_topics($seeders, $status){
-		$query = $this->db->prepare('SELECT `id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,(`se` * 1.) / `rt` as `avg` FROM `Topics` WHERE `avg` <= :se AND `dl` = :dl ORDER BY `ss`, `na`');
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-		}
-		$query->bindValue(':se', $seeders, PDO::PARAM_INT);
-		$query->bindValue(':dl', $status, PDO::PARAM_INT);
-		$query->execute();
-		$topics = $query->fetchAll(PDO::FETCH_ASSOC);
-		$this->log .= get_now_datetime() . 'Данные о раздачах получены.<br />';
+	public function get_topics($seeders, $status, $time){
+		$this->log .= get_now_datetime() . 'Получение данных о раздачах...<br />';
+		for($i = 0; $i <= $time - 1; $days_fields[] = 'd'.$i++);
+		$avg_seeders = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields )) . ' + (`se` * 1.) / `rt` ) /
+			(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE 1 END', $days_fields )) . ' + 1 )';
+		$topics = $this->query_database("
+			SELECT
+				`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,
+				CASE
+					WHEN `ds` IS 0
+					THEN (`se` * 1.) / `rt`
+					ELSE $avg_seeders
+				END as `avg`
+			FROM
+				`Topics`
+				INNER JOIN
+				`Seeders`
+					ON `Topics`.`id` = `Seeders`.`id`
+				INNER JOIN `Other`
+			WHERE `avg` <= CAST(:se as REAL) AND `dl` = :dl
+			ORDER BY `ss`, `avg`
+		", array('se' => $seeders, 'dl' => $status));
+		if(empty($topics)) throw new Exception();
 		return $topics;
 	}
 	
 	// ... из базы подразделы для отчётов
-	public function get_forums_details($subsections_use){
-		$query = $this->db->query('SELECT * FROM `Forums` WHERE `id` IN('.$subsections_use.')');
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-		}
-		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
+	public function get_forums_details($subsec){
+		$subsections = $this->get_forums($subsec);
 		foreach($subsections as $id => $subsection){
-			$query = $this->db->prepare('SELECT SUM(`si`) FROM `Topics` WHERE `ss` = :id');
-			if($this->db->errorCode() != '0000') {
-				$db_error = $this->db->errorInfo();
-				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-			}
-			$query->bindValue(':id', $subsection['id']);
-			$query->execute();
-			$size = $query->fetchAll(PDO::FETCH_COLUMN);
-			$query = $this->db->prepare('SELECT COUNT() FROM `Topics` WHERE `ss` = :id');
-			if($this->db->errorCode() != '0000') {
-				$db_error = $this->db->errorInfo();
-				throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
-			}
-			$query->bindValue(':id', $subsection['id']);
-			$query->execute();			
-			$qt = $query->fetchAll(PDO::FETCH_COLUMN);
+			$size = $this->query_database(
+				"SELECT SUM(`si`) FROM `Topics` WHERE `ss` = :id",
+				array('id' => $subsection['id']),
+				PDO::FETCH_COLUMN
+			);
+			$qt = $this->query_database(
+				"SELECT COUNT() FROM `Topics` WHERE `ss` = :id",
+				array('id' => $subsection['id']),
+				PDO::FETCH_COLUMN
+			);
 			$subsections[$id]['si'] = $size[0];
 			$subsections[$id]['qt'] = $qt[0];
 		}
-		$this->log .= get_now_datetime() . 'Данные о подразделах получены.<br />';
 		return $subsections;
 	}
 		

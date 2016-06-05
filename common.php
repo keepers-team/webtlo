@@ -126,6 +126,7 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url',$forum_url);
 	if(isset($TT_rule_topics) && $TT_rule_topics != '') $ini->write('sections','rule_topics',$TT_rule_topics);
 	if(isset($TT_rule_reports) && $TT_rule_reports != '') $ini->write('sections','rule_reports',$TT_rule_reports);
+	if(isset($avg_seeders_period) && $avg_seeders_period != '') $ini->write('sections','avg_seeders_period',$avg_seeders_period);
 	if(isset($savedir)) $ini->write('download','savedir',$savedir);
 	$ini->write('download','savesubdir',isset($savesubdir) ? 1 : 0);
 	$ini->write('sections', 'avg_seeders',isset($avg_seeders) ? 1 : 0);
@@ -168,6 +169,7 @@ function get_settings(){
 	$config['rule_topics'] = $ini->read('sections','rule_topics',3);
 	$config['rule_reports'] = $ini->read('sections','rule_reports',10);
 	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
+	$config['avg_seeders_period'] = $ini->read('sections','avg_seeders_period',14);
 	$config['topics_status'] = explode(',', $ini->read('sections','topics_status','2,8'));
 	
 	// прокси
