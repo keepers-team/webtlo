@@ -573,20 +573,21 @@ class deluge {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
-		if(!empty($savepath))
-			$savepath = '"download_location" : "'.$savepath.'"';
-		foreach($filename as $filename){
-			$localpath = $this->torrentDownload($filename['filename']);
+		foreach($filename as $file){
+			$localpath = $this->torrentDownload($file['filename']);
 			$json = $this->makeRequest('{
 				"method" : "web.add_torrents",
 				"params" : [[{
 					"path" : "' . $localpath . '",
-					"options" : { '.$savepath.' }
+					"options" : { '.(!empty($savepath) ? '"download_location" : "'.$savepath.'"' : '').' }
 				}]],
 				"id" : 1
 			}');
 			//~ return $json['result'] == 1 ? true : false;
 		}
+		if(empty($label)) return;
+		sleep(round(count($filename) / 3) + 1); // < 3 дольше ожидание
+		$this->setLabel(array_column_common($filename, 'hash'), $label);
 	}
 	
 	// загрузить торрент локально
@@ -600,13 +601,28 @@ class deluge {
 	}
 	
 	// включение плагинов
-	public function enablePlugin($name = "") {
-		$json = $this->makeRequest('{ "method" : "core.enable_plugin", "params" : [ "'.$name.'" ] , "id" : 3 }');
+	private function enablePlugin($name = "") {
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.enable_plugin', 'params' => array( $name ), 'id' => 3 )));
+    }
+
+	// добавить метку
+	private function addLabel($label = ""){
+		// не знаю как по-другому вытащить список уже имеющихся label
+		$filters = $this->makeRequest(json_encode(array( 'method' => 'core.get_filter_tree', 'params' => array(), 'id' => 3 )));
+		if(in_array($label, array_column_common($filters['result']['label'], 0))) return;
+        $json = $this->makeRequest(json_encode(array( 'method' => 'label.add', 'params' => array( $label ), 'id' => 3 )));
     }
 	
 	// установка метки
     public function setLabel($hash, $label = "") {
-		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+		$label = str_replace(' ', '_', $label);
+		if(!preg_match("|^[aA-zZ0-9\-_]+$|", $label))
+			return get_now_datetime() . 'В названии метки присутствуют недопустимые символы.<br />';
+		$this->enablePlugin('Label');
+		$this->addLabel($label);
+		foreach($hash as $hash){
+			$json = $this->makeRequest(json_encode(array( 'method' => 'label.set_torrent', 'params' => array( $hash, $label ), 'id' => 1 )));
+		}
 	}
     
     // запуск раздач
