@@ -212,7 +212,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 				<button type="button" value="remove" class="tor_remove torrent_action" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img class="loading" src="img/loading.gif" />Удалить</button>
 				<button type="button" value="start" class="tor_start torrent_action" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Старт</button>
 				<button type="button" value="stop" class="tor_stop torrent_action" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Стоп</button>
-				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Метка</button>
+				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)"><img class="loading" src="img/loading.gif" />Метка</button>
 			</div>
 			<form method="post" id="topics_filter_'.$subsection['id'].'">
 				<div class="topics_filter" title="Фильтр раздач текущего подраздела">

@@ -32,6 +32,7 @@ if(isset($_POST['action'])) $action = $_POST['action'];
 
 $data = $_POST['remove_data'];
 $force = $_POST['force_start'];
+$label = empty($_POST['label']) ? $subsection['lb'] : $_POST['label'];
 
 try {
 	
@@ -40,7 +41,7 @@ try {
 	if($client->is_online()) {
 		switch($action) {
 			case 'set_label':
-				$client->log .= $client->setLabel($hashes, $subsection['lb']);
+				$client->log .= $client->setLabel($hashes, $label);
 				break;
 			case 'stop':
 				$client->log .= $client->torrentStop($hashes);

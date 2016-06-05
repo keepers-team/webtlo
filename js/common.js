@@ -72,4 +72,4 @@ function makeDelay(ms){
 }
 
 // инициализация диалога
-$('#dialog').dialog({ autoOpen: false });
+$('#dialog').dialog({ autoOpen: false, width: 500 });

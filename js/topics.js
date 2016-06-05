@@ -119,7 +119,7 @@ function execActionTopics(){
 		type: "POST",
 		context: this,
 		url: "php/exec_actions_topics.php",
-		data: { topics:topics, client:data.cl, subsec:data.ss, action:action, remove_data:remove_data, force_start:force_start },
+		data: { topics:topics, client:data.cl, subsec:data.ss, action:action, remove_data:remove_data, force_start:force_start, label:label },
 		success: function(response) {
 			resp = $.parseJSON(response);
 			$("#log").append(resp.log);
@@ -152,9 +152,9 @@ function execActionTopics(){
 	});
 }
 
-$("#topics").on("click", ".torrent_action", function(){
+$("#topics").on("click", ".torrent_action", function(e){
 	var button = this;
-	remove_data = ""; force_start = "";
+	remove_data = ""; force_start = ""; label = "";
 	subsection = $(this).parents(".tab-topic").attr("value");
 	action = $(this).val();
 	topics = listSelectedTopics.apply();
@@ -169,6 +169,16 @@ $("#topics").on("click", ".torrent_action", function(){
 			resizable: false,
 			position: [ 'center' , 200 ]
 		}).text('Удалить загруженные файлы раздач с диска ?');
+		$("#dialog").dialog("open");
+		return;
+	}
+	if(action == 'set_label' && e.ctrlKey){
+		$("#dialog").dialog({
+			buttons: [{ text: "ОК", click: function() { label = $("#any_label").val(); execActionTopics.apply(button); }}],
+			modal: true,
+			resizable: false,
+			position: [ 'center' , 200 ]
+		}).html('<label>Установить метку: <input id="any_label" size="27" />');
 		$("#dialog").dialog("open");
 		return;
 	}
