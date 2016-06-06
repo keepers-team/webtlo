@@ -461,10 +461,10 @@ class FromDatabase {
 				END as `avg`
 			FROM
 				`Topics`
-				INNER JOIN
+				LEFT JOIN
 				`Seeders`
 					ON `Topics`.`id` = `Seeders`.`id`
-				INNER JOIN `Other`
+				LEFT JOIN `Other`
 			WHERE `avg` <= CAST(:se as REAL) AND `dl` = :dl
 			ORDER BY `ss`, `avg`
 		", array('se' => $seeders, 'dl' => $status));

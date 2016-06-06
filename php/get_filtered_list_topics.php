@@ -37,10 +37,10 @@ try {
 			END as `avg`
 		FROM
 			`Topics`
-			INNER JOIN
+			LEFT JOIN
 			`Seeders`
 				ON `Topics`.`id` = `Seeders`.`id`
-			INNER JOIN `Other`
+			LEFT JOIN `Other`
 		WHERE $where AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT)
 		ORDER BY CAST(`$filter_sort` as $cast) $filter_sort_direction
 	");
