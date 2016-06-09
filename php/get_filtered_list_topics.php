@@ -20,16 +20,20 @@ try {
 		(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE 1 END', $days_fields )) . ' + 1 )';
 	
 	// подготовка запроса
-	$where = (isset($filter_interval) ? "`avg` >= CAST(:from as REAL) AND `avg` <= CAST(:to as REAL)" : "`avg` $filter_rule_direction CAST(:se as REAL)");
+	$where = (isset($filter_interval) ? "`avg` >= CAST(:from as REAL) AND `avg` <= CAST(:to as REAL)" : "`avg` $filter_rule_direction CAST(:se as REAL)") . " AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT)";
 	$cast = ($filter_sort == 'na' ? 'text' : ($filter_sort == 'avg' ? 'real' : 'int'));
 	$param = array('dl' => $filter_status, 'ss' => $subsec, 'ds' => $ds);
 	$param += isset($filter_interval) ? array('from' => $filter_rule_interval['from'], 'to' => $filter_rule_interval['to']) : array('se' => $filter_rule);
+	if($subsec == 0){
+		$param = array();
+		$where = "`ss` = 0 AND `dl` = -2";
+	}
 	
 	$db = new PDO('sqlite:' . dirname(__FILE__) . '/../webtlo.db');
 	
 	$sth = $db->prepare("
 		SELECT
-			`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,
+			`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,`cl`,
 			CASE
 				WHEN `ds` IS 0
 				THEN (`se` * 1.) / `rt`
@@ -41,7 +45,7 @@ try {
 			`Seeders`
 				ON `Topics`.`id` = `Seeders`.`id`
 			LEFT JOIN `Other`
-		WHERE $where AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT)
+		WHERE $where
 		ORDER BY CAST(`$filter_sort` as $cast) $filter_sort_direction
 	");
 	if($db->errorCode() != '0000') {
@@ -58,7 +62,7 @@ try {
 		$icons = ($topic['ds'] >= $time || !$avg_seeders ? 'green' : ($topic['ds'] >= $time / 2 ? 'yellow' : 'red'));
 		$output .=
 			'<div id="topic_' . $topic['id'] . '"><label>
-				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'">
+				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
 				<img title="" src="img/'.$icons.'.png" />
 				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 1).'</span>
 			</label></div>';

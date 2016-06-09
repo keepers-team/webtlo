@@ -13,12 +13,19 @@ class Webtlo {
 	public $api_key;
 	public $api_url;
 	public $log;
+	public $limit;
 	
 	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
 		$this->log = get_now_datetime() . 'Получение данных с ' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
 		$this->make_database();
+		$this->init_curl();
+		$this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
+		$this->limit = $this->get_limit();
+	}
+	
+	private function init_curl(){
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_RETURNTRANSFER => 1,
@@ -26,30 +33,23 @@ class Webtlo {
 		    CURLOPT_SSL_VERIFYPEER => 0
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
-		// прокси
+	}
+	
+	private function init_proxy($proxy_activate = false, $proxy_type, $proxy_address, $proxy_auth){
 		if($proxy_activate) {
 			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
-			$this->init_proxy($proxy_type, $proxy_address, $proxy_auth);
+			$proxy_array = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5	);
+			$proxy_type = (array_key_exists($proxy_type, $proxy_array) ? $proxy_array[$proxy_type] : null);
+			$proxy_address = (in_array(null, explode(':', $proxy_address)) ? null : $proxy_address);
+			$proxy_auth = (in_array(null, explode(':', $proxy_auth)) ? null : $proxy_auth);
+			curl_setopt_array($this->ch, array(
+				CURLOPT_PROXYTYPE => $proxy_type,
+				CURLOPT_PROXY => $proxy_address,
+				CURLOPT_PROXYUSERPWD => $proxy_auth
+			));
 		} else {
 			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
 		}
-	}
-	
-	private function init_proxy($proxy_type, $proxy_address, $proxy_auth){
-		$proxy_array = array(
-			'http' => 0,
-			'socks4' => 4,
-			'socks4a' => 6,
-			'socks5' => 5
-		);		
-		$proxy_type = (array_key_exists($proxy_type, $proxy_array) ? $proxy_array[$proxy_type] : null);
-		$proxy_address = (in_array(null, explode(':', $proxy_address)) ? null : $proxy_address);
-		$proxy_auth = (in_array(null, explode(':', $proxy_auth)) ? null : $proxy_auth);		
-		curl_setopt_array($this->ch, array(
-			CURLOPT_PROXYTYPE => $proxy_type,
-			CURLOPT_PROXY => $proxy_address,
-			CURLOPT_PROXYUSERPWD => $proxy_auth
-		));
 	}
 	
 	private function request_exec($url){
@@ -134,29 +134,35 @@ class Webtlo {
 	// список раздач раздела
 	public function get_subsection_data($subsections, $status){
 		$this->log .= get_now_datetime() . 'Получение списка раздач...<br />';
-		$ids = array();
-		// узнаём лимит на кол-во запросов
-		$limit = $this->get_limit();
-		//~ $tmp = array();
 		foreach($subsections as $subsection){
 			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);
 			$this->log .= get_now_datetime() . 'Список раздач раздела № ' . $subsection['id'] . ' получен (' . count($data['result']) . ' шт.).<br />';
 			foreach($data['result'] as $id => $val){
 				// только раздачи с выбранными статусами
-				if((isset($val[0])) && (in_array($val[0], $status))){
-					$tmp[] = $id;
+				if(isset($val[0]) && in_array($val[0], $status)){
+					$ids[] = $id;
 				}
 			}
 		}
-		// разбираем $tmp
-		$id_list = array_chunk($tmp, $limit, false);
-		foreach($id_list as $num => $id){
-			$ids[] = implode(',', $id);
-		}
-		
 		return $ids;
-	}	
+	}
+	
+	// получить id раздачи по hash
+	public function get_topic_id($hashes){
+		if(empty($hashes)) return;
+		$this->log .= get_now_datetime() . 'Поиск раздач из других подразделов...<br />';
+		$hashes = array_chunk($hashes, $this->limit, false);
+		foreach($hashes as $hashes){
+			$value = implode(',', $hashes);
+			$url = $this->api_url . '/v1/get_topic_id?by=hash&api_key=' . $this->api_key . '&val=' . $value;
+			$data = $this->request_exec($url);
+			foreach($data['result'] as $id){
+				if(!empty($id)) $ids[] = $id;
+			}
+		}
+		return $ids;
+	}
 	
 	private function count_days($array){
 		$i = 0;
@@ -174,12 +180,25 @@ class Webtlo {
 	}
 	
 	// сведения о каждой раздаче
-	public function get_tor_topic_data($ids, $tc_topics, $rule, $subsec, $avg_seeders, $time){
+	public function get_tor_topic_data($ids){
+		if(empty($ids)) return;
 		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
-		$topics = array();
-		
+		$ids = array_chunk($ids, $this->limit, false);
+		foreach($ids as $ids){
+			$value = implode(',', $ids);
+			$url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $value;
+			$data = $this->request_exec($url);
+			foreach($data['result'] as $topic_id => $info){
+				if(is_array($info)) $topics[$topic_id] = $info;
+			}
+		}
+		return $topics;
+	}
+	
+	public function preparation_of_topics($data, $tc_topics, $rule, $subsec, $avg_seeders, $time){
+		if(empty($data)) return;
+		$subsec = explode(',', $subsec);
 		if($avg_seeders){
-			$subsec = explode(',', $subsec);
 			$in = str_repeat('?,', count($subsec) - 1) . '?';
 			$this->log .= get_now_datetime() . 'Задействован алгоритм поиска среднего значения количества сидов...<br />';
 			$this->log .= get_now_datetime() . 'Получение информации о раздачах за предыдущее обновление...<br />';
@@ -189,85 +208,78 @@ class Webtlo {
 			$seeders = $this->query_database('SELECT `id`,`'.implode('`,`',$days_fields).'` FROM `Seeders`', array(), true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
 		}
 		
-		$tmp = array();
 		$ud_current = new DateTime('now'); // текущая дата обновления сведений
 		$ud_old = new DateTime(); // прошлое значение даты обновления сведений
 		
-		foreach($ids as $ids){
-			$url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $ids;
-			$data = $this->request_exec($url);
-			
-			// разбираем полученные с api данные
-			foreach($data['result'] as $topic_id => $info){
-				// для отправки дальше
-				$tmp['topics'][$topic_id]['id'] = $topic_id;
-				$tmp['topics'][$topic_id]['ss'] = $info['forum_id'];
-				$tmp['topics'][$topic_id]['na'] = $info['topic_title'];
-				$tmp['topics'][$topic_id]['hs'] = $info['info_hash'];
-				$tmp['topics'][$topic_id]['si'] = $info['size'];
-				$tmp['topics'][$topic_id]['st'] = $info['tor_status'];
-				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
-				// средние сиды
-				$days = 0;
-				$sum_updates = 1;
-				$sum_seeders = $info['seeders'];
-				$avg_seeders = $sum_seeders / $sum_updates;
-				if(isset($topics_old[$topic_id])){
-					// переносим старые значения
-					$days = $topics_old[$topic_id][0]['ds'];
-					if(isset($seeders[$topic_id])) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
-					$ud_old->setTimestamp($topics_old[$topic_id][0]['ud'])->setTime(0, 0, 0);
-					if($ud_current->diff($ud_old)->format('%d') > 0){
-						$tmp['seeders'][$topic_id]['d'.$days % $time] = round($topics_old[$topic_id][0]['se'] / $topics_old[$topic_id][0]['rt'], 3);
-						$tmp['seeders'][$topic_id] += array_fill_keys($days_fields, '');
-						$seeders_insert = preg_replace('/^$/', "''", $tmp['seeders'][$topic_id]);
-						$tmp['seeders'][$topic_id][] = $avg_seeders;
-						$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
-						$days++;
-						// формирование массива для вставки средних сидов
-						$tmp['insert_seeders'][] = "SELECT " .
-						    "{$topic_id},".
-						    implode(",", $seeders_insert) . " UNION ALL";
-					} else {
-						$sum_updates = $topics_old[$topic_id][0]['rt'] + 1;
-						$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
-						$tmp['seeders'][$topic_id][] = $sum_seeders / $sum_updates;
-						$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
-					}
-				}
-				$tmp['topics'][$topic_id]['ud'] = $ud_current->format('U');
-				$tmp['topics'][$topic_id]['ds'] = $days;
-				$tmp['topics'][$topic_id]['se'] = $sum_seeders;
-				$tmp['topics'][$topic_id]['rt'] = $sum_updates;
-				$tmp['topics'][$topic_id]['avg'] = $avg_seeders;
-				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
-				if(isset($tc_topics[$info['info_hash']])){
-					$tmp['topics'][$topic_id]['dl'] = ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1);
+		// разбираем полученные с api данные
+		foreach($data as $topic_id => $info){
+			$stored = in_array($info['forum_id'], $subsec);
+			// для отправки дальше
+			$tmp['topics'][$topic_id]['id'] = $topic_id;
+			$tmp['topics'][$topic_id]['ss'] = $stored ? $info['forum_id'] : 0;
+			$tmp['topics'][$topic_id]['na'] = $info['topic_title'];
+			$tmp['topics'][$topic_id]['hs'] = $info['info_hash'];
+			$tmp['topics'][$topic_id]['si'] = $info['size'];
+			$tmp['topics'][$topic_id]['st'] = $info['tor_status'];
+			$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
+			// средние сиды
+			$days = 0;
+			$sum_updates = 1;
+			$sum_seeders = $info['seeders'];
+			$avg_seeders = $sum_seeders / $sum_updates;
+			if(isset($topics_old[$topic_id])){
+				// переносим старые значения
+				$days = $topics_old[$topic_id][0]['ds'];
+				if(isset($seeders[$topic_id])) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
+				$ud_old->setTimestamp($topics_old[$topic_id][0]['ud'])->setTime(0, 0, 0);
+				if($ud_current->diff($ud_old)->format('%d') > 0 && $stored){
+					$tmp['seeders'][$topic_id]['d'.$days % $time] = round($topics_old[$topic_id][0]['se'] / $topics_old[$topic_id][0]['rt'], 3);
+					$tmp['seeders'][$topic_id] += array_fill_keys($days_fields, '');
+					$seeders_insert = preg_replace('/^$/', "''", $tmp['seeders'][$topic_id]);
+					$tmp['seeders'][$topic_id][] = $avg_seeders;
+					$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
+					$days++;
+					// формирование массива для вставки средних сидов
+					$tmp['insert_seeders'][] = "SELECT " .
+					    "{$topic_id},".
+					    implode(",", $seeders_insert) . " UNION ALL";
 				} else {
-					$tmp['topics'][$topic_id]['dl'] = 0;
+					$sum_updates = $topics_old[$topic_id][0]['rt'] + 1;
+					$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
+					$tmp['seeders'][$topic_id][] = $sum_seeders / $sum_updates;
+					$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
 				}
-				// для вставки в базу
-				$tmp['insert_topics'][] = "SELECT " .
-				    "{$topic_id},
-				    {$info['forum_id']},
-				    {$this->db->quote($info['topic_title'])},
-				    '{$info['info_hash']}',
-				    {$sum_seeders},
-				    {$info['size']},
-				    {$info['tor_status']},
-				    {$info['reg_time']},
-				    {$tmp['topics'][$topic_id]['dl']},
-				    {$sum_updates},
-				    {$days}" .
-			    " UNION ALL";
 			}
-						
+			$tmp['topics'][$topic_id]['ud'] = $ud_current->format('U');
+			$tmp['topics'][$topic_id]['ds'] = $days;
+			$tmp['topics'][$topic_id]['se'] = $sum_seeders;
+			$tmp['topics'][$topic_id]['rt'] = $sum_updates;
+			$tmp['topics'][$topic_id]['avg'] = $avg_seeders;
+			$tmp['topics'][$topic_id]['cl'] = isset($tc_topics[$info['info_hash']]) ? $tc_topics[$info['info_hash']]['client'] : '';
+			// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю)
+			$tmp['topics'][$topic_id]['dl'] = !isset($tc_topics[$info['info_hash']]) ? 0 : (!$stored ? -2 : ($tc_topics[$info['info_hash']]['status'] == 1 ? 1 : -1));
+			
+			// для вставки в базу
+			$tmp['insert_topics'][] = "SELECT " .
+			    "{$topic_id},
+			    {$tmp['topics'][$topic_id]['ss']},
+			    {$this->db->quote($info['topic_title'])},
+			    '{$info['info_hash']}',
+			    {$sum_seeders},
+			    {$info['size']},
+			    {$info['tor_status']},
+			    {$info['reg_time']},
+			    {$tmp['topics'][$topic_id]['dl']},
+			    {$sum_updates},
+			    {$days},
+			    '{$tmp['topics'][$topic_id]['cl']}'" .
+		    " UNION ALL";
 		}
 		
 		// разбираем $tmp
 		$insert_topics = array_chunk($tmp['insert_topics'], 500, false);
 		foreach($tmp['topics'] as $id => $topic){
-			if($topic['avg'] <= $rule) $topics[$id] = $topic;
+			if($topic['avg'] <= $rule || $topic['dl'] == -2) $topics[$id] = $topic;
 		}
 		// сортируем топики по кол-ву сидов по возрастанию
 		uasort($topics, array($this, 'sort_topics'));
@@ -275,7 +287,7 @@ class Webtlo {
 		// отправляем в базу данных топики
 		$this->log .= get_now_datetime() . 'Запись в базу данных сведений о раздачах...<br />';
 		foreach($insert_topics as $value){
-			$this->query_database('INSERT INTO temp.Topics1 (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`,`ds`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
+			$this->query_database('INSERT INTO temp.Topics1 (`id`,`ss`,`na`,`hs`,`se`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`cl`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
 		}
 		
 		$this->query_database('INSERT INTO `Topics` SELECT * FROM temp.Topics1');
@@ -313,7 +325,7 @@ class Webtlo {
 		
 		$this->log .= get_now_datetime() . 'Подготовка структуры базы данных...<br />';
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
-				
+		
 		// таблицы
 		
 		// список подразделов
@@ -335,9 +347,7 @@ class Webtlo {
 				si INT NOT NULL,
 				st INT NOT NULL,
 				rg INT NOT NULL,
-				dl INT NOT NULL DEFAULT 0,
-				rt INT NOT NULL DEFAULT 1,
-				ds INT NOT NULL DEFAULT 0
+				dl INT NOT NULL DEFAULT 0
 		)');
 		
 		// средние сиды
@@ -378,7 +388,7 @@ class Webtlo {
 			    UPDATE Topics SET
 					ss = NEW.ss, na = NEW.na, hs = NEW.hs, se = NEW.se,
 					si = NEW.si, st = NEW.st, rg = NEW.rg, dl = NEW.dl,
-					rt = NEW.rt, ds = NEW.ds
+					rt = NEW.rt, ds = NEW.ds, cl = NEW.cl
 			    WHERE id = NEW.id;
 			    SELECT RAISE(IGNORE);
 			END;
@@ -401,6 +411,15 @@ class Webtlo {
 			    SELECT RAISE(IGNORE);
 			END;
 		');
+		
+		// совместимость со старыми версиями базы данных
+		$version = $this->query_database('PRAGMA user_version', array(), true);
+		if($version[0]['user_version'] < 1){
+				$this->query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
+				$this->query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
+				$this->query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
+				$this->query_database('PRAGMA user_version = 1');
+		}
 		
 		// временные таблицы
 		$this->query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
@@ -453,7 +472,7 @@ class FromDatabase {
 			(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE 1 END', $days_fields )) . ' + 1 )';
 		$topics = $this->query_database("
 			SELECT
-				`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,
+				`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,`cl`,
 				CASE
 					WHEN `ds` IS 0
 					THEN (`se` * 1.) / `rt`
@@ -465,7 +484,7 @@ class FromDatabase {
 				`Seeders`
 					ON `Topics`.`id` = `Seeders`.`id`
 				LEFT JOIN `Other`
-			WHERE `avg` <= CAST(:se as REAL) AND `dl` = :dl
+			WHERE `avg` <= CAST(:se as REAL) AND `dl` = :dl OR `dl` = -2
 			ORDER BY `ss`, `avg`
 		", array('se' => $seeders, 'dl' => $status));
 		if(empty($topics)) throw new Exception();

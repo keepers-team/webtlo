@@ -13,7 +13,7 @@ try {
 	$update = array_chunk($_POST['success'], 500, false); // не более 500 за раз
 	foreach($update as $topics){
 		$in = str_repeat('?,', count($topics) - 1) . '?';
-		$sql = "UPDATE `Topics` SET `dl` = ".$status." WHERE `id` IN ($in)";
+		$sql = "UPDATE `Topics` SET `dl` = $status WHERE `id` IN ($in)";
 		$sth = $db->prepare($sql);
 		if($db->errorCode() != '0000') {
 			$db_error = $db->errorInfo();

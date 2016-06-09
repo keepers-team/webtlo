@@ -10,7 +10,8 @@ function listSelectedTopics(){
 		if($(this).prop("checked")) {
 			id = $(this).attr("id");
 			hash = $(this).attr("hash");
-			topics.push({id: id, hash: hash});
+			client = $(this).attr("client");
+			topics.push({id: id, hash: hash, client: client});
 		}
 	});
 	return topics;
@@ -49,39 +50,32 @@ $("#topics").on("click", ".tor_download", function(){
 	});
 });
 
-// проверка наличия, указанного в настройках подраздела, торрент-клиента
-function checkSubsectionClient() {
-	if(!$("#list-ss [value="+subsection+"]").val()){
-		$("#result_"+subsection).html("В настройках подразделов нет такого идентификатора: "+subsection+".<br />");
-		return false;
-	}
-	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
-	tmp = ss_data.split("|");
-	if(tmp[2] == "" && tmp[2] == 0){
-		$("#result_"+subsection).html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
-		return false;
-	}
-	if(!$("#list-tcs [value="+tmp[2]+"]").val()){
-		$("#result_"+subsection).html("Нет такого торрент-клиента: "+tmp[2]+"<br />");
-		return false;
-	}
-	cl_data = $("#list-tcs [value="+tmp[2]+"]").attr("data");
-	return {cl: cl_data, ss: ss_data};
-}
-
 // добавление раздач в торрент-клиент
 $("#topics").on("click", ".tor_add", function(){
 	subsection = $(this).parents(".tab-topic").attr("value");
 	topics = listSelectedTopics.apply();
 	if(topics == '') return;
-	data = checkSubsectionClient.apply();
-	if(!data) return;
+	if(!$("#list-ss [value="+subsection+"]").val()){
+		$("#result_"+subsection).html("В настройках подразделов нет такого идентификатора: "+subsection+".<br />");
+		return;
+	}
+	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
+	tmp = ss_data.split("|");
+	if(tmp[2] == "" && tmp[2] == 0){
+		$("#result_"+subsection).html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
+		return;
+	}
+	if(!$("#list-tcs [value="+tmp[2]+"]").val()){
+		$("#result_"+subsection).html("В настройках нет такого торрент-клиента: "+tmp[2]+"<br />");
+		return;
+	}
+	cl_data = $("#list-tcs [value="+tmp[2]+"]").attr("data");
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
 		context: this,
 		url: "php/add_topics_to_client.php",
-		data: { topics:topics, client:data.cl, subsec:data.ss, cfg:$data },
+		data: { topics:topics, client:cl_data, subsec:ss_data, cfg:$data },
 		success: function(response) {
 			var resp = eval("(" + response + ")");
 			$("#log").append(resp.log);
@@ -113,32 +107,31 @@ $("#topics").on("click", ".tor_add", function(){
 })
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
-function execActionTopics(){
+function exec_action_for_topics(){
 	$("#dialog").dialog("close");
 	$.ajax({
 		type: "POST",
 		context: this,
 		url: "php/exec_actions_topics.php",
-		data: { topics:topics, client:data.cl, subsec:data.ss, action:action, remove_data:remove_data, force_start:force_start, label:label },
+		data: { topics:topics, clients:clients, action:action, remove_data:remove_data, force_start:force_start, label:label },
 		success: function(response) {
 			resp = $.parseJSON(response);
 			$("#log").append(resp.log);
 			$("#result_"+subsection).html(resp.result);
 			//~ $("#log").append(response);
-			if(resp.ids != null){
-				if(action == 'remove'){
-					// помечаем в базе удалённые раздачи
-				    $.ajax({
-					    type: "POST",
-					    context: this,
-						url: "php/mark_topics_in_database.php",
-						data: { success:resp.ids, status:0 },
-						success: function(response) {
-							$("#log").append(response);
-							getFilteredTopics.apply(this);
-						},
-					});
-				}
+			if(resp.ids != null && action == 'remove'){
+				status = subsection == 0 ? -3 : 0;
+				// помечаем в базе удалённые раздачи
+			    $.ajax({
+				    type: "POST",
+				    context: this,
+					url: "php/mark_topics_in_database.php",
+					data: { success:resp.ids, status:status },
+					success: function(response) {
+						$("#log").append(response);
+						getFilteredTopics.apply(this);
+					},
+				});
 			}
 		},
 		beforeSend: function() {
@@ -154,17 +147,17 @@ function execActionTopics(){
 
 $("#topics").on("click", ".torrent_action", function(e){
 	var button = this;
-	remove_data = ""; force_start = ""; label = "";
+	remove_data = ""; force_start = "";
 	subsection = $(this).parents(".tab-topic").attr("value");
 	action = $(this).val();
-	topics = listSelectedTopics.apply();
-	if(topics == '') return;
-	data = checkSubsectionClient.apply();
-	if(!data) return;
+	topics = listSelectedTopics.apply(); if(topics == '') return;
+	clients = listTorClients();
+	data = $("#list-ss [value="+subsection+"]").attr("data");
+	data = data.split("|"); label = data[3];
 	if(action == 'remove'){
 		$("#dialog").dialog({
-			buttons: [{ text: "Да", click: function() { remove_data = true; execActionTopics.apply(button); }},
-				{ text: "Нет", click: function() { execActionTopics.apply(button); }}],
+			buttons: [{ text: "Да", click: function() { remove_data = true; exec_action_for_topics.apply(button); }},
+				{ text: "Нет", click: function() { exec_action_for_topics.apply(button); }}],
 			modal: true,
 			resizable: false,
 			position: [ 'center' , 200 ]
@@ -172,9 +165,9 @@ $("#topics").on("click", ".torrent_action", function(e){
 		$("#dialog").dialog("open");
 		return;
 	}
-	if(action == 'set_label' && e.ctrlKey){
+	if(action == 'set_label' && (e.ctrlKey || subsection == 0)){
 		$("#dialog").dialog({
-			buttons: [{ text: "ОК", click: function() { label = $("#any_label").val(); execActionTopics.apply(button); }}],
+			buttons: [{ text: "ОК", click: function() { label = $("#any_label").val(); exec_action_for_topics.apply(button); }}],
 			modal: true,
 			resizable: false,
 			position: [ 'center' , 200 ]
@@ -182,7 +175,7 @@ $("#topics").on("click", ".torrent_action", function(e){
 		$("#dialog").dialog("open");
 		return;
 	}
-	execActionTopics.apply(this);
+	exec_action_for_topics.apply(this);
 });
 
 // вывод на экран кол-во, объём выбранных раздач
@@ -291,7 +284,7 @@ function getFilteredTopics(){
 				$("#topics_list_"+subsec).html(resp.topics);
 			}
 			if(resp.log != null){
-				$("#topics_list_"+subsec).append(resp.log);
+				$("#log").append(resp.log);
 			}
 			showSelectedInfo(subsec, 0, 0.00);
 		},

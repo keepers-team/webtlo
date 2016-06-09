@@ -39,9 +39,12 @@ try {
 	
 	// получение данных с api.rutracker.org
 	$webtlo = new Webtlo($cfg['api_key'], $cfg['api_url'], $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth']);
-	$subsections = $webtlo->get_cat_forum_tree($cfg['subsections_line']); /* обновляем дерево разделов */
-	$ids = $webtlo->get_subsection_data($subsections, $cfg['topics_status']); /* получаем список раздач разделов */
-	$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $cfg['rule_topics'], $cfg['subsections_line'], $cfg['avg_seeders'], $cfg['avg_seeders_period']); /* получаем подробные сведения о раздачах */
+	$subsections = $webtlo->get_cat_forum_tree($cfg['subsections_line']);
+	$ids = $webtlo->get_subsection_data($subsections, $cfg['topics_status']);
+	$topics = $webtlo->get_tor_topic_data($ids);
+	$ids = $webtlo->get_topic_id(array_diff(array_keys($tc_topics), array_column_common($topics, 'info_hash')));
+	$topics += $webtlo->get_tor_topic_data($ids);
+	$output = $webtlo->preparation_of_topics($topics, $tc_topics, $cfg['rule_topics'], $cfg['subsections_line'], $cfg['avg_seeders'], $cfg['avg_seeders_period']);
 	
 	// переименовываем файл лога, если он больше 5 Мб
 	if(file_exists($filelog) && filesize($filelog) >= 5242880){

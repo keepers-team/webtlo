@@ -10,6 +10,9 @@ function get_tor_client_data($tcs, &$log) {
 		$client = new $tc['cl']($tc['ht'], $tc['pt'], $tc['lg'], $tc['pw']);
 		if($client->is_online()) {
 			$tmp = $client->getTorrents();
+			foreach($tmp as $hash => $value){
+				$tmp[$hash]['client'] = $tc['cm'];
+			}
 			$tc_topics += $tmp;
 		} else $tmp = null;
 		$log .= str_replace('{cm}', $tc['cm'], $client->log);

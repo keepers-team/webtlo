@@ -139,9 +139,12 @@ switch($_POST['m'])
 			$tc_topics = get_tor_client_data($tcs, $log); /* обновляем сведения от т.-клиентов */
 			$webtlo = new Webtlo($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
-			$ids = $webtlo->get_subsection_data($subsections, $topics_status); /* получаем список раздач разделов */
-			$topics = $webtlo->get_tor_topic_data($ids, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period); /* получаем подробные сведения о раздачах */
-			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $log . $webtlo->log);
+			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
+			$topics = $webtlo->get_tor_topic_data($ids);
+			$ids = $webtlo->get_topic_id(array_diff(array_keys($tc_topics), array_column_common($topics, 'info_hash')));
+			$topics += $webtlo->get_tor_topic_data($ids);
+			$output = $webtlo->preparation_of_topics($topics, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period);
+			output_topics($forum_url, $output, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();
 			echo json_encode(array('log' => $log . $webtlo->log,

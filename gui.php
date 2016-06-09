@@ -196,9 +196,10 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			$output .= '<li class="report"><a href="#tabs-topic_'.$subsection['id'].'" class="report"><span class="rp-header">№ '.$subsection['id'].'</span> - '.mb_substr($subsection['na'],mb_strrpos($subsection['na'], ' » ')+3).'</a></li>';
 		};
 		
-		$output .= '</ul>';		
+		$output .= '<li class="report"><a href="#tabs-topic_0" class="report">Другое</a></li></ul>';
 		
-		// содержимое вкладок подразделов //
+		// содержимое вкладок подразделов
+		$TT_subsections[]['id'] = 0;
 		foreach($TT_subsections as $subsection)
 		{
 			$output .= 
@@ -305,13 +306,13 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			$q = 1;
 			foreach($TT_torrents as $topic_id => &$param)
 			{
-				if(($param['dl'] == 0) && ($param['ss'] == $subsection['id']))
+				if(($param['dl'] == 0 || $param['dl'] == -2) && $param['ss'] == $subsection['id'])
 				{
 					// вывод топиков
 					$icons = ($param['ds'] >= $time || !$avg_seeders ? 'green' : ($param['ds'] >= $time / 2 ? 'yellow' : 'red'));
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>
-								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'">
+								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'" client="'.$param['cl'].'">
 								<img title="" src="img/'.$icons.'.png" />
 								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 1).'</span>
 							</label></div>';

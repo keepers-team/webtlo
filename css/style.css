@@ -208,6 +208,10 @@ label:hover {
 }
 
 /* topics */
+#tabs-topic_0 .topics_filter, #tabs-topic_0 .tor_download, #tabs-topic_0 .tor_add {
+	display: none;
+}
+
 .seeders, .errors {
 	color: red;
 }
