@@ -44,7 +44,7 @@ try {
 	$topics = $webtlo->get_tor_topic_data($ids);
 	$ids = $webtlo->get_topic_id(array_diff(array_keys($tc_topics), array_column_common($topics, 'info_hash')));
 	$topics += $webtlo->get_tor_topic_data($ids);
-	$output = $webtlo->preparation_of_topics($topics, $tc_topics, $cfg['rule_topics'], $cfg['subsections_line'], $cfg['avg_seeders'], $cfg['avg_seeders_period']);
+	$output = $webtlo->preparation_of_topics($topics, $tc_topics, $cfg['rule_topics'], $cfg['subsections_line'], $cfg['avg_seeders'], $cfg['avg_seeders_period'], $cfg['topics_status']);
 	
 	// переименовываем файл лога, если он больше 5 Мб
 	if(file_exists($filelog) && filesize($filelog) >= 5242880){

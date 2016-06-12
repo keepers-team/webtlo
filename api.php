@@ -164,14 +164,13 @@ class Webtlo {
 		return $ids;
 	}
 	
-	private function count_days($array){
-		$i = 0;
-		foreach($array as $item){
-			if(is_numeric($item)){
-				$i++;
-			}
+	private function sum_values($arr, $index = "") {
+		$sum = 0;
+		foreach($arr as $key => $value){
+			if(preg_match("/^$index/", $key))
+				$sum += $value;
 		}
-		return $i;
+		return $sum;
 	}
 	
 	private function sort_topics($a, $b){
@@ -195,7 +194,7 @@ class Webtlo {
 		return $topics;
 	}
 	
-	public function preparation_of_topics($data, $tc_topics, $rule, $subsec, $avg_seeders, $time){
+	public function preparation_of_topics($data, $tc_topics, $rule, $subsec, $avg_seeders, $time, $status){
 		if(empty($data)) return;
 		$subsec = explode(',', $subsec);
 		if($avg_seeders){
@@ -204,8 +203,11 @@ class Webtlo {
 			$this->log .= get_now_datetime() . 'Получение информации о раздачах за предыдущее обновление...<br />';
 			$topics_old = $this->query_database("SELECT Topics.id,se,rt,ds,ud FROM `Topics` INNER JOIN Other WHERE `ss` IN ($in)", $subsec, true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
 			$this->log .= get_now_datetime() . 'Получение информации о средних сидах за предыдущее обновление...<br />';
-			for($i = 0; $i <= $time - 1; $days_fields[] = 'd'.$i++);
-			$seeders = $this->query_database('SELECT `id`,`'.implode('`,`',$days_fields).'` FROM `Seeders`', array(), true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
+			for($i = 0; $i <= $time - 1; $i++){
+				$days_fields[] = 'd'.$i;
+				$days_fields[] = 'q'.$i;
+			}
+			$seeders = $this->query_database('SELECT `id`,'.implode(',',$days_fields).' FROM `Seeders`', array(), true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC);
 		}
 		
 		$ud_current = new DateTime('now'); // текущая дата обновления сведений
@@ -227,17 +229,17 @@ class Webtlo {
 			$sum_updates = 1;
 			$sum_seeders = $info['seeders'];
 			$avg_seeders = $sum_seeders / $sum_updates;
-			if(isset($topics_old[$topic_id])){
+			if(isset($topics_old[$topic_id]) && in_array($info['tor_status'], $status)){
 				// переносим старые значения
 				$days = $topics_old[$topic_id][0]['ds'];
 				if(isset($seeders[$topic_id])) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
 				$ud_old->setTimestamp($topics_old[$topic_id][0]['ud'])->setTime(0, 0, 0);
 				if($ud_current->diff($ud_old)->format('%d') > 0 && $stored){
-					$tmp['seeders'][$topic_id]['d'.$days % $time] = round($topics_old[$topic_id][0]['se'] / $topics_old[$topic_id][0]['rt'], 3);
+					$tmp['seeders'][$topic_id]['d'.$days % $time] = $topics_old[$topic_id][0]['se'];
+					$tmp['seeders'][$topic_id]['q'.$days % $time] = $topics_old[$topic_id][0]['rt'];
 					$tmp['seeders'][$topic_id] += array_fill_keys($days_fields, '');
 					$seeders_insert = preg_replace('/^$/', "''", $tmp['seeders'][$topic_id]);
-					$tmp['seeders'][$topic_id][] = $avg_seeders;
-					$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
+					$avg_seeders = ($this->sum_values($tmp['seeders'][$topic_id], 'd') + $sum_seeders) / ($this->sum_values($tmp['seeders'][$topic_id], 'q') + $sum_updates);
 					$days++;
 					// формирование массива для вставки средних сидов
 					$tmp['insert_seeders'][] = "SELECT " .
@@ -246,8 +248,7 @@ class Webtlo {
 				} else {
 					$sum_updates = $topics_old[$topic_id][0]['rt'] + 1;
 					$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
-					$tmp['seeders'][$topic_id][] = $sum_seeders / $sum_updates;
-					$avg_seeders = array_sum($tmp['seeders'][$topic_id]) / $this->count_days($tmp['seeders'][$topic_id]);
+					$avg_seeders = isset($tmp['seeders'][$topic_id]) ? ($this->sum_values($tmp['seeders'][$topic_id], 'd') + $sum_seeders) / ($this->sum_values($tmp['seeders'][$topic_id], 'q') + $sum_updates) : $sum_seeders / $sum_updates;
 				}
 			}
 			$tmp['topics'][$topic_id]['ud'] = $ud_current->format('U');
@@ -299,7 +300,7 @@ class Webtlo {
 			$insert_seeders = array_chunk($tmp['insert_seeders'], 500, false);
 
 			foreach($insert_seeders as $value){
-				$this->query_database('INSERT INTO temp.Seeders1 (`id`,`'.implode('`,`',$days_fields).'`) ' . rtrim(implode(' ', $value), ' UNION ALL'));
+				$this->query_database('INSERT INTO temp.Seeders1 (`id`,'.implode(',',$days_fields).') ' . rtrim(implode(' ', $value), ' UNION ALL'));
 			}
 			
 			$this->query_database('INSERT INTO `Seeders` SELECT * FROM temp.Seeders1');
@@ -353,11 +354,16 @@ class Webtlo {
 		// средние сиды
 		$this->query_database('CREATE TABLE IF NOT EXISTS Seeders (
 			id INT NOT NULL PRIMARY KEY,
-			d0 REAL, d1 REAL,d2 REAL,d3 REAL,d4 REAL,d5 REAL,d6 REAL,
-			d7 REAL,d8 REAL,d9 REAL,d10 REAL,d11 REAL,d12 REAL,d13 REAL,
-			d14 REAL,d15 REAL,d16 REAL,d17 REAL,d18 REAL,d19 REAL,
-			d20 REAL,d21 REAL,d22 REAL,d23 REAL,d24 REAL,d25 REAL,
-			d26 REAL,d27 REAL,d28 REAL,d29 REAL
+			d0 INT, d1 INT,d2 INT,d3 INT,d4 INT,d5 INT,d6 INT,
+			d7 INT,d8 INT,d9 INT,d10 INT,d11 INT,d12 INT,d13 INT,
+			d14 INT,d15 INT,d16 INT,d17 INT,d18 INT,d19 INT,
+			d20 INT,d21 INT,d22 INT,d23 INT,d24 INT,d25 INT,
+			d26 INT,d27 INT,d28 INT,d29 INT,
+			q0 INT, q1 INT,q2 INT,q3 INT,q4 INT,q5 INT,q6 INT,
+			q7 INT,q8 INT,q9 INT,q10 INT,q11 INT,q12 INT,q13 INT,
+			q14 INT,q15 INT,q16 INT,q17 INT,q18 INT,q19 INT,
+			q20 INT,q21 INT,q22 INT,q23 INT,q24 INT,q25 INT,
+			q26 INT,q27 INT,q28 INT,q29 INT
 		)');
 		
 		// триггеры
@@ -406,7 +412,15 @@ class Webtlo {
 				    d16 = NEW.d16, d17 = NEW.d17, d18 = NEW.d18, d19 = NEW.d19,
 				    d20 = NEW.d20, d21 = NEW.d21, d22 = NEW.d22, d23 = NEW.d23,
 				    d24 = NEW.d24, d25 = NEW.d25, d26 = NEW.d26, d27 = NEW.d27,
-				    d28 = NEW.d28, d29 = NEW.d29
+				    d28 = NEW.d28, d29 = NEW.d29,
+				    q0 = NEW.q0, q1 = NEW.q1, q2 = NEW.q2, q3 = NEW.q3,
+				    q4 = NEW.q4, q5 = NEW.q5, q6 = NEW.q6, q7 = NEW.q7,
+				    q8 = NEW.q8, q9 = NEW.q9, q10 = NEW.q10, q11 = NEW.q11,
+				    q12 = NEW.q12, q13 = NEW.q13, q14 = NEW.q14, q15 = NEW.q15,
+				    q16 = NEW.q16, q17 = NEW.q17, q18 = NEW.q18, q19 = NEW.q19,
+				    q20 = NEW.q20, q21 = NEW.q21, q22 = NEW.q22, q23 = NEW.q23,
+				    q24 = NEW.q24, q25 = NEW.q25, q26 = NEW.q26, q27 = NEW.q27,
+				    q28 = NEW.q28, q29 = NEW.q29
 			    WHERE id = NEW.id;
 			    SELECT RAISE(IGNORE);
 			END;
@@ -467,9 +481,12 @@ class FromDatabase {
 	// ... из базы топики
 	public function get_topics($seeders, $status, $time){
 		$this->log .= get_now_datetime() . 'Получение данных о раздачах...<br />';
-		for($i = 0; $i <= $time - 1; $days_fields[] = 'd'.$i++);
-		$avg_seeders = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields )) . ' + (`se` * 1.) / `rt` ) /
-			(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE 1 END', $days_fields )) . ' + 1 )';
+		for($i = 0; $i <= $time - 1; $i++){
+				$days_fields['d'][] = 'd'.$i;
+				$days_fields['q'][] = 'q'.$i;
+			}
+		$avg_seeders = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['d'] )) . ' + (`se` * 1.) ) /
+			(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['q'] )) . ' + `rt` )';
 		$topics = $this->query_database("
 			SELECT
 				`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,`cl`,

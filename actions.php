@@ -143,7 +143,7 @@ switch($_POST['m'])
 			$topics = $webtlo->get_tor_topic_data($ids);
 			$ids = $webtlo->get_topic_id(array_diff(array_keys($tc_topics), array_column_common($topics, 'info_hash')));
 			$topics += $webtlo->get_tor_topic_data($ids);
-			$output = $webtlo->preparation_of_topics($topics, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period);
+			$output = $webtlo->preparation_of_topics($topics, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period, $topics_status);
 			output_topics($forum_url, $output, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();

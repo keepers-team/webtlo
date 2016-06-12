@@ -15,9 +15,12 @@ try {
 	$time = $_POST['time'];
 	$time = $time == 0 ? 1 : ($time > 30 ? 30 : $time); // жёсткое ограничение на 30 дн.
 	$ds = isset($avg_seeders_complete) && $avg_seeders ? $time : 0;
-	for($i = 0; $i <= $time - 1; $days_fields[] = 'd'.$i++);
-	$avg = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields )) . ' + (`se` * 1.) / `rt` ) /
-		(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE 1 END', $days_fields )) . ' + 1 )';
+	for($i = 0; $i <= $time - 1; $i++){
+		$days_fields['d'][] = 'd'.$i;
+		$days_fields['q'][] = 'q'.$i;
+	}
+	$avg = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['d'] )) . ' + (`se` * 1.) ) /
+		(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['q'] )) . ' + `rt` )';
 	
 	// подготовка запроса
 	$where = (isset($filter_interval) ? "`avg` >= CAST(:from as REAL) AND `avg` <= CAST(:to as REAL)" : "`avg` $filter_rule_direction CAST(:se as REAL)") . " AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT)";
