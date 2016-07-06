@@ -26,7 +26,7 @@ $("#topics").on("click", ".tor_download", function(){
 	$.ajax({
 		type: "POST",
 		context: this,
-		url: "index.php",
+		url: "actions.php",
 		data: { topics:topics, m:'download', subsec:subsection, cfg:$data },
 		success: function(response) {
 			var resp = eval("(" + response + ")");
@@ -286,7 +286,6 @@ function getFilteredTopics(){
 			if(resp.log != null){
 				$("#log").append(resp.log);
 			}
-			showSelectedInfo(subsec, 0, 0.00);
 		},
 		beforeSend: function() {
 			block_actions();
@@ -301,8 +300,12 @@ function getFilteredTopics(){
 var delay = makeDelay (500);
 $("#topics").on("spin input", ".topics_filter input[type=text]", function(){
 	delay (getFilteredTopics, this);
+	subsec = $(this).parents(".tab-topic").attr("value");
+	showSelectedInfo(subsec, 0, 0.00);
 });
 
 $("#topics").on("change", ".topics_filter input[type=radio], .topics_filter input[type=checkbox]", function(){
 	delay (getFilteredTopics, this);
+	subsec = $(this).parents(".tab-topic").attr("value");
+	showSelectedInfo(subsec, 0, 0.00);
 });

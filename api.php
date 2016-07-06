@@ -30,7 +30,8 @@ class Webtlo {
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_RETURNTRANSFER => 1,
 		    CURLOPT_ENCODING => "gzip",
-		    CURLOPT_SSL_VERIFYPEER => 0
+		    CURLOPT_SSL_VERIFYPEER => 0,
+		    CURLOPT_SSL_VERIFYHOST => 0
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 	}
@@ -85,7 +86,7 @@ class Webtlo {
 	// статусы раздач
 	public function get_tor_status_titles($tor_status){
 		if(!is_array($tor_status))
-			throw new Exception(get_now_datetime() . 'Не выбран ни один из статусов раздач на трекере.<br />');
+			throw new Exception(get_now_datetime() . 'В настройках не выбран статус раздач на трекере.<br />');
 		$url = $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$status = array();
@@ -180,7 +181,7 @@ class Webtlo {
 	
 	// сведения о каждой раздаче
 	public function get_tor_topic_data($ids){
-		if(empty($ids)) return;
+		if(empty($ids)) return array();
 		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
 		$ids = array_chunk($ids, $this->limit, false);
 		foreach($ids as $ids){
@@ -194,7 +195,7 @@ class Webtlo {
 		return $topics;
 	}
 	
-	public function preparation_of_topics($data, $tc_topics, $rule, $subsec, $avg_seeders, $time, $status){
+	public function preparation_of_topics($data, $tc_topics, $rule, $subsec, $avg_seeders, $time){
 		if(empty($data)) return;
 		$subsec = explode(',', $subsec);
 		if($avg_seeders){
@@ -229,7 +230,7 @@ class Webtlo {
 			$sum_updates = 1;
 			$sum_seeders = $info['seeders'];
 			$avg_seeders = $sum_seeders / $sum_updates;
-			if(isset($topics_old[$topic_id]) && in_array($info['tor_status'], $status)){
+			if(isset($topics_old[$topic_id])){
 				// переносим старые значения
 				$days = $topics_old[$topic_id][0]['ds'];
 				if(isset($seeders[$topic_id])) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
@@ -542,7 +543,8 @@ class Download {
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_SSL_VERIFYPEER => 0
+			CURLOPT_SSL_VERIFYPEER => 0,
+			CURLOPT_SSL_VERIFYHOST => 0
 			//~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 		// прокси
