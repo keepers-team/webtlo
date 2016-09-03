@@ -106,13 +106,19 @@ class Webtlo {
 		$subsections_use = explode(',', $subsections_use);
 		foreach($data['result']['c'] as $cat_id => $cat_title){
 		    foreach($data['result']['tree'][$cat_id] as $forum_id => $subforum){
+				// разделы
+				if(in_array($forum_id, $subsections_use)){
+					$tmp['subsections'][$forum_id]['id'] = $forum_id;
+		            $tmp['subsections'][$forum_id]['na'] = $cat_title.' » '.$data['result']['f'][$forum_id];
+				}
+	            $tmp['insert'][] = 'SELECT '.$forum_id.','.$this->db->quote($cat_title.' » '.$data['result']['f'][$forum_id]).' UNION ALL';
+		        // подразделы
 		        foreach($subforum as $subforum_id){
 		            if(in_array($subforum_id, $subsections_use)){
 			            $tmp['subsections'][$subforum_id]['id'] = $subforum_id;
 			            $tmp['subsections'][$subforum_id]['na'] = $cat_title.' » '.$data['result']['f'][$forum_id].' » '.$data['result']['f'][$subforum_id];
 					}
 		            $tmp['insert'][] = 'SELECT '.$subforum_id.','.$this->db->quote($cat_title.' » '.$data['result']['f'][$forum_id].' » '.$data['result']['f'][$subforum_id]).' UNION ALL';
-					
 		        }
 		    }
 		}

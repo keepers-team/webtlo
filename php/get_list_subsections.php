@@ -25,6 +25,8 @@
 		$subsections = array();
 		foreach($data['result']['c'] as $cat_id => $cat_title){
 		    foreach($data['result']['tree'][$cat_id] as $forum_id => $subforum){
+				$subsections[$forum_id]['value'] = $forum_id;
+	            $subsections[$forum_id]['label'] = $cat_title.' » '.$data['result']['f'][$forum_id];
 		        foreach($subforum as $subforum_id){
 		            $subsections[$subforum_id]['value'] = $subforum_id;
 		            $subsections[$subforum_id]['label'] = $cat_title.' » '.$data['result']['f'][$forum_id].' » '.$data['result']['f'][$subforum_id];

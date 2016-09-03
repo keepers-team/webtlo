@@ -43,7 +43,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.8.3.6</title>
+		<title>web-TLO-0.8.3.7</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -80,10 +80,10 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									<label>
 										Используемый адрес форума:
 										<select name="forum_url" id="forum_url" class="myinput">
-											<option value="http://rutracker.cr" <? echo ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") ?> >http://rutracker.cr</option>
-											<option value="http://rutracker.org" <? echo ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") ?> >http://rutracker.org</option>
-											<option value="https://rutracker.cr" <? echo ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") ?> >https://rutracker.cr</option>
-											<option value="https://rutracker.org" <? echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
+											<option value="http://rutracker.cr" <?php echo ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") ?> >http://rutracker.cr</option>
+											<option value="http://rutracker.org" <?php echo ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") ?> >http://rutracker.org</option>
+											<option value="https://rutracker.cr" <?php echo ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") ?> >https://rutracker.cr</option>
+											<option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
 										</select>
 									</label>
 								</div>
@@ -91,31 +91,31 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									<label>
 										Используемый адрес API:
 										<select name="api_url" id="api_url" class="myinput">
-											<option value="http://api.rutracker.cc" <? echo ($cfg['api_url'] == 'http://api.rutracker.cc' ? "selected" : "") ?> >http://api.rutracker.cc</option>
-											<option value="http://api.rutracker.org" <? echo ($cfg['api_url'] == 'http://api.rutracker.org' ? "selected" : "") ?> >http://api.rutracker.org</option>
-											<option value="https://api.rutracker.cc" <? echo ($cfg['api_url'] == 'https://api.rutracker.cc' ? "selected" : "") ?> >https://api.rutracker.cc</option>
-											<option value="https://api.rutracker.org" <? echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?> >https://api.rutracker.org</option>
+											<option value="http://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'http://api.rutracker.cc' ? "selected" : "") ?> >http://api.rutracker.cc</option>
+											<option value="http://api.rutracker.org" <?php echo ($cfg['api_url'] == 'http://api.rutracker.org' ? "selected" : "") ?> >http://api.rutracker.org</option>
+											<option value="https://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'https://api.rutracker.cc' ? "selected" : "") ?> >https://api.rutracker.cc</option>
+											<option value="https://api.rutracker.org" <?php echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?> >https://api.rutracker.org</option>
 										</select>
 									</label>
 								</div>
 								<div>
 									<label>
 										Логин:
-										<input name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<? echo $cfg['tracker_login'] ?>" />
+										<input name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
 									</label>
 									<label>
 										Пароль:
-										<input name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<? echo $cfg['tracker_paswd'] ?>" />
+										<input name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
 									</label>
 								</div>																			
 								<div>
 									<label>
 										Ключ bt:
-										<input name="bt_key" class="myinput" type="password" size="24" title="Хранительский ключ bt" value="<? echo $cfg['bt_key'] ?>" />
+										<input name="bt_key" class="myinput" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
 									</label>
 									<label>
 										Ключ api:
-										<input name="api_key" class="myinput" type="password" size="24" title="Хранительский ключ api" value="<? echo $cfg['api_key'] ?>" />
+										<input name="api_key" class="myinput" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
 									</label>
 								</div>
 							</div>
@@ -123,7 +123,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 							<div>
 								<div>
 									<label title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
-										<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <? echo $proxy_activate ?> />
+										<input name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?> />
 										использовать прокси-сервер (например, для обхода блокировки)
 									</label>											
 								</div>
@@ -132,31 +132,31 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 										<label>
 											Тип прокси-сервера:
 											<select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
-												<option value="http" <? echo ($cfg['proxy_type'] == 'http' ? "selected" : "") ?> >HTTP</option>
-												<option value="socks4" <? echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?> >SOCKS4</option>
-												<option value="socks4a" <? echo ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?> >SOCKS4A</option>
-												<option value="socks5" <? echo ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?> >SOCKS5</option>
+												<option value="http" <?php echo ($cfg['proxy_type'] == 'http' ? "selected" : "") ?> >HTTP</option>
+												<option value="socks4" <?php echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?> >SOCKS4</option>
+												<option value="socks4a" <?php echo ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?> >SOCKS4A</option>
+												<option value="socks5" <?php echo ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?> >SOCKS5</option>
 											</select>
 										</label>
 									</div>
 									<div>
 										<label>
 											IP-адрес/сетевое имя:
-											<input name="proxy_hostname" id="proxy_hostname" class="myinput" type="text" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="<? echo $cfg['proxy_hostname'] ?>" />
+											<input name="proxy_hostname" id="proxy_hostname" class="myinput" type="text" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="<?php echo $cfg['proxy_hostname'] ?>" />
 										</label>
 										<label>
 											Порт:
-											<input name="proxy_port" id="proxy_port" class="myinput" type="text" size="24" title="Порт прокси-сервера." value="<? echo $cfg['proxy_port'] ?>" />
+											<input name="proxy_port" id="proxy_port" class="myinput" type="text" size="24" title="Порт прокси-сервера." value="<?php echo $cfg['proxy_port'] ?>" />
 										</label>
 									</div>
 									<div>
 										<label>
 											Логин:
-											<input name="proxy_login" id="proxy_login" class="myinput" type="text" size="24" title="Имя пользователя для доступа к прокси-серверу (необязательно)." value="<? echo $cfg['proxy_login'] ?>" />
+											<input name="proxy_login" id="proxy_login" class="myinput" type="text" size="24" title="Имя пользователя для доступа к прокси-серверу (необязательно)." value="<?php echo $cfg['proxy_login'] ?>" />
 										</label>
 										<label>
 											Пароль:
-											<input name="proxy_paswd" id="proxy_paswd" class="myinput" type="text" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="<? echo $cfg['proxy_paswd'] ?>" />
+											<input name="proxy_paswd" id="proxy_paswd" class="myinput" type="text" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="<?php echo $cfg['proxy_paswd'] ?>" />
 										</label>
 									</div>
 								</div>
@@ -171,7 +171,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 								<div class="block-settings">											
 									<select id="list-tcs" size=10>
 										<option value=0 data="0" disabled>список торрент-клиентов</option>
-										<? echo $tcs ?>
+										<?php echo $tcs ?>
 									</select>
 								</div>
 								<div class="block-settings" id="tc-prop">
@@ -220,7 +220,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 								<div class="block-settings">											
 									<select name="list-ss" id="list-ss" size=9>
 										<option value=0 data="0" disabled>список подразделов</option>
-										<? echo $subsections ?>
+										<?php echo $subsections ?>
 									</select>
 								</div>
 								<div class="block-settings" id="ss-prop">
@@ -254,71 +254,71 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 								<div id="tor_status">
 									<div>
 										<label title="не проверено">
-											<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" <? echo $topic_not_checked ?> />
+											<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" <?php echo $topic_not_checked ?> />
 											не проверено
 										</label>
 									</div>
 									<div>
 										<label title="проверено">
-											<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" <? echo $topic_checked ?> />
+											<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" <?php echo $topic_checked ?> />
 											проверено
 										</label>
 									</div>
 									<div>
 										<label title="недооформлено">
-											<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" <? echo $topic_not_decoration ?> />
+											<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" <?php echo $topic_not_decoration ?> />
 											недооформлено
 										</label>
 									</div>
 									<div>
 										<label title="сомнительно">
-											<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" <? echo $topic_doubtfully ?> />
+											<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" <?php echo $topic_doubtfully ?> />
 											сомнительно
 										</label>
 									</div>
 									<div>
 										<label title="временная">
-											<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" <? echo $topic_temporary ?> />
+											<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" <?php echo $topic_temporary ?> />
 											временная
 										</label>
 									</div>											
 								</div>
 								<h3>Предлагать для хранения раздачи с кол-вом сидов не более</h3>
 								<div>
-									<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<? echo $cfg['rule_topics'] ?>" />
+									<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<?php echo $cfg['rule_topics'] ?>" />
 								</div>
 								<h3>Поиск среднего значения количества сидов</h3>
 								<div>
 									<label title="При поиске раздач использовать алгоритм нахождения среднего значения количества сидов">
-										<input name="avg_seeders" id="avg_seeders" type="checkbox" size="24" <? echo $avg_seeders ?> />
+										<input name="avg_seeders" id="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
 										использовать алгоритм нахождения среднего значения количества сидов
 									</label>
 									<div id="avg_seeders_settings" style="display:none">
 										<label title="Укажите период хранения сведений о средних сидах (максимум 30 дней)">
 											Хранить сведения о сидах за последние
-											<input name="avg_seeders_period" class="" id="avg_seeders_period" type="text" size="2" value="<? echo $cfg['avg_seeders_period'] ?>"/>
+											<input name="avg_seeders_period" class="" id="avg_seeders_period" type="text" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
 											дн.
 										</label>
 									</div>
 								</div>
 								<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
 								<div>
-									<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<? echo $cfg['rule_reports'] ?>" />
+									<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<?php echo $cfg['rule_reports'] ?>" />
 								</div>
 							</div>
 							<h2>Настройки загрузки торрент-файлов</h2>
 							<div>
 								<h3>Каталог для скачиваемых *.torrent файлов</h3>
 								<div>
-									<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<? echo $cfg['save_dir'] ?>" />
+									<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" />
 								</div>
 								<label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">										
-									<input name="savesubdir" type="checkbox" size="24" <? echo $savesubdir ?> />
+									<input name="savesubdir" type="checkbox" size="24" <?php echo $savesubdir ?> />
 									создавать подкаталоги
 								</label>
 								<h3>Настройки retracker.local</h3>
 								<label title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
-									<input name="retracker" type="checkbox" size="24" <? echo $retracker ?> />
+									<input name="retracker" type="checkbox" size="24" <?php echo $retracker ?> />
 									добавлять retracker.local в скачиваемые *.torrent-файлы
 								</label>
 							</div>		
