@@ -4,9 +4,7 @@ include dirname(__FILE__) . '/api.php';
 include dirname(__FILE__) . '/clients.php';
 include dirname(__FILE__) . '/gui.php';
 include dirname(__FILE__) . '/common.php';
-//~ include dirname(__FILE__) . '/simple_html_dom.php';
-
-error_reporting(0);
+include dirname(__FILE__) . '/reports.php';
 
 // разбираем настройки
 
@@ -16,10 +14,10 @@ if(isset($_POST['cfg'])) {
 	$savesubdir = isset($savesubdir) ? 1 : 0;
 	$retracker = isset($retracker) ? 1 : 0;
 	$avg_seeders = isset($avg_seeders) ? 1 : 0;
+	$avg_seeders_period = $avg_seeders_period == 0 ? 1 : ($avg_seeders_period > 30 ? 30 : $avg_seeders_period); // жёсткое ограничение на 30 дн.
 	$proxy_activate = isset($proxy_activate) ? 1 : 0;
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
-	$time = $time == 0 ? 1 : ($time > 30 ? 30 : $time); // жёсткое ограничение на 30 дн.
 }
 
 // подразделы
@@ -54,14 +52,28 @@ switch($_POST['m'])
 			$db = new FromDatabase();
 			$subsections = $db->get_forums_details($TT_subsections);
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			output_preparation($topics, $subsections);
-			output_reports($subsections, $TT_login, $db->log);
+			$reports = create_reports($subsections, $topics);
+			output_reports($reports, $TT_login, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
 				'report' => '<br /><div>Нет или недостаточно данных для
 				отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />'
 			));
+		}
+		break;
+	//------------------------------------------------------------------
+	case 'send':
+		try {
+			$db = new FromDatabase();
+			$subsections = $db->get_forums_details(array_column_common($TT_subsections, 'id'));
+			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
+			$reports = create_reports($subsections, $topics);
+			$send = new SendReports($forum_url, $TT_login, $TT_password, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
+			$send->send_reports($reports, $TT_subsections);
+			echo $db->log . $send->log;
+		} catch (Exception $e) {
+			echo $db->log . (isset($send->log) ? $send->log : '') . $e->getMessage();
 		}
 		break;
 	//------------------------------------------------------------------

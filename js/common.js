@@ -1,9 +1,5 @@
-/*
- * JS for web-TLO (Web Torrent List Organizer)
- * common.js
- * author: berkut_174 (webtlo@yandex.ru)
- * last change: 11.02.2016
- */
+
+/* вспомогательные функции */
 
 /* текущее время */
 function nowTime(){

@@ -1,15 +1,7 @@
 //~ $(document).ready(function() {
 	
-	/*
-	 * JS for web-TLO (Web Torrent List Organizer)
-	 * webtlo.js
-	 * author: berkut_174 (webtlo@yandex.ru)
-	 * last change: 11.02.2016
-	 */
-	
 	/* инициализация кнопок */
-	$("#update").button();
-	$("#startreports").button();
+	$("#update, #startreports, #sendreports").button();
 	
 	// средние сиды в настройках
 	$("#avg_seeders_period").spinner({ min: 0, max: 30, mouseWheel: true });
@@ -168,6 +160,33 @@
 					r.select();}
 				});
 				
+			},
+			complete: function() {
+				block_actions();
+			},
+		});
+	});
+	
+	/* отправка отчётов */
+	$( "#sendreports" )
+	.click(function() {
+		// список подразделов
+		subsec = listDataSubsections();
+		$data = $("#config").serialize();
+		$.ajax({
+			type: "POST",
+			url: "actions.php",
+			data: { m:'send', cfg:$data, subsec:subsec },
+			beforeSend: function() {
+				block_actions();
+				$("#log").append(nowTime() + "Начато выполнение процесса отправки отчётов...<br />");
+			},
+			success: function(response) {
+				//~ var resp = eval("(" + response + ")");
+				//~ $("#log").append(resp.log);
+				//~ $("#reports").html(jQuery.trim(resp.report));
+				$("#log").append(response);
+				$("#log").append(nowTime() + "Процесс отправки отчётов завершен.<br />");
 			},
 			complete: function() {
 				block_actions();

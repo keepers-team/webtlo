@@ -1,9 +1,3 @@
-/*
- * JS for web-TLO (Web Torrent List Organizer)
- * tor_clients.js
- * author: berkut_174 (webtlo@yandex.ru)
- * last change: 11.02.2016
- */
 
 /* всё про торрент-клиенты */
 

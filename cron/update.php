@@ -1,10 +1,4 @@
 ﻿<?php
-/*
- * web-TLO (Web Torrent List Organizer)
- * update.php
- * author: berkut_174 (webtlo@yandex.ru)
- * last change: 11.02.2016
- */
 	
 include dirname(__FILE__) . '/../api.php';
 include dirname(__FILE__) . '/../clients.php';

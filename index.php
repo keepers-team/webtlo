@@ -43,7 +43,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.8.3.7</title>
+		<title>web-TLO-0.8.4.0</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -65,6 +65,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 					<div id="btn-menu">
 						<input id="update" name="update" type="button" class="btn-lock" title="Обновить сведения о раздачах" value="Обновить сведения" />
 						<input id="startreports" name="startreports" type="button" class="btn-lock" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
+						<input id="sendreports" name="sendreports" type="button" class="btn-lock" title="Отправить отчёты на форум" value="Отправить отчёты" />
 					</div>
 					<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					<div id="topics"></div>
@@ -245,6 +246,10 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									<label>
 										Каталог для данных:
 										<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
+									</label>
+									<label>
+										Ссылка на список:
+										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
 								</div>
 							</div>

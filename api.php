@@ -1,10 +1,4 @@
 ﻿<?php
-/*
- * web-TLO (Web Torrent List Organizer)
- * api.php
- * author: berkut_174 (webtlo@yandex.ru)
- * last change: 10.03.2016
- */
 
 class Webtlo {
 	
@@ -478,7 +472,7 @@ class FromDatabase {
 	// ... из базы подразделы для списка раздач на главной
 	public function get_forums($subsec){
 		$this->log .= get_now_datetime() . 'Получение данных о подразделах...<br />';
-		$subsec = explode(',', $subsec);
+		if(!is_array($subsec)) $subsec = explode(',', $subsec);
 		$in = str_repeat('?,', count($subsec) - 1) . '?';
 		$subsections = $this->query_database("SELECT * FROM `Forums` WHERE `id` IN ($in)", $subsec);
 		if(empty($subsections)) throw new Exception();

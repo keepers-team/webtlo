@@ -61,6 +61,7 @@ $("#list-ss").on("change", function(){
 		$("#ss-client :first").prop("selected", "selected");
 	$("#ss-label").val(val[3]);
 	$("#ss-folder").val(val[4]);
+	$("#ss-link").val(val[5]);
 	ss_change = $(this).val();
 });
 
@@ -78,8 +79,9 @@ $("#ss-prop").on("focusout", function(){
 	cl = $("#ss-client").val();
 	lb = $("#ss-label").val();
 	fd = $("#ss-folder").val();
+	ln = $("#ss-link").val();
 	$("#list-ss option[value="+ss_change+"]")
-		.attr("data", id+"|"+na+"|"+cl+"|"+lb+"|"+fd)
+		.attr("data", id+"|"+na+"|"+cl+"|"+lb+"|"+fd+"|"+ln)
 		.val(id)
 		.text(na.replace(/.* » (.*)$/, '$1'));
 });
@@ -106,7 +108,8 @@ function listDataSubsections(){
 				na: data[1],
 				cl: data[2],
 				lb: data[3],
-				fd: data[4]
+				fd: data[4],
+				ln: data[5]
 			});
 		}
 	});

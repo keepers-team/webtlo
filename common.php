@@ -1,12 +1,4 @@
 ﻿<?php
-/*
- * web-TLO (Web Torrent List Organizer)
- * common.php
- * author: Cuser (cuser@yandex.ru)
- * previous change: 30.04.2014
- * editor: berkut_174 (webtlo@yandex.ru)
- * last change: 11.02.2016
- */
 
 if (!defined('_BR_'))		//*.ini file access, http://develstudio.ru/php-orion/articles/rabotaem-s-fajlami-ini-v-php
 	define('_BR_',chr(13).chr(10));
@@ -114,6 +106,7 @@ function write_config($filename, $cfg, $subsections, $tcs){
 			if(isset($subsec['cl'])) $ini->write($subsec['id'],'client',!empty($subsec['cl']) ? $subsec['cl'] : '');
 			if(isset($subsec['lb'])) $ini->write($subsec['id'],'label',$subsec['lb']);
 			if(isset($subsec['fd'])) $ini->write($subsec['id'],'data-folder',$subsec['fd']);
+			if(isset($subsec['ln'])) $ini->write($subsec['id'],'link',$subsec['ln']);
 		}
 		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
 	}
@@ -162,6 +155,7 @@ function get_settings(){
 			$config['subsections'][$id]['client'] = $ini->read("$id","client","utorrent");
 			$config['subsections'][$id]['label'] = $ini->read("$id","label","");
 			$config['subsections'][$id]['data-folder'] = $ini->read("$id","data-folder","");
+			$config['subsections'][$id]['link'] = $ini->read("$id","link","");
 		}
 	}
 	

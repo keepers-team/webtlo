@@ -1,9 +1,6 @@
 /*
  * 
  * stylesheet web-TLO (Web Torrent List Organizer)
- * style.css
- * author: berkut_174 (webtlo@yandex.ru)
- * last change: 11.02.2016
  * 
  */
 
@@ -83,7 +80,7 @@ li.menu.ui-tabs-active {
 	float: left;
 }
 
-#startreports:disabled, #update:disabled, .btn_cntrl button:disabled {
+#startreports:disabled, #update:disabled, .btn_cntrl button:disabled, #sendreports:disabled {
 	background: #fafafa;
 	cursor: default;
 	color: #D3D3D3;
