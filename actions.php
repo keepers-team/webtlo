@@ -70,7 +70,7 @@ switch($_POST['m'])
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
 			$reports = create_reports($subsections, $topics);
 			$send = new SendReports($forum_url, $TT_login, $TT_password, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-			$send->send_reports($reports, $TT_subsections);
+			$send->send_reports($api_key, $api_url, $reports, $TT_subsections);
 			echo $db->log . $send->log;
 		} catch (Exception $e) {
 			echo $db->log . (isset($send->log) ? $send->log : '') . $e->getMessage();

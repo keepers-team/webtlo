@@ -195,7 +195,8 @@ function get_settings(){
 
 function convert_bytes($size) {
     $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
-	return $size ? round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0';
+	$i = $size >= pow(1024,4) ? 3 : floor(log($size, 1024));
+	return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0';
 }
 
 function rmdir_recursive($dir, $basedir = false) {

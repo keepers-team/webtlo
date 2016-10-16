@@ -9,13 +9,13 @@ class Webtlo {
 	public $log;
 	public $limit;
 	
-	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
+	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type = 0, $proxy_address = "", $proxy_auth = ""){
 		$this->log = get_now_datetime() . 'Получение данных с ' . $api_url . '...<br />';
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
-		$this->make_database();
 		$this->init_curl();
-		$this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
+		if(is_array($proxy_activate)) curl_setopt_array($this->ch, $proxy_activate);
+		else $this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 		$this->limit = $this->get_limit();
 	}
 	
@@ -31,6 +31,7 @@ class Webtlo {
 	}
 	
 	private function init_proxy($proxy_activate = false, $proxy_type, $proxy_address, $proxy_auth){
+		$this->make_database();
 		if($proxy_activate) {
 			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
 			$proxy_array = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5	);

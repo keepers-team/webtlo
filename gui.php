@@ -14,8 +14,12 @@ function output_reports($subsections, $login, $log){
 	unset($subsections['common']);
 	$tabs[] = '<li class="report"><a href="#tabs-wtlocommon" class="report">Сводный отчёт</a></li>';
 	foreach($subsections as $subsection){
+		if(!isset($subsection['messages'])) continue;
 		$tabs[] = '<li class="report"><a href="#tabs-wtlo'.$subsection['id'].'" class="report"><span class="rp-header">№ '. $subsection['id'].'</span> - '.mb_substr($subsection['na'],mb_strrpos($subsection['na'], ' » ')+3).'</a></li>';
 		$header = str_replace('%%nick%%', $login, $subsection['header']);
+		$header = str_replace('%%count%%', 1, $header);
+		$header = str_replace('%%dlqt%%', $subsection['dlqt'], $header);
+		$header = str_replace('%%dlsi%%', convert_bytes($subsection['dlsi']), $header);
 		$content[$subsection['id']] =
 			'<div id="tabs-wtlo'.$subsection['id'].'" class="report">'.
 				str_replace('[br]', '', $header) . '<br /><br />'.

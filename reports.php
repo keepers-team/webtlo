@@ -41,6 +41,7 @@ function create_reports($subsections, $topics){
 	$dlqt = 0;
 	$dlsi = 0;
 	foreach($subsections as &$subsection){
+		if(!isset($tmp[$subsection['id']])) continue;
 		if($tmp[$subsection['id']]['lgth'] != 0){
 			$text = str_replace('%%start%%', $tmp[$subsection['id']]['start'], $pattern);
 			$text = str_replace('%%end%%', $tmp[$subsection['id']]['qt'], $text);
@@ -56,14 +57,14 @@ function create_reports($subsections, $topics){
 				  ' [color=gray]~>[/color] [url=tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]<br /><br />'.
 				  'Актуально на: [color=darkblue]'. date('d.m.Y', $topics[0]['ud']) . '[/color][br]<br />'.
 				  'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '[br]<br />'.
-				  'Всего хранимых раздач в подразделе: '. $subsection['dlqt'] .' шт. / '. convert_bytes($subsection['dlsi']) .'[br]<br />'.
-				  'Количество хранителей: 1<br />[hr]<br />'.
-				  'Хранитель 1: [url=profile.php?mode=viewprofile&u=%%nick%%&name=1][u][color=#006699]%%nick%%[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'<br /><br />';
+				  'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]<br />'.
+				  'Количество хранителей: %%count%%<br />[hr]<br />'.
+				  'Хранитель 1: [url=profile.php?mode=viewprofile&u=%%nick%%&name=1][u][color=#006699]%%nick%%[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'[br]<br /><br />';
 		$common .= '[url=viewtopic.php?p=%%ins' . $subsection['id'] . '%%#%%ins' .$subsection['id'] . '%%][u]'.$subsection['na'] . '[/u][/url] — ' .	$subsection['dlqt'] .' шт. ('. convert_bytes($subsection['dlsi']) . ')[br]<br />';
 		$subsection['header'] = $header;
 	}
-	$common = str_replace('%%dlqt%%', $dlqt, $common);
-	$common = str_replace('%%dlsi%%', str_replace(' ', '[/b] ', convert_bytes($dlsi)), $common);
+	$common = str_replace('%%dlqt%%', empty($dlqt) ? 0 : $dlqt, $common);
+	$common = str_replace('%%dlsi%%', empty($dlsi) ? 0 : preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($dlsi)), $common);
 	$subsections['common'] = $common;
 	return $subsections;
 }
@@ -190,7 +191,7 @@ class SendReports {
 		return $post_id;
 	}
 	
-	public function send_reports($subsections, $data = array()){
+	public function send_reports($api_key, $api_url, $subsections, $data = array()){
 		$common = $subsections['common'];
 		unset($subsections['common']);
 		// получаем ссылки на списки
@@ -201,6 +202,7 @@ class SendReports {
 		$form_token = $this->get_form_token();
 		// отправка отчётов по каждому подразделу
 		foreach($subsections as &$subsection){
+			if(!isset($subsection['messages'])) continue;
 			if(empty($links[$subsection['id']])){
 				$this->log .= get_now_datetime() . 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка для отправки отчётов, пропускаем...<br />';
 				continue;
@@ -227,6 +229,13 @@ class SendReports {
 							if($nick == $this->login){
 								$subsection['messages'][$j]['id'] = $post;
 								$j++;
+							} else {
+								// получаем id раздач хранимых другими хранителями
+								foreach($row->find('.post_body a') as $topic){
+									if(preg_match('/viewtopic.php\?t=[0-9]*/', $topic->href)){
+										$keepers[$nick][] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->href);
+									}
+								}
 							}
 						}
 					}
@@ -241,13 +250,42 @@ class SendReports {
 			$this->log .= get_now_datetime() . 'Найдено сообщений: ' . $j . '.<br />';
 			// отправка шапки
 			if($nick_author == $this->login){
+				// получение данных о раздачах хранимых другими хранителями
+				if(isset($keepers)){
+					$this->log .= get_now_datetime() . 'Сканирование сообщений других хранителей для подраздела № ' . $subsection['id'] . '...<br />';
+					foreach($keepers as $nick => $ids){
+						$webtlo = new Webtlo($api_key, $api_url, $this->proxy);
+						$topics = $webtlo->get_tor_topic_data($ids);
+						$this->log .= $webtlo->log;
+						$stored[$nick]['dlsi'] = 0;
+						$stored[$nick]['dlqt'] = 0;
+						foreach($topics as $topic){
+							if($topic['forum_id'] == $subsection['id']){
+								$stored[$nick]['dlsi'] += $topic['size'];
+								$stored[$nick]['dlqt'] += 1;
+							}
+						}
+					}
+					// вставка в отчёты данных о других хранителях
+					$q = 2;
+					foreach($stored as $nick => $data){
+						$subsection['header'] .= 'Хранитель '.$q.': [url=profile.php?mode=viewprofile&u='.$nick.'&name=1][u][color=#006699]'.$nick.'[/u][/color][/url] [color=gray]~>[/color] '. $data['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($data['dlsi']) .'[br]';
+						$q++;
+					}
+				}
 				$this->log .= get_now_datetime() . 'Отправка шапки для подраздела № ' . $subsection['id'] . '...<br />';
 				$subsection['header'] = str_replace('%%nick%%', $this->login, $subsection['header']);
+				$subsection['header'] = str_replace('%%count%%', isset($keepers) ? count($keepers) + 1 : 1, $subsection['header']);
+				$subsection['header'] = str_replace('%%dlqt%%', isset($stored) ? array_sum(array_column_common($stored, 'dlqt')) + $subsection['dlqt'] : $subsection['dlqt'], $subsection['header']);
+				$subsection['header'] = str_replace('%%dlsi%%', convert_bytes(isset($stored) ? array_sum(array_column_common($stored, 'dlsi')) + $subsection['dlsi'] : $subsection['dlsi']), $subsection['header']);
+				// отправка сообщения с шапкой
 				$this->send_message(
 					'editpost', $subsection['header'], $form_token,
 					$links[$subsection['id']], $post_author, '[Список] ' . $subsection['na']
 				);
 			}
+			unset($keepers);
+			unset($stored);
 			// отправка сообщений
 			$q = 0;
 			foreach($subsection['messages'] as &$message){
@@ -285,8 +323,7 @@ class SendReports {
 		unset($html);
 		$this->send_message(
 			empty($post_id) ? 'reply' : 'editpost',
-			empty($common) ? '' : $common,
-			$form_token, 4275633, $post_id
+			$common, $form_token, 4275633, $post_id
 		);
 	}
 	

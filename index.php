@@ -43,7 +43,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.8.4.0</title>
+		<title>web-TLO-0.8.4.1</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -249,7 +249,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									</label>
 									<label>
 										Ссылка на список:
-										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
+										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
 								</div>
 							</div>
