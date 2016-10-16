@@ -43,7 +43,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.8.4.1</title>
+		<title>web-TLO-0.8.4.2</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -219,7 +219,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 							<div>
 								<input id="ss-add" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавление нового подраздела" />
 								<div class="block-settings">											
-									<select name="list-ss" id="list-ss" size=9>
+									<select name="list-ss" id="list-ss" size=11>
 										<option value=0 data="0" disabled>список подразделов</option>
 										<?php echo $subsections ?>
 									</select>
@@ -326,7 +326,17 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									<input name="retracker" type="checkbox" size="24" <?php echo $retracker ?> />
 									добавлять retracker.local в скачиваемые *.torrent-файлы
 								</label>
-							</div>		
+								<h3>Скачивание *.torrent файлов с заменой Passkey</h3>
+								<label>
+									Каталог:
+									<input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53" title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey." value="<?php echo $cfg['dir_torrents'] ?>" />
+								</label>
+								<br />
+								<label>
+									Passkey:
+									<input id="passkey" name="passkey" class="myinput" type="text" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
+								</label>
+							</div>
 						</div>
 					</form>
 				</div>					

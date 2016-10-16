@@ -259,7 +259,7 @@
 //~ });
 
 // проверка закрывающего слеша
-$("#savedir").on("change", function() {
+$("#savedir, #dir_torrents").on("change", function() {
 	if($(this).val() != '') {
 		CheckSlash(this);
 	}

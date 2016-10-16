@@ -46,7 +46,8 @@ try {
 	
 	// скачиваем торрент-файлы
 	$dl = new Download($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-	$success = $dl->download_torrent_files($tmpdir, $forum_url, $TT_login, $TT_password, $topics, $retracker, $dl_log);
+	$dl->savedir = $tmpdir;
+	$success = $dl->download_torrent_files($forum_url, $TT_login, $TT_password, $topics, $retracker, $dl_log);
 	$log .= $dl->log;	
 	$q = preg_replace("|.*<span[^>]*?>(.*)</span>.*|sei", '$1', $dl_log); // кол-во	
 	if(empty($success)){

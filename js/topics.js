@@ -20,6 +20,7 @@ function listSelectedTopics(){
 // скачивание т.-файлов выделенных топиков
 $("#topics").on("click", ".tor_download", function(){
 	subsection = $(this).parents(".tab-topic").attr("value");
+	edit = $(this).val();
 	topics = listSelectedTopics.apply();
 	if(topics == "") return;	
 	$data = $("#config").serialize();
@@ -27,11 +28,12 @@ $("#topics").on("click", ".tor_download", function(){
 		type: "POST",
 		context: this,
 		url: "actions.php",
-		data: { topics:topics, m:'download', subsec:subsection, cfg:$data },
+		data: { topics:topics, m:'download', subsec:subsection, cfg:$data, edit:edit },
 		success: function(response) {
 			var resp = eval("(" + response + ")");
 			$("#log").append(resp.log);
 			$("#result_"+subsection).html(resp.dl_log);
+			//~ $("#log").html(response);
 		},
 		beforeSend: function() {
 			block_actions();
@@ -45,7 +47,7 @@ $("#topics").on("click", ".tor_download", function(){
 			});
 			block_actions();
 			$(this).children("span").children("img").hide();
-			$("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
+			//~ $("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
 		},
 	});
 });

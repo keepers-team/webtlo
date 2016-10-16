@@ -537,6 +537,7 @@ class Download {
 	public $ch;
 	public $api_key;
 	public $log;
+	public $savedir;
 	
 	public function __construct($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
 		$this->log = get_now_datetime() . 'Скачивание торрент-файлов...<br />';
@@ -574,6 +575,35 @@ class Download {
 		));
 	}
 	
+	// подготовка каталогов
+	public function create_directories($savedir, $savesubdir, $subsection, $rule, $dir_torrents, $edit, &$dl_log){
+		$savedir = $edit ? $dir_torrents : $savedir;
+		if(empty($savedir))
+		{
+			$dl_log = '<span class="errors">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span><br />';
+			throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+		}
+		// проверяем существование указанного каталога
+		if(!is_writable($savedir))
+		{
+			$dl_log = '<span class="errors">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span><br />';
+			throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+		}
+		// если задействованы подкаталоги
+		if($savesubdir && !$edit)
+		{
+			$savedir .= 'tfiles_' . $subsection . '_' . date("(d.m.Y_H.i.s)") . '_' . $rule . substr($savedir, -1);
+			$result = (is_writable($savedir) || mkdir($savedir)) ? true : false;
+			// создался ли подкаталог
+			if(!$result)
+			{
+				$dl_log = '<span class="errors">Ошибка при создании подкаталога: неверно указан путь или недостаточно прав. Скачивание невозможно.</span><br />';
+				throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+			}
+		}
+		$this->savedir = $savedir;
+	}
+	
 	// идентификатор пользователя
 	private function get_user_id($forum_url, $login, $paswd){
 		$paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
@@ -608,7 +638,7 @@ class Download {
 	}
 	
 	// скачивание т-.файлов
-	public function download_torrent_files($savedir, $forum_url, $login, $paswd, $topics, $retracker, &$dl_log){
+	public function download_torrent_files($forum_url, $login, $paswd, $topics, $retracker, &$dl_log, $passkey = "", $edit = false){
 		$q = 0; // кол-во успешно скачанных торрент-файлов
 		//~ $err = 0;
 		$starttime = microtime(true);
@@ -625,8 +655,8 @@ class Download {
 			    't' => $topic['id'],
 			    'add_retracker_url' => $retracker
 		    )));
-			$torrent_file = $savedir . '[webtlo].t' . $topic['id'] . '.torrent';
-			//~ $torrent_file = mb_convert_encoding($savedir . '[webtlo].t' . $topic['id'] . '.torrent', 'Windows-1251', 'UTF-8');
+			$torrent_file = $this->savedir . '[webtlo].t' . $topic['id'] . '.torrent';
+			//~ $torrent_file = mb_convert_encoding($this->savedir . '[webtlo].t' . $topic['id'] . '.torrent', 'Windows-1251', 'UTF-8');
 			$n = 1; // кол-во попыток
 			while(true) {
 				
@@ -661,11 +691,32 @@ class Download {
 					continue;
 				}
 				
+				// меняем passkey
+				if($edit){
+					$torrent = new Torrent();
+					if($torrent->load($json) == false)
+					{
+						$this->log .= get_now_datetime() . $torrent->error . '(' . $topic_id . ').<br />';
+						break;
+					}
+					$trackers = $torrent->getTrackers();
+					foreach($trackers as &$tracker){
+						$tracker = preg_replace('/(?<==)\w+$/', $passkey, $tracker);
+					}
+					unset($tracker);
+					$torrent->setTrackers($trackers);
+					$content = $torrent->bencode();
+					if(file_put_contents($torrent_file, $content) === false)
+						$this->log .= get_now_datetime() . 'Произошла ошибка при сохранении файла: '.$torrent_file.'.<br />';
+					else $q++;
+					break;
+				}
+				
 				// сохраняем в файл
 				if(!file_put_contents($torrent_file, $json) === false) {
 					$success[$q]['id'] = $topic['id'];
 					$success[$q]['hash'] = $topic['hash'];
-					$success[$q]['filename'] = 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($savedir) . '/[webtlo].t'.$topic['id'].'.torrent';
+					$success[$q]['filename'] = 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($this->savedir) . '/[webtlo].t'.$topic['id'].'.torrent';
 					$q++;
 					//~ $this->log .= get_now_datetime() . 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.<br />';
 				}
@@ -674,7 +725,8 @@ class Download {
 			}
 		}
 		$endtime1 = microtime(true);
-		$dl_log .= 'Сохранено в каталоге "' . $savedir . '": <span class="rp-header">' . $q . '</span> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
+		$dl_log = 'Сохранено в каталоге "' . $this->savedir . '": <span class="rp-header">' . $q . '</span> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
+		$this->log .= get_now_datetime() . 'Скачивание торрент-файлов завершено.<br />';
 		return isset($success) ? $success : null;
 	}
 	

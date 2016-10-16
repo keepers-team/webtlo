@@ -67,12 +67,13 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			<div class="btn_cntrl">'. // вывод кнопок управления раздачами
 				'<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
 				<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
-				<button type="button" class="tor_download" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img class="loading" src="img/loading.gif" />Скачать</button>
+				<button type="button" value="0" class="tor_download" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img class="loading" src="img/loading.gif" />Скачать</button>
 				<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img class="loading" src="img/loading.gif" />Добавить</button>
 				<button type="button" value="remove" class="tor_remove torrent_action" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img class="loading" src="img/loading.gif" />Удалить</button>
 				<button type="button" value="start" class="tor_start torrent_action" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Старт</button>
 				<button type="button" value="stop" class="tor_stop torrent_action" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img class="loading" src="img/loading.gif" />Стоп</button>
 				<button type="button" value="set_label" class="tor_label torrent_action" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)"><img class="loading" src="img/loading.gif" />Метка</button>
+				<button type="button" value="1" class="tor_download" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey"><img class="loading" src="img/loading.gif" />Скачать с заменой Passkey</button>
 			</div>
 			<form method="post" id="topics_filter_'.$subsection['id'].'">
 				<div class="topics_filter" title="Фильтр раздач текущего подраздела">

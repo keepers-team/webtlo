@@ -5,6 +5,7 @@ include dirname(__FILE__) . '/clients.php';
 include dirname(__FILE__) . '/gui.php';
 include dirname(__FILE__) . '/common.php';
 include dirname(__FILE__) . '/reports.php';
+include dirname(__FILE__) . '/php/torrenteditor.php';
 
 // разбираем настройки
 
@@ -30,6 +31,11 @@ if(isset($_POST['tcs'])) {
 	$tcs = $_POST['tcs'];
 }
 
+// замена passkey
+if(isset($_POST['edit'])) {
+	$edit = $_POST['edit'];
+}
+
 /*
  * 'savecfg' - сохранение настроек,
  * 'reports' - формирование отчётов,
@@ -37,8 +43,6 @@ if(isset($_POST['tcs'])) {
  * 'update' - обновление сведений о раздачах
  * 'download' - скачивание т.-файлов
 */
-
-class ExceptionExt extends Exception { }
 
 switch($_POST['m'])
 {
@@ -94,55 +98,15 @@ switch($_POST['m'])
 	//------------------------------------------------------------------
 	case 'download':
 		try {
-			try {
-				// проверяем существование указанного каталога
-				if(!is_writable($savedir)) {
-				//~ if(!is_writable(mb_convert_encoding($savedir, 'Windows-1251', 'UTF-8'))) {
-					throw new ExceptionExt('<span class="errors">Каталог "' .
-						$savedir . '" не существует или недостаточно прав.
-						Скачивание невозможно.</span><br />'
-					);
-				}
-				
-				// если задействованы подкаталоги
-				if($savesubdir) {						
-					$savedir .= 'tfiles_' . $TT_subsections . '_' .
-						date("(d.m.Y_H.i.s)") . '_' . $TT_rule_topics .
-						substr($savedir, -1);
-					$res = (is_writable($savedir) || mkdir($savedir)) ? true : false;
-					// по сути такая проверка не нужна, маловероятно, что
-					// созданный каталог не будет доступен на запись
-					
-					// создался ли подкаталог
-					if(!$res) {	
-						throw new ExceptionExt('<span class="errors">Ошибка при
-							создании подкаталога: неверно указан путь или
-							недостаточно прав. Скачивание невозможно.
-							</span><br />'
-						);
-					}
-				}					
-			} catch (ExceptionExt $e) {
-				$dl_log = $e->getMessage();
-				throw new Exception;
-			}
-			
 			$topics = $_POST['topics']; // массив из идентификаторов топиков для скачивания
-			
-			// если нужные каталоги присутствуют,
-			// то выполняем скачивание т.-файлов
 			$dl = new Download($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-			$dl->download_torrent_files($savedir, $forum_url, $TT_login, $TT_password, $topics,	$retracker, $dl_log);
-			
+			$dl->create_directories($savedir, $savesubdir, $TT_subsections, $TT_rule_topics, $dir_torrents, $edit, $dl_log);
+			$dl->download_torrent_files($forum_url, $TT_login, $TT_password, $topics, $retracker, $dl_log, $passkey, $edit);
+			echo json_encode(array('log' => $dl->log, 'dl_log' => $dl_log));
 		} catch (Exception $e) {
 			$dl->log .= $e->getMessage();
-			if(!isset($dl_log))
-				$dl_log = 'Ошибка при скачивании торрент-файлов. Обратитесь
-				к журналу событий за подробностями.<br />';
+			echo json_encode(array('log' => $dl->log, 'dl_log' => $dl_log));
 		}
-		echo json_encode(array('log' => $dl->log,
-			'dl_log' => $dl_log));
-			
 		break;
 	//------------------------------------------------------------------
 	case 'update':

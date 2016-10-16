@@ -111,6 +111,10 @@ function write_config($filename, $cfg, $subsections, $tcs){
 		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
 	}
 	
+	// кураторы
+	if(isset($dir_torrents)) $ini->write('curators','dir_torrents',$dir_torrents);
+	if(isset($passkey)) $ini->write('curators','user_passkey',$passkey);
+	
 	if(isset($TT_login) && $TT_login != '') $ini->write('torrent-tracker','login',$TT_login);
 	if(isset($TT_password) && $TT_password != '') $ini->write('torrent-tracker','password',$TT_password);
 	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key',$bt_key);
@@ -188,6 +192,10 @@ function get_settings(){
 	$config['save_dir'] = $ini->read('download','savedir','C:\Temp\\');
 	$config['savesub_dir'] = $ini->read('download','savesubdir',0);
 	$config['retracker'] = $ini->read('download','retracker',0);
+	
+	// кураторы
+	$config['dir_torrents'] = $ini->read('curators','dir_torrents','C:\Temp\\');
+	$config['user_passkey'] = $ini->read('curators','user_passkey','');
 	
 	return $config;
 	
