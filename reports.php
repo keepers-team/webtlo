@@ -1,6 +1,6 @@
 <?php
 
-include dirname(__FILE__) . '/php/simple_html_dom.php';
+include dirname(__FILE__) . '/php/phpQuery.php';
 
 function create_reports($subsections, $topics){
 	$tmp = array();
@@ -79,6 +79,7 @@ class SendReports {
 	protected $uid;
 	protected $login;
 	protected $paswd;
+	protected $ch;
 	
 	public function __construct($forum_url, $login, $paswd, $proxy_activate, $proxy_type = 0, $proxy_address = "", $proxy_auth = ""){
 		$this->log = get_now_datetime() . 'Выполняется отправка отчётов на форум...<br />';
@@ -86,6 +87,7 @@ class SendReports {
 		$this->paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
 		$this->login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
 		$this->forum_url = $forum_url;
+		$this->ch = curl_init();
 		$this->get_cookie();
 	}
 	
@@ -104,6 +106,7 @@ class SendReports {
 			CURLOPT_PROXY => $proxy_address,
 			CURLOPT_PROXYUSERPWD => $proxy_auth
 		);
+		curl_setopt_array($this->ch, $this->proxy);
 	}
 	
 	private function get_cookie(){
@@ -130,34 +133,28 @@ class SendReports {
 		$this->cookie = $cookie[1];
 	}
 	
-	private function make_request($url, $fields, $options = array()){
-		$ch = curl_init();
-		curl_setopt_array($ch, $this->proxy);
-		curl_setopt_array($ch, $options);
-		curl_setopt_array($ch, array(
+	private function make_request($url, $fields = array(), $options = array()){
+		curl_setopt_array($this->ch, $options);
+		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => 0,
 			CURLOPT_SSL_VERIFYHOST => 0,
 			CURLOPT_URL => $url,
 			CURLOPT_POSTFIELDS => http_build_query($fields)
 		));
-		$data = curl_exec($ch);
+		$data = curl_exec($this->ch);
 		if($data === false)
-			throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />');
-		curl_close($ch);
+			throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
 		return $data;
 	}
 	
 	private function get_form_token(){
 		$data = $this->make_request(
 			$this->forum_url . '/forum/profile.php',
-			array('mode' => 'viewprofile', 'u' => $this->uid),
-			array(CURLOPT_COOKIE => "$this->cookie")
+			array('mode' => 'viewprofile', 'u' => $this->uid)
 		);
-		$html = str_get_html(mb_convert_encoding($data, 'UTF-8', 'Windows-1251'));
-		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script', 0), $form_token);
-		$html->clear();
-		unset($html);
+		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script:first'), $form_token);
 		if(!isset($form_token[1]))
 			throw new Exception(get_now_datetime() . 'Не получен form_token.<br />');
 		return $form_token[1];
@@ -176,18 +173,20 @@ class SendReports {
 				'submit_mode' => "submit",
 				'form_token' => "$form_token",
 				'message' => mb_convert_encoding("$message", 'Windows-1251', 'UTF-8')
-			),
-			array(CURLOPT_COOKIE => "$this->cookie")
+			)
 		);
-		$html = str_get_html(mb_convert_encoding($data, 'UTF-8', 'Windows-1251'));
-		if(!empty($html->find('div.msg', 0)->plaintext))
-			throw new Exception(get_now_datetime() . $html->find('div.msg', 0)->plaintext . '(' . $topic_id . ')<br />');
-		if(!isset($html->find('div.mrg_16 a', 0)->href))
-			throw new Exception(get_now_datetime() . $html->find('div.mrg_16', 0)->plaintext . '(' . $topic_id . ')<br />');
-		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $html->find('div.mrg_16 a', 0)->href);
-		$html->clear();
-		unset($html);
-		usleep(1000);
+		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		$error = $html->find('div.msg')->text();
+		if(!empty($error)){
+			$this->log .= get_now_datetime() . $error . '(' . $topic_id . ')<br />';
+			return;
+		}
+		$post_id = $html->find('div.mrg_16 > a')->attr('href');
+		if(empty($post_id)){
+			$this->log .= get_now_datetime() . $html->find('div.mrg_16')->text() . '(' . $topic_id . ')<br />';
+			return;
+		}
+		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
 		return $post_id;
 	}
 	
@@ -198,6 +197,10 @@ class SendReports {
 		foreach($data as $data){
 			$links[$data['id']] = preg_replace('/.*?([0-9]*)$/', '$1', $data['ln']);
 		}
+		// изменяем опции curl
+		curl_setopt_array($this->ch, array(
+			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
+		));
 		// получение form_token
 		$form_token = $this->get_form_token();
 		// отправка отчётов по каждому подразделу
@@ -213,39 +216,40 @@ class SendReports {
 			$this->log .= get_now_datetime() . 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...<br />';
 			while($page > 0){
 				$data = $this->make_request(
-					$this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']]. '&start=' . $i,
-					array(),
-					array(CURLOPT_COOKIE => "$this->cookie")
+					$this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']]. '&start=' . $i
 				);
-				$html = str_get_html(mb_convert_encoding($data, 'UTF-8', 'Windows-1251'));
-				if(!empty($html->find('#topic_main', 0))){
+				$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+				$topic_main = $html->find('table#topic_main');
+				if(!empty($topic_main)){
 					$j = 0;
-					$nick_author = $html->find('p.nick-author', 0)->find('a', 0)->plaintext;
-					$post_author = str_replace('post_', '', $html->find('#topic_main', 0)->find('.row1, .row2', 0)->id);
-					foreach($html->find('#topic_main', 0)->find('.row1, .row2') as $row){
-						$post = str_replace('post_', '', $row->id);
-						if($post_author != $post){
-							$nick = $html->find('#'.$row->id, 0)->find('a', 1)->plaintext;
+					$topic_main = pq($topic_main);
+					$nick_author = $topic_main->find('p.nick-author:first > a')->text();
+					$post_author = str_replace('post_', '', $topic_main->find('tbody:first')->attr('id'));
+					foreach($topic_main->find('tbody') as $row){
+						$row = pq($row);
+						$post = str_replace('post_', '', $row->attr('id'));
+						if($post_author != $post && !empty($post)){
+							$nick = $row->find('p.nick > a')->text();
 							if($nick == $this->login){
 								$subsection['messages'][$j]['id'] = $post;
 								$j++;
 							} else {
 								// получаем id раздач хранимых другими хранителями
-								foreach($row->find('.post_body a') as $topic){
-									if(preg_match('/viewtopic.php\?t=[0-9]*/', $topic->href)){
-										$keepers[$nick][] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->href);
+								foreach($row->find('a.postLink') as $topic){
+									$topic = pq($topic);
+									if(preg_match('/viewtopic.php\?t=[0-9]*/', $topic->attr('href'))){
+										$keepers[$nick][] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
 									}
 								}
 							}
 						}
 					}
 				}
-				if(!empty($html->find('a.pg', -1)) && $i == 0)
-					$page = $html->find('a.pg', -1)->prev_sibling()->innertext;
+				$pages = $topic_main->find('a.pg:last')->prev();
+				if(!empty($pages) && $i == 0)
+					$page = $topic_main->find('a.pg:last')->prev()->text();
 				$page--;
 				$i += 30;
-				$html->clear();
-				unset($html);
 			}
 			$this->log .= get_now_datetime() . 'Найдено сообщений: ' . $j . '.<br />';
 			// отправка шапки
@@ -256,7 +260,7 @@ class SendReports {
 					foreach($keepers as $nick => $ids){
 						$webtlo = new Webtlo($api_key, $api_url, $this->proxy);
 						$topics = $webtlo->get_tor_topic_data($ids);
-						$this->log .= $webtlo->log;
+						//~ $this->log .= $webtlo->log;
 						$stored[$nick]['dlsi'] = 0;
 						$stored[$nick]['dlqt'] = 0;
 						foreach($topics as $topic){
@@ -287,7 +291,7 @@ class SendReports {
 			unset($keepers);
 			unset($stored);
 			// отправка сообщений
-			$q = 0;
+			$q = 1;
 			foreach($subsection['messages'] as &$message){
 				if(empty($message['id'])){
 					$this->log .= get_now_datetime() . 'Вставка дополнительного ' . $q . '-ого сообщения для подраздела № ' . $subsection['id'] . '...<br />';
@@ -302,11 +306,13 @@ class SendReports {
 			// вставка ссылок в сводном отчёте на список
 			$common = str_replace('%%ins' . $subsection['id'] . '%%', $subsection['messages'][0]['id'], $common);
 			foreach($subsection['messages'] as $message){
-				$this->log .= get_now_datetime() . 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...<br />';
-				$this->send_message(
-					'editpost',	empty($message['text']) ? 'резерв' : $message['text'],
-					$form_token, $links[$subsection['id']], $message['id']
-				);
+				if(!empty($message['id'])){
+					$this->log .= get_now_datetime() . 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...<br />';
+					$this->send_message(
+						'editpost',	empty($message['text']) ? 'резерв' : $message['text'],
+						$form_token, $links[$subsection['id']], $message['id']
+					);
+				}
 			}
 		}
 		unset($subsection);
@@ -314,13 +320,11 @@ class SendReports {
 		$this->log .= get_now_datetime() . 'Отправка сводного отчёта...<br />';
 		$data = $this->make_request(
 			$this->forum_url . '/forum/search.php',
-			array('uid' => $this->uid, 't' => 4275633, 'dm' => 1),
-			array(CURLOPT_COOKIE => "$this->cookie")
+			array('uid' => $this->uid, 't' => 4275633, 'dm' => 1)
 		);
-		$html = str_get_html(mb_convert_encoding($data, 'UTF-8', 'Windows-1251'));
-		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', empty($html->find('.row1, .row2', 0)) ? "" : $html->find('.row1, .row2', 0)->find('.txtb', 0)->href);
-		$html->clear();
-		unset($html);
+		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		$common_post = $html->find('.row1:first');
+		$post_id = empty($common_post) ? "" : preg_replace('/.*?([0-9]*)$/', '$1', pq($common_post)->find('.txtb')->attr('href'));
 		$this->send_message(
 			empty($post_id) ? 'reply' : 'editpost',
 			$common, $form_token, 4275633, $post_id
@@ -328,7 +332,7 @@ class SendReports {
 	}
 	
 	public function __destruct(){
-		
+		curl_close($this->ch);
 	}
 	
 }

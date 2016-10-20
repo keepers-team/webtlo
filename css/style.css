@@ -222,10 +222,6 @@ label:hover {
 	margin-right: 5px;
 }
 
-.btn_cntrl button span {
-	font: 13px monospace;
-}
-
 .loading {
 	display: inline-block;
 	margin:  0 5px -2.5px -5px;
