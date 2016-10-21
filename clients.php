@@ -654,7 +654,7 @@ class deluge {
 	
 }
 
-// qBittorrent 3.4.4 ~ Windows x32
+// qBittorrent 3.3.{4,5,7} ~ Windows x32
 class qbittorrent {
 	
 	private static $base = "http://%s:%s/%s";	
@@ -666,6 +666,7 @@ class qbittorrent {
     public $paswd;
     
     protected $sid;
+    protected $api;
 	
 	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
 		$this->host = $host;
@@ -679,7 +680,17 @@ class qbittorrent {
             $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
             return false;
         }
+        if (!$this->version_api()) {
+			$this->log .= get_now_datetime() . 'Версия торрент-клиента не поддерживается.<br />';
+			return false;
+		}
         return true;
+	}
+	
+	// версия API
+	private function version_api() {
+		$this->api = $this->makeRequest("", 'version/api', true);
+		return $this->api < 7 ? false : true;
 	}
 	
 	// получение идентификатора сессии
@@ -748,42 +759,51 @@ class qbittorrent {
 	public function torrentAdd($filename, $savepath = "", $label = "") {
 		$filename = implode("\n", array_column_common($filename, 'filename'));
 		$fields = http_build_query(array(
-            'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label
+            'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label, 'category' => $label
 		), '', '&', PHP_QUERY_RFC3986);
 		$this->makeRequest($fields, 'command/download', false);
 	}
 	
 	// установка метки
     public function setLabel($hash, $label = "") {
-		$fields = http_build_query(array(
-			'hashes' => implode('|', $hash), 'label' => $label
-        ), '', '&', PHP_QUERY_RFC3986);
-		$this->makeRequest($fields, 'command/setLabel', false);
+		$hash = array_map(function($hash){ return strtolower($hash); }, $hash);
+		if ( $this->api < 10 ) {
+			$fields = http_build_query(array(
+				'hashes' => implode('|', $hash), 'label' => $label
+	        ), '', '&', PHP_QUERY_RFC3986);
+			$this->makeRequest($fields, 'command/setLabel', false);
+		} else {
+			$fields = http_build_query(array(
+				'hashes' => implode('|', $hash), 'category' => $label
+	        ), '', '&', PHP_QUERY_RFC3986);
+			$this->makeRequest($fields, 'command/setCategory', false);
+		}
 	}
     
     // запуск раздач
     public function torrentStart($hash, $force = false) {
 		foreach($hash as $hash){
-			$this->makeRequest('hash='.$hash, 'command/resume', false);
+			$this->makeRequest('hash='.strtolower($hash), 'command/resume', false);
 		}
 	}
 	
     // остановка раздач
     public function torrentStop($hash) {
 		foreach($hash as $hash){
-			$this->makeRequest('hash='.$hash, 'command/pause', false);
+			$this->makeRequest('hash='.strtolower($hash), 'command/pause', false);
 		}
 	}
 	
     // удаление раздач
 	public function torrentRemove($hash, $data = false) {
+		$hash = array_map(function($hash){ return strtolower($hash); }, $hash);
 		$this->makeRequest('hashes='.implode('|', $hash), 'command/delete' . ($data ? 'Perm' : ''), false);
 	}
 	
 	// проверить локальные данные раздач
 	public function torrentRecheck($hash) {
 		foreach($hash as $hash){
-			$this->makeRequest('hash='.$hash, 'command/recheck', false);
+			$this->makeRequest('hash='.strtolower($hash), 'command/recheck', false);
 		}
 	}
 	
