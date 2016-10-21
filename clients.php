@@ -10,14 +10,16 @@ function get_tor_client_data($tcs, &$log) {
 		$client = new $tc['cl']($tc['ht'], $tc['pt'], $tc['lg'], $tc['pw']);
 		if($client->is_online()) {
 			$tmp = $client->getTorrents();
-			foreach($tmp as $hash => $value){
-				$tmp[$hash]['client'] = $tc['cm'];
+			if(!empty($tmp)){
+				foreach($tmp as $hash => $value){
+					$tmp[$hash]['client'] = $tc['cm'];
+				}
+				$tc_topics += $tmp;
 			}
-			$tc_topics += $tmp;
-		} else $tmp = null;
+		}
 		$log .= str_replace('{cm}', $tc['cm'], $client->log);
 		$log .= get_now_datetime() . $tc['cm'] . ' (' . $tc['cl'] .
-			') - получено раздач: ' . count($tmp) . '<br />';
+			') - получено раздач: ' . (empty($tmp) ? 0 : count($tmp)) . '<br />';
 	}
 	
 	// array ( [hash] => ( 'status' => status, 'client' => comment ) )
@@ -121,7 +123,7 @@ class utorrent {
 			$data[$torrent[0]]['status'] = $status;
 			//~ $data[$torrent[0]]['client'] = '';
 		}
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
@@ -272,7 +274,7 @@ class transmission {
 			$data[strtoupper($torrent['hashString'])]['status'] = $status;
 			//~ $data[strtoupper($torrent['hashString'])]['client'] = '';
 		}
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
@@ -421,7 +423,7 @@ class vuze {
 			$data[strtoupper($torrent['hashString'])]['status'] = $status;
 			//~ $data[strtoupper($torrent['hashString'])]['client'] = '';
 		}
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
@@ -571,7 +573,7 @@ class deluge {
 			$data[strtoupper($hash)]['status'] = $status;
 			//~ $data[strtoupper($hash)]['client'] = '';
 		}        
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
@@ -739,7 +741,7 @@ class qbittorrent {
 			$data[strtoupper($torrent['hash'])]['status'] = $status;
 			//~ $data[strtoupper($torrent['hash'])]['client'] = '';
 		}
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
@@ -907,7 +909,7 @@ class ktorrent {
 			$data[strtoupper($torrent['info_hash'])]['status'] = $status;
 			//~ $data[strtoupper($torrent['info_hash'])]['client'] = '';
 		}
-        return $data;
+        return isset($data) ? $data : null;
 	}
 	
 	// добавить торрент
