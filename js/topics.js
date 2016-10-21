@@ -85,11 +85,12 @@ $("#topics").on("click", ".tor_add", function(){
 			//~ $("#log").append(response);
 			if(resp.success != null){
 				// помечаем в базе добавленные раздачи
+				cl = cl_data.split("|");
 			    $.ajax({
 				    type: "POST",
 				    context: this,
 					url: "php/mark_topics_in_database.php",
-					data: { success:resp.success, status:-1 },
+					data: { success:resp.success, status:-1, client:cl[0] },
 					success: function(response) {
 						$("#log").append(response);
 						getFilteredTopics.apply(this);
@@ -128,7 +129,7 @@ function exec_action_for_topics(){
 				    type: "POST",
 				    context: this,
 					url: "php/mark_topics_in_database.php",
-					data: { success:resp.ids, status:status },
+					data: { success:resp.ids, status:status, client:'' },
 					success: function(response) {
 						$("#log").append(response);
 						getFilteredTopics.apply(this);
