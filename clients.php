@@ -1,6 +1,6 @@
 <?php
 
-function get_tor_client_data($tcs, &$log) {
+function get_tor_client_data($tcs, &$log = "") {
 	
 	$log .= get_now_datetime() . 'Получение данных от торрент-клиентов...<br />';
 	$log .= get_now_datetime() . 'Количество торрент-клиентов: ' . count($tcs) . '.<br />';

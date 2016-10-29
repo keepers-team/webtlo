@@ -5,7 +5,6 @@ include dirname(__FILE__) . '/clients.php';
 include dirname(__FILE__) . '/gui.php';
 include dirname(__FILE__) . '/common.php';
 include dirname(__FILE__) . '/reports.php';
-include dirname(__FILE__) . '/php/torrenteditor.php';
 
 // разбираем настройки
 
@@ -53,10 +52,10 @@ switch($_POST['m'])
 	//------------------------------------------------------------------
 	case 'reports':
 		try {
-			$db = new FromDatabase();
+			$db = new Database();
 			$subsections = $db->get_forums_details($TT_subsections);
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics);
+			$reports = create_reports($subsections, $topics); unset($topics);
 			output_reports($reports, $TT_login, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
@@ -69,11 +68,12 @@ switch($_POST['m'])
 	//------------------------------------------------------------------
 	case 'send':
 		try {
-			$db = new FromDatabase();
-			$subsections = $db->get_forums_details(array_column_common($TT_subsections, 'id'));
+			$db = new Database();
+			$subsec = array_column_common($TT_subsections, 'id');
+			$subsections = $db->get_forums_details($subsec);
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics);
-			$send = new SendReports($forum_url, $TT_login, $TT_password, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
+			$reports = create_reports($subsections, $topics); unset($topics);
+			$send = new Reports($forum_url, $TT_login, $TT_password, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 			$send->send_reports($api_key, $api_url, $reports, $TT_subsections);
 			echo $db->log . $send->log;
 		} catch (Exception $e) {
@@ -83,10 +83,11 @@ switch($_POST['m'])
 	//------------------------------------------------------------------
 	case 'topics':
 		try {
-			$db = new FromDatabase();
+			$db = new Database();
 			$subsections = $db->get_forums($TT_subsections);
 			$topics = $db->get_topics($TT_rule_topics, 0, $avg_seeders_period);
-			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $db->log);
+			$keepers = $db->get_keepers();
+			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $keepers, $db->log);
 		} catch (Exception $e) {
 			$db->log .= $e->getMessage();
 			echo json_encode(array('log' => $db->log,
@@ -111,16 +112,17 @@ switch($_POST['m'])
 	//------------------------------------------------------------------
 	case 'update':
 		try {
-			$log = '';
+			$subsec = array_column_common($TT_subsections, 'id');
 			$tc_topics = get_tor_client_data($tcs, $log); /* обновляем сведения от т.-клиентов */
+			$reports = new Reports($forum_url, $TT_login, $TT_password, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
+			$keepers = $reports->search_keepers($TT_subsections, $log);
+			$db = new Database();
+			$db->set_keepers($keepers);
 			$webtlo = new Webtlo($api_key, $api_url, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
-			$subsections = $webtlo->get_cat_forum_tree($TT_subsections); /* обновляем дерево разделов */
+			$subsections = $webtlo->get_cat_forum_tree($subsec); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
-			$topics = $webtlo->get_tor_topic_data($ids);
-			$ids = $webtlo->get_topic_id(array_diff(array_keys($tc_topics), array_column_common($topics, 'info_hash')));
-			$topics += $webtlo->get_tor_topic_data($ids);
-			$output = $webtlo->preparation_of_topics($topics, $tc_topics, $TT_rule_topics, $TT_subsections, $avg_seeders, $avg_seeders_period);
-			output_topics($forum_url, $output, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $log . $webtlo->log);
+			$output = $webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders, $avg_seeders_period);
+			output_topics($forum_url, $output, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $keepers, $log . $webtlo->log);
 		} catch (Exception $e) {
 			$webtlo->log .= $e->getMessage();
 			echo json_encode(array('log' => $log . $webtlo->log,

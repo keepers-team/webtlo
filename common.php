@@ -149,6 +149,7 @@ function get_settings(){
 		$config['clients'][$comment]['lg'] = $ini->read("torrent-client-$i","login","");
 		$config['clients'][$comment]['pw'] = $ini->read("torrent-client-$i","password","");
 	}
+	ksort($config['clients'], SORT_NATURAL);
 	
 	// подразделы
 	$config['subsections_line'] = $ini->read('sections','subsections','');
@@ -159,9 +160,14 @@ function get_settings(){
 			$config['subsections'][$id]['client'] = $ini->read("$id","client","utorrent");
 			$config['subsections'][$id]['label'] = $ini->read("$id","label","");
 			$config['subsections'][$id]['data-folder'] = $ini->read("$id","data-folder","");
-			$config['subsections'][$id]['link'] = $ini->read("$id","link","");
+			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
 		}
 	}
+	uasort($config['subsections'], function($a, $b){
+		$a['title'] = mb_substr($a['title'], mb_strrpos($a['title'], ' » ') + 3);
+		$b['title'] = mb_substr($b['title'], mb_strrpos($b['title'], ' » ') + 3);
+		return strnatcmp($a['title'], $b['title']);
+	});
 	
 	// раздачи
 	$config['rule_topics'] = $ini->read('sections','rule_topics',3);

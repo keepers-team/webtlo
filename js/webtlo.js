@@ -204,7 +204,7 @@
 			return;
 		}
 		tcs = listTorClients();
-		subsec = listSubsections();
+		subsec = listDataSubsections();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",

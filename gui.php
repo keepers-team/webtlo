@@ -45,7 +45,7 @@ function output_reports($subsections, $login, $log){
 }
 
 // вывод топиков на главной странице
-function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $time, $avg_seeders, $log){
+function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $time, $avg_seeders, $keepers, $log){
 		// заголовки вкладок
 		$output = '<div id="topictabs" class="report">'.
 			'<ul class="report">';
@@ -94,6 +94,16 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 						<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
 							<input type="checkbox" name="avg_seeders_complete" />
 							"зелёные"
+						</label>
+						<br />
+						<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
+							<input type="checkbox" class="keepers" name="not_keepers" />
+							нет хранителей
+						</label>
+						<br />
+						<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+							<input type="checkbox" class="keepers" name="is_keepers" />
+							есть хранители
 						</label>
 					</fieldset>
 					<fieldset class="filter_sort" title="Сортировка">
@@ -170,12 +180,13 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 				{
 					// вывод топиков
 					$icons = ($param['ds'] >= $time || !$avg_seeders ? 'green' : ($param['ds'] >= $time / 2 ? 'yellow' : 'red'));
+					$keeper = isset($keepers[$param['id']]) ? ' ~> <span title="Хранители" class="bold">'.implode(', ', $keepers[$param['id']]).'</span>' : "";
 					$output .=
 							'<div id="topic_' . $param['id'] . '"><label>
 								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'" client="'.$param['cl'].'">
 								<img title="" src="img/'.$icons.'.png" />
-								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 1).'</span>
-							</label></div>';
+								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 1).'</span>'.$keeper.
+							'</label></div>';
 				}
 			}
 			$output .= '</div></div>';

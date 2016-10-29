@@ -9,6 +9,7 @@ try {
 	parse_str($_POST['topics_filter']);
 	$forum_url = $_POST['forum_url'];
 	$subsec = $_POST['subsec'];
+	$kp = isset($not_keepers) ? 'AND Keepers.topic_id IS NULL' : (isset($is_keepers) ? 'AND Keepers.topic_id IS NOT NULL' : '');
 	
 	// средние сиды
 	$avg_seeders = ($_POST['avg'] == 'true');
@@ -23,7 +24,7 @@ try {
 		(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['q'] )) . ' + `rt` )';
 	
 	// подготовка запроса
-	$where = (isset($filter_interval) ? "`avg` >= CAST(:from as REAL) AND `avg` <= CAST(:to as REAL)" : "`avg` $filter_rule_direction CAST(:se as REAL)") . " AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT)";
+	$where = (isset($filter_interval) ? "`avg` >= CAST(:from as REAL) AND `avg` <= CAST(:to as REAL)" : "`avg` $filter_rule_direction CAST(:se as REAL)") . " AND `dl` = :dl AND `ss` = :ss AND `ds` >= CAST(:ds as INT) $kp";
 	$cast = ($filter_sort == 'na' ? 'text' : ($filter_sort == 'avg' ? 'real' : 'int'));
 	$param = array('dl' => $filter_status, 'ss' => $subsec, 'ds' => $ds);
 	$param += isset($filter_interval) ? array('from' => $filter_rule_interval['from'], 'to' => $filter_rule_interval['to']) : array('se' => $filter_rule);
@@ -48,6 +49,7 @@ try {
 			`Seeders`
 				ON `Topics`.`id` = `Seeders`.`id`
 			LEFT JOIN `Other`
+			LEFT JOIN Keepers ON Topics.id = Keepers.topic_id
 		WHERE $where
 		ORDER BY CAST(`$filter_sort` as $cast) $filter_sort_direction
 	");
@@ -58,17 +60,26 @@ try {
 	$sth->execute($param);
 	$topics = $sth->fetchAll(PDO::FETCH_ASSOC);
 	
+	$sth = $db->prepare("SELECT topic_id,nick FROM `Keepers`");
+	if($db->errorCode() != '0000') {
+		$db_error = $db->errorInfo();
+		throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+	}
+	$sth->execute();
+	$keepers = $sth->fetchAll(PDO::FETCH_COLUMN|PDO::FETCH_GROUP);
+	
 	$q = 1;
 	$output = "";
 	
 	foreach($topics as $topic_id => $topic){
 		$icons = ($topic['ds'] >= $time || !$avg_seeders ? 'green' : ($topic['ds'] >= $time / 2 ? 'yellow' : 'red'));
+		$keeper = isset($keepers[$topic['id']]) ? ' ~> <span title="Хранители" class="bold">'.implode(', ', $keepers[$topic['id']]).'</span>' : "";
 		$output .=
 			'<div id="topic_' . $topic['id'] . '"><label>
 				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
 				<img title="" src="img/'.$icons.'.png" />
-				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 1).'</span>
-			</label></div>';
+				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 1).'</span>'.$keeper.
+			'</label></div>';
 	}
 	
 	//~ echo $output;

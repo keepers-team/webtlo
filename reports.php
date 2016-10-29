@@ -1,7 +1,5 @@
 <?php
 
-include dirname(__FILE__) . '/php/phpQuery.php';
-
 function create_reports($subsections, $topics){
 	$tmp = array();
 	$max = 119000;
@@ -69,7 +67,7 @@ function create_reports($subsections, $topics){
 	return $subsections;
 }
 
-class SendReports {
+class Reports {
 	
 	public $log;
 	public $forum_url;
@@ -82,6 +80,7 @@ class SendReports {
 	protected $ch;
 	
 	public function __construct($forum_url, $login, $paswd, $proxy_activate, $proxy_type = 0, $proxy_address = "", $proxy_auth = ""){
+		include_once dirname(__FILE__) . '/php/phpQuery.php';
 		$this->log = get_now_datetime() . 'Выполняется отправка отчётов на форум...<br />';
 		$this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 		$this->paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
@@ -220,6 +219,10 @@ class SendReports {
 				);
 				$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
 				$topic_main = $html->find('table#topic_main');
+				$pages = $html->find('a.pg:last')->prev();
+				if(!empty($pages) && $i == 0)
+					$page = $html->find('a.pg:last')->prev()->text();
+				unset($html);
 				if(!empty($topic_main)){
 					$j = 0;
 					$topic_main = pq($topic_main);
@@ -237,7 +240,7 @@ class SendReports {
 								// получаем id раздач хранимых другими хранителями
 								foreach($row->find('a.postLink') as $topic){
 									$topic = pq($topic);
-									if(preg_match('/viewtopic.php\?t=[0-9]*/', $topic->attr('href'))){
+									if(preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))){
 										$keepers[$nick][] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
 									}
 								}
@@ -245,9 +248,6 @@ class SendReports {
 						}
 					}
 				}
-				$pages = $topic_main->find('a.pg:last')->prev();
-				if(!empty($pages) && $i == 0)
-					$page = $topic_main->find('a.pg:last')->prev()->text();
 				$page--;
 				$i += 30;
 			}
@@ -269,6 +269,7 @@ class SendReports {
 								$stored[$nick]['dlqt'] += 1;
 							}
 						}
+						unset($topics);
 					}
 					// вставка в отчёты данных о других хранителях
 					$q = 2;
@@ -324,11 +325,59 @@ class SendReports {
 		);
 		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
 		$common_post = $html->find('.row1:first');
+		unset($html);
 		$post_id = empty($common_post) ? "" : preg_replace('/.*?([0-9]*)$/', '$1', pq($common_post)->find('.txtb')->attr('href'));
 		$this->send_message(
 			empty($post_id) ? 'reply' : 'editpost',
 			$common, $form_token, 4275633, $post_id
 		);
+	}
+	
+	public function search_keepers($subsections, &$log){
+		$log .= get_now_datetime() . 'Обновление сведений о хранителях...<br />';
+		// изменяем опции curl
+		curl_setopt_array($this->ch, array(
+			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
+		));
+		$keepers = array();
+		foreach ( $subsections as $subsection ) {
+			if ( empty($subsection['ln']) ) continue;
+			$ln = preg_replace('/.*?([0-9]*)$/', '$1', $subsection['ln']);
+			$i = 0;
+			$page = 1;
+			// получение данных со страниц
+			while($page > 0){
+				$data = $this->make_request(
+					$this->forum_url . '/forum/viewtopic.php?t=' . $ln. '&start=' . $i
+				);
+				$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+				$topic_main = $html->find('table#topic_main');
+				$pages = $html->find('a.pg:last')->prev();
+				if(!empty($pages) && $i == 0)
+					$page = $html->find('a.pg:last')->prev()->text();
+				unset($html);
+				if(!empty($topic_main)){
+					$topic_main = pq($topic_main);
+					foreach($topic_main->find('tbody') as $row){
+						$row = pq($row);
+						$nick = $row->find('p.nick > a')->text();
+						if($nick != $this->login && !empty($nick)){
+							// получаем id раздач хранимых другими хранителями
+							foreach($row->find('a.postLink') as $topic){
+								$topic = pq($topic);
+								if(preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))){
+									$topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
+									$keepers[$topic_id][] = $nick;
+								}
+							}
+						}
+					}
+				}
+				$page--;
+				$i += 30;
+			}
+		}
+		return $keepers;
 	}
 	
 	public function __destruct(){

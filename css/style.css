@@ -200,7 +200,7 @@ label:hover {
 	text-decoration: underline;
 }
 	
-.rp-header {
+.rp-header, .bold {
 	font-weight: bold;
 }
 

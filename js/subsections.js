@@ -18,7 +18,7 @@ function addSubsection(event, ui) {
 		if(vl == val) q = 1;
 	});
 	if(q != 1) {
-		$("#list-ss").append('<option value="'+vl+'" data="'+vl+'|'+lb+'||'+label+'|">'+label+'</option>');	
+		$("#list-ss").append('<option value="'+vl+'" data="'+vl+'|'+lb+'||'+label+'||">'+label+'</option>');
 		$("#ss-prop .ss-prop").prop("disabled", false);
 		$("#list-ss :last").prop("selected", "selected").change();
 	} else {
@@ -142,9 +142,10 @@ $(document).ready(function() {
 					for (var i in subsection) {
 						data = $("#list-ss option[value="+subsection[i].value+"]").attr("data");
 						data = data.split("|");
+						label = subsection[i].label.replace(/.* » (.*)$/, '$1');
 						$("#list-ss option[value="+subsection[i].value+"]")
-							.attr("data", data[0]+'|'+subsection[i].label+'|'+data[2]+'|'+data[3]+'|'+data[4])
-							.text(subsection[i].label.replace(/.* » (.*)$/, '$1'));
+							.attr("data", data[0]+'|'+subsection[i].label+'|'+data[2]+'|'+label+'|'+data[4]+'|'+data[5])
+							.text(label);
 					}
 					$("#list-ss").change();
 				},

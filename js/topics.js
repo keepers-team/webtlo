@@ -312,3 +312,20 @@ $("#topics").on("change", ".topics_filter input[type=radio], .topics_filter inpu
 	subsec = $(this).parents(".tab-topic").attr("value");
 	showSelectedInfo(subsec, 0, 0.00);
 });
+
+// есть/нет хранители
+$("#topics").on("change", ".topics_filter .keepers", function(){
+	if ( $(this).prop("checked") ) {
+		main = $(this).parents(".filter_status").children("label");
+		switch ( $(this).attr('name') ) {
+			case 'not_keepers':
+				is_keepers = $(main).children("input[name=is_keepers]");
+				$(is_keepers).prop("checked", false);
+				break;
+			case 'is_keepers':
+				not_keepers = $(main).children("input[name=not_keepers]");
+				$(not_keepers).prop("checked", false);
+				break;
+		}
+	}
+});
