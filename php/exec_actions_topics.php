@@ -1,7 +1,7 @@
 <?php
 
-include dirname(__FILE__) . '/../clients.php';
 include dirname(__FILE__) . '/../common.php';
+include dirname(__FILE__) . '/../clients.php';
 
 if(isset($_POST['topics'])){
 	$topics = $_POST['topics'];
@@ -31,7 +31,6 @@ $data = isset($_POST['remove_data']) ? $_POST['remove_data'] : '';
 $force = isset($_POST['force_start']) ? $_POST['force_start'] : '';
 $label = isset($_POST['label']) ? $_POST['label'] : '';
 
-$log = '';
 $ids = array();
 
 try {
@@ -57,50 +56,48 @@ try {
 		throw new Exception();
 	}
 	
-	$log .= get_now_datetime() . 'Начато выполнение действия "'.$action.'" для выбранных раздач...<br />';
-	$log .= get_now_datetime() . 'Количество затрагиваемых торрент-клиентов: '.count($cm).'.<br />';
+	Log::append ( 'Начато выполнение действия "'.$action.'" для выбранных раздач...' );
+	Log::append ( 'Количество затрагиваемых торрент-клиентов: '.count($cm).'.' );
 	
-	foreach($cm as $cm){
-		if(isset($tcs[$cm])){
-			$client = new $tcs[$cm]['cl']($tcs[$cm]['ht'], $tcs[$cm]['pt'], $tcs[$cm]['lg'], $tcs[$cm]['pw']);
-			if($client->is_online()) {
-				switch($action) {
+	foreach ( $cm as $cm ) {
+		if ( isset( $tcs[$cm] ) ) {
+			$client = new $tcs[$cm]['cl'] ( $tcs[$cm]['ht'], $tcs[$cm]['pt'], $tcs[$cm]['lg'], $tcs[$cm]['pw'], $tcs[$cm]['cm'] );
+			if ( $client->is_online() ) {
+				switch ( $action ) {
 					case 'set_label':
-						$client->log .= $client->setLabel($hashes[$cm]['hash'], $label);
+						Log::append ( $client->setLabel($hashes[$cm]['hash'], $label) );
 						break;
 					case 'stop':
-						$client->log .= $client->torrentStop($hashes[$cm]['hash']);
+						Log::append ( $client->torrentStop($hashes[$cm]['hash']) );
 						break;
 					case 'start':
-						$client->log .= $client->torrentStart($hashes[$cm]['hash'], $force);
+						Log::append ( $client->torrentStart($hashes[$cm]['hash'], $force) );
 						break;
 					case 'remove':
-						$client->log .= $client->torrentRemove($hashes[$cm]['hash'], $data);
+						Log::append ( $client->torrentRemove($hashes[$cm]['hash'], $data) );
 						break;
 					default:
 						$result = 'Невозможно выполнить действие: "'.$action.'".<br />';
-						throw new Exception(str_replace('{cm}', $cm, $client->log));
+						throw new Exception();
 				}
 				$ids += $hashes[$cm]['id'];
-				$client->log .= get_now_datetime() . 'Действие "'.$action.'" для "'.$cm.'" выполнено ('.count($hashes[$cm]['id']).').<br />';
+				Log::append ( 'Действие "'.$action.'" для "'.$cm.'" выполнено ('.count($hashes[$cm]['id']).').' );
 			} else {
-				$client->log .= get_now_datetime() . 'Error: действие "'.$action.'" для "'.$cm.'" не выполнено.<br />';
-				$log .= str_replace('{cm}', $cm, $client->log);
+				Log::append ( 'Error: действие "'.$action.'" для "'.$cm.'" не выполнено.' );
 				continue;
 			}
-			$result = 'Запрос на выполнение действия "'.$action.'" успешно отправлен.<br />';
-			$log .= str_replace('{cm}', $cm, $client->log);
 		}
 	}
-	$log .= get_now_datetime() . 'Выполнение действия "'.$action.'" завершено.<br />';
+	$result = 'Действие "'.$action.'" выполнено. За подробностями обратитесь к журналу.<br />';
+	Log::append ( 'Выполнение действия "'.$action.'" завершено.' );
 	// выводим на экран
-	echo json_encode(array('log' => $log, 'result' => $result, 'ids' => empty($ids) ? null : $ids));
-	//~ echo $log;
+	echo json_encode(array('log' => Log::get(), 'result' => $result, 'ids' => empty($ids) ? null : $ids));
+	//~ echo Log::get();
 	
 } catch (Exception $e) {
-	$log .= $e->getMessage();
-	echo json_encode(array('log' => $log, 'result' => $result, 'ids' => null));
-	//~ echo $log;
+	Log::append ( $e->getMessage() );
+	echo json_encode(array('log' => Log::get(), 'result' => $result, 'ids' => null));
+	//~ echo Log::get();
 }
 
 ?>

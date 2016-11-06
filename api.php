@@ -1,21 +1,22 @@
 ﻿<?php
 
+Db::create();
+
 class Webtlo {
 	
-	public $ch;
-	public $db;
-	public $api_key;
-	public $api_url;
-	public $log;
 	public $limit;
 	
-	public function __construct($api_key, $api_url, $proxy_activate, $proxy_type = 0, $proxy_address = "", $proxy_auth = ""){
-		$this->log = get_now_datetime() . 'Получение данных с ' . $api_url . '...<br />';
+	protected $ch;
+	protected $db;
+	protected $api_key;
+	protected $api_url;
+	
+	public function __construct($api_key, $api_url){
+		Log::append ( 'Получение данных с ' . $api_url . '...' );
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
+		$this->make_database();
 		$this->init_curl();
-		if(is_array($proxy_activate)) curl_setopt_array($this->ch, $proxy_activate);
-		else $this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 		$this->get_limit();
 	}
 	
@@ -28,24 +29,7 @@ class Webtlo {
 		    CURLOPT_SSL_VERIFYHOST => 0
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
-	}
-	
-	private function init_proxy($proxy_activate = false, $proxy_type, $proxy_address, $proxy_auth){
-		$this->make_database();
-		if($proxy_activate) {
-			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
-			$proxy_array = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5	);
-			$proxy_type = (array_key_exists($proxy_type, $proxy_array) ? $proxy_array[$proxy_type] : null);
-			$proxy_address = (in_array(null, explode(':', $proxy_address)) ? null : $proxy_address);
-			$proxy_auth = (in_array(null, explode(':', $proxy_auth)) ? null : $proxy_auth);
-			curl_setopt_array($this->ch, array(
-				CURLOPT_PROXYTYPE => $proxy_type,
-				CURLOPT_PROXY => $proxy_address,
-				CURLOPT_PROXYUSERPWD => $proxy_auth
-			));
-		} else {
-			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
-		}
+		curl_setopt_array($this->ch, Proxy::$proxy);
 	}
 	
 	private function request_exec($url){
@@ -54,17 +38,17 @@ class Webtlo {
 		while(true){
 			$json = curl_exec($this->ch);
 			if($json === false) {
-				throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
+				throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
 			}
 			$data = json_decode($json, true);
 			if(isset($data['error'])){
 				if($data['error']['code'] == '503' && $n <= 3){
-					$this->log .= get_now_datetime() . 'Повторная попытка ' . $n . '/3 получить данные.<br />';
+					Log::append ( 'Повторная попытка ' . $n . '/3 получить данные.' );
 					sleep(20);
 					$n++;
 					continue;
 				}
-				throw new Exception(get_now_datetime() . 'API ошибка: ' . $data['error']['text'] . '<br />');
+				throw new Exception( 'API ошибка: ' . $data['error']['text'] );
 			}
 			break;
 		}
@@ -81,7 +65,7 @@ class Webtlo {
 	// статусы раздач
 	public function get_tor_status_titles($tor_status){
 		if(!is_array($tor_status))
-			throw new Exception(get_now_datetime() . 'В настройках не выбран статус раздач на трекере.<br />');
+			throw new Exception( 'В настройках не выбран статус раздач на трекере.' );
 		$url = $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$status = array();
@@ -94,7 +78,7 @@ class Webtlo {
 	
 	// дерево разделов
 	public function get_cat_forum_tree($subsec){
-		$this->log .= get_now_datetime() . 'Получение дерева разделов...<br />';
+		Log::append ( 'Получение дерева разделов...' );
 		$url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		foreach($data['result']['c'] as $cat_id => $cat_title){
@@ -135,7 +119,7 @@ class Webtlo {
 	
 	// список раздач раздела
 	public function get_subsection_data($subsections, $status){
-		$this->log .= get_now_datetime() . 'Получение списка раздач...<br />';
+		Log::append ( 'Получение списка раздач...' );
 		foreach($subsections as $subsection){
 			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);
@@ -147,7 +131,7 @@ class Webtlo {
 					$q++;
 				}
 			}
-			$this->log .= get_now_datetime() . 'Список раздач раздела № ' . $subsection['id'] . ' получен (' . $q . ' шт.).<br />';
+			Log::append ( 'Список раздач раздела № ' . $subsection['id'] . ' получен (' . $q . ' шт.).' );
 		}
 		return $ids;
 	}
@@ -311,7 +295,7 @@ class Webtlo {
 	}
 	
 	public function prepare_topics($ids, $tc_topics, $rule, $subsec, $avg_seeders, $time){
-		if ( empty ( $ids ) ) return;
+		//~ if ( empty ( $ids ) ) return;
 		
 		// получаем дату предыдущего обновления
 		$last_update = $this->query_database(
@@ -322,30 +306,36 @@ class Webtlo {
 		$ud_old->setTimestamp($last_update[0])->setTime(0, 0, 0);
 		
 		if ( $avg_seeders ) {
-			$this->log .= get_now_datetime() . 'Задействован алгоритм поиска среднего значения количества сидов...<br />';
+			Log::append ( 'Задействован алгоритм поиска среднего значения количества сидов...' );
 		}
 		
 		// раздачи из хранимых подразделов
-		$this->log .= get_now_datetime() . 'Получение подробных сведений о раздачах...<br />';
-		$topics = $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
+		Log::append ( 'Получение подробных сведений о раздачах...' );
+		$topics = empty ( $ids )
+			? array()
+			: $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
 		unset($ids);
 		
 		// раздачи из других подразделов
-		$this->log .= get_now_datetime() . 'Поиск раздач из других подразделов...<br />';
-		$ids = $this->get_topic_id ( array_keys ( $tc_topics ) );
-		$topics += $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
-		unset($ids);
+		if ( !empty ( $tc_topics ) ) {
+			Log::append ( 'Поиск раздач из других подразделов...' );
+			$ids = $this->get_topic_id ( array_keys ( $tc_topics ) );
+			$topics += empty ( $ids )
+				? array()
+				: $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
+			unset($ids);
+		}
 		
 		$q = $this->query_database("SELECT COUNT() FROM temp.Topics1", array(), true, PDO::FETCH_COLUMN);
 		if ( $q[0] > 0 ) {
-			$this->log .= get_now_datetime() . 'Запись в базу данных сведений о раздачах...<br />';
+			Log::append ( 'Запись в базу данных сведений о раздачах...' );
 			$this->query_database('INSERT INTO `Topics` SELECT * FROM temp.Topics1');
 			$this->query_database('DELETE FROM `Topics` WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL )');
 		}
 		
 		$q = $this->query_database("SELECT COUNT() FROM temp.Seeders1", array(), true, PDO::FETCH_COLUMN);
 		if ( $q[0] > 0 ) {
-			$this->log .= get_now_datetime() . 'Запись в базу данных сведений о средних сидах...<br />';
+			Log::append ( 'Запись в базу данных сведений о средних сидах...' );
 			$this->query_database('INSERT INTO `Seeders` SELECT * FROM temp.Seeders1');
 		}
 		
@@ -370,7 +360,7 @@ class Webtlo {
 		$sth = $this->db->prepare($sql);
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+			throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 		}
 		$sth->execute($param);
 		return $fetch ? $sth->fetchAll($pdo) : true;
@@ -378,131 +368,7 @@ class Webtlo {
 	
 	private function make_database(){
 		
-		$this->log .= get_now_datetime() . 'Подготовка структуры базы данных...<br />';
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
-		
-		// таблицы
-		
-		// список подразделов
-		$this->query_database('CREATE TABLE IF NOT EXISTS Forums (
-				id INT NOT NULL PRIMARY KEY,
-				na VARCHAR NOT NULL
-		)');
-		
-		// разное
-		$this->query_database('CREATE TABLE IF NOT EXISTS Other AS SELECT 0 AS "id", 0 AS "ud"');
-		
-		// топики
-		$this->query_database('CREATE TABLE IF NOT EXISTS Topics (
-				id INT NOT NULL PRIMARY KEY,
-				ss INT NOT NULL,
-				na VARCHAR NOT NULL,
-				hs VARCHAR NOT NULL,
-				se INT NOT NULL,
-				si INT NOT NULL,
-				st INT NOT NULL,
-				rg INT NOT NULL,
-				dl INT NOT NULL DEFAULT 0
-		)');
-		
-		// средние сиды
-		$this->query_database('CREATE TABLE IF NOT EXISTS Seeders (
-			id INT NOT NULL PRIMARY KEY,
-			d0 INT, d1 INT,d2 INT,d3 INT,d4 INT,d5 INT,d6 INT,
-			d7 INT,d8 INT,d9 INT,d10 INT,d11 INT,d12 INT,d13 INT,
-			d14 INT,d15 INT,d16 INT,d17 INT,d18 INT,d19 INT,
-			d20 INT,d21 INT,d22 INT,d23 INT,d24 INT,d25 INT,
-			d26 INT,d27 INT,d28 INT,d29 INT,
-			q0 INT, q1 INT,q2 INT,q3 INT,q4 INT,q5 INT,q6 INT,
-			q7 INT,q8 INT,q9 INT,q10 INT,q11 INT,q12 INT,q13 INT,
-			q14 INT,q15 INT,q16 INT,q17 INT,q18 INT,q19 INT,
-			q20 INT,q21 INT,q22 INT,q23 INT,q24 INT,q25 INT,
-			q26 INT,q27 INT,q28 INT,q29 INT
-		)');
-		
-		// хранители
-		$this->query_database('CREATE TABLE IF NOT EXISTS Keepers (
-			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			topic_id INTEGER NOT NULL, nick VARCHAR NOT NULL
-		)');
-		
-		// триггеры
-		
-		// запретить дубликаты в keepers
-		$this->query_database('CREATE TRIGGER IF NOT EXISTS Keepers_not_duplicate
-			BEFORE INSERT ON Keepers
-	        WHEN EXISTS (SELECT id FROM Keepers WHERE topic_id = NEW.topic_id AND nick = NEW.nick)
-			BEGIN
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-		
-		// удалить сведения о средних сидах при удалении раздачи
-		$this->query_database('CREATE TRIGGER IF NOT EXISTS Seeders_delete
-			BEFORE DELETE ON Topics FOR EACH ROW
-			BEGIN
-				DELETE FROM Seeders WHERE id = OLD.id;
-			END;
-		');
-		
-		// обновить при вставке такой же записи
-		$this->query_database('CREATE TRIGGER IF NOT EXISTS Forums_update
-			BEFORE INSERT ON Forums
-	        WHEN EXISTS (SELECT id FROM Forums WHERE id = NEW.id)
-			BEGIN
-			    UPDATE Forums SET na = NEW.na
-			    WHERE id = NEW.id;
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-		
-		$this->query_database('CREATE TRIGGER IF NOT EXISTS Topics_update
-	        BEFORE INSERT ON Topics
-	        WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
-			BEGIN
-			    UPDATE Topics SET
-					ss = NEW.ss, na = NEW.na, hs = NEW.hs, se = NEW.se,
-					si = NEW.si, st = NEW.st, rg = NEW.rg, dl = NEW.dl,
-					rt = NEW.rt, ds = NEW.ds, cl = NEW.cl
-			    WHERE id = NEW.id;
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-	
-		$this->query_database('CREATE TRIGGER IF NOT EXISTS Seeders_update
-	        BEFORE INSERT ON Seeders
-	        WHEN EXISTS (SELECT id FROM Seeders WHERE id = NEW.id)
-			BEGIN
-			    UPDATE Seeders SET
-				    d0 = NEW.d0, d1 = NEW.d1, d2 = NEW.d2, d3 = NEW.d3,
-				    d4 = NEW.d4, d5 = NEW.d5, d6 = NEW.d6, d7 = NEW.d7,
-				    d8 = NEW.d8, d9 = NEW.d9, d10 = NEW.d10, d11 = NEW.d11,
-				    d12 = NEW.d12, d13 = NEW.d13, d14 = NEW.d14, d15 = NEW.d15,
-				    d16 = NEW.d16, d17 = NEW.d17, d18 = NEW.d18, d19 = NEW.d19,
-				    d20 = NEW.d20, d21 = NEW.d21, d22 = NEW.d22, d23 = NEW.d23,
-				    d24 = NEW.d24, d25 = NEW.d25, d26 = NEW.d26, d27 = NEW.d27,
-				    d28 = NEW.d28, d29 = NEW.d29,
-				    q0 = NEW.q0, q1 = NEW.q1, q2 = NEW.q2, q3 = NEW.q3,
-				    q4 = NEW.q4, q5 = NEW.q5, q6 = NEW.q6, q7 = NEW.q7,
-				    q8 = NEW.q8, q9 = NEW.q9, q10 = NEW.q10, q11 = NEW.q11,
-				    q12 = NEW.q12, q13 = NEW.q13, q14 = NEW.q14, q15 = NEW.q15,
-				    q16 = NEW.q16, q17 = NEW.q17, q18 = NEW.q18, q19 = NEW.q19,
-				    q20 = NEW.q20, q21 = NEW.q21, q22 = NEW.q22, q23 = NEW.q23,
-				    q24 = NEW.q24, q25 = NEW.q25, q26 = NEW.q26, q27 = NEW.q27,
-				    q28 = NEW.q28, q29 = NEW.q29
-			    WHERE id = NEW.id;
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-		
-		// совместимость со старыми версиями базы данных
-		$version = $this->query_database('PRAGMA user_version', array(), true);
-		if($version[0]['user_version'] < 1){
-			$this->query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
-			$this->query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
-			$this->query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
-			$this->query_database('PRAGMA user_version = 1');
-		}
 		
 		// временные таблицы
 		$this->query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
@@ -521,10 +387,8 @@ class Webtlo {
 class Database {
 	
 	public $db;
-	public $log;
 	
 	public function __construct(){
-		$this->log = '';
 		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
 	}
 	
@@ -532,7 +396,7 @@ class Database {
 		$sth = $this->db->prepare($sql);
 		if($this->db->errorCode() != '0000') {
 			$db_error = $this->db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+			throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 		}
 		$sth->execute($param);
 		return $fetch ? $sth->fetchAll($pdo) : true;
@@ -540,7 +404,7 @@ class Database {
 	
 	// ... из базы подразделы для списка раздач на главной
 	public function get_forums($subsec){
-		$this->log .= get_now_datetime() . 'Получение данных о подразделах...<br />';
+		Log::append ( 'Получение данных о подразделах...' );
 		if(!is_array($subsec)) $subsec = explode(',', $subsec);
 		$in = str_repeat('?,', count($subsec) - 1) . '?';
 		$subsections = $this->query_database("SELECT * FROM `Forums` WHERE `id` IN ($in)", $subsec);
@@ -550,7 +414,7 @@ class Database {
 	
 	// ... из базы топики
 	public function get_topics($seeders, $status, $time){
-		$this->log .= get_now_datetime() . 'Получение данных о раздачах...<br />';
+		Log::append ( 'Получение данных о раздачах...' );
 		for($i = 0; $i <= $time - 1; $i++){
 			$days_fields['d'][] = 'd'.$i;
 			$days_fields['q'][] = 'q'.$i;
@@ -620,7 +484,7 @@ class Database {
 	
 	// в базу хранители
 	public function set_keepers ( $keepers ) {
-		$this->log .= get_now_datetime() . 'Запись в базу данных списка раздач других хранителей...<br />';
+		Log::append ( 'Запись в базу данных списка раздач других хранителей...' );
 		$insert = array();
 		$this->query_database("CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1");
 		foreach ( $keepers as $topic_id => $nick ) {
@@ -641,14 +505,18 @@ class Database {
 
 class Download {
 
-	public $ch;
-	public $api_key;
-	public $log;
-	public $savedir;
+	protected $ch;
+	protected $api_key;
 	
-	public function __construct($api_key, $proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
-		$this->log = get_now_datetime() . 'Скачивание торрент-файлов...<br />';
+	private $savedir;
+	
+	public function __construct($api_key, $savedir = ""){
 		$this->api_key = $api_key;
+		$this->savedir = $savedir;
+		$this->init_curl();
+	}
+	
+	private function init_curl(){
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
@@ -656,63 +524,42 @@ class Download {
 			CURLOPT_SSL_VERIFYHOST => 0
 			//~ CURLOPT_CONNECTTIMEOUT => 60
 		));
-		// прокси
-		if($proxy_activate) {
-			$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
-			$this->init_proxy($proxy_type, $proxy_address, $proxy_auth);
-		} else {
-			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
-		}
-	}
-	
-	private function init_proxy($proxy_type, $proxy_address, $proxy_auth){
-		$proxy_array = array(
-			'http' => 0,
-			'socks4' => 4,
-			'socks4a' => 6,
-			'socks5' => 5
-		);		
-		$proxy_type = (array_key_exists($proxy_type, $proxy_array) ? $proxy_array[$proxy_type] : null);
-		$proxy_address = (in_array(null, explode(':', $proxy_address)) ? null : $proxy_address);
-		$proxy_auth = (in_array(null, explode(':', $proxy_auth)) ? null : $proxy_auth);		
-		curl_setopt_array($this->ch, array(
-			CURLOPT_PROXYTYPE => $proxy_type,
-			CURLOPT_PROXY => $proxy_address,
-			CURLOPT_PROXYUSERPWD => $proxy_auth
-		));
+		curl_setopt_array($this->ch, Proxy::$proxy);
 	}
 	
 	// подготовка каталогов
 	public function create_directories($savedir, $savesubdir, $subsection, $rule, $dir_torrents, $edit, &$dl_log){
 		$savedir = $edit ? $dir_torrents : $savedir;
-		if(empty($savedir))
+		if (empty($savedir))
 		{
-			$dl_log = '<span class="errors">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span><br />';
-			throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+			$dl_log = '<span class="errors">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span>';
+			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 		}
 		// проверяем существование указанного каталога
-		if(!is_writable($savedir))
+		if (!is_writable($savedir))
 		{
-			$dl_log = '<span class="errors">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span><br />';
-			throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+			$dl_log = '<span class="errors">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span>';
+			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 		}
 		// если задействованы подкаталоги
-		if($savesubdir && !$edit)
+		if ($savesubdir && !$edit)
 		{
+			Log::append ( 'Попытка создать подкаталог...' );
 			$savedir .= 'tfiles_' . $subsection . '_' . date("(d.m.Y_H.i.s)") . '_' . $rule . substr($savedir, -1);
 			$result = (is_writable($savedir) || mkdir($savedir)) ? true : false;
 			// создался ли подкаталог
-			if(!$result)
+			if (!$result)
 			{
-				$dl_log = '<span class="errors">Ошибка при создании подкаталога: неверно указан путь или недостаточно прав. Скачивание невозможно.</span><br />';
-				throw new Exception(get_now_datetime() . 'Ошибка при попытке скачать торрент-файлы.<br />');
+				$dl_log = '<span class="errors">Ошибка при создании подкаталога: неверно указан путь или недостаточно прав. Скачивание невозможно.</span>';
+				throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 			}
 		}
 		$this->savedir = $savedir;
 	}
 	
 	// идентификатор пользователя
-	private function get_user_id($forum_url, $login, $paswd){
+	private function get_user_id($forum_url, $login, $paswd, &$dl_log){
+		Log::append ( 'Получение идентификатора пользователя...' );
 		$paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
 		$login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
 		curl_setopt_array($this->ch, array(CURLOPT_URL => $forum_url . '/forum/login.php',
@@ -723,23 +570,24 @@ class Download {
 			CURLOPT_HEADER => 1
 		));
 		$json = curl_exec($this->ch);
-		if($json === false)
-			throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
+		if($json === false) {
+			$dl_log = '<span class="errors">Ошибка при подключении к форуму. Обратитесь к журналу за подробностями.</span>';
+			throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
+		}
 		preg_match("/.*Set-Cookie: [^-]*-([0-9]*)/", $json, $tmp);
 		if(!ctype_digit($tmp[1])){
 			preg_match('|<title>(.*)</title>|sei', $json, $title);
-			if(!empty($title))
+			if(!empty($title)) {
 				if($title[1] == 'rutracker.org'){
 					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $json, $text);
 					if(!empty($text))
-						$this->log .= get_now_datetime() . 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.<br />';
-				} else
-					$this->log .= get_now_datetime() . 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.<br />';
-			throw new Exception(				
-				get_now_datetime() .
-				'Получен некорректный идентификатор пользователя: "' .
-				(isset($tmp[1]) ? $tmp[1] : 'null') . '".<br />'
-			);
+						Log::append ( 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.' );
+				} else {
+					Log::append ( 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.' );
+				}
+			}
+			$dl_log = '<span class="errors">Ошибка при авторизации на форуме. Обратитесь к журналу за подробностями.</span>';
+			throw new Exception( 'Получен некорректный идентификатор пользователя: "' .	(isset($tmp[1]) ? $tmp[1] : 'null') . '".');
 		}
 		return $tmp[1];
 	}
@@ -749,7 +597,11 @@ class Download {
 		$q = 0; // кол-во успешно скачанных торрент-файлов
 		//~ $err = 0;
 		$starttime = microtime(true);
-		$user = $this->get_user_id($forum_url, $login, $paswd);
+		$user = $this->get_user_id($forum_url, $login, $paswd, $dl_log);
+		Log::append ( $edit
+			? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
+			: 'Выполняется скачивание торрент-файлов...'
+		);
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_URL => $forum_url . '/forum/dl.php',
 		    CURLOPT_HEADER => 0
@@ -769,14 +621,14 @@ class Download {
 				
 				// выходим после 3-х попыток
 				if($n >= 4) {
-					$this->log .= get_now_datetime() . 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.<br />';
+					Log::append ( 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.' );
 					break;
 				}
 				
 				$json = curl_exec($this->ch);
 				
 				if($json === false) {
-					$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').<br />';
+					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').' );
 					break;
 				}
 				
@@ -784,15 +636,15 @@ class Download {
 				preg_match('|<center.*>(.*)</center>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
 				if(!empty($forbidden)) {
 					preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $title);
-					$this->log .= get_now_datetime() . 'Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').<br />';
+					Log::append ( 'Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').' );
 					break;
 				}
 				
 				// проверка "ошибка 503" и т.д.
 				preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
-					$this->log .= get_now_datetime() . 'Error: ' . $error[1] . ' (' . $topic['id'] . ').<br />';
-					$this->log .= get_now_datetime() . 'Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').<br />';
+					Log::append ( 'Error: ' . $error[1] . ' (' . $topic['id'] . ').' );
+					Log::append ( 'Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').' );
 					sleep(40);
 					$n++;
 					continue;
@@ -804,7 +656,7 @@ class Download {
 					$torrent = new Torrent();
 					if($torrent->load($json) == false)
 					{
-						$this->log .= get_now_datetime() . $torrent->error . '(' . $topic_id . ').<br />';
+						Log::append ( $torrent->error . '(' . $topic_id . ').' );
 						break;
 					}
 					$trackers = $torrent->getTrackers();
@@ -815,7 +667,7 @@ class Download {
 					$torrent->setTrackers($trackers);
 					$content = $torrent->bencode();
 					if(file_put_contents($torrent_file, $content) === false)
-						$this->log .= get_now_datetime() . 'Произошла ошибка при сохранении файла: '.$torrent_file.'.<br />';
+						Log::append ( 'Произошла ошибка при сохранении файла: '.$torrent_file.'.' );
 					else $q++;
 					break;
 				}
@@ -826,7 +678,7 @@ class Download {
 					$success[$q]['hash'] = $topic['hash'];
 					$success[$q]['filename'] = 'http://' . $_SERVER['SERVER_ADDR'] . '/' . basename($this->savedir) . '/[webtlo].t'.$topic['id'].'.torrent';
 					$q++;
-					//~ $this->log .= get_now_datetime() . 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.<br />';
+					//~ Log::append ( 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.' );
 				}
 				
 				break;
@@ -834,7 +686,7 @@ class Download {
 		}
 		$endtime1 = microtime(true);
 		$dl_log = 'Сохранено в каталоге "' . $this->savedir . '": <span class="rp-header">' . $q . '</span> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
-		$this->log .= get_now_datetime() . 'Скачивание торрент-файлов завершено.<br />';
+		Log::append ( 'Скачивание торрент-файлов завершено.' );
 		return isset($success) ? $success : null;
 	}
 	

@@ -22,7 +22,8 @@ $("#topics").on("click", ".tor_download", function(){
 	subsection = $(this).parents(".tab-topic").attr("value");
 	edit = $(this).val();
 	topics = listSelectedTopics.apply();
-	if(topics == "") return;	
+	if(topics == "") return;
+	$("#log").append(nowTime() + "Начат процесс скачивания торрент-файлов...<br />");
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",

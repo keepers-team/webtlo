@@ -1,7 +1,7 @@
 <?php
 
 // вывод отчётов на главной странице
-function output_reports($subsections, $login, $log){
+function output_reports($subsections, $login){
 	$pattern =
 		'<h2>Отчёты - ' . date('H:i / d.m.Y') . '</h2>'.
 		'<div id="reporttabs" class="report">'.
@@ -41,11 +41,11 @@ function output_reports($subsections, $login, $log){
 	$output = str_replace('%%content%%', implode('', $content), $output);
 	
 	//~ echo $output;
-	echo json_encode(array('report' => $output, 'log' => $log));
+	echo json_encode(array('report' => $output, 'log' => Log::get()));
 }
 
 // вывод топиков на главной странице
-function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $time, $avg_seeders, $keepers, $log){
+function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, $time, $avg_seeders, $keepers){
 		// заголовки вкладок
 		$output = '<div id="topictabs" class="report">'.
 			'<ul class="report">';
@@ -193,7 +193,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 		}
 		
 		$output .= '</div>';
-		echo json_encode(array('topics' => $output, 'log' => $log));
+		echo json_encode(array('topics' => $output, 'log' => Log::get()));
 		//~ echo $output;
 }
 	

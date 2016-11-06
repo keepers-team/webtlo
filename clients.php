@@ -1,13 +1,13 @@
 <?php
 
-function get_tor_client_data($tcs, &$log = "") {
+function get_tor_client_data ( $tcs ) {
 	
-	$log .= get_now_datetime() . 'Получение данных от торрент-клиентов...<br />';
-	$log .= get_now_datetime() . 'Количество торрент-клиентов: ' . count($tcs) . '.<br />';
+	Log::append ( 'Получение данных от торрент-клиентов...' );
+	Log::append ( 'Количество торрент-клиентов: ' . count($tcs) );
 	$tc_topics = array();
 	
 	foreach($tcs as $cm => $tc) {
-		$client = new $tc['cl']($tc['ht'], $tc['pt'], $tc['lg'], $tc['pw']);
+		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
 		if($client->is_online()) {
 			$tmp = $client->getTorrents();
 			if(!empty($tmp)){
@@ -17,9 +17,7 @@ function get_tor_client_data($tcs, &$log = "") {
 				$tc_topics += $tmp;
 			}
 		}
-		$log .= str_replace('{cm}', $tc['cm'], $client->log);
-		$log .= get_now_datetime() . $tc['cm'] . ' (' . $tc['cl'] .
-			') - получено раздач: ' . (empty($tmp) ? 0 : count($tmp)) . '<br />';
+		Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . (empty($tmp) ? 0 : count($tmp)) );
 	}
 	
 	// array ( [hash] => ( 'status' => status, 'client' => comment ) )
@@ -32,33 +30,30 @@ class utorrent {
 		
     private static $base = "http://%s:%s/gui/%s";
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $token;
     protected $guid;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getToken()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
-        return true;
+		return $this->getToken();
 	}
 	
 	// получение токена
 	private function getToken() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'token.html'),
@@ -68,7 +63,8 @@ class utorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+            Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         $info = curl_getinfo($ch);
@@ -83,6 +79,8 @@ class utorrent {
 	        $this->token = $m[1];
             return true;
         }
+        Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
     }
 	
@@ -99,7 +97,7 @@ class utorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -108,7 +106,7 @@ class utorrent {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest("?list=1");
         foreach($json['torrents'] as $torrent)
 		{
@@ -193,32 +191,29 @@ class transmission {
 	
 	private static $base = "http://%s:%s/transmission/rpc";	
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $sid;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getSID()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
-        return true;
+		return $this->getSID();
 	}
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -228,7 +223,8 @@ class transmission {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
@@ -237,6 +233,8 @@ class transmission {
             $this->sid = $sid[1];
             return true;
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -253,7 +251,7 @@ class transmission {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -262,7 +260,7 @@ class transmission {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
@@ -294,7 +292,7 @@ class transmission {
 	
 	// установка метки
     public function setLabel($hash, $label = "") {
-		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+		return 'Торрент-клиент не поддерживает установку меток.';
 	}
     
     // запуск раздач
@@ -342,32 +340,29 @@ class vuze {
 	
 	private static $base = "http://%s:%s/transmission/rpc";
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $sid;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getSID()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
-        return true;
+		return $this->getSID();
 	}
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -377,7 +372,8 @@ class vuze {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
@@ -386,6 +382,8 @@ class vuze {
             $this->sid = $sid[1];
             return true;
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -402,7 +400,7 @@ class vuze {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -411,7 +409,7 @@ class vuze {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
@@ -443,7 +441,7 @@ class vuze {
 	
 	// установка метки
     public function setLabel($hash, $label = "") {
-		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+		return 'Торрент-клиент не поддерживает установку меток.';
 	}
     
     // запуск раздач
@@ -491,32 +489,29 @@ class deluge {
 	
 	private static $base = "http://%s:%s/json";
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $sid;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getSID()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
-        return true;
+		return $this->getSID();
 	}
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
@@ -527,7 +522,8 @@ class deluge {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
@@ -536,6 +532,8 @@ class deluge {
             $this->sid = $sid[1];
             return true;
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -552,7 +550,7 @@ class deluge {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -561,7 +559,7 @@ class deluge {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "name", "message", "progress" ], {} ], "id" : 9 }');
         foreach($json['result']['torrents'] as $hash => $torrent)
 		{
@@ -622,7 +620,7 @@ class deluge {
     public function setLabel($hash, $label = "") {
 		$label = str_replace(' ', '_', $label);
 		if(!preg_match("|^[aA-zZ0-9\-_]+$|", $label))
-			return get_now_datetime() . 'В названии метки присутствуют недопустимые символы.<br />';
+			return 'В названии метки присутствуют недопустимые символы.';
 		$this->enablePlugin('Label');
 		$this->addLabel($label);
 		foreach($hash as $hash){
@@ -659,29 +657,27 @@ class qbittorrent {
 	
 	private static $base = "http://%s:%s/%s";	
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $sid;
     protected $api;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getSID()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
+		if (!$this->getSID()) return false;
         if (!$this->version_api()) {
-			$this->log .= get_now_datetime() . 'Версия торрент-клиента не поддерживается.<br />';
+			Log::append ( 'Версия торрент-клиента не поддерживается.' );
 			return false;
 		}
         return true;
@@ -695,7 +691,7 @@ class qbittorrent {
 	
 	// получение идентификатора сессии
 	private function getSID() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login'),
@@ -707,7 +703,8 @@ class qbittorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
@@ -716,6 +713,8 @@ class qbittorrent {
             $this->sid = $sid[1];
             return true;
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -731,7 +730,7 @@ class qbittorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -740,7 +739,7 @@ class qbittorrent {
 	
 	// получение списка раздач
 	public function getTorrents() {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('', 'query/torrents');
         foreach($json as $torrent)
 		{
@@ -814,33 +813,30 @@ class ktorrent {
 	
 	private static $base = "http://%s:%s/%s";
 	
-	public $log;
 	public $host;
     public $port;
     public $login;
     public $paswd;
+    public $comment;
     
     protected $challenge;
     protected $sid;
 	
-	public function __construct($host = "", $port = "", $login = "", $paswd = "") {
+	public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
 		$this->host = $host;
         $this->port = $port;
         $this->login = $login;
         $this->paswd = $paswd;
+        $this->comment = $comment;
 	}
 	
 	public function is_online() {
-		if (!$this->getChallenge()) {
-            $this->log .= get_now_datetime() . 'Произошла ошибка при подключении к торрент-клиенту "{cm}".<br />';
-            return false;
-        }
-        return true;
+		return $this->getChallenge();
 	}
 	
 	// получение challenge
 	private function getChallenge() {
-		$this->log .= get_now_datetime() . 'Попытка подключиться к торрент-клиенту "{cm}"...<br />';
+		Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login/challenge.xml'),
@@ -852,17 +848,18 @@ class ktorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
         preg_match('|<challenge>(.*)</challenge>|sei', $output, $challenge);
         if(!empty($challenge)) {
             $this->challenge = sha1($challenge[1] . $this->paswd);;
-            if($this->getSID())
-	            return true;
-	        return false;
+            return $this->getSID();
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -879,7 +876,8 @@ class ktorrent {
         ));
         $output = curl_exec($ch);
         if($output === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+			Log::append ( 'Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.' );
 			return false;
 		}
         curl_close($ch);
@@ -888,6 +886,8 @@ class ktorrent {
             $this->sid = $sid[1];
             return true;
 		}
+		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
+		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
         return false;
 	}
 	
@@ -902,7 +902,7 @@ class ktorrent {
         ));
         $req = curl_exec($ch);
         if($req === false) {
-			$this->log .= get_now_datetime() . 'CURL ошибка: ' . curl_error($ch) . '<br />';
+			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
 			return false;
 		}
         curl_close($ch);
@@ -915,7 +915,7 @@ class ktorrent {
 	
 	// получение списка раздач
 	public function getTorrents($full = false) {
-		$this->log .= get_now_datetime() . 'Попытка получить данные о раздачах от торрент-клиента "{cm}"...<br />';
+		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
         if($full) return $json;
@@ -941,7 +941,7 @@ class ktorrent {
 	
 	// установка метки
     public function setLabel($hash, $label = "") {
-		return get_now_datetime() . 'Торрент-клиент не поддерживает установку меток.<br />';
+		return 'Торрент-клиент не поддерживает установку меток.';
 	}
     
     // запуск раздач
@@ -976,7 +976,7 @@ class ktorrent {
 	
 	// проверить локальные данные раздач
 	public function torrentRecheck($hash) {
-		return get_now_datetime() . 'Торрент-клиент не поддерживает проверку локальных данных.<br />';
+		return 'Торрент-клиент не поддерживает проверку локальных данных.';
 	}
 	
 }

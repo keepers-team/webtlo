@@ -55,7 +55,7 @@ try {
 	");
 	if($db->errorCode() != '0000') {
 		$db_error = $db->errorInfo();
-		throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+		throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 	}
 	$sth->execute($param);
 	$topics = $sth->fetchAll(PDO::FETCH_ASSOC);
@@ -63,7 +63,7 @@ try {
 	$sth = $db->prepare("SELECT topic_id,nick FROM `Keepers`");
 	if($db->errorCode() != '0000') {
 		$db_error = $db->errorInfo();
-		throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+		throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 	}
 	$sth->execute();
 	$keepers = $sth->fetchAll(PDO::FETCH_COLUMN|PDO::FETCH_GROUP);
@@ -86,9 +86,9 @@ try {
 	echo json_encode(array('log' => null, 'topics' => $output));
 	
 } catch (Exception $e) {
-	$log = $e->getMessage();
+	Log::append ( $e->getMessage() );
 	//~ echo $log;
-	echo json_encode(array('log' => $log, 'topics' => null));
+	echo json_encode(array('log' => Log::get(), 'topics' => null));
 }
 
 ?>

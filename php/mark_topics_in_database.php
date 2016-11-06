@@ -2,11 +2,11 @@
 
 include dirname(__FILE__) . '/../common.php';
 
-$log = get_now_datetime() . 'Обновление списка топиков для хранения...<br />';
+Log::append ( 'Обновление списка раздач...' );
 
 try {
 	if(!isset($_POST['success']))
-		throw new Exception(get_now_datetime() . 'Список топиков не нуждается в обновлении.<br />');
+		throw new Exception( 'Список не нуждается в обновлении.' );
 	
 	$status = $_POST['status'];
 	$client = $_POST['client'];
@@ -19,14 +19,14 @@ try {
 		$sth = $db->prepare($sql);
 		if($db->errorCode() != '0000') {
 			$db_error = $db->errorInfo();
-			throw new Exception(get_now_datetime() . 'SQL ошибка: ' . $db_error[2] . '<br />');
+			throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 		}
 		$sth->execute($topics);
 	}
-	echo $log;
+	echo Log::get();
 } catch (Exception $e) {
-	$log .= $e->getMessage();
-	echo $log;
+	Log::append ( $e->getMessage() );
+	echo Log::get();
 }
 
 ?>

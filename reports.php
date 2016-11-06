@@ -69,43 +69,20 @@ function create_reports($subsections, $topics){
 
 class Reports {
 	
-	public $log;
-	public $forum_url;
-	public $proxy = array();
-	
-	protected $cookie;
+	protected $ch;
 	protected $uid;
 	protected $login;
 	protected $paswd;
-	protected $ch;
+	protected $cookie;
+	protected $forum_url;
 	
-	public function __construct($forum_url, $login, $paswd, $proxy_activate, $proxy_type = 0, $proxy_address = "", $proxy_auth = ""){
+	public function __construct($forum_url, $login, $paswd){
 		include_once dirname(__FILE__) . '/php/phpQuery.php';
-		$this->log = get_now_datetime() . 'Выполняется отправка отчётов на форум...<br />';
-		$this->init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth);
 		$this->paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
 		$this->login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
 		$this->forum_url = $forum_url;
 		$this->ch = curl_init();
 		$this->get_cookie();
-	}
-	
-	private function init_proxy($proxy_activate, $proxy_type, $proxy_address, $proxy_auth){
-		if(!$proxy_activate){
-			$this->log .= get_now_datetime() . 'Прокси-сервер не используется.<br />';
-			return;
-		}
-		$this->log .= get_now_datetime() . 'Используется ' . mb_strtoupper($proxy_type) . '-прокси: "' . $proxy_address . '".<br />';
-		$proxy_array = array('http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5);		
-		$proxy_type = (array_key_exists($proxy_type, $proxy_array) ? $proxy_array[$proxy_type] : null);
-		$proxy_address = (in_array(null, explode(':', $proxy_address)) ? null : $proxy_address);
-		$proxy_auth = (in_array(null, explode(':', $proxy_auth)) ? null : $proxy_auth);		
-		$this->proxy = array(
-			CURLOPT_PROXYTYPE => $proxy_type,
-			CURLOPT_PROXY => $proxy_address,
-			CURLOPT_PROXYUSERPWD => $proxy_auth
-		);
-		curl_setopt_array($this->ch, $this->proxy);
 	}
 	
 	private function get_cookie(){
@@ -118,22 +95,22 @@ class Reports {
 		preg_match("|.*Set-Cookie: ([^;]*);.*|", $data, $cookie);
 		if(!isset($uid[1]) || !isset($cookie[1])){
 			preg_match('|<title>(.*)</title>|sei', $data, $title);
-			if(!empty($title))
+			if(!empty($title)) {
 				if($title[1] == 'rutracker.org'){
 					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $data, $text);
 					if(!empty($text))
-						$this->log .= get_now_datetime() . 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.<br />';
+						Log::append ( 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.' );
 				} else {
-					$this->log .= get_now_datetime() . 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.<br />';
+					Log::append ( 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.' );
 				}
-			throw new Exception(get_now_datetime() . 'Не удалось авторизоваться на форуме.<br />');
+			}
+			throw new Exception( 'Не удалось авторизоваться на форуме.' );
 		}
 		$this->uid = $uid[1];
 		$this->cookie = $cookie[1];
 	}
 	
 	private function make_request($url, $fields = array(), $options = array()){
-		curl_setopt_array($this->ch, $options);
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => 0,
@@ -141,9 +118,11 @@ class Reports {
 			CURLOPT_URL => $url,
 			CURLOPT_POSTFIELDS => http_build_query($fields)
 		));
+		curl_setopt_array($this->ch, Proxy::$proxy);
+		curl_setopt_array($this->ch, $options);
 		$data = curl_exec($this->ch);
 		if($data === false)
-			throw new Exception(get_now_datetime() . 'CURL ошибка: ' . curl_error($this->ch) . '<br />');
+			throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
 		return $data;
 	}
 	
@@ -155,7 +134,7 @@ class Reports {
 		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
 		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script:first'), $form_token);
 		if(!isset($form_token[1]))
-			throw new Exception(get_now_datetime() . 'Не получен form_token.<br />');
+			throw new Exception( 'Не получен form_token.' );
 		return $form_token[1];
 	}
 	
@@ -177,12 +156,12 @@ class Reports {
 		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
 		$error = $html->find('div.msg')->text();
 		if(!empty($error)){
-			$this->log .= get_now_datetime() . $error . '(' . $topic_id . ')<br />';
+			Log::append ( $error . '(' . $topic_id . ')' );
 			return;
 		}
 		$post_id = $html->find('div.mrg_16 > a')->attr('href');
 		if(empty($post_id)){
-			$this->log .= get_now_datetime() . $html->find('div.mrg_16')->text() . '(' . $topic_id . ')<br />';
+			Log::append ( $html->find('div.mrg_16')->text() . '(' . $topic_id . ')' );
 			return;
 		}
 		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
@@ -190,6 +169,7 @@ class Reports {
 	}
 	
 	public function send_reports($api_key, $api_url, $subsections, $data = array()){
+		Log::append ( 'Выполняется отправка отчётов на форум...' );
 		$common = $subsections['common'];
 		unset($subsections['common']);
 		// получаем ссылки на списки
@@ -206,13 +186,13 @@ class Reports {
 		foreach($subsections as &$subsection){
 			if(!isset($subsection['messages'])) continue;
 			if(empty($links[$subsection['id']])){
-				$this->log .= get_now_datetime() . 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка для отправки отчётов, пропускаем...<br />';
+				Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка для отправки отчётов, пропускаем...' );
 				continue;
 			}
 			$i = 0;
 			$page = 1;
 			// получение данных со страниц
-			$this->log .= get_now_datetime() . 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...<br />';
+			Log::append ( 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...' );
 			while($page > 0){
 				$data = $this->make_request(
 					$this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']]. '&start=' . $i
@@ -251,16 +231,15 @@ class Reports {
 				$page--;
 				$i += 30;
 			}
-			$this->log .= get_now_datetime() . 'Найдено сообщений: ' . $j . '.<br />';
+			Log::append ( 'Найдено сообщений: ' . $j . '.' );
 			// отправка шапки
 			if($nick_author == $this->login){
 				// получение данных о раздачах хранимых другими хранителями
 				if(isset($keepers)){
-					$this->log .= get_now_datetime() . 'Сканирование сообщений других хранителей для подраздела № ' . $subsection['id'] . '...<br />';
+					Log::append ( 'Сканирование сообщений других хранителей для подраздела № ' . $subsection['id'] . '...' );
 					foreach($keepers as $nick => $ids){
-						$webtlo = new Webtlo($api_key, $api_url, $this->proxy);
+						$webtlo = new Webtlo($api_key, $api_url);
 						$topics = $webtlo->get_tor_topic_data($ids);
-						//~ $this->log .= $webtlo->log;
 						$stored[$nick]['dlsi'] = 0;
 						$stored[$nick]['dlqt'] = 0;
 						foreach($topics as $topic){
@@ -278,7 +257,7 @@ class Reports {
 						$q++;
 					}
 				}
-				$this->log .= get_now_datetime() . 'Отправка шапки для подраздела № ' . $subsection['id'] . '...<br />';
+				Log::append ( 'Отправка шапки для подраздела № ' . $subsection['id'] . '...' );
 				$subsection['header'] = str_replace('%%nick%%', $this->login, $subsection['header']);
 				$subsection['header'] = str_replace('%%count%%', isset($keepers) ? count($keepers) + 1 : 1, $subsection['header']);
 				$subsection['header'] = str_replace('%%dlqt%%', isset($stored) ? array_sum(array_column_common($stored, 'dlqt')) + $subsection['dlqt'] : $subsection['dlqt'], $subsection['header']);
@@ -295,7 +274,7 @@ class Reports {
 			$q = 1;
 			foreach($subsection['messages'] as &$message){
 				if(empty($message['id'])){
-					$this->log .= get_now_datetime() . 'Вставка дополнительного ' . $q . '-ого сообщения для подраздела № ' . $subsection['id'] . '...<br />';
+					Log::append ( 'Вставка дополнительного ' . $q . '-ого сообщения для подраздела № ' . $subsection['id'] . '...' );
 					$message['id'] = $this->send_message(
 						'reply', '[spoiler]' . $q . str_repeat('?', 119981 - count($q)) . '[/spoiler]',
 						$form_token, $links[$subsection['id']]
@@ -308,7 +287,7 @@ class Reports {
 			$common = str_replace('%%ins' . $subsection['id'] . '%%', $subsection['messages'][0]['id'], $common);
 			foreach($subsection['messages'] as $message){
 				if(!empty($message['id'])){
-					$this->log .= get_now_datetime() . 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...<br />';
+					Log::append ( 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...' );
 					$this->send_message(
 						'editpost',	empty($message['text']) ? 'резерв' : $message['text'],
 						$form_token, $links[$subsection['id']], $message['id']
@@ -318,7 +297,7 @@ class Reports {
 		}
 		unset($subsection);
 		// отправка сводного отчёта
-		$this->log .= get_now_datetime() . 'Отправка сводного отчёта...<br />';
+		Log::append ( 'Отправка сводного отчёта...' );
 		$data = $this->make_request(
 			$this->forum_url . '/forum/search.php',
 			array('uid' => $this->uid, 't' => 4275633, 'dm' => 1)
@@ -333,8 +312,8 @@ class Reports {
 		);
 	}
 	
-	public function search_keepers($subsections, &$log){
-		$log .= get_now_datetime() . 'Обновление сведений о хранителях...<br />';
+	public function search_keepers ( $subsections ){
+		Log::append ( 'Получение списка раздач хранимых другими хранителями...' );
 		// изменяем опции curl
 		curl_setopt_array($this->ch, array(
 			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"

@@ -63,8 +63,10 @@ class TIniFileEx {
             }
             $result .= _BR_;
         }
-		if(file_put_contents($this->filename, $result)) return get_now_datetime() . 'Настройки успешно сохранены.<br />';
-		else return get_now_datetime() . 'Ошибка при сохранении настроек.<br />';
+		Log::append ( file_put_contents ( $this->filename, $result )
+			? 'Настройки успешно сохранены.'
+			: 'Ошибка при сохранении настроек.'
+		);
     }
 }
 
@@ -250,6 +252,224 @@ function array_column_common(array $input, $columnKey, $indexKey = null) {
 // получить текущую дату
 function get_now_datetime() {
 	return date('d.m.Y H:i:s') . ' ';
+}
+
+// ведение общего лога
+class Log {
+	
+	private static $log;
+	
+	public static function append ( $message = "" ) {
+		if ( !empty ( $message ) )
+			self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
+	}
+	
+	public static function get ( $break = '<br />' ) {
+		if ( !empty ( self::$log ) )
+			return implode ( $break, self::$log ) . $break;
+	}
+	
+	public static function write ( $filelog ) {
+		self::move ( $filelog );
+		if ( $filelog = fopen ( $filelog, "a" ) ) {
+			fwrite ( $filelog, self::get ( "\n" ) );
+			fclose ( $filelog );
+		} else {
+			echo "Не удалось создать файл лога.";
+		}
+	}
+	
+	private static function move ( $filelog ) {
+		// переименовываем файл лога, если он больше 5 Мб
+		if ( file_exists($filelog) && filesize($filelog) >= 5242880 ) {
+			if ( !rename ( $filelog, preg_replace ( '|.log$|', '.1.log', $filelog ) ) )
+				echo "Не удалось переименовать файл лога.";
+		}
+	}
+	
+	public static function clean () {
+		self::$log = array();
+	}
+	
+}
+
+// установка параметров прокси
+class Proxy {
+	
+	public static $proxy;
+	
+	protected static $auth;
+	protected static $type;
+	protected static $address;
+	
+	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5 );
+	
+	public static function init ( $active = 0 ) {
+		self::$proxy = $active ? self::set_proxy() : array();
+		Log::append ( $active
+			? 'Используется ' . mb_strtoupper( array_search ( self::$type, self::$types) ) . '-прокси: "' . self::$address . '".'
+			: 'Прокси-сервер не используется.'
+		);
+	}
+	
+	public static function setting ( $type = 0, $address = "", $auth = "" ) {
+		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
+		self::$address = (in_array(null, explode(':', $address)) ? null : $address);
+		self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
+	}
+	
+	private static function set_proxy () {
+		return array(
+			CURLOPT_PROXYTYPE => self::$type,
+			CURLOPT_PROXY => self::$address,
+			CURLOPT_PROXYUSERPWD => self::$auth
+		);
+	}
+	
+}
+
+class Db {
+	
+	private static $db;
+	
+	private static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
+		$sth = self::$db->prepare($sql);
+		if(self::$db->errorCode() != '0000') {
+			$error = self::$db->errorInfo();
+			Log::append ( 'SQL ошибка: ' . $error[2] );
+		}
+		$sth->execute($param);
+		return $fetch ? $sth->fetchAll($pdo) : true;
+	}
+	
+	public static function create() {
+		
+		self::$db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
+		
+		// таблицы
+		
+		// список подразделов
+		self::query_database('CREATE TABLE IF NOT EXISTS Forums (
+				id INT NOT NULL PRIMARY KEY,
+				na VARCHAR NOT NULL
+		)');
+		
+		// разное
+		self::query_database('CREATE TABLE IF NOT EXISTS Other AS SELECT 0 AS "id", 0 AS "ud"');
+		
+		// топики
+		self::query_database('CREATE TABLE IF NOT EXISTS Topics (
+				id INT NOT NULL PRIMARY KEY,
+				ss INT NOT NULL,
+				na VARCHAR NOT NULL,
+				hs VARCHAR NOT NULL,
+				se INT NOT NULL,
+				si INT NOT NULL,
+				st INT NOT NULL,
+				rg INT NOT NULL,
+				dl INT NOT NULL DEFAULT 0
+		)');
+		
+		// средние сиды
+		self::query_database('CREATE TABLE IF NOT EXISTS Seeders (
+			id INT NOT NULL PRIMARY KEY,
+			d0 INT, d1 INT,d2 INT,d3 INT,d4 INT,d5 INT,d6 INT,
+			d7 INT,d8 INT,d9 INT,d10 INT,d11 INT,d12 INT,d13 INT,
+			d14 INT,d15 INT,d16 INT,d17 INT,d18 INT,d19 INT,
+			d20 INT,d21 INT,d22 INT,d23 INT,d24 INT,d25 INT,
+			d26 INT,d27 INT,d28 INT,d29 INT,
+			q0 INT, q1 INT,q2 INT,q3 INT,q4 INT,q5 INT,q6 INT,
+			q7 INT,q8 INT,q9 INT,q10 INT,q11 INT,q12 INT,q13 INT,
+			q14 INT,q15 INT,q16 INT,q17 INT,q18 INT,q19 INT,
+			q20 INT,q21 INT,q22 INT,q23 INT,q24 INT,q25 INT,
+			q26 INT,q27 INT,q28 INT,q29 INT
+		)');
+		
+		// хранители
+		self::query_database('CREATE TABLE IF NOT EXISTS Keepers (
+			id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+			topic_id INTEGER NOT NULL, nick VARCHAR NOT NULL
+		)');
+		
+		// триггеры
+		
+		// запретить дубликаты в keepers
+		self::query_database('CREATE TRIGGER IF NOT EXISTS Keepers_not_duplicate
+			BEFORE INSERT ON Keepers
+	        WHEN EXISTS (SELECT id FROM Keepers WHERE topic_id = NEW.topic_id AND nick = NEW.nick)
+			BEGIN
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+		
+		// удалить сведения о средних сидах при удалении раздачи
+		self::query_database('CREATE TRIGGER IF NOT EXISTS Seeders_delete
+			BEFORE DELETE ON Topics FOR EACH ROW
+			BEGIN
+				DELETE FROM Seeders WHERE id = OLD.id;
+			END;
+		');
+		
+		// обновить при вставке такой же записи
+		self::query_database('CREATE TRIGGER IF NOT EXISTS Forums_update
+			BEFORE INSERT ON Forums
+	        WHEN EXISTS (SELECT id FROM Forums WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Forums SET na = NEW.na
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+		
+		self::query_database('CREATE TRIGGER IF NOT EXISTS Topics_update
+	        BEFORE INSERT ON Topics
+	        WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Topics SET
+					ss = NEW.ss, na = NEW.na, hs = NEW.hs, se = NEW.se,
+					si = NEW.si, st = NEW.st, rg = NEW.rg, dl = NEW.dl,
+					rt = NEW.rt, ds = NEW.ds, cl = NEW.cl
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+	
+		self::query_database('CREATE TRIGGER IF NOT EXISTS Seeders_update
+	        BEFORE INSERT ON Seeders
+	        WHEN EXISTS (SELECT id FROM Seeders WHERE id = NEW.id)
+			BEGIN
+			    UPDATE Seeders SET
+				    d0 = NEW.d0, d1 = NEW.d1, d2 = NEW.d2, d3 = NEW.d3,
+				    d4 = NEW.d4, d5 = NEW.d5, d6 = NEW.d6, d7 = NEW.d7,
+				    d8 = NEW.d8, d9 = NEW.d9, d10 = NEW.d10, d11 = NEW.d11,
+				    d12 = NEW.d12, d13 = NEW.d13, d14 = NEW.d14, d15 = NEW.d15,
+				    d16 = NEW.d16, d17 = NEW.d17, d18 = NEW.d18, d19 = NEW.d19,
+				    d20 = NEW.d20, d21 = NEW.d21, d22 = NEW.d22, d23 = NEW.d23,
+				    d24 = NEW.d24, d25 = NEW.d25, d26 = NEW.d26, d27 = NEW.d27,
+				    d28 = NEW.d28, d29 = NEW.d29,
+				    q0 = NEW.q0, q1 = NEW.q1, q2 = NEW.q2, q3 = NEW.q3,
+				    q4 = NEW.q4, q5 = NEW.q5, q6 = NEW.q6, q7 = NEW.q7,
+				    q8 = NEW.q8, q9 = NEW.q9, q10 = NEW.q10, q11 = NEW.q11,
+				    q12 = NEW.q12, q13 = NEW.q13, q14 = NEW.q14, q15 = NEW.q15,
+				    q16 = NEW.q16, q17 = NEW.q17, q18 = NEW.q18, q19 = NEW.q19,
+				    q20 = NEW.q20, q21 = NEW.q21, q22 = NEW.q22, q23 = NEW.q23,
+				    q24 = NEW.q24, q25 = NEW.q25, q26 = NEW.q26, q27 = NEW.q27,
+				    q28 = NEW.q28, q29 = NEW.q29
+			    WHERE id = NEW.id;
+			    SELECT RAISE(IGNORE);
+			END;
+		');
+		
+		// совместимость со старыми версиями базы данных
+		$version = self::query_database('PRAGMA user_version', array(), true);
+		if($version[0]['user_version'] < 1){
+			self::query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
+			self::query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
+			self::query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
+			self::query_database('PRAGMA user_version = 1');
+		}
+	}
+	
 }
 
 ?>

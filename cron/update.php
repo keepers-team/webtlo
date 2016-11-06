@@ -1,72 +1,46 @@
 ﻿<?php
 	
+include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../api.php';
 include dirname(__FILE__) . '/../clients.php';
-include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../reports.php';
-
-/*
- * читаем настройки
- * получаем данные от т.-клиентов
- * получаем данные с api.rutracker.org
- * пишем лог в файл
- */
 
 if(!ini_get('date.timezone'))
 	date_default_timezone_set('Europe/Moscow');
-	
-$starttime = microtime(true);
-
-$log = get_now_datetime() . "Начато обновление сведений о раздачах...\n";
-$filelog =  dirname(__FILE__) . "/update.log";
-
-// получение настроек
-$cfg = get_settings();
 
 try {
 	
-	if(!isset($cfg['subsections'])){
-		throw new Exception (get_now_datetime() . "В настройках не указаны сканируемые подразделы.\n");
-	}
+	Log::append ( "Начато обновление сведений о раздачах..." );
+	
+	$starttime = microtime(true);
+	$filelog =  dirname(__FILE__) . "/update.log";
+	
+	// получение настроек
+	$cfg = get_settings();
+	Proxy::setting ( $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
+	Proxy::init ( $cfg['proxy_activate'] );
+	
+	if(!isset($cfg['subsections']))
+		throw new Exception ( "В настройках не указаны сканируемые подразделы." );
 	
 	// получение данных от т.-клиентов
-	$tc_topics = get_tor_client_data($cfg['clients'], $log);
+	$tc_topics = get_tor_client_data ( $cfg['clients'] );
 	
 	// получение данных с api.rutracker.org
-	$subsec = array_keys($cfg['subsections']);
-	$webtlo = new Webtlo($cfg['api_key'], $cfg['api_url'], $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth']);
-	$subsections = $webtlo->get_cat_forum_tree($subsec);
-	$ids = $webtlo->get_subsection_data($subsections, $cfg['topics_status']);
+	$subsec = array_keys ( $cfg['subsections'] );
+	$webtlo = new Webtlo ( $cfg['api_key'], $cfg['api_url'] );
+	$subsections = $webtlo->get_cat_forum_tree ( $subsec );
+	$ids = $webtlo->get_subsection_data ( $subsections, $cfg['topics_status'] );
 	$output = $webtlo->prepare_topics($ids, $tc_topics, $cfg['rule_topics'], $subsec, $cfg['avg_seeders'], $cfg['avg_seeders_period']);
 	
-	// переименовываем файл лога, если он больше 5 Мб
-	if(file_exists($filelog) && filesize($filelog) >= 5242880){
-		if(!rename($filelog, preg_replace('|.log$|', '.1.log', $filelog)))
-			throw new Exception (get_now_datetime() . "Не удалось переименовать файл лога.\n");
-	}
-	
-	// открываем файл лога
-	if(!$filelog = fopen($filelog, "a"))
-		throw new Exception (get_now_datetime() . "Не удалось создать файл лога.\n");
-	
-	$log .= $webtlo->log;
 	$endtime = microtime(true);
-	$log .= get_now_datetime() . "Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с).\n";
-	$log = str_replace('<br />', ''."\n".'', $log);
+	Log::append ( "Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с)." );
 	
-	// записываем в файл
-	fwrite($filelog, $log);
-	fclose($filelog);
+	Log::write ( $filelog );
 
 } catch (Exception $e) {
-	if(isset($webtlo->log)) $log .= $webtlo->log;
-	$log .= $e->getMessage();
-	$log = str_replace('<br />', ''."\n".'', $log);
-	// пытаемся записать в файл
-	if($filelog = fopen($filelog, "a")){
-		fwrite($filelog, $log);
-		fclose($filelog);
-	}
+	Log::append ( $e->getMessage() );
+	Log::write ( $filelog );
 }
 
 ?>
