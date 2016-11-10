@@ -131,7 +131,7 @@ class Reports {
 			$this->forum_url . '/forum/profile.php',
 			array('mode' => 'viewprofile', 'u' => $this->uid)
 		);
-		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script:first'), $form_token);
 		if(!isset($form_token[1]))
 			throw new Exception( 'Не получен form_token.' );
@@ -153,7 +153,7 @@ class Reports {
 				'message' => mb_convert_encoding("$message", 'Windows-1251', 'UTF-8')
 			)
 		);
-		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 		$error = $html->find('div.msg')->text();
 		if(!empty($error)){
 			Log::append ( $error . '(' . $topic_id . ')' );
@@ -197,7 +197,7 @@ class Reports {
 				$data = $this->make_request(
 					$this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']]. '&start=' . $i
 				);
-				$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+				$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 				$topic_main = $html->find('table#topic_main');
 				$pages = $html->find('a.pg:last')->prev();
 				if(!empty($pages) && $i == 0)
@@ -302,7 +302,7 @@ class Reports {
 			$this->forum_url . '/forum/search.php',
 			array('uid' => $this->uid, 't' => 4275633, 'dm' => 1)
 		);
-		$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 		$common_post = $html->find('.row1:first');
 		unset($html);
 		$post_id = empty($common_post) ? "" : preg_replace('/.*?([0-9]*)$/', '$1', pq($common_post)->find('.txtb')->attr('href'));
@@ -329,7 +329,7 @@ class Reports {
 				$data = $this->make_request(
 					$this->forum_url . '/forum/viewtopic.php?t=' . $ln. '&start=' . $i
 				);
-				$html = phpQuery::newDocumentHTML($data, 'Windows-1251');
+				$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 				$topic_main = $html->find('table#topic_main');
 				$pages = $html->find('a.pg:last')->prev();
 				if(!empty($pages) && $i == 0)

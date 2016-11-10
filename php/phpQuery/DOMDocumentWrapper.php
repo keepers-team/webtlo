@@ -175,7 +175,7 @@ class DOMDocumentWrapper {
 				}
 				if ($docEncoding !== $requestedCharset) {
 					phpQuery::debug("CONVERT $docEncoding => $requestedCharset");
-					$markup = mb_convert_encoding($markup, $requestedCharset, $docEncoding);
+					$markup = mb_convert_encoding($markup, $requestedCharset, 'Windows-1251');
 					$markup = $this->charsetAppendToHTML($markup, $requestedCharset);
 					$charset = $requestedCharset;
 				}
