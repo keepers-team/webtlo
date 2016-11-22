@@ -18,8 +18,7 @@ if(isset($_POST['cfg'])) {
 	$active = isset($proxy_activate) ? 1 : 0;
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
-	Proxy::setting ( $proxy_type, $proxy_address, $proxy_auth );
-	Proxy::init ( $active );
+	Proxy::options ( $active, $proxy_type, $proxy_address, $proxy_auth );
 }
 
 // подразделы
@@ -126,7 +125,7 @@ switch($_POST['m'])
 			$keepers = $reports->search_keepers($TT_subsections);
 			$db = new Database();
 			$db->set_keepers($keepers);
-			$webtlo = new Webtlo($api_key, $api_url);
+			$webtlo = new Webtlo($api_url, $api_key);
 			$subsections = $webtlo->get_cat_forum_tree($subsec); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
 			$output = $webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders, $avg_seeders_period);

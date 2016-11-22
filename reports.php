@@ -238,7 +238,7 @@ class Reports {
 				if(isset($keepers)){
 					Log::append ( 'Сканирование сообщений других хранителей для подраздела № ' . $subsection['id'] . '...' );
 					foreach($keepers as $nick => $ids){
-						$webtlo = new Webtlo($api_key, $api_url);
+						$webtlo = new Webtlo($api_url, $api_key);
 						$topics = $webtlo->get_tor_topic_data($ids);
 						$stored[$nick]['dlsi'] = 0;
 						$stored[$nick]['dlqt'] = 0;

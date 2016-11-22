@@ -16,8 +16,7 @@ try {
 	
 	// получение настроек
 	$cfg = get_settings();
-	Proxy::setting ( $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
-	Proxy::init ( $cfg['proxy_activate'] );
+	Proxy::options ( $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
 	
 	// получаем данные
 	$reports = new Reports ( $cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd'] );

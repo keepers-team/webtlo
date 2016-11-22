@@ -151,7 +151,9 @@ function get_settings(){
 		$config['clients'][$comment]['lg'] = $ini->read("torrent-client-$i","login","");
 		$config['clients'][$comment]['pw'] = $ini->read("torrent-client-$i","password","");
 	}
-	ksort($config['clients'], SORT_NATURAL);
+	if ( is_array( $config['clients'] ) ) {
+		ksort($config['clients'], SORT_NATURAL);
+	}
 	
 	// подразделы
 	$config['subsections_line'] = $ini->read('sections','subsections','');
@@ -164,12 +166,12 @@ function get_settings(){
 			$config['subsections'][$id]['data-folder'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
 		}
+		uasort($config['subsections'], function($a, $b){
+			$a['title'] = mb_substr($a['title'], mb_strrpos($a['title'], ' » ') + 3);
+			$b['title'] = mb_substr($b['title'], mb_strrpos($b['title'], ' » ') + 3);
+			return strnatcmp($a['title'], $b['title']);
+		});
 	}
-	uasort($config['subsections'], function($a, $b){
-		$a['title'] = mb_substr($a['title'], mb_strrpos($a['title'], ' » ') + 3);
-		$b['title'] = mb_substr($b['title'], mb_strrpos($b['title'], ' » ') + 3);
-		return strnatcmp($a['title'], $b['title']);
-	});
 	
 	// раздачи
 	$config['rule_topics'] = $ini->read('sections','rule_topics',3);
@@ -304,18 +306,15 @@ class Proxy {
 	
 	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5 );
 	
-	public static function init ( $active = 0 ) {
-		self::$proxy = $active ? self::set_proxy() : array();
-		Log::append ( $active
-			? 'Используется ' . mb_strtoupper( array_search ( self::$type, self::$types) ) . '-прокси: "' . self::$address . '".'
-			: 'Прокси-сервер не используется.'
-		);
-	}
-	
-	public static function setting ( $type = 0, $address = "", $auth = "" ) {
+	public static function options ( $active = false, $type = "http", $address = "", $auth = "" ) {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
 		self::$address = (in_array(null, explode(':', $address)) ? null : $address);
 		self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
+		self::$proxy = $active ? self::set_proxy() : array();
+		Log::append ( $active
+			? 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address . '".'
+			: 'Прокси-сервер не используется.'
+		);
 	}
 	
 	private static function set_proxy () {
@@ -332,7 +331,8 @@ class Db {
 	
 	private static $db;
 	
-	private static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
+	public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
+		self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
 		$sth = self::$db->prepare($sql);
 		if(self::$db->errorCode() != '0000') {
 			$error = self::$db->errorInfo();
@@ -340,6 +340,17 @@ class Db {
 		}
 		$sth->execute($param);
 		return $fetch ? $sth->fetchAll($pdo) : true;
+	}
+	
+	// https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
+	public static function lexa_ci_utf8_like ( $mask, $value ) {
+	    $mask = str_replace(
+	        array("%", "_"),
+	        array(".*?", "."),
+	        preg_quote($mask, "/")
+	    );
+	    $mask = "/^$mask$/ui";
+	    return preg_match ( $mask, $value );
 	}
 	
 	public static function create() {

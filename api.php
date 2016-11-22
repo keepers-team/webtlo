@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 Db::create();
 
@@ -11,7 +11,7 @@ class Webtlo {
 	protected $api_key;
 	protected $api_url;
 	
-	public function __construct($api_key, $api_url){
+	public function __construct($api_url, $api_key = ""){
 		Log::append ( 'Получение данных с ' . $api_url . '...' );
 		$this->api_key = $api_key;
 		$this->api_url = $api_url;
@@ -77,7 +77,7 @@ class Webtlo {
 	}
 	
 	// дерево разделов
-	public function get_cat_forum_tree($subsec){
+	public function get_cat_forum_tree ( $subsec = array() ) {
 		Log::append ( 'Получение дерева разделов...' );
 		$url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);

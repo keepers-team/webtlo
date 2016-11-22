@@ -31,8 +31,7 @@ if(isset($_POST['cfg'])) {
 	$active = isset($proxy_activate) ? 1 : 0;
 	$proxy_address = $proxy_hostname . ':' . $proxy_port;
 	$proxy_auth = $proxy_login . ':' . $proxy_paswd;
-	Proxy::setting ( $proxy_type, $proxy_address, $proxy_auth );
-	Proxy::init ( $active );
+	Proxy::options ( $active, $proxy_type, $proxy_address, $proxy_auth );
 }
 
 $topics = $_POST['topics'];

@@ -1,55 +1,32 @@
 <?php
 
-	$db = new PDO('sqlite:' . dirname(dirname(__FILE__)) . '/webtlo.db');
-	$query = $db->query('SELECT * FROM `Forums`');
-	if($db->errorCode() == '0000') {
-		$subsections = $query->fetchAll(PDO::FETCH_ASSOC);
-		$subsections = array_map(function($subsection) {
-		    return array(
-		        'value' => $subsection['id'],
-		        'label' => $subsection['na']
-		    );
-		}, $subsections);
-	} else {
-		$ch = curl_init();
-		curl_setopt_array($ch, array(
-		    CURLOPT_RETURNTRANSFER => 1,
-		    CURLOPT_ENCODING => 'gzip',
-		    CURLOPT_URL => 'http://api.rutracker.cc/v1/static/cat_forum_tree',
-		    CURLOPT_PROXYTYPE => 0,
-			CURLOPT_PROXY => '195.82.146.100:3128'
-	    ));
-		$json = curl_exec($ch);
-		$data = json_decode($json, true);
-		curl_close($ch);
-		$subsections = array();
-		foreach($data['result']['c'] as $cat_id => $cat_title){
-		    foreach($data['result']['tree'][$cat_id] as $forum_id => $subforum){
-				$subsections[$forum_id]['value'] = $forum_id;
-	            $subsections[$forum_id]['label'] = $cat_title.' » '.$data['result']['f'][$forum_id];
-		        foreach($subforum as $subforum_id){
-		            $subsections[$subforum_id]['value'] = $subforum_id;
-		            $subsections[$subforum_id]['label'] = $cat_title.' » '.$data['result']['f'][$forum_id].' » '.$data['result']['f'][$subforum_id];
-		        }
-		    }
-		}
+include dirname(__FILE__) . '/../common.php';
+include dirname(__FILE__) . '/../api.php';
+
+try {
+	
+	if ( empty ( $_GET['term'] ) ) return;
+	$pattern = '%' . str_replace ( ' ', '%', $_GET['term'] ) . '%';
+	
+	$q = Db::query_database ( "SELECT COUNT() FROM Forums", array(), true, PDO::FETCH_COLUMN );
+	
+	if ( empty ( $q[0] ) ) {
+		$cfg = get_settings ();
+		Proxy::options ( true, $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
+		$webtlo = new Webtlo ( $cfg['api_url'], $cfg['api_key'] );
+		$webtlo->get_cat_forum_tree ();
 	}
 	
-	if(!empty($_GET['term']))       
-    {
-		//~ $pattern = '/'.preg_quote($_GET['term']).'/iu';
-		$pattern = '/'.$_GET['term'].'/iu';
-		$result = array();
-		foreach($subsections as $key => $subsection){
-		    foreach($subsection as $subkey => $value){
-		        if(preg_match($pattern, $value)){
-		            $result[$key] = $subsection;
-		            break;
-		        }
-		    }
-		}
-		echo json_encode($result);
-		//~ echo $_GET['term'];
-    }
+	$subsections = Db::query_database (
+		"SELECT id AS value, na AS label FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
+		array( 'term' => $pattern ), true
+	);
 	
+	echo json_encode ( $subsections );
+	
+} catch (Exception $e) {
+	//~ Log::append ( $e );
+	//~ echo json_encode ( array ( $e ) );
+}
+
 ?>
