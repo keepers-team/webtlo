@@ -108,6 +108,9 @@ class Reports {
 		}
 		$this->uid = $uid[1];
 		$this->cookie = $cookie[1];
+		curl_setopt_array($this->ch, array(
+			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
+		));
 	}
 	
 	private function make_request($url, $fields = array(), $options = array()){
@@ -136,6 +139,53 @@ class Reports {
 		if(!isset($form_token[1]))
 			throw new Exception( 'Не получен form_token.' );
 		return $form_token[1];
+	}
+	
+	// поиск темы со списком
+	private function search_topic_id( $title = "" ) {
+		$search = preg_replace( '|.*» ?(.*)$|', '$1', $title );
+		if( mb_strlen( $search, 'UTF-8' ) < 3 ) return false;
+		$title = explode( ' » ', $title );
+		$i = 0;
+		$page = 1;
+		$page_id = "";
+		while( $page > 0 ) {
+			$data = $this->make_request(
+				$this->forum_url . "/forum/search.php?id=$page_id",
+				array(
+					'nm' => mb_convert_encoding( "$search", 'Windows-1251', 'UTF-8' ),
+					'start' => $i,
+					'f' => 1584
+				)
+			);
+			$html = phpQuery::newDocumentHTML($data, 'UTF-8');
+			$topic_main = $html->find('table.forum > tbody:first');
+			$pages = $html->find('a.pg:last')->prev();
+			if( !empty( $pages ) && $i == 0 ) {
+				$page = $html->find('a.pg:last')->prev()->text();
+				$page_id = $html->find('a.pg:last')->attr('href');
+				$page_id = preg_replace( '|.*id=([^\&]*).*|', '$1', $page_id );
+			}
+			unset( $html );
+			if( !empty( $topic_main ) ) {
+				$topic_main = pq($topic_main);
+				foreach( $topic_main->find('tr.tCenter') as $row ) {
+					$row = pq($row);
+					$topic_title = $row->find( 'a.topictitle' )->text();
+					if( !empty( $topic_title ) ) {
+						$topic_title = explode( '»', str_replace( '[Список] ', '', $topic_title ) );
+						$topic_title = array_map( 'trim', $topic_title );
+						if( empty( array_diff( $title, $topic_title ) ) ) {
+							$topic_id = $row->find('a.topictitle')->attr('href');
+							return preg_replace( '/.*?([0-9]*)$/', '$1', $topic_id );
+						}
+					}
+				}
+			}
+			$page--;
+			$i += 50;
+		}
+		return false;
 	}
 	
 	private function send_message($mode, $message, $form_token, $topic_id, $post_id = "", $subject = ""){
@@ -176,18 +226,18 @@ class Reports {
 		foreach($data as $data){
 			$links[$data['id']] = preg_replace('/.*?([0-9]*)$/', '$1', $data['ln']);
 		}
-		// изменяем опции curl
-		curl_setopt_array($this->ch, array(
-			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
-		));
 		// получение form_token
 		$form_token = $this->get_form_token();
 		// отправка отчётов по каждому подразделу
 		foreach($subsections as &$subsection){
 			if(!isset($subsection['messages'])) continue;
 			if(empty($links[$subsection['id']])){
-				Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка для отправки отчётов, пропускаем...' );
-				continue;
+				Log::append( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка на список, выполняется автоматический поиск темы...' );
+				$links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
+				if( empty( $links[$subsection['id']] ) ) {
+					Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не удалось найти тему со списком, пропускаем...' );
+					continue;
+				}
 			}
 			$i = 0;
 			$page = 1;
@@ -314,13 +364,12 @@ class Reports {
 	
 	public function search_keepers ( $subsections ){
 		Log::append ( 'Получение списка раздач хранимых другими хранителями...' );
-		// изменяем опции curl
-		curl_setopt_array($this->ch, array(
-			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
-		));
 		$keepers = array();
 		foreach ( $subsections as $subsection ) {
-			if ( empty($subsection['ln']) ) continue;
+			if ( empty( $subsection['ln'] ) ) {
+				$subsection['ln'] = $this->search_topic_id( $subsection['na'] );
+				if( empty( $subsection['ln'] ) ) continue;
+			}
 			$ln = preg_replace('/.*?([0-9]*)$/', '$1', $subsection['ln']);
 			$i = 0;
 			$page = 1;
