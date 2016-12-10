@@ -1,5 +1,6 @@
 <?php
 
+// получение списка раздач
 function get_tor_client_data ( $tcs ) {
 	
 	Log::append ( 'Получение данных от торрент-клиентов...' );
@@ -10,18 +11,71 @@ function get_tor_client_data ( $tcs ) {
 		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
 		if($client->is_online()) {
 			$tmp = $client->getTorrents();
-			if(!empty($tmp)){
-				foreach($tmp as $hash => $value){
-					$tmp[$hash]['client'] = $tc['cm'];
-				}
-				$tc_topics += $tmp;
-			}
+			$tc_topics += $tmp;
 		}
-		Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . (empty($tmp) ? 0 : count($tmp)) );
+		Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . count($tmp) );
 	}
 	
 	// array ( [hash] => ( 'status' => status, 'client' => comment ) )
+	// status: 0 - загружается, 1 - раздаётся, -1 - на паузе или стопе
 	return $tc_topics;
+	
+}
+
+// регулировка раздач
+function topics_control( $topics, $tc_topics, $ids, $rule, $tcs = array() ) {
+	
+	$ids = array_flip( $ids );
+	
+	// выбираем раздачи для остановки
+	foreach( $topics as $topic_id => $topic ) {
+		
+		// если нет такой раздачи или идёт загрузка раздачи, идём дальше
+		if( empty( $tc_topics[$ids[$topic_id]]['status'] ) ) continue;
+		$client = $tc_topics[$ids[$topic_id]];
+		
+		// учитываем себя
+		$topic['seeders'] -= $topic['seeders'] ? $client['status'] : 0;
+		// находим значение личей
+		$leechers = $rule['leechers'] ? $topic['leechers'] : 0;
+		// находим значение пиров
+		$peers = $topic['seeders'] + $leechers;
+		
+		// стопим только, если есть сиды
+		if( ( $peers > $rule['peers'] || !$rule['no_leechers'] && !$topic['leechers'] ) && $topic['seeders'] ) {
+			if( $client['status'] == 1 )
+				$hashes[$client['client']]['stop'][] = $ids[$topic_id];
+		} else {
+			if( $client['status'] == -1 )
+				$hashes[$client['client']]['start'][] = $ids[$topic_id];
+		}
+	}
+	
+	if( empty( $hashes ) )
+		throw new Exception( 'Раздачи не нуждаются в регулировании.' );
+	
+	// выполняем запуск/остановку раздач
+	foreach( $tcs as $cm => $tc ) {
+		if( empty( $hashes[$cm] ) ) continue;
+		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
+		if( $client->is_online() ) {
+			// запускаем
+			if( !empty( $hashes[$cm]['start'] ) ) {
+				$q = count( $hashes[$cm]['start'] );
+				$client->torrentStart( $hashes[$cm]['start'] );
+				Log::append( "Запрос на запуск раздач торрент-клиенту \"$cm\" отправлен ($q)." );
+			}
+			// останавливаем
+			if( !empty( $hashes[$cm]['stop'] ) ) {
+				$q = count( $hashes[$cm]['stop'] );
+				$client->torrentStop( $hashes[$cm]['stop'] );
+				Log::append( "Запрос на остановку раздач торрент-клиенту \"$cm\" отправлен ($q)." );
+			}
+		} else {
+			Log::append( "Регулировка раздач не выполнена для торрент-клиента \"$cm\"." );
+			continue;
+		}
+	}
 	
 }
 
@@ -111,17 +165,19 @@ class utorrent {
         foreach($json['torrents'] as $torrent)
 		{
 			$status = decbin($torrent[1]);
-			// 100%, загружено, проверено, нет ошибок
-			if( $torrent[4] == 1000 &&
-				$status{0} == 1 &&
-				$status{4} == 1 &&
-				$status{3} == 0
-			) $status = 1;
-			else $status = 0;
-			$data[$torrent[0]]['status'] = $status;
-			//~ $data[$torrent[0]]['client'] = '';
+			// 0 - Started, 2 - Paused, 3 - Error, 4 - Checked, 7 - Loaded, 100% Downloads
+			if( !$status{3} ) {
+				$status = $status{0} && $status{4} && $torrent[4] == 1000
+					// на паузе или стопе
+					? !$status{2} && $status{7}
+						? 1
+						: -1
+					: 0;
+				$data[$torrent[0]]['status'] = $status;
+				$data[$torrent[0]]['client'] = $this->comment;
+			}
 		}
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -261,18 +317,23 @@ class transmission {
 	// получение списка раздач
 	public function getTorrents() {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
-		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
+		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
-			// скачано 100%, нет ошибок
-			if(	$torrent['percentDone'] == 1 && $torrent['error'] == 0)
-				$status = 1;
-			else
-				$status = 0;
-			$data[strtoupper($torrent['hashString'])]['status'] = $status;
-			//~ $data[strtoupper($torrent['hashString'])]['client'] = '';
+			if( empty( $torrent['error'] ) ) {
+				// скачано 100%
+				$status = $torrent['percentDone'] == 1
+					// на паузе
+					? $torrent['status'] == 0
+						? -1
+						: 1
+					: 0;
+				$hash = strtoupper( $torrent['hashString'] );
+				$data[$hash]['status'] = $status;
+				$data[$hash]['client'] = $this->comment;
+			}
 		}
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -410,18 +471,23 @@ class vuze {
 	// получение списка раздач
 	public function getTorrents() {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
-		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "name", "error", "percentDone"] } }');
+		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
         foreach($json['arguments']['torrents'] as $torrent)
 		{
-			// скачано 100%, нет ошибок
-			if(	$torrent['percentDone'] ==	1 && $torrent['error'] == 0)
-				$status = 1;
-			else
-				$status = 0;
-			$data[strtoupper($torrent['hashString'])]['status'] = $status;
-			//~ $data[strtoupper($torrent['hashString'])]['client'] = '';
+			if( empty( $torrent['error'] ) ) {
+				// скачано 100%
+				$status = $torrent['percentDone'] == 1
+					// на паузе
+					? $torrent['status'] == 0
+						? -1
+						: 1
+					: 0;
+				$hash = strtoupper( $torrent['hashString'] );
+				$data[$hash]['status'] = $status;
+				$data[$hash]['client'] = $this->comment;
+			}
 		}
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -560,18 +626,23 @@ class deluge {
 	// получение списка раздач
 	public function getTorrents() {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
-		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "name", "message", "progress" ], {} ], "id" : 9 }');
+		$json = $this->makeRequest('{ "method" : "web.update_ui" , "params" : [[ "paused", "message", "progress" ], {} ], "id" : 9 }');
         foreach($json['result']['torrents'] as $hash => $torrent)
 		{
-			// скачано 100%, нет ошибок
-			if(	$torrent['progress'] ==	100 && $torrent['message'] == 'OK')
-				$status = 1;
-			else
-				$status = 0;
-			$data[strtoupper($hash)]['status'] = $status;
-			//~ $data[strtoupper($hash)]['client'] = '';
+			if( $torrent['message'] == 'OK' ) {
+				// скачано 100%
+				$status = $torrent['progress'] == 100
+					// на паузе
+					? $torrent['paused']
+						? -1
+						: 1
+					: 0;
+				$hash = strtoupper( $hash );
+				$data[$hash]['status'] = $status;
+				$data[$hash]['client'] = $this->comment;
+			}
 		}        
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -626,6 +697,11 @@ class deluge {
 		foreach($hash as $hash){
 			$json = $this->makeRequest(json_encode(array( 'method' => 'label.set_torrent', 'params' => array( $hash, $label ), 'id' => 1 )));
 		}
+	}
+    
+    // запустить все
+    public function startAll () {
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.resume_all_torrents', 'params' => array(), 'id' => 7 )));
 	}
     
     // запуск раздач
@@ -743,15 +819,20 @@ class qbittorrent {
 		$json = $this->makeRequest('', 'query/torrents');
         foreach($json as $torrent)
 		{
-			// скачано 100%, не ошибка
-			if($torrent['progress'] == 1 && $torrent['state'] != 'error')
-				$status = 1;
-			else
-				$status = 0;
-			$data[strtoupper($torrent['hash'])]['status'] = $status;
-			//~ $data[strtoupper($torrent['hash'])]['client'] = '';
+			if( $torrent['state'] != 'error' ) {
+				// скачано 100%
+				$status = $torrent['progress'] == 1
+					// на паузе
+					? $torrent['state'] == 'pausedUP'
+						? -1
+						: 1
+					: 0;
+				$hash = strtoupper( $torrent['hash'] );
+				$data[$hash]['status'] = $status;
+				$data[$hash]['client'] = $this->comment;
+			}
 		}
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -777,6 +858,11 @@ class qbittorrent {
 	        ), '', '&', PHP_QUERY_RFC3986);
 			$this->makeRequest($fields, 'command/setCategory', false);
 		}
+	}
+    
+    // запустить все
+    public function startAll () {
+		$this->makeRequest("", 'command/resumeAll', false);
 	}
     
     // запуск раздач
@@ -921,15 +1007,20 @@ class ktorrent {
         if($full) return $json;
         foreach($json['torrent'] as $torrent)
 		{
-			// скачано 100%, раздача
-			if($torrent['percentage'] == 100 && $torrent['status'] == 'Раздача')
-				$status = 1;
-			else
-				$status = 0;
-			$data[strtoupper($torrent['info_hash'])]['status'] = $status;
-			//~ $data[strtoupper($torrent['info_hash'])]['client'] = '';
+			if( $torrent['status'] != 'Ошибка' ) {
+				// скачано 100%
+				$status = $torrent['percentage'] == 100
+					// на паузе
+					? $torrent['status'] == 'Пауза' //Приостановлен
+						? -1
+						: 1
+					: 0;
+				$hash = strtoupper( $torrent['info_hash'] );
+				$data[$hash]['status'] = $status;
+				$data[$hash]['client'] = $this->comment;
+			}
 		}
-        return isset($data) ? $data : null;
+        return is_array($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -942,6 +1033,11 @@ class ktorrent {
 	// установка метки
     public function setLabel($hash, $label = "") {
 		return 'Торрент-клиент не поддерживает установку меток.';
+	}
+    
+    // запустить все
+    public function startAll () {
+		$json = $this->makeRequest('action?startall=true');
 	}
     
     // запуск раздач

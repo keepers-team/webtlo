@@ -130,13 +130,11 @@ $(document).ready(function() {
 			}
 		});
 		
-		term = "^("+pattern.join("|")+")$";
-		
 		if(pattern.length){
 			$.ajax({
 				url: 'php/get_list_subsections.php',
 				type: 'GET',
-				data: { term : term },
+				data: { term : pattern },
 				success: function (response) {
 					subsection = $.parseJSON(response);
 					for (var i in subsection) {

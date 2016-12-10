@@ -6,8 +6,9 @@ class Webtlo {
 	
 	public $limit;
 	
+	public static $db;
+	
 	protected $ch;
-	protected $db;
 	protected $api_key;
 	protected $api_url;
 	
@@ -136,6 +137,23 @@ class Webtlo {
 		return $ids;
 	}
 	
+	// получить значения пиров по id раздачи
+	public function get_peer_stats( $ids ) {
+		if( empty( $ids ) ) return;
+		$ids = array_chunk( $ids, $this->limit, false );
+		foreach( $ids as $ids ) {
+			$value = implode( ',', $ids );
+			$url = $this->api_url . '/v1/get_peer_stats?by=topic_id&api_key=' . $this->api_key . '&val=' . $value;
+			$data = $this->request_exec( $url );
+			foreach( $data['result'] as $topic_id => $topic ) {
+				if( !empty( $topic ) ) {
+					$topics[$topic_id] = array_combine( array( 'seeders', 'leechers', 'seeder_last_seen' ), $topic );
+				}
+			}
+		}
+		return $topics;
+	}
+	
 	// получить id раздачи по hash
 	public function get_topic_id($hashes){
 		if(empty($hashes)) return;
@@ -144,8 +162,8 @@ class Webtlo {
 			$value = implode(',', $hashes);
 			$url = $this->api_url . '/v1/get_topic_id?by=hash&api_key=' . $this->api_key . '&val=' . $value;
 			$data = $this->request_exec($url);
-			foreach($data['result'] as $id){
-				if(!empty($id)) $ids[] = $id;
+			foreach($data['result'] as $hash => $id){
+				if(!empty($id)) $ids[$hash] = $id;
 			}
 		}
 		return $ids;
@@ -183,7 +201,7 @@ class Webtlo {
 	private function prepare_insert($data) {
 		foreach ( $data as $id => &$value ) {
 			$value = array_map ( function ($e) {
-				return is_numeric($e) ? $e : $this->db->quote($e);
+				return is_numeric($e) ? $e : Webtlo::$db->quote($e);
 			}, $value);
 			$value = (empty($value['id']) ? $id . ',' : '') . implode (',', $value);
 		}
@@ -357,9 +375,9 @@ class Webtlo {
 	}
 	
 	private function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
-		$sth = $this->db->prepare($sql);
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
+		$sth = Webtlo::$db->prepare($sql);
+		if(Webtlo::$db->errorCode() != '0000') {
+			$db_error = Webtlo::$db->errorInfo();
 			throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 		}
 		$sth->execute($param);
@@ -368,7 +386,7 @@ class Webtlo {
 	
 	private function make_database(){
 		
-		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
+		Webtlo::$db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
 		
 		// временные таблицы
 		$this->query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
@@ -380,22 +398,21 @@ class Webtlo {
 	
 	public function __destruct(){
 		curl_close($this->ch);
-		unset($this->db);
 	}
 }
 
 class Database {
 	
-	public $db;
+	public static $db;
 	
 	public function __construct(){
-		$this->db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
+		Database::$db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
 	}
 	
 	private function query_database($sql, $param = array(), $pdo = PDO::FETCH_ASSOC, $fetch = true){
-		$sth = $this->db->prepare($sql);
-		if($this->db->errorCode() != '0000') {
-			$db_error = $this->db->errorInfo();
+		$sth = Database::$db->prepare($sql);
+		if(Database::$db->errorCode() != '0000') {
+			$db_error = Database::$db->errorInfo();
 			throw new Exception( 'SQL ошибка: ' . $db_error[2] );
 		}
 		$sth->execute($param);
@@ -474,7 +491,7 @@ class Database {
 	private function prepare_insert ( $data ) {
 		foreach ( $data as $id => &$value ) {
 			$value = array_map ( function ($e) {
-				return is_numeric($e) ? $e : $this->db->quote($e);
+				return is_numeric($e) ? $e : Database::$db->quote($e);
 			}, $value);
 			$value = (empty($value['id']) ? $id . ',' : '') . implode (',', $value);
 		}

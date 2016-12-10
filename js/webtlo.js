@@ -3,12 +3,25 @@
 	/* инициализация кнопок */
 	$("#update, #startreports, #sendreports").button();
 	
-	// средние сиды в настройках
-	$("#avg_seeders_period").spinner({ min: 0, max: 30, mouseWheel: true });
-	$("#avg_seeders").on("change", function(){
-		$(this).prop("checked") ? $("#avg_seeders_settings").show() : $("#avg_seeders_settings").hide();
+	// период хранения средних сидов
+	$("#avg_seeders_period").spinner({
+		min: 1,
+		max: 30,
+		mouseWheel: true
 	});
-	$("#avg_seeders").change();
+	
+	// фильтрация раздач, количество сидов
+	$("#TT_rule_topics, #TT_rule_reports").spinner({
+		min: 0,
+		step: 0.5,
+		mouseWheel: true
+	});
+	
+	// регулировка раздач, количество пиров
+	$("#peers").spinner({
+		min: 1,
+		mouseWheel: true
+	});
 
 	/* кнопка справки */
 	$("#help").addClass("ui-button ui-state-default");

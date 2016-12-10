@@ -6,7 +6,9 @@ include dirname(__FILE__) . '/../api.php';
 try {
 	
 	if ( empty ( $_GET['term'] ) ) return;
-	$pattern = '%' . str_replace ( ' ', '%', $_GET['term'] ) . '%';
+	$pattern = is_array( $_GET['term'] )
+		? $_GET['term']
+		: array( $_GET['term'] );
 	
 	$q = Db::query_database ( "SELECT COUNT() FROM Forums", array(), true, PDO::FETCH_COLUMN );
 	
@@ -17,10 +19,16 @@ try {
 		$webtlo->get_cat_forum_tree ();
 	}
 	
-	$subsections = Db::query_database (
-		"SELECT id AS value, na AS label FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
-		array( 'term' => $pattern ), true
-	);
+	$subsections = array();
+	
+	foreach( $pattern as $pattern ) {
+		$pattern = '%' . str_replace ( ' ', '%', $pattern ) . '%';
+		$data = Db::query_database (
+			"SELECT id AS value, na AS label FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
+			array( 'term' => $pattern ), true
+		);
+		$subsections = array_merge_recursive( $subsections, $data );
+	}
 	
 	echo json_encode ( $subsections );
 	

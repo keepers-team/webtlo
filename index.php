@@ -37,13 +37,15 @@ $topic_not_checked = (in_array(0, $cfg['topics_status']) ? "checked" : "");
 $topic_not_decoration = (in_array(3, $cfg['topics_status']) ? "checked" : "");
 $topic_doubtfully = (in_array(8, $cfg['topics_status']) ? "checked" : "");
 $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
+$leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
+$no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 
 ?>
 
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.0.4</title>
+		<title>web-TLO-0.9.1.0</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -157,7 +159,7 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 										</label>
 										<label>
 											Пароль:
-											<input name="proxy_paswd" id="proxy_paswd" class="myinput" type="text" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="<?php echo $cfg['proxy_paswd'] ?>" />
+											<input name="proxy_paswd" id="proxy_paswd" class="myinput" type="password" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="<?php echo $cfg['proxy_paswd'] ?>" />
 										</label>
 									</div>
 								</div>
@@ -253,9 +255,9 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									</label>
 								</div>
 							</div>
-							<h2>Настройки поиска раздач</h2>
+							<h2>Настройки управления раздачами</h2>
 							<div>
-								<h3>Получать сведения о раздачах только со статусом</h3>
+								<h3>Статусы раздач</h3>
 								<div id="tor_status">
 									<div>
 										<label title="не проверено">
@@ -288,28 +290,35 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 										</label>
 									</div>											
 								</div>
-								<h3>Предлагать для хранения раздачи с кол-вом сидов не более</h3>
-								<div>
-									<input name="TT_rule_topics" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<?php echo $cfg['rule_topics'] ?>" />
-								</div>
-								<h3>Поиск среднего значения количества сидов</h3>
-								<div>
-									<label title="При поиске раздач использовать алгоритм нахождения среднего значения количества сидов">
-										<input name="avg_seeders" id="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
-										использовать алгоритм нахождения среднего значения количества сидов
-									</label>
-									<div id="avg_seeders_settings" style="display:none">
-										<label title="Укажите период хранения сведений о средних сидах (максимум 30 дней)">
-											Хранить сведения о сидах за последние
-											<input name="avg_seeders_period" class="" id="avg_seeders_period" type="text" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
-											дн.
-										</label>
-									</div>
-								</div>
-								<h3>Вносить в отчёты раздачи с кол-вом сидов не более</h3>
-								<div>
-									<input name="TT_rule_reports" class="myinput" type="text" size="24" title="Укажите числовое значение" value="<?php echo $cfg['rule_reports'] ?>" />
-								</div>
+								<h3>Фильтрация раздач</h3>
+								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
+									Предлагать для хранения раздачи с количеством сидов не более:
+									<input id="TT_rule_topics" name="TT_rule_topics" type="text" size="2" readonly value="<?php echo $cfg['rule_topics'] ?>" />
+								</label>
+								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
+									Вносить в отчёты раздачи с количеством сидов не более:
+									<input id="TT_rule_reports" name="TT_rule_reports" type="text" size="2" readonly value="<?php echo $cfg['rule_reports'] ?>" />
+								</label>
+								<label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
+									<input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
+									находить среднее значение количества сидов за
+									<input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="text" size="2" readonly value="<?php echo $cfg['avg_seeders_period'] ?>"/>
+									дн.
+								</label>
+								<h3>Регулировка раздач<sup>1</sup></h3>
+								<label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
+									Останавливать раздачи с количеством пиров более:
+									<input id="peers" name="peers" type="text" size="2" readonly value="<?php echo $cfg['topics_control']['peers'] ?>" />
+								</label>
+								<label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
+									<input name="leechers" type="checkbox" <?php echo $leechers ?> />
+									учитывать значение личей
+								</label>
+								<label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
+									<input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
+									запускать раздачи с 0 (нулём) личей
+								</label>
+								<p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</p>
 							</div>
 							<h2>Настройки загрузки торрент-файлов</h2>
 							<div>
@@ -327,12 +336,11 @@ $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 									добавлять retracker.local в скачиваемые *.torrent-файлы
 								</label>
 								<h3>Скачивание *.torrent файлов с заменой Passkey</h3>
-								<label>
+								<label class="label">
 									Каталог:
 									<input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53" title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey." value="<?php echo $cfg['dir_torrents'] ?>" />
 								</label>
-								<br />
-								<label>
+								<label class="label">
 									Passkey:
 									<input id="passkey" name="passkey" class="myinput" type="text" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
 								</label>

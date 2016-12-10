@@ -11,7 +11,9 @@ body {
 }
 
 a, button, menu, input, textarea, select {
+/*
 	text-decoration: none;
+*/
 	outline: none;
 }
 
@@ -42,7 +44,22 @@ h3 {
 .sub_settings h3:first-child {
 	margin: 5px 0 10px 0;
 }
-	
+
+sup, sub {
+    vertical-align: baseline;
+    position: relative;
+    font-size: .7em;
+    line-height: 1;
+}
+
+sup {
+    bottom: 1.4ex;
+}
+
+sub {
+	top: .5ex;
+}
+    
 /* menu */	
 #menutabs {
 	margin: 10px 20px 0 20px;
@@ -137,6 +154,15 @@ label:hover {
 	cursor: pointer;
 }
 
+.label {
+	padding: 2px 0;
+	display: block;
+}
+
+.label * {
+	vertical-align: middle;
+}
+
 .myinput {
 	margin: 8px 0;
 	display: inline-block;
@@ -187,8 +213,11 @@ label:hover {
 	margin: 0;
 }
 
-#avg_seeders_settings {
-	margin: 12px 0 5px 10px;
+.footnote {
+	font-size: small;
+	margin: 15px 0 0 0;
+	padding: 5px 0 0 0;
+	border-top: 1px solid #000;
 }
 
 /* reports */

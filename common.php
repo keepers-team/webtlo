@@ -93,6 +93,11 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	// статусы раздач
 	if(isset($topics_status)) $ini->write('sections','topics_status',implode(',', $topics_status));
 	
+	// регулировка раздач
+	if( is_numeric( $peers ) ) $ini->write( 'topics_control', 'peers', $peers );
+	$ini->write( 'topics_control', 'leechers', isset( $leechers ) ? 1 : 0 );
+	$ini->write( 'topics_control', 'no_leechers', isset( $no_leechers ) ? 1 : 0 );
+	
 	// прокси
 	$ini->write('proxy', 'activate', isset($proxy_activate) ? 1 : 0);
 	if(isset($proxy_type)) $ini->write('proxy','type',$proxy_type);
@@ -134,11 +139,11 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	echo $ini->updateFile(); // обновление файла с настройками
 }
 
-function get_settings(){
+function get_settings( $filename = 'config.ini' ){
 	
 	$config = array();
 	
-	$ini = new TIniFileEx(dirname(__FILE__) . '/config.ini');
+	$ini = new TIniFileEx( dirname(__FILE__) . '/' . $filename );
 	
 	// торрент-клиенты
 	$qt = $ini->read('other','qt','0');
@@ -152,7 +157,9 @@ function get_settings(){
 		$config['clients'][$comment]['pw'] = $ini->read("torrent-client-$i","password","");
 	}
 	if ( is_array( $config['clients'] ) ) {
-		ksort($config['clients'], SORT_NATURAL);
+		uksort($config['clients'], function($a, $b) {
+			return strnatcmp($a, $b);
+		});
 	}
 	
 	// подразделы
@@ -179,6 +186,11 @@ function get_settings(){
 	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
 	$config['avg_seeders_period'] = $ini->read('sections','avg_seeders_period',14);
 	$config['topics_status'] = explode(',', $ini->read('sections','topics_status','2,8'));
+	
+	// регулировка раздач
+	$config['topics_control']['peers'] = $ini->read( 'topics_control', 'peers', 10 );
+	$config['topics_control']['leechers'] = $ini->read( 'topics_control', 'leechers', 0 );
+	$config['topics_control']['no_leechers'] = $ini->read( 'topics_control', 'no_leechers', 1 );
 	
 	// прокси
 	$config['proxy_activate'] = $ini->read('proxy','activate',0);
