@@ -552,8 +552,9 @@ class Download {
 			$dl_log = '<span class="errors">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span>';
 			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 		}
+		$winsavedir = mb_convert_encoding( $savedir, 'Windows-1251', 'UTF-8' );
 		// проверяем существование указанного каталога
-		if (!is_writable($savedir))
+		if (!is_writable($savedir) && !is_writable($winsavedir))
 		{
 			$dl_log = '<span class="errors">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span>';
 			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
@@ -563,7 +564,10 @@ class Download {
 		{
 			Log::append ( 'Попытка создать подкаталог...' );
 			$savedir .= 'tfiles_' . $subsection . '_' . date("(d.m.Y_H.i.s)") . '_' . $rule . substr($savedir, -1);
-			$result = (is_writable($savedir) || mkdir($savedir)) ? true : false;
+			$winsavedir = mb_convert_encoding( $savedir, 'Windows-1251', 'UTF-8' );
+			$result = PHP_OS == 'WINNT'
+				? (is_writable($winsavedir) || mkdir($winsavedir))
+				: (is_writable($savedir) || mkdir($savedir));
 			// создался ли подкаталог
 			if (!$result)
 			{
@@ -632,7 +636,7 @@ class Download {
 			    'add_retracker_url' => $retracker
 		    )));
 			$torrent_file = $this->savedir . '[webtlo].t' . $topic['id'] . '.torrent';
-			//~ $torrent_file = mb_convert_encoding($this->savedir . '[webtlo].t' . $topic['id'] . '.torrent', 'Windows-1251', 'UTF-8');
+			if( PHP_OS == 'WINNT' ) $torrent_file = mb_convert_encoding( $torrent_file, 'Windows-1251', 'UTF-8' );
 			$n = 1; // кол-во попыток
 			while(true) {
 				
