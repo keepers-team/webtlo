@@ -60,7 +60,7 @@ switch($_POST['m'])
 			$db = new Database();
 			$subsections = $db->get_forums_details($TT_subsections);
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics); unset($topics);
+			$reports = create_reports($subsections, $topics, $TT_login); unset($topics);
 			output_reports($reports, $TT_login);
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );
@@ -77,7 +77,7 @@ switch($_POST['m'])
 			$subsec = array_column_common($TT_subsections, 'id');
 			$subsections = $db->get_forums_details($subsec);
 			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics); unset($topics);
+			$reports = create_reports($subsections, $topics, $TT_login); unset($topics);
 			$send = new Reports($forum_url, $TT_login, $TT_password);
 			$send->send_reports($api_key, $api_url, $reports, $TT_subsections);
 			echo Log::get();

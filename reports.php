@@ -1,6 +1,6 @@
 <?php
 
-function create_reports($subsections, $topics){
+function create_reports($subsections, $topics, $nick){
 	$tmp = array();
 	$max = 119000;
 	$pattern = '[spoiler="№№ %%start%% — %%end%%"]<br />[list=1]<br />[*=%%start%%]%%list%%[/list]<br />[/spoiler]<br />';
@@ -57,7 +57,7 @@ function create_reports($subsections, $topics){
 				  'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '[br]<br />'.
 				  'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]<br />'.
 				  'Количество хранителей: %%count%%<br />[hr]<br />'.
-				  'Хранитель 1: [url=profile.php?mode=viewprofile&u=%%nick%%&name=1][u][color=#006699]%%nick%%[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'[br]<br /><br />';
+				  'Хранитель 1: [url=profile.php?mode=viewprofile&u='.urlencode( $nick ).'&name=1][u][color=#006699]'.$nick.'[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'[br]<br /><br />';
 		$common .= '[url=viewtopic.php?p=%%ins' . $subsection['id'] . '%%#%%ins' .$subsection['id'] . '%%][u]'.$subsection['na'] . '[/u][/url] — ' .	$subsection['dlqt'] .' шт. ('. convert_bytes($subsection['dlsi']) . ')[br]<br />';
 		$subsection['header'] = $header;
 	}
@@ -143,6 +143,7 @@ class Reports {
 	
 	// поиск темы со списком
 	private function search_topic_id( $title = "" ) {
+		$title = html_entity_decode( $title );
 		$search = preg_replace( '|.*» ?(.*)$|', '$1', $title );
 		if( mb_strlen( $search, 'UTF-8' ) < 3 ) return false;
 		$title = explode( ' » ', $title );
@@ -175,7 +176,8 @@ class Reports {
 					if( !empty( $topic_title ) ) {
 						$topic_title = explode( '»', str_replace( '[Список] ', '', $topic_title ) );
 						$topic_title = array_map( 'trim', $topic_title );
-						if( empty( array_diff( $title, $topic_title ) ) ) {
+						$diff = array_diff( $title, $topic_title );
+						if( empty( $diff ) ) {
 							$topic_id = $row->find('a.topictitle')->attr('href');
 							return preg_replace( '/.*?([0-9]*)$/', '$1', $topic_id );
 						}
@@ -239,8 +241,9 @@ class Reports {
 					continue;
 				}
 			}
-			$i = 0;
-			$page = 1;
+			$i = 0; // +30
+			$j = 0; // количество своих сообщений
+			$page = 1; // количество страниц
 			// получение данных со страниц
 			Log::append ( 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...' );
 			while($page > 0){
@@ -254,10 +257,11 @@ class Reports {
 					$page = $html->find('a.pg:last')->prev()->text();
 				unset($html);
 				if(!empty($topic_main)){
-					$j = 0;
 					$topic_main = pq($topic_main);
-					$nick_author = $topic_main->find('p.nick-author:first > a')->text();
-					$post_author = str_replace('post_', '', $topic_main->find('tbody:first')->attr('id'));
+					if( $i == 0 ) {
+						$nick_author = $topic_main->find('p.nick-author:first > a')->text();
+						$post_author = str_replace('post_', '', $topic_main->find('tbody:first')->attr('id'));
+					}
 					foreach($topic_main->find('tbody') as $row){
 						$row = pq($row);
 						$post = str_replace('post_', '', $row->attr('id'));
@@ -303,15 +307,19 @@ class Reports {
 					// вставка в отчёты данных о других хранителях
 					$q = 2;
 					foreach($stored as $nick => $data){
-						$subsection['header'] .= 'Хранитель '.$q.': [url=profile.php?mode=viewprofile&u='.$nick.'&name=1][u][color=#006699]'.$nick.'[/u][/color][/url] [color=gray]~>[/color] '. $data['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($data['dlsi']) .'[br]';
+						$subsection['header'] .= 'Хранитель '.$q.': [url=profile.php?mode=viewprofile&u='.urlencode( $nick ).'&name=1][u][color=#006699]'.$nick.'[/u][/color][/url] [color=gray]~>[/color] '. $data['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($data['dlsi']) .'[br]';
 						$q++;
 					}
 				}
 				Log::append ( 'Отправка шапки для подраздела № ' . $subsection['id'] . '...' );
-				$subsection['header'] = str_replace('%%nick%%', $this->login, $subsection['header']);
-				$subsection['header'] = str_replace('%%count%%', isset($keepers) ? count($keepers) + 1 : 1, $subsection['header']);
-				$subsection['header'] = str_replace('%%dlqt%%', isset($stored) ? array_sum(array_column_common($stored, 'dlqt')) + $subsection['dlqt'] : $subsection['dlqt'], $subsection['header']);
-				$subsection['header'] = str_replace('%%dlsi%%', convert_bytes(isset($stored) ? array_sum(array_column_common($stored, 'dlsi')) + $subsection['dlsi'] : $subsection['dlsi']), $subsection['header']);
+				$count = isset($keepers) ? count($keepers) + 1 : 1;
+				$dlqt = isset($stored) ? array_sum(array_column_common($stored, 'dlqt')) + $subsection['dlqt'] : $subsection['dlqt'];
+				$dlsi = convert_bytes(isset($stored) ? array_sum(array_column_common($stored, 'dlsi')) + $subsection['dlsi'] : $subsection['dlsi']);
+				$subsection['header'] = str_replace(
+					array( '%%count%%', '%%dlqt%%', '%%dlsi%%' ),
+					array( $count, $dlqt, $dlsi ),
+					$subsection['header']
+				);
 				// отправка сообщения с шапкой
 				$this->send_message(
 					'editpost', $subsection['header'], $form_token,
@@ -320,7 +328,7 @@ class Reports {
 			}
 			unset($keepers);
 			unset($stored);
-			// отправка сообщений
+			// вставка дополнительных сообщений
 			$q = 1;
 			foreach($subsection['messages'] as &$message){
 				if(empty($message['id'])){
@@ -330,11 +338,13 @@ class Reports {
 						$form_token, $links[$subsection['id']]
 					);
 					$q++;
+					usleep(1000);
 				}
 			}
 			unset($message);
 			// вставка ссылок в сводном отчёте на список
 			$common = str_replace('%%ins' . $subsection['id'] . '%%', $subsection['messages'][0]['id'], $common);
+			// редактирование сообщений
 			foreach($subsection['messages'] as $message){
 				if(!empty($message['id'])){
 					Log::append ( 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...' );
