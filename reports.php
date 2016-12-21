@@ -236,7 +236,7 @@ class Reports {
 			if(empty($links[$subsection['id']])){
 				Log::append( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка на список, выполняется автоматический поиск темы...' );
 				$links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
-				if( empty( $links[$subsection['id']] ) ) {
+				if( !$links[$subsection['id']] ) {
 					Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не удалось найти тему со списком, пропускаем...' );
 					continue;
 				}
@@ -375,10 +375,13 @@ class Reports {
 	public function search_keepers ( $subsections ){
 		Log::append ( 'Получение списка раздач хранимых другими хранителями...' );
 		$keepers = array();
-		foreach ( $subsections as $subsection ) {
+		foreach ( $subsections as &$subsection ) {
 			if ( empty( $subsection['ln'] ) ) {
 				$subsection['ln'] = $this->search_topic_id( $subsection['na'] );
-				if( empty( $subsection['ln'] ) ) continue;
+				if( !$subsection['ln'] ) {
+					Log::append( 'Не удалось найти тему со списком для подраздела № ' . $subsection['id'] );
+					continue;
+				}
 			}
 			$ln = preg_replace('/.*?([0-9]*)$/', '$1', $subsection['ln']);
 			$i = 0;

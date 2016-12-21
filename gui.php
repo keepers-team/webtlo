@@ -154,18 +154,18 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 							</div>
 							<div class="filter_rule">
 								<label title="Количество сидов">
-									<input type="text" name="filter_rule" size="1" readonly value="'.$rule_topics.'" />
+									<input type="text" name="filter_rule" size="1" value="'.$rule_topics.'" />
 								</label>
 							</div>
 						</div>
 						<div class="filter_rule_interval" style="display: none">
 							<label title="Начальное количество сидов">
 								от
-								<input type="text" name="filter_rule_interval[from]" size="1" readonly value="0" />
+								<input type="text" name="filter_rule_interval[from]" size="1" value="0" />
 							</label>
 							<label title="Конечное количество сидов">
 								до
-								<input type="text" name="filter_rule_interval[to]" size="1" readonly value="'.$rule_topics.'" />
+								<input type="text" name="filter_rule_interval[to]" size="1" value="'.$rule_topics.'" />
 							</label>
 						</div>
 					</fieldset>

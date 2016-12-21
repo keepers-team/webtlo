@@ -21,8 +21,8 @@ if(isset($cfg['clients'])){
 // подразделы
 if(isset($cfg['subsections'])){
 	foreach($cfg['subsections'] as $id => $ss){
-		$subsections[] = '<option value="'.$id.'" data="'.$id.'|'.
-			implode('|', $ss).'">'.preg_replace('|.* » (.*)$|', '$1', $ss['title']).'</option>';
+		$lb = preg_replace('|.* » (.*)$|', '$1', $ss['na']);
+		$subsections[] = '<option value="'.$ss['id'].'" data="'.implode('|', $ss).'">'.$lb.'</option>';
 	}
 	$subsections = implode('', $subsections);
 } else $subsections = '';
@@ -45,7 +45,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.1.2</title>
+		<title>web-TLO-0.9.1.3</title>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
 		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
 		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
@@ -293,22 +293,22 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<h3>Фильтрация раздач</h3>
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
 									Предлагать для хранения раздачи с количеством сидов не более:
-									<input id="TT_rule_topics" name="TT_rule_topics" type="text" size="2" readonly value="<?php echo $cfg['rule_topics'] ?>" />
+									<input id="TT_rule_topics" name="TT_rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
 								</label>
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
 									Вносить в отчёты раздачи с количеством сидов не более:
-									<input id="TT_rule_reports" name="TT_rule_reports" type="text" size="2" readonly value="<?php echo $cfg['rule_reports'] ?>" />
+									<input id="TT_rule_reports" name="TT_rule_reports" type="text" size="2" value="<?php echo $cfg['rule_reports'] ?>" />
 								</label>
 								<label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
 									<input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
 									находить среднее значение количества сидов за
-									<input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="text" size="2" readonly value="<?php echo $cfg['avg_seeders_period'] ?>"/>
+									<input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="text" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
 									дн.
 								</label>
 								<h3>Регулировка раздач<sup>1</sup></h3>
 								<label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
 									Останавливать раздачи с количеством пиров более:
-									<input id="peers" name="peers" type="text" size="2" readonly value="<?php echo $cfg['topics_control']['peers'] ?>" />
+									<input id="peers" name="peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
 								</label>
 								<label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
 									<input name="leechers" type="checkbox" <?php echo $leechers ?> />

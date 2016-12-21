@@ -37,7 +37,7 @@ try {
 	
 	$sth = $db->prepare("
 		SELECT
-			`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,`cl`,
+			DISTINCT(Topics.id),ss,na,hs,si,st,rg,dl,rt,ds,cl,
 			CASE
 				WHEN `ds` IS 0
 				THEN (`se` * 1.) / `rt`
@@ -48,7 +48,6 @@ try {
 			LEFT JOIN
 			`Seeders`
 				ON `Topics`.`id` = `Seeders`.`id`
-			LEFT JOIN `Other`
 			LEFT JOIN Keepers ON Topics.id = Keepers.topic_id
 		WHERE $where
 		ORDER BY CAST(`$filter_sort` as $cast) $filter_sort_direction

@@ -167,16 +167,17 @@ function get_settings( $filename = 'config.ini' ){
 	if(!empty($config['subsections_line'])) $subsections = explode(',', $config['subsections_line']);
 	if(isset($subsections)){
 		foreach($subsections as $id){
-			$config['subsections'][$id]['title'] = $ini->read("$id","title","");
-			$config['subsections'][$id]['client'] = $ini->read("$id","client","utorrent");
-			$config['subsections'][$id]['label'] = $ini->read("$id","label","");
-			$config['subsections'][$id]['data-folder'] = $ini->read("$id","data-folder","");
+			$config['subsections'][$id]['id'] = $id;
+			$config['subsections'][$id]['na'] = $ini->read("$id","title","");
+			$config['subsections'][$id]['cl'] = $ini->read("$id","client","utorrent");
+			$config['subsections'][$id]['lb'] = $ini->read("$id","label","");
+			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
 		}
 		uasort($config['subsections'], function($a, $b){
-			$a['title'] = mb_substr($a['title'], mb_strrpos($a['title'], ' » ') + 3);
-			$b['title'] = mb_substr($b['title'], mb_strrpos($b['title'], ' » ') + 3);
-			return strnatcmp($a['title'], $b['title']);
+			$a['title'] = mb_substr($a['na'], mb_strrpos($a['na'], ' » ') + 3);
+			$b['title'] = mb_substr($b['na'], mb_strrpos($b['na'], ' » ') + 3);
+			return strnatcmp($a['na'], $b['na']);
 		});
 	}
 	
