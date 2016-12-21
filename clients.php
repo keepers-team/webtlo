@@ -40,6 +40,8 @@ function topics_control( $topics, $tc_topics, $ids, $rule, $tcs = array() ) {
 		$leechers = $rule['leechers'] ? $topic['leechers'] : 0;
 		// находим значение пиров
 		$peers = $topic['seeders'] + $leechers;
+		// учитываем вновь прибывшего "лишнего" сида
+		$peers += $topic['seeders'] && $peers == $rule['peers'] && $client['status'] == 1 ? 1 : 0;
 		
 		// стопим только, если есть сиды
 		if( ( $peers > $rule['peers'] || !$rule['no_leechers'] && !$topic['leechers'] ) && $topic['seeders'] ) {
@@ -62,13 +64,19 @@ function topics_control( $topics, $tc_topics, $ids, $rule, $tcs = array() ) {
 			// запускаем
 			if( !empty( $hashes[$cm]['start'] ) ) {
 				$q = count( $hashes[$cm]['start'] );
-				$client->torrentStart( $hashes[$cm]['start'] );
+				$hashes[$cm]['start'] = array_chunk( $hashes[$cm]['start'], 100 );
+				foreach( $hashes[$cm]['start'] as $start ) {
+					$client->torrentStart( $start );
+				}
 				Log::append( "Запрос на запуск раздач торрент-клиенту \"$cm\" отправлен ($q)." );
 			}
 			// останавливаем
 			if( !empty( $hashes[$cm]['stop'] ) ) {
 				$q = count( $hashes[$cm]['stop'] );
-				$client->torrentStop( $hashes[$cm]['stop'] );
+				$hashes[$cm]['stop'] = array_chunk( $hashes[$cm]['stop'], 100 );
+				foreach( $hashes[$cm]['stop'] as $stop ) {
+					$client->torrentStop( $stop );
+				}
 				Log::append( "Запрос на остановку раздач торрент-клиенту \"$cm\" отправлен ($q)." );
 			}
 		} else {
