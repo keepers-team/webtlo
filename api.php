@@ -27,7 +27,8 @@ class Webtlo {
 		    CURLOPT_RETURNTRANSFER => 1,
 		    CURLOPT_ENCODING => "gzip",
 		    CURLOPT_SSL_VERIFYPEER => 0,
-		    CURLOPT_SSL_VERIFYHOST => 0
+		    CURLOPT_SSL_VERIFYHOST => 0,
+		    CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);
@@ -35,6 +36,7 @@ class Webtlo {
 	
 	private function request_exec($url){
 		$n = 1; // кол-во попыток
+		$data = array();
 		curl_setopt($this->ch, CURLOPT_URL, $url);
 		while(true){
 			$json = curl_exec($this->ch);
@@ -49,6 +51,7 @@ class Webtlo {
 					$n++;
 					continue;
 				}
+				if( $data['error']['code'] == '404' ) break;
 				throw new Exception( 'API ошибка: ' . $data['error']['text'] );
 			}
 			break;
@@ -112,26 +115,43 @@ class Webtlo {
 			$this->query_database ( "INSERT INTO temp.Forums1 (id,na) $select" );
 		}
 		
-		$this->query_database('INSERT INTO `Forums` ( `id`,`na` ) SELECT * FROM temp.Forums1');
-		$this->query_database('DELETE FROM `Forums` WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
+		$this->query_database('INSERT INTO Forums ( id,na ) SELECT id,na FROM temp.Forums1');
+		$this->query_database('DELETE FROM Forums WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
 		
 		return isset($tmp['subsec']) ? $tmp['subsec'] : array();
 	}
 	
 	// список раздач раздела
-	public function get_subsection_data($subsections, $status){
-		Log::append ( 'Получение списка раздач...' );
+	public function get_subsection_data( $subsections, $status = array(2,8), $get = 'ids' ) {
+		//~ Log::append ( 'Получение списка раздач...' );
+		$ids = array();
 		foreach($subsections as $subsection){
 			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);
 			$q = 0;
-			foreach($data['result'] as $id => $val){
+			if( empty( $data['result'] ) ) continue;
+			foreach( $data['result'] as $id => $val ) {
 				// только раздачи с выбранными статусами
-				if(isset($val[0]) && in_array($val[0], $status)){
-					$ids[] = $id;
+				if( !empty( $val ) && in_array( $val[0], $status ) ) {
+					if( count( $val ) < 3 ) throw new Exception( "Error: Недостаточно элементов в ответе." );
+					switch( $get ) {
+						case 'ids':
+							$ids[] = $id;
+							break;
+						case 'status':
+							$ids[$id] = $val[0];
+							break;
+						case 'seeders':
+							$ids[$id] = $val[1];
+							break;
+						case 'all':
+							$ids[$id] = implode( ',', $val ) . ",${subsection['id']}";
+							break;
+					}
 					$q++;
 				}
 			}
+			Db::query_database( "UPDATE Forums SET qt = $q, si = ${data['total_size_bytes']} WHERE id = ${subsection['id']}" );
 			Log::append ( 'Список раздач раздела № ' . $subsection['id'] . ' получен (' . $q . ' шт.).' );
 		}
 		return $ids;
@@ -169,20 +189,6 @@ class Webtlo {
 		return $ids;
 	}
 	
-	private function sum_values($arr, $index = "") {
-		$sum = 0;
-		foreach($arr as $key => $value){
-			if(preg_match("/^$index/", $key))
-				$sum += $value;
-		}
-		return $sum;
-	}
-	
-	private function sort_topics($a, $b){
-		if($a['avg'] == $b['avg']) return 0;
-		return $a['avg'] < $b['avg'] ? -1 : 1;
-	}
-	
 	// сведения о каждой раздаче
 	public function get_tor_topic_data($ids){
 		if(empty($ids)) return;
@@ -209,12 +215,16 @@ class Webtlo {
 		return $str;
 	}
 	
-	private function insert_topics($ids, &$tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders) {
+	private function insert_topics($ids, &$tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders) {
 		$ids = array_chunk ( $ids, 500 );
 		for($i = 0; $i <= $time - 1; $i++){
-			$days_fields[] = 'd'.$i;
-			$days_fields[] = 'q'.$i;
+			$avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
+			$avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
+			$avg['q'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE 1 END";
 		}
+		$sum_se = implode( '+', $avg['sum_se'] );
+		$sum_qt = implode( '+', $avg['sum_qt'] );
+		$q = implode( '+', $avg['q'] );
 		$topics = array();
 		foreach ( $ids as $value ) {
 			// получаем подробные сведения о раздачах
@@ -225,12 +235,8 @@ class Webtlo {
 			if ( $avg_seeders ) {
 				$in = str_repeat('?,', count($value) - 1) . '?';
 				$topics_old = $this->query_database(
-					"SELECT id,se,rt,ds FROM `Topics` WHERE id IN ($in)",
-					$value, true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC
-				);
-				$seeders = $this->query_database(
-					"SELECT id," . implode(',', $days_fields) . " FROM `Seeders` WHERE id IN ($in)",
-					$value, true, PDO::FETCH_GROUP|PDO::FETCH_ASSOC
+					"SELECT Topics.id,se,rg,qt,ds,$sum_se as sum_se,$sum_qt as sum_qt,$q as q FROM Topics LEFT JOIN Seeders ON Topics.id = Seeders.id WHERE Topics.id IN ($in)",
+					$value, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
 				);
 			}
 			
@@ -246,21 +252,19 @@ class Webtlo {
 				$days = 0;
 				$sum_updates = 1;
 				$sum_seeders = $info['seeders'];
-				$avg = $sum_seeders / $sum_updates;
 				if ( isset ( $topics_old[$topic_id] ) ) {
-					// переносим старые значения
-					$days = $topics_old[$topic_id][0]['ds'];
-					if ( isset ( $seeders[$topic_id] ) ) $tmp['seeders'][$topic_id] = $seeders[$topic_id][0];
-					if ( $ud_current->diff($ud_old)->format('%d' ) > 0 ) {
-						$tmp['seeders'][$topic_id]['d'.$days % $time] = $topics_old[$topic_id][0]['se'];
-						$tmp['seeders'][$topic_id]['q'.$days % $time] = $topics_old[$topic_id][0]['rt'];
-						$tmp['seeders'][$topic_id] += array_fill_keys($days_fields, '');
-						$avg = ($this->sum_values($tmp['seeders'][$topic_id], 'd') + $sum_seeders) / ($this->sum_values($tmp['seeders'][$topic_id], 'q') + $sum_updates);
-						$days++;
+					if( empty( $topics_old[$topic_id]['rg'] ) || $topics_old[$topic_id]['rg'] == $info['reg_time'] ) {
+						// переносим старые значения
+						$days = $topics_old[$topic_id]['ds'];
+						// по прошествии дня
+						if ( !empty( $last ) && $current->diff($last)->format('%d' ) > 0 ) {
+							$days++;
+						} else {
+							$sum_updates += $topics_old[$topic_id]['qt'];
+							$sum_seeders += $topics_old[$topic_id]['se'];
+						}
 					} else {
-						$sum_updates = $topics_old[$topic_id][0]['rt'] + 1;
-						$sum_seeders = $topics_old[$topic_id][0]['se'] + $info['seeders'];
-						$avg = isset($tmp['seeders'][$topic_id]) ? ($this->sum_values($tmp['seeders'][$topic_id], 'd') + $sum_seeders) / ($this->sum_values($tmp['seeders'][$topic_id], 'q') + $sum_updates) : $sum_seeders / $sum_updates;
+						$topics_del[] = $topic_id;
 					}
 				}
 				$tmp['topics'][$topic_id]['se'] = $sum_seeders;
@@ -269,25 +273,29 @@ class Webtlo {
 				$tmp['topics'][$topic_id]['rg'] = $info['reg_time'];
 				// "0" - не храню, "1" - храню (раздаю), "-1" - храню (качаю), "-2" - из других подразделов
 				$tmp['topics'][$topic_id]['dl'] = !isset($tc_topics[$info['info_hash']]) ? 0 : (!$stored ? -2 : (empty($tc_topics[$info['info_hash']]['status']) ? -1 : 1));
-				$tmp['topics'][$topic_id]['rt'] = $sum_updates;
+				$tmp['topics'][$topic_id]['qt'] = $sum_updates;
 				$tmp['topics'][$topic_id]['ds'] = $days;
 				$tmp['topics'][$topic_id]['cl'] = isset($tc_topics[$info['info_hash']]) ? $tc_topics[$info['info_hash']]['client'] : '';
-				$tmp['topics'][$topic_id]['avg'] = $avg;
+				$tmp['topics'][$topic_id]['avg'] = !empty( $topics_old[$topic_id] )
+					? ($topics_old[$topic_id]['sum_se'] + $sum_seeders) / ($topics_old[$topic_id]['sum_qt'] + $sum_updates)
+					: $sum_seeders / $sum_updates;
 				unset($tc_topics[$info['info_hash']]);
 			}
-			
-			unset($topics_old);
-			unset($seeders);
 			unset($data);
 			
 			// формируем массив топиков для вывода на экран
 			if ( isset ( $tmp['topics'] ) ) {
-				foreach ( $tmp['topics'] as $id => &$topic ) {
-					if ( $topic['avg'] <= $rule || $topic['dl'] == -2 )
-						$topics[$id] = $topic;
+				foreach ( $tmp['topics'] as $topic_id => &$topic ) {
+					if ( $topic['avg'] <= $rule || $topic['dl'] == -2 ) {
+						$topics[$topic_id] = $topic;
+						$topics[$topic_id]['ds'] = isset( $topics_old[$topic_id]['q'] )
+							? $topics_old[$topic_id]['q']
+							: 0;
+					}
 					unset($topic['avg']);
 				}
 			}
+			unset($topics_old);
 			unset($topic);
 			
 			// пишем данные о топиках в базу
@@ -298,30 +306,27 @@ class Webtlo {
 				unset($select);
 			}
 			
-			// пишем данные о средних сидах в базу
-			if ( isset($tmp['seeders']) && $ud_current->diff($ud_old)->format('%d') > 0 ) {
-				$select = $this->prepare_insert ( $tmp['seeders'] );
-				unset($tmp['seeders']);
-				$this->query_database( "INSERT INTO temp.Seeders1 (id," . implode ( ',', $days_fields ).") $select" );
-				unset($select);
-			}
-			
 			unset($tmp);
+		}
+		
+		// удаляем перерегистрированные раздачи
+		if( !empty( $topics_del ) ) {
+			$in = implode( ',', $topics_del );
+			$this->query_database( "DELETE FROM Topics WHERE id IN ($in)" );
 		}
 		
 		return $topics;
 	}
 	
 	public function prepare_topics($ids, $tc_topics, $rule, $subsec, $avg_seeders, $time){
-		//~ if ( empty ( $ids ) ) return;
 		
 		// получаем дату предыдущего обновления
-		$last_update = $this->query_database(
+		$ud = $this->query_database(
 			"SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN
 		);
-		$ud_current = new DateTime('now');
-		$ud_old = new DateTime();
-		$ud_old->setTimestamp($last_update[0])->setTime(0, 0, 0);
+		$current = new DateTime('now');
+		$last = new DateTime();
+		$last->setTimestamp($ud[0])->setTime(0, 0, 0);
 		
 		if ( $avg_seeders ) {
 			Log::append ( 'Задействован алгоритм поиска среднего значения количества сидов...' );
@@ -331,7 +336,7 @@ class Webtlo {
 		Log::append ( 'Получение подробных сведений о раздачах...' );
 		$topics = empty ( $ids )
 			? array()
-			: $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
+			: $this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders);
 		unset($ids);
 		
 		// раздачи из других подразделов
@@ -340,36 +345,28 @@ class Webtlo {
 			$ids = $this->get_topic_id ( array_keys ( $tc_topics ) );
 			$topics += empty ( $ids )
 				? array()
-				: $this->insert_topics($ids, $tc_topics, $subsec, $ud_old, $ud_current, $time, $rule, $avg_seeders);
+				: $this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders);
 			unset($ids);
 		}
 		
 		$q = $this->query_database("SELECT COUNT() FROM temp.Topics1", array(), true, PDO::FETCH_COLUMN);
 		if ( $q[0] > 0 ) {
 			Log::append ( 'Запись в базу данных сведений о раздачах...' );
-			$this->query_database('INSERT INTO `Topics` SELECT * FROM temp.Topics1');
-			$this->query_database('DELETE FROM `Topics` WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL )');
-		}
-		
-		$q = $this->query_database("SELECT COUNT() FROM temp.Seeders1", array(), true, PDO::FETCH_COLUMN);
-		if ( $q[0] > 0 ) {
-			Log::append ( 'Запись в базу данных сведений о средних сидах...' );
-			$this->query_database('INSERT INTO `Seeders` SELECT * FROM temp.Seeders1');
-		}
-		
-		// если были отключены средние сиды
-		if ( !$avg_seeders ) {
-			$q = $this->query_database("SELECT COUNT() FROM Seeders", array(), true, PDO::FETCH_COLUMN);
-			if ( $q[0] > 0 ) {
-				$this->query_database('DELETE FROM `Seeders`');
-			}
+			$in = str_repeat( '?,', count( $subsec ) - 1 ) . '?';
+			$this->query_database("INSERT INTO Topics SELECT * FROM temp.Topics1");
+			$this->query_database("DELETE FROM Topics WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL AND ( Topics.ss IN ($in) OR Topics.dl = -2 ) )", $subsec);
 		}
 		
 		// время последнего обновления
-		$this->query_database('UPDATE `Other` SET ud = ? WHERE id = 0', array($ud_current->format('U')));
+		$this->query_database('UPDATE `Other` SET ud = ? WHERE id = 0', array($current->format('U')));
 		
 		// сортируем топики по кол-ву сидов по возрастанию
-		uasort($topics, array($this, 'sort_topics'));
+		uasort( $topics, function( $a, $b ) {
+			return $a['avg'] != $b['avg']
+				? $a['avg'] < $b['avg']
+					? -1 : 1
+				: 0;
+		});
 		
 		return $topics;
 	}
@@ -391,7 +388,6 @@ class Webtlo {
 		// временные таблицы
 		$this->query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
 		$this->query_database('CREATE TEMP TABLE Topics1 AS SELECT * FROM Topics WHERE 0 = 1');
-		$this->query_database('CREATE TEMP TABLE Seeders1 AS SELECT * FROM Seeders WHERE 0 = 1');
 		$this->query_database('CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1');
 		
 	}
@@ -424,38 +420,43 @@ class Database {
 		Log::append ( 'Получение данных о подразделах...' );
 		if(!is_array($subsec)) $subsec = explode(',', $subsec);
 		$in = str_repeat('?,', count($subsec) - 1) . '?';
-		$subsections = $this->query_database("SELECT * FROM `Forums` WHERE `id` IN ($in)", $subsec);
+		$subsections = $this->query_database("SELECT * FROM `Forums` WHERE `id` IN ($in) ORDER BY na", $subsec);
 		if(empty($subsections)) throw new Exception();
 		return $subsections;
 	}
 	
 	// ... из базы топики
-	public function get_topics($seeders, $status, $time){
+	public function get_topics( $subsec, $status, $avg_seeders, $period_seeders, $sort = 'avg' ) {
 		Log::append ( 'Получение данных о раздачах...' );
-		for($i = 0; $i <= $time - 1; $i++){
-			$days_fields['d'][] = 'd'.$i;
-			$days_fields['q'][] = 'q'.$i;
+		if( $avg_seeders ) {
+			for($i = 0; $i < $period_seeders; $i++){
+				$avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
+				$avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
+				$avg['qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE 1 END";
+			}
+			$qt = implode( '+', $avg['qt'] );
+			$sum_qt = implode( '+', $avg['sum_qt'] );
+			$sum_se = implode( '+', $avg['sum_se'] );
+			$avg = "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END";
+		} else {
+			$qt = "ds";
+			$avg = "se";
 		}
-		$avg_seeders = '(' . implode ( '+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['d'] )) . ' + (`se` * 1.) ) /
-			(' . implode('+', preg_replace('|^(.*)$|', 'CASE WHEN $1 IS "" OR $1 IS NULL THEN 0 ELSE $1 END', $days_fields['q'] )) . ' + `rt` )';
-		$topics = $this->query_database("
-			SELECT
-				`Topics`.`id`,`ss`,`na`,`hs`,`si`,`st`,`rg`,`dl`,`rt`,`ds`,`ud`,`cl`,
-				CASE
-					WHEN `ds` IS 0
-					THEN (`se` * 1.) / `rt`
-					ELSE $avg_seeders
-				END as `avg`
-			FROM
-				`Topics`
-				LEFT JOIN
-				`Seeders`
-					ON `Topics`.`id` = `Seeders`.`id`
-				LEFT JOIN `Other`
-			WHERE `avg` <= CAST(:se as REAL) AND `dl` = :dl OR `dl` = -2
-			ORDER BY `ss`, `avg`
-		", array('se' => $seeders, 'dl' => $status));
-		if(empty($topics)) throw new Exception();
+		if( is_array( $subsec ) ) $subsec = implode( ',', $subsec );
+		$topics = $this->query_database(
+			"SELECT Topics.id,ss,na,hs,si,st,rg,dl,cl,$qt as ds,$avg as avg ".
+			"FROM Topics LEFT JOIN Seeders on Seeders.id = Topics.id ".
+			"WHERE ss IN($subsec) AND dl = :dl OR dl = -2",
+			array( 'dl' => $status ), PDO::FETCH_ASSOC, true
+		);
+		// сортировка раздач
+		uasort( $topics, function( $a, $b ) use ( $sort ) {
+			return $a[$sort] != $b[$sort]
+				? $a[$sort] < $b[$sort]
+					? -1 : 1
+				: 0;
+		});
+		if( empty( $topics ) ) throw new Exception();
 		return $topics;
 	}
 	
@@ -464,12 +465,12 @@ class Database {
 		$subsections = $this->get_forums($subsec);
 		foreach($subsections as $id => $subsection){
 			$size = $this->query_database(
-				"SELECT SUM(`si`) FROM `Topics` WHERE `ss` = :id",
+				"SELECT SUM(`si`) FROM `Topics` WHERE `ss` = :id AND st IN (2,8)",
 				array('id' => $subsection['id']),
 				PDO::FETCH_COLUMN
 			);
 			$qt = $this->query_database(
-				"SELECT COUNT() FROM `Topics` WHERE `ss` = :id",
+				"SELECT COUNT() FROM `Topics` WHERE `ss` = :id AND st IN (2,8)",
 				array('id' => $subsection['id']),
 				PDO::FETCH_COLUMN
 			);
@@ -538,7 +539,8 @@ class Download {
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => 0,
-			CURLOPT_SSL_VERIFYHOST => 0
+			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 			//~ CURLOPT_CONNECTTIMEOUT => 60
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);

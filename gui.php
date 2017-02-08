@@ -2,8 +2,9 @@
 
 // вывод отчётов на главной странице
 function output_reports($subsections, $login){
+	$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
 	$pattern =
-		'<h2>Отчёты - ' . date('H:i / d.m.Y') . '</h2>'.
+		'<h2>Отчёты - ' . date('H:i / d.m.Y', $update_time[0]) . '</h2>'.
 		'<div id="reporttabs" class="report">'.
 			'<ul class="report">%%tabs%%</ul><br />'.
 			'<div id="tabs-wtlocommon" class="report">'.
@@ -176,7 +177,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 			$q = 1;
 			foreach($TT_torrents as $topic_id => &$param)
 			{
-				if(($param['dl'] == 0 || $param['dl'] == -2) && $param['ss'] == $subsection['id'])
+				if( $param['ss'] == $subsection['id'] && ( $param['dl'] == 0 && $param['avg'] <= $rule_topics || $param['dl'] == -2 ) )
 				{
 					// вывод топиков
 					$icons = ($param['ds'] >= $time || !$avg_seeders ? 'green' : ($param['ds'] >= $time / 2 ? 'yellow' : 'red'));
@@ -185,7 +186,7 @@ function output_topics($forum_url, $TT_torrents, $TT_subsections, $rule_topics, 
 							'<div id="topic_' . $param['id'] . '"><label>
 								<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$param['id'].'" subsection="'.$subsection['id'].'" size="'.$param['si'].'" hash="'.$param['hs'].'" client="'.$param['cl'].'">
 								<img title="" src="img/'.$icons.'.png" />
-								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 1).'</span>'.$keeper.
+								<a href="'.$forum_url.'/forum/viewtopic.php?t='.$param['id'].'" target="_blank">'.$param['na'].'</a>'.' ('.convert_bytes($param['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($param['avg'], 2).'</span>'.$keeper.
 							'</label></div>';
 				}
 			}

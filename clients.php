@@ -8,6 +8,7 @@ function get_tor_client_data ( $tcs ) {
 	$tc_topics = array();
 	
 	foreach($tcs as $cm => $tc) {
+		$tmp = array();
 		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
 		if($client->is_online()) {
 			$tmp = $client->getTorrents();

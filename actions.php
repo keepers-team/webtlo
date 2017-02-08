@@ -59,8 +59,8 @@ switch($_POST['m'])
 			Log::clean();
 			$db = new Database();
 			$subsections = $db->get_forums_details($TT_subsections);
-			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics, $TT_login); unset($topics);
+			$topics = $db->get_topics($TT_subsections, 1, $avg_seeders, $avg_seeders_period);
+			$reports = create_reports($subsections, $topics, $TT_login, $TT_rule_reports); unset($topics);
 			output_reports($reports, $TT_login);
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );
@@ -76,8 +76,8 @@ switch($_POST['m'])
 			$db = new Database();
 			$subsec = array_column_common($TT_subsections, 'id');
 			$subsections = $db->get_forums_details($subsec);
-			$topics = $db->get_topics($TT_rule_reports, 1, $avg_seeders_period);
-			$reports = create_reports($subsections, $topics, $TT_login); unset($topics);
+			$topics = $db->get_topics($subsec, 1, $avg_seeders, $avg_seeders_period);
+			$reports = create_reports($subsections, $topics, $TT_login, $TT_rule_reports); unset($topics);
 			$send = new Reports($forum_url, $TT_login, $TT_password);
 			$send->send_reports($api_key, $api_url, $reports, $TT_subsections);
 			echo Log::get();
@@ -92,7 +92,7 @@ switch($_POST['m'])
 			Log::clean();
 			$db = new Database();
 			$subsections = $db->get_forums($TT_subsections);
-			$topics = $db->get_topics($TT_rule_topics, 0, $avg_seeders_period);
+			$topics = $db->get_topics($TT_subsections, 0, $avg_seeders, $avg_seeders_period);
 			$keepers = $db->get_keepers();
 			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $keepers);
 		} catch (Exception $e) {

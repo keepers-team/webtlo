@@ -12,7 +12,7 @@ try {
 	Log::append( "Начат процесс регулировки раздач в торрент-клиентах..." );
 	
 	$starttime = microtime(true);
-	$filelog =  dirname(__FILE__) . "/update.log";
+	$filelog = "control.log";
 	
 	// получение настроек
 	$cfg = get_settings();

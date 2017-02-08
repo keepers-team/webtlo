@@ -156,15 +156,15 @@ function get_settings( $filename = 'config.ini' ){
 		$config['clients'][$comment]['lg'] = $ini->read("torrent-client-$i","login","");
 		$config['clients'][$comment]['pw'] = $ini->read("torrent-client-$i","password","");
 	}
-	if ( is_array( $config['clients'] ) ) {
+	if ( isset( $config['clients'] ) && is_array( $config['clients'] ) ) {
 		uksort($config['clients'], function($a, $b) {
 			return strnatcmp($a, $b);
 		});
 	}
 	
 	// подразделы
-	$config['subsections_line'] = $ini->read('sections','subsections','');
-	if(!empty($config['subsections_line'])) $subsections = explode(',', $config['subsections_line']);
+	$config['subsec'] = $ini->read('sections','subsections','');
+	if(!empty($config['subsec'])) $subsections = explode(',', $config['subsec']);
 	if(isset($subsections)){
 		foreach($subsections as $id){
 			$config['subsections'][$id]['id'] = $id;
@@ -285,9 +285,15 @@ class Log {
 	}
 	
 	public static function write ( $filelog ) {
+		$dir = dirname(__FILE__) . "/logs";
+		$result = is_writable( $dir ) || mkdir( $dir );
+		if( !$result )
+			echo "Нет или недостаточно прав для доступа к каталогу logs";
+		$filelog = "$dir/$filelog";
 		self::move ( $filelog );
 		if ( $filelog = fopen ( $filelog, "a" ) ) {
 			fwrite ( $filelog, self::get ( "\n" ) );
+			fwrite ( $filelog, " -- DONE --\n" );
 			fclose ( $filelog );
 		} else {
 			echo "Не удалось создать файл лога.";
@@ -342,14 +348,14 @@ class Proxy {
 
 class Db {
 	
-	private static $db;
+	public static $db;
 	
 	public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC){
 		self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
 		$sth = self::$db->prepare($sql);
 		if(self::$db->errorCode() != '0000') {
 			$error = self::$db->errorInfo();
-			Log::append ( 'SQL ошибка: ' . $error[2] );
+			throw new Exception( 'SQL ошибка: ' . $error[2] );
 		}
 		$sth->execute($param);
 		return $fetch ? $sth->fetchAll($pdo) : true;
@@ -364,6 +370,17 @@ class Db {
 	    );
 	    $mask = "/^$mask$/ui";
 	    return preg_match ( $mask, $value );
+	}
+	
+	public static function combine_set( $set ) {
+		foreach( $set as $id => &$value ) {
+			$value = array_map ( function ($e) {
+				return is_numeric($e) ? $e : Db::$db->quote($e);
+			}, $value);
+			$value = ( empty( $value['id'] ) ? "$id," : "" ) . implode ( ',', $value );
+		}
+		$statement = 'SELECT ' . implode (' UNION ALL SELECT ', $set);
+		return $statement;
 	}
 	
 	public static function create() {
@@ -426,14 +443,6 @@ class Db {
 			END;
 		');
 		
-		// удалить сведения о средних сидах при удалении раздачи
-		self::query_database('CREATE TRIGGER IF NOT EXISTS Seeders_delete
-			BEFORE DELETE ON Topics FOR EACH ROW
-			BEGIN
-				DELETE FROM Seeders WHERE id = OLD.id;
-			END;
-		');
-		
 		// обновить при вставке такой же записи
 		self::query_database('CREATE TRIGGER IF NOT EXISTS Forums_update
 			BEFORE INSERT ON Forums
@@ -445,52 +454,101 @@ class Db {
 			END;
 		');
 		
-		self::query_database('CREATE TRIGGER IF NOT EXISTS Topics_update
-	        BEFORE INSERT ON Topics
-	        WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
-			BEGIN
-			    UPDATE Topics SET
-					ss = NEW.ss, na = NEW.na, hs = NEW.hs, se = NEW.se,
-					si = NEW.si, st = NEW.st, rg = NEW.rg, dl = NEW.dl,
-					rt = NEW.rt, ds = NEW.ds, cl = NEW.cl
-			    WHERE id = NEW.id;
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-	
-		self::query_database('CREATE TRIGGER IF NOT EXISTS Seeders_update
-	        BEFORE INSERT ON Seeders
-	        WHEN EXISTS (SELECT id FROM Seeders WHERE id = NEW.id)
-			BEGIN
-			    UPDATE Seeders SET
-				    d0 = NEW.d0, d1 = NEW.d1, d2 = NEW.d2, d3 = NEW.d3,
-				    d4 = NEW.d4, d5 = NEW.d5, d6 = NEW.d6, d7 = NEW.d7,
-				    d8 = NEW.d8, d9 = NEW.d9, d10 = NEW.d10, d11 = NEW.d11,
-				    d12 = NEW.d12, d13 = NEW.d13, d14 = NEW.d14, d15 = NEW.d15,
-				    d16 = NEW.d16, d17 = NEW.d17, d18 = NEW.d18, d19 = NEW.d19,
-				    d20 = NEW.d20, d21 = NEW.d21, d22 = NEW.d22, d23 = NEW.d23,
-				    d24 = NEW.d24, d25 = NEW.d25, d26 = NEW.d26, d27 = NEW.d27,
-				    d28 = NEW.d28, d29 = NEW.d29,
-				    q0 = NEW.q0, q1 = NEW.q1, q2 = NEW.q2, q3 = NEW.q3,
-				    q4 = NEW.q4, q5 = NEW.q5, q6 = NEW.q6, q7 = NEW.q7,
-				    q8 = NEW.q8, q9 = NEW.q9, q10 = NEW.q10, q11 = NEW.q11,
-				    q12 = NEW.q12, q13 = NEW.q13, q14 = NEW.q14, q15 = NEW.q15,
-				    q16 = NEW.q16, q17 = NEW.q17, q18 = NEW.q18, q19 = NEW.q19,
-				    q20 = NEW.q20, q21 = NEW.q21, q22 = NEW.q22, q23 = NEW.q23,
-				    q24 = NEW.q24, q25 = NEW.q25, q26 = NEW.q26, q27 = NEW.q27,
-				    q28 = NEW.q28, q29 = NEW.q29
-			    WHERE id = NEW.id;
-			    SELECT RAISE(IGNORE);
-			END;
-		');
-		
 		// совместимость со старыми версиями базы данных
 		$version = self::query_database('PRAGMA user_version', array(), true);
+		
 		if($version[0]['user_version'] < 1){
 			self::query_database('ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1');
 			self::query_database('ALTER TABLE Topics ADD COLUMN ds INT DEFAULT 0');
 			self::query_database('ALTER TABLE Topics ADD COLUMN cl VARCHAR');
 			self::query_database('PRAGMA user_version = 1');
+		}
+		
+		if($version[0]['user_version'] < 2) {
+			self::query_database('DROP TRIGGER IF EXISTS Seeders_update');
+			self::query_database('ALTER TABLE Other ADD COLUMN se INT DEFAULT 0');
+			self::query_database('ALTER TABLE Forums ADD COLUMN qt INT');
+			self::query_database('ALTER TABLE Forums ADD COLUMN si INT');
+			self::query_database('ALTER TABLE Topics RENAME TO TopicsTemp');
+			
+			self::query_database('CREATE TABLE IF NOT EXISTS Topics (
+			    id INT PRIMARY KEY NOT NULL,
+			    ss INT,
+			    na VARCHAR,
+			    hs VARCHAR,
+			    se INT,
+			    si INT,
+			    st INT,
+			    rg INT,
+			    dl INT,
+			    qt INT,
+			    ds INT,
+			    cl VARCHAR
+			)');
+			
+			self::query_database('INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,dl,qt,ds,cl)
+				SELECT id,ss,na,hs,se,si,st,rg,dl,rt,ds,cl FROM TopicsTemp'
+			);
+			
+			self::query_database('DROP TABLE TopicsTemp');
+			
+			self::query_database('CREATE TRIGGER IF NOT EXISTS delete_seeders
+				AFTER DELETE ON Topics FOR EACH ROW
+				BEGIN
+					DELETE FROM Seeders WHERE id = OLD.id;
+				END;'
+			);
+			
+			self::query_database('CREATE TRIGGER IF NOT EXISTS insert_seeders
+				AFTER INSERT ON Topics
+				BEGIN
+					INSERT INTO Seeders (id) VALUES (NEW.id);
+				END;
+			');
+			
+			self::query_database('CREATE TRIGGER IF NOT EXISTS topic_exists
+				BEFORE INSERT ON Topics
+				WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
+				BEGIN
+					UPDATE Topics SET
+					    ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,
+					    na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,
+					    hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,
+					    se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,
+					    si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,
+					    st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,
+					    rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END,
+					    dl = CASE WHEN NEW.dl IS NULL THEN dl ELSE NEW.dl END,
+					    qt = CASE WHEN NEW.qt IS NULL THEN qt ELSE NEW.qt END,
+					    ds = CASE WHEN NEW.ds IS NULL THEN ds ELSE NEW.ds END,
+					    cl = CASE WHEN NEW.cl IS NULL THEN cl ELSE NEW.cl END
+					WHERE id = NEW.id;
+					SELECT RAISE(IGNORE);
+				END;'
+			);
+			
+			self::query_database('CREATE TRIGGER IF NOT EXISTS transfer_seeders
+				AFTER UPDATE ON Topics
+				WHEN NEW.ds <> OLD.ds
+				BEGIN
+					UPDATE Seeders SET
+						d0 = OLD.se, d1 = d0, d2 = d1, d3 = d2, d4 = d3,
+						d5 = d4, d6 = d5, d7 = d6, d8 = d7, d9 = d8,
+						d10 = d9, d11 = d10, d12 = d11, d13 = d12, d14 = d13,
+						d15 = d14, d16 = d15, d17 = d16, d18 = d17, d19 = d18,
+						d20 = d19, d21 = d20, d22 = d21, d23 = d22, d24 = d23,
+						d25 = d24, d26 = d25, d27 = d26, d28 = d27, d29 = d28,
+						q0 = OLD.qt, q1 = q0, q2 = q1, q3 = q2, q4 = q3,
+						q5 = q4, q6 = q5, q7 = q6, q8 = q7, q9 = q8,
+						q10 = q9, q11 = q10, q12 = q11, q13 = q12, q14 = q13,
+						q15 = q14, q16 = q15, q17 = q16, q18 = q17, q19 = q18,
+						q20 = q19, q21 = q20, q22 = q21, q23 = q22, q24 = q23,
+						q25 = q24, q26 = q25, q27 = q26, q28 = q27, q29 = q28
+					WHERE id = NEW.id;
+				END;'
+			);
+			
+			self::query_database('PRAGMA user_version = 2');
 		}
 	}
 	

@@ -1,6 +1,6 @@
 AddDefaultCharset UTF-8
 
-<Files *.ini>
+<Files ~ "\.(ini|db|log)$">
 	Order deny,allow
 	Deny from all
 </Files>

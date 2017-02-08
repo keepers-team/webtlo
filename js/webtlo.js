@@ -50,7 +50,7 @@
 		success: function(response) {
 			var resp = eval( '(' + response + ')' );
 			$("#topics").html(jQuery.trim(resp.topics));
-			//~ $("#log").append(resp.log);
+			$("#log").append(resp.log);
 			//~ $("#log").append(response);
 			//инициализация горизонтальных вкладок отчетов
 			var topictabs = $("#topictabs").tabs();

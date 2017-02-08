@@ -13,7 +13,7 @@ try {
 	Log::append ( "Начато обновление сведений о раздачах..." );
 	
 	$starttime = microtime(true);
-	$filelog =  dirname(__FILE__) . "/update.log";
+	$filelog = "update.log";
 	
 	// получение настроек
 	$cfg = get_settings();

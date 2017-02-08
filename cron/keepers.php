@@ -12,7 +12,7 @@ try {
 	Log::append ( "Начато обновление списка раздач других хранителей..." );
 	
 	$starttime = microtime(true);
-	$filelog =  dirname(__FILE__) . "/update.log";
+	$filelog = "keepers.log";
 	
 	// получение настроек
 	$cfg = get_settings();

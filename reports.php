@@ -1,12 +1,13 @@
 <?php
 
-function create_reports($subsections, $topics, $nick){
+function create_reports($subsections, $topics, $nick, $limit){
 	$tmp = array();
 	$max = 119000;
 	$pattern = '[spoiler="№№ %%start%% — %%end%%"]<br />[list=1]<br />[*=%%start%%]%%list%%[/list]<br />[/spoiler]<br />';
+	$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
 	$length = mb_strlen($pattern, 'UTF-8');
 	foreach($topics as $topic){
-		if($topic['dl'] == 1 && $topic['ss'] != 0){
+		if($topic['dl'] == 1 && $topic['ss'] != 0 && $topic['avg'] <= $limit){
 			if(!isset($tmp[$topic['ss']])){
 				$tmp[$topic['ss']]['start'] = 1;
 				$tmp[$topic['ss']]['lgth'] = 0;
@@ -14,7 +15,7 @@ function create_reports($subsections, $topics, $nick){
 				$tmp[$topic['ss']]['dlqt'] = 0;
 				$tmp[$topic['ss']]['qt'] = 0 ;
 			}
-			$str = '[url=viewtopic.php?t='.$topic['id'].']'.$topic['na'].'[/url] '.convert_bytes($topic['si']).' -  [color=red]'.round($topic['avg']).'[/color]';
+			$str = '[url=viewtopic.php?t='.$topic['id'].']'.$topic['na'].'[/url] '.convert_bytes($topic['si']);
 			$lgth = mb_strlen($str, 'UTF-8');
 			$current = $tmp[$topic['ss']]['lgth'] + $lgth;
 			$available = $max - $length - ($tmp[$topic['ss']]['qt'] - $tmp[$topic['ss']]['start'] + 1) * 3;
@@ -33,7 +34,7 @@ function create_reports($subsections, $topics, $nick){
 			$tmp[$topic['ss']]['dlqt']++;
 		}
 	}
-	$common = 'Актуально на: [b]' . date('d.m.Y', $topics[0]['ud']) . '[/b][br][br]<br /><br />'.
+	$common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]<br /><br />'.
 			  'Общее количество хранимых раздач: [b]%%dlqt%%[/b] шт.[br]<br />'.
 			  'Общий вес хранимых раздач: [b]%%dlsi%%<br />[hr]<br />';
 	$dlqt = 0;
@@ -48,12 +49,12 @@ function create_reports($subsections, $topics, $nick){
 		$subsection['messages'] = $tmp[$subsection['id']]['msg'];
 		$dlqt += $subsection['dlqt'] = $tmp[$subsection['id']]['dlqt'];
 		$dlsi += $subsection['dlsi'] = $tmp[$subsection['id']]['dlsi'];
-		$info = 'Актуально на: [color=darkblue]' . date('d.m.Y', $topics[0]['ud']) . '[/color][br]<br />'.
+		$info = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]<br />'.
 				'Всего хранимых раздач в подразделе: ' . $subsection['dlqt'] . ' шт. / ' . convert_bytes($subsection['dlsi']) . '<br />';
 		$subsection['messages'][0]['text'] = $info . $subsection['messages'][0]['text'];
-		$header = 'Подраздел: [url=viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.$subsection['na'].'[/u][/color][/url]'.
-				  ' [color=gray]~>[/color] [url=tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]<br /><br />'.
-				  'Актуально на: [color=darkblue]'. date('d.m.Y', $topics[0]['ud']) . '[/color][br]<br />'.
+		$header = '[url=viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.preg_replace( '|.*» ?(.*)$|', '$1', $subsection['na'] ).'[/u][/color][/url] '.
+				  '| [url=tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]<br /><br />'.
+				  'Актуально на: [color=darkblue]'. date('d.m.Y', $update_time[0]) . '[/color][br]<br />'.
 				  'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '[br]<br />'.
 				  'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]<br />'.
 				  'Количество хранителей: %%count%%<br />[hr]<br />'.
@@ -119,7 +120,8 @@ class Reports {
 			CURLOPT_SSL_VERIFYPEER => 0,
 			CURLOPT_SSL_VERIFYHOST => 0,
 			CURLOPT_URL => $url,
-			CURLOPT_POSTFIELDS => http_build_query($fields)
+			CURLOPT_POSTFIELDS => http_build_query($fields),
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);
 		curl_setopt_array($this->ch, $options);
