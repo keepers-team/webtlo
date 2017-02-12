@@ -245,6 +245,7 @@
 	
 	/* проверка введённых данных */
 	function FormConfigCheck(errors){
+		return true;
         var login = $('input[name=TT_login]').val();
         var paswd = $('input[name=TT_password]').val();
         var api = $('input[name=api_key]').val();
@@ -283,3 +284,31 @@ $("#proxy_activate").on("change", function() {
 	$(this).prop("checked") ? $("#proxy_prop").show() : $("#proxy_prop").hide();
 });
 $("#proxy_activate").change();
+
+// получение bt_key, api_key, user_id
+$("#TT_login, #TT_password").on("change", function() {
+	if( $("#TT_login").val() && $("#TT_password").val() ) {
+		if( !$("#bt_key").val() || !$("#api_key").val() || !$("#user_id").val() ) {
+			$data = $("#config").serialize();
+			$.ajax({
+				type: "POST",
+				url: "php/get_user_details.php",
+				data: { cfg:$data },
+				//~ beforeSend: function() {
+					//~ $(".user_details").prop("disabled", true);
+				//~ },
+				success: function(response) {
+					console.log(response);
+					var resp = eval("(" + response + ")");
+					$("#log").append(resp.log);
+					$("#bt_key").val(resp.bt_key);
+					$("#api_key").val(resp.api_key);
+					$("#user_id").val(resp.user_id);
+				},
+				//~ complete: function() {
+					//~ $(".user_details").prop("disabled", false);
+				//~ },
+			});
+		}
+	}
+});

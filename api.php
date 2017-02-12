@@ -26,8 +26,8 @@ class Webtlo {
 		curl_setopt_array($this->ch, array(
 		    CURLOPT_RETURNTRANSFER => 1,
 		    CURLOPT_ENCODING => "gzip",
-		    CURLOPT_SSL_VERIFYPEER => 0,
-		    CURLOPT_SSL_VERIFYHOST => 0,
+		    CURLOPT_SSL_VERIFYPEER => false,
+		    CURLOPT_SSL_VERIFYHOST => 2,
 		    CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 		    //~ CURLOPT_CONNECTTIMEOUT => 60
 		));
@@ -538,8 +538,8 @@ class Download {
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_SSL_VERIFYPEER => 0,
-			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 2,
 			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 			//~ CURLOPT_CONNECTTIMEOUT => 60
 		));
@@ -580,47 +580,15 @@ class Download {
 		$this->savedir = $savedir;
 	}
 	
-	// идентификатор пользователя
-	private function get_user_id($forum_url, $login, $paswd, &$dl_log){
-		Log::append ( 'Получение идентификатора пользователя...' );
-		$paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
-		$login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
-		curl_setopt_array($this->ch, array(CURLOPT_URL => $forum_url . '/forum/login.php',
-			CURLOPT_POSTFIELDS => http_build_query(array(
-				'login_username' => "$login", 'login_password' => "$paswd",
-				'login' => 'Вход'
-			)),
-			CURLOPT_HEADER => 1
-		));
-		$json = curl_exec($this->ch);
-		if($json === false) {
-			$dl_log = '<span class="errors">Ошибка при подключении к форуму. Обратитесь к журналу за подробностями.</span>';
-			throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
-		}
-		preg_match("/.*Set-Cookie: [^-]*-([0-9]*)/", $json, $tmp);
-		if(!ctype_digit($tmp[1])){
-			preg_match('|<title>(.*)</title>|sei', $json, $title);
-			if(!empty($title)) {
-				if($title[1] == 'rutracker.org'){
-					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $json, $text);
-					if(!empty($text))
-						Log::append ( 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.' );
-				} else {
-					Log::append ( 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.' );
-				}
-			}
-			$dl_log = '<span class="errors">Ошибка при авторизации на форуме. Обратитесь к журналу за подробностями.</span>';
-			throw new Exception( 'Получен некорректный идентификатор пользователя: "' .	(isset($tmp[1]) ? $tmp[1] : 'null') . '".');
-		}
-		return $tmp[1];
-	}
-	
 	// скачивание т-.файлов
-	public function download_torrent_files($forum_url, $login, $paswd, $topics, $retracker, &$dl_log, $passkey = "", $edit = false){
+	public function download_torrent_files($forum_url, $user_id, $topics, $retracker, &$dl_log, $passkey = "", $edit = false){
+		if( empty($user_id) ) {
+			$dl_log = "Необходимо указать в настройках авторизации \"Ключ id\".";
+			throw new Exception();
+		}
 		$q = 0; // кол-во успешно скачанных торрент-файлов
 		//~ $err = 0;
 		$starttime = microtime(true);
-		$user = $this->get_user_id($forum_url, $login, $paswd, $dl_log);
 		Log::append ( $edit
 			? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
 			: 'Выполняется скачивание торрент-файлов...'
@@ -632,7 +600,7 @@ class Download {
 		//~ $topics = array_chunk($topics, 30, true);
 		foreach($topics as $topic){
 		    curl_setopt($this->ch, CURLOPT_POSTFIELDS, http_build_query(array(
-			    'keeper_user_id' => $user,
+			    'keeper_user_id' => $user_id,
 			    'keeper_api_key' => "$this->api_key",
 			    't' => $topic['id'],
 			    'add_retracker_url' => $retracker

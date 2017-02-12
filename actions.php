@@ -109,7 +109,7 @@ switch($_POST['m'])
 			$topics = $_POST['topics']; // массив из идентификаторов топиков для скачивания
 			$dl = new Download($api_key);
 			$dl->create_directories($savedir, $savesubdir, $TT_subsections, $TT_rule_topics, $dir_torrents, $edit, $dl_log);
-			$dl->download_torrent_files($forum_url, $TT_login, $TT_password, $topics, $retracker, $dl_log, $passkey, $edit);
+			$dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $dl_log, $passkey, $edit);
 			echo json_encode(array('log' => Log::get(), 'dl_log' => $dl_log));
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );

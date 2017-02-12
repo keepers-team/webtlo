@@ -39,8 +39,9 @@ function create_reports($subsections, $topics, $nick, $limit){
 			  'Общий вес хранимых раздач: [b]%%dlsi%%<br />[hr]<br />';
 	$dlqt = 0;
 	$dlsi = 0;
+	$exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', "" ) );
 	foreach($subsections as &$subsection){
-		if(!isset($tmp[$subsection['id']])) continue;
+		if( !isset($tmp[$subsection['id']]) || in_array($subsection['id'], $exclude) ) continue;
 		if($tmp[$subsection['id']]['lgth'] != 0){
 			$text = str_replace('%%start%%', $tmp[$subsection['id']]['start'], $pattern);
 			$text = str_replace('%%end%%', $tmp[$subsection['id']]['qt'], $text);
@@ -71,55 +72,25 @@ function create_reports($subsections, $topics, $nick, $limit){
 class Reports {
 	
 	protected $ch;
-	protected $uid;
 	protected $login;
-	protected $paswd;
-	protected $cookie;
 	protected $forum_url;
 	
 	public function __construct($forum_url, $login, $paswd){
 		include_once dirname(__FILE__) . '/php/phpQuery.php';
-		$this->paswd = mb_convert_encoding($paswd, 'Windows-1251', 'UTF-8');
-		$this->login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
+		$this->login = $login;
 		$this->forum_url = $forum_url;
+		UserDetails::$forum_url = $forum_url;
+		UserDetails::get_cookie( $login, $paswd );
 		$this->ch = curl_init();
-		$this->get_cookie();
-	}
-	
-	private function get_cookie(){
-		$data = $this->make_request(
-			$this->forum_url . '/forum/login.php',
-			array('login_username' => "$this->login", 'login_password' => "$this->paswd", 'login' => 'Вход'),
-			array(CURLOPT_HEADER => 1)
-		);
-		preg_match("|.*Set-Cookie: [^-]*-([0-9]*)|", $data, $uid);
-		preg_match("|.*Set-Cookie: ([^;]*);.*|", $data, $cookie);
-		if(!isset($uid[1]) || !isset($cookie[1])){
-			preg_match('|<title>(.*)</title>|sei', $data, $title);
-			if(!empty($title)) {
-				if($title[1] == 'rutracker.org'){
-					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $data, $text);
-					if(!empty($text))
-						Log::append ( 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.' );
-				} else {
-					Log::append ( 'Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.' );
-				}
-			}
-			throw new Exception( 'Не удалось авторизоваться на форуме.' );
-		}
-		$this->uid = $uid[1];
-		$this->cookie = $cookie[1];
-		curl_setopt_array($this->ch, array(
-			CURLOPT_HEADER => 0, CURLOPT_COOKIE => "$this->cookie"
-		));
 	}
 	
 	private function make_request($url, $fields = array(), $options = array()){
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
-			CURLOPT_SSL_VERIFYPEER => 0,
-			CURLOPT_SSL_VERIFYHOST => 0,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 2,
 			CURLOPT_URL => $url,
+			CURLOPT_COOKIE => UserDetails::$cookie,
 			CURLOPT_POSTFIELDS => http_build_query($fields),
 			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
 		));
@@ -129,18 +100,6 @@ class Reports {
 		if($data === false)
 			throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
 		return $data;
-	}
-	
-	private function get_form_token(){
-		$data = $this->make_request(
-			$this->forum_url . '/forum/profile.php',
-			array('mode' => 'viewprofile', 'u' => $this->uid)
-		);
-		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
-		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script:first'), $form_token);
-		if(!isset($form_token[1]))
-			throw new Exception( 'Не получен form_token.' );
-		return $form_token[1];
 	}
 	
 	// поиск темы со списком
@@ -192,30 +151,32 @@ class Reports {
 		return false;
 	}
 	
-	private function send_message($mode, $message, $form_token, $topic_id, $post_id = "", $subject = ""){
+	private function send_message($mode, $message, $topic_id, $post_id = "", $subject = ""){
 		$message = str_replace('<br />', '', $message);
 		$message = str_replace('[br]', "\n", $message);
+		// получение form_token
+		if( empty(UserDetails::$form_token) ) UserDetails::get_form_token();
 		$data = $this->make_request(
 			$this->forum_url . '/forum/posting.php',
 			array(
 				't' => $topic_id,
-				'mode' => "$mode",
+				'mode' => $mode,
 				'p' => $post_id,
 				'subject' => mb_convert_encoding("$subject", 'Windows-1251', 'UTF-8'),
 				'submit_mode' => "submit",
-				'form_token' => "$form_token",
+				'form_token' => UserDetails::$form_token,
 				'message' => mb_convert_encoding("$message", 'Windows-1251', 'UTF-8')
 			)
 		);
 		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 		$error = $html->find('div.msg')->text();
 		if(!empty($error)){
-			Log::append ( $error . '(' . $topic_id . ')' );
+			Log::append ( $error . ' (' . $topic_id . ').' );
 			return;
 		}
 		$post_id = $html->find('div.mrg_16 > a')->attr('href');
 		if(empty($post_id)){
-			Log::append ( $html->find('div.mrg_16')->text() . '(' . $topic_id . ')' );
+			Log::append ( $html->find('div.mrg_16')->text() . ' (' . $topic_id . ').' );
 			return;
 		}
 		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
@@ -230,11 +191,10 @@ class Reports {
 		foreach($data as $data){
 			$links[$data['id']] = preg_replace('/.*?([0-9]*)$/', '$1', $data['ln']);
 		}
-		// получение form_token
-		$form_token = $this->get_form_token();
+		$send_exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', "" ) );
 		// отправка отчётов по каждому подразделу
 		foreach($subsections as &$subsection){
-			if(!isset($subsection['messages'])) continue;
+			if( !isset($subsection['messages']) || in_array($subsection['id'], $send_exclude) ) continue;
 			if(empty($links[$subsection['id']])){
 				Log::append( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка на список, выполняется автоматический поиск темы...' );
 				$links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
@@ -242,6 +202,7 @@ class Reports {
 					Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не удалось найти тему со списком, пропускаем...' );
 					continue;
 				}
+				TIniFileEx::write( $subsection['id'], 'link', $links[$subsection['id']] );
 			}
 			$i = 0; // +30
 			$j = 0; // количество своих сообщений
@@ -324,8 +285,7 @@ class Reports {
 				);
 				// отправка сообщения с шапкой
 				$this->send_message(
-					'editpost', $subsection['header'], $form_token,
-					$links[$subsection['id']], $post_author, '[Список] ' . $subsection['na']
+					'editpost', $subsection['header'], $links[$subsection['id']], $post_author, '[Список] ' . $subsection['na']
 				);
 			}
 			unset($keepers);
@@ -336,11 +296,10 @@ class Reports {
 				if(empty($message['id'])){
 					Log::append ( 'Вставка дополнительного ' . $q . '-ого сообщения для подраздела № ' . $subsection['id'] . '...' );
 					$message['id'] = $this->send_message(
-						'reply', '[spoiler]' . $q . str_repeat('?', 119981 - count($q)) . '[/spoiler]',
-						$form_token, $links[$subsection['id']]
+						'reply', '[spoiler]' . $q . str_repeat('?', 119981 - count($q)) . '[/spoiler]', $links[$subsection['id']]
 					);
 					$q++;
-					usleep(1000);
+					usleep(1500);
 				}
 			}
 			unset($message);
@@ -351,27 +310,29 @@ class Reports {
 				if(!empty($message['id'])){
 					Log::append ( 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...' );
 					$this->send_message(
-						'editpost',	empty($message['text']) ? 'резерв' : $message['text'],
-						$form_token, $links[$subsection['id']], $message['id']
+						'editpost',	empty($message['text']) ? 'резерв' : $message['text'], $links[$subsection['id']], $message['id']
 					);
 				}
 			}
 		}
+		TIniFileEx::updateFile();
 		unset($subsection);
 		// отправка сводного отчёта
-		Log::append ( 'Отправка сводного отчёта...' );
-		$data = $this->make_request(
-			$this->forum_url . '/forum/search.php',
-			array('uid' => $this->uid, 't' => 4275633, 'dm' => 1)
-		);
-		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
-		$common_post = $html->find('.row1:first');
-		unset($html);
-		$post_id = empty($common_post) ? "" : preg_replace('/.*?([0-9]*)$/', '$1', pq($common_post)->find('.txtb')->attr('href'));
-		$this->send_message(
-			empty($post_id) ? 'reply' : 'editpost',
-			$common, $form_token, 4275633, $post_id
-		);
+		$send_common = TIniFileEx::read( 'reports', 'common', 1 );
+		if( $send_common ) {
+			Log::append ( 'Отправка сводного отчёта...' );
+			$data = $this->make_request(
+				$this->forum_url . '/forum/search.php',
+				array('uid' => UserDetails::$uid, 't' => 4275633, 'dm' => 1)
+			);
+			$html = phpQuery::newDocumentHTML($data, 'UTF-8');
+			$common_post = $html->find('.row1:first');
+			unset($html);
+			$post_id = empty($common_post) ? "" : preg_replace('/.*?([0-9]*)$/', '$1', pq($common_post)->find('.txtb')->attr('href'));
+			$this->send_message(
+				empty($post_id) ? 'reply' : 'editpost', $common, 4275633, $post_id
+			);
+		}
 	}
 	
 	public function search_keepers ( $subsections ){
@@ -384,6 +345,7 @@ class Reports {
 					Log::append( 'Не удалось найти тему со списком для подраздела № ' . $subsection['id'] );
 					continue;
 				}
+				TIniFileEx::write( $subsection['id'], 'link', $subsection['ln'] );
 			}
 			$ln = preg_replace('/.*?([0-9]*)$/', '$1', $subsection['ln']);
 			$i = 0;
@@ -420,6 +382,7 @@ class Reports {
 				$i += 30;
 			}
 		}
+		TIniFileEx::updateFile();
 		return $keepers;
 	}
 	

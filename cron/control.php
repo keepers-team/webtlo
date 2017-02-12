@@ -16,7 +16,6 @@ try {
 	
 	// получение настроек
 	$cfg = get_settings();
-	Proxy::options( $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
 	
 	// получение данных от т.-клиентов
 	$tc_topics = get_tor_client_data( $cfg['clients'] );

@@ -1,73 +1,83 @@
 ﻿<?php
 
-if (!defined('_BR_'))		//*.ini file access, http://develstudio.ru/php-orion/articles/rabotaem-s-fajlami-ini-v-php
+include_once dirname(__FILE__) . '/php/log.php';
+include_once dirname(__FILE__) . '/php/user_details.php';
+
+// http://develstudio.ru/php-orion/articles/rabotaem-s-fajlami-ini-v-php
+if (!defined('_BR_'))
 	define('_BR_',chr(13).chr(10));
+
 class TIniFileEx {
-    public $filename;
-    public $arr;
-    function __construct($file = false){
-        if ($file)
-            $this->loadFromFile($file);
+	
+    protected static $rcfg;
+    protected static $wcfg;
+    
+    public static $filename = "config.ini";
+    
+    public function __construct( $filename = "config.ini" ) {
+		self::$filename = $filename;
+        $this->loadFromFile();
     }
-    function initArray(){
-        $this->arr = parse_ini_file($this->filename, true);
+    
+    private static function loadFromFile() {
+		self::$rcfg = is_readable( self::$filename )
+			? parse_ini_file( self::$filename, true )
+			: array();
     }
-    function loadFromFile($file){
-        $result = true;
-        $this->filename = $file;
-        if (file_exists($file) && is_readable($file)){
-            $this->initArray();
-        }
-        else
-            $result = false;
-        return $result;
+    
+    public static function read( $section, $key, $def = "" ) {
+		if( !isset( self::$rcfg ) ) self::loadFromFile();
+        return isset( self::$rcfg[$section][$key] )
+			? self::$rcfg[$section][$key]
+			: $def;
     }
-    function read($section, $key, $def = ''){
-        if (isset($this->arr[$section][$key])){
-            return $this->arr[$section][$key];
-        } else
-            return $def;
+    
+    public static function write( $section, $key, $value ) {
+        if( is_bool( $value ) ) $value = $value ? 1 : 0;
+        self::$wcfg[$section][$key] = $value;
     }
-    function write($section, $key, $value){
-        if (is_bool($value))
-            $value = $value ? 1 : 0;
-        $this->arr[$section][$key] = $value;
-		if(true)return true;
-		else return false;
-    }
-    function eraseSection($section){
-        if (isset($this->arr[$section]))
-            unset($this->arr[$section]);
-    }
-    function deleteKey($section, $key){
-        if (isset($this->arr[$section][$key]))
-            unset($this->arr[$section][$key]);
-    }
-    function readSections(&$array){
-        $array = array_keys($this->arr);
-        return $array;
-    }
-    function readKeys($section, &$array){
-        if (isset($this->arr[$section])){
-            $array = array_keys($this->arr[$section]);
-            return $array;
-        }
-        return array();
-    }
-    function updateFile(){
-        $result = '';
-        foreach ($this->arr as $sname=>$section){
+	
+    public static function updateFile() {
+		if( empty( self::$wcfg ) ) return;
+		if( !isset( self::$rcfg ) ) self::loadFromFile();
+		self::$rcfg = array_replace_recursive( self::$rcfg, self::$wcfg );
+        $result = "";
+        foreach( self::$rcfg as $sname => $section ) {
             $result .= '[' . $sname . ']' . _BR_;
-            foreach ($section as $key=>$value){
+            foreach( $section as $key => $value ) {
                 $result .= $key .'="'.str_replace('\\', '\\\\', $value) .'"'._BR_;
             }
             $result .= _BR_;
         }
-		Log::append ( file_put_contents ( $this->filename, $result )
-			? 'Настройки успешно сохранены.'
-			: 'Ошибка при сохранении настроек.'
+		Log::append( file_put_contents( self::$filename, $result )
+			? 'Настройки успешно сохранены в файл.'
+			: 'Не удалось записать настройки в файл.'
 		);
     }
+    
+    //~ public function eraseSection( $section ) {
+        //~ if( isset( self::$wcfg[$section] ) )
+            //~ unset( self::$wcfg[$section] );
+    //~ }
+    
+    //~ public function deleteKey( $section, $key ) {
+        //~ if( isset( self::$wcfg[$section][$key] ) )
+            //~ unset( self::$wcfg[$section][$key] );
+    //~ }
+    
+    //~ public function readSections( &$array ) {
+        //~ $array = array_keys( self::$rcfg );
+        //~ return $array;
+    //~ }
+    
+    //~ public function readKeys( $section, &$array ) {
+        //~ if( isset( self::$rcfg[$section] ) ) {
+            //~ $array = array_keys( self::$rcfg[$section] );
+            //~ return $array;
+        //~ }
+        //~ return array();
+    //~ }
+    
 }
 
 function write_config($filename, $cfg, $subsections, $tcs){
@@ -113,7 +123,7 @@ function write_config($filename, $cfg, $subsections, $tcs){
 			if(isset($subsec['cl'])) $ini->write($subsec['id'],'client',!empty($subsec['cl']) ? $subsec['cl'] : '');
 			if(isset($subsec['lb'])) $ini->write($subsec['id'],'label',$subsec['lb']);
 			if(isset($subsec['fd'])) $ini->write($subsec['id'],'data-folder',$subsec['fd']);
-			if(isset($subsec['ln'])) $ini->write($subsec['id'],'link',$subsec['ln']);
+			if( !empty($subsec['ln']) ) $ini->write( $subsec['id'],'link',$subsec['ln'] );
 		}
 		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
 	}
@@ -122,15 +132,16 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	if(isset($dir_torrents)) $ini->write('curators','dir_torrents',$dir_torrents);
 	if(isset($passkey)) $ini->write('curators','user_passkey',$passkey);
 	
-	if(isset($TT_login) && $TT_login != '') $ini->write('torrent-tracker','login',$TT_login);
-	if(isset($TT_password) && $TT_password != '') $ini->write('torrent-tracker','password',$TT_password);
-	if(isset($bt_key) && $bt_key != '') $ini->write('torrent-tracker','bt_key',$bt_key);
-	if(isset($api_key) && $api_key != '') $ini->write('torrent-tracker','api_key',$api_key);
-	if(isset($api_url) && $api_url != '') $ini->write('torrent-tracker','api_url',$api_url);
-	if(isset($forum_url) && $forum_url != '') $ini->write('torrent-tracker','forum_url',$forum_url);
-	if(isset($TT_rule_topics) && $TT_rule_topics != '') $ini->write('sections','rule_topics',$TT_rule_topics);
-	if(isset($TT_rule_reports) && $TT_rule_reports != '') $ini->write('sections','rule_reports',$TT_rule_reports);
-	if(isset($avg_seeders_period) && $avg_seeders_period != '') $ini->write('sections','avg_seeders_period',$avg_seeders_period);
+	if( !empty( $TT_login ) ) $ini->write( 'torrent-tracker', 'login', $TT_login );
+	if( !empty( $TT_password ) ) $ini->write( 'torrent-tracker', 'password', $TT_password );
+	if( !empty( $user_id ) ) $ini->write( 'torrent-tracker', 'user_id', $user_id );
+	if( !empty( $bt_key ) ) $ini->write( 'torrent-tracker', 'bt_key', $bt_key );
+	if( !empty( $api_key ) ) $ini->write( 'torrent-tracker', 'api_key', $api_key );
+	if( !empty( $api_url ) ) $ini->write( 'torrent-tracker', 'api_url', $api_url );
+	if( !empty( $forum_url ) ) $ini->write( 'torrent-tracker', 'forum_url', $forum_url );
+	if( !empty( $TT_rule_topics ) ) $ini->write( 'sections', 'rule_topics', $TT_rule_topics );
+	if( !empty( $TT_rule_reports ) ) $ini->write( 'sections', 'rule_reports', $TT_rule_reports );
+	if( !empty( $avg_seeders_period ) ) $ini->write( 'sections', 'avg_seeders_period', $avg_seeders_period );
 	if(isset($savedir)) $ini->write('download','savedir',$savedir);
 	$ini->write('download','savesubdir',isset($savesubdir) ? 1 : 0);
 	$ini->write('sections', 'avg_seeders',isset($avg_seeders) ? 1 : 0);
@@ -209,6 +220,7 @@ function get_settings( $filename = 'config.ini' ){
 	$config['bt_key'] = $ini->read('torrent-tracker','bt_key','');
 	$config['api_key'] = $ini->read('torrent-tracker','api_key','');
 	$config['api_url'] = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
+	$config['user_id'] = $ini->read('torrent-tracker','user_id','');
 	$config['forum_url'] = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
 	
 	// загрузки
@@ -219,6 +231,23 @@ function get_settings( $filename = 'config.ini' ){
 	// кураторы
 	$config['dir_torrents'] = $ini->read('curators','dir_torrents','C:\Temp\\');
 	$config['user_passkey'] = $ini->read('curators','user_passkey','');
+	
+	// установка настроек прокси
+	Proxy::options( $config['proxy_activate'], $config['proxy_type'], $config['proxy_address'], $config['proxy_auth'] );
+	
+	// получение bt_key, api_key, user_id
+	if( !empty($config['tracker_login']) && !empty($config['tracker_paswd']) ) {
+		if( empty($config['bt_key']) || empty($config['api_key']) || empty($config['user_id']) ) {
+			UserDetails::get_details( $config['forum_url'], $config['tracker_login'], $config['tracker_paswd'] );
+			$ini->write( 'torrent-tracker', 'bt_key', UserDetails::$bt );
+			$ini->write( 'torrent-tracker', 'api_key', UserDetails::$api );
+			$ini->write( 'torrent-tracker', 'user_id', UserDetails::$uid );
+			$ini->updateFile();
+			$config['bt_key'] = UserDetails::$bt;
+			$config['api_key'] = UserDetails::$api;
+			$config['user_id'] = UserDetails::$uid;
+		}
+	}
 	
 	return $config;
 	
@@ -264,60 +293,10 @@ function array_column_common(array $input, $columnKey, $indexKey = null) {
 	return $array;
 }
 
-// получить текущую дату
-function get_now_datetime() {
-	return date('d.m.Y H:i:s') . ' ';
-}
-
-// ведение общего лога
-class Log {
-	
-	private static $log;
-	
-	public static function append ( $message = "" ) {
-		if ( !empty ( $message ) )
-			self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
-	}
-	
-	public static function get ( $break = '<br />' ) {
-		if ( !empty ( self::$log ) )
-			return implode ( $break, self::$log ) . $break;
-	}
-	
-	public static function write ( $filelog ) {
-		$dir = dirname(__FILE__) . "/logs";
-		$result = is_writable( $dir ) || mkdir( $dir );
-		if( !$result )
-			echo "Нет или недостаточно прав для доступа к каталогу logs";
-		$filelog = "$dir/$filelog";
-		self::move ( $filelog );
-		if ( $filelog = fopen ( $filelog, "a" ) ) {
-			fwrite ( $filelog, self::get ( "\n" ) );
-			fwrite ( $filelog, " -- DONE --\n" );
-			fclose ( $filelog );
-		} else {
-			echo "Не удалось создать файл лога.";
-		}
-	}
-	
-	private static function move ( $filelog ) {
-		// переименовываем файл лога, если он больше 5 Мб
-		if ( file_exists($filelog) && filesize($filelog) >= 5242880 ) {
-			if ( !rename ( $filelog, preg_replace ( '|.log$|', '.1.log', $filelog ) ) )
-				echo "Не удалось переименовать файл лога.";
-		}
-	}
-	
-	public static function clean () {
-		self::$log = array();
-	}
-	
-}
-
 // установка параметров прокси
 class Proxy {
 	
-	public static $proxy;
+	public static $proxy = array();
 	
 	protected static $auth;
 	protected static $type;

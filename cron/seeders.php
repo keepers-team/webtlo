@@ -17,7 +17,6 @@ try {
 	
 	// получение настроек
 	$cfg = get_settings();
-	Proxy::options( $cfg['proxy_activate'], $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
 	
 	// если выключены средние сиды
 	if( !$cfg['avg_seeders'] )

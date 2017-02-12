@@ -45,7 +45,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.1</title>
+		<title>web-TLO-0.9.2.2</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
@@ -104,21 +104,25 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<div>
 									<label>
 										Логин:
-										<input name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
+										<input id="TT_login" name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
 									</label>
 									<label>
 										Пароль:
-										<input name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
+										<input id="TT_password" name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
 									</label>
 								</div>																			
 								<div>
 									<label>
 										Ключ bt:
-										<input name="bt_key" class="myinput" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
+										<input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
 									</label>
 									<label>
 										Ключ api:
-										<input name="api_key" class="myinput" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
+										<input id="api_key" name="api_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
+									</label>
+									<label>
+										Ключ id:
+										<input id="user_id" name="user_id" class="myinput user_details" type="text" size="24" title="Идентификатор пользователя" value="<?php echo $cfg['user_id'] ?>" />
 									</label>
 								</div>
 							</div>
