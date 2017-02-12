@@ -10,7 +10,7 @@ body {
 	width: 100%;
 }
 
-a, button, menu, input, textarea, select {
+a, h2, h3, button, menu, input, textarea, select {
 /*
 	text-decoration: none;
 */
@@ -65,6 +65,7 @@ sub {
 	margin: 10px 20px 0 20px;
 }
 
+/* fix widgets ui */
 ul.menu.ui-tabs-nav {
 	background: #fff;
 	border: 0;
@@ -82,6 +83,14 @@ ul.menu.ui-tabs-nav li:first-child {
 
 li.menu.ui-tabs-active {
 	border-bottom: .055em solid #fff;
+}
+
+.ui-widget.ui-widget-content {
+	border: 1px solid #aaaaaa;
+}
+
+.ui-spinner-input {
+	padding: 0;
 }
 
 /* content */

@@ -45,12 +45,12 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.0</title>
-		<script src="jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
-		<script src="jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
-		<script src="jquery-ui-1.10.3.custom/development-bundle/external/jquery.mousewheel.js"></script>
+		<title>web-TLO-0.9.2.1</title>
+		<script src="jquery-ui-1.12.1/jquery.js"></script>
+		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
-		<link rel="stylesheet" href="jquery-ui-1.10.3.custom/css/smoothness/jquery-ui-1.10.3.custom.css" />
+		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 	</head>
 	<body>
