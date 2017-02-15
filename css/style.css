@@ -159,6 +159,11 @@ li.menu.ui-tabs-active {
 	margin: 0 50px 0 0;
 }
 
+#settings .flex {
+	display: flex;
+	margin: 0 0 10px 0;
+}
+
 label:hover {
 	cursor: pointer;
 }
@@ -196,26 +201,31 @@ label:hover {
 	margin: 10px 0;
 }
 
-#list-tcs, #list-ss {
-	width: 400px;
-	padding: 0 3px;
-}
-
-#list-tcs, #list-ss {
+#list-tcs {
 	width: 500px;
+	padding: 0 3px;
 	margin: 10px 15px 0 0;
 }
 
 #ss-add {
 	display: block;
+	width: 100%;
 	margin: 0 0 20px 0;
 }
 
-/*
-#ss-prop {
-	float: left;
+#ss-del {
+	margin: 0 0 15px 0;
 }
-*/
+
+#list-ss {
+	width: 100%;
+	margin-left: 10px;
+}
+
+.ss-prop {
+	width: 70%;
+	margin: 0 0 0 10px;
+}
 
 #ss-prop label {
 	display: block;

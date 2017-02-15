@@ -19,9 +19,9 @@ if(isset($_POST['topics'])){
 if(isset($_POST['clients'])) {
 	$clients = $_POST['clients'];
 	if(!empty($clients) && is_array($clients)){
-		foreach($clients as $client){
-			if(in_array($client['cm'], $cm))
-				$tcs[$client['cm']] = $client;
+		foreach($clients as $id => $client){
+			if(in_array($id, $cm))
+				$tcs[$id] = $client;
 		}
 	}
 }

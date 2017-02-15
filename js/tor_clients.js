@@ -25,6 +25,7 @@ if($("select[id=list-tcs] option").size() > 1) {
 
 /* изменение свойств т.-клиента */
 $("#tc-prop").on("focusout", function(){
+	cm_old = $("#list-tcs option[value="+tc_change+"]").text();
 	cm = $("#TC_comment").val();
 	cl = $("#TC_client").val();
 	ht = $("#TC_hostname").val();
@@ -33,25 +34,38 @@ $("#tc-prop").on("focusout", function(){
 	pw = $("#TC_password").val();
 	$("#list-tcs option[value="+tc_change+"]")
 		.attr("data", cm+"|"+cl+"|"+ht+"|"+pt+"|"+lg+"|"+pw)
-		.val(cm)
 		.text(cm);
+	$("#list-ss option").each(function(){
+		data = $(this).attr("data");
+		arr = data.split("|");
+		if( arr[0] == cm_old )
+			$(this).attr("data", data.replace(/^[^|]*/, cm));
+	});
+	doSortSelect("list-tcs");
 });
 
 /* удалить т.-клиент из списка */
 $("#del-tc").on("click", function() {
 	if($("#list-tcs").val()) {
 		i = $("#list-tcs :selected").index();
-		//alert(i);
 		$("#list-tcs :selected").remove();			
 		q = $("select[id=list-tcs] option").size();
 		if(q == 1) {
 			$("#tc-prop .tc-prop").val('').prop("disabled", true);
 		} else {
-			//~ i == 1 ? i++ : i;
 			q == i ? i : i++;
 			$("#list-tcs :nth-child("+i+")").prop("selected", "selected").change();
 		}
 	}
+	$("#list-ss option").each(function(){
+		data = $(this).attr("data");
+		cl = data.split("|");
+		value = $("#list-tcs option").filter(function() {
+			return $(this).text() == cl[0];
+		}).val();
+		if(!value)
+			$(this).attr("data", data.replace(/^[^|]*/, ""));
+	});
 });
 
 /* добавить т.-клиент в список */
@@ -68,24 +82,30 @@ $("#add-tc").on("click", function() {
 	pw = $("#TC_password").val();
 	if($("#list-tcs").val()) {
 		num_new = 0;
+		q = 1;
 		$("#list-tcs option").each(function(){
 			val = $(this).val();
-			nm_tmp = val.replace(/\d*$/, '');
-			num_tmp = val.replace(nm_tmp, '');
+			q = val > q ? val : q;
+			data = $(this).attr("data");
+			data = data.split("|");
+			nm_tmp = data[0].replace(/\d*$/, '');
+			num_tmp = data[0].replace(nm_tmp, '');
 			zero_tmp = num_tmp.replace(/[^0].*/, '');
 			if((nm_tmp == nm) && (parseInt(num_tmp) > num_new) && (zero == zero_tmp)) {
 				num_new = num_tmp;
-			}			
+			}
 		});
 		num_new++;
+		q++;
 		cm_new = nm+'|'+zero+'|'+num_new;
 		cm_new = (cm.length < cm_new.length - 2 ? cm_new.replace(/\|0*\|/, zero.slice(0,-1)) : cm_new.replace(/\|/g, ''));
-		$("#list-tcs").append('<option value="'+cm_new+'" data="'+cm_new+'|'+cl+
+		$("#list-tcs").append('<option value="'+q+'" data="'+cm_new+'|'+cl+
 			'|'+ht+'|'+pt+'|'+lg+'|'+pw+'">'+cm_new+'</option>');
 	} else {
-		$("#list-tcs").append('<option value="client1" data="client1|utorrent||||">client1</option>' );
+		$("#list-tcs").append('<option value="1" data="client1|utorrent||||">client1</option>' );
 	}
-	$("#list-tcs :last").prop("selected", "selected").change();
+	$("#list-tcs [value="+q+"]").prop("selected", "selected").change();
+	doSortSelect("list-tcs");
 });
 
 /* обновление списка используемых торрент-клиентов */
@@ -95,15 +115,11 @@ function listClientsRefresh() {
 			$(this).remove();
 	});
 	$("#list-tcs option").each(function(){
-		client = $(this).val();
-		if(client != 0)
-			$("#ss-client").append('<option value="'+client+'">'+client+'</option>' );
-	});
-	$("#list-ss option").each(function(){
-		data = $(this).attr("data");
-		cl = data.split("|");
-		if(!$("#ss-client [value="+cl[2]+"]").val())
-			$(this).attr("data", data.replace("|"+cl[2]+"|", "||"));
+		id = $(this).val();
+		client = $(this).attr("data");
+		client = client.split("|");
+		if(id != 0)
+			$("#ss-client").append('<option value="'+id+'">'+client[0]+'</option>' );
 	});
 	$("#list-ss").change();
 }
@@ -113,19 +129,20 @@ $("#tc-prop").focusout(listClientsRefresh);
 
 /* получение списка т.-клиентов */
 function listTorClients(){
-	var list = [];
+	var list = {};
 	$("#list-tcs option").each(function(){
-		if($(this).val() != 0) {
+		val = $(this).val();
+		if( val != 0 ) {
 			data = $(this).attr("data");
 			data = data.split("|");
-			list.push({
-				cm: data[0],
-				cl: data[1],
-				ht: data[2],
-				pt: data[3],
-				lg: data[4],
-				pw: data[5]
-			});
+			list[val] = {
+				"cm": data[0],
+				"cl": data[1],
+				"ht": data[2],
+				"pt": data[3],
+				"lg": data[4],
+				"pw": data[5]
+			};
 		}
 	});
 	return list;

@@ -64,15 +64,20 @@ $("#topics").on("click", ".tor_add", function(){
 	}
 	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
 	tmp = ss_data.split("|");
-	if(tmp[2] == "" && tmp[2] == 0){
+	if(tmp[0] == "" && tmp[0] == 0){
 		$("#result_"+subsection).html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
 		return;
 	}
-	if(!$("#list-tcs [value="+tmp[2]+"]").val()){
-		$("#result_"+subsection).html("В настройках нет такого торрент-клиента: "+tmp[2]+"<br />");
+	value = $("#list-tcs option").filter(function() {
+		return $(this).text() == tmp[0];
+	}).val();
+	if(!value){
+		$("#result_"+subsection).html("В настройках нет такого торрент-клиента: "+tmp[0]+"<br />");
 		return;
 	}
-	cl_data = $("#list-tcs [value="+tmp[2]+"]").attr("data");
+	cl_data = $("#list-tcs option").filter(function() {
+		return $(this).text() == tmp[0];
+	}).attr("data");
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
@@ -157,7 +162,7 @@ $("#topics").on("click", ".torrent_action", function(e){
 	topics = listSelectedTopics.apply(); if(topics == '') return;
 	clients = listTorClients();
 	data = $("#list-ss [value="+subsection+"]").attr("data");
-	data = data.split("|"); label = data[3];
+	data = data.split("|"); label = data[1];
 	if(action == 'remove'){
 		$("#dialog").dialog({
 			buttons: [{ text: "Да", click: function() { remove_data = true; exec_action_for_topics.apply(button); }},

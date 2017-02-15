@@ -69,3 +69,20 @@ function makeDelay(ms){
 
 // инициализация диалога
 $('#dialog').dialog({ autoOpen: false, width: 500 });
+
+// сортировка в select
+function doSortSelect( select_id ) {
+	var sortedVals = $.makeArray($('#'+select_id+' option')).sort( function(a,b) {
+		if( $(a).val() == 0 ) return -1;
+		return $(a).text().toUpperCase() > $(b).text().toUpperCase() ? 1 : $(a).text().toUpperCase() < $(b).text().toUpperCase() ? -1 : 0 ;
+	});
+	$('#'+select_id).empty().html(sortedVals);
+}
+
+function doSortSelectByValue( select_id ) {
+	var sortedVals = $.makeArray($('#'+select_id+' option')).sort( function(a,b) {
+		if( $(a).val() == 0 ) return -1;
+		return $(a).val().toUpperCase() > $(b).val().toUpperCase() ? 1 : $(a).val().toUpperCase() < $(b).val().toUpperCase() ? -1 : 0 ;
+	});
+	$('#'+select_id).empty().html(sortedVals);
+}

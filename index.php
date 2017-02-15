@@ -12,17 +12,16 @@ $cfg = get_settings();
 	
 // торрент-клиенты
 if(isset($cfg['clients'])){
-	foreach($cfg['clients'] as $tc){
-		$tcs[] = '<option value="'.$tc['cm'].'" data="'.implode('|', $tc).'">'.$tc['cm'].'</option>';
+	foreach($cfg['clients'] as $id => $tc){
+		$tcs[] = '<option value="'.$id.'" data="'.implode('|', $tc).'">'.$tc['cm'].'</option>';
 	}
 	$tcs = implode('', $tcs);
 } else $tcs = '';
 
 // подразделы
 if(isset($cfg['subsections'])){
-	foreach($cfg['subsections'] as $id => $ss){
-		$lb = preg_replace('|.* » (.*)$|', '$1', $ss['na']);
-		$subsections[] = '<option value="'.$ss['id'].'" data="'.implode('|', $ss).'">'.$lb.'</option>';
+	foreach($cfg['subsections'] as $id => &$ss){
+		$subsections[] = '<option value="'.$id.'" data="'.implode('|', $ss).'">'.$ss['na'].'</option>';
 	}
 	$subsections = implode('', $subsections);
 } else $subsections = '';
@@ -45,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.2</title>
+		<title>web-TLO-0.9.2.3</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
@@ -223,41 +222,38 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 							</div>
 							<h2>Настройки сканируемых подразделов</h2>
 							<div>
-								<input id="ss-add" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавление нового подраздела" />
-								<div class="block-settings">											
-									<select name="list-ss" id="list-ss" size=11>
-										<option value=0 data="0" disabled>список подразделов</option>
+								<input id="ss-add" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
+								<input id="ss-del" type="button" value="Удалить" title="Удалить выбранный подраздел" />
+								<label class="flex">
+									Подраздел:
+									<select name="list-ss" id="list-ss">
 										<?php echo $subsections ?>
 									</select>
-								</div>
-								<div class="block-settings" id="ss-prop">
-									<label>
+								</label>
+								<fieldset id="ss-prop">
+									<label class="flex">
 										Индекс:
-										<input disabled id="ss-id" class="myinput ss-prop" type="text" size="10" title="Индекс подраздела" />
+										<input disabled id="ss-id" class="myinput ss-prop" type="text" title="Индекс подраздела" />
 									</label>
-									<label>
-										Название:
-										<input disabled id="ss-title" class="myinput ss-prop" type="text" size="70" title="Полное название подраздела" />
-									</label>
-									<label>
+									<label class="flex">
 										Торрент-клиент:
 										<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
-											<option value=0 disabled>не выбран</option>
+											<option value=0>не выбран</option>
 										</select>
 									</label>
-									<label>
+									<label class="flex">
 										Метка:
 										<input id="ss-label" class="myinput ss-prop" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)" />
 									</label>
-									<label>
+									<label class="flex">
 										Каталог для данных:
 										<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
 									</label>
-									<label>
+									<label class="flex">
 										Ссылка на список:
 										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
-								</div>
+								</fieldset>
 							</div>
 							<h2>Настройки управления раздачами</h2>
 							<div>

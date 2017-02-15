@@ -6,6 +6,8 @@ $("#ss-add").autocomplete({
 	source: 'php/get_list_subsections.php',
 	delay: 1000,
 	select: addSubsection
+}).on("focusout", function(){
+	$(this).val("");
 });
 
 function addSubsection(event, ui) {
@@ -18,29 +20,29 @@ function addSubsection(event, ui) {
 		if(vl == val) q = 1;
 	});
 	if(q != 1) {
-		$("#list-ss").append('<option value="'+vl+'" data="'+vl+'|'+lb+'||'+label+'||">'+label+'</option>');
-		$("#ss-prop .ss-prop").prop("disabled", false);
+		$("#list-ss").append('<option value="'+vl+'" data="|'+label+'||">'+lb+'</option>');
+		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
+		$("#ss-id").prop("disabled", true);
 		$("#list-ss :last").prop("selected", "selected").change();
 	} else {
 		$("#list-ss option[value="+vl+"]").prop("selected", "selected").change();
 	}
 	ui.item.value = '';
+	doSortSelect("list-ss");
 }
 
 /* удалить подраздел */
-$("#list-ss").on("keydown", function(e) {
-	if (e.which == 46) {
-		if($("#list-ss").val()) {
-			i = $("#list-ss :selected").index();
-			$("#list-ss :selected").remove();			
-			q = $("select[id=list-ss] option").size();
-			if(q == 1) {
-				$("#ss-prop .ss-prop").val('').prop("disabled", true);
-				$("#ss-client :first").prop("selected", "selected");
-			} else {
-				q == i ? i : i++;
-				$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
-			}
+$("#ss-del").on("click", function() {
+	if($("#list-ss").val()) {
+		i = $("#list-ss :selected").index();
+		$("#list-ss :selected").remove();
+		q = $("select[id=list-ss] option").size();
+		if(q == 0) {
+			$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
+			$("#ss-client :first").prop("selected", "selected");
+		} else {
+			q == i ? i : i++;
+			$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
 		}
 	}
 });
@@ -49,41 +51,39 @@ $("#list-ss").on("keydown", function(e) {
 var ss_change;
 
 $("#list-ss").on("change", function(){
-	val = $("#list-ss :selected").attr('data');
-	val = val.split('|');
-	$("#ss-id").prop("disabled", true);
-	$("#ss-title").prop("disabled", true);
-	$("#ss-id").val(val[0]);
-	$("#ss-title").val(val[1]);
-	if($("#ss-client [value="+val[2]+"]").val())
-		$("#ss-client [value="+val[2]+"]").prop("selected", "selected");
+	data = $("#list-ss :selected").attr("data");
+	data = data.split('|');
+	client = $("#ss-client option").filter(function() {
+		return $(this).text() == data[0];
+	}).val();
+	if( client )
+		$("#ss-client [value="+client+"]").prop("selected", "selected");
 	else
 		$("#ss-client :first").prop("selected", "selected");
-	$("#ss-label").val(val[3]);
-	$("#ss-folder").val(val[4]);
-	$("#ss-link").val(val[5]);
+	$("#ss-label").val(data[1]);
+	$("#ss-folder").val(data[2]);
+	$("#ss-link").val(data[3]);
 	ss_change = $(this).val();
+	$("#ss-id").val(ss_change);
 });
 
 /* при загрузке выбрать первый подраздел в списке */
-if($("select[id=list-ss] option").size() > 1) {
-	$("#list-ss :nth-child(2)").prop("selected", "selected").change();
+if($("select[id=list-ss] option").size() > 0) {
+	$("#list-ss :first").prop("selected", "selected").change();
 } else {
 	$("#ss-prop .ss-prop").prop("disabled", true);
 }
 
 /* изменение свойств подраздела */
 $("#ss-prop").on("focusout", function(){
-	id = $("#ss-id").val();
-	na = $("#ss-title").val();
-	cl = $("#ss-client").val();
+	cl = $("#ss-client :selected").val() != 0
+		? $("#ss-client :selected").text()
+		: "";
 	lb = $("#ss-label").val();
 	fd = $("#ss-folder").val();
 	ln = $("#ss-link").val();
 	$("#list-ss option[value="+ss_change+"]")
-		.attr("data", id+"|"+na+"|"+cl+"|"+lb+"|"+fd+"|"+ln)
-		.val(id)
-		.text(na.replace(/.* » (.*)$/, '$1'));
+		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln);
 });
 
 /* получение идентификаторов подразделов */
@@ -98,19 +98,21 @@ function listSubsections(){
 }
 
 function listDataSubsections(){
-	var list = [];
+	var list = {};
 	$("#list-ss option").each(function(){
 		if($(this).attr("data") != 0) {
+			value = $(this).val();
+			text = $(this).text();
 			data = $(this).attr("data");
 			data = data.split("|");
-			list.push({
-				id: data[0],
-				na: data[1],
-				cl: data[2],
-				lb: data[3],
-				fd: data[4],
-				ln: data[5]
-			});
+			list[value] = {
+				"id": value,
+				"na": text,
+				"cl": data[0],
+				"lb": data[1],
+				"fd": data[2],
+				"ln": data[3]
+			};
 		}
 	});
 	return list;
@@ -123,10 +125,10 @@ $(document).ready(function() {
 		var pattern = [];
 		
 		$("#list-ss option").each(function(){
-			var data = $(this).attr("data");			
-			data = data.split("|");
-			if(data[1] == ""){
-				pattern.push(data[0]);
+			text = $(this).text();
+			value = $(this).val();
+			if( text == "" ) {
+				pattern.push(value);
 			}
 		});
 		
@@ -138,12 +140,13 @@ $(document).ready(function() {
 				success: function (response) {
 					subsection = $.parseJSON(response);
 					for (var i in subsection) {
+						//~ text = $("#list-ss option[value="+subsection[i].value+"]").text();
 						data = $("#list-ss option[value="+subsection[i].value+"]").attr("data");
 						data = data.split("|");
 						label = subsection[i].label.replace(/.* » (.*)$/, '$1');
 						$("#list-ss option[value="+subsection[i].value+"]")
-							.attr("data", data[0]+'|'+subsection[i].label+'|'+data[2]+'|'+label+'|'+data[4]+'|'+data[5])
-							.text(label);
+							.attr("data", data[0]+'|'+label+'|'+data[2]+'|'+data[3])
+							.text(subsection[i].label);
 					}
 					$("#list-ss").change();
 				},

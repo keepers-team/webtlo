@@ -1,7 +1,5 @@
 <?php
 
-Db::create();
-
 class Webtlo {
 	
 	public $limit;
