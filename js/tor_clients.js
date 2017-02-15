@@ -108,6 +108,34 @@ $("#add-tc").on("click", function() {
 	doSortSelect("list-tcs");
 });
 
+// проверка доступности торрент-клиента
+$("#online-tc").on("click", function() {
+	if( $("#list-tcs").val() ) {
+		data = $("#list-tcs :selected").attr("data");
+		data = data.split("|");
+		$.ajax({
+			url: 'php/actions/tor_client_is_online.php',
+			type: 'POST',
+			context: this,
+			data: { tor_client : data },
+			beforeSend: function() {
+				$("#result-tc").text("");
+				$(this).children("img").show();
+				$(this).prop("disabled", true);
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#result-tc").html(response.status);
+			},
+			complete: function() {
+				$(this).prop("disabled", false);
+				$(this).children("img").hide();
+			},
+		});
+	}
+});
+
 /* обновление списка используемых торрент-клиентов */
 function listClientsRefresh() {
 	$("#ss-client option").each(function(){

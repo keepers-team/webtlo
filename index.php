@@ -44,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.3</title>
+		<title>web-TLO-0.9.2.4</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
@@ -170,8 +170,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 							<h2>Настройки торрент-клиентов</h2>
 							<div>
 								<p>
-									<input name="add-tc" id="add-tc" type="button" value="Добавить" />
-									<input name="del-tc" id="del-tc" type="button" value="Удалить" />
+									<input name="add-tc" id="add-tc" type="button" value="Добавить" title="Добавить новый торрент-клиент в список" />
+									<input name="del-tc" id="del-tc" type="button" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
+									<button name="online-tc" id="online-tc" type="button" title="Проверить доступность выбранного торрент-клиента в списке"><img hidden src="img/loading.gif" />Проверить</button>
+									<span id="result-tc"></span>
 								</p>
 								
 								<div class="block-settings">											

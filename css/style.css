@@ -187,6 +187,26 @@ label:hover {
 	margin-top: 15px;
 }
 
+#online-tc {
+	padding: 1px 5px;
+}
+
+#online-tc img {
+	height: 17px;
+	margin: 0 5px;
+	vertical-align: middle;
+}
+
+#result-tc {
+	margin: 0 5px;
+	font-size: small;
+}
+
+#result-tc img {
+	margin-top: -1.5px;
+	vertical-align: middle;
+}
+
 #tc-prop {
 	padding-top: 8px;
 }
