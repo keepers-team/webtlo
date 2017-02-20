@@ -10,7 +10,7 @@ body {
 	width: 100%;
 }
 
-a, h2, h3, button, menu, input, textarea, select {
+a, h2, h3, button, menu, input, textarea, select, span {
 /*
 	text-decoration: none;
 */
@@ -40,6 +40,10 @@ h3 {
 	margin: 15px 0 10px 0;
 	font-weight: bold;
 }	
+
+hr {
+	clear: both;
+}
 
 .sub_settings h3:first-child {
 	margin: 5px 0 10px 0;
@@ -101,12 +105,12 @@ li.menu.ui-tabs-active {
 }
 
 /* main */
-#btn-menu {
-	margin: 0 5px 15px 15px;
+#button_menu {
+	margin: 0 5px 10px 15px;
 	float: left;
 }
 
-#startreports:disabled, #update:disabled, .btn_cntrl button:disabled, #sendreports:disabled {
+#startreports:disabled, #update:disabled, .topics_control button:disabled, #sendreports:disabled {
 	background: #fafafa;
 	cursor: default;
 	color: #D3D3D3;
@@ -130,8 +134,8 @@ li.menu.ui-tabs-active {
 	margin: 5px 0 0 10px;
 }
 
-#topics {
-	clear: both;
+#subsections-button *, #subsections-menu * {
+	font-size: small;
 }
 
 /* settings */
@@ -281,12 +285,19 @@ label:hover {
 	color: red;
 }
 
-/* topics control */
-.btn_cntrl {
-	margin-top: 5px;
+#sub-data {
+	border: 1px solid #aaaaaa;
+	border-radius: 4px;
+	margin: 10px 0;
+	font-size: small;
 }
 
-.btn_cntrl button {
+/* topics control */
+.topics_control {
+	padding: 10px 10px 0 10px;
+}
+
+.topics_control button {
 	margin-right: 5px;
 }
 
@@ -295,11 +306,12 @@ label:hover {
 	margin:  0 5px -2.5px -5px;
 	width: 13px;
 	height: 13px;
+	display: none;
 }
 
 /* topics filter */
 .topics_filter {
-	margin: 0 -10px;
+	margin-bottom: 10px;
 /*
 	border: 1px solid #D3D3D3;
 	border-radius: 4px;
@@ -338,8 +350,12 @@ label:hover {
 }
 
 /* topics result */
-.topics_result {
-	margin-top: 15px;
+#topics_result {
+	margin: 10px;
+}
+
+#topics {
+	padding: 4.5px 10px 10px 10px;
 }
 
 .topics label * {

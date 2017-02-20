@@ -87,23 +87,6 @@ switch($_POST['m'])
 		}
 		break;
 	//------------------------------------------------------------------
-	case 'topics':
-		try {
-			Log::clean();
-			$db = new Database();
-			$subsections = $db->get_forums($TT_subsections);
-			$topics = $db->get_topics($TT_subsections, 0, $avg_seeders, $avg_seeders_period);
-			$keepers = $db->get_keepers();
-			output_topics($forum_url, $topics, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $keepers);
-		} catch (Exception $e) {
-			Log::append ( $e->getMessage() );
-			echo json_encode(array('log' => Log::get(),
-				'topics' => '<br /><div>Нет или недостаточно данных для
-				отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />'
-			));
-		}
-		break;
-	//------------------------------------------------------------------
 	case 'download':
 		try {
 			$topics = $_POST['topics']; // массив из идентификаторов топиков для скачивания
@@ -125,11 +108,12 @@ switch($_POST['m'])
 			$keepers = $reports->search_keepers($TT_subsections);
 			$db = new Database();
 			$db->set_keepers($keepers);
+			unset($keepers);
 			$webtlo = new Webtlo($api_url, $api_key);
 			$subsections = $webtlo->get_cat_forum_tree($subsec); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
-			$output = $webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders, $avg_seeders_period);
-			output_topics($forum_url, $output, $subsections, $TT_rule_topics, $avg_seeders_period, $avg_seeders, $keepers);
+			$webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders, $avg_seeders_period);
+			echo json_encode( array('log' => Log::get(), 'topics' => null ) );
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );
 			echo json_encode(array('log' => Log::get(),

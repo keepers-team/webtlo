@@ -177,7 +177,13 @@ function get_settings( $filename = 'config.ini' ){
 	
 	// подразделы
 	$config['subsec'] = $ini->read('sections','subsections','');
-	if(!empty($config['subsec'])) $subsections = explode(',', $config['subsec']);
+	if( !empty($config['subsec']) ) {
+		$subsections = explode( ',', $config['subsec'] );
+		$titles = Db::query_database(
+			"SELECT id,na FROM Forums WHERE id IN (${config['subsec']})",
+			array(), true, PDO::FETCH_KEY_PAIR
+		);
+	}
 	if(isset($subsections)){
 		foreach($subsections as $id){
 			$config['subsections'][$id]['cl'] = $ini->read("$id","client","utorrent");
@@ -185,11 +191,9 @@ function get_settings( $filename = 'config.ini' ){
 			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
 			$config['subsections'][$id]['id'] = $id;
-			$title = Db::query_database(
-				"SELECT na FROM Forums WHERE id = :id",
-				array('id' => $id), true, PDO::FETCH_COLUMN
-			);
-			$config['subsections'][$id]['na'] = $title[0];
+			$config['subsections'][$id]['na'] = isset( $titles[$id] )
+				? $titles[$id]
+				: $ini->read( "$id", "title", "$id" );
 		}
 		uasort($config['subsections'], function($a, $b){
 			return strnatcasecmp($a['na'], $b['na']);
@@ -223,7 +227,7 @@ function get_settings( $filename = 'config.ini' ){
 	$config['tracker_paswd'] = $ini->read('torrent-tracker','password','');
 	$config['bt_key'] = $ini->read('torrent-tracker','bt_key','');
 	$config['api_key'] = $ini->read('torrent-tracker','api_key','');
-	$config['api_url'] = $ini->read('torrent-tracker','api_url','http://api.rutracker.cc');
+	$config['api_url'] = $ini->read('torrent-tracker','api_url','http://api.t-ru.org');
 	$config['user_id'] = $ini->read('torrent-tracker','user_id','');
 	$config['forum_url'] = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
 	

@@ -29,7 +29,7 @@ try {
 	$webtlo = new Webtlo ( $cfg['api_url'], $cfg['api_key'] );
 	$subsections = $webtlo->get_cat_forum_tree ( $subsec );
 	$ids = $webtlo->get_subsection_data ( $subsections, $cfg['topics_status'] );
-	$output = $webtlo->prepare_topics($ids, $tc_topics, $cfg['rule_topics'], $subsec, $cfg['avg_seeders'], $cfg['avg_seeders_period']);
+	$webtlo->prepare_topics($ids, $tc_topics, $cfg['rule_topics'], $subsec, $cfg['avg_seeders'], $cfg['avg_seeders_period']);
 	
 	$endtime = microtime(true);
 	Log::append ( "Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с)." );

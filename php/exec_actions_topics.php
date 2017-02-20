@@ -81,9 +81,9 @@ try {
 						throw new Exception();
 				}
 				$ids += $hashes[$cm]['id'];
-				Log::append ( 'Действие "'.$action.'" для "'.$cm.'" выполнено ('.count($hashes[$cm]['id']).').' );
+				Log::append ( 'Действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" выполнено ('.count($hashes[$cm]['id']).').' );
 			} else {
-				Log::append ( 'Error: действие "'.$action.'" для "'.$cm.'" не выполнено.' );
+				Log::append ( 'Error: действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" не выполнено.' );
 				continue;
 			}
 		}

@@ -44,14 +44,19 @@ var lock = 0;
 
 function block_actions(){
 	if(lock == 0){
-		$(".btn-lock").prop("disabled", true);
-		$(".btn_cntrl button").prop("disabled", true);
+		$("#button_menu input, .topics_control button").prop("disabled", true);
+		$("#subsections").selectmenu("disable");
 		$("#loading").show();
 		lock = 1;
 	} else {
-		$(".btn-lock").prop("disabled", false);
-		$(".btn_cntrl button").prop("disabled", false);
-		$("#loading").hide();
+		$("#button_menu input, .topics_control button").prop("disabled", false);
+		if( $("#subsections").val() < 1 || !$("input[name=filter_status]").eq(1).prop("checked") ) {
+			$(".tor_add").prop("disabled", true);
+		} else {
+			$(".tor_stop, .tor_remove, .tor_label, .tor_start").prop("disabled", true);
+		}
+		$("#subsections").selectmenu("enable");
+		$("#loading, .loading").hide();
 		lock = 0;
 	}
 };

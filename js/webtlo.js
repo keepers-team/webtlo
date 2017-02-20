@@ -1,7 +1,7 @@
 //~ $(document).ready(function() {
 	
 	/* инициализация кнопок */
-	$("#update, #startreports, #sendreports").button();
+	$("#button_menu input, .topics_control button").button();
 	
 	// период хранения средних сидов
 	$("#avg_seeders_period").spinner({
@@ -11,7 +11,7 @@
 	});
 	
 	// фильтрация раздач, количество сидов
-	$("#TT_rule_topics, #TT_rule_reports").spinner({
+	$("#TT_rule_topics, #TT_rule_reports, .filter_rule input[type=text]").spinner({
 		min: 0,
 		step: 0.5,
 		mouseWheel: true
@@ -36,45 +36,6 @@
 	var menutabs = $( "#menutabs" ).tabs();
 	menutabs.addClass( "ui-tabs-vertical ui-helper-clearfix" ).removeClass("ui-widget-content");
 	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
-	
-	/* отображение топикоп при запуске приложения */
-	subsec = listSubsections();
-	$data = $("#config").serialize();
-	$.ajax({
-		type: "POST",
-		url: "actions.php",
-		data: { m:'topics', cfg:$data, subsec:subsec },
-		beforeSend: function() {
-			block_actions();
-		},
-		success: function(response) {
-			var resp = eval( '(' + response + ')' );
-			$("#topics").html(jQuery.trim(resp.topics));
-			$("#log").append(resp.log);
-			//~ $("#log").append(response);
-			//инициализация горизонтальных вкладок отчетов
-			var topictabs = $("#topictabs").tabs();
-			// проверка настроек
-			var errors = [];
-			$("#log").append(nowTime() + 'Проверка настроек...<br />');
-			if(!FormConfigCheck(errors))
-				$("#log").append(errors);
-			else
-				$("#log").append(nowTime() + 'Готов к работе.<br />');
-				// $("#log").append(nowTime() + 'Дата обновления сведений.<br />');
-			InitControlButtons();
-		},
-		complete: function(){
-			block_actions();
-		},
-	});
-	
-	/* инициализация кнопок управления */
-	function InitControlButtons() {
-		$(".tor_download, .tor_add, .tor_select, .tor_unselect, .torrent_action").button();
-		$(".filter_rule input[type=text]").spinner({ min: 0, mouseWheel: true, step: 0.5 });
-		$(".loading").hide();
-	}
 	
 	/* инициализация "аккордиона" для вкладки настройки */
 	$("div.sub_settings").each(function() {
@@ -228,16 +189,14 @@
 				$("#log").append(nowTime() + "Начато обновление сведений...<br />");
 			},
 			success: function(response) {
-				var resp = eval("(" + response + ")");
-				$("#log").append(resp.log);
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#topics").html(response.topics);
+				getFilteredTopics();
 				$("#log").append(nowTime() + "Обновление сведений завершено.</br>");
-				$("#topics").html(jQuery.trim(resp.topics));
-				//инициализация горизонтальных вкладок отчетов
-				var topictabs = $( "#topictabs" ).tabs();
 			},
 			complete: function() {
 				block_actions();
-				InitControlButtons();
 			},
 		});
 	});

@@ -1,6 +1,14 @@
 
 /* всё про работу с подразделами */
 
+// загрузка данных о выбранном подразделе на главной
+$("#subsections").selectmenu({
+	width: "calc(100% - 36px)",
+	change: function( event, ui ) {
+		getFilteredTopics();
+	}
+});
+
 /* добавить подраздел */
 $("#ss-add").autocomplete({
 	source: 'php/get_list_subsections.php',
@@ -21,21 +29,24 @@ function addSubsection(event, ui) {
 	});
 	if(q != 1) {
 		$("#list-ss").append('<option value="'+vl+'" data="|'+label+'||">'+lb+'</option>');
+		$("#subsections_stored").append('<option value="'+vl+'">'+lb+'</option>');
 		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
 		$("#ss-id").prop("disabled", true);
-		$("#list-ss :last").prop("selected", "selected").change();
-	} else {
-		$("#list-ss option[value="+vl+"]").prop("selected", "selected").change();
 	}
+	$("#list-ss option[value="+vl+"]").prop("selected", "selected").change();
 	ui.item.value = '';
 	doSortSelect("list-ss");
+	doSortSelect("subsections_stored");
+	$("#subsections").selectmenu("refresh");
 }
 
 /* удалить подраздел */
 $("#ss-del").on("click", function() {
-	if($("#list-ss").val()) {
+	forum_id = $("#list-ss").val();
+	if( forum_id ) {
 		i = $("#list-ss :selected").index();
 		$("#list-ss :selected").remove();
+		$("#subsections_stored [value="+forum_id+"]").remove();
 		q = $("select[id=list-ss] option").size();
 		if(q == 0) {
 			$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
@@ -44,6 +55,8 @@ $("#ss-del").on("click", function() {
 			q == i ? i : i++;
 			$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
 		}
+		$("#subsections").selectmenu("refresh");
+		getFilteredTopics();
 	}
 });
 

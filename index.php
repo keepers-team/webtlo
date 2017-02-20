@@ -44,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.4</title>
+		<title>web-TLO-0.9.2.5</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
@@ -63,13 +63,138 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 			</ul>
 			<div id="content">
 				<div id="main" class="content">
-					<div id="btn-menu">
-						<input id="update" name="update" type="button" class="btn-lock" title="Обновить сведения о раздачах" value="Обновить сведения" />
-						<input id="startreports" name="startreports" type="button" class="btn-lock" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
-						<input id="sendreports" name="sendreports" type="button" class="btn-lock" title="Отправить отчёты на форум" value="Отправить отчёты" />
+					<div id="button_menu">
+						<input id="update" name="update" type="button" title="Обновить сведения о раздачах" value="Обновить сведения" />
+						<input id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
+						<input id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум" value="Отправить отчёты" />
 					</div>
 					<img id="loading" src="img/loading.gif" title="Выполняется..." />
-					<div id="topics"></div>
+					<hr />
+					<select id="subsections">
+						<optgroup id="subsections_stored">
+							<?php echo $subsections ?>
+						</optgroup>
+						<optgroup label="Прочее">
+							<option value="0">Хранимые раздачи из других подразделов</option>
+<!--
+							<option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
+							<option value="-2">Раздачи из "чёрного списка"</option>
+-->
+						</optgroup>
+					</select>
+					<div id="sub-data">
+						<div class="topics_control">
+							<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
+							<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
+							<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img disabled class="loading" src="img/loading.gif" />Добавить</button>
+							<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)"><img disabled class="loading" src="img/loading.gif" />Метка</button>
+							<button type="button" class="tor_start torrent_action" value="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img disabled class="loading" src="img/loading.gif" />Старт</button>
+							<button type="button" class="tor_stop torrent_action" value="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img disabled class="loading" src="img/loading.gif" />Стоп</button>
+							<button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img disabled class="loading" src="img/loading.gif" />Удалить</button>
+							<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img disabled class="loading" src="img/loading.gif" />Скачать</button>
+							<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey"><img disabled class="loading" src="img/loading.gif" />Скачать с заменой Passkey</button>
+						</div>
+						<form method="post" id="topics_filter">
+							<div class="topics_filter" title="Фильтр раздач текущего подраздела">
+								<fieldset class="filter_status" title="Статусы">
+									<label>
+										<input type="radio" name="filter_status" value="1" />
+										храню<br />
+									</label>
+									<label>
+										<input type="radio" name="filter_status" value="0" checked />
+										не храню<br />
+									</label>
+									<label>
+										<input type="radio" name="filter_status" value="-1" />
+										качаю<br />
+									</label>
+									<br />
+									<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+										<input type="checkbox" name="avg_seeders_complete" />
+										"зелёные"
+									</label>
+									<br />
+									<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
+										<input type="checkbox" class="keepers" name="not_keepers" />
+										нет хранителей
+									</label>
+									<br />
+									<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+										<input type="checkbox" class="keepers" name="is_keepers" />
+										есть хранители
+									</label>
+								</fieldset>
+								<fieldset class="filter_sort" title="Сортировка">
+									<div class="filter_sort_direction">
+										<label>
+											<input type="radio" name="filter_sort_direction" value="asc" checked />
+											по возрастанию<br />
+										</label>
+										<label>
+											<input type="radio" name="filter_sort_direction" value="desc" />
+											по убыванию<br />
+										</label>
+									</div>
+									<div class="filter_sort_value">
+										<label>
+											<input type="radio" name="filter_sort" value="na" />
+											по названию<br />
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="si" />
+											по объёму<br />
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="avg" checked />
+											по количеству сидов<br />
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="rg" />
+											по дате регистрации<br />
+										</label>
+									</div>
+								</fieldset>
+								<fieldset class="filter_rule" title="Сиды">
+									<label title="Использовать интервал сидов">
+										<input type="checkbox" name="filter_interval" />
+										интервал
+									</label>
+									<div class="filter_rule_one">
+										<div class="filter_rule_direction">
+											<label>
+												<input type="radio" name="filter_rule_direction" value="1" checked />
+												не более<br />
+											</label>
+											<label>
+												<input type="radio" name="filter_rule_direction" value="0" />
+												не менее<br />
+											</label>
+										</div>
+										<div class="filter_rule">
+											<label title="Количество сидов">
+												<input type="text" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+											</label>
+										</div>
+									</div>
+									<div class="filter_rule_interval" style="display: none">
+										<label title="Начальное количество сидов">
+											от
+											<input type="text" name="filter_rule_interval[from]" size="1" value="0" />
+										</label>
+										<label title="Конечное количество сидов">
+											до
+											<input type="text" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+										</label>
+									</div>
+								</fieldset>
+							</div>
+						</form>
+						<hr />
+						<div id="topics_result">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>).</div>
+						<hr />
+						<div id="topics"></div>
+					</div>
 				</div>
 				<div id="settings" class="content">
 					<form id="config">
@@ -83,8 +208,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 										Используемый адрес форума:
 										<select name="forum_url" id="forum_url" class="myinput">
 											<option value="http://rutracker.cr" <?php echo ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") ?> >http://rutracker.cr</option>
+											<option value="http://rutracker.net" <?php echo ($cfg['forum_url'] == 'http://rutracker.net' ? "selected" : "") ?> >http://rutracker.net</option>
 											<option value="http://rutracker.org" <?php echo ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") ?> >http://rutracker.org</option>
 											<option value="https://rutracker.cr" <?php echo ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") ?> >https://rutracker.cr</option>
+											<option value="https://rutracker.net" <?php echo ($cfg['forum_url'] == 'https://rutracker.net' ? "selected" : "") ?> >https://rutracker.net</option>
 											<option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
 										</select>
 									</label>
@@ -94,8 +221,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 										Используемый адрес API:
 										<select name="api_url" id="api_url" class="myinput">
 											<option value="http://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'http://api.rutracker.cc' ? "selected" : "") ?> >http://api.rutracker.cc</option>
+											<option value="http://api.t-ru.org" <?php echo ($cfg['api_url'] == 'http://api.t-ru.org' ? "selected" : "") ?> >http://api.t-ru.org</option>
 											<option value="http://api.rutracker.org" <?php echo ($cfg['api_url'] == 'http://api.rutracker.org' ? "selected" : "") ?> >http://api.rutracker.org</option>
 											<option value="https://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'https://api.rutracker.cc' ? "selected" : "") ?> >https://api.rutracker.cc</option>
+											<option value="https://api.t-ru.org" <?php echo ($cfg['api_url'] == 'https://api.t-ru.org' ? "selected" : "") ?> >https://api.t-ru.org</option>
 											<option value="https://api.rutracker.org" <?php echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?> >https://api.rutracker.org</option>
 										</select>
 									</label>
