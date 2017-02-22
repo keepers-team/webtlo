@@ -19,6 +19,10 @@ $("#ss-add").autocomplete({
 });
 
 function addSubsection(event, ui) {
+	if( ui.item.value < 0 ) {
+		ui.item.value = '';
+		return;
+	}
 	lb = ui.item.label;
 	label = lb.replace(/.* » (.*)$/, '$1');
 	vl = ui.item.value;

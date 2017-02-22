@@ -45,6 +45,14 @@ hr {
 	clear: both;
 }
 
+input[type="text"] {
+	padding: 0 3px;
+}
+
+#ui-datepicker-div {
+	font-size: small;
+}
+
 .sub_settings h3:first-child {
 	margin: 5px 0 10px 0;
 }
@@ -312,41 +320,46 @@ label:hover {
 /* topics filter */
 .topics_filter {
 	margin-bottom: 10px;
+}
+
+.filter_block {
+	display: inline-block;
+	vertical-align: top;
+	margin: 10px 10px 0 10px;
+}
+
+.filter_block fieldset {
+	margin-bottom: 10px;
 /*
-	border: 1px solid #D3D3D3;
+	border: 1px solid #d3d3d3;
 	border-radius: 4px;
-	width: 490px;
 */
 }
 
-.topics_filter fieldset {
-	display: inline-block;
-	vertical-align: top;
-	margin-right: 15px;
+.topics_filter label {
+	display: block;
 }
 
-.topics_filter fieldset legend {
+.filter_rule fieldset {
+	margin-top: 5px;
+}
+
+.filter_rule_value {
+	margin-top: 5px;
 	text-align: center;
 }
 
-.filter_status, .filter_sort, .filter_rule {
-	padding: 8px 8px 0 8px;
+.filter_common label {
+	margin-bottom: 5px;
 }
 
-.filter_sort_direction {
-	margin-bottom: 10px;
+.date_container * {
+	vertical-align: middle;
 }
 
-.filter_rule_one, .filter_rule_interval {
-	margin: 10px 0;
-}
-
-.filter_rule_interval label {
-	margin-right: 10px;
-}
-
-.filter_rule_direction {
-	margin-bottom: 2px;
+.date_container img {
+	width: 15px;
+	margin-left: 2px;
 }
 
 /* topics result */

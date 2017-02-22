@@ -7,14 +7,16 @@ function get_tor_client_data ( $tcs ) {
 	Log::append ( 'Количество торрент-клиентов: ' . count($tcs) );
 	$tc_topics = array();
 	
-	foreach($tcs as $id => $tc) {
-		$tmp = array();
-		$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
-		if($client->is_online()) {
-			$tmp = $client->getTorrents( $id );
-			$tc_topics += $tmp;
+	if( isset($tcs) && is_array($tcs) ) {
+		foreach($tcs as $id => $tc) {
+			$tmp = array();
+			$client = new $tc['cl'] ( $tc['ht'], $tc['pt'], $tc['lg'], $tc['pw'], $tc['cm'] );
+			if($client->is_online()) {
+				$tmp = $client->getTorrents( $id );
+				$tc_topics += $tmp;
+			}
+			Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . count($tmp) );
 		}
-		Log::append ( $tc['cm'] . ' (' . $tc['cl'] . ') - получено раздач: ' . count($tmp) );
 	}
 	
 	// array ( [hash] => ( 'status' => status, 'client' => comment ) )

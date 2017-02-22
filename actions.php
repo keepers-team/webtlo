@@ -112,8 +112,8 @@ switch($_POST['m'])
 			$webtlo = new Webtlo($api_url, $api_key);
 			$subsections = $webtlo->get_cat_forum_tree($subsec); /* обновляем дерево разделов */
 			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
-			$webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders, $avg_seeders_period);
-			echo json_encode( array('log' => Log::get(), 'topics' => null ) );
+			$webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders);
+			echo json_encode( array('log' => Log::get() ) );
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );
 			echo json_encode(array('log' => Log::get(),

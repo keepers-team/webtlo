@@ -87,8 +87,8 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	$ini = new TIniFileEx($filename);
 	
 	// т.-клиенты
-	if(is_array($tcs)){
-		$q = 0;
+	$q = 0;
+	if( isset($tcs) && is_array($tcs) ) {
 		foreach($tcs as $id => $tc){
 			$q++;
 			$ini->write( "torrent-client-$q", 'id', $id );
@@ -99,8 +99,8 @@ function write_config($filename, $cfg, $subsections, $tcs){
 			if( isset($tc['lg']) ) $ini->write( "torrent-client-$q", 'login', $tc['lg'] );
 			if( isset($tc['pw']) ) $ini->write( "torrent-client-$q", 'password', $tc['pw'] );
 		}
-		$ini->write('other', 'qt', $q); // кол-во т.-клиентов
 	}
+	$ini->write('other', 'qt', $q); // кол-во т.-клиентов
 	
 	// статусы раздач
 	if(isset($topics_status)) $ini->write('sections','topics_status',implode(',', $topics_status));
@@ -141,9 +141,10 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	if( !empty( $api_key ) ) $ini->write( 'torrent-tracker', 'api_key', $api_key );
 	if( !empty( $api_url ) ) $ini->write( 'torrent-tracker', 'api_url', $api_url );
 	if( !empty( $forum_url ) ) $ini->write( 'torrent-tracker', 'forum_url', $forum_url );
-	if( !empty( $TT_rule_topics ) ) $ini->write( 'sections', 'rule_topics', $TT_rule_topics );
-	if( !empty( $TT_rule_reports ) ) $ini->write( 'sections', 'rule_reports', $TT_rule_reports );
-	if( !empty( $avg_seeders_period ) ) $ini->write( 'sections', 'avg_seeders_period', $avg_seeders_period );
+	if( is_numeric($TT_rule_topics) ) $ini->write( 'sections', 'rule_topics', $TT_rule_topics );
+	if( is_numeric($rule_date_release) ) $ini->write( 'sections', 'rule_date_release', $rule_date_release );
+	if( is_numeric($TT_rule_reports) ) $ini->write( 'sections', 'rule_reports', $TT_rule_reports );
+	if( is_numeric($avg_seeders_period) ) $ini->write( 'sections', 'avg_seeders_period', $avg_seeders_period );
 	if(isset($savedir)) $ini->write('download','savedir',$savedir);
 	$ini->write('download','savesubdir',isset($savesubdir) ? 1 : 0);
 	$ini->write('sections', 'avg_seeders',isset($avg_seeders) ? 1 : 0);
@@ -202,6 +203,7 @@ function get_settings( $filename = 'config.ini' ){
 	
 	// раздачи
 	$config['rule_topics'] = $ini->read('sections','rule_topics',3);
+	$config['rule_date_release'] = $ini->read( 'sections', 'rule_date_release', 0 );
 	$config['rule_reports'] = $ini->read('sections','rule_reports',10);
 	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
 	$config['avg_seeders_period'] = $ini->read('sections','avg_seeders_period',14);

@@ -2,23 +2,28 @@
 
 include dirname(__FILE__) . '/../common.php';
 
-Log::append ( 'Обновление списка раздач...' );
-
 try {
-	if(!isset($_POST['success']))
-		throw new Exception( 'Список не нуждается в обновлении.' );
+	
+	if( empty($_POST['success']) ) throw new Exception();
 	
 	$status = $_POST['status'];
 	$client = $_POST['client'];
+	$success = $_POST['success'];
 	
-	$update = array_chunk($_POST['success'], 500, false); // не более 500 за раз
+	$in = implode( ',', $success );
 	
-	foreach( $update as &$topics ) {
-		array_unshift($topics, $status, $client);
-		$in = str_repeat('?,', count($topics) - 1) . '?';
-		Db::query_database( "UPDATE Topics SET dl = ?, cl = ? WHERE id IN ($in)", $topics );
+	if( is_numeric($status) ) {
+		Db::query_database(
+			"UPDATE Topics SET dl = :dl, cl = :cl WHERE id IN ($in)",
+			array( 'dl' => $status, 'cl' => $client )
+		);
+	} else {
+		// удалить раздачу, если она не из хранимого подраздела
+		Db::query_database( "DELETE FROM Topics WHERE id IN ($in)" );
 	}
+	
 	echo Log::get();
+	
 } catch (Exception $e) {
 	Log::append ( $e->getMessage() );
 	echo Log::get();

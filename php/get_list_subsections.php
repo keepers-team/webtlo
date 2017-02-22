@@ -14,7 +14,6 @@ try {
 	
 	if ( empty ( $q[0] ) ) {
 		$cfg = get_settings ();
-		Proxy::options ( true, $cfg['proxy_type'], $cfg['proxy_address'], $cfg['proxy_auth'] );
 		$webtlo = new Webtlo ( $cfg['api_url'], $cfg['api_key'] );
 		$webtlo->get_cat_forum_tree ();
 	}
@@ -33,8 +32,9 @@ try {
 	echo json_encode ( $subsections );
 	
 } catch (Exception $e) {
-	//~ Log::append ( $e );
-	//~ echo json_encode ( array ( $e ) );
+	echo json_encode(array(
+		array('label' => $e->getMessage(), 'value' => -1)
+	));
 }
 
 ?>

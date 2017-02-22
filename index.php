@@ -44,9 +44,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.5</title>
+		<title>web-TLO-0.9.2.6</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
+		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
@@ -96,98 +97,121 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 						</div>
 						<form method="post" id="topics_filter">
 							<div class="topics_filter" title="Фильтр раздач текущего подраздела">
-								<fieldset class="filter_status" title="Статусы">
-									<label>
-										<input type="radio" name="filter_status" value="1" />
-										храню<br />
-									</label>
-									<label>
-										<input type="radio" name="filter_status" value="0" checked />
-										не храню<br />
-									</label>
-									<label>
-										<input type="radio" name="filter_status" value="-1" />
-										качаю<br />
-									</label>
-									<br />
-									<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-										<input type="checkbox" name="avg_seeders_complete" />
-										"зелёные"
-									</label>
-									<br />
-									<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
-										<input type="checkbox" class="keepers" name="not_keepers" />
-										нет хранителей
-									</label>
-									<br />
-									<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
-										<input type="checkbox" class="keepers" name="is_keepers" />
-										есть хранители
-									</label>
-								</fieldset>
-								<fieldset class="filter_sort" title="Сортировка">
-									<div class="filter_sort_direction">
+								<div class="filter_block ui-widget">
+									<fieldset title="Статусы">
+										<label>
+											<input type="radio" name="filter_status" value="1" />
+											храню
+										</label>
+										<label>
+											<input type="radio" name="filter_status" value="0" checked />
+											не храню
+										</label>
+										<label>
+											<input type="radio" name="filter_status" value="-1" />
+											качаю
+										</label>
+									</fieldset>
+									<fieldset>
+										<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+											<input type="checkbox" name="avg_seeders_complete" />
+											"зелёные"
+										</label>
+										<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
+											<input type="checkbox" class="keepers" name="not_keepers" />
+											нет хранителей
+										</label>
+										<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+											<input type="checkbox" class="keepers" name="is_keepers" />
+											есть хранители
+										</label>
+									</fieldset>
+								</div>
+								<div class="filter_block ui-widget" title="Сортировка">
+									<fieldset>
 										<label>
 											<input type="radio" name="filter_sort_direction" value="asc" checked />
-											по возрастанию<br />
+											по возрастанию
 										</label>
 										<label>
 											<input type="radio" name="filter_sort_direction" value="desc" />
-											по убыванию<br />
+											по убыванию
 										</label>
-									</div>
-									<div class="filter_sort_value">
+									</fieldset>
+									<fieldset>
 										<label>
 											<input type="radio" name="filter_sort" value="na" />
-											по названию<br />
+											по названию
 										</label>
 										<label>
 											<input type="radio" name="filter_sort" value="si" />
-											по объёму<br />
+											по объёму
 										</label>
 										<label>
 											<input type="radio" name="filter_sort" value="avg" checked />
-											по количеству сидов<br />
+											по количеству сидов
 										</label>
 										<label>
 											<input type="radio" name="filter_sort" value="rg" />
-											по дате регистрации<br />
+											по дате регистрации
 										</label>
-									</div>
-								</fieldset>
-								<fieldset class="filter_rule" title="Сиды">
+									</fieldset>
+								</div>
+								<div class="filter_block ui-widget" title="Поиск по фразе">
+									<fieldset>
+										<label title="Введите фразу для поиска">
+											Поиск по фразе:
+											<input type="text" name="filter_phrase" size="20"/>
+										</label>
+										<label>
+											<input type="radio" name="filter_by_phrase" value="1" checked />
+											в названии раздачи
+										</label>
+										<label>
+											<input type="radio" name="filter_by_phrase" value="0" />
+											в имени хранителя
+										</label>
+									</fieldset>
+									<fieldset class="filter_common">
+										<label title="Выберите произвольный период средних сидов">
+											Период средних сидов:
+											<input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
+										</label>
+										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
+											Дата регистрации до:
+											<input type="text" id="filter_date_release" name="filter_date_release" size="8" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
+										</label>
+									</fieldset>
+								</div>
+								<div class="filter_block filter_rule ui-widget" title="Сиды">
 									<label title="Использовать интервал сидов">
 										<input type="checkbox" name="filter_interval" />
 										интервал
 									</label>
-									<div class="filter_rule_one">
-										<div class="filter_rule_direction">
-											<label>
-												<input type="radio" name="filter_rule_direction" value="1" checked />
-												не более<br />
-											</label>
-											<label>
-												<input type="radio" name="filter_rule_direction" value="0" />
-												не менее<br />
-											</label>
-										</div>
-										<div class="filter_rule">
-											<label title="Количество сидов">
-												<input type="text" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
-											</label>
-										</div>
-									</div>
-									<div class="filter_rule_interval" style="display: none">
-										<label title="Начальное количество сидов">
+									<fieldset class="filter_rule_one">
+										<label>
+											<input type="radio" name="filter_rule_direction" value="1" checked />
+											не более
+										</label>
+										<label>
+											<input type="radio" name="filter_rule_direction" value="0" />
+											не менее
+										</label>
+										<label class="filter_rule_value" title="Количество сидов">
+											<input type="text" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+										</label>
+									</fieldset>
+									<fieldset class="filter_rule_interval" style="display: none">
+										<label class="filter_rule_value" title="Начальное количество сидов">
 											от
 											<input type="text" name="filter_rule_interval[from]" size="1" value="0" />
 										</label>
-										<label title="Конечное количество сидов">
+										<label class="filter_rule_value" title="Конечное количество сидов">
 											до
 											<input type="text" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
 										</label>
-									</div>
-								</fieldset>
+									</fieldset>
+								</div>
 							</div>
 						</form>
 						<hr />
@@ -425,6 +449,11 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
 									Предлагать для хранения раздачи с количеством сидов не более:
 									<input id="TT_rule_topics" name="TT_rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
+								</label>
+								<label class="label" title="Укажите необходимое количество дней">
+									Предлагать для хранения раздачи старше
+									<input id="rule_date_release" name="rule_date_release" type="text" size="2" value="<?php echo $cfg['rule_date_release'] ?>" />
+									дн.
 								</label>
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
 									Вносить в отчёты раздачи с количеством сидов не более:

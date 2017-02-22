@@ -126,7 +126,7 @@ function exec_action_for_topics(){
 			$("#topics_result").html(resp.result);
 			//~ $("#log").append(response);
 			if(resp.ids != null && action == 'remove'){
-				status = subsection < 1 ? '' : 0;
+				status = subsection == 0 ? '' : 0;
 				// помечаем в базе удалённые раздачи
 			    $.ajax({
 				    type: "POST",
@@ -280,8 +280,8 @@ function getFilteredTopics(){
 		data: { forum_id: forum_id, config: $config, filter: $filter },
 		success: function(response) {
 			response = $.parseJSON(response);
-			$("#log").append(response.log);
-			$("#topics").html(response.topics);
+			if( response.log ) $("#topics_result").html(response.log);
+			if( response.topics != null ) $("#topics").html(response.topics);
 			//~ $("#log").append(response);
 		},
 		beforeSend: function() {
@@ -301,6 +301,11 @@ $("#topics_filter input[type=text]").on("spin input", function() {
 });
 
 $("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").on("change", function() {
+	delay( getFilteredTopics, this );
+	showSelectedInfo( 0, 0.00 );
+});
+
+$("#filter_date_release").on("change", function() {
 	delay( getFilteredTopics, this );
 	showSelectedInfo( 0, 0.00 );
 });

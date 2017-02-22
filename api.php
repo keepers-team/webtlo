@@ -200,7 +200,7 @@ class Webtlo {
 		return $topics;
 	}
 	
-	private function insert_topics($ids, &$tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders) {
+	private function insert_topics($ids, &$tc_topics, $subsec, $last, $current, $rule, $avg_seeders) {
 		$ids = array_chunk ( $ids, 500 );
 		$topics = array();
 		foreach ( $ids as $value ) {
@@ -277,7 +277,7 @@ class Webtlo {
 		
 	}
 	
-	public function prepare_topics($ids, $tc_topics, $rule, $subsec, $avg_seeders, $time){
+	public function prepare_topics($ids, $tc_topics, $rule, $subsec, $avg_seeders){
 		
 		// создаём временные таблицы
 		Db::query_database('CREATE TEMP TABLE Topics1 AS SELECT * FROM Topics WHERE 0 = 1');
@@ -298,7 +298,7 @@ class Webtlo {
 		// раздачи из хранимых подразделов
 		Log::append ( 'Получение подробных сведений о раздачах...' );
 		if( !empty($ids) )
-			$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders);
+			$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $rule, $avg_seeders);
 		unset($ids);
 		
 		// раздачи из других подразделов
@@ -306,7 +306,7 @@ class Webtlo {
 			Log::append ( 'Поиск раздач из других подразделов...' );
 			$ids = $this->get_topic_id ( array_keys ( $tc_topics ) );
 			if( !empty($ids) )
-				$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $time, $rule, $avg_seeders);
+				$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $rule, $avg_seeders);
 			unset($ids);
 		}
 		

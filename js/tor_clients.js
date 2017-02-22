@@ -80,9 +80,9 @@ $("#add-tc").on("click", function() {
 	pt = $("#TC_port").val();
 	lg = $("#TC_login").val();
 	pw = $("#TC_password").val();
+	q = 1;
 	if($("#list-tcs").val()) {
 		num_new = 0;
-		q = 1;
 		$("#list-tcs option").each(function(){
 			val = $(this).val();
 			q = val > q ? val : q;
@@ -102,9 +102,9 @@ $("#add-tc").on("click", function() {
 		$("#list-tcs").append('<option value="'+q+'" data="'+cm_new+'|'+cl+
 			'|'+ht+'|'+pt+'|'+lg+'|'+pw+'">'+cm_new+'</option>');
 	} else {
-		$("#list-tcs").append('<option value="1" data="client1|utorrent||||">client1</option>' );
+		$("#list-tcs").append('<option value="'+q+'" data="client1|utorrent||||">client1</option>' );
 	}
-	$("#list-tcs [value="+q+"]").prop("selected", "selected").change();
+	$("#list-tcs option[value="+q+"]").prop("selected", "selected").change();
 	doSortSelect("list-tcs");
 });
 
@@ -149,7 +149,9 @@ function listClientsRefresh() {
 		if(id != 0)
 			$("#ss-client").append('<option value="'+id+'">'+client[0]+'</option>' );
 	});
-	$("#list-ss").change();
+	if($("select[id=list-ss] option").size() > 0) {
+		$("#list-ss").change();
+	}
 }
 
 $("#add-tc, #del-tc").click(listClientsRefresh);

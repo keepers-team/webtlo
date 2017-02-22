@@ -4,9 +4,15 @@
 	$("#button_menu input, .topics_control button").button();
 	
 	// период хранения средних сидов
-	$("#avg_seeders_period").spinner({
+	$("#avg_seeders_period, #filter_avg_seeders_period").spinner({
 		min: 1,
 		max: 30,
+		mouseWheel: true
+	});
+	
+	// дата релиза в настройках
+	$("#rule_date_release").spinner({
+		min: 0,
 		mouseWheel: true
 	});
 	
@@ -16,6 +22,21 @@
 		step: 0.5,
 		mouseWheel: true
 	});
+	
+	// дата релиза в фильтре
+	$.datepicker.regional["ru"];
+	$("#filter_date_release").datepicker({
+		changeMonth: true,
+		changeYear: true,
+		showOn: "both",
+		dateFormat: 'dd.mm.yy',
+		maxDate: "now",
+		buttonImage: "img/calendar.png",
+		buttonImageOnly: true,
+		buttonText: "Раскрыть календарь"
+	}).datepicker(
+		"setDate", $("#filter_date_release").val()
+	).datepicker("refresh");
 	
 	// регулировка раздач, количество пиров
 	$("#peers").spinner({
@@ -191,7 +212,6 @@
 			success: function(response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				$("#topics").html(response.topics);
 				getFilteredTopics();
 				$("#log").append(nowTime() + "Обновление сведений завершено.</br>");
 			},
@@ -257,7 +277,6 @@ $("#TT_login, #TT_password").on("change", function() {
 					//~ $(".user_details").prop("disabled", true);
 				//~ },
 				success: function(response) {
-					console.log(response);
 					var resp = eval("(" + response + ")");
 					$("#log").append(resp.log);
 					$("#bt_key").val(resp.bt_key);

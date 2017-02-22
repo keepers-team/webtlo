@@ -2,20 +2,38 @@
 
 include dirname(__FILE__) . '/../../common.php';
 
+mb_regex_encoding('UTF-8');
+
 try {
 	
 	$forum_id = $_POST['forum_id'];
-	parse_str( $_POST['filter'] );
 	parse_str( $_POST['config'] );
+	parse_str( $_POST['filter'] );
 	
-	// если введено не число
+	// некорретный ввод значений сидов
 	if( !is_numeric($filter_rule) || !is_numeric($filter_rule_interval['from']) || !is_numeric($filter_rule_interval['to']) )
-		throw new Exception( "Получено некорректное значение сидов." );
+		throw new Exception( "В фильтре введено некорректное значение сидов." );
+		
+	if( !is_numeric($filter_rule) || !is_numeric($filter_rule_interval['from']) || !is_numeric($filter_rule_interval['to']) )
+		throw new Exception( "Значение сидов в фильтре должно быть больше 0." );
+	
+	if( $filter_rule_interval['from'] > $filter_rule_interval['to'] )
+		throw new Exception( "Начальное значение сидов в фильтре должно быть меньше или равно конечному значению." );
+	
+	// некорректный период средних сидов
+	if( !is_numeric($avg_seeders_period) )
+		throw new Exception( "В фильтре введено некорректное значение для периода средних сидов." );
+	
+	// некорректная дата
+	$date_release = DateTime::createFromFormat( "d.m.Y", $filter_date_release );
+	if( !$date_release )
+		throw new Exception( "В фильтре введена некорректная дата создания релиза." );
+	$date_release->setTime(23, 59, 59);
 	
 	// если включены средние сиды
 	if( $avg_seeders ) {
 		// жёсткое ограничение на 30 дней для средних сидов
-		$avg_seeders_period = $avg_seeders_period != 0
+		$avg_seeders_period = $avg_seeders_period > 0
 			? $avg_seeders_period > 30
 				? 30
 				: $avg_seeders_period
@@ -90,24 +108,41 @@ try {
 	
 	foreach( $topics as $topic_id => $topic ) {
 		
+		// фильтрация по дате релиза
+		if( $topic['rg'] > $date_release->format('U') ) continue;
+		
+		// фильтрация по количеству сидов
 		//~ if( $forum_id > 0 ) {
 			if( isset($filter_interval) ) {
-				if( $filter_rule_interval['from'] > $topic['avg'] || $filter_rule_interval['to'] < $topic['avg'] )
-					continue;
+				if( $filter_rule_interval['from'] > $topic['avg'] || $filter_rule_interval['to'] < $topic['avg'] ) continue;
 			} else {
 				if( $filter_rule_direction ) {
-					if( $filter_rule < $topic['avg'] )
-						continue;
+					if( $filter_rule < $topic['avg'] ) continue;
 				} else {
-					if( $filter_rule > $topic['avg'] )
-						continue;
+					if( $filter_rule > $topic['avg'] ) continue;
 				}
 			}
+			
+			// фильтрация по статусу "зелёные"
 			if( $topic['ds'] < $ds ) continue;
 		//~ }
 		
+		// список других хранителей
+		$keeper = isset( $keepers[$topic['id']] )
+			? ' ~> <span title="Хранители" class="bold">' . implode( ', ', $keepers[$topic['id']] ) . '</span>'
+			: '';
+		
+		// фильтрация по фразе
+		if( !empty($filter_phrase) ) {
+			if( empty($filter_by_phrase) ) {
+				if( !mb_eregi($filter_phrase, $keeper) ) continue;
+			} else {
+				if( !mb_eregi($filter_phrase, $topic['na']) ) continue;
+			}
+		}
+		
 		$icons = ($topic['ds'] >= $avg_seeders_period || !$avg_seeders ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
-		$keeper = isset($keepers[$topic['id']]) ? ' ~> <span title="Хранители" class="bold">'.implode(', ', $keepers[$topic['id']]).'</span>' : "";
+		
 		$output .=
 			'<div id="topic_' . $topic['id'] . '"><label>
 				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
@@ -120,9 +155,7 @@ try {
 	echo json_encode( array('log' => Log::get(), 'topics' => $output) );
 	
 } catch (Exception $e) {
-	Log::append( $e->getMessage() );
-	$output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />';
-	echo json_encode( array('log' => Log::get(), 'topics' => $output) );
+	echo json_encode( array('log' => $e->getMessage(), 'topics' => null) );
 }
 
 ?>
