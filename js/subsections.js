@@ -6,7 +6,17 @@ $("#subsections").selectmenu({
 	width: "calc(100% - 36px)",
 	change: function( event, ui ) {
 		getFilteredTopics();
-	}
+		showSelectedInfo( 0, 0.00 );
+	},
+	open: function( event, ui ) {
+		active = $("#subsections-button").attr("aria-activedescendant");
+		$("#subsections-menu").closest("ul")
+		.find("div[role=option]")
+		.each( function() {
+			$(this).css({ "font-weight": "normal" });
+		});
+		$("#"+active).css({ "font-weight": "bold" });
+	},
 });
 
 /* добавить подраздел */
