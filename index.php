@@ -350,6 +350,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 												<option value="deluge" title="WebUi   plugin">Deluge</option>
 												<option value="qbittorrent">qBittorrent</option>
 												<option value="ktorrent">KTorrent</option>
+												<option value="rtorrent">rTorrent 0.9.x</option>
 											</select>
 										</label>
 									</div>

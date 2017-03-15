@@ -1088,4 +1088,148 @@ class ktorrent {
 	
 }
 
+// rTorrent 0.9.x ~ Linux
+// Added by: advers222@ya.ru
+class rtorrent {
+    // предлагается вводить ссылку полностью в веб интерфейсе
+    // потому что при нескольких клиентах вполне может меняться последняя часть (RPC2)
+    // http://localhost/RPC2
+    private static $base = "http://%s";
+
+    public $host;
+    public $port;
+    public $login;
+    public $paswd;
+    public $comment;
+
+    protected $token;
+    protected $guid;
+
+    public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "") {
+        $this->host = $host;
+        $this->port = $port;
+        $this->login = $login;
+        $this->paswd = $paswd;
+        $this->comment = $comment;
+    }
+
+    public function is_online() {
+        return $this->makeRequest("get_name") ? true : false;
+    }
+
+    // получение токена
+    private function getToken() {
+        // FIXME: Стоит делать авторизацию или не стоит?
+        // Авторизация не предусмотрена потому как у меня ее нет и тестировать не на чем. Необходимость неизвестна :-/
+        return true;
+    }
+
+    // выполнение запроса
+    function makeRequest($cmd, $param = null) {
+        // XML RPC запрос
+        $request = xmlrpc_encode_request($cmd, $param);
+        $header[] = "Content-type: text/xml";
+        $header[] = "Content-length: ".strlen($request);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, sprintf(self::$base, $this->host));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        //curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+
+        $data = curl_exec($ch);
+        if (curl_errno($ch)) {
+            Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+            return false;
+        }
+        curl_close($ch);
+        // Грязный хак для приведения ответа XML RPC к понятному для PHP
+        return xmlrpc_decode(str_replace('i8>', 'i4>', $data));
+    }
+
+    // получение списка раздач
+    public function getTorrents( $client = "" ) {
+        Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
+        $res = $this->makeRequest("d.multicall", array("main", "d.get_hash=", "d.get_state=", "d.get_complete=") );
+        // ответ в формате array(HASH, STATE active/stopped, COMPLETED)
+        foreach($res as $torrent)
+        {
+            // $status:
+            //		0 - Не скачано
+            //		1 - Скачано и активно
+            //		-1 - Скачано и остановлено
+            $status = $torrent[2]
+                // на паузе или стопе
+                ? $torrent[1]
+                    ? 1
+                    : -1
+                : 0;
+            $data[$torrent[0]]['status'] = $status;
+            $data[$torrent[0]]['client'] = $client;
+        }
+        return is_array($data) ? $data : array();
+    }
+
+    // добавить торрент
+    public function torrentAdd($filename, $savepath = "", $label = "") {
+        // TODO: Сделать добавление раздач напрямую, когда-нибудь.
+        return "Добавление торрента только через каталог слежения";
+    }
+
+    // изменение свойств торрента
+    public function setProperties($hash, $property, $value) {
+        // FIXME: Не знаю что за свойства, потому не делал
+        return "Установка свойств заблокирована.";
+    }
+
+    // изменение настроек
+    public function setSetting($setting, $value) {
+        // FIXME: Не знаю что за настройки, потому не делал
+        return "Установка настроек заблокирована.";
+    }
+
+    // установка метки
+    public function setLabel($hash, $label = "") {
+        foreach ($hash as $hash) {
+            $this->makeRequest("d.set_custom1", array($hash, $label) );
+        }
+    }
+
+    // запуск раздач
+    public function torrentStart($hash, $force = false) {
+        foreach ($hash as $hash) {
+            $this->makeRequest("d.start", $hash);
+        }
+    }
+
+    // пауза раздач
+    public function torrentPause($hash) {
+        foreach ($hash as $hash) {
+            $this->makeRequest("d.pause", $hash);
+        }
+    }
+
+    // проверить локальные данные раздач
+    public function torrentRecheck($hash) {
+        foreach ($hash as $hash) {
+            $this->makeRequest("d.check_hash", $hash);
+        }
+    }
+
+    // остановка раздач
+    public function torrentStop($hash) {
+        foreach ($hash as $hash) {
+            $this->makeRequest("d.stop", $hash);
+        }
+    }
+
+    // удаление раздач
+    public function torrentRemove($hash, $data = false) {
+        // FIXME: Не знаю стоит ли делать удаление, мне пока не нужно и страшно. Удаленного не вернешь :))
+        return "Удаление раздачи заблокировано.";
+    }
+
+}
+
 ?>
