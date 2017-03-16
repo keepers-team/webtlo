@@ -1173,8 +1173,13 @@ class rtorrent {
 
     // добавить торрент
     public function torrentAdd($filename, $savepath = "", $label = "") {
-        // TODO: Сделать добавление раздач напрямую, когда-нибудь.
-        return "Добавление торрента только через каталог слежения";
+        // TODO: Придумать, как установить метку для раздачи, потому как для установки наужно знать хеш
+        $result_ok = 0;
+        $result_fail = 0;
+        foreach($filename as $filename){
+            $this->makeRequest("load", $filename) ? $result_ok += 1 : $result_fail += 1;
+        }
+        Log::append ( 'Добавлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // изменение свойств торрента
