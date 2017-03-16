@@ -1117,13 +1117,6 @@ class rtorrent {
         return $this->makeRequest("get_name") ? true : false;
     }
 
-    // получение токена
-    private function getToken() {
-        // FIXME: Стоит делать авторизацию или не стоит?
-        // Авторизация не предусмотрена потому как у меня ее нет и тестировать не на чем. Необходимость неизвестна :-/
-        return true;
-    }
-
     // выполнение запроса
     function makeRequest($cmd, $param = null) {
         // XML RPC запрос
@@ -1173,66 +1166,74 @@ class rtorrent {
 
     // добавить торрент
     public function torrentAdd($filename, $savepath = "", $label = "") {
-        // TODO: Придумать, как установить метку для раздачи, потому как для установки наужно знать хеш
+        // TODO: Придумать, как установить метку для раздачи.
+        // TODO: Скорее всего не сработает установка метки потому что на момент
+        // TODO: запроса торрент еще не будет добавлен :-/
         $result_ok = 0;
         $result_fail = 0;
-        foreach($filename as $filename){
-            $this->makeRequest("load", $filename) ? $result_ok += 1 : $result_fail += 1;
+        foreach($filename as $fn){
+            $this->makeRequest("load", $fn['filename']) === false ? $result_fail += 1 : $result_ok += 1;
+            if ($label) {
+                $this->makeRequest("d.set_custom1", array($fn["hash"], $label) );
+            }
         }
         Log::append ( 'Добавлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
-    // изменение свойств торрента
-    public function setProperties($hash, $property, $value) {
-        // FIXME: Не знаю что за свойства, потому не делал
-        return "Установка свойств заблокирована.";
-    }
-
-    // изменение настроек
-    public function setSetting($setting, $value) {
-        // FIXME: Не знаю что за настройки, потому не делал
-        return "Установка настроек заблокирована.";
-    }
-
     // установка метки
     public function setLabel($hash, $label = "") {
+        $result_ok = 0;
+        $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.set_custom1", array($hash, $label) );
+            $this->makeRequest("d.set_custom1", array($hash, $label) ) === false ? $result_fail += 1 : $result_ok += 1;
         }
+        Log::append ( 'Установлено меток успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // запуск раздач
     public function torrentStart($hash, $force = false) {
+        $result_ok = 0;
+        $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.start", $hash);
+            $this->makeRequest("d.start", $hash) === false ? $result_fail += 1 : $result_ok += 1;
         }
+        Log::append ( 'Запущено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // пауза раздач
     public function torrentPause($hash) {
+        $result_ok = 0;
+        $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.pause", $hash);
+            $this->makeRequest("d.pause", $hash) === false ? $result_fail += 1 : $result_ok += 1;
         }
+        Log::append ( 'Приостановлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // проверить локальные данные раздач
     public function torrentRecheck($hash) {
+        $result_ok = 0;
+        $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.check_hash", $hash);
+            $this->makeRequest("d.check_hash", $hash) === false ? $result_fail += 1 : $result_ok += 1;
         }
+        Log::append ( 'Проверка файлов запущена успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // остановка раздач
     public function torrentStop($hash) {
+        $result_ok = 0;
+        $result_fail = 0;
         foreach ($hash as $hash) {
-            $this->makeRequest("d.stop", $hash);
+            $this->makeRequest("d.stop", $hash) === false ? $result_fail += 1 : $result_ok += 1;
         }
+        Log::append ( 'Остановлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);
     }
 
     // удаление раздач
     public function torrentRemove($hash, $data = false) {
         // FIXME: Не знаю стоит ли делать удаление, мне пока не нужно и страшно. Удаленного не вернешь :))
-        return "Удаление раздачи заблокировано.";
+        Log::append ("Удаление раздачи заблокировано.");
     }
 
 }
