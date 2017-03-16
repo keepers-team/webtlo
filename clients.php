@@ -1172,7 +1172,7 @@ class rtorrent {
         $result_ok = 0;
         $result_fail = 0;
         foreach($filename as $fn){
-            $this->makeRequest("load", $fn['filename']) === false ? $result_fail += 1 : $result_ok += 1;
+            $this->makeRequest("load_start", $fn['filename']) === false ? $result_fail += 1 : $result_ok += 1;
             if ($label) {
                 $this->makeRequest("d.set_custom1", array($fn["hash"], $label) );
             }
