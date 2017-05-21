@@ -152,13 +152,16 @@ function exec_action_for_topics(){
 
 $(".torrent_action").on("click", function(e){
 	var button = this;
-	remove_data = ""; force_start = "";
+	remove_data = ""; force_start = ""; label = "";
 	subsection = $("#subsections").val();
 	action = $(this).val();
 	topics = listSelectedTopics.apply(); if(topics == '') return;
 	clients = listTorClients();
-	data = $("#list-ss [value="+subsection+"]").attr("data");
-	data = data.split("|"); label = data[1];
+	if( subsection > 0 ) {
+		data = $("#list-ss [value="+subsection+"]").attr("data");
+		data = data.split("|");
+		label = data[1];
+	}
 	if(action == 'remove'){
 		$("#dialog").dialog({
 			buttons: [{ text: "Да", click: function() { remove_data = true; exec_action_for_topics.apply(button); }},

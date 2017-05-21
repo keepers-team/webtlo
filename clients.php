@@ -194,6 +194,7 @@ class utorrent {
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "") {
 		//~ $this->setSetting('dir_add_label', 1);
+		$this->setSetting('dir_active_download_flag', true);
 		if(!empty($savepath))
 			$this->setSetting('dir_active_download', urlencode($savepath));
 		foreach($filename as $file){

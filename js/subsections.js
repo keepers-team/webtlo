@@ -9,6 +9,8 @@ $("#subsections").selectmenu({
 		showSelectedInfo( 0, 0.00 );
 	},
 	open: function( event, ui ) {
+		height = $("#subsections-menu").height() >= 399 ? 400 : 'auto';
+		$("#subsections-menu").css("height", height);
 		active = $("#subsections-button").attr("aria-activedescendant");
 		$("#subsections-menu").closest("ul")
 		.find("div[role=option]")

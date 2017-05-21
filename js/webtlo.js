@@ -34,9 +34,10 @@
 		buttonImage: "img/calendar.png",
 		buttonImageOnly: true,
 		buttonText: "Раскрыть календарь"
-	}).datepicker(
-		"setDate", $("#filter_date_release").val()
-	).datepicker("refresh");
+	})
+	.datepicker("setDate", $("#filter_date_release").val())
+	.css("width", 90)
+	.datepicker("refresh");
 	
 	// регулировка раздач, количество пиров
 	$("#peers").spinner({

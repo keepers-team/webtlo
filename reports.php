@@ -75,6 +75,9 @@ class Reports {
 	protected $login;
 	protected $forum_url;
 	
+	private $months = array('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+	private $months_ru = array( 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек' );
+	
 	public function __construct($forum_url, $login, $paswd){
 		include_once dirname(__FILE__) . '/php/phpQuery.php';
 		$this->login = $login;
@@ -103,7 +106,7 @@ class Reports {
 	}
 	
 	// поиск темы со списком
-	private function search_topic_id( $title = "" ) {
+	public function search_topic_id( $title = "" ) {
 		$title = html_entity_decode( $title );
 		$search = preg_replace( '|.*» ?(.*)$|', '$1', $title );
 		if( mb_strlen( $search, 'UTF-8' ) < 3 ) return false;
@@ -149,6 +152,49 @@ class Reports {
 			$i += 50;
 		}
 		return false;
+	}
+	
+	public function search_all_stored_topics( $topic_id ) {
+		$i = 0; // +30
+		$page = 1; // количество страниц
+		$now_date = new DateTime('now');
+		$keepers = array();
+		// получение данных со страниц
+		while( $page > 0 ) {
+			$data = $this->make_request( $this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i" );
+			$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
+			$topic_main = $html->find('table#topic_main');
+			$pages = $html->find('a.pg:last')->prev();
+			if( !empty($pages) && $i == 0 )
+				$page = $html->find('a.pg:last')->prev()->text();
+			unset($html);
+			if( !empty($topic_main) ) {
+				$topic_main = pq($topic_main);
+				foreach( $topic_main->find('tbody') as $row ) {
+					$row = pq($row);
+					$post_id = $row->attr('id');
+					if( empty($post_id) ) continue;
+					$posted = $row->find('.p-link')->text();
+					$posted_since = $row->find('.posted_since')->text();
+					if( preg_match('|(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})|', $posted_since, $since) )
+						$posted = $since[0];
+					$posted = str_replace( $this->months_ru, $this->months, $posted );
+					$topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
+					// пропускаем сообщение, если оно старше 30 дней
+					if( $now_date->diff($topic_date)->format('%a') > 30 ) continue;
+					// получаем id раздач хранимых другими хранителями
+					foreach( $row->find('a.postLink') as $topic ) {
+						$topic = pq($topic);
+						if( preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href')) ) {
+							$keepers[] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
+						}
+					}
+				}
+			}
+			$page--;
+			$i += 30;
+		}
+		return $keepers;
 	}
 	
 	private function send_message($mode, $message, $topic_id, $post_id = "", $subject = ""){
@@ -223,7 +269,7 @@ class Reports {
 					$topic_main = pq($topic_main);
 					if( $i == 0 ) {
 						$nick_author = $topic_main->find('p.nick-author:first > a')->text();
-						$post_author = str_replace('post_', '', $topic_main->find('tbody:first')->attr('id'));
+						$post_author = str_replace('post_', '', $topic_main->find('tbody')->eq(1)->attr('id'));
 					}
 					foreach($topic_main->find('tbody') as $row){
 						$row = pq($row);

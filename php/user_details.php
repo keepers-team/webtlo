@@ -51,10 +51,10 @@ class UserDetails {
 		preg_match("|.*bb_session=[^-]*-([0-9]*)|", $data, $uid);
 		preg_match("|.*(bb_session=[^;]*);.*|", $data, $cookie);
 		if( empty( $uid[1] ) || empty( $cookie[1] ) ) {
-			preg_match('|<title>(.*)</title>|sei', $data, $title);
+			preg_match('|<title>(.*)</title>|si', $data, $title);
 			if(!empty($title)) {
 				if($title[1] == 'rutracker.org'){
-					preg_match('|<h4[^>]*?>(.*)</h4>|sei', $data, $text);
+					preg_match('|<h4[^>]*?>(.*)</h4>|si', $data, $text);
 					if(!empty($text))
 						Log::append ( 'Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.' );
 				} else {
@@ -89,7 +89,7 @@ class UserDetails {
 			array( CURLOPT_COOKIE => self::$cookie )
 		);
 		$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
-		preg_match("|.*form_token : '([^,]*)',.*|sei", $html->find('script:first'), $form_token);
+		preg_match("|.*form_token : '([^,]*)',.*|si", $html->find('script:first'), $form_token);
 		if( empty($form_token[1]) )
 			throw new Exception( 'Error: Не получен form_token.' );
 		self::$form_token = $form_token[1];

@@ -49,7 +49,7 @@ try {
 	// скачиваем торрент-файлы
 	$dl = new Download ( $api_key, $tmpdir );
 	$success = $dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $add_log);
-	$q = preg_replace("|.*<span[^>]*?>(.*)</span>.*|sei", '$1', $add_log); // кол-во
+	$q = preg_replace("|.*<span[^>]*?>(.*)</span>.*|si", '$1', $add_log); // кол-во
 	if ( empty ( $success ) ){
 		$add_log = 'Нет скачанных торрент-файлов для добавления их в торрент-клиент.<br />';
 		throw new Exception();

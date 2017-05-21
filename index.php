@@ -44,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.8</title>
+		<title>web-TLO-0.9.2.9</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -130,11 +130,11 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<div class="filter_block ui-widget" title="Сортировка">
 									<fieldset>
 										<label>
-											<input type="radio" name="filter_sort_direction" value="asc" checked />
+											<input type="radio" name="filter_sort_direction" value="1" checked />
 											по возрастанию
 										</label>
 										<label>
-											<input type="radio" name="filter_sort_direction" value="desc" />
+											<input type="radio" name="filter_sort_direction" value="-1" />
 											по убыванию
 										</label>
 									</fieldset>
@@ -179,7 +179,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 										</label>
 										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
 											Дата регистрации до:
-											<input type="text" id="filter_date_release" name="filter_date_release" size="8" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
+											<input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
 										</label>
 									</fieldset>
 								</div>
@@ -198,17 +198,17 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 											не менее
 										</label>
 										<label class="filter_rule_value" title="Количество сидов">
-											<input type="text" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+											<input type="text" id="filter_rule" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
 										</label>
 									</fieldset>
 									<fieldset class="filter_rule_interval" style="display: none">
 										<label class="filter_rule_value" title="Начальное количество сидов">
 											от
-											<input type="text" name="filter_rule_interval[from]" size="1" value="0" />
+											<input type="text" id="filter_rule_from" name="filter_rule_interval[from]" size="1" value="0" />
 										</label>
 										<label class="filter_rule_value" title="Конечное количество сидов">
 											до
-											<input type="text" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+											<input type="text" id="filter_rule_to" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
 										</label>
 									</fieldset>
 								</div>

@@ -84,24 +84,14 @@ try {
 		$param, true, PDO::FETCH_ASSOC
 	);
 	
+	// сортировка раздач
+	$topics = natsort_field( $topics, $filter_sort, $filter_sort_direction );
+	
 	// данные о других хранителях
 	$keepers = Db::query_database(
 		"SELECT topic_id,nick FROM Keepers WHERE topic_id IN (SELECT id FROM Topics WHERE ss = :forum_id)",
 		array( 'forum_id' => $forum_id ), true, PDO::FETCH_COLUMN|PDO::FETCH_GROUP
 	);
-	
-	// сортировка раздач
-	uasort( $topics, function( $a, $b ) use ( $filter_sort, $filter_sort_direction ) {
-		$a[$filter_sort] = strtoupper($a[$filter_sort]);
-		$b[$filter_sort] = strtoupper($b[$filter_sort]);
-		return $a[$filter_sort] != $b[$filter_sort]
-			? $a[$filter_sort] < $b[$filter_sort]
-				? $filter_sort_direction == 'asc'
-					? -1 : 1
-				: ( $filter_sort_direction == 'asc' ? 1 : -1 )
-			: 0;
-	});
-	
 	
 	$q = 1;
 	$output = "";

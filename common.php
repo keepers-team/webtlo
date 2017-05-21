@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 include_once dirname(__FILE__) . '/php/log.php';
 include_once dirname(__FILE__) . '/php/db.php';
@@ -171,9 +171,7 @@ function get_settings( $filename = 'config.ini' ){
 		$config['clients'][$id]['pw'] = $ini->read("torrent-client-$i","password","");
 	}
 	if ( isset( $config['clients'] ) && is_array( $config['clients'] ) ) {
-		uksort($config['clients'], function($a, $b) {
-			return strnatcasecmp($a, $b);
-		});
+		$config['clients'] = natsort_field( $config['clients'], 'cm' );
 	}
 	
 	// подразделы
@@ -196,9 +194,7 @@ function get_settings( $filename = 'config.ini' ){
 				? $titles[$id]
 				: $ini->read( "$id", "title", "$id" );
 		}
-		uasort($config['subsections'], function($a, $b){
-			return strnatcasecmp($a['na'], $b['na']);
-		});
+		$config['subsections'] = natsort_field( $config['subsections'], 'na' );
 	}
 	
 	// раздачи
@@ -301,6 +297,20 @@ function array_column_common(array $input, $columnKey, $indexKey = null) {
 		}
 	}
 	return $array;
+}
+
+function natsort_field( array $input, $field, $direct = 1 ) {
+	uasort( $input, function( $a, $b ) use ( $field, $direct ) {
+		if( is_string($a[$field]) )
+			$a[$field] = mb_ereg_replace( 'ё', 'е', mb_strtolower($a[$field], 'UTF-8') );
+		if( is_string($b[$field]) )
+			$b[$field] = mb_ereg_replace( 'ё', 'е', mb_strtolower($b[$field], 'UTF-8') );
+		return ( $a[$field] != $b[$field]
+			? $a[$field] < $b[$field]
+				? -1 : 1
+			: 0 ) * $direct;
+	});
+	return $input;
 }
 
 // установка параметров прокси

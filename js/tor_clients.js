@@ -84,7 +84,7 @@ $("#add-tc").on("click", function() {
 	if($("#list-tcs").val()) {
 		num_new = 0;
 		$("#list-tcs option").each(function(){
-			val = $(this).val();
+			val = parseInt($(this).val());
 			q = val > q ? val : q;
 			data = $(this).attr("data");
 			data = data.split("|");

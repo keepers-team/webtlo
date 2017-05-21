@@ -555,15 +555,15 @@ class Download {
 				}
 				
 				// проверка "торрент не зарегистрирован" и т.д.
-				preg_match('|<center.*>(.*)</center>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
+				preg_match('|<center.*>(.*)</center>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
 				if(!empty($forbidden)) {
-					preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $title);
+					preg_match('|<title>(.*)</title>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $title);
 					Log::append ( 'Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').' );
 					break;
 				}
 				
 				// проверка "ошибка 503" и т.д.
-				preg_match('|<title>(.*)</title>|sei', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
+				preg_match('|<title>(.*)</title>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
 					Log::append ( 'Error: ' . $error[1] . ' (' . $topic['id'] . ').' );
 					Log::append ( 'Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').' );
