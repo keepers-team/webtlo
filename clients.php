@@ -596,7 +596,8 @@ class deluge {
 	        CURLOPT_POSTFIELDS => '{ "method" : "auth.login" , "params" : [ "' . $this->paswd . '" ], "id" : 2 }',
 	        CURLOPT_RETURNTRANSFER => true,
 	        CURLOPT_ENCODING => 'gzip',
-	        CURLOPT_HEADER => true
+	        CURLOPT_HEADER => true,
+	        CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
         ));
         $output = curl_exec($ch);
         if($output === false) {
@@ -608,7 +609,41 @@ class deluge {
         preg_match("|Set-Cookie: ([^;]+);|i", $output, $sid);
         if(!empty($sid)) {
             $this->sid = $sid[1];
-            return true;
+			$webUIIsConnected = $this->makeRequest(json_encode(array(
+				'method' => 'web.connected',
+				'params' => array(),
+				'id' => 7
+			)))['result'];
+			if (!$webUIIsConnected){
+				$firstHost = $this->makeRequest(json_encode(array(
+					'method' => 'web.get_hosts',
+					'params' => array(),
+					'id' => 7
+				)))['result'][0][0];
+				$firstHostStatus = $this->makeRequest(json_encode(array(
+					'method' => 'web.get_host_status',
+					'params' => array($firstHost),
+					'id' => 7
+				)))['result'][3];
+				if ($firstHostStatus === 'Offline') {
+					Log::append('Deluge daemon offline.');
+					return false;
+				} elseif ($firstHostStatus === 'Online') {
+					$response = $this->makeRequest(json_encode(array(
+						'method' => 'web.connect',
+						'params' => array($firstHost),
+						'id' => 7
+					)));
+					if ($response['error'] === null){
+						Log::append('Подключение Deluge webUI к Deluge daemon прошло успешно.');
+						return true;
+					} else {
+						Log::append('Подключение Deluge webUI к Deluge daemon не удалось.');
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 		Log::append ( 'Не удалось подключиться к веб-интерфейсу торрент-клиента.' );
 		Log::append ( 'Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.' );
@@ -624,7 +659,8 @@ class deluge {
 	        CURLOPT_RETURNTRANSFER => true,
 	        CURLOPT_COOKIE => $this->sid,
 	        CURLOPT_ENCODING => 'gzip',
-	        CURLOPT_POSTFIELDS => $fields
+	        CURLOPT_POSTFIELDS => $fields,
+	        CURLOPT_HTTPHEADER => array('Content-Type: application/json')
         ));
         $req = curl_exec($ch);
         if($req === false) {
@@ -700,14 +736,16 @@ class deluge {
     }
 	
 	// установка метки
-    public function setLabel($hash, $label = "") {
+    public function setLabel($hashes, $label = "") {
 		$label = str_replace(' ', '_', $label);
-		if(!preg_match("|^[aA-zZ0-9\-_]+$|", $label))
+		if(!preg_match("|^[aA-zZ0-9\-_]+$|", $label)) {
+			Log::append('В названии метки присутствуют недопустимые символы.');
 			return 'В названии метки присутствуют недопустимые символы.';
+		}
 		$this->enablePlugin('Label');
 		$this->addLabel($label);
-		foreach($hash as $hash){
-			$json = $this->makeRequest(json_encode(array( 'method' => 'label.set_torrent', 'params' => array( $hash, $label ), 'id' => 1 )));
+		foreach($hashes as $hash){
+			$json = $this->makeRequest(json_encode(array( 'method' => 'label.set_torrent', 'params' => array( strtolower($hash), $label ), 'id' => 1 )));
 		}
 	}
     
@@ -718,24 +756,24 @@ class deluge {
     
     // запуск раздач
     public function torrentStart($hash, $force = false) {
-		$json = $this->makeRequest(json_encode(array( 'method' => 'core.resume_torrent', 'params' => array($hash), 'id' => 7 )));
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.resume_torrent', 'params' =>  array(array_map('strtolower', $hash)), 'id' => 7 )));
 	}
-	
+
     // остановка раздач
     public function torrentStop($hash) {
-		$json = $this->makeRequest(json_encode(array( 'method' => 'core.pause_torrent', 'params' => array($hash), 'id' => 8 )));
+		$json = $this->makeRequest(json_encode(array( 'method' => 'core.pause_torrent', 'params' => array(array_map('strtolower', $hash)), 'id' => 8 )));
 	}
 	
     // удаление раздач
-	public function torrentRemove($hash, $data = false) {
-		foreach($hash as $hash){
-			$json = $this->makeRequest(json_encode(array( 'method' => 'core.remove_torrent', 'params' => array($hash, $data), 'id' => 6 )));
+	public function torrentRemove($hashes, $data = false) {
+		foreach($hashes as $hash){
+			$json = $this->makeRequest(json_encode(array( 'method' => 'core.remove_torrent', 'params' => array(strtolower($hash), $data), 'id' => 6 )));
 		}
 	}
 	
 	// проверить локальные данные раздач
 	public function torrentRecheck($hash) {
-        $json = $this->makeRequest(json_encode(array( 'method' => 'core.force_recheck', 'params' => array($hash), 'id' => 5 )));
+        $json = $this->makeRequest(json_encode(array( 'method' => 'core.force_recheck', 'params' => array(array_map('strtolower', $hash)), 'id' => 5 )));
     }
 	
 }
