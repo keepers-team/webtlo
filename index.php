@@ -161,14 +161,14 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 									<fieldset>
 										<label title="Введите фразу для поиска">
 											Поиск по фразе:
-											<input type="text" name="filter_phrase" size="20"/>
+											<input type="search" name="filter_phrase" size="20"/>
 										</label>
 										<label>
 											<input type="radio" name="filter_by_phrase" value="1" checked />
 											в названии раздачи
 										</label>
 										<label>
-											<input type="radio" name="filter_by_phrase" value="0" />
+											<input type="radio" name="filter_by_phrase" id="filter_by_keeper" value="0" />
 											в имени хранителя
 										</label>
 									</fieldset>
