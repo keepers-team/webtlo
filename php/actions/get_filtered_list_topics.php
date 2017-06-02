@@ -137,6 +137,7 @@ try {
 			'<div id="topic_' . $topic['id'] . '"><label>
 				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
 				<img title="" src="img/'.$icons.'.png" />
+				<span>[' . date( 'd.m.Y', $topic['rg'] ) . ']</span>
 				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.$keeper.
 			'</label></div>';
 		
