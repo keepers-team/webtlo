@@ -19,7 +19,7 @@ try {
 	// получение данных из базы
 	$db = new Database();
 	$subsections = $db->get_forums_details( $subsec );
-	$topics = $db->get_topics( $subsec, 1, $cfg['avg_seeders'], $cfg['avg_seeders_period'] );
+	$topics = $db->get_topics( $subsec, 1, $cfg['avg_seeders'], $cfg['avg_seeders_period'], 'na' );
 	
 	// формирование отчётов
 	$reports = create_reports( $subsections, $topics, $cfg['tracker_login'], $cfg['rule_reports'] );
