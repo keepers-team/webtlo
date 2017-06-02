@@ -2,11 +2,19 @@
 /* всё про работу с подразделами */
 
 // загрузка данных о выбранном подразделе на главной
-$("#subsections").selectmenu({
+var subsections = $("#subsections");
+subsections.selectmenu({
 	width: "calc(100% - 36px)",
 	change: function( event, ui ) {
 		getFilteredTopics();
 		showSelectedInfo( 0, 0.00 );
+		$.cookie('saved_forum_id', ui.item.value);
+	},
+	create: function ( event, ui ) {
+		if(typeof($.cookie('saved_forum_id')) !== "undefined"){
+			subsections.val(parseInt($.cookie('saved_forum_id')));
+			subsections.selectmenu("refresh");
+		}
 	},
 	open: function( event, ui ) {
 		height = $("#subsections-menu").height() >= 399 ? 400 : 'auto';
