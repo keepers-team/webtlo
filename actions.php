@@ -59,7 +59,7 @@ switch($_POST['m'])
 			Log::clean();
 			$db = new Database();
 			$subsections = $db->get_forums_details($TT_subsections);
-			$topics = $db->get_topics($TT_subsections, 1, $avg_seeders, $avg_seeders_period);
+			$topics = $db->get_topics($TT_subsections, 1, $avg_seeders, $avg_seeders_period, 'na');
 			$reports = create_reports($subsections, $topics, $TT_login, $TT_rule_reports); unset($topics);
 			output_reports($reports, $TT_login);
 		} catch (Exception $e) {
