@@ -49,6 +49,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
+		<script src="jquery-ui-1.12.1/external/jquery.cookie.js"></script>
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
