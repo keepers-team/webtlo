@@ -134,12 +134,12 @@ try {
 		$icons = ($topic['ds'] >= $avg_seeders_period || !$avg_seeders ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
 		
 		$output .=
-			'<div id="topic_' . $topic['id'] . '"><label>
+			'<div id="topic_' . $topic['id'] . '" class="topic_data"><label>
 				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
 				<img title="" src="img/'.$icons.'.png" />
-				<span>[' . date( 'd.m.Y', $topic['rg'] ) . ']</span>
-				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.$keeper.
-			'</label></div>';
+				<span title="Дата регистрации раздачи">[' . date( 'd.m.Y', $topic['rg'] ) . ']</span>
+				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.
+			'</label>'.$keeper.'</div>';
 		
 	}
 	

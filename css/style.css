@@ -302,11 +302,17 @@ label:hover {
 
 /* topics control */
 .topics_control {
-	padding: 10px 10px 0 10px;
+	padding: 10px 10px 5px 10px;
 }
 
 .topics_control button {
 	margin-right: 5px;
+}
+
+#filter_show img, #filter_reset img {
+	margin: 0 -5px;
+	width: 15px;
+	height: 15px;
 }
 
 .loading {
@@ -371,7 +377,7 @@ label:hover {
 	padding: 4.5px 10px 10px 10px;
 }
 
-.topics label * {
+.topic_data * {
 	vertical-align: middle;
 }
 

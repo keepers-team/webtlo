@@ -304,6 +304,25 @@ function getFilteredTopics(){
 	});
 }
 
+// скрыть/показать фильтр
+$("#filter_show").on("click", function() {
+	$("#topics_filter").toggle(500);
+});
+
+// сбросить настройки фильтра
+$("#filter_reset").on("click", function() {
+	$("#topics_filter input[type=text]").val("");
+	$("#topics_filter input[type=search]").val("");
+	$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
+	$("#filter_date_release").datepicker("setDate", "-"+$("#rule_date_release").val());
+	$("#filter_rule, #filter_rule_to").val($("#TT_rule_topics").val());
+	$("#filter_rule_from").val(0);
+	$("#filter_avg_seeders_period").val($("#avg_seeders_period").val());
+	$(".filter_rule_interval").hide();
+	$(".filter_rule_one").show();
+	$("#topics_filter .default").prop("checked", true).change();
+});
+
 // события при выборе свойств фильтра
 var delay = makeDelay (500);
 $("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function() {

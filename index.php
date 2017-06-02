@@ -44,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.9</title>
+		<title>web-TLO-0.9.2.10</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -86,6 +86,8 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 					</select>
 					<div id="sub-data">
 						<div class="topics_control">
+							<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра"><img src="img/filter.png" /></button>
+							<button type="button" id="filter_reset" title="Сбросить настройки фильтра на значения по умолчанию"><img src="img/reset.png" /></button>
 							<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
 							<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
 							<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img disabled class="loading" src="img/loading.gif" />Добавить</button>
@@ -105,7 +107,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 											храню
 										</label>
 										<label>
-											<input type="radio" name="filter_status" value="0" checked />
+											<input type="radio" name="filter_status" value="0" checked class="default" />
 											не храню
 										</label>
 										<label>
@@ -131,7 +133,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<div class="filter_block ui-widget" title="Сортировка">
 									<fieldset>
 										<label>
-											<input type="radio" name="filter_sort_direction" value="1" checked />
+											<input type="radio" name="filter_sort_direction" value="1" checked class="default" />
 											по возрастанию
 										</label>
 										<label>
@@ -149,7 +151,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 											по объёму
 										</label>
 										<label>
-											<input type="radio" name="filter_sort" value="avg" checked />
+											<input type="radio" name="filter_sort" value="avg" checked class="default" />
 											по количеству сидов
 										</label>
 										<label>
@@ -165,7 +167,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 											<input type="search" name="filter_phrase" size="20"/>
 										</label>
 										<label>
-											<input type="radio" name="filter_by_phrase" value="1" checked />
+											<input type="radio" name="filter_by_phrase" value="1" checked class="default" />
 											в названии раздачи
 										</label>
 										<label>
@@ -191,7 +193,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 									</label>
 									<fieldset class="filter_rule_one">
 										<label>
-											<input type="radio" name="filter_rule_direction" value="1" checked />
+											<input type="radio" name="filter_rule_direction" value="1" checked class="default" />
 											не более
 										</label>
 										<label>
