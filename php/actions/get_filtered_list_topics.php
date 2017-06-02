@@ -119,7 +119,7 @@ try {
 		
 		// список других хранителей
 		$keeper = isset( $keepers[$topic['id']] )
-			? ' ~> <span title="Хранители" class="bold">' . implode( ', ', $keepers[$topic['id']] ) . '</span>'
+			? ' ~> <span title="Хранители" class="bold"><span id="keeper">' . implode( '</span>, <span id="keeper">', $keepers[$topic['id']] ) . '</span></span>'
 			: '';
 		
 		// фильтрация по фразе

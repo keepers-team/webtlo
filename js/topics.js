@@ -272,6 +272,14 @@ $("input[name=filter_interval]").on("click", function(){
 	$(".filter_rule_one").toggle(500);
 });
 
+// сортировка по хранителю при двойном клике по его никнейму в списке раздач
+$(document).on("dblclick","#keeper",function(e){
+	$("input[name=filter_phrase]").val($(this).text());
+	$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
+	$('input[name=filter_by_keeper][type="radio"]').prop("checked", true);
+	$('input[name=is_keepers][type="checkbox"]').prop("checked", true).change();
+});
+
 // получение отфильтрованных раздач из базы
 function getFilteredTopics(){
 	forum_id = $("#subsections").val();
@@ -298,7 +306,7 @@ function getFilteredTopics(){
 
 // события при выборе свойств фильтра
 var delay = makeDelay (500);
-$("#topics_filter input[type=text]").on("spin input", function() {
+$("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function() {
 	delay( getFilteredTopics, this );
 	showSelectedInfo( 0, 0.00 );
 });
