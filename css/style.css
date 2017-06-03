@@ -369,7 +369,7 @@ label:hover {
 }
 
 /* topics result */
-#topics_result {
+#topics_result, #filtered_topics_result {
 	margin: 10px;
 }
 
