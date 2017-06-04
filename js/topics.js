@@ -96,9 +96,11 @@ $(".tor_add").on("click", function(){
 					url: "php/mark_topics_in_database.php",
 					data: { success:resp.success, status:-1, client:value },
 					success: function(response) {
-						$("#log").append(response);
-						getFilteredTopics.apply(this);
-					},
+						setTimeout(function () {
+							$("#log").append(response);
+							getFilteredTopics.apply(this);
+						}, 2000)
+					}
 				});
 			}
 		},
@@ -187,33 +189,68 @@ $(".torrent_action").on("click", function(e){
 });
 
 // вывод на экран кол-во, объём выбранных раздач
-function showSelectedInfo(count, size){
-	$("#topics_result").html('Выбрано раздач: <span id="topics_count" class="rp-header"></span> (<span id="topics_size"></span>).');
-	$("#topics_count").text(count);
-	$("#topics_size").text(сonvertBytes(size));
+function showSizeAndAmount(count, size, filtered){
+	var topics_count = filtered ? "#filtered_topics_count" : "#topics_count";
+	var topics_size = filtered ? "#filtered_topics_size" : "#topics_size";
+	$(topics_count).text(count);
+	$(topics_size).text(сonvertBytes(size));
+}
+
+function Counter() {
+	this.count = 0;
+	this.size_all = 0
+}
+
+function addSizeAndAmount(input) {
+	var size = input.attr("size");
+	this.size_all += parseInt(size);
+	this.count++;
+}
+
+// получение данных и вывод на экран кол-во, объём выделенных/остортированных раздач
+function countSizeAndAmount(thisElem) {
+	var action = 0;
+	if (thisElem !== undefined){
+		action = thisElem.val();
+	}
+	var counter = new Counter();
+	var topics = $("#topics").find("input[type=checkbox]");
+	var filtered = false;
+	if (topics.length === 0){
+		showSizeAndAmount(0, 0, true);
+	} else {
+		topics.each(function () {
+			switch (action) {
+				case "select":
+					$(this).prop("checked", "true");
+					addSizeAndAmount.call(counter, $(this));
+					break;
+				case "unselect":
+					$(this).removeAttr("checked");
+					break;
+				case "on":
+					if ($(this).prop("checked")) {
+						addSizeAndAmount.call(counter, $(this));
+					}
+					break;
+				default:
+					addSizeAndAmount.call(counter, $(this));
+					filtered = true;
+			}
+		});
+		if ($("#topics_count").length === 0) {
+			$("#topics_result").html('Выбрано раздач: <span id="topics_count" class="rp-header">0</span> ' +
+				'(<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span>' +
+				' (<span id="filtered_topics_size">0.00</span>).');
+			countSizeAndAmount();
+		}
+		showSizeAndAmount(counter.count, counter.size_all, filtered);
+	}
 }
 
 // кнопка выделить все / отменить выделение
 $(".tor_select, .tor_unselect").on("click", function(){
-	action = $(this).val();
-	count = 0;
-	size_all = 0;
-	$("#topics").closest("div")
-	.find("input[type=checkbox]")
-	.each(function() {
-		switch (action) {
-			case "select":
-				size = $(this).attr("size");
-				$(this).prop("checked", "true");
-				size_all += parseInt(size);
-				count++;
-				break;
-			case "unselect":
-				$(this).removeAttr("checked");
-				break;
-		}
-	});
-	showSelectedInfo(count, size_all);
+	countSizeAndAmount($(this))
 });
 
 // выделение/снятие выделения интервала раздач
@@ -221,6 +258,7 @@ $("#topics").on("click", ".topic", function(event){
 	subsection = $("#subsections").val();
 	if(!$("#topics .topic").hasClass("first-topic")){
 		$(this).addClass("first-topic");
+		countSizeAndAmount($(this));
 		return;
 	}
 	if(event.shiftKey){
@@ -244,24 +282,9 @@ $("#topics").on("click", ".topic", function(event){
 			}
 		});
 	}
+	countSizeAndAmount($(this));
 	$("#topics .first-topic").removeClass("first-topic");
 	$(this).addClass("first-topic");
-});
-
-// получение данных о выделенных раздачах (объём, кол-во)
-$("#topics").on("click", ".topic", function(){
-	count = 0;
-	size_all = 0;
-	$("#topics").closest("div")
-	.find("input[type=checkbox]")
-	.each(function() {
-		size = $(this).attr("size");
-		if($(this).prop("checked")) {
-			count++;
-			size_all += parseInt(size);
-		}
-	});
-	showSelectedInfo(count, size_all);
 });
 
 // фильтр
@@ -300,7 +323,8 @@ function getFilteredTopics(){
 		},
 		complete: function() {
 			block_actions();
-		},
+			countSizeAndAmount()
+		}
 	});
 }
 
@@ -327,17 +351,17 @@ $("#filter_reset").on("click", function() {
 var delay = makeDelay (500);
 $("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function() {
 	delay( getFilteredTopics, this );
-	showSelectedInfo( 0, 0.00 );
+	showSizeAndAmount( 0, 0.00 );
 });
 
 $("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").on("change", function() {
 	delay( getFilteredTopics, this );
-	showSelectedInfo( 0, 0.00 );
+	showSizeAndAmount( 0, 0.00 );
 });
 
 $("#filter_date_release").on("change", function() {
 	delay( getFilteredTopics, this );
-	showSelectedInfo( 0, 0.00 );
+	showSizeAndAmount( 0, 0.00 );
 });
 
 // есть/нет хранители
