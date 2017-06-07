@@ -382,6 +382,9 @@ class Database {
 		);
 		// сортировка раздач
 		uasort( $topics, function( $a, $b ) use ( $sort ) {
+			$re = '/^(\(.+?\)\s?)(?(1)(.*?\[.*?\]\s?){0,2}|)/';
+			$a[$sort] = preg_replace($re, "", $a[$sort]);
+			$b[$sort] = preg_replace($re, "", $b[$sort]);
 			return $a[$sort] != $b[$sort]
 				? $a[$sort] < $b[$sort]
 					? -1 : 1
