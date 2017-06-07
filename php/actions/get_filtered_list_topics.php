@@ -31,7 +31,7 @@ try {
 	$date_release->setTime(23, 59, 59);
 	
 	// если включены средние сиды
-	if( $avg_seeders ) {
+	if( isset($avg_seeders) ) {
 		// жёсткое ограничение на 30 дней для средних сидов
 		$avg_seeders_period = $avg_seeders_period > 0
 			? $avg_seeders_period > 30
@@ -131,7 +131,7 @@ try {
 			}
 		}
 		
-		$icons = ($topic['ds'] >= $avg_seeders_period || !$avg_seeders ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
+		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
 		
 		$output .=
 			'<div id="topic_' . $topic['id'] . '" class="topic_data"><label>
