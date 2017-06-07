@@ -106,7 +106,8 @@ class BEncode_Int
     public function decode( &$raw, &$offset )
     {
             $end = strpos( $raw, 'e', $offset );
-            $this->value = substr( $raw, ++$offset, $end - $offset );
+            ++$offset;
+            $this->value = substr( $raw, $offset, $end - $offset );
             $offset += ( $end - $offset );
     }
 
@@ -141,7 +142,8 @@ class BEncode_Dictionary
 
             while ( true )
             {
-                $name = BEncode::decode( $raw, ++$offset );
+                ++$offset;
+                $name = BEncode::decode( $raw, $offset );
 
                 if ( $name->get_type() == 'end' )
                 {
@@ -156,7 +158,8 @@ class BEncode_Dictionary
                     return new BEncode_Error( "Key name in dictionary was not a string." );
                 }
 
-                $value = BEncode::decode( $raw, ++$offset );
+                ++$offset;
+                $value = BEncode::decode( $raw, $offset );
 
                 if ( $value->get_type() == 'error' )
                 {
@@ -238,7 +241,8 @@ class BEncode_List
 
             while ( true )
             {
-                $value = BEncode::decode( $raw, ++$offset );
+                ++$offset;
+                $value = BEncode::decode( $raw, $offset );
 
                 if ( $value->get_type() == 'end' )
                 {
