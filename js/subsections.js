@@ -8,11 +8,11 @@ subsections.selectmenu({
 	change: function( event, ui ) {
 		getFilteredTopics();
 		showSizeAndAmount( 0, 0.00 );
-		$.cookie('saved_forum_id', ui.item.value);
+		Cookies.set('saved_forum_id', ui.item.value);
 	},
 	create: function ( event, ui ) {
-		if(typeof($.cookie('saved_forum_id')) !== "undefined"){
-			subsections.val(parseInt($.cookie('saved_forum_id')));
+		if(typeof(Cookies.get('saved_forum_id')) !== "undefined"){
+			subsections.val(parseInt(Cookies.get('saved_forum_id')));
 			subsections.selectmenu("refresh");
 		}
 	},
@@ -21,10 +21,10 @@ subsections.selectmenu({
 		$("#subsections-menu").css("height", height);
 		active = $("#subsections-button").attr("aria-activedescendant");
 		$("#subsections-menu").closest("ul")
-		.find("div[role=option]")
-		.each( function() {
-			$(this).css({ "font-weight": "normal" });
-		});
+			.find("div[role=option]")
+			.each( function() {
+				$(this).css({ "font-weight": "normal" });
+			});
 		$("#"+active).css({ "font-weight": "bold" });
 	},
 });

@@ -49,7 +49,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
-		<script src="jquery-ui-1.12.1/external/jquery.cookie.js"></script>
+		<script src="jquery-ui-1.12.1/external/js.cookie.js"></script>
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
@@ -490,7 +490,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<div>
 									<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" />
 								</div>
-								<label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">										
+								<label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
 									<input name="savesubdir" type="checkbox" size="24" <?php echo $savesubdir ?> />
 									создавать подкаталоги
 								</label>
