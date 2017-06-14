@@ -61,7 +61,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 				<li class="menu"><a href="#settings" class="menu">Настройки</a></li>
 				<li class="menu"><a href="#reports" class="menu">Отчёты</a></li>
 				<li class="menu"><a href="#journal" class="menu">Журнал</a></li>
-				<a id="help" href="manual.pdf" target="_blank" title="Открыть файл руководства">FAQ</a>
+				<li class="menu"><a href="#manual" title="Открыть файл руководства">FAQ</a></li>
 			</ul>
 			<div id="content">
 				<div id="main" class="content">
@@ -515,6 +515,9 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 				<div id="reports" class="content"></div>
 				<div id="journal" class="content">
 					<div id="log"></div>
+				</div>
+				<div id="manual" class="content">
+					<object data="manual.pdf" type="application/pdf" width="100%" height="90%"></object>
 				</div>
 			</div>
 		</div>
