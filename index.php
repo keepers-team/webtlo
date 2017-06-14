@@ -412,6 +412,14 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 										Ссылка на список:
 										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
+									<label class="flex">
+									Создавать подкаталог для добавляемой раздачи:
+									<select id="ss-sub-folder" title="Создавать подкаталог для данных добавляемой раздачи">
+										<option value="0">Нет</option>
+										<option value="1">С ID топика</option>
+										<!-- <option value="2">Запрашивать</option> -->
+										</select>
+									</label>
 								</fieldset>
 							</div>
 							<h2>Настройки управления раздачами</h2>
