@@ -125,6 +125,7 @@ function write_config($filename, $cfg, $subsections, $tcs){
 			if(isset($subsec['cl'])) $ini->write($subsec['id'],'client',!empty($subsec['cl']) ? $subsec['cl'] : '');
 			if(isset($subsec['lb'])) $ini->write($subsec['id'],'label',$subsec['lb']);
 			if(isset($subsec['fd'])) $ini->write($subsec['id'],'data-folder',$subsec['fd']);
+			if(isset($subsec['sub_folder'])) $ini->write($subsec['id'],'data-sub-folder',$subsec['sub_folder']);
 			if( !empty($subsec['ln']) ) $ini->write( $subsec['id'],'link',$subsec['ln'] );
 		}
 		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
@@ -189,6 +190,7 @@ function get_settings( $filename = 'config.ini' ){
 			$config['subsections'][$id]['lb'] = $ini->read("$id","label","");
 			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
+			$config['subsections'][$id]['sub_folder'] = $ini->read("$id","data-sub-folder","");
 			$config['subsections'][$id]['id'] = $id;
 			$config['subsections'][$id]['na'] = isset( $titles[$id] )
 				? $titles[$id]

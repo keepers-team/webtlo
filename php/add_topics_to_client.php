@@ -15,11 +15,12 @@ if(isset($_POST['client'])) {
 }
 
 if(isset($_POST['subsec'])) {
-	list($ss_client, $ss_label, $ss_savepath, $ss_link) = explode("|", $_POST['subsec']);
-	$subsection['cl'] = $ss_client;
-	$subsection['lb'] = $ss_label;
-	$subsection['fd'] = $ss_savepath;
-	$subsection['ln'] = $ss_link;
+	list($ss_client, $ss_label, $ss_savepath, $ss_link, $ss_savepath_subfolder) = explode("|", $_POST['subsec']);
+	$subsection['cl']					= $ss_client;
+	$subsection['lb']					= $ss_label;
+	$subsection['fd']					= $ss_savepath;
+	$subsection['ln']					= $ss_link;
+	$subsection['savepath_subfolder']	= (int) $ss_savepath_subfolder;
 }
 
 Log::append ( 'Запущен процесс добавления раздач в торрент-клиент "' . $cl['cm'] . '"...' );
@@ -59,7 +60,7 @@ try {
 	Log::append ( 'Добавление раздач в торрент-клиент...' );
 	$client = new $cl['cl'] ( $cl['ht'], $cl['pt'], $cl['lg'], $cl['pw'], $cl['cm'] );
 	if($client->is_online()) {
-		$client->torrentAdd ( $success, $subsection['fd'], $subsection['lb'] );
+		$client->torrentAdd ( $success, $subsection['fd'], $subsection['lb'], $subsection['savepath_subfolder'] );
 		$success = array_column_common ( $success, 'id' );
 	}  else {
 		$add_log = 'Указанный в настройках торрент-клиент недоступен.<br />';

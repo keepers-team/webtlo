@@ -100,6 +100,11 @@ $("#list-ss").on("change", function(){
 	$("#ss-label").val(data[1]);
 	$("#ss-folder").val(data[2]);
 	$("#ss-link").val(data[3]);
+	if (data[4]){
+		$("#ss-sub-folder").val(data[4]);
+	} else {
+		$("#ss-sub-folder :first").prop("selected", "selected");
+	}
 	ss_change = $(this).val();
 	$("#ss-id").val(ss_change);
 });
@@ -119,8 +124,9 @@ $("#ss-prop").on("focusout", function(){
 	lb = $("#ss-label").val();
 	fd = $("#ss-folder").val();
 	ln = $("#ss-link").val();
+	var sub_folder = $("#ss-sub-folder").val();
 	$("#list-ss option[value="+ss_change+"]")
-		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln);
+		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln+"|"+sub_folder);
 });
 
 /* получение идентификаторов подразделов */
@@ -148,7 +154,8 @@ function listDataSubsections(){
 				"cl": data[0],
 				"lb": data[1],
 				"fd": data[2],
-				"ln": data[3]
+				"ln": data[3],
+				"sub_folder": data[4]
 			};
 		}
 	});
@@ -160,7 +167,7 @@ $(document).ready(function() {
 	// fix у кого старые настройки
 	window.onload=function(){
 		var pattern = [];
-		
+
 		$("#list-ss option").each(function(){
 			text = $(this).text();
 			value = $(this).val();
@@ -168,7 +175,7 @@ $(document).ready(function() {
 				pattern.push(value);
 			}
 		});
-		
+
 		if(pattern.length){
 			$.ajax({
 				url: 'php/get_list_subsections.php',
@@ -190,7 +197,7 @@ $(document).ready(function() {
 			});
 		}
 	}
-	
+
 });
 	
 

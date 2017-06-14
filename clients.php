@@ -192,13 +192,17 @@ class utorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
+	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		//~ $this->setSetting('dir_add_label', 1);
 		$this->setSetting('dir_active_download_flag', true);
 		if(!empty($savepath))
 			$this->setSetting('dir_active_download', urlencode($savepath));
 		foreach($filename as $file){
-			$json = $this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
+			if (!empty($savepath)) {
+				$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+				$this->setSetting('dir_active_download', urlencode($current_savepath));
+			}
+			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
 		}
 		if(empty($label)) return;
 		sleep(round(count($filename) / 3) + 1); // < 3 дольше ожидание
@@ -349,14 +353,15 @@ class transmission {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
-		foreach($filename as $filename){
+	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+		foreach($filename as $file){
+			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $filename['filename'] . '",
+					"filename" : "' . $file['filename'] . '",
 					"paused" : "false"'
-					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($savepath) . '"' : '') .
+					. (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
 			}', true);
 			//~ return $json['result']; // success
@@ -503,14 +508,15 @@ class vuze {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
-		foreach($filename as $filename){
+	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+		foreach($filename as $file){
+			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $filename['filename'] . '",
+					"filename" : "' . $file['filename'] . '",
 					"paused" : "false"'
-					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($savepath) . '"' : '') .
+					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
 			}', true);
 			//~ retutn $json['result']; // success
@@ -694,14 +700,15 @@ class deluge {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
+	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		foreach($filename as $file){
+			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 			$localpath = $this->torrentDownload($file['filename']);
 			$json = $this->makeRequest(json_encode(array(
 				"method" => "web.add_torrents",
 				"params" => [[array(
 					"path" => "$localpath",
-					"options" => array( "download_location" => !empty($savepath) ? $savepath : '')
+					"options" => array( "download_location" => !empty($savepath) ? $current_savepath : '')
 				)]],
 				"id" => 1
 			)));
@@ -886,12 +893,14 @@ class qbittorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
-		$filename = implode("\n", array_column_common($filename, 'filename'));
-		$fields = http_build_query(array(
-            'urls' => $filename, 'savepath' => $savepath, 'cookie' => $this->sid, 'label' => $label, 'category' => $label
-		), '', '&', PHP_QUERY_RFC3986);
-		$this->makeRequest($fields, 'command/download', false);
+	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+		foreach($filename as $file) {
+			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+			$fields = http_build_query(array(
+				'urls' => $file['filename'], 'savepath' => !empty($savepath) ? $current_savepath : '', 'cookie' => $this->sid, 'label' => $label, 'category' => $label
+			), '', '&', PHP_QUERY_RFC3986);
+			$this->makeRequest($fields, 'command/download', false);
+		}
 	}
 	
 	// установка метки
