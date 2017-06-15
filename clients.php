@@ -825,7 +825,8 @@ class qbittorrent {
 	        CURLOPT_POSTFIELDS => http_build_query(array(
 				'username' => "$this->login", 'password' => "$this->paswd"
 			)),
-	        CURLOPT_HEADER => true
+	        CURLOPT_HEADER => true,
+			CURLOPT_REFERER => sprintf(self::$base, $this->host, $this->port, 'login')
         ));
         $output = curl_exec($ch);
         if($output === false) {
@@ -852,7 +853,8 @@ class qbittorrent {
 	        CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
 	        CURLOPT_RETURNTRANSFER => true,
 	        CURLOPT_COOKIE => $this->sid,
-	        CURLOPT_POSTFIELDS => $fields
+	        CURLOPT_POSTFIELDS => $fields,
+			CURLOPT_REFERER => sprintf(self::$base, $this->host, $this->port, $url)
         ));
         $req = curl_exec($ch);
         if($req === false) {
