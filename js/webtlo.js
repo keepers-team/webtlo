@@ -55,7 +55,12 @@
 	});
 	
 	/* инициализация главного меню */
-	var menutabs = $( "#menutabs" ).tabs();
+	var menutabs = $( "#menutabs" ).tabs({
+		activate: function (event, ui) {
+			Cookies.set('selected-tab', ui.newTab.index());
+		},
+		active: Cookies.get('selected-tab')
+	});
 	menutabs.addClass( "ui-tabs-vertical ui-helper-clearfix" ).removeClass("ui-widget-content");
 	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
 	
