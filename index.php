@@ -237,9 +237,11 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 											<option value="http://rutracker.cr" <?php echo ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") ?> >http://rutracker.cr</option>
 											<option value="http://rutracker.net" <?php echo ($cfg['forum_url'] == 'http://rutracker.net' ? "selected" : "") ?> >http://rutracker.net</option>
 											<option value="http://rutracker.org" <?php echo ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") ?> >http://rutracker.org</option>
+											<option value="http://rutracker.nl" <?php echo ($cfg['forum_url'] == 'http://rutracker.nl' ? "selected" : "") ?> >http://rutracker.nl</option>
 											<option value="https://rutracker.cr" <?php echo ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") ?> >https://rutracker.cr</option>
 											<option value="https://rutracker.net" <?php echo ($cfg['forum_url'] == 'https://rutracker.net' ? "selected" : "") ?> >https://rutracker.net</option>
 											<option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
+											<option value="https://rutracker.nl" <?php echo ($cfg['forum_url'] == 'https://rutracker.nl' ? "selected" : "") ?> >https://rutracker.nl</option>
 										</select>
 									</label>
 								</div>
