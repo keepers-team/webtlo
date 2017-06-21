@@ -195,17 +195,17 @@ class utorrent {
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		//~ $this->setSetting('dir_add_label', 1);
 		$this->setSetting('dir_active_download_flag', true);
-		if(!empty($savepath))
-			$this->setSetting('dir_active_download', urlencode($savepath));
 		foreach($filename as $file){
 			if (!empty($savepath)) {
 				$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 				$this->setSetting('dir_active_download', urlencode($current_savepath));
 			}
 			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
+			usleep( 500000 );
 		}
-		if(empty($label)) return;
-		sleep(round(count($filename) / 3) + 1); // < 3 дольше ожидание
+		if ( empty( $label ) ) {
+			return;
+		}
 		$this->setProperties(array_column_common($filename, 'hash'), 'label', $label);
 	}
 	
