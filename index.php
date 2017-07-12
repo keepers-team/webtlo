@@ -44,7 +44,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.13</title>
+		<title>web-TLO-0.9.2.14</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -69,8 +69,8 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 						<input id="update" name="update" type="button" title="Обновить сведения о раздачах" value="Обновить сведения" />
 						<input id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
 						<input id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум" value="Отправить отчёты" />
+						<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					</div>
-					<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					<hr />
 					<select id="subsections">
 						<optgroup id="subsections_stored">
@@ -224,9 +224,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 					</div>
 				</div>
 				<div id="settings" class="content">
-					<form id="config">
+					<div>
 						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл">
-						<br/><br/>
+					</div>
+					<form id="config">
 						<div class="sub_settings">
 							<h2>Настройки авторизации на форуме</h2>
 							<div>
@@ -527,7 +528,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 					<div id="log"></div>
 				</div>
 				<div id="manual" class="content">
-					<object data="manual.pdf" type="application/pdf" width="100%" height="90%"></object>
+					<object data="manual.pdf" type="application/pdf" width="100%" height="100%"></object>
 				</div>
 			</div>
 		</div>

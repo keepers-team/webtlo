@@ -5,9 +5,9 @@
  */
 
 /* @import url("./reset.css"); */
-					
+
 body {
-	width: 100%;
+	padding: 20px;
 }
 
 a, h2, h3, button, menu, input, textarea, select, span {
@@ -43,6 +43,8 @@ h3 {
 
 hr {
 	clear: both;
+	margin-left: 0;
+	margin-right: 0;
 }
 
 input[type="text"] {
@@ -51,6 +53,10 @@ input[type="text"] {
 
 #ui-datepicker-div {
 	font-size: small;
+}
+
+.sub_settings {
+	margin-top: -3px;
 }
 
 .sub_settings h3:first-child {
@@ -74,7 +80,32 @@ sub {
     
 /* menu */	
 #menutabs {
-	margin: 10px 20px 0 20px;
+	padding: 0;
+}
+
+#menutabs, #content, #main, #sub-data, #reports, #reporttabs, #settings, #journal {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+#manual, #topics, #reporttabs div, #config, #log {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+#sub-data:after{
+	content: "";
+	display: block;
+	height: 0;
+	width: 100%;
+	margin-bottom: 5px; /* length you wanted on padding-bottom */
+}
+
+#reporttabs {
+	height: calc(100% - 38px);
 }
 
 /* fix widgets ui */
@@ -110,6 +141,7 @@ li.menu.ui-tabs-active {
 	border: 1px solid #D3D3D3 /*#999999*/;
 	border-radius: 4px;
 	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	height: calc(100% - 46px);
 }
 
 /* main */
@@ -139,7 +171,9 @@ li.menu.ui-tabs-active {
 }
 
 #loading {
-	margin: 5px 0 0 10px;
+	margin: 0 0 0 10px;
+	display: inline-block;
+	vertical-align: middle;
 }
 
 #subsections-button *, #subsections-menu * {
@@ -148,7 +182,12 @@ li.menu.ui-tabs-active {
 
 /* settings */
 #savecfg {
-	margin: 0 0 0 15px;
+	margin: 0 0 10px 15px;
+}
+
+#config {
+	border-top: 1px solid #aaaaaa;
+	border-radius: 4px;
 }
 
 .block-settings {
@@ -296,8 +335,9 @@ label:hover {
 #sub-data {
 	border: 1px solid #aaaaaa;
 	border-radius: 4px;
-	margin: 10px 0;
+	margin: 10px 0 0;
 	font-size: small;
+	height: calc(100% - 111px);
 }
 
 /* topics control */
@@ -324,10 +364,6 @@ label:hover {
 }
 
 /* topics filter */
-.topics_filter {
-	margin-bottom: 10px;
-}
-
 .filter_block {
 	display: inline-block;
 	vertical-align: top;
@@ -370,11 +406,11 @@ label:hover {
 
 /* topics result */
 #topics_result {
-	margin: 10px;
+	margin: 0 10px 0 10px;
 }
 
 #topics {
-	padding: 4.5px 10px 10px 10px;
+	padding: 0 10px 0 10px;
 }
 
 .topic_data * {
