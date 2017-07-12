@@ -69,8 +69,8 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 						<input id="update" name="update" type="button" title="Обновить сведения о раздачах" value="Обновить сведения" />
 						<input id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
 						<input id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум" value="Отправить отчёты" />
+						<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					</div>
-					<img id="loading" src="img/loading.gif" title="Выполняется..." />
 					<hr />
 					<select id="subsections">
 						<optgroup id="subsections_stored">
@@ -527,7 +527,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 					<div id="log"></div>
 				</div>
 				<div id="manual" class="content">
-					<object data="manual.pdf" type="application/pdf" width="100%" height="90%"></object>
+					<object data="manual.pdf" type="application/pdf" width="100%" height="100%"></object>
 				</div>
 			</div>
 		</div>
