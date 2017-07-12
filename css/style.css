@@ -385,3 +385,7 @@ label:hover {
 #log {
 	font: normal 14px monospace;
 }
+
+#manual {
+	background: transparent url(../img/loading.gif) center no-repeat;
+}
