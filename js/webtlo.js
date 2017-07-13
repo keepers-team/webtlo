@@ -57,9 +57,10 @@
 	/* инициализация главного меню */
 	var menutabs = $( "#menutabs" ).tabs({
 		activate: function (event, ui) {
-			Cookies.set('selected-tab', ui.newTab.index());
+			Cookies.set('selected-tab', (ui.newTab.index() === 2 ? 0 : ui.newTab.index()));
 		},
-		active: Cookies.get('selected-tab')
+		active: Cookies.get('selected-tab'),
+		disabled: [ 2 ]
 	});
 	menutabs.addClass( "ui-tabs-vertical ui-helper-clearfix" ).removeClass("ui-widget-content");
 	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
@@ -160,7 +161,7 @@
 					r.moveToElementText(e); 
 					r.select();}
 				});
-				
+				$( "#menutabs" ).tabs( "enable", 2 );
 			},
 			complete: function() {
 				block_actions();
