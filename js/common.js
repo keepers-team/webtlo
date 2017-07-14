@@ -38,18 +38,17 @@ function CheckSlash(e){
 			new_path = path;
 	}
 	$(e).val(new_path);
-};
-
+}
 var lock = 0;
 
 function block_actions(){
 	if(lock == 0){
-		$("#button_menu input, .topics_control button").prop("disabled", true);
+		$(".topics_control button").prop("disabled", true);
 		$("#subsections").selectmenu("disable");
 		$("#loading").show();
 		lock = 1;
 	} else {
-		$("#button_menu input, .topics_control button").prop("disabled", false);
+		$(".topics_control button").prop("disabled", false);
 		if( $("#subsections").val() < 1 || !$("input[name=filter_status]").eq(1).prop("checked") ) {
 			$(".tor_add").prop("disabled", true);
 		} else {
@@ -59,8 +58,7 @@ function block_actions(){
 		$("#loading, .loading").hide();
 		lock = 0;
 	}
-};
-
+}
 // выполнить функцию с задержкой
 function makeDelay(ms){
 	var timer = 0;
