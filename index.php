@@ -98,6 +98,18 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 									<i class="fa fa-square-o" aria-hidden="true"></i>
 								</button>
 							</div>
+							<div id="new-torrents">
+								<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
+									<i class="fa fa-plus" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
+									<i class="fa fa-download" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
+									<i class="fa fa-download download-replace" aria-hidden="true"></i>
+									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
+								</button>
+							</div>
 							<div id="control">
 								<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
 									<i class="fa fa-tag" aria-hidden="true"></i>
@@ -110,18 +122,6 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								</button>
 								<button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
 									<i class="fa fa-times text-danger" aria-hidden="true"></i>
-								</button>
-							</div>
-							<div id="new-torrents">
-								<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
-									<i class="fa fa-plus" aria-hidden="true"></i>
-								</button>
-								<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
-									<i class="fa fa-download" aria-hidden="true"></i>
-								</button>
-								<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
-									<i class="fa fa-download download-replace" aria-hidden="true"></i>
-									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
 								</button>
 							</div>
 							<button id="update" name="update" type="button" title="Обновить сведения о раздачах">
