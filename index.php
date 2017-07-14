@@ -41,6 +41,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 
 ?>
 
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8" />
@@ -53,6 +54,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
+		<link rel="stylesheet" href="css/font-awesome.min.css">
 	</head>
 	<body>
 		<div id="menutabs" class="menu">
@@ -65,13 +67,6 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 			</ul>
 			<div id="content">
 				<div id="main" class="content">
-					<div id="button_menu">
-						<input id="update" name="update" type="button" title="Обновить сведения о раздачах" value="Обновить сведения" />
-						<input id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум" value="Создать отчёты" />
-						<input id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум" value="Отправить отчёты" />
-						<img id="loading" src="img/loading.gif" title="Выполняется..." />
-					</div>
-					<hr />
 					<select id="subsections">
 						<optgroup id="subsections_stored">
 							<?php echo $subsections ?>
@@ -86,17 +81,67 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 					</select>
 					<div id="sub-data">
 						<div class="topics_control">
-							<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра"><img src="img/filter.png" /></button>
-							<button type="button" id="filter_reset" title="Сбросить настройки фильтра на значения по умолчанию"><img src="img/reset.png" /></button>
-							<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">Выделить все</button>
-							<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">Снять выделение</button>
-							<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент"><img disabled class="loading" src="img/loading.gif" />Добавить</button>
-							<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)"><img disabled class="loading" src="img/loading.gif" />Метка</button>
-							<button type="button" class="tor_start torrent_action" value="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте"><img disabled class="loading" src="img/loading.gif" />Старт</button>
-							<button type="button" class="tor_stop torrent_action" value="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте"><img disabled class="loading" src="img/loading.gif" />Стоп</button>
-							<button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента"><img disabled class="loading" src="img/loading.gif" />Удалить</button>
-							<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог"><img disabled class="loading" src="img/loading.gif" />Скачать</button>
-							<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey"><img disabled class="loading" src="img/loading.gif" />Скачать с заменой Passkey</button>
+							<div id="filter">
+								<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра">
+									<i class="fa fa-filter" aria-hidden="true"></i>
+								</button>
+								<button type="button" id="filter_reset" title="Сбросить настройки фильтра на значения по умолчанию">
+									<i class="fa fa-undo" aria-hidden="true"></i>
+								</button>
+							</div>
+							<div id="select">
+								<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">
+									<i class="fa fa-check-square-o" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">
+									<i class="fa fa-square-o" aria-hidden="true"></i>
+								</button>
+							</div>
+							<div id="control">
+								<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-tag" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_start torrent_action" value="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-play" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_stop torrent_action" value="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-pause" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-times text-danger" aria-hidden="true"></i>
+								</button>
+							</div>
+							<div id="new-torrents">
+								<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-plus" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-download" aria-hidden="true"></i>
+								</button>
+								<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
+									<i disabled class="loading fa fa-spinner fa-spin"></i>
+									<i class="fa fa-download download-replace" aria-hidden="true"></i>
+									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
+								</button>
+							</div>
+							<button id="update" name="update" type="button" title="Обновить сведения о раздачах">
+								<i class="fa fa-refresh" aria-hidden="true"></i>
+							</button>
+							<div id="reports-control">
+								<button id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум">
+									<i class="fa fa-file-text-o" aria-hidden="true"></i> Создать отчеты
+								</button>
+								<button id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум">
+									<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчеты
+								</button>
+							</div>
+							<i disabled id="loading" class="fa fa-spinner fa-spin"></i>
 						</div>
 						<form method="post" id="topics_filter">
 							<div class="topics_filter" title="Фильтр раздач текущего подраздела">

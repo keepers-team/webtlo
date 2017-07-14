@@ -1,7 +1,8 @@
 //~ $(document).ready(function() {
 	
 	/* инициализация кнопок */
-	$("#button_menu input, .topics_control button").button();
+	$(".topics_control button").button();
+	$(" #select, #control, #new-torrents, #reports-control, #filter ").buttonset();
 	
 	// период хранения средних сидов
 	$("#avg_seeders_period, #filter_avg_seeders_period").spinner({
