@@ -1,7 +1,8 @@
 //~ $(document).ready(function() {
 	
 	/* инициализация кнопок */
-	$("#button_menu input, .topics_control button").button();
+	$("#topics_control button").button();
+	$("#select, #control, #new-torrents, #filter").buttonset();
 	
 	// период хранения средних сидов
 	$("#avg_seeders_period, #filter_avg_seeders_period").spinner({
@@ -118,6 +119,7 @@
 			data: { m:'reports', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
+				$("#process").text( "Формирование отчётов..." );
 				$("#log").append(nowTime() + "Начато формирование отчётов...<br />");
 			},
 			success: function(response) {
@@ -181,6 +183,7 @@
 			data: { m:'send', cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
+				$("#process").text( "Отправка отчётов на форум..." );
 				$("#log").append(nowTime() + "Начато выполнение процесса отправки отчётов...<br />");
 			},
 			success: function(response) {
@@ -214,6 +217,7 @@
 			data: { m:'update', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
 				block_actions();
+				$("#process").text( "Обновление сведений о раздачах..." );
 				$("#log").append(nowTime() + "Начато обновление сведений...<br />");
 			},
 			success: function(response) {

@@ -38,7 +38,7 @@ $(".tor_download").on("click", function(){
 		},
 		beforeSend: function() {
 			block_actions();
-			$(this).children(".loading").show();
+			$("#process").text( "Скачивание торрент-файлов..." );
 		},
 		complete: function() {
 			$("#topics_list_"+subsection).closest("div")
@@ -106,7 +106,7 @@ $(".tor_add").on("click", function(){
 		},
 		beforeSend: function() {
 			block_actions();
-			$(this).children(".loading").show();
+			$("#process").text( "Добавление раздач в торрент-клиент..." );
 		},
 		complete: function() {
 			block_actions();
@@ -144,7 +144,7 @@ function exec_action_for_topics(){
 		},
 		beforeSend: function() {
 			block_actions();
-			$(this).children(".loading").show();
+			$("#process").text( "Управление раздачами..." );
 		},
 		complete: function() {
 			block_actions();
@@ -320,6 +320,7 @@ function getFilteredTopics(){
 		},
 		beforeSend: function() {
 			block_actions();
+			$("#process").text( "Получение данных о раздачах..." );
 		},
 		complete: function() {
 			block_actions();
