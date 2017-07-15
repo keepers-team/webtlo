@@ -120,7 +120,7 @@ $("#online-tc").on("click", function() {
 			data: { tor_client : data },
 			beforeSend: function() {
 				$("#result-tc").text("");
-				$(this).children("img").show();
+				$(this).children("i").css("display", "inline-block");
 				$(this).prop("disabled", true);
 			},
 			success: function (response) {
@@ -130,7 +130,7 @@ $("#online-tc").on("click", function() {
 			},
 			complete: function() {
 				$(this).prop("disabled", false);
-				$(this).children("img").hide();
+				$(this).children("i").hide();
 			},
 		});
 	}

@@ -347,20 +347,6 @@ label:hover {
 	padding: 10px 10px 5px 10px;
 }
 
-#filter_show img, #filter_reset img {
-	margin: 0 -5px;
-	width: 15px;
-	height: 15px;
-}
-
-.loading {
-	/*display: inline-block;*/
-	margin:  0 5px -2.5px -5px;
-	width: 13px;
-	height: 13px;
-	display: none;
-}
-
 /* topics filter */
 .filter_block {
 	display: inline-block;
@@ -397,11 +383,6 @@ label:hover {
 	vertical-align: middle;
 }
 
-.date_container img {
-	width: 15px;
-	margin-left: 2px;
-}
-
 /* topics result */
 #topics_result {
 	margin: 0 10px 0 10px;
@@ -418,10 +399,6 @@ label:hover {
 /* log */
 #log {
 	font: normal 14px monospace;
-}
-
-#manual {
-	background: transparent url(../img/loading.gif) center no-repeat;
 }
 
 .ui-button {
@@ -444,4 +421,25 @@ label:hover {
 .download-replace-super {
 	font-size: .5em !important;
 	vertical-align: top;
+}
+
+.ui-datepicker-trigger {
+	border: none;
+	background: none;
+}
+
+#manual:before {
+	content: "\f110";
+	font-family: FontAwesome, serif;
+	font-size: 100px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: -50px 0 0 -50px;
+	animation: fa-spin 2s infinite linear;
+	z-index: -1;
+}
+
+#checking {
+	display: none;
 }

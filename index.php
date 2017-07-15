@@ -134,7 +134,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
 							<div id="indication">
-								<i disabled id="loading" class="fa fa-spinner fa-spin"></i>
+								<i id="loading" class="fa fa-spinner fa-spin"></i>
 								<div style="display:none;" id="process"></div>
 							</div>
 						</div>
@@ -371,7 +371,9 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<p>
 									<input name="add-tc" id="add-tc" type="button" value="Добавить" title="Добавить новый торрент-клиент в список" />
 									<input name="del-tc" id="del-tc" type="button" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
-									<button name="online-tc" id="online-tc" type="button" title="Проверить доступность выбранного торрент-клиента в списке"><img hidden src="img/loading.gif" />Проверить</button>
+									<button name="online-tc" id="online-tc" type="button" title="Проверить доступность выбранного торрент-клиента в списке">
+										<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
+									</button>
 									<span id="result-tc"></span>
 								</p>
 								
