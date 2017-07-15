@@ -443,3 +443,7 @@ label:hover {
 #checking {
 	display: none;
 }
+
+#loading {
+	font-size: 14px;
+}

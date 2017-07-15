@@ -134,7 +134,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
 							<div id="indication">
-								<i id="loading" class="fa fa-spinner fa-spin"></i>
+								<i id="loading" class="fa fa-spinner fa-pulse"></i>
 								<div style="display:none;" id="process"></div>
 							</div>
 						</div>
