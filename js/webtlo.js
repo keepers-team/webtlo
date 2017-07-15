@@ -32,9 +32,7 @@
 		showOn: "both",
 		dateFormat: 'dd.mm.yy',
 		maxDate: "now",
-		buttonImage: "img/calendar.png",
-		buttonImageOnly: true,
-		buttonText: "Раскрыть календарь"
+		buttonText: '<i class="fa fa-calendar" aria-hidden="true"></i>'
 	})
 	.datepicker("setDate", $("#filter_date_release").val())
 	.css("width", 90)
