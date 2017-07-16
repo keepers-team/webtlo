@@ -512,7 +512,7 @@ class Download {
 	}
 	
 	// скачивание т-.файлов
-	public function download_torrent_files($forum_url, $user_id, $topics, $retracker, &$dl_log, $passkey = "", $edit = false){
+	public function download_torrent_files( $forum_url, $user_id, $topics, $retracker, &$dl_log, $passkey = "", $edit = false, $tor_for_user = false ) {
 		if( empty($user_id) ) {
 			$dl_log = "Необходимо указать в настройках авторизации \"Ключ id\".";
 			throw new Exception();
@@ -584,6 +584,9 @@ class Download {
 					$trackers = $torrent->getTrackers();
 					foreach($trackers as &$tracker){
 						$tracker = preg_replace('/(?<==)\w+$/', $passkey, $tracker);
+						if ( $tor_for_user ) {
+							$tracker = preg_replace( '/\w+(?==)/', 'pk', $tracker );
+						}
 					}
 					unset($tracker);
 					$torrent->setTrackers($trackers);

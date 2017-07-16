@@ -134,6 +134,7 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	// кураторы
 	if(isset($dir_torrents)) $ini->write('curators','dir_torrents',$dir_torrents);
 	if(isset($passkey)) $ini->write('curators','user_passkey',$passkey);
+	$ini->write( 'curators', 'tor_for_user', isset( $tor_for_user ) ? 1 : 0 );
 	
 	if( !empty( $TT_login ) ) $ini->write( 'torrent-tracker', 'login', $TT_login );
 	if( !empty( $TT_password ) ) $ini->write( 'torrent-tracker', 'password', $TT_password );
@@ -239,6 +240,7 @@ function get_settings( $filename = 'config.ini' ){
 	// кураторы
 	$config['dir_torrents'] = $ini->read('curators','dir_torrents','C:\Temp\\');
 	$config['user_passkey'] = $ini->read('curators','user_passkey','');
+	$config['tor_for_user'] = $ini->read( 'curators', 'tor_for_user', 0 );
 	
 	// установка настроек прокси
 	Proxy::options( $config['proxy_activate'], $config['proxy_type'], $config['proxy_address'], $config['proxy_auth'] );

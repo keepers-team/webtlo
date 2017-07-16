@@ -11,6 +11,7 @@ include dirname(__FILE__) . '/reports.php';
 // общие с формы #config
 if(isset($_POST['cfg'])) {
 	parse_str($_POST['cfg']); 
+	$tor_for_user = isset( $tor_for_user ) ? 1 : 0;
 	$savesubdir = isset($savesubdir) ? 1 : 0;
 	$retracker = isset($retracker) ? 1 : 0;
 	$avg_seeders = isset($avg_seeders) ? 1 : 0;
@@ -92,7 +93,7 @@ switch($_POST['m'])
 			$topics = $_POST['topics']; // массив из идентификаторов топиков для скачивания
 			$dl = new Download($api_key);
 			$dl->create_directories($savedir, $savesubdir, $TT_subsections, $TT_rule_topics, $dir_torrents, $edit, $dl_log);
-			$dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $dl_log, $passkey, $edit);
+			$dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $dl_log, $passkey, $edit, $tor_for_user);
 			echo json_encode(array('log' => Log::get(), 'dl_log' => $dl_log));
 		} catch (Exception $e) {
 			Log::append ( $e->getMessage() );

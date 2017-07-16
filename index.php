@@ -38,6 +38,7 @@ $topic_doubtfully = (in_array(8, $cfg['topics_status']) ? "checked" : "");
 $topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
+$tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 ?>
 
@@ -45,7 +46,7 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.2</title>
+		<title>web-TLO-0.9.3.3</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -565,6 +566,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<label class="label">
 									Passkey:
 									<input id="passkey" name="passkey" class="myinput" type="text" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
+								</label>
+								<label>
+									<input name="tor_for_user" type="checkbox" size="24" <?php echo $tor_for_user ?> />
+									скачать торрент-файлы для обычного пользователя
 								</label>
 							</div>
 						</div>
