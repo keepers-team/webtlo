@@ -73,7 +73,6 @@ $( "#tor_blacklist" ).on( "click", function() {
 		},
 		success: function( response ) {
 			$( "#topics_result" ).html( response );
-			hold_topics_result = true;
 			getFilteredTopics.apply( this );
 		},
 		complete: function() {
@@ -128,7 +127,6 @@ $(".tor_add").on("click", function(){
 					data: { success:resp.success, status:-1, client:value },
 					success: function(response) {
 						$("#log").append(response);
-						hold_topics_result = true;
 						getFilteredTopics.apply(this);
 					}
 				});
@@ -167,7 +165,6 @@ function exec_action_for_topics(){
 					data: { success:resp.ids, status:status, client:'' },
 					success: function(response) {
 						$("#log").append(response);
-						hold_topics_result = true;
 						getFilteredTopics.apply(this);
 					},
 				});
@@ -241,9 +238,6 @@ function addSizeAndAmount(input) {
 // получение данных и вывод на экран кол-во, объём выделенных/остортированных раздач
 function countSizeAndAmount(thisElem) {
 	var action = 0;
-	if ( typeof hold_topics_result === "undefined" ) {
-		hold_topics_result = false;
-	}
 	if ( thisElem !== undefined ) {
 		action = thisElem.val();
 	}
@@ -251,6 +245,7 @@ function countSizeAndAmount(thisElem) {
 	var topics = $("#topics").find("input[type=checkbox]");
 	var filtered = false;
 	if (topics.length === 0) {
+		showSizeAndAmount(0, 0, false);
 		showSizeAndAmount(0, 0, true);
 	} else {
 		topics.each(function () {
@@ -272,16 +267,9 @@ function countSizeAndAmount(thisElem) {
 					filtered = true;
 			}
 		});
-		if ( !hold_topics_result ) {
-			if ( $("#topics_count").length === 0 ) {
-				$("#topics_result").html('Выбрано раздач: <span id="topics_count" class="rp-header">0</span> ' +
-					'(<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span>' +
-					' (<span id="filtered_topics_size">0.00</span>).');
-			}
-			showSizeAndAmount(counter.count, counter.size_all, filtered);
-		}
+		showSizeAndAmount(0, 0, false);
+		showSizeAndAmount(counter.count, counter.size_all, filtered);
 	}
-	hold_topics_result = false;
 }
 
 // кнопка выделить все / отменить выделение
