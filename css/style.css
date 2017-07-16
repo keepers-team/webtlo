@@ -8,6 +8,7 @@
 
 html {
 	height: 100%;
+	min-width: 1024px;
 }
 
 body {
@@ -56,10 +57,6 @@ input[type="text"] {
 	padding: 0 3px;
 }
 
-#ui-datepicker-div {
-	font-size: small;
-}
-
 .sub_settings {
 	margin-top: -3px;
 }
@@ -99,6 +96,18 @@ sub {
 	flex: 1;
 	overflow-y: auto;
 	min-height: 0;
+}
+
+#manual:before {
+	content: "\f110";
+	font-family: FontAwesome, serif;
+	font-size: 100px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: -50px 0 0 -50px;
+	animation: fa-spin 2s infinite linear;
+	z-index: -1;
 }
 
 #sub-data:after{
@@ -141,6 +150,28 @@ li.menu.ui-tabs-active {
 	padding: 0;
 }
 
+#ui-datepicker-div {
+	font-size: small;
+}
+
+.ui-button {
+	padding: .4em .6em;
+}
+
+.ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {
+	padding: .3em .7em;
+	font-size: 85%;
+}
+
+.ui-tabs .ui-tabs-panel {
+	padding: .6em 1em;
+}
+
+.ui-datepicker-trigger {
+	border: none;
+	background: none;
+}
+
 /* content */
 #content {
 	border: 1px solid #D3D3D3 /*#999999*/;
@@ -155,19 +186,6 @@ li.menu.ui-tabs-active {
 	cursor: default;
 	color: #D3D3D3;
 	border: 1px solid #D3D3D3;
-}
-
-#help {
-	height: 1.7em;
-	font-size: 1em;
-	font-weight: normal;
-	padding: /*10px 13px 0 13px;*/.555em .722em 0 .722em /*9.5px 18px*/;
-	margin: 0 0 -.055em 0;
-/*
-	-moz-border-radius: 20px;
-    -webkit-border-radius: 20px;
-    border-radius: 20px;
-*/
 }
 
 #indication, #indication * {
@@ -185,6 +203,8 @@ li.menu.ui-tabs-active {
 /* settings */
 #savecfg {
 	margin: 0 0 10px 15px;
+	padding: .3em .7em;
+	font-size: 85%;
 }
 
 #config {
@@ -196,12 +216,6 @@ li.menu.ui-tabs-active {
 	display: inline-block;
 	vertical-align: top;
 }
-
-/*
-.block-settings :first-child {
-	margin-right: 30px;
-}
-*/
 
 .block-settings span {
 	display: inline-block;
@@ -248,6 +262,10 @@ label:hover {
 	height: 17px;
 	margin: 0 5px;
 	vertical-align: middle;
+}
+
+#checking {
+	display: none;
 }
 
 #result-tc {
@@ -347,6 +365,19 @@ label:hover {
 	padding: 10px 10px 5px 10px;
 }
 
+.download-replace {
+	letter-spacing: -5px;
+}
+
+.download-replace-super {
+	font-size: .5em !important;
+	vertical-align: top;
+}
+
+#loading {
+	font-size: 14px;
+}
+
 /* topics filter */
 .filter_block {
 	display: inline-block;
@@ -384,8 +415,17 @@ label:hover {
 }
 
 /* topics result */
+.status_info {
+	display: flex;
+}
+
 #topics_result {
-	margin: 0 10px 0 10px;
+	flex: 1;
+	text-align: right;
+}
+
+#topics_result, #counter {
+	margin: 0 10px;
 }
 
 #topics {
@@ -399,51 +439,4 @@ label:hover {
 /* log */
 #log {
 	font: normal 14px monospace;
-}
-
-.ui-button {
-	padding: .4em .6em;
-}
-
-.ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header, #savecfg {
-	padding: .3em .7em;
-	font-size: 85%;
-}
-
-.ui-tabs .ui-tabs-panel {
-	padding: .6em 1em;
-}
-
-.download-replace {
-	letter-spacing: -5px;
-}
-
-.download-replace-super {
-	font-size: .5em !important;
-	vertical-align: top;
-}
-
-.ui-datepicker-trigger {
-	border: none;
-	background: none;
-}
-
-#manual:before {
-	content: "\f110";
-	font-family: FontAwesome, serif;
-	font-size: 100px;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	margin: -50px 0 0 -50px;
-	animation: fa-spin 2s infinite linear;
-	z-index: -1;
-}
-
-#checking {
-	display: none;
-}
-
-#loading {
-	font-size: 14px;
 }
