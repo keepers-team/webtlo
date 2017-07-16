@@ -260,7 +260,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 							</div>
 						</form>
 						<hr />
-						<div id="topics_result">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>).</div>
+						<div class="status_info">
+							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="topics_result"></div>
+						</div>
 						<hr />
 						<div id="topics"></div>
 					</div>
