@@ -112,7 +112,7 @@ $(".tor_add").on("click", function(){
 			block_actions();
 		},
 	});
-})
+});
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
 function exec_action_for_topics(){
@@ -329,9 +329,18 @@ function getFilteredTopics(){
 	});
 }
 
+// скрыть фильтр если он был скрыт ранее
+$(document).ready(function() {
+	if(Cookies.get('filter-state') === "false"){
+		$("#topics_filter").hide();
+	}
+});
+
 // скрыть/показать фильтр
 $("#filter_show").on("click", function() {
-	$("#topics_filter").toggle(500);
+	$("#topics_filter").toggle(500, function () {
+		Cookies.set('filter-state', $(this).is(':visible'));
+	});
 });
 
 // сбросить настройки фильтра
