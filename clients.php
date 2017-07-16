@@ -188,7 +188,7 @@ class utorrent {
 				$data[$torrent[0]]['client'] = $client;
 			}
 		}
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -349,7 +349,7 @@ class transmission {
 				$data[$hash]['client'] = $client;
 			}
 		}
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -504,7 +504,7 @@ class vuze {
 				$data[$hash]['client'] = $client;
 			}
 		}
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -696,7 +696,7 @@ class deluge {
 				$data[$hash]['client'] = $client;
 			}
 		}        
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -889,7 +889,7 @@ class qbittorrent {
 				$data[$hash]['client'] = $client;
 			}
 		}
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -1079,7 +1079,7 @@ class ktorrent {
 				$data[$hash]['client'] = $client;
 			}
 		}
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
 	}
 	
 	// добавить торрент
@@ -1209,7 +1209,7 @@ class rtorrent {
             $data[$torrent[0]]['status'] = $status;
             $data[$torrent[0]]['client'] = $client;
         }
-        return is_array($data) ? $data : array();
+        return isset($data) ? $data : array();
     }
 
     // добавить торрент
