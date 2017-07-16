@@ -203,7 +203,30 @@ class Db {
 			);
 			
 			self::query_database('PRAGMA user_version = 2');
+			
 		}
+		
+		if( $version[0]['user_version'] < 3 ) {
+			
+			self::query_database( 'CREATE TABLE IF NOT EXISTS Blacklist (
+				id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+				topic_id INTEGER NOT NULL
+			)' );
+			
+			self::query_database( 'DROP TRIGGER delete_seeders' );
+			
+			self::query_database('CREATE TRIGGER IF NOT EXISTS delete_topics
+				AFTER DELETE ON Topics FOR EACH ROW
+				BEGIN
+					DELETE FROM Seeders WHERE id = OLD.id;
+					DELETE FROM Blacklist WHERE topic_id = OLD.id;
+				END;'
+			);
+			
+			self::query_database('PRAGMA user_version = 3');
+			
+		}
+		
 	}
 	
 }

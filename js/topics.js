@@ -52,6 +52,37 @@ $(".tor_download").on("click", function(){
 	});
 });
 
+// "чёрный список"
+$( "#tor_blacklist" ).on( "click", function() {
+	
+	forum_id = $( "#subsections" ).val();
+	value = forum_id != -2 ? 1 : 0;
+	topics = listSelectedTopics.apply();
+	
+	if ( topics == "" ) {
+		return;
+	}
+	
+	$.ajax({
+		type: "POST",
+		url: "php/actions/blacklist.php",
+		data: { topics:topics, value:value },
+		beforeSend: function() {
+			block_actions();
+			$("#process").text( "Редактирование \"чёрного списка\" раздач..." );
+		},
+		success: function( response ) {
+			$( "#topics_result" ).html( response );
+			hold_topics_result = true;
+			getFilteredTopics.apply( this );
+		},
+		complete: function() {
+			block_actions();
+		},
+	});
+	
+});
+
 // добавление раздач в торрент-клиент
 $(".tor_add").on("click", function(){
 	subsection = $("#subsections").val();
@@ -96,10 +127,9 @@ $(".tor_add").on("click", function(){
 					url: "php/mark_topics_in_database.php",
 					data: { success:resp.success, status:-1, client:value },
 					success: function(response) {
-						setTimeout(function () {
-							$("#log").append(response);
-							getFilteredTopics.apply(this);
-						}, 2000)
+						$("#log").append(response);
+						hold_topics_result = true;
+						getFilteredTopics.apply(this);
 					}
 				});
 			}
@@ -137,6 +167,7 @@ function exec_action_for_topics(){
 					data: { success:resp.ids, status:status, client:'' },
 					success: function(response) {
 						$("#log").append(response);
+						hold_topics_result = true;
 						getFilteredTopics.apply(this);
 					},
 				});
@@ -210,13 +241,16 @@ function addSizeAndAmount(input) {
 // получение данных и вывод на экран кол-во, объём выделенных/остортированных раздач
 function countSizeAndAmount(thisElem) {
 	var action = 0;
-	if (thisElem !== undefined){
+	if ( typeof hold_topics_result === "undefined" ) {
+		hold_topics_result = false;
+	}
+	if ( thisElem !== undefined ) {
 		action = thisElem.val();
 	}
 	var counter = new Counter();
 	var topics = $("#topics").find("input[type=checkbox]");
 	var filtered = false;
-	if (topics.length === 0){
+	if (topics.length === 0) {
 		showSizeAndAmount(0, 0, true);
 	} else {
 		topics.each(function () {
@@ -238,14 +272,16 @@ function countSizeAndAmount(thisElem) {
 					filtered = true;
 			}
 		});
-		if ($("#topics_count").length === 0) {
-			$("#topics_result").html('Выбрано раздач: <span id="topics_count" class="rp-header">0</span> ' +
-				'(<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span>' +
-				' (<span id="filtered_topics_size">0.00</span>).');
-			countSizeAndAmount();
+		if ( !hold_topics_result ) {
+			if ( $("#topics_count").length === 0 ) {
+				$("#topics_result").html('Выбрано раздач: <span id="topics_count" class="rp-header">0</span> ' +
+					'(<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span>' +
+					' (<span id="filtered_topics_size">0.00</span>).');
+			}
+			showSizeAndAmount(counter.count, counter.size_all, filtered);
 		}
-		showSizeAndAmount(counter.count, counter.size_all, filtered);
 	}
+	hold_topics_result = false;
 }
 
 // кнопка выделить все / отменить выделение
@@ -312,10 +348,11 @@ function getFilteredTopics(){
 		type: "POST",
 		url: "php/actions/get_filtered_list_topics.php",
 		data: { forum_id: forum_id, config: $config, filter: $filter },
-		success: function(response) {
+		success: function( response ) {
 			response = $.parseJSON(response);
-			if( response.log ) $("#topics_result").html(response.log);
-			if( response.topics != null ) $("#topics").html(response.topics);
+			if ( response.topics != null ) {
+				$("#topics").html(response.topics);
+			}
 			//~ $("#log").append(response);
 		},
 		beforeSend: function() {
@@ -324,7 +361,7 @@ function getFilteredTopics(){
 		},
 		complete: function() {
 			block_actions();
-			countSizeAndAmount()
+			countSizeAndAmount.apply();
 		}
 	});
 }

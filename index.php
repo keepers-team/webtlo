@@ -42,11 +42,10 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 ?>
 
 <!DOCTYPE html>
-
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.2.14</title>
+		<title>web-TLO-0.9.3.0</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -76,8 +75,8 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 							<option value="0">Хранимые раздачи из других подразделов</option>
 <!--
 							<option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
-							<option value="-2">Раздачи из "чёрного списка"</option>
 -->
+							<option value="-2">Раздачи из "чёрного списка"</option>
 						</optgroup>
 					</select>
 					<div id="sub-data">
@@ -108,6 +107,9 @@ $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 								<button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
 									<i class="fa fa-download download-replace" aria-hidden="true"></i>
 									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
+								</button>
+								<button type="button" id="tor_blacklist" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
+									<i class="fa fa-ban" aria-hidden="true"></i>
 								</button>
 							</div>
 							<div id="control">

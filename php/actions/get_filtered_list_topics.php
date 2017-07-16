@@ -66,12 +66,16 @@ try {
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
 			case 0:
-				$where = "dl = -2";
+				$where = "dl = -2 AND Blacklist.topic_id IS NULL";
+				$param = array();
+				break;
+			case -2:
+				$where = "Blacklist.topic_id IS NOT NULL";
 				$param = array();
 				break;
 		}
 	} else {
-		$where = "dl = :dl AND ss = :forum_id $kp";
+		$where = "dl = :dl AND ss = :forum_id AND Blacklist.topic_id IS NULL $kp";
 		$param = array( 'dl' => $filter_status, 'forum_id' => $forum_id );
 	}
 	
@@ -80,6 +84,7 @@ try {
 		"SELECT Topics.id,ss,na,hs,si,st,rg,dl,cl,$qt as ds,$avg as avg ".
 		"FROM Topics LEFT JOIN Seeders on Seeders.id = Topics.id ".
 		"LEFT JOIN (SELECT * FROM Keepers GROUP BY topic_id) Keepers ON Topics.id = Keepers.topic_id ".
+		"LEFT JOIN (SELECT * FROM Blacklist GROUP BY topic_id) Blacklist ON Topics.id = Blacklist.topic_id ".
 		"WHERE $where",
 		$param, true, PDO::FETCH_ASSOC
 	);
