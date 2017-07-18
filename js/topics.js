@@ -329,6 +329,7 @@ $(document).on("dblclick",".keeper",function(e){
 
 // получение отфильтрованных раздач из базы
 function getFilteredTopics(){
+	Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
 	forum_id = $("#subsections").val();
 	$config = $("#config").serialize();
 	$filter = $("#topics_filter").serialize();
@@ -359,6 +360,20 @@ $(document).ready(function() {
 	if(Cookies.get('filter-state') === "false"){
 		$("#topics_filter").hide();
 	}
+	var filter_options = JSON.parse( Cookies.get( 'filter-options' ) );
+	jQuery.each( filter_options, function ( i, option ) {
+		$( "#topics_filter" ).find( "input[name='" + option[ "name" ] + "']" ).each( function () {
+			if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
+				if ( $( this ).val() === option[ "value" ] ) {
+					$( this ).prop( "checked", true );
+				} else {
+					$( this ).prop( "checked", false );
+				}
+			} else {
+				$( this ).val( option[ "value" ] );
+			}
+		} );
+	} );
 });
 
 // скрыть/показать фильтр
@@ -389,15 +404,11 @@ $("#topics_filter").find("input[type=text], input[type=search]").on("spin input"
 	showSizeAndAmount( 0, 0.00 );
 });
 
-$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").on("change", function() {
-	delay( getFilteredTopics, this );
-	showSizeAndAmount( 0, 0.00 );
-});
-
-$("#filter_date_release").on("change", function() {
-	delay( getFilteredTopics, this );
-	showSizeAndAmount( 0, 0.00 );
-});
+$("#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release").on("change",
+	function () {
+		delay(getFilteredTopics, this);
+		showSizeAndAmount(0, 0.00);
+	});
 
 // есть/нет хранители
 $(".topics_filter .keepers").on("change", function(){
