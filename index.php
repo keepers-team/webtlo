@@ -50,7 +50,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<title>web-TLO-0.9.3.3</title>
 		<!-- <link rel="stylesheet" href="css/reset.css" />  сброс стилей -->
 		<!-- <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" /> -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
 		<!-- <link rel="stylesheet" href="css/jquery.bootstrap-touchspin.css" />-->
 		<!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap4.min.css"> -->
 		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
@@ -77,7 +77,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<a href="#manual" title="Открыть файл руководства" class="nav-link" data-toggle="tab" role="tab">FAQ</a>
 				</li>
 			</ul>
-			<div id="content" class="tab-content">
+			<div id="content" class="tab-content pl-2 pr-2 pb-2">
 				<div id="main" class="tab-pane fade show active" role="tabpanel">
 					<select id="subsections" class="form-control form-control-sm" title="Подраздел">
 						<optgroup id="subsections_stored" label="">
@@ -94,57 +94,57 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<div id="sub-data">
 						<div id="topics_control">
 							<div id="filter" class="btn-group" role="group">
-								<!--<button type="button" id="filter_show" class="btn btn-sm btn-secondary" title="Скрыть или показать настройки фильтра">
+								<!--<button type="button" id="filter_show" class="btn btn-sm btn-outline-dark" title="Скрыть или показать настройки фильтра">
 									<i class="fa fa-filter"></i>
 								</button> -->
-								<button type="button" id="filter_reset" class="btn btn-sm btn-secondary" title="Сбросить настройки фильтра на значения по умолчанию">
+								<button type="button" id="filter_reset" class="btn btn-sm btn-outline-dark" title="Сбросить настройки фильтра на значения по умолчанию">
 									<i class="fa fa-undo"></i>
 								</button>
 							</div>
 							<div id="select" class="btn-group" role="group">
-								<button type="button" id="tor_select" class="btn btn-sm btn-secondary" value="select" title="Выделить все раздачи текущего подраздела">
+								<button type="button" id="tor_select" class="btn btn-sm btn-outline-dark" value="select" title="Выделить все раздачи текущего подраздела">
 									<i class="fa fa-check-square-o"></i>
 								</button>
-								<button type="button" id="tor_unselect" class="btn btn-sm btn-secondary" value="unselect" title="Снять выделение всех раздач текущего подраздела">
+								<button type="button" id="tor_unselect" class="btn btn-sm btn-outline-dark" value="unselect" title="Снять выделение всех раздач текущего подраздела">
 									<i class="fa fa-square-o"></i>
 								</button>
 							</div>
 							<div id="new-torrents" class="btn-group" role="group">
-								<button type="button" id="tor_add" class="btn btn-sm btn-secondary" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
+								<button type="button" id="tor_add" class="btn btn-sm btn-outline-dark" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
 									<i class="fa fa-plus text-success"></i>
 								</button>
-								<button type="button" id="tor_download" class="btn btn-sm btn-secondary" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
+								<button type="button" id="tor_download" class="btn btn-sm btn-outline-dark" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
 									<i class="fa fa-download"></i>
 								</button>
-								<button type="button" id="tor_download" class="btn btn-sm btn-secondary" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
+								<button type="button" id="tor_download" class="btn btn-sm btn-outline-dark" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
 									<i class="fa fa-download download-replace"></i>
 									<i class="fa fa-asterisk download-replace-super"></i>
 								</button>
-								<button type="button" id="tor_blacklist" class="btn btn-sm btn-secondary" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
+								<button type="button" id="tor_blacklist" class="btn btn-sm btn-outline-dark" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
 									<i class="fa fa-ban text-danger"></i>
 								</button>
 							</div>
 							<div id="control" class="btn-group" role="group">
-								<button type="button" class="btn btn-sm btn-secondary torrent_action" id="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
+								<button type="button" class="btn btn-sm btn-outline-dark torrent_action" id="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
 									<i class="fa fa-tag"></i>
 								</button>
-								<button type="button" class="btn btn-sm btn-secondary torrent_action" id="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте">
+								<button type="button" class="btn btn-sm btn-outline-dark torrent_action" id="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте">
 									<i class="fa fa-play text-success"></i>
 								</button>
-								<button type="button" class="btn btn-sm btn-secondary torrent_action" id="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте">
+								<button type="button" class="btn btn-sm btn-outline-dark torrent_action" id="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте">
 									<i class="fa fa-pause text-warning"></i>
 								</button>
-								<button type="button" class="btn btn-sm btn-secondary torrent_action" id="remove_open_modal" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
+								<button type="button" class="btn btn-sm btn-outline-dark torrent_action" id="remove_open_modal" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
 									<i class="fa fa-times text-danger"></i>
 								</button>
 							</div>
-							<button id="update" class="btn btn-sm btn-secondary" name="update" type="button" title="Обновить сведения о раздачах">
+							<button id="update" class="btn btn-sm btn-outline-dark" name="update" type="button" title="Обновить сведения о раздачах">
 								<i class="fa fa-refresh"></i> Обновить сведения
 							</button>
-							<button id="startreports" class="btn btn-sm btn-secondary" name="startreports" type="button" title="Сформировать отчёты для вставки на форум">
+							<button id="startreports" class="btn btn-sm btn-outline-dark" name="startreports" type="button" title="Сформировать отчёты для вставки на форум">
 								<i class="fa fa-file-text-o"></i> Создать отчёты
 							</button>
-							<button id="sendreports" class="btn btn-sm btn-secondary" name="sendreports" type="button" title="Отправить отчёты на форум">
+							<button id="sendreports" class="btn btn-sm btn-outline-dark" name="sendreports" type="button" title="Отправить отчёты на форум">
 								<i class="fa fa-paper-plane-o"></i> Отправить отчёты
 							</button>
 							<div id="indication">
@@ -156,35 +156,35 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<div class="topics_filter" title="Фильтр раздач текущего подраздела">
 
 								<div class="btn-group" data-toggle="buttons" title="Статусы">
-									<label class="btn btn-sm btn-secondary">
+									<label class="btn btn-sm btn-outline-dark">
 										<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
 									</label>
-									<label class="btn btn-sm btn-secondary active">
+									<label class="btn btn-sm btn-outline-dark active">
 										<input type="radio" name="filter_status" value="0" autocomplete="off" checked> не храню
 									</label>
-									<label class="btn btn-sm btn-secondary">
+									<label class="btn btn-sm btn-outline-dark">
 										<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
 									</label>
 								</div>
 
 								<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-									<label class="btn btn-secondary btn-sm">
+									<label class="btn btn-outline-dark btn-sm">
 										<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
 									</label>
 								</div>
 
 								<div class="btn-group" data-toggle="buttons">
-									<label class="btn btn-secondary btn-sm" title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
+									<label class="btn btn-outline-dark btn-sm" title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
 										<input type="checkbox" name="not_keepers" class="keepers" autocomplete="off"> нет хранителей
 									</label>
-									<label class="btn btn-secondary btn-sm" title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+									<label class="btn btn-outline-dark btn-sm" title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
 										<input type="checkbox" name="is_keepers" class="keepers" autocomplete="off"> есть хранители
 									</label>
 								</div>
 
 								<div class="filter_block">
 									<label for="filter_avg_seeders_period" title="Выберите произвольный период средних сидов">
-										Период средних сидов:
+										<span class="mr-2">Период средних сидов:</span>
 										<input type="number" id="filter_avg_seeders_period" class="form-control form-control-sm" name="avg_seeders_period" value="<?php echo $cfg['avg_seeders_period'] ?>" min="1" max="30"/>
 									</label>
 								</div>
@@ -237,19 +237,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 				<div id="settings" class="tab-pane fade" role="tabpanel">
 					<div>
-						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-secondary">
+						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-outline-dark">
 					</div>
 					<form id="config">
 						<div class="sub_settings" id="accordion" role="tablist">
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a data-toggle="collapse" data-parent="#accordion" href="#authentication">Настройки авторизации на форуме</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="authentication" class="collapse show" role="tabpanel">
-									<div class="card-block">
-										<div class="form-group row">
+									<div class="card-body">
+										<div class="row">
 											<label for="forum_url" class="col-3 col-form-label">
 												Используемый адрес форума:
 											</label>
@@ -266,7 +266,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</select>
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="api_url" class="col-3 col-form-label">
 												Используемый адрес API:
 											</label>
@@ -281,7 +281,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</select>
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="TT_login" class="col-3 col-form-label">
 												Логин:
 											</label>
@@ -289,7 +289,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="TT_login" name="TT_login" class="form-control form-control-sm" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>">
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="TT_password" class="col-3 col-form-label">
 												Пароль:
 											</label>
@@ -297,7 +297,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="TT_password" name="TT_password" class="form-control form-control-sm" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>">
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="bt_key" class="col-3 col-form-label">
 												Ключ bt:
 											</label>
@@ -305,7 +305,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="bt_key" name="bt_key" class="form-control form-control-sm" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>">
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="api_key" class="col-3 col-form-label">
 												Ключ api:
 											</label>
@@ -313,7 +313,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="api_key" name="api_key" class="form-control form-control-sm" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>">
 											</div>
 										</div>
-										<div class="form-group row">
+										<div class="row">
 											<label for="user_id" class="col-3 col-form-label">
 												Ключ id:
 											</label>
@@ -327,12 +327,12 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#proxy">Настройки прокси-сервера</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="proxy" class="collapse" role="tabpanel">
-									<div class="card-block">
+									<div class="card-body">
 										<div>
 											<label class="form-check-label" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
 												<input class="form-check-input" name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?>>
@@ -340,7 +340,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											</label>
 										</div>
 										<div id="proxy_prop">
-											<div class="form-group row">
+											<div class="row">
 												<label for="proxy_type" class="col-3 col-form-label">
 													Тип прокси-сервера:
 												</label>
@@ -353,7 +353,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													</select>
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="proxy_hostname" class="col-3 col-form-label">
 													IP-адрес/сетевое имя:
 												</label>
@@ -361,7 +361,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													<input name="proxy_hostname" id="proxy_hostname" class="form-control form-control-sm" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="<?php echo $cfg['proxy_hostname'] ?>">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="proxy_port" class="col-3 col-form-label">
 													Порт:
 												</label>
@@ -369,7 +369,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													<input name="proxy_port" id="proxy_port" class="form-control form-control-sm" size="24" title="Порт прокси-сервера." value="<?php echo $cfg['proxy_port'] ?>">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="proxy_login" class="col-3 col-form-label">
 													Логин:
 												</label>
@@ -377,7 +377,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													<input name="proxy_login" id="proxy_login" class="form-control form-control-sm" size="24" title="Имя пользователя для доступа к прокси-серверу (необязательно)." value="<?php echo $cfg['proxy_login'] ?>">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="proxy_paswd" class="col-3 col-form-label">
 													Пароль:
 												</label>
@@ -392,16 +392,16 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#clients">Настройки торрент-клиентов</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="clients" class="collapse" role="tabpanel">
-									<div class="card-block">
+									<div class="card-body">
 										<p>
-											<input name="add-tc" id="add-tc" type="button" class="btn btn-sm btn-secondary" value="Добавить" title="Добавить новый торрент-клиент в список" />
-											<input name="del-tc" id="del-tc" type="button" class="btn btn-sm btn-secondary" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
-											<button name="online-tc" id="online-tc" type="button" class="btn btn-sm btn-secondary" title="Проверить доступность выбранного торрент-клиента в списке">
+											<input name="add-tc" id="add-tc" type="button" class="btn btn-sm btn-outline-dark" value="Добавить" title="Добавить новый торрент-клиент в список" />
+											<input name="del-tc" id="del-tc" type="button" class="btn btn-sm btn-outline-dark" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
+											<button name="online-tc" id="online-tc" type="button" class="btn btn-sm btn-outline-dark" title="Проверить доступность выбранного торрент-клиента в списке">
 												<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
 											</button>
 											<span id="result-tc"></span>
@@ -463,19 +463,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#sub-sections">Настройки сканируемых подразделов</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="sub-sections" class="collapse" role="tabpanel">
-									<div class="card-block">
+									<div class="card-body">
 										<div class="form-group row">
 											<div class="col-12">
 												<input id="ss-add" class="form-control form-control-sm" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" autocomplete="off">
 											</div>
 										</div>
-										<input id="ss-del" type="button" class="btn btn-sm btn-secondary" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
-										<div class="form-group row">
+										<input id="ss-del" type="button" class="btn btn-sm btn-outline-dark" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
+										<div class="row">
 											<label for="list-ss" class="col-2 col-form-label">Подраздел:</label>
 											<div class="col-10">
 												<select name="list-ss" id="list-ss" class="form-control form-control-sm">
@@ -484,13 +484,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											</div>
 										</div>
 										<div id="ss-prop">
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-id" class="col-2 col-form-label">Индекс:</label>
 												<div class="col-1">
 													<input disabled id="ss-id" class="form-control form-control-sm ss-prop" title="Индекс подраздела">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-client" class="col-2 col-form-label">Торрент-клиент:</label>
 												<div class="col-2">
 													<select id="ss-client" class="form-control form-control-sm ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
@@ -498,25 +498,25 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													</select>
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-label" class="col-2 col-form-label">Метка:</label>
 												<div class="col-5">
 													<input id="ss-label" class="form-control form-control-sm ss-prop" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-folder" class="col-2 col-form-label">Каталог для данных:</label>
 												<div class="col-6">
 													<input id="ss-folder" class="form-control form-control-sm ss-prop" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-link" class="col-2 col-form-label">Ссылка на список:</label>
 												<div class="col-2">
 													<input id="ss-link" class="form-control form-control-sm ss-prop" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)">
 												</div>
 											</div>
-											<div class="form-group row">
+											<div class="row">
 												<label for="ss-sub-folder" class="col-2 col-form-label">Создавать подкаталог для добавляемой раздачи:</label>
 												<div class="col-2">
 													<select id="ss-sub-folder" class="form-control form-control-sm ss-prop" title="Создавать подкаталог для данных добавляемой раздачи">
@@ -533,12 +533,12 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#torrents-control">Настройки управления раздачами</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="torrents-control" class="collapse" role="tabpanel">
-									<div class="card-block">
+									<div class="card-body">
 										<h4>Статусы раздач</h4>
 										<div id="tor_status">
 											<div class="form-check">
@@ -573,25 +573,47 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											</div>
 										</div>
 										<h4>Фильтрация раздач</h4>
-										<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
-											Предлагать для хранения раздачи с количеством сидов не более:
-											<input id="TT_rule_topics" name="TT_rule_topics" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
-										</label>
-										<label class="label" title="Укажите необходимое количество дней">
-											Предлагать для хранения раздачи старше
-											<input id="rule_date_release" name="rule_date_release" type="number" min="0" size="2" value="<?php echo $cfg['rule_date_release'] ?>" />
-											дн.
-										</label>
-										<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
-											Вносить в отчёты раздачи с количеством сидов не более:
-											<input id="TT_rule_reports" name="TT_rule_reports" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_reports'] ?>" />
-										</label>
-										<label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
-											<input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
-											находить среднее значение количества сидов за
-											<input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="number" min="1" max="30" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
-											дн.
-										</label>
+										<div class="row">
+											<label for="TT_rule_topics" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
+												Предлагать для хранения раздачи с количеством сидов не более:
+											</label>
+											<div class="col-1">
+												<input id="TT_rule_topics" name="TT_rule_topics" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>">
+											</div>
+										</div>
+										<div class="row">
+											<label for="rule_date_release" class="col-6 col-form-label" title="Укажите необходимое количество дней">
+												Предлагать для хранения раздачи старше
+											</label>
+											<div class="col-2">
+												<div class="input-group input-group-sm">
+													<input id="rule_date_release" name="rule_date_release" class="form-control" type="number" min="0" size="2" value="<?php echo $cfg['rule_date_release'] ?>">
+													<span class="input-group-addon">дн.</span>
+												</div>
+											</div>
+										</div>
+										<div class="row">
+											<label for="TT_rule_reports" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
+												Вносить в отчёты раздачи с количеством сидов не более:
+											</label>
+											<div class="col-1">
+												<input id="TT_rule_reports" name="TT_rule_reports" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_reports'] ?>">
+											</div>
+										</div>
+										<div class="row">
+											<label for="avg_seeders_period" class="col-6 col-form-label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
+												находить среднее значение количества сидов за
+											</label>
+											<div class="col-2">
+												<div class="input-group input-group-sm">
+													<span class="input-group-addon">
+														<input id="avg_seeders" name="avg_seeders" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)" type="checkbox" size="24" <?php echo $avg_seeders ?>>
+													</span>
+													<input id="avg_seeders_period" name="avg_seeders_period" class="form-control" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="number" min="1" max="30" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
+													<span class="input-group-addon">дн.</span>
+												</div>
+											</div>
+										</div>
 										<h4>Регулировка раздач<sup>1</sup></h4>
 										<label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
 											Останавливать раздачи с количеством пиров более:
@@ -613,12 +635,12 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 							<div class="card">
 								<div class="card-header" role="tab">
-									<h5 class="mb-0">
+									<h6 class="mb-0">
 										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#torrents-download">Настройки загрузки торрент-файлов</a>
-									</h5>
+									</h6>
 								</div>
 								<div id="torrents-download" class="collapse" role="tabpanel">
-									<div class="card-block">
+									<div class="card-body">
 										<h4>Каталог для скачиваемых *.torrent файлов</h4>
 										<div>
 											<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" />
@@ -674,7 +696,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<div class="modal-footer">
 						<button type="button" class="btn btn-danger" data-dismiss="modal" id="remove_data">Да</button>
 						<button type="button" class="btn btn-primary" data-dismiss="modal" id="remove">Нет</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Отмена</button>
 					</div>
 				</div>
 			</div>
@@ -695,19 +717,20 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-primary" data-dismiss="modal" id="set_custom_label">Ок</button>
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+						<button type="button" class="btn btn-outline-dark" data-dismiss="modal">Отмена</button>
 					</div>
 				</div>
 			</div>
 		</div>
 		<!-- скрипты webtlo -->
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
 		<!-- <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script> -->
 		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
 		<script src="jquery-ui-1.12.1/external/js.cookie.js"></script>
-		<script src="jquery-ui-1.12.1/tether.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
 		<script src="jquery-ui-1.12.1/bootstrap3-typeahead.js"></script>
 		<script src="jquery-ui-1.12.1/bootstrap-datepicker.js"></script>
 		<script src="jquery-ui-1.12.1/bootstrap-datepicker.ru.min.js"></script>

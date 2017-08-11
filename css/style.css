@@ -109,6 +109,8 @@ sub {
 	height: calc(100% - 42px);
 	/*box-sizing: border-box;*/
 	padding-top: 10px;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
 }
 
 #manual, #topics, #reporttabs div, #config, #log {
@@ -208,6 +210,7 @@ li.menu.ui-tabs-active {
 
 #indication, #indication * {
 	display: inline-block;
+	font-size: 14px;
 }
 
 #loading, #process {
@@ -245,7 +248,7 @@ li.menu.ui-tabs-active {
 /*#settings .flex {
 	display: flex;
 	margin: 0 0 10px 0;
-}*/
+}
 
 label:hover {
 	cursor: pointer;
@@ -264,7 +267,7 @@ label:hover {
 	margin: 8px 0;
 	display: inline-block;
 	padding: 0 3px;
-}
+}*/
 
 #proxy_prop {
 	margin-top: 15px;
@@ -389,6 +392,7 @@ label:hover {
 	display: inline-block;
 	/*vertical-align: top;
 	margin: 5px 10px 0 10px;*/
+	font-size: 14px;
 }
 
 .filter_block fieldset {
@@ -398,10 +402,10 @@ label:hover {
 	border-radius: 4px;
 */
 }
-
+/*
 .topics_filter label {
 	display: block;
-}
+}*/
 
 .filter_rule fieldset {
 	margin-top: 5px;
