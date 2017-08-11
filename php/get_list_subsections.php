@@ -23,7 +23,7 @@ try {
 	foreach( $pattern as $pattern ) {
 		$pattern = '%' . str_replace ( ' ', '%', $pattern ) . '%';
 		$data = Db::query_database (
-			"SELECT id AS value, na AS label FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
+			"SELECT id AS id, na AS name FROM Forums WHERE id LIKE :term OR na LIKE :term ORDER BY na",
 			array( 'term' => $pattern ), true
 		);
 		$subsections = array_merge_recursive( $subsections, $data );

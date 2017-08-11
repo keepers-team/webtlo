@@ -17,7 +17,7 @@ $("#list-tcs").on("change", function() {
 });
 
 /* при загрузке выбрать первый т.-клиент в списке */
-if($("select[id=list-tcs] option").size() > 1) {
+if($("select[id=list-tcs] option").length > 1) {
 	$("#list-tcs :nth-child(2)").prop("selected", "selected").change();
 } else {
 	$("#tc-prop .tc-prop").prop("disabled", true);
@@ -49,7 +49,7 @@ $("#del-tc").on("click", function() {
 	if($("#list-tcs").val()) {
 		i = $("#list-tcs :selected").index();
 		$("#list-tcs :selected").remove();			
-		q = $("select[id=list-tcs] option").size();
+		q = $("select[id=list-tcs] option").length;
 		if(q == 1) {
 			$("#tc-prop .tc-prop").val('').prop("disabled", true);
 		} else {
@@ -149,7 +149,7 @@ function listClientsRefresh() {
 		if(id != 0)
 			$("#ss-client").append('<option value="'+id+'">'+client[0]+'</option>' );
 	});
-	if($("select[id=list-ss] option").size() > 0) {
+	if($("select[id=list-ss] option").length > 0) {
 		$("#list-ss").change();
 	}
 }

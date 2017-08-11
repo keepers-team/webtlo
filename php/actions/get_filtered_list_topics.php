@@ -9,26 +9,35 @@ try {
 	$forum_id = $_POST['forum_id'];
 	parse_str( $_POST['config'] );
 	parse_str( $_POST['filter'] );
+	$filter_by_name = $_POST['filter_by_name'];
+	$filter_by_keeper = $_POST['filter_by_keeper'];
+	$filter_date_release_from = $_POST['filter_date_release_from'];
+	$filter_date_release_until = $_POST['filter_date_release_until'];
+
+	$filter_seeders_from = $_POST['filter_seeders_from'] != '' ? $_POST['filter_seeders_from'] : null;
+	$filter_seeders_to = $_POST['filter_seeders_to'] != '' ? $_POST['filter_seeders_to'] : null;
 	
 	// некорретный ввод значений сидов
-	if( !is_numeric($filter_rule) || !is_numeric($filter_rule_interval['from']) || !is_numeric($filter_rule_interval['to']) )
-		throw new Exception( "В фильтре введено некорректное значение сидов." );
+	//if(/* !is_numeric($filter_rule) || */!is_numeric($filter_seeders_from) || !is_numeric($filter_seeders_to) )
+	//	throw new Exception( "В фильтре введено некорректное значение сидов." );
 		
-	if( !is_numeric($filter_rule) || !is_numeric($filter_rule_interval['from']) || !is_numeric($filter_rule_interval['to']) )
-		throw new Exception( "Значение сидов в фильтре должно быть больше 0." );
-	
-	if( $filter_rule_interval['from'] > $filter_rule_interval['to'] )
-		throw new Exception( "Начальное значение сидов в фильтре должно быть меньше или равно конечному значению." );
-	
+	//if(/* !is_numeric($filter_rule) || */!is_numeric($filter_seeders_from) || !is_numeric($filter_seeders_to) )
+	//	throw new Exception( "Значение сидов в фильтре должно быть больше 0." );
+	if (isset($filter_seeders_from) && isset($filter_seeders_to)) {
+		if( $filter_seeders_from > $filter_seeders_to )
+			throw new Exception( "Начальное значение сидов в фильтре должно быть меньше или равно конечному значению." );
+	}
+
 	// некорректный период средних сидов
 	if( !is_numeric($avg_seeders_period) )
 		throw new Exception( "В фильтре введено некорректное значение для периода средних сидов." );
 	
 	// некорректная дата
-	$date_release = DateTime::createFromFormat( "d.m.Y", $filter_date_release );
-	if( !$date_release )
+	$date_release_from = DateTime::createFromFormat( "d.m.Y", $filter_date_release_from );
+	$date_release_until = DateTime::createFromFormat( "d.m.Y", $filter_date_release_until );
+	if( !$date_release_until )
 		throw new Exception( "В фильтре введена некорректная дата создания релиза." );
-	$date_release->setTime(23, 59, 59);
+	$date_release_until->setTime(23, 59, 59);
 	
 	// если включены средние сиды
 	if( isset($avg_seeders) ) {
@@ -88,10 +97,25 @@ try {
 		"WHERE $where",
 		$param, true, PDO::FETCH_ASSOC
 	);
-	
+
+	if ( $_POST['order'][0]['dir'] == 'asc' ) {
+		$filter_sort_direction = 1;
+	} else {
+		$filter_sort_direction = - 1;
+	};
+
+	$columns_names = array(
+		2 => 'rg',
+		3 => 'si',
+		4 => 'avg',
+		5 => 'na'
+	);
+
+	$filter_sort = $columns_names[$_POST['order'][0]['column']];
+
 	// сортировка раздач
 	$topics = natsort_field( $topics, $filter_sort, $filter_sort_direction );
-	
+
 	// данные о других хранителях
 	$keepers = Db::query_database(
 		"SELECT topic_id,nick FROM Keepers WHERE topic_id IN (SELECT id FROM Topics WHERE ss = :forum_id)",
@@ -99,59 +123,89 @@ try {
 	);
 	
 	$q = 1;
-	$output = "";
-	
+	$data = array();
+
 	foreach( $topics as $topic_id => $topic ) {
-		
+
 		// фильтрация по дате релиза
-		if( $topic['rg'] > $date_release->format('U') ) continue;
-		
+		if ($date_release_from) {
+			if( $topic['rg'] < $date_release_from->format('U') ) continue;
+		}
+		if( $topic['rg'] > $date_release_until->format('U') ) continue;
+
 		// фильтрация по количеству сидов
 		//~ if( $forum_id > 0 ) {
-			if( isset($filter_interval) ) {
-				if( $filter_rule_interval['from'] > $topic['avg'] || $filter_rule_interval['to'] < $topic['avg'] ) continue;
-			} else {
-				if( $filter_rule_direction ) {
-					if( $filter_rule < $topic['avg'] ) continue;
-				} else {
-					if( $filter_rule > $topic['avg'] ) continue;
-				}
+		if ((!isset($filter_seeders_from)) && (isset($filter_seeders_to))) {
+			if( $filter_seeders_to < $topic['avg'] ) {
+				continue;
 			}
-			
-			// фильтрация по статусу "зелёные"
-			if( $topic['ds'] < $ds ) continue;
+		} elseif ((isset($filter_seeders_from)) && (!isset($filter_seeders_to))) {
+			if( $filter_seeders_from > $topic['avg'] ) {
+				continue;
+			}
+		} elseif ((isset($filter_seeders_from)) && (isset($filter_seeders_to))) {
+			if( $filter_seeders_from > $topic['avg'] || $filter_seeders_to < $topic['avg'] ) {
+				continue;
+			}
+		}
+
+		// фильтрация по статусу "зелёные"
+		if( $topic['ds'] < $ds ) continue;
 		//~ }
-		
+
 		// список других хранителей
 		$keeper = isset( $keepers[$topic['id']] )
-			? ' ~> <span title="Хранители" class="bold"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
+			? '<span title="' . implode( ',', $keepers[$topic['id']] ) . '" class="bold"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
 			: '';
-		
+
 		// фильтрация по фразе
-		if( !empty($filter_phrase) ) {
+		if (!empty($filter_by_name)) {
+			if( !mb_eregi($filter_by_name, $topic['na']) ) continue;
+		}
+
+		if (!empty($filter_by_keeper)) {
+			if( !mb_eregi($filter_by_keeper, $keeper) ) continue;
+		}
+
+		/*if( !empty($filter_phrase) ) {
 			if( empty($filter_by_phrase) ) {
 				if( !mb_eregi($filter_phrase, $keeper) ) continue;
 			} else {
 				if( !mb_eregi($filter_phrase, $topic['na']) ) continue;
 			}
-		}
-		
+		}*/
+
 		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
-		
-		$output .=
-			'<div id="topic_' . $topic['id'] . '" class="topic_data"><label>
-				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
-				<img title="" src="img/'.$icons.'.png" />
-				<span title="Дата регистрации раздачи">[' . date( 'd.m.Y', $topic['rg'] ) . ']</span>
-				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.
-			'</label>'.$keeper.'</div>';
-		
+
+		$data[] = [
+			"checkbox" => '<input type="checkbox" class="topic" tag="' . $q ++
+			              . '" id="' . $topic['id'] . '" subsection="'
+			              . $topic['ss'] . '" size="' . $topic['si']
+			              . '" hash="' . $topic['hs'] . '" client="'
+			              . $topic['cl'] . '" >',
+			"color"    => '<img title="" src="img/' . $icons . '.png">',
+			"reg_date" => date( 'd.m.Y', $topic['rg'] ),
+			"size"     => convert_bytes( $topic['si'] ),
+			"seeders"  => '<span class="seeders" title="Значение сидов">'
+			              . round( $topic['avg'], 2 ) . '</span>',
+			"name"     => '<a href="' . $forum_url . '/forum/viewtopic.php?t='
+			              . $topic['id'] . '" target="_blank" ' . 'title="'
+			              . $topic['na'] . '">' . $topic['na'] . '</a>',
+			"keepers"  => $keeper
+		]
+	;
+
 	}
-	
-	echo json_encode( array('log' => Log::get(), 'topics' => $output) );
+	$output = array(
+		"draw" => (int) $_POST["draw"],
+		"recordsTotal" => count($topics),
+		"recordsFiltered" => count($data),
+		"data" => $data
+	);
+	echo json_encode($output);
 	
 } catch (Exception $e) {
-	echo json_encode( array('log' => $e->getMessage(), 'topics' => null) );
+	echo json_encode( array('error' => $e->getMessage()) );
 }
 
 ?>
