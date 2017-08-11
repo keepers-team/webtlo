@@ -417,7 +417,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											</div>
 											<div class="col-5" id="tc-prop">
 												<div class="row">
-													<div class="col-5">
+													<div class="col-6">
 														<div class="form-group">
 															<label for="TC_comment">Название (комментарий)</label>
 															<input name="TC_comment" id="TC_comment" class="form-control form-control-sm tc-prop" size="24" title="Комментарий">
@@ -432,7 +432,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 														</div>
 													</div>
 
-													<div class="col-5">
+													<div class="col-6">
 														<div class="form-group">
 															<label for="TC_client">Торрент-клиент</label>
 															<select name="TC_client" id="TC_client" class="form-control form-control-sm tc-prop">
@@ -539,8 +539,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 								<div id="torrents-control" class="collapse" role="tabpanel">
 									<div class="card-body">
-										<h4>Статусы раздач</h4>
-										<div id="tor_status">
+										<h5>Статусы раздач</h5>
+										<div id="tor_status" class="form-group col-12">
 											<div class="form-check">
 												<label title="не проверено" class="form-check-label">
 													<input class="form-check-input" name="topics_status[]" value="0" type="checkbox" size="24" <?php echo $topic_not_checked ?>>
@@ -572,67 +572,77 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</label>
 											</div>
 										</div>
-										<h4>Фильтрация раздач</h4>
-										<div class="row">
-											<label for="TT_rule_topics" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
-												Предлагать для хранения раздачи с количеством сидов не более:
-											</label>
-											<div class="col-1">
-												<input id="TT_rule_topics" name="TT_rule_topics" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>">
-											</div>
-										</div>
-										<div class="row">
-											<label for="rule_date_release" class="col-6 col-form-label" title="Укажите необходимое количество дней">
-												Предлагать для хранения раздачи старше
-											</label>
-											<div class="col-2">
-												<div class="input-group input-group-sm">
-													<input id="rule_date_release" name="rule_date_release" class="form-control" type="number" min="0" size="2" value="<?php echo $cfg['rule_date_release'] ?>">
-													<span class="input-group-addon">дн.</span>
+										<h5>Фильтрация раздач</h5>
+										<div class="form-group col-12">
+											<div class="row">
+												<label for="TT_rule_topics" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
+													Предлагать для хранения раздачи с количеством сидов не более:
+												</label>
+												<div class="col-1">
+													<input id="TT_rule_topics" name="TT_rule_topics" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>">
 												</div>
 											</div>
-										</div>
-										<div class="row">
-											<label for="TT_rule_reports" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
-												Вносить в отчёты раздачи с количеством сидов не более:
-											</label>
-											<div class="col-1">
-												<input id="TT_rule_reports" name="TT_rule_reports" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_reports'] ?>">
+											<div class="row">
+												<label for="rule_date_release" class="col-6 col-form-label" title="Укажите необходимое количество дней">
+													Предлагать для хранения раздачи старше
+												</label>
+												<div class="col-2">
+													<div class="input-group input-group-sm">
+														<input id="rule_date_release" name="rule_date_release" class="form-control" type="number" min="0" size="2" value="<?php echo $cfg['rule_date_release'] ?>">
+														<span class="input-group-addon">дн.</span>
+													</div>
+												</div>
 											</div>
-										</div>
-										<div class="row">
-											<label for="avg_seeders_period" class="col-6 col-form-label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
-												находить среднее значение количества сидов за
-											</label>
-											<div class="col-2">
-												<div class="input-group input-group-sm">
+											<div class="row">
+												<label for="TT_rule_reports" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
+													Вносить в отчёты раздачи с количеством сидов не более:
+												</label>
+												<div class="col-1">
+													<input id="TT_rule_reports" name="TT_rule_reports" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_reports'] ?>">
+												</div>
+											</div>
+											<div class="row">
+												<label for="avg_seeders_period" class="col-6 col-form-label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
+													находить среднее значение количества сидов за
+												</label>
+												<div class="col-2">
+													<div class="input-group input-group-sm">
 													<span class="input-group-addon">
 														<input id="avg_seeders" name="avg_seeders" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)" type="checkbox" size="24" <?php echo $avg_seeders ?>>
 													</span>
-													<input id="avg_seeders_period" name="avg_seeders_period" class="form-control" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="number" min="1" max="30" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>"/>
-													<span class="input-group-addon">дн.</span>
+														<input id="avg_seeders_period" name="avg_seeders_period" class="form-control" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="number" min="1" max="30" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>">
+														<span class="input-group-addon">дн.</span>
+													</div>
 												</div>
 											</div>
 										</div>
-										<h4>Регулировка раздач<sup>1</sup></h4>
-										<label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
-											Останавливать раздачи с количеством пиров более:
-											<input id="peers" name="peers" type="number" min="1" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
-										</label>
-										<label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
-											<input name="leechers" type="checkbox" <?php echo $leechers ?> />
-											учитывать значение личей
-										</label>
-										<label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
-											<input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
-											запускать раздачи с 0 (нулём) личей
-										</label>
+										<h5>Регулировка раздач<sup>1</sup></h5>
+										<div class="form-group col-12">
+											<div class="row">
+												<label for="peers" class="col-6 col-form-label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
+													Останавливать раздачи с количеством пиров более:
+												</label>
+												<div class="col-1">
+													<input id="peers" name="peers" class="form-control form-control-sm" type="number" min="1" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" >
+												</div>
+											</div>
+											<div class="form-check">
+												<label class="form-check-label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
+													<input name="leechers" class="form-check-input" type="checkbox" <?php echo $leechers ?> >
+													учитывать значение личей
+												</label>
+											</div>
+											<div class="form-check">
+												<label class="form-check-label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
+													<input name="no_leechers" class="form-check-input" type="checkbox" <?php echo $no_leechers ?> >
+													запускать раздачи с 0 (нулём) личей
+												</label>
+											</div>
+										</div>
 										<p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</p>
 									</div>
 								</div>
 							</div>
-
-
 							<div class="card">
 								<div class="card-header" role="tab">
 									<h6 class="mb-0">
@@ -641,32 +651,56 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 								<div id="torrents-download" class="collapse" role="tabpanel">
 									<div class="card-body">
-										<h4>Каталог для скачиваемых *.torrent файлов</h4>
-										<div>
-											<input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" />
+										<h5>Каталог для скачиваемых *.torrent файлов</h5>
+										<div class="form-group col-5">
+											<input id="savedir" name="savedir" class="form-control form-control-sm" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" >
+											<div class="form-check">
+												<label class="form-check-label" title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
+													<input name="savesubdir" class="form-check-input" type="checkbox" size="24" <?php echo $savesubdir ?>>
+													создавать подкаталоги
+												</label>
+											</div>
 										</div>
-										<label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
-											<input name="savesubdir" type="checkbox" size="24" <?php echo $savesubdir ?> />
-											создавать подкаталоги
-										</label>
-										<h4>Настройки retracker.local</h4>
-										<label title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
-											<input name="retracker" type="checkbox" size="24" <?php echo $retracker ?> />
-											добавлять retracker.local в скачиваемые *.torrent-файлы
-										</label>
-										<h4>Скачивание *.torrent файлов с заменой Passkey</h4>
-										<label class="label">
-											Каталог:
-											<input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53" title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey." value="<?php echo $cfg['dir_torrents'] ?>" />
-										</label>
-										<label class="label">
-											Passkey:
-											<input id="passkey" name="passkey" class="myinput" type="text" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
-										</label>
-										<label>
-											<input name="tor_for_user" type="checkbox" size="24" <?php echo $tor_for_user ?> />
-											скачать торрент-файлы для обычного пользователя
-										</label>
+										<h5>Настройки retracker.local</h5>
+										<div class="form-group col-5">
+											<div class="form-check">
+												<label class="form-check-label" title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
+													<input name="retracker" class="form-check-input" type="checkbox" size="24" <?php echo $retracker ?>>
+													добавлять retracker.local в скачиваемые *.torrent-файлы
+												</label>
+											</div>
+										</div>
+
+
+										<h5>Скачивание *.torrent файлов с заменой Passkey</h5>
+										<div class="form-group col-7">
+											<div class="row">
+												<label for="dir_torrents" class="col-2 col-form-label">
+													Каталог:
+												</label>
+												<div class="col-10">
+													<input id="dir_torrents" name="dir_torrents" class="form-control form-control-sm" size="53" title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey." value="<?php echo $cfg['dir_torrents'] ?>" />
+												</div>
+											</div>
+											<div class="row">
+												<label for="passkey" class="col-2 col-form-label">
+													Passkey:
+												</label>
+												<div class="col-10">
+													<input id="passkey" name="passkey" class="form-control form-control-sm" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
+												</div>
+											</div>
+
+											<div class="form-check">
+												<label class="form-check-label">
+													<input name="tor_for_user" class="form-check-input" type="checkbox" size="24" <?php echo $tor_for_user ?>>
+													скачать торрент-файлы для обычного пользователя
+												</label>
+											</div>
+										</div>
+
+
+
 									</div>
 								</div>
 							</div>
