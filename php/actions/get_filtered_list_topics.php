@@ -69,7 +69,7 @@ try {
 			$kp = 'AND Keepers.topic_id IS NOT NULL';
 		}
 	}
-	
+
 	$ds = isset($avg_seeders_complete) && isset($avg_seeders)
 		? $avg_seeders_period
 		: 0;
@@ -107,6 +107,7 @@ try {
 	};
 
 	$columns_names = array(
+		2 => 'st',
 		3 => 'rg',
 		4 => 'si',
 		5 => 'avg',
