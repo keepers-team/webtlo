@@ -55,14 +55,17 @@ $( document ).ready( function () {
 			"columns": [
 				{
 					"orderable": false,
-					"data": "checkbox"
+					"data": "checkbox",
+					"width": "6px"
 				},
 				{
 					"orderable": false,
-					"data": "color"
+					"data": "color",
+					"width": "6px"
 				},
 				{
-					"data": "torrents_status"
+					"data": "torrents_status",
+					"width": "6px"
 				},
 				{
 					"data": "reg_date",
@@ -82,7 +85,7 @@ $( document ).ready( function () {
 				{
 					"orderable": false,
 					"data": "keepers",
-					"width": "80px"
+					"width": "100px"
 				}
 			],
 			"scrollY": "400px"
