@@ -457,7 +457,8 @@ $( "#topics" ).on( "click", ".topic", function ( event ) {
 // сортировка по хранителю при двойном клике по его никнейму в списке раздач
 $( document ).on( "dblclick", ".keeper", function ( e ) {
 	$( "#filter_by_keeper" ).val( $( this ).text() );
-	$( 'input[name=is_keepers][type="checkbox"]' ).prop( "checked", true ).change();
+	$( 'input[name=is_keepers][value="0"], input[name=is_keepers][value="-1"]' ).prop( "checked", false ).parent().removeClass( 'active' );
+	$( 'input[name=is_keepers][value="1"]' ).prop( "checked", true ).change().parent().addClass( 'active' );
 } );
 
 // скрыть/показать фильтр
@@ -488,19 +489,10 @@ $( "#filter_reset" ).on( "click", function () {
 } );
 
 // есть/нет хранители
-$( ".topics_filter .keepers" ).on( "change", function () {
-	var $is_keepers = $( "input[name=is_keepers]" );
-	var $not_keepers = $( "input[name=not_keepers]" );
-	if ( $( this ).prop( "checked" ) ) {
-		switch ( $( this ).attr( 'name' ) ) {
-			case 'not_keepers':
-				$is_keepers.prop( "checked", false );
-				$is_keepers.parent().removeClass("active");
-				break;
-			case 'is_keepers':
-				$not_keepers.prop( "checked", false );
-				$not_keepers.parent().removeClass("active");
-				break;
-		}
+$( 'input[name="is_keepers"]' ).on( "change", function () {
+	var is_keepers_val = $(this).val();
+	if (is_keepers_val === "0" || is_keepers_val === "-1") {
+		$( "#filter_by_keeper" ).val( "" );
 	}
-} );
+	}
+);

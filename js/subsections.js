@@ -21,7 +21,6 @@ $( '#ss-add' ).typeahead( {
 			data: { term: query },
 			success: function ( response ) {
 				var result = JSON.parse( response );
-				console.log( result );
 				return process( result );
 			}
 		} );
@@ -40,7 +39,6 @@ $( '#ss-add' ).typeahead( {
 });
 
 function addSubsection(subsection) {
-	console.log(subsection);
 	if( subsection.id < 0 ) {
 		subsection.id = '';
 		return;

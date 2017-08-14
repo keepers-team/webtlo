@@ -175,11 +175,14 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 
 								<div class="btn-group" data-toggle="buttons">
-									<label class="btn btn-outline-dark btn-sm" title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
-										<input type="checkbox" name="not_keepers" class="keepers" autocomplete="off"> нет хранителей
+									<label class="btn btn-sm btn-outline-dark">
+										<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
 									</label>
-									<label class="btn btn-outline-dark btn-sm" title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
-										<input type="checkbox" name="is_keepers" class="keepers" autocomplete="off"> есть хранители
+									<label class="btn btn-sm btn-outline-dark active">
+										<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
+									</label>
+									<label class="btn btn-sm btn-outline-dark">
+										<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
 									</label>
 								</div>
 

@@ -62,11 +62,13 @@ try {
 	}
 	
 	// подготовка запроса
-	$kp = !isset($not_keepers)
-		? isset($is_keepers)
-			? 'AND Keepers.topic_id IS NOT NULL'
-			: ''
-		: 'AND Keepers.topic_id IS NULL';
+	if (isset($is_keepers)){
+		if ($is_keepers == -1 ) {
+			$kp = 'AND Keepers.topic_id IS NULL';
+		} elseif ($is_keepers == 1) {
+			$kp = 'AND Keepers.topic_id IS NOT NULL';
+		}
+	}
 	
 	$ds = isset($avg_seeders_complete) && isset($avg_seeders)
 		? $avg_seeders_period
