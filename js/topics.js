@@ -21,6 +21,11 @@ $( document ).ready( function () {
 					d.filter_date_release_until = $( "#filter_date_release_until" ).val();
 					d.filter_seeders_from = $( "#filter_seeders_from" ).val();
 					d.filter_seeders_to = $( "#filter_seeders_to" ).val();
+				},
+				dataSrc: function ( json ) {
+					$("#filtered_topics_count").text(json.filtered_topics_count);
+					$("#filtered_topics_size").text(json.filtered_topics_size);
+					return json.data;
 				}
 			},
 			language: {
@@ -90,9 +95,7 @@ $( document ).ready( function () {
 			],
 			"scrollY": "400px"
 		} )
-		.on( 'draw.dt', function () {
-			countSizeAndAmount();
-		} ).on( 'xhr.dt', function () {
+		.on( 'xhr.dt', function () {
 			blockActions();
 		} );
 	var $topics = $( '#topics' );
@@ -354,11 +357,9 @@ $( "#remove_data, #remove, #set_custom_label, .torrent_action" ).on( "click", fu
 } );
 
 // вывод на экран кол-во, объём выбранных раздач
-function showSizeAndAmount( count, size, filtered ) {
-	var topics_count = filtered ? "#filtered_topics_count" : "#topics_count";
-	var topics_size = filtered ? "#filtered_topics_size" : "#topics_size";
-	$( topics_count ).text( count );
-	$( topics_size ).text( сonvertBytes( size ) );
+function showSizeAndAmount( count, size ) {
+	$( "#topics_count" ).text( count );
+	$( "#topics_size" ).text( сonvertBytes( size ) );
 }
 
 function Counter() {
@@ -366,8 +367,8 @@ function Counter() {
 	this.size_all = 0
 }
 
-function addSizeAndAmount( input ) {
-	var size = input.attr( "size" );
+function addSizeAndAmount( element ) {
+	var size = element.attr( "size" );
 	this.size_all += parseInt( size );
 	this.count++;
 }
@@ -380,10 +381,8 @@ function countSizeAndAmount( thisElem ) {
 	}
 	var counter = new Counter();
 	var topics_checkboxes = $( "#topics" ).find( "input[type=checkbox]" );
-	var filtered = false;
 	if ( topics_checkboxes.length === 0 ) {
-		showSizeAndAmount( 0, 0, false );
-		showSizeAndAmount( 0, 0, true );
+		showSizeAndAmount( 0, 0 );
 	} else {
 		topics_checkboxes.each( function () {
 			switch ( action ) {
@@ -401,11 +400,9 @@ function countSizeAndAmount( thisElem ) {
 					break;
 				default:
 					addSizeAndAmount.call( counter, $( this ) );
-					filtered = true;
 			}
 		} );
-		showSizeAndAmount( 0, 0, false );
-		showSizeAndAmount( counter.count, counter.size_all, filtered );
+		showSizeAndAmount( counter.count, counter.size_all );
 	}
 }
 

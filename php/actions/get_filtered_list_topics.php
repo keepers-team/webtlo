@@ -142,6 +142,9 @@ try {
 	$q = 1;
 	$data = array();
 
+	$filtered_topics_count = 0;
+	$filtered_topics_size = 0;
+
 	foreach( $topics as $topic_id => $topic ) {
 
 		// фильтрация по дате релиза
@@ -213,7 +216,9 @@ try {
 			                     . 'title="'
 			                     . $topic['na'] . '">' . $topic['na'] . '</a>',
 			"keepers"         => $keeper,
-		]
+		];
+		$filtered_topics_count++ ;
+		$filtered_topics_size += $topic['si'];
 	;
 
 	}
@@ -221,7 +226,9 @@ try {
 		"draw" => (int) $_POST["draw"],
 		"recordsTotal" => count($topics),
 		"recordsFiltered" => count($data),
-		"data" => $data
+		"data" => $data,
+		"filtered_topics_count" => $filtered_topics_count,
+		"filtered_topics_size" => convert_bytes($filtered_topics_size)
 	);
 	echo json_encode($output);
 	
