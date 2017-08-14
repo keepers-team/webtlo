@@ -105,10 +105,10 @@ try {
 	};
 
 	$columns_names = array(
-		2 => 'rg',
-		3 => 'si',
-		4 => 'avg',
-		5 => 'na'
+		3 => 'rg',
+		4 => 'si',
+		5 => 'avg',
+		6 => 'na'
 	);
 
 	$torrents_statuses = array(
