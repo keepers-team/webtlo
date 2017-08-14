@@ -62,6 +62,10 @@ $( document ).ready( function () {
 					"data": "color"
 				},
 				{
+					"orderable": false,
+					"data": "torrents_status"
+				},
+				{
 					"data": "reg_date",
 					"width": "80px"
 				},

@@ -111,6 +111,20 @@ try {
 		5 => 'na'
 	);
 
+	$torrents_statuses = array(
+		0  => '<span style="color: #C71585;">*</span>',
+		1  => '<span style="color: #FF4500;">x</span>',
+		2  => '<span style="color: #008000;">√</span>',
+		3  => '<span style="color: red;">?</span>',
+		4  => '<span style="color: #FF4500;">!</span>',
+		5  => '<span style="color: blue;">D</span>',
+		7  => '<span style="color: #D26900;">∑</span>',
+		8  => '<span style="color: #008000;">#</span>',
+		9  => '<span style="color: #2424FF;">%</span>',
+		10 => '<span style="color: blue;">T</span>',
+		11 => '<span style="color: blue;">∏</span>'
+	);
+
 	$filter_sort = $columns_names[$_POST['order'][0]['column']];
 
 	// сортировка раздач
@@ -178,20 +192,24 @@ try {
 		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
 
 		$data[] = [
-			"checkbox" => '<input type="checkbox" class="topic" tag="' . $q ++
-			              . '" id="' . $topic['id'] . '" subsection="'
-			              . $topic['ss'] . '" size="' . $topic['si']
-			              . '" hash="' . $topic['hs'] . '" client="'
-			              . $topic['cl'] . '" >',
-			"color"    => '<img title="" src="img/' . $icons . '.png">',
-			"reg_date" => date( 'd.m.Y', $topic['rg'] ),
-			"size"     => convert_bytes( $topic['si'] ),
-			"seeders"  => '<span class="seeders" title="Значение сидов">'
-			              . round( $topic['avg'], 2 ) . '</span>',
-			"name"     => '<a href="' . $forum_url . '/forum/viewtopic.php?t='
-			              . $topic['id'] . '" target="_blank" ' . 'title="'
-			              . $topic['na'] . '">' . $topic['na'] . '</a>',
-			"keepers"  => $keeper
+			"checkbox"        => '<input type="checkbox" class="topic" tag="'
+			                     . $q ++
+			                     . '" id="' . $topic['id'] . '" subsection="'
+			                     . $topic['ss'] . '" size="' . $topic['si']
+			                     . '" hash="' . $topic['hs'] . '" client="'
+			                     . $topic['cl'] . '" >',
+			"color"           => '<img title="" src="img/' . $icons . '.png">',
+			"torrents_status" => $torrents_statuses[ $topic['st'] ],
+			"reg_date"        => date( 'd.m.Y', $topic['rg'] ),
+			"size"            => convert_bytes( $topic['si'] ),
+			"seeders"         => '<span class="seeders" title="Значение сидов">'
+			                     . round( $topic['avg'], 2 ) . '</span>',
+			"name"            => '<a href="' . $forum_url
+			                     . '/forum/viewtopic.php?t='
+			                     . $topic['id'] . '" target="_blank" '
+			                     . 'title="'
+			                     . $topic['na'] . '">' . $topic['na'] . '</a>',
+			"keepers"         => $keeper,
 		]
 	;
 

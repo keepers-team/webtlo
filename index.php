@@ -57,6 +57,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="stylesheet" href="css/font-awesome.min.css">
+		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
 		<div class="container-fluid">
@@ -202,8 +203,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<tr id="table_filter">
 										<th></th>
 										<th></th>
+										<th></th>
 										<th>
-
 											<input title="Рег.дата от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="" id="filter_date_release_from">
 											<input title="Рег.дата до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="" id="filter_date_release_until" name="filter_date_release_until" data-registered-until="<?php echo $cfg['rule_date_release'] ?>">
 										</th>
@@ -220,6 +221,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										</th>
 									</tr>
 									<tr>
+										<th></th>
 										<th></th>
 										<th></th>
 										<th>Рег.дата</th>
