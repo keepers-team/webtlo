@@ -27,7 +27,7 @@ html {
 	height: 100%;
 }
 
-body, #main, #manual {
+body, #main, #manual, #reports, #reporttabs {
 	/*padding: 10px;*/
 	height: 100%;
 }
@@ -94,6 +94,7 @@ sub {
 	padding-top: 10px;
 	border-left: 1px solid #ddd;
 	border-right: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
 }
 
 #manual, #topics, #reporttabs div, #config, #log {
@@ -121,8 +122,12 @@ sub {
 	margin-bottom: 5px; /* length you wanted on padding-bottom */
 }
 
-#reporttabs {
-	height: calc(100% - 18px);
+#reporttabs, #reporttabs > div {
+	height: calc(100% - 30px);
+}
+
+#reporttabs > .tab-content {
+	height: calc(100% - 56px);
 }
 
 .ui-widget.ui-widget-content {
