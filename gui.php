@@ -13,10 +13,6 @@ function output_reports($subsections, $login){
 				'</div>'.
 			'%%content%%'.
 		'</div></div>';
-	ob_start();
-	var_dump(debug_backtrace());
-	$output = ob_get_clean();
-	file_put_contents('log.html', $output, FILE_APPEND);
 	unset($subsections['common']);
 	$content = array();
 	$tabs[] = '<li class="nav-item"><a href="#tabs-wtlocommon" class="nav-link active" id="pills-home-tab" data-toggle="pill" role="tab">Сводный отчёт</a></li>';
