@@ -4,6 +4,17 @@ include dirname(__FILE__) . '/../../common.php';
 
 mb_regex_encoding('UTF-8');
 
+$cfg = get_settings();
+
+$subsections = [];
+if(isset($cfg['subsections'])){
+	foreach($cfg['subsections'] as $id => &$ss){
+		$subsections[] = $id;
+		$subsections_names[$id] = $ss['na'];
+	}
+	$subsections = implode(', ', $subsections);
+} else $subsections = '';
+
 try {
 	
 	$forum_id = $_POST['forum_id'];
@@ -73,7 +84,7 @@ try {
 	$ds = isset($avg_seeders_complete) && isset($avg_seeders)
 		? $avg_seeders_period
 		: 0;
-	
+
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
 			case 0:
@@ -82,6 +93,10 @@ try {
 				break;
 			case -2:
 				$where = "Blacklist.topic_id IS NOT NULL";
+				$param = array();
+				break;
+			case -3:
+				$where = "dl = $filter_status AND ss IN ($subsections) AND Blacklist.topic_id IS NULL $kp";
 				$param = array();
 				break;
 		}
@@ -99,7 +114,6 @@ try {
 		"WHERE $where",
 		$param, true, PDO::FETCH_ASSOC
 	);
-
 	if ( $_POST['order'][0]['dir'] == 'asc' ) {
 		$filter_sort_direction = 1;
 	} else {
@@ -111,7 +125,8 @@ try {
 		3 => 'rg',
 		4 => 'si',
 		5 => 'avg',
-		6 => 'na'
+		6 => 'na',
+		8 => 'ss'
 	);
 
 	$torrents_statuses = array(
@@ -208,6 +223,7 @@ try {
 			                     . 'title="'
 			                     . $topic['na'] . '">' . $topic['na'] . '</a>',
 			"keepers"         => $keeper,
+			"subsection"      => '<span title="' . $subsections_names[$topic['ss']] . '">' . $topic['ss'] . '</span>',
 		];
 		$filtered_topics_count++ ;
 		$filtered_topics_size += $topic['si'];

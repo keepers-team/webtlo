@@ -90,6 +90,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
 -->
 							<option value="-2">Раздачи из "чёрного списка"</option>
+							<option value="-3">Раздачи из всех хранимых подразделов</option>
 						</optgroup>
 					</select>
 					<div id="sub-data">
@@ -222,6 +223,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<th>
 											<input title="Хранители" data-toggle="tooltip" placeholder="Хранители" class="form-control form-control-sm" id="filter_by_keeper">
 										</th>
+										<th></th>
 									</tr>
 									<tr>
 										<th></th>
@@ -232,6 +234,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<th>Сидов</th>
 										<th>Название раздачи</th>
 										<th>Хранители</th>
+										<th>Разд.</th>
 									</tr>
 								</thead>
 								<tbody id="topics_table_body"></tbody>

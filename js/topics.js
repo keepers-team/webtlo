@@ -91,6 +91,10 @@ $( document ).ready( function () {
 					"orderable": false,
 					"data": "keepers",
 					"width": "100px"
+				},
+				{
+					"data": "subsection",
+					"width": "50px"
 				}
 			],
 			"scrollY": "400px"
