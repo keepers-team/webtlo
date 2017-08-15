@@ -84,7 +84,11 @@ sup {
 sub {
 	top: .5ex;
 }
-    
+
+.rp-header, .bold {
+	font-weight: bold;
+}
+
 /* menu */
 #content {
 	/*display: flex;
