@@ -175,7 +175,7 @@ try {
 
 		// список других хранителей
 		$keeper = isset( $keepers[$topic['id']] )
-			? '<span title="' . implode( ',', $keepers[$topic['id']] ) . '" class="bold"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
+			? '<span title="' . implode( ',', $keepers[$topic['id']] ) . '"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
 			: '';
 
 		// фильтрация по фразе
@@ -186,14 +186,6 @@ try {
 		if (!empty($filter_by_keeper)) {
 			if( !mb_eregi($filter_by_keeper, $keeper) ) continue;
 		}
-
-		/*if( !empty($filter_phrase) ) {
-			if( empty($filter_by_phrase) ) {
-				if( !mb_eregi($filter_phrase, $keeper) ) continue;
-			} else {
-				if( !mb_eregi($filter_phrase, $topic['na']) ) continue;
-			}
-		}*/
 
 		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
 
