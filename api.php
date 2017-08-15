@@ -1,13 +1,13 @@
 <?php
 
 class Webtlo {
-	
+
 	public $limit;
-	
+
 	protected $ch;
 	protected $api_key;
 	protected $api_url;
-	
+
 	public function __construct($api_url, $api_key = ""){
 		Log::append ( 'Получение данных с ' . $api_url . '...' );
 		$this->api_key = $api_key;
@@ -15,33 +15,37 @@ class Webtlo {
 		$this->init_curl();
 		$this->get_limit();
 	}
-	
+
 	private function init_curl(){
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
-		    CURLOPT_RETURNTRANSFER => 1,
-		    CURLOPT_ENCODING => "gzip",
-		    CURLOPT_SSL_VERIFYPEER => false,
-		    CURLOPT_SSL_VERIFYHOST => 2,
-		    CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
-		    //~ CURLOPT_CONNECTTIMEOUT => 60
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_ENCODING => "gzip",
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 5,
+			CURLOPT_TIMEOUT => 5
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);
 	}
-	
+
 	private function request_exec($url){
 		$n = 1; // кол-во попыток
+		$max_n = 10; // кол-во попыток
 		$data = array();
 		curl_setopt($this->ch, CURLOPT_URL, $url);
 		while(true){
 			$json = curl_exec($this->ch);
-			if($json === false) {
-				throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
+			if($json === false && $n <= $max_n) {
+				Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . ' Повторная попытка ' . $n . '/' . $max_n . ' получить данные.' );
+				$n++;
+				continue;
 			}
 			$data = json_decode($json, true);
 			if(isset($data['error'])){
-				if($data['error']['code'] == '503' && $n <= 3){
-					Log::append ( 'Повторная попытка ' . $n . '/3 получить данные.' );
+				if($data['error']['code'] == '503' && $n <= $max_n){
+					Log::append ( 'Повторная попытка ' . $n . '/' . $max_n . ' получить данные.' );
 					sleep(20);
 					$n++;
 					continue;
@@ -53,14 +57,14 @@ class Webtlo {
 		}
 		return $data;
 	}
-	
+
 	// ограничение на запрашиваемые данные
 	private function get_limit(){
 		$url = $this->api_url . '/v1/get_limit?api_key=' . $this->api_key;
 		$data = $this->request_exec($url);
 		$this->limit = isset ( $data['result']['limit'] ) ? $data['result']['limit'] : 100;
 	}
-	
+
 	// статусы раздач
 	public function get_tor_status_titles($tor_status){
 		if(!is_array($tor_status))
@@ -74,7 +78,7 @@ class Webtlo {
 		}
 		return $status;
 	}
-	
+
 	// дерево разделов
 	public function get_cat_forum_tree ( $subsec = array() ) {
 		Log::append ( 'Получение дерева разделов...' );
@@ -102,7 +106,7 @@ class Webtlo {
 		        }
 		    }
 		}
-		
+
 		$tmp['subsections'] = array_chunk ( $tmp['subsections'], 500 );
 		// отправляем в базу данных
 		Db::query_database('CREATE TEMP TABLE Forums1 AS SELECT * FROM Forums WHERE 0 = 1');
@@ -110,13 +114,13 @@ class Webtlo {
 			$select = Db::combine_set( $value );
 			Db::query_database ( "INSERT INTO temp.Forums1 (id,na) $select" );
 		}
-		
+
 		Db::query_database('INSERT INTO Forums ( id,na ) SELECT id,na FROM temp.Forums1');
 		Db::query_database('DELETE FROM Forums WHERE id IN ( SELECT Forums.id FROM Forums LEFT JOIN temp.Forums1 ON Forums.id = temp.Forums1.id WHERE temp.Forums1.id IS NULL )');
-		
+
 		return isset($tmp['subsec']) ? $tmp['subsec'] : array();
 	}
-	
+
 	// список раздач раздела
 	public function get_subsection_data( $subsections, $status = array(2,8), $get = 'ids' ) {
 		//~ Log::append ( 'Получение списка раздач...' );
@@ -152,7 +156,7 @@ class Webtlo {
 		}
 		return $ids;
 	}
-	
+
 	// получить значения пиров по id раздачи
 	public function get_peer_stats( $ids ) {
 		if( empty( $ids ) ) return;
@@ -169,7 +173,7 @@ class Webtlo {
 		}
 		return $topics;
 	}
-	
+
 	// получить id раздачи по hash
 	public function get_topic_id($hashes){
 		if(empty($hashes)) return;
@@ -184,7 +188,7 @@ class Webtlo {
 		}
 		return $ids;
 	}
-	
+
 	// сведения о каждой раздаче
 	public function get_tor_topic_data($ids){
 		if(empty($ids)) return;
@@ -199,7 +203,7 @@ class Webtlo {
 		}
 		return $topics;
 	}
-	
+
 	private function insert_topics($ids, &$tc_topics, $subsec, $last, $current, $rule, $avg_seeders) {
 		$ids = array_chunk ( $ids, 500 );
 		$topics = array();
@@ -207,7 +211,7 @@ class Webtlo {
 			// получаем подробные сведения о раздачах
 			$data = $this->get_tor_topic_data ( $value );
 			if ( empty ( $data ) ) continue;
-			
+
 			// если включены "средние сиды" получаем данные за предыдущее обновление сведений
 			if ( $avg_seeders ) {
 				$in = str_repeat('?,', count($value) - 1) . '?';
@@ -216,7 +220,7 @@ class Webtlo {
 					$value, true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE
 				);
 			}
-			
+
 			// разбираем полученные с api данные
 			foreach ( $data as $topic_id => $info ) {
 				$stored = in_array($info['forum_id'], $subsec);
@@ -257,7 +261,7 @@ class Webtlo {
 			}
 			unset($topics_old);
 			unset($data);
-			
+
 			// пишем данные о топиках в базу
 			if ( isset ( $tmp['topics'] ) ) {
 				$select = Db::combine_set( $tmp['topics'] );
@@ -265,24 +269,24 @@ class Webtlo {
 				Db::query_database( "INSERT INTO temp.Topics1 $select" );
 				unset($select);
 			}
-			
+
 			unset($tmp);
 		}
-		
+
 		// удаляем перерегистрированные раздачи
 		if( !empty( $topics_del ) ) {
 			$in = implode( ',', $topics_del );
 			Db::query_database( "DELETE FROM Topics WHERE id IN ($in)" );
 		}
-		
+
 	}
-	
+
 	public function prepare_topics($ids, $tc_topics, $rule, $subsec, $avg_seeders){
-		
+
 		// создаём временные таблицы
 		Db::query_database('CREATE TEMP TABLE Topics1 AS SELECT * FROM Topics WHERE 0 = 1');
 		Db::query_database('CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1');
-		
+
 		// получаем дату предыдущего обновления
 		$ud = Db::query_database(
 			"SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN
@@ -290,17 +294,17 @@ class Webtlo {
 		$current = new DateTime('now');
 		$last = new DateTime();
 		$last->setTimestamp($ud[0])->setTime(0, 0, 0);
-		
+
 		if ( $avg_seeders ) {
 			Log::append ( 'Задействован алгоритм поиска среднего значения количества сидов...' );
 		}
-		
+
 		// раздачи из хранимых подразделов
 		Log::append ( 'Получение подробных сведений о раздачах...' );
 		if( !empty($ids) )
 			$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $rule, $avg_seeders);
 		unset($ids);
-		
+
 		// раздачи из других подразделов
 		if ( !empty ( $tc_topics ) ) {
 			Log::append ( 'Поиск раздач из других подразделов...' );
@@ -309,7 +313,7 @@ class Webtlo {
 				$this->insert_topics($ids, $tc_topics, $subsec, $last, $current, $rule, $avg_seeders);
 			unset($ids);
 		}
-		
+
 		$q = Db::query_database("SELECT COUNT() FROM temp.Topics1", array(), true, PDO::FETCH_COLUMN);
 		if ( $q[0] > 0 ) {
 			Log::append ( 'Запись в базу данных сведений о раздачах...' );
@@ -317,25 +321,25 @@ class Webtlo {
 			Db::query_database("INSERT INTO Topics SELECT * FROM temp.Topics1");
 			Db::query_database("DELETE FROM Topics WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL AND ( Topics.ss IN ($in) OR Topics.dl = -2 ) )", $subsec);
 		}
-		
+
 		// время последнего обновления
 		Db::query_database('UPDATE `Other` SET ud = ? WHERE id = 0', array($current->format('U')));
-		
+
 	}
-	
+
 	public function __destruct(){
 		curl_close($this->ch);
 	}
 }
 
 class Database {
-	
+
 	public static $db;
-	
+
 	public function __construct(){
 		Database::$db = new PDO('sqlite:' . dirname(__FILE__) . '/webtlo.db');
 	}
-	
+
 	private function query_database($sql, $param = array(), $pdo = PDO::FETCH_ASSOC, $fetch = true){
 		$sth = Database::$db->prepare($sql);
 		if(Database::$db->errorCode() != '0000') {
@@ -345,7 +349,7 @@ class Database {
 		$sth->execute($param);
 		return $fetch ? $sth->fetchAll($pdo) : true;
 	}
-	
+
 	// ... из базы подразделы для списка раздач на главной
 	public function get_forums($subsec){
 		Log::append ( 'Получение данных о подразделах...' );
@@ -355,7 +359,7 @@ class Database {
 		if(empty($subsections)) throw new Exception();
 		return $subsections;
 	}
-	
+
 	// ... из базы топики
 	public function get_topics( $subsec, $status, $avg_seeders, $period_seeders, $sort = 'avg' ) {
 		Log::append ( 'Получение данных о раздачах...' );
@@ -390,7 +394,7 @@ class Database {
 		if( empty( $topics ) ) throw new Exception();
 		return $topics;
 	}
-	
+
 	// ... из базы подразделы для отчётов
 	public function get_forums_details($subsec){
 		$subsections = $this->get_forums($subsec);
@@ -410,7 +414,7 @@ class Database {
 		}
 		return $subsections;
 	}
-	
+
 	// ... из базы хранители
 	public function get_keepers(){
 		$keepers = $this->query_database(
@@ -419,7 +423,7 @@ class Database {
 		);
 		return $keepers;
 	}
-	
+
 	private function prepare_insert ( $data ) {
 		foreach ( $data as $id => &$value ) {
 			$value = array_map ( function ($e) {
@@ -430,7 +434,7 @@ class Database {
 		$str = 'SELECT ' . implode (' UNION ALL SELECT ', $data);
 		return $str;
 	}
-	
+
 	// в базу хранители
 	public function set_keepers ( $keepers ) {
 		Log::append ( 'Запись в базу данных списка раздач других хранителей...' );
@@ -449,34 +453,35 @@ class Database {
 		$this->query_database("INSERT INTO `Keepers` SELECT * FROM temp.Keepers1");
 		$this->query_database("DELETE FROM `Keepers` WHERE id NOT IN (SELECT Keepers.id FROM temp.Keepers1 LEFT JOIN Keepers ON temp.Keepers1.topic_id  = Keepers.topic_id AND temp.Keepers1.nick = Keepers.nick WHERE Keepers.id IS NOT NULL)");
 	}
-	
+
 }
 
 class Download {
 
 	protected $ch;
 	protected $api_key;
-	
+
 	private $savedir;
-	
+
 	public function __construct($api_key, $savedir = ""){
 		$this->api_key = $api_key;
 		$this->savedir = $savedir;
 		$this->init_curl();
 	}
-	
+
 	private function init_curl(){
 		$this->ch = curl_init();
 		curl_setopt_array($this->ch, array(
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_SSL_VERIFYHOST => 2,
-			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
-			//~ CURLOPT_CONNECTTIMEOUT => 60
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 5,
+			CURLOPT_TIMEOUT => 5
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);
 	}
-	
+
 	// подготовка каталогов
 	public function create_directories($savedir, $savesubdir, $subsection, $rule, $dir_torrents, $edit, &$dl_log){
 		$savedir = $edit ? $dir_torrents : $savedir;
@@ -510,7 +515,7 @@ class Download {
 		}
 		$this->savedir = $savedir;
 	}
-	
+
 	// скачивание т-.файлов
 	public function download_torrent_files( $forum_url, $user_id, $topics, $retracker, &$dl_log, $passkey = "", $edit = false, $tor_for_user = false ) {
 		if( empty($user_id) ) {
@@ -540,20 +545,20 @@ class Download {
 			if( PHP_OS == 'WINNT' ) $torrent_file = mb_convert_encoding( $torrent_file, 'Windows-1251', 'UTF-8' );
 			$n = 1; // кол-во попыток
 			while(true) {
-				
+
 				// выходим после 3-х попыток
 				if($n >= 4) {
 					Log::append ( 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.' );
 					break;
 				}
-				
+
 				$json = curl_exec($this->ch);
-				
+
 				if($json === false) {
 					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').' );
 					break;
 				}
-				
+
 				// проверка "торрент не зарегистрирован" и т.д.
 				preg_match('|<center.*>(.*)</center>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $forbidden);
 				if(!empty($forbidden)) {
@@ -561,7 +566,7 @@ class Download {
 					Log::append ( 'Error: ' . (empty($title) ? $forbidden[1] : $title[1]) . ' (' . $topic['id'] . ').' );
 					break;
 				}
-				
+
 				// проверка "ошибка 503" и т.д.
 				preg_match('|<title>(.*)</title>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
@@ -571,7 +576,7 @@ class Download {
 					$n++;
 					continue;
 				}
-				
+
 				// меняем passkey
 				if($edit){
 					include_once dirname(__FILE__) . '/php/torrenteditor.php';
@@ -596,7 +601,7 @@ class Download {
 					else $q++;
 					break;
 				}
-				
+
 				// сохраняем в файл
 				if(!file_put_contents($torrent_file, $json) === false) {
 					$success[$q]['id'] = $topic['id'];
@@ -605,7 +610,7 @@ class Download {
 					$q++;
 					//~ Log::append ( 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.' );
 				}
-				
+
 				break;
 			}
 		}
@@ -614,11 +619,11 @@ class Download {
 		Log::append ( 'Скачивание торрент-файлов завершено.' );
 		return isset($success) ? $success : null;
 	}
-	
+
 	public function __destruct(){
 		curl_close($this->ch);
 	}
-	
+
 }
-	
+
 ?>

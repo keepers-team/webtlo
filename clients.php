@@ -615,22 +615,25 @@ class deluge {
         preg_match("|Set-Cookie: ([^;]+);|i", $output, $sid);
         if(!empty($sid)) {
             $this->sid = $sid[1];
-			$webUIIsConnected = $this->makeRequest(json_encode(array(
-				'method' => 'web.connected',
-				'params' => array(),
-				'id' => 7
-			)))['result'];
+	        $response = $this->makeRequest(json_encode(array(
+		        'method' => 'web.connected',
+		        'params' => array(),
+		        'id' => 7
+	        )));
+			$webUIIsConnected = $response['result'];
 			if (!$webUIIsConnected){
-				$firstHost = $this->makeRequest(json_encode(array(
+				$response = $this->makeRequest(json_encode(array(
 					'method' => 'web.get_hosts',
 					'params' => array(),
 					'id' => 7
-				)))['result'][0][0];
-				$firstHostStatus = $this->makeRequest(json_encode(array(
+				)));
+				$firstHost = $response['result'][0][0];
+				$response = $this->makeRequest(json_encode(array(
 					'method' => 'web.get_host_status',
 					'params' => array($firstHost),
 					'id' => 7
-				)))['result'][3];
+				)));
+				$firstHostStatus = $response['result'][3];
 				if ($firstHostStatus === 'Offline') {
 					Log::append('Deluge daemon offline.');
 					return false;
