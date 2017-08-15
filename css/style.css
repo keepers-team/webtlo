@@ -378,11 +378,11 @@ thead th {
 	padding: 0 5px 0 5px;
 }
 
-tbody td:nth-last-child(-n+2) {
+tbody td:nth-last-child(-n+3) {
 	max-width: 500px;
 }
 
-tbody td:nth-last-child(-n+2) a {
+tbody td:nth-last-child(-n+3) a {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
