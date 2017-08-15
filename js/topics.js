@@ -115,6 +115,14 @@ $( document ).ready( function () {
 	$( "#table_filter input, input[type=number]" ).on( "input",
 		redrawTopicsList );
 
+	//перерисовка таблицы при открытии главной
+	$('a[data-toggle="tab"][href="#main"]').on('shown.bs.tab', function (e) {
+		var table = $( '#topics_table' ).DataTable( {
+			retrieve: true
+		} );
+		table.columns.adjust();
+	});
+
 	//инициализация тултипов
 	$( function () {
 		$( '[data-toggle="tooltip"]' ).tooltip()
