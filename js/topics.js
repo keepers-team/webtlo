@@ -150,10 +150,11 @@ function listSelectedTopics() {
 		.find( "input[type=checkbox]" )
 		.each( function () {
 			if ( $( this ).prop( "checked" ) ) {
-				id = $( this ).attr( "id" );
-				hash = $( this ).attr( "hash" );
-				client = $( this ).attr( "client" );
-				topics.push( { id: id, hash: hash, client: client } );
+				var id = $( this ).attr( "id" );
+				var hash = $( this ).attr( "hash" );
+				var client = $( this ).attr( "client" );
+				var subsection = $( this ).attr( "subsection" );
+				topics.push( { id: id, hash: hash, client: client, subsection: subsection } );
 			}
 		} );
 	return topics;
@@ -231,11 +232,11 @@ $( "#tor_add" ).on( "click", function () {
 	if ( topics == '' ) {
 		return;
 	}
-	if ( !$( "#list-ss [value=" + subsection + "]" ).val() ) {
+	/*if ( !$( "#list-ss [value=" + subsection + "]" ).val() ) {
 		$( "#topics_result" ).html( "В настройках подразделов нет такого идентификатора: " + subsection + ".<br />" );
 		return;
-	}
-	var ss_data = $( "#list-ss [value=" + subsection + "]" ).attr( "data" );
+	}*/
+	/*var ss_data = $( "#list-ss [value=" + subsection + "]" ).attr( "data" );
 	var tmp = ss_data.split( "|" );
 	if ( tmp[ 0 ] == "" && tmp[ 0 ] == 0 ) {
 		$( "#topics_result" ).html( "В настройках текущего подраздела не указан используемый торрент-клиент.<br />" );
@@ -250,13 +251,13 @@ $( "#tor_add" ).on( "click", function () {
 	}
 	var cl_data = $( "#list-tcs option" ).filter( function () {
 		return $( this ).text() == tmp[ 0 ];
-	} ).attr( "data" );
+	} ).attr( "data" );*/
 	var $data = $( "#config" ).serialize();
 	$.ajax( {
 		type: "POST",
 		context: this,
 		url: "php/add_topics_to_client.php",
-		data: { topics: topics, client: cl_data, subsec: ss_data, cfg: $data },
+		data: { topics: topics, /*client: cl_data, subsec: ss_data,*/ cfg: $data },
 		success: function ( response ) {
 			var resp = eval( "(" + response + ")" );
 			$( "#log" ).append( resp.log );
@@ -268,7 +269,7 @@ $( "#tor_add" ).on( "click", function () {
 					type: "POST",
 					context: this,
 					url: "php/mark_topics_in_database.php",
-					data: { success: resp.success, status: -1, client: value },
+					data: { success: resp.success, status: -1/*, /*client: value */},
 					success: function ( response ) {
 						$( "#log" ).append( response );
 						redrawTopicsList();

@@ -14,6 +14,7 @@ if(isset($cfg['subsections'])){
 	}
 	$subsections = implode(', ', $subsections);
 } else $subsections = '';
+$subsections_stored_ids = implode(", ", array_keys($cfg['subsections']));
 
 try {
 	
@@ -78,7 +79,11 @@ try {
 			$kp = 'AND Keepers.topic_id IS NULL';
 		} elseif ($is_keepers == 1) {
 			$kp = 'AND Keepers.topic_id IS NOT NULL';
+		} else {
+			$kp = '';
 		}
+	} else {
+		$kp = '';
 	}
 
 	$ds = isset($avg_seeders_complete) && isset($avg_seeders)
@@ -150,8 +155,8 @@ try {
 
 	// данные о других хранителях
 	$keepers = Db::query_database(
-		"SELECT topic_id,nick FROM Keepers WHERE topic_id IN (SELECT id FROM Topics WHERE ss = :forum_id)",
-		array( 'forum_id' => $forum_id ), true, PDO::FETCH_COLUMN|PDO::FETCH_GROUP
+		"SELECT topic_id,nick FROM Keepers WHERE topic_id IN (SELECT id FROM Topics WHERE ss IN ($subsections_stored_ids))",
+		array(), true, PDO::FETCH_COLUMN|PDO::FETCH_GROUP
 	);
 	
 	$q = 1;

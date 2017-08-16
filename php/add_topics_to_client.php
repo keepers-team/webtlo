@@ -4,26 +4,35 @@ include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../clients.php';
 include dirname(__FILE__) . '/../api.php';
 
-if(isset($_POST['client'])) {
-	list($comment, $client, $host, $port, $login, $paswd) = explode("|", $_POST['client']);
-	$cl['cm'] = $comment;
-	$cl['cl'] = $client;
-	$cl['ht'] = $host;
-	$cl['pt'] = $port;
-	$cl['lg'] = $login;
-	$cl['pw'] = $paswd;
-}
+$cfg = get_settings();
 
-if(isset($_POST['subsec'])) {
-	list($ss_client, $ss_label, $ss_savepath, $ss_link, $ss_savepath_subfolder) = explode("|", $_POST['subsec']);
-	$subsection['cl']					= $ss_client;
-	$subsection['lb']					= $ss_label;
-	$subsection['fd']					= $ss_savepath;
-	$subsection['ln']					= $ss_link;
-	$subsection['savepath_subfolder']	= (int) $ss_savepath_subfolder;
-}
+$clients = [];
+if(isset($cfg['clients'])){
+	foreach($cfg['clients'] as $id => &$client){
+		$clients[$id]['cl'] = $client['cl'];
+		$clients[$id]['cm'] = $client['cm'];
+		$clients[$id]['ht'] = $client['ht'];
+		$clients[$id]['pt'] = $client['pt'];
+		$clients[$id]['lg'] = $client['lg'];
+		$clients[$id]['pw'] = $client['pw'];
 
-Log::append ( 'Запущен процесс добавления раздач в торрент-клиент "' . $cl['cm'] . '"...' );
+	}
+} else $clients = '';
+
+$subsections = [];
+if(isset($cfg['subsections'])){
+	foreach($cfg['subsections'] as $id => &$subsection){
+		$subsections[$id]['cl'] = $subsection['cl'];
+		$subsections[$id]['lb'] = $subsection['lb'];
+		$subsections[$id]['df'] = $subsection[`df`];
+		$subsections[$id]['ln'] = $subsection['ln'];
+		$subsections[$id]['sub_folder'] = $subsection['sub_folder'];
+		$subsections[$id]['id'] = $subsection['id'];
+
+	}
+} else $subsections = '';
+
+Log::append ( 'Запущен процесс добавления раздач в торрент-клиент ...' );
 
 if(isset($_POST['cfg'])) {
 	parse_str($_POST['cfg']);
@@ -48,25 +57,44 @@ try {
 		throw new Exception( 'Не удалось создать временный каталог: "' . $tmpdir . '".' );
 	
 	// скачиваем торрент-файлы
-	$dl = new Download ( $api_key, $tmpdir );
-	$success = $dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $add_log);
-	$q = preg_replace("|.*<span[^>]*?>(.*)</span>.*|si", '$1', $add_log); // кол-во
+	$dl                   = new Download ( $api_key, $tmpdir );
+	$success              = $dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $add_log);
+	$quantity_of_torrents = preg_replace("|.*<span[^>]*?>(.*)</span>.*|si", '$1', $add_log); // кол-во
 	if ( empty ( $success ) ){
 		$add_log = 'Нет скачанных торрент-файлов для добавления их в торрент-клиент.<br />';
 		throw new Exception();
 	}
-	
+
 	// добавляем раздачи в торрент-клиент
 	Log::append ( 'Добавление раздач в торрент-клиент...' );
-	$client = new $cl['cl'] ( $cl['ht'], $cl['pt'], $cl['lg'], $cl['pw'], $cl['cm'] );
-	if($client->is_online()) {
-		$client->torrentAdd ( $success, $subsection['fd'], $subsection['lb'], $subsection['savepath_subfolder'] );
-		$success = array_column_common ( $success, 'id' );
-	}  else {
-		$add_log = 'Указанный в настройках торрент-клиент недоступен.<br />';
-		throw new Exception();
+
+	$torrents_chunks_for_clients = array();
+	foreach ($success as $torrent) {
+		$torrents_chunks_for_clients[$torrent["subsection"]][] = $torrent;
 	}
-	$add_log = 'Добавлено в торрент-клиент "' . $cl['cm'] . '": <span class="rp-header">'. $q . '</span> шт.<br />';
+	$success = array();
+
+	$clients_with_new_torrents = array();
+	foreach ( $torrents_chunks_for_clients as $subsection_id => $torrents_chunk_for_client ) {
+		$client_id = $subsections[$subsection_id]['cl'];
+		if (!empty($clients[$client_id]['cl'])) {
+			$client = new $clients[$client_id]['cl'] ( $clients[$client_id]['ht'],
+				$clients[$client_id]['pt'], $clients[$client_id]['lg'], $clients[$client_id]['pw'], $clients[$client_id]['cm'] );
+			if($client->is_online()) {
+				$client->torrentAdd ( $torrents_chunk_for_client, $subsections[$subsection_id]['fd'], $subsections[$subsection_id]['lb'], $subsections[$subsection_id]['sub_folder'] );
+				$success[$client_id] = array_column_common ( $torrents_chunk_for_client, 'id' );
+			}  else {
+				$add_log = 'Указанный в настройках торрент-клиент недоступен.<br />';
+				throw new Exception();
+			}
+			$clients_with_new_torrents[] = $clients[$client_id]['cm'];
+		} else {
+			$add_log = 'Не задан клиент для раздела ' . $subsection_id;
+		}
+	}
+
+	$add_log = 'Добавлено в торрент-клиент "' . implode(", ", $clients_with_new_torrents) . '": <span class="rp-header">' . $quantity_of_torrents . '</span> шт.<br />';
+
 	Log::append ( 'Добавление торрент-файлов завершено.' );
 	
 	// выводим на экран

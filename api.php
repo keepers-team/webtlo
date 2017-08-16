@@ -606,6 +606,7 @@ class Download {
 				if(!file_put_contents($torrent_file, $json) === false) {
 					$success[$q]['id'] = $topic['id'];
 					$success[$q]['hash'] = $topic['hash'];
+					$success[$q]['subsection'] = $topic['subsection'];
 					$success[$q]['filename'] = "http://${basename}/[webtlo].t${topic['id']}.torrent";
 					$q++;
 					//~ Log::append ( 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.' );
