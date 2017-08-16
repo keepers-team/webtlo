@@ -24,7 +24,7 @@ if(isset($cfg['subsections'])){
 	foreach($cfg['subsections'] as $id => &$subsection){
 		$subsections[$id]['cl'] = $subsection['cl'];
 		$subsections[$id]['lb'] = $subsection['lb'];
-		$subsections[$id]['df'] = $subsection[`df`];
+		$subsections[$id]['df'] = $subsection['df'];
 		$subsections[$id]['ln'] = $subsection['ln'];
 		$subsections[$id]['sub_folder'] = $subsection['sub_folder'];
 		$subsections[$id]['id'] = $subsection['id'];
@@ -81,7 +81,7 @@ try {
 			$client = new $clients[$client_id]['cl'] ( $clients[$client_id]['ht'],
 				$clients[$client_id]['pt'], $clients[$client_id]['lg'], $clients[$client_id]['pw'], $clients[$client_id]['cm'] );
 			if($client->is_online()) {
-				$client->torrentAdd ( $torrents_chunk_for_client, $subsections[$subsection_id]['fd'], $subsections[$subsection_id]['lb'], $subsections[$subsection_id]['sub_folder'] );
+				$client->torrentAdd ( $torrents_chunk_for_client, $subsections[$subsection_id]['df'], $subsections[$subsection_id]['lb'], $subsections[$subsection_id]['sub_folder'] );
 				$success[$client_id] = array_column_common ( $torrents_chunk_for_client, 'id' );
 			}  else {
 				$add_log = 'Указанный в настройках торрент-клиент недоступен.<br />';
