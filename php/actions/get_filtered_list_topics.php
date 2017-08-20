@@ -6,14 +6,14 @@ mb_regex_encoding('UTF-8');
 
 $cfg = get_settings();
 
-$subsections = [];
+$subsections_ids = [];
 if(isset($cfg['subsections'])){
 	foreach($cfg['subsections'] as $id => &$ss){
-		$subsections[] = $id;
+		$subsections_ids[]      = $id;
 		$subsections_names[$id] = $ss['na'];
 	}
-	$subsections = implode(', ', $subsections);
-} else $subsections = '';
+	$subsections_ids = implode(', ', $subsections_ids);
+} else $subsections_ids = '';
 $subsections_stored_ids = implode(", ", array_keys($cfg['subsections']));
 
 try {
@@ -101,7 +101,7 @@ try {
 				$param = array();
 				break;
 			case -3:
-				$where = "dl = $filter_status AND ss IN ($subsections) AND Blacklist.topic_id IS NULL $kp";
+				$where = "dl = $filter_status AND ss IN ($subsections_ids) AND Blacklist.topic_id IS NULL $kp";
 				$param = array();
 				break;
 		}
@@ -228,7 +228,7 @@ try {
 			                     . 'title="'
 			                     . $topic['na'] . '">' . $topic['na'] . '</a>',
 			"keepers"         => $keeper,
-			"subsection"      => '<span title="' . $subsections_names[$topic['ss']] . '">' . $topic['ss'] . '</span>',
+			"subsection"      => '<span data-toggle="tooltip" title="' . $subsections_names[$topic['ss']] . '">' . $topic['ss'] . '</span>',
 		];
 		$filtered_topics_count++ ;
 		$filtered_topics_size += $topic['si'];

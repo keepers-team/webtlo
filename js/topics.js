@@ -101,6 +101,11 @@ $( document ).ready( function () {
 		} )
 		.on( 'xhr.dt', function () {
 			blockActions();
+
+			//инициализация тултипов
+			$( function () {
+				$( '[data-toggle="tooltip"]' ).tooltip()
+			} )
 		} );
 	var $topics = $( '#topics' );
 	var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
@@ -126,11 +131,6 @@ $( document ).ready( function () {
 		} );
 		table.columns.adjust();
 	});
-
-	//инициализация тултипов
-	$( function () {
-		$( '[data-toggle="tooltip"]' ).tooltip()
-	} )
 } );
 
 function redrawTopicsList() {
@@ -232,26 +232,6 @@ $( "#tor_add" ).on( "click", function () {
 	if ( topics == '' ) {
 		return;
 	}
-	/*if ( !$( "#list-ss [value=" + subsection + "]" ).val() ) {
-		$( "#topics_result" ).html( "В настройках подразделов нет такого идентификатора: " + subsection + ".<br />" );
-		return;
-	}*/
-	/*var ss_data = $( "#list-ss [value=" + subsection + "]" ).attr( "data" );
-	var tmp = ss_data.split( "|" );
-	if ( tmp[ 0 ] == "" && tmp[ 0 ] == 0 ) {
-		$( "#topics_result" ).html( "В настройках текущего подраздела не указан используемый торрент-клиент.<br />" );
-		return;
-	}
-	var value = $( "#list-tcs option" ).filter( function () {
-		return $( this ).text() == tmp[ 0 ];
-	} ).val();
-	if ( !value ) {
-		$( "#topics_result" ).html( "В настройках нет такого торрент-клиента: " + tmp[ 0 ] + "<br />" );
-		return;
-	}
-	var cl_data = $( "#list-tcs option" ).filter( function () {
-		return $( this ).text() == tmp[ 0 ];
-	} ).attr( "data" );*/
 	var $data = $( "#config" ).serialize();
 	$.ajax( {
 		type: "POST",

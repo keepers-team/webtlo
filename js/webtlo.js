@@ -86,10 +86,10 @@
 			return;
 		}
 		// получаем список т.-клиентов
-		tcs = listTorClients();
+		var tcs = listTorClients();
 		// подразделов
-		subsec = listSubsections();
-		$data = $("#config").serialize();
+		var subsec = listSubsections();
+		var $data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "actions.php",

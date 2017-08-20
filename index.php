@@ -197,7 +197,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</form>
 						<hr />
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
 							<div id="topics_result"></div>
 						</div>
 						<hr />
