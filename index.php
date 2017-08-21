@@ -205,17 +205,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<table id="topics_table" class="display compact" width="100%" cellspacing="0">
 								<thead>
 									<tr id="table_filter">
-										<th></th>
-										<th></th>
-										<th></th>
-										<th>
-											<input title="Рег.дата от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="" id="filter_date_release_from">
-											<input title="Рег.дата до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="" id="filter_date_release_until" name="filter_date_release_until" data-registered-until="<?php echo $cfg['rule_date_release'] ?>">
+										<th colspan="4">
+											<div class="input-group">
+												<input title="Рег.дата от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="" id="filter_date_release_from">
+												<span class="input-group-addon">:</span>
+												<input title="Рег.дата до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="" id="filter_date_release_until" name="filter_date_release_until" data-registered-until="<?php echo $cfg['rule_date_release'] ?>">
+											</div>
 										</th>
-										<th></th>
-										<th>
-											<input type="number" min="0" step="0.5" title="Сидов от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="0" id="filter_seeders_from">
-											<input type="number" min="0" step="0.5" title="Сидов до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="<?php echo $cfg['rule_topics'] ?>" id="filter_seeders_to">
+										<th colspan="2">
+											<div class="input-group">
+												<input type="number" min="0" step="0.5" title="Сидов от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="0" id="filter_seeders_from">
+												<span class="input-group-addon">:</span>
+												<input type="number" min="0" step="0.5" title="Сидов до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="<?php echo $cfg['rule_topics'] ?>" id="filter_seeders_to">
+											</div>
 										</th>
 										<th>
 											<input title="Название раздачи" data-toggle="tooltip" placeholder="Название раздачи" class="form-control form-control-sm" id="filter_by_name">
