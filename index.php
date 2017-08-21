@@ -195,12 +195,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 							</div>
 						</form>
-						<hr />
-						<div class="status_info">
-							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
-							<div id="topics_result"></div>
-						</div>
-						<hr />
 						<div id="topics">
 							<table id="topics_table" class="display compact" width="100%" cellspacing="0">
 								<thead>
@@ -241,6 +235,10 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</thead>
 								<tbody id="topics_table_body"></tbody>
 							</table>
+						</div>
+						<div class="status_info">
+							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="topics_result"></div>
 						</div>
 					</div>
 				</div>

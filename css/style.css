@@ -327,8 +327,8 @@ sub {
 }
 
 #topics {
-	padding: 0 10px 0 10px;
-	height: calc(100% - 125px);
+	padding: 5px 0 0 0;
+	height: calc(100% - 108px);
 }
 
 .topic_data * {
