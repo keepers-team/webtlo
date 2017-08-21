@@ -206,17 +206,17 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<thead>
 									<tr id="table_filter">
 										<th colspan="4">
-											<div class="input-group">
-												<input title="Рег.дата от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="" id="filter_date_release_from">
+											<div class="input-group input-group-sm">
+												<input title="Рег.дата от" data-toggle="tooltip" placeholder="От" class="form-control" value="" id="filter_date_release_from">
 												<span class="input-group-addon">:</span>
-												<input title="Рег.дата до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="" id="filter_date_release_until" name="filter_date_release_until" data-registered-until="<?php echo $cfg['rule_date_release'] ?>">
+												<input title="Рег.дата до" data-toggle="tooltip" placeholder="До" class="form-control" value="" id="filter_date_release_until" name="filter_date_release_until" data-registered-until="<?php echo $cfg['rule_date_release'] ?>">
 											</div>
 										</th>
 										<th colspan="2">
-											<div class="input-group">
-												<input type="number" min="0" step="0.5" title="Сидов от" data-toggle="tooltip" placeholder="От" class="form-control form-control-sm" value="0" id="filter_seeders_from">
+											<div class="input-group input-group-sm">
+												<input type="number" min="0" step="0.5" title="Сидов от" data-toggle="tooltip" placeholder="От" class="form-control" value="0" id="filter_seeders_from">
 												<span class="input-group-addon">:</span>
-												<input type="number" min="0" step="0.5" title="Сидов до" data-toggle="tooltip" placeholder="До" class="form-control form-control-sm" value="<?php echo $cfg['rule_topics'] ?>" id="filter_seeders_to">
+												<input type="number" min="0" step="0.5" title="Сидов до" data-toggle="tooltip" placeholder="До" class="form-control" value="<?php echo $cfg['rule_topics'] ?>" id="filter_seeders_to">
 											</div>
 										</th>
 										<th>
