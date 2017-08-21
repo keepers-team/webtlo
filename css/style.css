@@ -32,6 +32,10 @@ body, #main, #manual, #reports, #reporttabs {
 	height: 100%;
 }
 
+table {
+	font-size: 14px;
+}
+
 a:link {
 	color: #3333cc; /* 0000ff -> 0066cc, #3333cc */
 }

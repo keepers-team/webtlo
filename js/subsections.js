@@ -25,6 +25,7 @@ $( '#ss-add' ).typeahead( {
 			}
 		} );
 	},
+	items: 12,
 	delay: 1000,
 	afterSelect: addSubsection,
 	fitToElement: true,
