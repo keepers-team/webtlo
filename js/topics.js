@@ -23,6 +23,8 @@ $( document ).ready( function () {
 					d.filter_seeders_to = $( "#filter_seeders_to" ).val();
 				},
 				dataSrc: function ( json ) {
+					$("#topics_count").text("0");
+					$("#topics_size").text("0.00");
 					$("#filtered_topics_count").text(json.filtered_topics_count);
 					$("#filtered_topics_size").text(json.filtered_topics_size);
 					return json.data;
