@@ -394,3 +394,12 @@ tbody td:nth-last-child(-n+3) a {
 tbody td {
 	padding: 0 4px 0 4px !important;
 }
+
+thead tr:nth-child(1) th {
+	padding: 4px !important;
+	box-sizing: border-box;
+}
+
+.input-group-sm>.input-group-addon {
+	padding: .25rem .1rem;;
+}
