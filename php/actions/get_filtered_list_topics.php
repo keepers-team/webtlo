@@ -17,7 +17,9 @@ if(isset($cfg['subsections'])){
 $subsections_stored_ids = implode(", ", array_keys($cfg['subsections']));
 
 try {
-	
+	$start = $_POST['start'];
+	$length = $_POST['length'] != -1 ? $_POST['length'] : null;
+
 	$forum_id = $_POST['forum_id'];
 	parse_str( $_POST['config'] );
 	parse_str( $_POST['filter'] );
@@ -232,14 +234,14 @@ try {
 		];
 		$filtered_topics_count++ ;
 		$filtered_topics_size += $topic['si'];
-	;
-
 	}
+	$part_of_data = array_slice($data, $start, $length);
+
 	$output = array(
 		"draw" => (int) $_POST["draw"],
 		"recordsTotal" => count($topics),
 		"recordsFiltered" => count($data),
-		"data" => $data,
+		"data" => $part_of_data,
 		"filtered_topics_count" => $filtered_topics_count,
 		"filtered_topics_size" => convert_bytes($filtered_topics_size)
 	);

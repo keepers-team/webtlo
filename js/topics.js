@@ -52,7 +52,20 @@ $( document ).ready( function () {
 					"sortDescending": ": активировать для сортировки столбца по убыванию"
 				}
 			},
-			paging: false,
+			drawCallback: function(settings) {
+				var pagination = $( this ).closest( '.dataTables_wrapper' ).find( '.dataTables_paginate' );
+				pagination.toggle( this.api().page.info().pages > 1 );
+
+				if (this.api().page.info().pages > 1) {
+					var $topics = $( '#topics' );
+					var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
+					var $topics_table_paginate = $( '#topics_table_paginate' );
+					var tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
+					$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
+				}
+			},
+			"lengthChange": false,
+			"pageLength": 1000,
 			"processing": true,
 			"searching": false,
 			"order": [ 4, 'asc' ],
@@ -111,10 +124,11 @@ $( document ).ready( function () {
 		} );
 	var $topics = $( '#topics' );
 	var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
+	var $topics_table_paginate = $( '#topics_table_paginate' );
 	var tableHeight = $topics.height() - $dataTables_scrollHead.height() - 2;
 	$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 	$( window ).bind( 'resize', function () {
-		var tableHeight = $topics.height() - $dataTables_scrollHead.height() - 2;
+		var tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
 		$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 	} );
 
