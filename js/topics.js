@@ -56,11 +56,15 @@ $( document ).ready( function () {
 				var pagination = $( this ).closest( '.dataTables_wrapper' ).find( '.dataTables_paginate' );
 				pagination.toggle( this.api().page.info().pages > 1 );
 
+				var $topics = $( '#topics' );
+				var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
+				var $topics_table_paginate = $( '#topics_table_paginate' );
+				var tableHeight;
 				if (this.api().page.info().pages > 1) {
-					var $topics = $( '#topics' );
-					var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
-					var $topics_table_paginate = $( '#topics_table_paginate' );
-					var tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
+					tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
+					$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
+				} else {
+					tableHeight = $topics.height() - $dataTables_scrollHead.height() - 4 - 2;
 					$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 				}
 			},
@@ -76,28 +80,28 @@ $( document ).ready( function () {
 				{
 					"orderable": false,
 					"data": "checkbox",
-					"width": "6px"
+					"width": "21px"
 				},
 				{
 					"orderable": false,
 					"data": "color",
-					"width": "6px"
+					"width": "23px"
 				},
 				{
 					"data": "torrents_status",
-					"width": "6px"
+					"width": "1px"
 				},
 				{
 					"data": "reg_date",
-					"width": "80px"
+					"width": "55px"
 				},
 				{
 					"data": "size",
-					"width": "80px"
+					"width": "55px"
 				},
 				{
 					"data": "seeders",
-					"width": "50px"
+					"width": "25px"
 				},
 				{
 					"data": "name"
@@ -109,7 +113,7 @@ $( document ).ready( function () {
 				},
 				{
 					"data": "subsection",
-					"width": "50px"
+					"width": "25px"
 				}
 			],
 			"scrollY": "400px"

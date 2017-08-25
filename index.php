@@ -48,15 +48,12 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<title>web-TLO-0.9.3.3</title>
-		<!-- <link rel="stylesheet" href="css/reset.css" />  сброс стилей -->
-		<!-- <link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" /> -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-		<!-- <link rel="stylesheet" href="css/jquery.bootstrap-touchspin.css" />-->
-		<!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap4.min.css"> -->
-		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
+		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap4.min.css">
+		<!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css"> -->
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
-		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="stylesheet" href="css/font-awesome.min.css">
+		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
@@ -196,7 +193,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 						</form>
 						<div id="topics">
-							<table id="topics_table" class="display compact" width="100%" cellspacing="0">
+							<table id="topics_table" class="table table-hover" width="100%" cellspacing="0">
 								<thead>
 									<tr id="table_filter">
 										<th colspan="4">
@@ -778,8 +775,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<script src="jquery-ui-1.12.1/bootstrap-datepicker.ru.min.js"></script>
 
 		<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
-		<!--<script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap4.min.js"></script>
-		<script src="https://cdn.datatables.net/plug-ins/1.10.15/dataRender/ellipsis.js"></script>-->
+		<script src="jquery-ui-1.12.1/dataTables.bootstrap4.min.js"></script>
+		<!--<script src="https://cdn.datatables.net/plug-ins/1.10.15/dataRender/ellipsis.js"></script>-->
 
 
 		<script type="text/javascript" src="js/common.js"></script>
