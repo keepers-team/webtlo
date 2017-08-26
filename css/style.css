@@ -4,8 +4,6 @@
  * 
  */
 
-/* @import url("./reset.css"); */
-
 html {
 	height: 100%;
 	min-width: 1024px;
@@ -80,10 +78,7 @@ sub {
 
 /* menu */
 #content {
-	/*display: flex;
-	flex-direction: column;*/
 	height: calc(100% - 42px);
-	/*box-sizing: border-box;*/
 	padding-top: 10px;
 	border-left: 1px solid #ddd;
 	border-right: 1px solid #ddd;
@@ -214,8 +209,6 @@ sub {
 
 #list-tcs {
 	width: 100%;
-	/*padding: 0 3px;
-	margin: 10px 15px 0 0;*/
 }
 
 #ss-del {
@@ -239,10 +232,6 @@ sub {
 }
 
 #sub-data {
-	/*border: 1px solid rgba(0,0,0,.1);
-	border-radius: 4px;
-	margin: 10px 0 0;
-	font-size: small;*/
 	height: calc(100% - 29px);
 }
 
@@ -260,29 +249,15 @@ sub {
 	vertical-align: top;
 }
 
-/*#loading {
-	font-size: 14px;
-}*/
-
 /* topics filter */
 .filter_block {
 	display: inline-block;
-	/*vertical-align: top;
-	margin: 5px 10px 0 10px;*/
 	font-size: 14px;
 }
 
 .filter_block fieldset {
 	margin-bottom: 5px;
-/*
-	border: 1px solid #d3d3d3;
-	border-radius: 4px;
-*/
 }
-/*
-.topics_filter label {
-	display: block;
-}*/
 
 .filter_rule fieldset {
 	margin-top: 5px;
@@ -334,12 +309,7 @@ sub {
 	height: calc(100% - 7px);
 }
 
-/*td {
-	overflow:hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis
-}*/
-
+/* таблица и фильтр над ней*/
 .dataTables_info {
 	white-space: nowrap;
 }

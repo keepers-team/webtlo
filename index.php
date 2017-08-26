@@ -48,9 +48,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<title>web-TLO-0.9.3.3</title>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap4.min.css">
-		<!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css"> -->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
 		<link rel="stylesheet" href="css/font-awesome.min.css">
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
@@ -762,22 +761,16 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 			</div>
 		</div>
 		<!-- скрипты webtlo -->
-		<script src="jquery-ui-1.12.1/jquery.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
-		<!-- <script src="jquery-ui-1.12.1/jquery-ui.js"></script>
-		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script> -->
-		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
-		<script src="jquery-ui-1.12.1/external/js.cookie.js"></script>
-
-		<script src="jquery-ui-1.12.1/bootstrap3-typeahead.js"></script>
-		<script src="jquery-ui-1.12.1/bootstrap-datepicker.js"></script>
-		<script src="jquery-ui-1.12.1/bootstrap-datepicker.ru.min.js"></script>
-
-		<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
-		<script src="jquery-ui-1.12.1/dataTables.bootstrap4.min.js"></script>
-		<!--<script src="https://cdn.datatables.net/plug-ins/1.10.15/dataRender/ellipsis.js"></script>-->
-
+		<script src="js-libs/jquery.js"></script>
+		<script src="js-libs/popper.min.js"></script>
+		<script src="js-libs/bootstrap.min.js"></script>
+		<script src="js-libs/external/jquery.mousewheel.js"></script>
+		<script src="js-libs/external/js.cookie.js"></script>
+		<script src="js-libs/bootstrap3-typeahead.js"></script>
+		<script src="js-libs/bootstrap-datepicker.js"></script>
+		<script src="js-libs/bootstrap-datepicker.ru.min.js"></script>
+		<script src="js-libs/jquery.dataTables.min.js"></script>
+		<script src="js-libs/dataTables.bootstrap4.min.js"></script>
 
 		<script type="text/javascript" src="js/common.js"></script>
 		<script type="text/javascript" src="js/tor_clients.js"></script>

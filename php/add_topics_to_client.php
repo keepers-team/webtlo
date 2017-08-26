@@ -9,24 +9,31 @@ $settings = get_settings();
 $clients = [];
 if(isset( $settings['clients'])){
 	foreach( $settings['clients'] as $id => &$client){
-		$clients[$id]['cl'] = $client['cl'];
+		foreach($client as $parameter => $value) {
+			$clients[$id][$parameter] = $value;
+		}
+
+		/*$clients[$id]['cl'] = $client['cl'];
 		$clients[$id]['cm'] = $client['cm'];
 		$clients[$id]['ht'] = $client['ht'];
 		$clients[$id]['pt'] = $client['pt'];
 		$clients[$id]['lg'] = $client['lg'];
-		$clients[$id]['pw'] = $client['pw'];
+		$clients[$id]['pw'] = $client['pw'];*/
 	}
 };
 
 $subsections = [];
 if(isset( $settings['subsections'])){
 	foreach( $settings['subsections'] as $id => &$subsection){
-		$subsections[$id]['cl'] = $subsection['cl'];
+		foreach($subsection as $parameter => $value) {
+			$subsections[$id][$parameter] = $value;
+		}
+		/*$subsections[$id]['cl'] = $subsection['cl'];
 		$subsections[$id]['lb'] = $subsection['lb'];
 		$subsections[$id]['df'] = $subsection['df'];
 		$subsections[$id]['ln'] = $subsection['ln'];
 		$subsections[$id]['sub_folder'] = $subsection['sub_folder'];
-		$subsections[$id]['id'] = $subsection['id'];
+		$subsections[$id]['id'] = $subsection['id'];*/
 	}
 };
 
