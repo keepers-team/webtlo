@@ -288,7 +288,7 @@ $("#get_statistics").on("click", function (e) {
 		data: { ss: ss },
 		success: function(response) {
 			response = $.parseJSON(response);
-			$("#statistics_table").find("tbody").append(response);
+			$("#statistics_table").find("tbody").html(response);
 		}
 	});
 });
