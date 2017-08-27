@@ -11,7 +11,7 @@
 			autoclose: true,
 			defaultViewDate: "today",
 			todayHighlight: true,
-			todayBtn: true
+			todayBtn: "linked"
 		} );
 		filter_date_release_until.datepicker( "setDate", getReleaseDateLimitTo( filter_date_release_until.attr( "data-registered-until" ) ) );
 

@@ -318,6 +318,10 @@ sub {
 	display: inline;
 }
 
+#table_filter .input-group-sm>.form-control {
+	padding: .25rem .25rem;
+}
+
 tbody td:nth-last-child(-n+3) {
 	max-width: 500px;
 }
