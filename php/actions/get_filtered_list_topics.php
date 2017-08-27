@@ -49,9 +49,6 @@ try {
 	// некорректная дата
 	$date_release_from = DateTime::createFromFormat( "d.m.Y", $filter_date_release_from );
 	$date_release_until = DateTime::createFromFormat( "d.m.Y", $filter_date_release_until );
-	if( !$date_release_until )
-		throw new Exception( "В фильтре введена некорректная дата создания релиза." );
-	$date_release_until->setTime(23, 59, 59);
 	
 	// если включены средние сиды
 	if( isset($avg_seeders) ) {
@@ -173,7 +170,10 @@ try {
 		if ($date_release_from) {
 			if( $topic['rg'] < $date_release_from->format('U') ) continue;
 		}
-		if( $topic['rg'] > $date_release_until->format('U') ) continue;
+		if ($date_release_until) {
+			$date_release_until->setTime(23, 59, 59);
+			if( $topic['rg'] > $date_release_until->format('U') ) continue;
+		}
 
 		// фильтрация по количеству сидов
 		//~ if( $forum_id > 0 ) {
