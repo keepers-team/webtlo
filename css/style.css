@@ -15,8 +15,17 @@ html {
 	height: 100%;
 }
 
-body, #main, #manual, #reports, #reporttabs {
+body, #main, #manual, #reports, #reporttabs, #statistics, #journal {
 	height: 100%;
+}
+
+#statistics_table {
+	height: calc(100% - 39px);
+}
+
+#statistics_table tbody {
+	height: calc(100% - 49px);
+	overflow-y: auto;
 }
 
 table {
@@ -88,6 +97,7 @@ sub {
 #manual, #topics, #reporttabs div, #config, #log {
 	overflow-y: auto;
 	min-height: 0;
+	height: 100%;
 }
 
 #manual:before {

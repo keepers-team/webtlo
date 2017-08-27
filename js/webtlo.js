@@ -278,3 +278,17 @@ $("#TT_login, #TT_password").on("change", function() {
 		}
 	}
 });
+
+$("#get_statistics").on("click", function (e) {
+	e.preventDefault();
+	var ss = $("#ss").val();
+	$.ajax({
+		type: "POST",
+		url: "php/statistics.php",
+		data: { ss: ss },
+		success: function(response) {
+			response = $.parseJSON(response);
+			$("#statistics_table").find("tbody").append(response);
+		}
+	});
+});
