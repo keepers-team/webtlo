@@ -80,7 +80,7 @@ try {
 						$result = 'Невозможно выполнить действие: "'.$action.'".<br />';
 						throw new Exception();
 				}
-				$ids += $hashes[$cm]['id'];
+				$ids[] = $hashes[$cm]['id'];
 				Log::append ( 'Действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" выполнено ('.count($hashes[$cm]['id']).').' );
 			} else {
 				Log::append ( 'Error: действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" не выполнено.' );

@@ -7,11 +7,13 @@ try {
 	if( empty($_POST['success']) ) throw new Exception();
 	
 	$status = $_POST['status'];
-	//$client = $_POST['client'];
 	$success = $_POST['success'];
-	
-	foreach ($success as $client_id => $topics) {
-		$in = implode( ',', $topics );
+
+	foreach ($success as $client_id => $topics_ids) {
+		if ($status == '0' || $status == '') {
+			$client_id = '';
+		}
+		$in = implode( ',', $topics_ids );
 		if( is_numeric($status) ) {
 			Db::query_database(
 				"UPDATE Topics SET dl = :dl, cl = :cl WHERE id IN ($in)",
