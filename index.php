@@ -56,6 +56,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="stylesheet" href="css/font-awesome.min.css">
+		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
 		<div id="menutabs" class="menu">
