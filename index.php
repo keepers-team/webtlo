@@ -260,9 +260,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 					<form id="config">
 						<div class="sub_settings" id="accordion" role="tablist">
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#authentication">
 									<h6 class="mb-0">
-										<a data-toggle="collapse" data-parent="#accordion" href="#authentication">Настройки авторизации на форуме</a>
+										<a href="#authentication">Настройки авторизации на форуме</a>
 									</h6>
 								</div>
 								<div id="authentication" class="collapse show" role="tabpanel">
@@ -344,9 +344,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 							</div>
 
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#proxy">
 									<h6 class="mb-0">
-										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#proxy">Настройки прокси-сервера</a>
+										<a class="collapsed" href="#proxy">Настройки прокси-сервера</a>
 									</h6>
 								</div>
 								<div id="proxy" class="collapse" role="tabpanel">
@@ -409,9 +409,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 							</div>
 
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#clients">
 									<h6 class="mb-0">
-										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#clients">Настройки торрент-клиентов</a>
+										<a class="collapsed" href="#clients">Настройки торрент-клиентов</a>
 									</h6>
 								</div>
 								<div id="clients" class="collapse" role="tabpanel">
@@ -480,9 +480,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 							</div>
 
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#sub-sections">
 									<h6 class="mb-0">
-										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#sub-sections">Настройки сканируемых подразделов</a>
+										<a class="collapsed" href="#sub-sections">Настройки сканируемых подразделов</a>
 									</h6>
 								</div>
 								<div id="sub-sections" class="collapse" role="tabpanel">
@@ -550,9 +550,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 							</div>
 
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#torrents-control">
 									<h6 class="mb-0">
-										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#torrents-control">Настройки управления раздачами</a>
+										<a class="collapsed" href="#torrents-control">Настройки управления раздачами</a>
 									</h6>
 								</div>
 								<div id="torrents-control" class="collapse" role="tabpanel">
@@ -662,9 +662,9 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 								</div>
 							</div>
 							<div class="card">
-								<div class="card-header" role="tab">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#torrents-download">
 									<h6 class="mb-0">
-										<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#torrents-download">Настройки загрузки торрент-файлов</a>
+										<a class="collapsed" href="#torrents-download">Настройки загрузки торрент-файлов</a>
 									</h6>
 								</div>
 								<div id="torrents-download" class="collapse" role="tabpanel">
