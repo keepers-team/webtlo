@@ -12,14 +12,6 @@ if ( typeof(Cookies.get( 'saved_forum_id' )) !== "undefined" ) {
 	$subsections.val( parseInt( Cookies.get( 'saved_forum_id' ) ) );
 }
 
-// work arount to fix navtabs issue https://github.com/twbs/bootstrap/issues/23667
-$('a[data-toggle="tab"]').click(function(){
-	// todo remove snippet on bootstrap v4
-	$('a[data-toggle="tab"]').click(function() {
-		$($(this).attr('href')).show().addClass('show active').siblings().hide();
-	})
-});
-
 /* добавить подраздел */
 $( '#ss-add' ).typeahead( {
 	source: function ( query, process ) {
