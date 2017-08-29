@@ -217,11 +217,9 @@ $(".torrent_action").on("click", function(e){
 });
 
 // вывод на экран кол-во, объём выбранных раздач
-function showSizeAndAmount(count, size, filtered){
-	var topics_count = filtered ? "#filtered_topics_count" : "#topics_count";
-	var topics_size = filtered ? "#filtered_topics_size" : "#topics_size";
-	$(topics_count).text(count);
-	$(topics_size).text(сonvertBytes(size));
+function showSizeAndAmount( count, size ) {
+	$( "#topics_count" ).text( count );
+	$( "#topics_size" ).text( сonvertBytes( size ) );
 }
 
 function Counter() {
@@ -229,9 +227,9 @@ function Counter() {
 	this.size_all = 0
 }
 
-function addSizeAndAmount(input) {
-	var size = input.attr("size");
-	this.size_all += parseInt(size);
+function addSizeAndAmount( element ) {
+	var size = element.attr( "size" );
+	this.size_all += parseInt( size );
 	this.count++;
 }
 
@@ -243,10 +241,8 @@ function countSizeAndAmount(thisElem) {
 	}
 	var counter = new Counter();
 	var topics = $("#topics").find("input[type=checkbox]");
-	var filtered = false;
 	if (topics.length === 0) {
-		showSizeAndAmount(0, 0, false);
-		showSizeAndAmount(0, 0, true);
+		showSizeAndAmount( 0, 0.00 );
 	} else {
 		topics.each(function () {
 			switch (action) {
@@ -264,11 +260,9 @@ function countSizeAndAmount(thisElem) {
 					break;
 				default:
 					addSizeAndAmount.call(counter, $(this));
-					filtered = true;
 			}
 		});
-		showSizeAndAmount(0, 0, false);
-		showSizeAndAmount(counter.count, counter.size_all, filtered);
+		showSizeAndAmount(counter.count, counter.size_all);
 	}
 }
 
@@ -341,6 +335,8 @@ function getFilteredTopics(){
 			response = $.parseJSON(response);
 			if ( response.topics != null ) {
 				$("#topics").html(response.topics);
+				$("#filtered_topics_count").text( response.count );
+				$("#filtered_topics_size").text( сonvertBytes( response.size ) );
 			}
 			//~ $("#log").append(response);
 		},
@@ -350,7 +346,6 @@ function getFilteredTopics(){
 		},
 		complete: function() {
 			block_actions();
-			countSizeAndAmount.apply();
 		}
 	});
 }
@@ -407,7 +402,7 @@ $("#topics_filter").find("input[type=text], input[type=search]").on("spin input"
 $("#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release").on("change",
 	function () {
 		delay(getFilteredTopics, this);
-		showSizeAndAmount(0, 0.00);
+		showSizeAndAmount( 0, 0.00 );
 	});
 
 // есть/нет хранители

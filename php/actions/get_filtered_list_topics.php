@@ -100,6 +100,8 @@ try {
 	
 	$q = 1;
 	$output = "";
+	$filtered_topics_count = 0;
+	$filtered_topics_size = 0;
 	
 	foreach( $topics as $topic_id => $topic ) {
 		
@@ -146,12 +148,26 @@ try {
 				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.
 			'</label>'.$keeper.'</div>';
 		
+		// объём и количество раздач
+		$filtered_topics_count++;
+		$filtered_topics_size += $topic['si'];
+		
 	}
 	
-	echo json_encode( array('log' => Log::get(), 'topics' => $output) );
+	echo json_encode( array(
+			'log' => Log::get(),
+			'topics' => $output,
+			'size' => $filtered_topics_size,
+			'count' => $filtered_topics_count
+	));
 	
 } catch (Exception $e) {
-	echo json_encode( array('log' => $e->getMessage(), 'topics' => null) );
+	echo json_encode( array(
+		'log' => $e->getMessage(),
+		'topics' => null,
+		'size' => 0,
+		'count' => 0
+	));
 }
 
 ?>
