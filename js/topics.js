@@ -1,131 +1,6 @@
 $( document ).ready( function () {
 
-	//инициализация таблицы с топиками
-	var table = $( '#topics_table' )
-		.on( 'preXhr.dt', function () {
-			blockActions();
-			$( "#process" ).text( "Получение данных о раздачах..." );
-		} )
-		.DataTable( {
-			serverSide: true,
-			ajax: {
-				url: 'php/actions/get_filtered_list_topics.php',
-				type: 'POST',
-				data: function ( d ) {
-					d.forum_id = $( "#subsections" ).val();
-					d.config = $( "#config" ).serialize();
-					d.filter = $( "#topics_filter" ).serialize();
-					d.filter_by_name = $( "#filter_by_name" ).val();
-					d.filter_by_keeper = $( "#filter_by_keeper" ).val();
-					d.filter_date_release_from = $( "#filter_date_release_from" ).val();
-					d.filter_date_release_until = $( "#filter_date_release_until" ).val();
-					d.filter_seeders_from = $( "#filter_seeders_from" ).val();
-					d.filter_seeders_to = $( "#filter_seeders_to" ).val();
-				},
-				dataSrc: function ( json ) {
-					$("#topics_count").text("0");
-					$("#topics_size").text("0.00");
-					$("#filtered_topics_count").text(json.filtered_topics_count);
-					$("#filtered_topics_size").text(json.filtered_topics_size);
-					return json.data;
-				}
-			},
-			language: {
-				"processing": "Подождите...",
-				"search": "Поиск:",
-				"lengthMenu": "Показать _MENU_ записей",
-				"info": "Записи с _START_ до _END_ из _TOTAL_ записей",
-				"infoEmpty": "Записи с 0 до 0 из 0 записей",
-				"infoFiltered": "(отфильтровано из _MAX_ записей)",
-				"infoPostFix": "",
-				"loadingRecords": "Загрузка записей...",
-				"zeroRecords": "Записи отсутствуют.",
-				"emptyTable": "В таблице отсутствуют данные",
-				"paginate": {
-					"first": "Первая",
-					"previous": "Предыдущая",
-					"next": "Следующая",
-					"last": "Последняя"
-				},
-				"aria": {
-					"sortAscending": ": активировать для сортировки столбца по возрастанию",
-					"sortDescending": ": активировать для сортировки столбца по убыванию"
-				}
-			},
-			drawCallback: function(settings) {
-				var pagination = $( this ).closest( '.dataTables_wrapper' ).find( '.dataTables_paginate' );
-				pagination.toggle( this.api().page.info().pages > 1 );
 
-				var $topics = $( '#topics' );
-				var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
-				var $topics_table_paginate = $( '#topics_table_paginate' );
-				var tableHeight;
-				if (this.api().page.info().pages > 1) {
-					tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
-					$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
-				} else {
-					tableHeight = $topics.height() - $dataTables_scrollHead.height() - 4 - 2;
-					$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
-				}
-			},
-			"lengthChange": false,
-			"pageLength": 1000,
-			"processing": true,
-			"searching": false,
-			"order": [ 5, 'asc' ],
-			"info": false,
-			stateSave: true,
-			responsive: true,
-			"columns": [
-				{
-					"orderable": false,
-					"data": "checkbox",
-					"width": "21px"
-				},
-				{
-					"orderable": false,
-					"data": "color",
-					"width": "23px"
-				},
-				{
-					"data": "torrents_status",
-					"width": "1px"
-				},
-				{
-					"data": "reg_date",
-					"width": "55px"
-				},
-				{
-					"data": "size",
-					"width": "55px"
-				},
-				{
-					"data": "seeders",
-					"width": "25px"
-				},
-				{
-					"data": "name"
-				},
-				{
-					"orderable": false,
-					"data": "keepers",
-					"width": "100px"
-				},
-				{
-					"data": "subsection",
-					"width": "25px"
-				}
-			],
-			"scrollY": "400px"
-		} )
-		.on( 'xhr.dt', function () {
-			blockActions();
-
-			//инициализация тултипов
-			$( function () {
-				$( '[data-toggle="tooltip"]' ).tooltip()
-			} )
-		} );
 	var $topics = $( '#topics' );
 	var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
 	var $topics_table_paginate = $( '#topics_table_paginate' );
@@ -146,10 +21,135 @@ $( document ).ready( function () {
 
 	//перерисовка таблицы при открытии главной
 	$('a[data-toggle="tab"][href="#main"]').on('shown.bs.tab', function (e) {
-		var table = $( '#topics_table' ).DataTable( {
-			retrieve: true
-		} );
-		table.columns.adjust();
+		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === false ) {
+			//инициализация таблицы с топиками
+			var table = $( '#topics_table' )
+				.on( 'preXhr.dt', function () {
+					blockActions();
+					$( "#process" ).text( "Получение данных о раздачах..." );
+				} )
+				.DataTable( {
+					serverSide: true,
+					ajax: {
+						url: 'php/actions/get_filtered_list_topics.php',
+						type: 'POST',
+						data: function ( d ) {
+							d.forum_id = $( "#subsections" ).val();
+							d.config = $( "#config" ).serialize();
+							d.filter = $( "#topics_filter" ).serialize();
+							d.filter_by_name = $( "#filter_by_name" ).val();
+							d.filter_by_keeper = $( "#filter_by_keeper" ).val();
+							d.filter_date_release_from = $( "#filter_date_release_from" ).val();
+							d.filter_date_release_until = $( "#filter_date_release_until" ).val();
+							d.filter_seeders_from = $( "#filter_seeders_from" ).val();
+							d.filter_seeders_to = $( "#filter_seeders_to" ).val();
+						},
+						dataSrc: function ( json ) {
+							$("#topics_count").text("0");
+							$("#topics_size").text("0.00");
+							$("#filtered_topics_count").text(json.filtered_topics_count);
+							$("#filtered_topics_size").text(json.filtered_topics_size);
+							return json.data;
+						}
+					},
+					language: {
+						"processing": "Подождите...",
+						"search": "Поиск:",
+						"lengthMenu": "Показать _MENU_ записей",
+						"info": "Записи с _START_ до _END_ из _TOTAL_ записей",
+						"infoEmpty": "Записи с 0 до 0 из 0 записей",
+						"infoFiltered": "(отфильтровано из _MAX_ записей)",
+						"infoPostFix": "",
+						"loadingRecords": "Загрузка записей...",
+						"zeroRecords": "Записи отсутствуют.",
+						"emptyTable": "В таблице отсутствуют данные",
+						"paginate": {
+							"first": "Первая",
+							"previous": "Предыдущая",
+							"next": "Следующая",
+							"last": "Последняя"
+						},
+						"aria": {
+							"sortAscending": ": активировать для сортировки столбца по возрастанию",
+							"sortDescending": ": активировать для сортировки столбца по убыванию"
+						}
+					},
+					drawCallback: function(settings) {
+						var pagination = $( this ).closest( '.dataTables_wrapper' ).find( '.dataTables_paginate' );
+						pagination.toggle( this.api().page.info().pages > 1 );
+
+						var $topics = $( '#topics' );
+						var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
+						var $topics_table_paginate = $( '#topics_table_paginate' );
+						var tableHeight;
+						if (this.api().page.info().pages > 1) {
+							tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
+							$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
+						} else {
+							tableHeight = $topics.height() - $dataTables_scrollHead.height() - 4 - 2;
+							$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
+						}
+					},
+					"lengthChange": false,
+					"pageLength": 1000,
+					"processing": true,
+					"searching": false,
+					"order": [ 5, 'asc' ],
+					"info": false,
+					stateSave: true,
+					responsive: true,
+					"columns": [
+						{
+							"orderable": false,
+							"data": "checkbox",
+							"width": "21px"
+						},
+						{
+							"orderable": false,
+							"data": "color",
+							"width": "23px"
+						},
+						{
+							"data": "torrents_status",
+							"width": "1px"
+						},
+						{
+							"data": "reg_date",
+							"width": "55px"
+						},
+						{
+							"data": "size",
+							"width": "55px"
+						},
+						{
+							"data": "seeders",
+							"width": "25px"
+						},
+						{
+							"data": "name"
+						},
+						{
+							"orderable": false,
+							"data": "keepers",
+							"width": "100px"
+						},
+						{
+							"data": "subsection",
+							"width": "25px"
+						}
+					],
+					"scrollY": "400px"
+				} )
+				.on( 'xhr.dt', function () {
+					blockActions();
+
+					//инициализация тултипов
+					$( function () {
+						$( '[data-toggle="tooltip"]' ).tooltip()
+					} )
+				} );
+		}
+
 	});
 } );
 
