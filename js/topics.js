@@ -72,7 +72,7 @@ $( document ).ready( function () {
 			"pageLength": 1000,
 			"processing": true,
 			"searching": false,
-			"order": [ 4, 'asc' ],
+			"order": [ 5, 'asc' ],
 			"info": false,
 			stateSave: true,
 			responsive: true,
