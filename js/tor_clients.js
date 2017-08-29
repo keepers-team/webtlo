@@ -17,8 +17,8 @@ $("#list-tcs").on("change", function() {
 });
 
 /* при загрузке выбрать первый т.-клиент в списке */
-if($("select[id=list-tcs] option").length > 1) {
-	$("#list-tcs :nth-child(2)").prop("selected", "selected").change();
+if($("select[id=list-tcs] option").length > 0) {
+	$("#list-tcs :nth-child(1)").prop("selected", "selected").change();
 } else {
 	$("#tc-prop .tc-prop").prop("disabled", true);
 }
