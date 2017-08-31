@@ -197,7 +197,7 @@ class utorrent {
 		$this->setSetting('dir_active_download_flag', true);
 		foreach($filename as $file){
 			if (!empty($savepath)) {
-				$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+				$current_savepath = $savepath_subfolder ? $savepath . '\\' . $file['id'] : $savepath;
 				$this->setSetting('dir_active_download', urlencode($current_savepath));
 			}
 			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
