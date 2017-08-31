@@ -218,7 +218,7 @@ try {
 			                     . $topic['ss'] . '" size="' . $topic['si']
 			                     . '" hash="' . $topic['hs'] . '" client="'
 			                     . $topic['cl'] . '" >',
-			"color"           => '<img title="" src="img/' . $icons . '.png">',
+			"color"           => '<img title="' . $topic['ds'] . '" src="img/' . $icons . '.png">',
 			"torrents_status" => $torrents_statuses[ $topic['st'] ],
 			"reg_date"        => date( 'd.m.Y', $topic['rg'] ),
 			"size"            => convert_bytes( $topic['si'] ),
