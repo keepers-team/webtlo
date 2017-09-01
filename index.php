@@ -125,10 +125,10 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 								<button type="button" id="tor_add" class="btn btn-sm btn-outline-dark" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
 									<i class="fa fa-plus text-success"></i>
 								</button>
-								<button type="button" id="tor_download" class="btn btn-sm btn-outline-dark" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
+								<button type="button" class="tor_download btn btn-sm btn-outline-dark" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
 									<i class="fa fa-download"></i>
 								</button>
-								<button type="button" id="tor_download" class="btn btn-sm btn-outline-dark" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
+								<button type="button" class="tor_download btn btn-sm btn-outline-dark" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
 									<i class="fa fa-download download-replace"></i>
 									<i class="fa fa-asterisk download-replace-super"></i>
 								</button>

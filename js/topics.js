@@ -181,7 +181,7 @@ function listSelectedTopics() {
 }
 
 // скачивание т.-файлов выделенных топиков
-$( "#tor_download" ).on( "click", function () {
+$( ".tor_download" ).on( "click", function () {
 	var subsection = $( "#subsections" ).val();
 	var edit = $( this ).val();
 	var topics = listSelectedTopics.apply();
