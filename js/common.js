@@ -50,9 +50,7 @@ function blockActions() {
 		lock = 1;
 	} else {
 		$( "#topics_control" ).find( "button" ).prop( "disabled", false );
-		if ( ($subsections.val() !== "-3" && $subsections.val() < 1) || !$( "input[name=filter_status]" ).eq( 1 ).prop( "checked" ) ) {
-			$( "#tor_add" ).prop( "disabled", true );
-		} else {
+		if ( !($subsections.val() !== "-3" && $subsections.val() < 1) && $( "input[name=filter_status]" ).eq( 1 ).prop( "checked" ) ) {
 			$( ".torrent_action" ).prop( "disabled", true );
 		}
 		$subsections.attr( "disabled", false );
