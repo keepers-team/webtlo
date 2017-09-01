@@ -94,7 +94,7 @@ sub {
 	border-bottom: 1px solid #ddd;
 }
 
-#manual, #topics, #reporttabs div, #config, #log {
+#manual, #topics, #reporttabs .tab-pane, #config, #log {
 	overflow-y: auto;
 	min-height: 0;
 	height: 100%;
