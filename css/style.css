@@ -353,7 +353,7 @@ thead tr:nth-child(1) th {
 	box-sizing: border-box;
 }
 
-.input-group-sm>.input-group-addon {
+#table_filter .input-group-sm>.input-group-addon {
 	padding: .25rem .1rem;;
 }
 
