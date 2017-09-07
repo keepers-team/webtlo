@@ -226,6 +226,7 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 										<th>
 											<input title="Название раздачи" data-toggle="tooltip" placeholder="Название раздачи" class="form-control form-control-sm" id="filter_by_name">
 										</th>
+										<th></th>
 										<th>
 											<input title="Хранители" data-toggle="tooltip" placeholder="Хранители" class="form-control form-control-sm" id="filter_by_keeper">
 										</th>
@@ -239,6 +240,7 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 										<th>Размер</th>
 										<th>Сидов</th>
 										<th>Название раздачи</th>
+										<th>Альт.</th>
 										<th>Хранители</th>
 										<th>Разд.</th>
 									</tr>

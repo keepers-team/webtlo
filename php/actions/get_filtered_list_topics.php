@@ -211,29 +211,71 @@ try {
 
 		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
 
+		// подготовка строки поиска альтернативных раздач
+
+		$alternatives_name = $topic['na'];
+		if ( ! empty( $alternatives_name ) ) {
+			$t1 = strpos( $alternatives_name, '/' );
+			if ( strpos( $alternatives_name, ']' ) > $t1 && $t1 !== false ) {
+				$alternatives_name_pieces = explode( '/', $alternatives_name );
+				$search_string            = $alternatives_name_pieces[0];
+			} elseif ( strpos( $alternatives_name, ']' ) < $t1
+			           && $t1 !== false ) {
+				$alternatives_name_pieces = explode( '/', $alternatives_name );
+				$alternatives_name_pieces = explode( ']',
+					$alternatives_name_pieces[0] );
+				$search_string            = $alternatives_name_pieces[1];
+			} elseif ( $t1 === false && strpos( $alternatives_name, '[' ) < 5
+			           && strpos( $alternatives_name, '[' ) !== false ) {
+				$alternatives_name_pieces = explode( ']', $alternatives_name );
+				$alternatives_name_pieces = explode( '[',
+					$alternatives_name_pieces[1] );
+				$search_string            = $alternatives_name_pieces[0];
+			} elseif ( $t1 === false
+			           && strpos( $alternatives_name, '[' ) !== false ) {
+				$alternatives_name_pieces = explode( '[', $alternatives_name );
+				$search_string            = $alternatives_name_pieces[0];
+			} else {
+				$alternatives_name_pieces = explode( '[', $alternatives_name );
+				$search_string            = $alternatives_name_pieces[0];
+			}
+			$t1 = ( $t1 !== false ) ? $t1 : 0;
+			$t2 = strpos( $alternatives_name, '[', $t1 );
+			if ( $t2 < 5 ) {
+				$t2 = strpos( $alternatives_name, ']' ) + 1;
+				$t2 = strpos( $alternatives_name, '[', $t2 );
+			}
+			$t2   = ( $t2 === false ) ? 0 : ( $t2 + 1 );
+			$year = mb_substr( $alternatives_name, $t2 );
+			if ( ! empty( $year ) ) {
+				$pattern = '/(,|\s|])/';
+				$years   = preg_split( $pattern, $year );
+				$year    = $years[0];
+			}
+			if ( ! empty( $year ) ) {
+				$search_string = $search_string . " " . $year;
+			}
+		}
+
 		$data[] = [
-			"checkbox"        => '<input type="checkbox" class="topic" tag="'
-			                     . $q ++
-			                     . '" id="' . $topic['id'] . '" subsection="'
-			                     . $topic['ss'] . '" size="' . $topic['si']
-			                     . '" hash="' . $topic['hs'] . '" client="'
-			                     . $topic['cl'] . '" >',
-			"color"           => '<img title="' . $topic['ds'] . '" src="img/' . $icons . '.png">',
+			"checkbox"        => "<input type='checkbox' class='topic' tag='{$q}'
+			                     id='{$topic['id']}' subsection='{$topic['ss']}'
+			                     size='{$topic['si']}' hash='{$topic['hs']}' client='{$topic['cl']}' >",
+			"color"           => "<img title='{$topic['ds']}' src='img/{$icons}.png'>",
 			"torrents_status" => $torrents_statuses[ $topic['st'] ],
 			"reg_date"        => date( 'd.m.Y', $topic['rg'] ),
 			"size"            => convert_bytes( $topic['si'] ),
 			"seeders"         => '<span class="seeders" title="Значение сидов">'
 			                     . round( $topic['avg'], 2 ) . '</span>',
-			"name"            => '<a href="' . $forum_url
-			                     . '/forum/viewtopic.php?t='
-			                     . $topic['id'] . '" target="_blank" '
-			                     . 'title="'
-			                     . $topic['na'] . '">' . $topic['na'] . '</a>',
-			"keepers"         => $keeper,
-			"subsection"      => '<span data-toggle="tooltip" title="' . $subsections_names[$topic['ss']] . '">' . $topic['ss'] . '</span>',
+			"name"            => "<a href='{$forum_url}/forum/viewtopic.php?t={$topic['id']}'
+			                     target='_blank' title='{$topic['na']}'>{$topic['na']}</a>",
+			"alternatives"    => "<a href='{$forum_url}/forum/tracker.php?f={$topic['ss']}&nm={$search_string}' target='_blank'>>>></a>",
+			"keepers"         => "<span data-toggle='tooltip' title='{$keeper}'>{$keeper}</span>",
+			"subsection"      => "<span data-toggle='tooltip' title='{$subsections_names[$topic['ss']]}'>{$topic['ss']}</span>",
 		];
 		$filtered_topics_count++ ;
 		$filtered_topics_size += $topic['si'];
+		$q++;
 	}
 	$part_of_data = array_slice($data, $start, $length);
 

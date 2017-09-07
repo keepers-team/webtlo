@@ -332,11 +332,24 @@ sub {
 	padding: .25rem .25rem;
 }
 
-tbody td:nth-last-child(-n+3) {
+tbody td:nth-last-child(-n+4) {
 	max-width: 500px;
 }
 
-tbody td:nth-last-child(-n+3) a {
+tbody td:nth-last-child(-n+2) {
+	max-width: 100px;
+}
+
+tbody td:nth-last-child(-n+4) a {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: inline-block;
+	vertical-align: middle;
+	max-width: 100%;
+}
+
+tbody td:nth-last-child(-n+2) span {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

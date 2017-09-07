@@ -130,6 +130,11 @@ $( document ).ready( function () {
 						},
 						{
 							"orderable": false,
+							"data": "alternatives",
+							"width": "25px"
+						},
+						{
+							"orderable": false,
 							"data": "keepers",
 							"width": "100px"
 						},
