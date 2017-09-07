@@ -220,7 +220,7 @@ try {
 				$alternatives_name_pieces = explode( '/', $alternatives_name );
 				$search_string            = $alternatives_name_pieces[0];
 			} elseif ( strpos( $alternatives_name, ']' ) < $t1
-			           && $t1 !== false ) {
+			           && $t1 !== false && strpos( $alternatives_name, ']' ) !== false ) {
 				$alternatives_name_pieces = explode( '/', $alternatives_name );
 				$alternatives_name_pieces = explode( ']',
 					$alternatives_name_pieces[0] );
