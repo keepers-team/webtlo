@@ -311,7 +311,7 @@ class transmission {
 	}
 	
 	// выполнение запроса
-	private function makeRequest($fields, $decode = true, $options = array()) {
+	private function makeRequest($fields, $options = array()) {
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         curl_setopt_array($ch, array(
@@ -321,32 +321,53 @@ class transmission {
 	        CURLOPT_HTTPHEADER => array($this->sid),
 	        CURLOPT_POSTFIELDS => $fields
         ));
-        $req = curl_exec($ch);
-        if($req === false) {
-			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
-			return false;
+		$i = 1; // номер попытки
+		$n = 3; // количество попыток
+		while( true ) {
+	        $req = curl_exec($ch);
+	        if( $req === false ) {
+				Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+				curl_close($ch);
+				return;
+			}
+			$req = json_decode( $req, true );
+			if( $req['result'] != 'success' ) {
+				if( empty($req['result']) && $i <= $n ) {
+					Log::append ( "Повторная попытка $i/$n выполнить запрос." );
+					sleep(10);
+					$i++;
+					continue;
+				}
+				$error = empty( $req['result'] )
+					? "Неизвестная ошибка"
+					: $req['result'];
+				Log::append( "Error: $error" );
+				curl_close($ch);
+				return;
+			}
+			curl_close($ch);
+			return $req;
 		}
-        curl_close($ch);
-        return ($decode ? json_decode($req, true) : $req);
 	}
 	
 	// получение списка раздач
 	public function getTorrents( $client = "" ) {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
-        foreach($json['arguments']['torrents'] as $torrent)
-		{
-			if( empty( $torrent['error'] ) ) {
-				// скачано 100%
-				$status = $torrent['percentDone'] == 1
-					// на паузе
-					? $torrent['status'] == 0
-						? -1
-						: 1
-					: 0;
-				$hash = strtoupper( $torrent['hashString'] );
-				$data[$hash]['status'] = $status;
-				$data[$hash]['client'] = $client;
+		if( !empty($json) ) {
+			foreach( $json['arguments']['torrents'] as $torrent ) {
+				if( empty( $torrent['error'] ) ) {
+					// скачано 100%
+					$status = $torrent['percentDone'] == 1
+						// на паузе
+						? $torrent['status'] == 0
+							? -1
+							: 1
+						: 0;
+					$hash = strtoupper( $torrent['hashString'] );
+					$data[$hash]['status'] = $status;
+					$data[$hash]['client'] = $client;
+				}
 			}
 		}
         return isset($data) ? $data : array();
@@ -354,6 +375,7 @@ class transmission {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+		$success = array();
 		foreach($filename as $file){
 			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
@@ -363,9 +385,19 @@ class transmission {
 					"paused" : "false"'
 					. (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
-			}', true);
-			//~ return $json['result']; // success
+			}');
+			if( !empty($json['arguments']) ) {
+				if( !empty( $json['arguments']['torrent-added'] ) ) {
+					$success[] = $json['arguments']['torrent-added']['hashString'];
+				}
+				if( !empty( $json['arguments']['torrent-duplicate'] ) ) {
+					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте (${file['id']})." );
+				}
+			}
 		}
+		return array_map( function($e) {
+			return strtoupper($e);
+		}, $success );
 	}
 	
 	// установка метки
@@ -378,8 +410,7 @@ class transmission {
 		$json = $this->makeRequest(json_encode(array(
             'method' => ($force ? 'torrent-start-now' : 'torrent-start'),
             'arguments' => array('ids' => $hash)
-        )), true);
-        //~ return $json['result'] == 'success' ? true : false;
+        )));
 	}
 	
     // остановка раздач
@@ -387,8 +418,7 @@ class transmission {
 		$json = $this->makeRequest(json_encode(array(
 			'method' => 'torrent-stop',
 			'arguments' => array('ids' => $hash)
-		)), true);
-		//~ return $json['result'] == 'success' ? true : false;
+		)));
 	}
 	
     // проверить локальные данные раздач
@@ -396,8 +426,7 @@ class transmission {
 		$json = $this->makeRequest(json_encode(array(
             'method' => 'torrent-verify',
             'arguments' => array( 'ids' => $hash )
-		)), true);
-        //~ return $json['result'] == 'success' ? true : false;
+		)));
 	}
 	
     // удаление раздач
@@ -407,8 +436,7 @@ class transmission {
             'arguments' => array(
 				'ids' => $hash,
 				'delete-local-data' => $data
-        ))), true);
-        //~ return $json['result'] == 'success' ? true : false;
+        ))));
 	}
 	
 }
@@ -466,7 +494,7 @@ class vuze {
 	}
 	
 	// выполнение запроса
-	private function makeRequest($fields, $decode = true, $options = array()) {
+	private function makeRequest($fields, $options = array()) {
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         curl_setopt_array($ch, array(
@@ -476,32 +504,53 @@ class vuze {
 	        CURLOPT_HTTPHEADER => array($this->sid),
 	        CURLOPT_POSTFIELDS => $fields
         ));
-        $req = curl_exec($ch);
-        if($req === false) {
-			Log::append ( 'CURL ошибка: ' . curl_error($ch) );
-			return false;
+		$i = 1; // номер попытки
+		$n = 3; // количество попыток
+		while( true ) {
+	        $req = curl_exec($ch);
+	        if( $req === false ) {
+				Log::append ( 'CURL ошибка: ' . curl_error($ch) );
+				curl_close($ch);
+				return;
+			}
+			$req = json_decode( $req, true );
+			if( $req['result'] != 'success' ) {
+				if( empty($req['result']) && $i <= $n ) {
+					Log::append ( "Повторная попытка $i/$n выполнить запрос." );
+					sleep(10);
+					$i++;
+					continue;
+				}
+				$error = empty( $req['result'] )
+					? "Неизвестная ошибка"
+					: $req['result'];
+				Log::append( "Error: $error" );
+				curl_close($ch);
+				return;
+			}
+			curl_close($ch);
+			return $req;
 		}
-        curl_close($ch);
-        return ($decode ? json_decode($req, true) : $req);
 	}
 	
 	// получение списка раздач
 	public function getTorrents( $client = "" ) {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('{ "method" : "torrent-get", "arguments" : { "fields" : [ "hashString", "status", "error", "percentDone"] } }');
-        foreach($json['arguments']['torrents'] as $torrent)
-		{
-			if( empty( $torrent['error'] ) ) {
-				// скачано 100%
-				$status = $torrent['percentDone'] == 1
-					// на паузе
-					? $torrent['status'] == 0
-						? -1
-						: 1
-					: 0;
-				$hash = strtoupper( $torrent['hashString'] );
-				$data[$hash]['status'] = $status;
-				$data[$hash]['client'] = $client;
+		if( !empty( $json ) ) {
+			foreach( $json['arguments']['torrents'] as $torrent ) {
+				if( empty( $torrent['error'] ) ) {
+					// скачано 100%
+					$status = $torrent['percentDone'] == 1
+						// на паузе
+						? $torrent['status'] == 0
+							? -1
+							: 1
+						: 0;
+					$hash = strtoupper( $torrent['hashString'] );
+					$data[$hash]['status'] = $status;
+					$data[$hash]['client'] = $client;
+				}
 			}
 		}
         return isset($data) ? $data : array();
@@ -509,6 +558,7 @@ class vuze {
 	
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+		$success = array();
 		foreach($filename as $file){
 			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
@@ -516,11 +566,21 @@ class vuze {
 				"arguments" : {
 					"filename" : "' . $file['filename'] . '",
 					"paused" : "false"'
-					 . (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
+					. (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
-			}', true);
-			//~ retutn $json['result']; // success
+			}');
+			if( !empty($json['arguments']) ) {
+				if( !empty( $json['arguments']['torrent-added'] ) ) {
+					$success[] = $json['arguments']['torrent-added']['hashString'];
+				}
+				if( !empty( $json['arguments']['torrent-duplicate'] ) ) {
+					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте (${file['id']})." );
+				}
+			}
 		}
+		return array_map( function($e) {
+			return strtoupper($e);
+		}, $success );
 	}
 	
 	// установка метки
@@ -533,8 +593,7 @@ class vuze {
 		$json = $this->makeRequest(json_encode(array(
             'method' => ($force ? 'torrent-start-now' : 'torrent-start'),
             'arguments' => array('ids' => $hash)
-        )), true);
-        //~ return $json['result'] == 'success' ? true : false;
+        )));
 	}
 	
     // остановка раздач
@@ -542,8 +601,7 @@ class vuze {
 		$json = $this->makeRequest(json_encode(array(
 			'method' => 'torrent-stop',
 			'arguments' => array('ids' => $hash)
-		)), true);
-		//~ return $json['result'] == 'success' ? true : false;
+		)));
 	}
 	
 	// проверить локальные данные раздач
@@ -551,8 +609,7 @@ class vuze {
 		$json = $this->makeRequest(json_encode(array(
             'method' => 'torrent-verify',
             'arguments' => array( 'ids' => $hash )
-		)), true);
-        //~ return $json['result'] == 'success' ? true : false;
+		)));
 	}
 	
     // удаление раздач
@@ -562,8 +619,7 @@ class vuze {
             'arguments' => array(
 				'ids' => $hash,
 				'delete-local-data' => $data
-        ))), true);
-        //~ return $json['result'] == 'success' ? true : false;
+        ))));
 	}
 	
 }
@@ -1059,7 +1115,7 @@ class ktorrent {
 	}
 	
 	// получение списка раздач
-	public function getTorrents( $client = "", $full = false) {
+	public function getTorrents( $client = "", $full = false ) {
 		Log::append ( 'Попытка получить данные о раздачах от торрент-клиента "' . $this->comment . '"...' );
 		$json = $this->makeRequest('data/torrents.xml', true, array(CURLOPT_POST => false), true);
 		// вывод отличается, если в клиенте только одна раздача
