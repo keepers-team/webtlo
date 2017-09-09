@@ -619,25 +619,25 @@ class deluge {
 				'method' => 'web.connected',
 				'params' => array(),
 				'id' => 7
-			)))['result'];
-			if (!$webUIIsConnected){
+			)));
+			if ( !$webUIIsConnected['result'] ) {
 				$firstHost = $this->makeRequest(json_encode(array(
 					'method' => 'web.get_hosts',
 					'params' => array(),
 					'id' => 7
-				)))['result'][0][0];
+				)));
 				$firstHostStatus = $this->makeRequest(json_encode(array(
 					'method' => 'web.get_host_status',
-					'params' => array($firstHost),
+					'params' => array( $firstHost['result'][0][0] ),
 					'id' => 7
-				)))['result'][3];
-				if ($firstHostStatus === 'Offline') {
+				)));
+				if ( $firstHostStatus['result'][3] === 'Offline' ) {
 					Log::append('Deluge daemon offline.');
 					return false;
-				} elseif ($firstHostStatus === 'Online') {
+				} elseif ( $firstHostStatus['result'][3] === 'Online' ) {
 					$response = $this->makeRequest(json_encode(array(
 						'method' => 'web.connect',
-						'params' => array($firstHost),
+						'params' => array( $firstHost['result'][0][0] ),
 						'id' => 7
 					)));
 					if ($response['error'] === null){
