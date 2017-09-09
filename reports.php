@@ -215,14 +215,21 @@ class Reports {
 			)
 		);
 		$html = phpQuery::newDocumentHTML($data, 'UTF-8');
-		$error = $html->find('div.msg')->text();
-		if(!empty($error)){
-			Log::append ( $error . ' (' . $topic_id . ').' );
+		$msg = $html->find('div.msg')->text();
+		if( !empty( $msg ) ) {
+			Log::append ( "Error: $msg ($topic_id)." );
 			return;
 		}
 		$post_id = $html->find('div.mrg_16 > a')->attr('href');
-		if(empty($post_id)){
-			Log::append ( $html->find('div.mrg_16')->text() . ' (' . $topic_id . ').' );
+		if ( empty( $post_id ) ) {
+			$msg = $html->find('div.mrg_16')->text();
+			if ( empty( $msg ) ) {
+				$msg = $html->find('h2')->text();
+				if ( empty( $msg ) ) {
+					$msg = 'Неизвестная ошибка';
+				}
+			}
+			Log::append ( "Error: $msg ($topic_id)." );
 			return;
 		}
 		$post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
