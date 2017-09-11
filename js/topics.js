@@ -47,8 +47,8 @@ $( document ).ready( function () {
 						dataSrc: function ( json ) {
 							$("#topics_count").text("0");
 							$("#topics_size").text("0.00");
-							$("#filtered_topics_count").text(json.filtered_topics_count);
-							$("#filtered_topics_size").text(json.filtered_topics_size);
+							$("#filtered_topics_count").text(json.count);
+							$("#filtered_topics_size").text(json.size);
 							return json.data;
 						}
 					},
