@@ -1,7 +1,7 @@
 //~ $(document).ready(function() {
 	
 	/* инициализация кнопок */
-	$("#topics_control button").button();
+	$("#topics_control button, #savecfg, #get_statistics").button();
 	$("#select, #control, #new-torrents, #filter").buttonset();
 	
 	// период хранения средних сидов
@@ -74,7 +74,6 @@
 	
 	/* сохранение настроек */
 	$( "#savecfg" )
-	.button()
 	.on("click", function() {
 		tcs = listTorClients();
 		subsec = listDataSubsections();
@@ -94,6 +93,26 @@
 			complete: function(response) {
 				$("#savecfg").prop("disabled", false);
 			},
+		});
+	});
+	
+	// получение статистики
+	$("#get_statistics").on( "click", function (e) {
+		$.ajax({
+			context: this,
+			type: "POST",
+			url: "php/actions/get_statistics.php",
+			beforeSend: function() {
+				$(this).prop( "disabled", true );
+			},
+			success: function( response ) {
+				json = $.parseJSON( response );
+				$("#table_statistics tbody").html( json.tbody );
+				$("#table_statistics tfoot").html( json.tfoot );
+			},
+			complete: function() {
+				$(this).prop( "disabled", false );
+			}
 		});
 	});
 	

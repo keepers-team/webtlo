@@ -46,7 +46,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.3</title>
+		<title>web-TLO-0.9.3.4</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -64,6 +64,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				<li class="menu"><a href="#main" class="menu">Главная</a></li>
 				<li class="menu"><a href="#settings" class="menu">Настройки</a></li>
 				<li class="menu"><a href="#reports" class="menu">Отчёты</a></li>
+				<li class="menu"><a href="#statistics" class="menu">Статистика</a></li>
 				<li class="menu"><a href="#journal" class="menu">Журнал</a></li>
 				<li class="menu"><a href="#manual" title="Открыть файл руководства">FAQ</a></li>
 			</ul>
@@ -577,6 +578,38 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</form>
 				</div>					
 				<div id="reports" class="content"></div>
+				<div id="statistics" class="content">
+					<div>
+						<button type="button" id="get_statistics" title="Получить статистику по хранимым подразделам">
+							Отобразить статистику
+						</button>
+					</div>
+					<div id="data_statistics">
+						<table id="table_statistics">
+							<thead>
+								<tr>
+									<th colspan="2">Подраздел</th>
+									<th colspan="10">Количество и вес раздач</th>
+								</tr>
+								<tr>
+									<th>ID</th>
+									<th width="40%">Название</th>
+									<th colspan="2">сc == 0</th>
+									<th colspan="2">0.0 < cc <= 0.5</th>
+									<th colspan="2">0.5 < сc <= 1.0</th>
+									<th colspan="2">1.0 < сc <= 1.5</th>
+									<th colspan="2">Всего в подразделе</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<th colspan="12">&mdash;</th>
+								</tr>
+							</tbody>
+							<tfoot></tfoot>
+						</table>
+					</div>
+				</div>
 				<div id="journal" class="content">
 					<div id="log"></div>
 				</div>

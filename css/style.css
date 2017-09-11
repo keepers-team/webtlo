@@ -86,14 +86,14 @@ sub {
 	padding: 0;
 }
 
-#menutabs, #content, #main, #sub-data, #reports, #reporttabs, #settings, #journal {
+#menutabs, #content, #main, #sub-data, #reports, #reporttabs, #settings, #journal, #statistics {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 	box-sizing: border-box;
 }
 
-#manual, #topics, #reporttabs div, #config, #log {
+#manual, #topics, #reporttabs div, #config, #log, #data_statistics {
 	flex: 1;
 	overflow-y: auto;
 	min-height: 0;
@@ -182,7 +182,7 @@ li.menu.ui-tabs-active {
 }
 
 /* main */
-#startreports:disabled, #update:disabled, #topics_control button:disabled, #sendreports:disabled {
+#startreports:disabled, #update:disabled, #topics_control button:disabled, #sendreports:disabled, #get_statistics:disabled {
 	background: #fafafa;
 	cursor: default;
 	color: #D3D3D3;
@@ -202,7 +202,7 @@ li.menu.ui-tabs-active {
 }
 
 /* settings */
-#savecfg {
+#savecfg, #get_statistics {
 	margin: 0 0 10px 15px;
 	padding: .3em .7em;
 	font-size: 85%;
@@ -342,6 +342,35 @@ label:hover {
 	
 .rp-header, .bold {
 	font-weight: bold;
+}
+
+/* statistics */
+#table_statistics {
+	text-align: center;
+	font-size: small;
+	color: #444444;
+	margin: auto;
+	width: 99%;
+}
+
+#table_statistics * {
+	border: 1px solid #aaaaaa;
+}
+
+#table_statistics thead, #table_statistics tfoot {
+	background: #f6f6f6;
+}
+
+#table_statistics th {
+	padding: 5px;
+}
+
+.warning {
+	background: #fafa00;
+}
+
+.critical {
+	background: #ff4040;
 }
 
 /* topics */
