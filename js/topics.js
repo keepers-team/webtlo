@@ -402,7 +402,7 @@ function countSizeAndAmount( thisElem ) {
 	if (topics.length === 0) {
 		showSizeAndAmount( 0, 0.00 );
 	} else {
-		topics_checkboxes.each( function () {
+		topics.each( function () {
 			switch ( action ) {
 				case "select":
 					$( this ).prop( "checked", true );
