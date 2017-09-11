@@ -601,6 +601,7 @@ class Download {
 				if(!file_put_contents($torrent_file, $json) === false) {
 					$success[$q]['id'] = $topic['id'];
 					$success[$q]['hash'] = $topic['hash'];
+					$success[$q]['subsection'] = $topic['subsection'];
 					$success[$q]['filename'] = "http://${basename}/[webtlo].t${topic['id']}.torrent";
 					$q++;
 					//~ Log::append ( 'Успешно сохранён торрент-файл для ' . $topic['id'] . '.' );
@@ -610,7 +611,7 @@ class Download {
 			}
 		}
 		$endtime1 = microtime(true);
-		$dl_log = 'Сохранено в каталоге "' . $this->savedir . '": <span class="rp-header">' . $q . '</span> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
+		$dl_log = 'Сохранено в каталоге "' . $this->savedir . '": <b>' . $q . '</b> шт. (за ' . round($endtime1-$starttime, 1). ' с).'; //, ошибок: ' . $err . '.';
 		Log::append ( 'Скачивание торрент-файлов завершено.' );
 		return isset($success) ? $success : null;
 	}

@@ -1,77 +1,56 @@
 //~ $(document).ready(function() {
-	
-	/* инициализация кнопок */
-	$("#topics_control button, #savecfg, #get_statistics").button();
-	$("#select, #control, #new-torrents, #filter").buttonset();
-	
-	// период хранения средних сидов
-	$("#avg_seeders_period, #filter_avg_seeders_period").spinner({
-		min: 1,
-		max: 30,
-		mouseWheel: true
-	});
-	
-	// дата релиза в настройках
-	$("#rule_date_release").spinner({
-		min: 0,
-		mouseWheel: true
-	});
-	
-	// фильтрация раздач, количество сидов
-	$("#TT_rule_topics, #TT_rule_reports, .filter_rule input[type=text]").spinner({
-		min: 0,
-		step: 0.5,
-		mouseWheel: true
-	});
-	
-	// дата релиза в фильтре
-	$.datepicker.regional["ru"];
-	$("#filter_date_release").datepicker({
-		changeMonth: true,
-		changeYear: true,
-		showOn: "both",
-		dateFormat: 'dd.mm.yy',
-		maxDate: "now",
-		buttonText: '<i class="fa fa-calendar" aria-hidden="true"></i>'
-	})
-	.datepicker("setDate", $("#filter_date_release").val())
-	.css("width", 90)
-	.datepicker("refresh");
-	
-	// регулировка раздач, количество пиров
-	$("#peers").spinner({
-		min: 1,
-		mouseWheel: true
-	});
 
-	/* кнопка справки */
-	$("#help").addClass("ui-button ui-state-default");
-	$("#help").hover(function(){
-		if($(this).hasClass("ui-state-hover"))
-			$(this).removeClass("ui-state-hover");
-		else
-			$(this).addClass("ui-state-hover");
-	});
-	
-	/* инициализация главного меню */
-	var menutabs = $( "#menutabs" ).tabs({
-		activate: function (event, ui) {
-			Cookies.set('selected-tab', (ui.newTab.index() === 2 ? 0 : ui.newTab.index()));
-		},
-		active: Cookies.get('selected-tab'),
-		disabled: [ 2 ]
-	});
-	menutabs.addClass( "ui-tabs-vertical ui-helper-clearfix" ).removeClass("ui-widget-content");
-	$( "#menutabs li.menu" ).removeClass( "ui-corner-top" ).addClass( "ui-corner-left" );
-	
-	/* инициализация "аккордиона" для вкладки настройки */
-	$("div.sub_settings").each(function() {
-		$(this).accordion({
-			collapsible: true,
-			heightStyle: "content"
-		});	
-	});
-	
+	$( document ).ready( function () {
+		// дата релиза в фильтре
+		var filter_date_release_until = $( "#filter_date_release_until" );
+		var filter_date_release = $( "#filter_date_release_from, #filter_date_release_until" );
+		filter_date_release.datepicker( {
+			language: "ru",
+			format: 'dd.mm.yyyy',
+			endDate: "today",
+			autoclose: true,
+			defaultViewDate: "today",
+			todayHighlight: true,
+			todayBtn: "linked"
+		} );
+		filter_date_release_until.datepicker( "setDate", getReleaseDateLimitTo( filter_date_release_until.attr( "data-registered-until" ) ) );
+
+		// скрыть фильтр если он был скрыт ранее
+		/*if ( Cookies.get( 'filter-state' ) === "false" ) {
+			$( "#topics_filter" ).hide();
+		}*/
+
+		// восстановить состояние опций фильтра
+		//TODO добавить сохранение состояния фильтра сверху таблицы
+		var filter_options = Cookies.get( 'filter-options' ) !== undefined ?
+			JSON.parse( Cookies.get( 'filter-options' ) ) : "default";
+		if ( filter_options !== "default" ) {
+			jQuery.each( filter_options, function ( i, option ) {
+				$( "#topics_filter" ).find( "input[name='" + option[ "name" ] + "']" ).each( function () {
+					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
+						if ( $( this ).val() === option[ "value" ] ) {
+							$( this ).prop( "checked", true );
+							$( this ).parent().addClass('active')
+						} else {
+							$( this ).prop( "checked", false );
+							$( this ).parent().removeClass('active')
+						}
+					} else {
+						$( this ).val( option[ "value" ] );
+					}
+				} );
+			} );
+		}
+
+		/* инициализация главного меню */
+		$( '#main_menu' ).find( ' a[href="' + Cookies.get( 'selected-tab' ) + '"]' ).tab( 'show' );
+	} );
+
+	/* сохранение открытой вкладки при перезагрузке страницы */
+	$( 'a[data-toggle="tab"]' ).on( 'shown.bs.tab', function () {
+		Cookies.set( 'selected-tab', ($( this ).attr( 'href' ) === "#reports" ? "#main" : $( this ).attr( 'href' )) );
+	} );
+
 	/* сохранение настроек */
 	$( "#savecfg" )
 	.on("click", function() {
@@ -92,7 +71,7 @@
 			},
 			complete: function(response) {
 				$("#savecfg").prop("disabled", false);
-			},
+			}
 		});
 	});
 	
@@ -126,16 +105,16 @@
 			return;
 		}
 		// получаем список т.-клиентов
-		tcs = listTorClients();
+		var tcs = listTorClients();
 		// подразделов
-		subsec = listSubsections();
-		$data = $("#config").serialize();
+		var subsec = listSubsections();
+		var $data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "actions.php",
 			data: { m:'reports', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
-				block_actions();
+				blockActions();
 				$("#process").text( "Формирование отчётов..." );
 				$("#log").append(nowTime() + "Начато формирование отчётов...<br />");
 			},
@@ -147,15 +126,15 @@
 				//~ $("#reports").html(response);
 				
 				//инициализация горизонтальных вкладок отчетов
-				var reporttabs = $("#reporttabs").tabs();
+				//var reporttabs = $("#reporttabs").tabs();
 				
 				//инициализация "аккордиона" сообщений
-				$( "div.acc" ).each(function(){
+				/*$( "div.acc" ).each(function(){
 					$(this).accordion({
 						collapsible: true,
 						heightStyle: "content"
 					});
-				});
+				});*/
 				
 				//выделение тела собщения двойным кликом (код должен идти после инициализации аккордиона, иначе handler клика будет затерт)
 				$("div.ui-accordion-content").dblclick(function() {
@@ -180,10 +159,10 @@
 					r.moveToElementText(e); 
 					r.select();}
 				});
-				$( "#menutabs" ).tabs( "enable", 2 );
+				$( '#main_menu' ).find( ' a[href="#reports"]' ).removeClass( "disabled" );
 			},
 			complete: function() {
-				block_actions();
+				blockActions();
 			},
 		});
 	});
@@ -199,7 +178,7 @@
 			url: "actions.php",
 			data: { m:'send', cfg:$data, subsec:subsec },
 			beforeSend: function() {
-				block_actions();
+				blockActions();
 				$("#process").text( "Отправка отчётов на форум..." );
 				$("#log").append(nowTime() + "Начато выполнение процесса отправки отчётов...<br />");
 			},
@@ -211,7 +190,7 @@
 				$("#log").append(nowTime() + "Процесс отправки отчётов завершен.<br />");
 			},
 			complete: function() {
-				block_actions();
+				blockActions();
 			},
 		});
 	});
@@ -221,7 +200,7 @@
 	.click(function() {
 		var errors = [];
 		if(!FormConfigCheck(errors)){
-			$("#topics").html("<br /><div>Проверьте настройки.<br />Для получения подробностей обратитесь к журналу событий.</div><br />");
+			$("#topics_result").html("<div>Проверьте настройки. Для получения подробностей обратитесь к журналу событий.</div>");
 			$("#log").append(errors);
 			return;
 		}
@@ -233,22 +212,21 @@
 			url: "actions.php",
 			data: { m:'update', tcs:tcs, cfg:$data, subsec:subsec },
 			beforeSend: function() {
-				block_actions();
+				blockActions();
 				$("#process").text( "Обновление сведений о раздачах..." );
 				$("#log").append(nowTime() + "Начато обновление сведений...<br />");
 			},
 			success: function(response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				getFilteredTopics();
+				redrawTopicsList();
 				$("#log").append(nowTime() + "Обновление сведений завершено.</br>");
 			},
 			complete: function() {
-				block_actions();
+				blockActions();
 			},
 		});
 	});
-	
 	
 	/* проверка введённых данных */
 	function FormConfigCheck(errors){

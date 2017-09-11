@@ -41,26 +41,25 @@ function CheckSlash(e){
 }
 var lock = 0;
 
-function block_actions(){
-	if(lock == 0){
-		$("#topics_control button").prop("disabled", true);
-		$("#subsections").selectmenu("disable");
-		$("#loading, #process").show();
+function blockActions() {
+	var $subsections = $( "#subsections" );
+	if ( lock === 0 ) {
+		$( "#topics_control" ).find( "button" ).prop( "disabled", true );
+		$subsections.attr( "disabled", true );
+		$( "#loading, #process" ).show();
 		lock = 1;
 	} else {
-		$("#topics_control button").prop("disabled", false);
-		if( $("#subsections").val() < 1 || !$("input[name=filter_status]").eq(1).prop("checked") ) {
-			$(".tor_add").prop("disabled", true);
-		} else {
-			$(".tor_stop, .tor_remove, .tor_label, .tor_start").prop("disabled", true);
+		$( "#topics_control" ).find( "button" ).prop( "disabled", false );
+		if ( !($subsections.val() !== "-3" && $subsections.val() < 1) && $( "input[name=filter_status]" ).eq( 1 ).prop( "checked" ) ) {
+			$( ".torrent_action" ).prop( "disabled", true );
 		}
-		$("#subsections").selectmenu("enable");
-		$("#loading, #process").hide();
+		$subsections.attr( "disabled", false );
+		$( "#loading, #process" ).hide();
 		lock = 0;
 	}
 }
 // выполнить функцию с задержкой
-function makeDelay(ms){
+/*function makeDelay(ms){
 	var timer = 0;
 	return function (callback, scope){
 		clearTimeout (timer);
@@ -68,10 +67,7 @@ function makeDelay(ms){
              callback.apply(scope);
         }, ms);
 	}
-}
-
-// инициализация диалога
-$('#dialog').dialog({ autoOpen: false, width: 500 });
+}*/
 
 // сортировка в select
 function doSortSelect( select_id ) {
@@ -89,3 +85,8 @@ function doSortSelectByValue( select_id ) {
 	});
 	$('#'+select_id).empty().html(sortedVals);
 }
+
+// убираем outline после нажатия кнопок
+$(".btn").click(function(){
+	$(this).blur();
+});
