@@ -4,24 +4,32 @@
  * 
  */
 
-/* @import url("./reset.css"); */
-
 html {
 	height: 100%;
 	min-width: 1024px;
 	min-height: 768px;
 }
 
-body {
-	padding: 10px;
-	height: calc(100% - 20px);
+.container-fluid {
+	padding-bottom: 15px;
+	height: 100%;
 }
 
-a, h2, h3, button, menu, input, textarea, select, span {
-/*
-	text-decoration: none;
-*/
-	outline: none;
+body, #main, #manual, #reports, #reporttabs, #statistics, #journal {
+	height: 100%;
+}
+
+#statistics_table {
+	height: calc(100% - 39px);
+}
+
+#statistics_table tbody {
+	height: calc(100% - 49px);
+	overflow-y: auto;
+}
+
+table {
+	font-size: 14px;
 }
 
 a:link {
@@ -50,16 +58,12 @@ h3 {
 
 hr {
 	clear: both;
-	margin-left: 0;
-	margin-right: 0;
-}
-
-input[type="text"] {
-	padding: 0 3px;
+	margin: 5px 0 5px 0;
 }
 
 .sub_settings {
 	margin-top: -3px;
+	width: 100%;
 }
 
 .sub_settings h3:first-child {
@@ -80,23 +84,24 @@ sup {
 sub {
 	top: .5ex;
 }
-    
-/* menu */	
-#menutabs {
-	padding: 0;
+
+/* menu */
+#content {
+	height: calc(100% - 42px);
+	padding-top: 10px;
+	border-left: 1px solid #ddd;
+	border-right: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
 }
 
-#menutabs, #content, #main, #sub-data, #reports, #reporttabs, #settings, #journal, #statistics {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	box-sizing: border-box;
-}
-
-#manual, #topics, #reporttabs div, #config, #log, #data_statistics {
-	flex: 1;
+#manual, #topics, #reporttabs .tab-pane, #config, #log, #data_statistics {
 	overflow-y: auto;
 	min-height: 0;
+	height: 100%;
+}
+
+#data_statistics {
+	height: calc(100% - 49px);
 }
 
 #manual:before {
@@ -119,28 +124,12 @@ sub {
 	margin-bottom: 5px; /* length you wanted on padding-bottom */
 }
 
-#reporttabs {
-	height: calc(100% - 18px);
+#reporttabs, #reporttabs > div {
+	height: calc(100% - 30px);
 }
 
-/* fix widgets ui */
-ul.menu.ui-tabs-nav {
-	background: #fff;
-	border: 0;
-}
-
-ul.menu.ui-tabs-nav li {
-	border-bottom-width: .055em;
-	margin: 0 .277em -.055em 0;
-	border-radius: 0;
-}
-
-ul.menu.ui-tabs-nav li:first-child {
-	margin-left: 40px;
-}
-
-li.menu.ui-tabs-active {
-	border-bottom: .055em solid #fff;
+#reporttabs > .tab-content {
+	height: calc(100% - 56px);
 }
 
 .ui-widget.ui-widget-content {
@@ -173,14 +162,6 @@ li.menu.ui-tabs-active {
 	background: none;
 }
 
-/* content */
-#content {
-	border: 1px solid #D3D3D3 /*#999999*/;
-	border-radius: 4px;
-	box-shadow: 0 0 10px rgba(0,0,0,0.5);
-	height: calc(100% - 32px);
-}
-
 /* main */
 #startreports:disabled, #update:disabled, #topics_control button:disabled, #sendreports:disabled, #get_statistics:disabled {
 	background: #fafafa;
@@ -191,6 +172,7 @@ li.menu.ui-tabs-active {
 
 #indication, #indication * {
 	display: inline-block;
+	font-size: 14px;
 }
 
 #loading, #process {
@@ -203,9 +185,7 @@ li.menu.ui-tabs-active {
 
 /* settings */
 #savecfg, #get_statistics {
-	margin: 0 0 10px 15px;
-	padding: .3em .7em;
-	font-size: 85%;
+	margin: 10px 0 10px 15px;
 }
 
 #config {
@@ -223,46 +203,8 @@ li.menu.ui-tabs-active {
 	margin: 10px 15px 0 0;	
 }
 
-#settings label {
-	margin: 0 50px 0 0;
-}
-
-#settings .flex {
-	display: flex;
-	margin: 0 0 10px 0;
-}
-
-label:hover {
-	cursor: pointer;
-}
-
-.label {
-	padding: 2px 0;
-	display: block;
-}
-
-.label * {
-	vertical-align: middle;
-}
-
-.myinput {
-	margin: 8px 0;
-	display: inline-block;
-	padding: 0 3px;
-}
-
 #proxy_prop {
 	margin-top: 15px;
-}
-
-#online-tc {
-	padding: 1px 5px;
-}
-
-#online-tc img {
-	height: 17px;
-	margin: 0 5px;
-	vertical-align: middle;
 }
 
 #checking {
@@ -279,49 +221,12 @@ label:hover {
 	vertical-align: middle;
 }
 
-#tc-prop {
-	padding-top: 8px;
-}
-
-#tc-prop label {
-	display: inline-block;
-	vertical-align: top;
-}
-
-.tc-prop {
-	display: block;
-	margin: 10px 0;
-}
-
 #list-tcs {
-	width: 500px;
-	padding: 0 3px;
-	margin: 10px 15px 0 0;
-}
-
-#ss-add {
-	display: block;
 	width: 100%;
-	margin: 0 0 20px 0;
 }
 
 #ss-del {
 	margin: 0 0 15px 0;
-}
-
-#list-ss {
-	width: 100%;
-	margin-left: 10px;
-}
-
-.ss-prop {
-	width: 60%;
-	margin: 0 0 0 10px;
-}
-
-#ss-prop label {
-	display: block;
-	margin: 0;
 }
 
 .footnote {
@@ -329,19 +234,6 @@ label:hover {
 	margin: 15px 0 0 0;
 	padding: 5px 0 0 0;
 	border-top: 1px solid #000;
-}
-
-/* reports */
-.report {
-	font-size: small;
-}
-
-.report a, #info ul li a {
-	text-decoration: underline;
-}
-	
-.rp-header, .bold {
-	font-weight: bold;
 }
 
 /* statistics */
@@ -383,16 +275,12 @@ label:hover {
 }
 
 #sub-data {
-	border: 1px solid #aaaaaa;
-	border-radius: 4px;
-	margin: 10px 0 0;
-	font-size: small;
-	height: calc(100% - 36px);
+	height: calc(100% - 29px);
 }
 
 /* topics control */
-#topics_control {
-	padding: 10px 10px 5px 10px;
+#topics_control, #topics_filter {
+	padding: 10px 10px 0 10px;
 }
 
 .download-replace {
@@ -404,27 +292,14 @@ label:hover {
 	vertical-align: top;
 }
 
-#loading {
-	font-size: 14px;
-}
-
 /* topics filter */
 .filter_block {
 	display: inline-block;
-	vertical-align: top;
-	margin: 5px 10px 0 10px;
+	font-size: 14px;
 }
 
 .filter_block fieldset {
 	margin-bottom: 5px;
-/*
-	border: 1px solid #d3d3d3;
-	border-radius: 4px;
-*/
-}
-
-.topics_filter label {
-	display: block;
 }
 
 .filter_rule fieldset {
@@ -459,7 +334,8 @@ label:hover {
 }
 
 #topics {
-	padding: 0 10px 0 10px;
+	padding: 5px 0 0 0;
+	height: calc(100% - 108px);
 }
 
 .topic_data * {
@@ -469,4 +345,81 @@ label:hover {
 /* log */
 #log {
 	font: normal 14px monospace;
+}
+
+/*FAQ*/
+#manual object {
+	height: calc(100% - 7px);
+}
+
+/* таблица и фильтр над ней*/
+.dataTables_info {
+	white-space: nowrap;
+}
+
+.filter_block * {
+	display: inline;
+}
+
+#table_filter .input-group-sm>.form-control {
+	padding: .25rem .25rem;
+}
+
+tbody td:nth-last-child(-n+4) {
+	max-width: 500px;
+}
+
+tbody td:nth-last-child(-n+2) {
+	max-width: 100px;
+}
+
+tbody td:nth-last-child(-n+4) a {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: inline-block;
+	vertical-align: middle;
+	max-width: 100%;
+}
+
+tbody td:nth-last-child(-n+2) span {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: inline-block;
+	vertical-align: middle;
+	max-width: 100%;
+}
+
+tbody td {
+	padding: 0 4px 0 4px !important;
+}
+
+thead tr:nth-child(1) th {
+	box-sizing: border-box;
+}
+
+#table_filter .input-group-sm>.input-group-addon {
+	padding: .25rem .1rem;;
+}
+
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting_desc:after,
+table.dataTable thead .sorting_asc_disabled:before,
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:before,
+table.dataTable thead .sorting_desc_disabled:after {
+	bottom: 0.2em;
+}
+
+table.dataTable thead>tr>th.sorting_asc, table.dataTable thead>tr>th.sorting_desc, table.dataTable thead>tr>th.sorting, table.dataTable thead>tr>td.sorting_asc, table.dataTable thead>tr>td.sorting_desc, table.dataTable thead>tr>td.sorting {
+	padding-right: 25px;
+}
+
+.table td, .table th {
+	padding: .2rem;
 }

@@ -2,53 +2,54 @@
 /* всё про работу с подразделами */
 
 // загрузка данных о выбранном подразделе на главной
-var subsections = $("#subsections");
-subsections.selectmenu({
-	width: "calc(100% - 36px)",
-	change: function( event, ui ) {
-		getFilteredTopics();
-		showSizeAndAmount( 0, 0.00 );
-		Cookies.set('saved_forum_id', ui.item.value);
-	},
-	create: function ( event, ui ) {
-		if(typeof(Cookies.get('saved_forum_id')) !== "undefined"){
-			subsections.val(parseInt(Cookies.get('saved_forum_id')));
-			subsections.selectmenu("refresh");
-		}
-	},
-	open: function( event, ui ) {
-		height = $("#subsections-menu").height() >= 399 ? 400 : 'auto';
-		$("#subsections-menu").css("height", height);
-		active = $("#subsections-button").attr("aria-activedescendant");
-		$("#subsections-menu").closest("ul")
-			.find("div[role=option]")
-			.each( function() {
-				$(this).css({ "font-weight": "normal" });
-			});
-		$("#"+active).css({ "font-weight": "bold" });
-	},
-});
+var $subsections = $( "#subsections" );
+$subsections.on( "change", function () {
+	redrawTopicsList();
+	Cookies.set( 'saved_forum_id', $subsections.val() );
+} );
+
+if ( typeof(Cookies.get( 'saved_forum_id' )) !== "undefined" ) {
+	$subsections.val( parseInt( Cookies.get( 'saved_forum_id' ) ) );
+}
 
 /* добавить подраздел */
-$("#ss-add").autocomplete({
-	source: 'php/get_list_subsections.php',
+$( '#ss-add' ).typeahead( {
+	source: function ( query, process ) {
+		$.ajax( {
+			url: 'php/get_list_subsections.php',
+			type: 'GET',
+			data: { term: query },
+			success: function ( response ) {
+				var result = JSON.parse( response );
+				return process( result );
+			}
+		} );
+	},
+	items: 12,
 	delay: 1000,
-	select: addSubsection
+	afterSelect: addSubsection,
+	fitToElement: true,
+	matcher: function ( item ) {
+		var it = this.displayText( item );
+		if ( (~it.toLowerCase().indexOf( this.query.toLowerCase() ) !== 0) || (this.query === item.id) ) {
+			return true;
+		}
+	}
 }).on("focusout", function(){
 	$(this).val("");
 });
 
-function addSubsection(event, ui) {
-	if( ui.item.value < 0 ) {
-		ui.item.value = '';
+function addSubsection(subsection) {
+	if( subsection.id < 0 ) {
+		subsection.id = '';
 		return;
 	}
-	lb = ui.item.label;
-	label = lb.replace(/.* » (.*)$/, '$1');
-	vl = ui.item.value;
+	var lb = subsection.name;
+	var label = lb.replace(/.* » (.*)$/, '$1');
+	var vl = subsection.id;
 	q = 0;
 	$("#list-ss option").each(function(){
-		val = $(this).val();
+		var val = $(this).val();
 		if(vl == val) q = 1;
 	});
 	if(q != 1) {
@@ -58,20 +59,20 @@ function addSubsection(event, ui) {
 		$("#ss-id").prop("disabled", true);
 	}
 	$("#list-ss option[value="+vl+"]").prop("selected", "selected").change();
-	ui.item.value = '';
+	subsection.id = '';
 	doSortSelect("list-ss");
 	doSortSelect("subsections_stored");
-	$("#subsections").selectmenu("refresh");
+	//redrawTopicsList();
 }
 
 /* удалить подраздел */
 $("#ss-del").on("click", function() {
-	forum_id = $("#list-ss").val();
+	var forum_id = $("#list-ss").val();
 	if( forum_id ) {
 		i = $("#list-ss :selected").index();
 		$("#list-ss :selected").remove();
 		$("#subsections_stored [value="+forum_id+"]").remove();
-		q = $("select[id=list-ss] option").size();
+		q = $("select[id=list-ss] option").length;
 		if(q == 0) {
 			$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
 			$("#ss-client :first").prop("selected", "selected");
@@ -79,8 +80,7 @@ $("#ss-del").on("click", function() {
 			q == i ? i : i++;
 			$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
 		}
-		$("#subsections").selectmenu("refresh");
-		getFilteredTopics();
+		$('#ss-add').val( '' );
 	}
 });
 
@@ -91,7 +91,7 @@ $("#list-ss").on("change", function(){
 	data = $("#list-ss :selected").attr("data");
 	data = data.split('|');
 	client = $("#ss-client option").filter(function() {
-		return $(this).text() == data[0];
+		return $(this).val() == data[0];
 	}).val();
 	if( client )
 		$("#ss-client [value="+client+"]").prop("selected", "selected");
@@ -110,7 +110,7 @@ $("#list-ss").on("change", function(){
 });
 
 /* при загрузке выбрать первый подраздел в списке */
-if($("select[id=list-ss] option").size() > 0) {
+if($("select[id=list-ss] option").length > 0) {
 	$("#list-ss :first").prop("selected", "selected").change();
 } else {
 	$("#ss-prop .ss-prop").prop("disabled", true);
@@ -119,7 +119,7 @@ if($("select[id=list-ss] option").size() > 0) {
 /* изменение свойств подраздела */
 $("#ss-prop").on("focusout", function(){
 	cl = $("#ss-client :selected").val() != 0
-		? $("#ss-client :selected").text()
+		? $("#ss-client :selected").val()
 		: "";
 	lb = $("#ss-label").val();
 	fd = $("#ss-folder").val();
@@ -197,7 +197,4 @@ $(document).ready(function() {
 			});
 		}
 	}
-
 });
-	
-
