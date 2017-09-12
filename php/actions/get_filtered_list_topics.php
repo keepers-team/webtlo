@@ -159,11 +159,11 @@ try {
 	);
 	
 	$q = 1;
-	$data = array();
 
+	$output = "";
 	$filtered_topics_count = 0;
 	$filtered_topics_size = 0;
-
+	
 	foreach( $topics as $topic_id => $topic ) {
 
 		// фильтрация по дате релиза
@@ -284,8 +284,8 @@ try {
 		"recordsTotal" => count($topics),
 		"recordsFiltered" => count($data),
 		"data" => $part_of_data,
-		"filtered_topics_count" => $filtered_topics_count,
-		"filtered_topics_size" => convert_bytes($filtered_topics_size)
+		"count" => $filtered_topics_count,
+		"size" => convert_bytes($filtered_topics_size)
 	);
 	echo json_encode($output);
 	

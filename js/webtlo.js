@@ -53,7 +53,6 @@
 
 	/* сохранение настроек */
 	$( "#savecfg" )
-	.button()
 	.on("click", function() {
 		tcs = listTorClients();
 		subsec = listDataSubsections();
@@ -75,7 +74,27 @@
 			}
 		});
 	});
-
+	
+	// получение статистики
+	$("#get_statistics").on( "click", function (e) {
+		$.ajax({
+			context: this,
+			type: "POST",
+			url: "php/actions/get_statistics.php",
+			beforeSend: function() {
+				$(this).prop( "disabled", true );
+			},
+			success: function( response ) {
+				json = $.parseJSON( response );
+				$("#table_statistics tbody").html( json.tbody );
+				$("#table_statistics tfoot").html( json.tfoot );
+			},
+			complete: function() {
+				$(this).prop( "disabled", false );
+			}
+		});
+	});
+	
 	/* формирование отчётов */
 	$( "#startreports" )
 	.click(function() {
@@ -209,7 +228,6 @@
 		});
 	});
 	
-	
 	/* проверка введённых данных */
 	function FormConfigCheck(errors){
 		return true;
@@ -277,18 +295,4 @@ $("#TT_login, #TT_password").on("change", function() {
 			});
 		}
 	}
-});
-
-$("#get_statistics").on("click", function (e) {
-	e.preventDefault();
-	var ss = $("#ss").val();
-	$.ajax({
-		type: "POST",
-		url: "php/statistics.php",
-		data: { ss: ss },
-		success: function(response) {
-			response = $.parseJSON(response);
-			$("#statistics_table").find("tbody").html(response);
-		}
-	});
 });

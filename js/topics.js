@@ -47,8 +47,8 @@ $( document ).ready( function () {
 						dataSrc: function ( json ) {
 							$("#topics_count").text("0");
 							$("#topics_size").text("0.00");
-							$("#filtered_topics_count").text(json.filtered_topics_count);
-							$("#filtered_topics_size").text(json.filtered_topics_size);
+							$("#filtered_topics_count").text(json.count);
+							$("#filtered_topics_size").text(json.size);
 							return json.data;
 						}
 					},
@@ -398,11 +398,11 @@ function countSizeAndAmount( thisElem ) {
 		action = thisElem.val();
 	}
 	var counter = new Counter();
-	var topics_checkboxes = $( "#topics" ).find( "input[type=checkbox]" );
-	if ( topics_checkboxes.length === 0 ) {
-		showSizeAndAmount( 0, 0 );
+	var topics = $("#topics").find("input[type=checkbox]");
+	if (topics.length === 0) {
+		showSizeAndAmount( 0, 0.00 );
 	} else {
-		topics_checkboxes.each( function () {
+		topics.each( function () {
 			switch ( action ) {
 				case "select":
 					$( this ).prop( "checked", true );
@@ -417,10 +417,10 @@ function countSizeAndAmount( thisElem ) {
 					}
 					break;
 				default:
-					addSizeAndAmount.call( counter, $( this ) );
+					addSizeAndAmount.call(counter, $(this));
 			}
-		} );
-		showSizeAndAmount( counter.count, counter.size_all );
+		});
+		showSizeAndAmount(counter.count, counter.size_all);
 	}
 }
 
@@ -477,6 +477,36 @@ $( document ).on( "dblclick", ".keeper", function ( e ) {
 	$( 'input[name=is_keepers][value="0"], input[name=is_keepers][value="-1"]' ).prop( "checked", false ).parent().removeClass( 'active' );
 	$( 'input[name=is_keepers][value="1"]' ).prop( "checked", true ).change().parent().addClass( 'active' );
 } );
+
+//~ // получение отфильтрованных раздач из базы
+//~ function getFilteredTopics(){
+	//~ Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
+	//~ forum_id = $("#subsections").val();
+	//~ $config = $("#config").serialize();
+	//~ $filter = $("#topics_filter").serialize();
+	//~ $.ajax({
+		//~ type: "POST",
+		//~ url: "php/actions/get_filtered_list_topics.php",
+		//~ data: { forum_id: forum_id, config: $config, filter: $filter },
+		//~ success: function( response ) {
+			//~ response = $.parseJSON(response);
+			//~ if ( response.topics != null ) {
+				//~ $("#topics").html(response.topics);
+				//~ $("#filtered_topics_count").text( response.count );
+				//~ $("#filtered_topics_size").text( сonvertBytes( response.size ) );
+			//~ }
+			//~ // $("#log").append(response);
+		//~ },
+		//~ beforeSend: function() {
+			//~ block_actions();
+			//~ $("#process").text( "Получение данных о раздачах..." );
+		//~ },
+		//~ complete: function() {
+			//~ block_actions();
+		//~ }
+	//~ });
+//~ }
+
 
 // скрыть/показать фильтр
 /*$( "#filter_show" ).on( "click", function () {

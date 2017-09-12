@@ -94,7 +94,7 @@ sub {
 	border-bottom: 1px solid #ddd;
 }
 
-#manual, #topics, #reporttabs .tab-pane, #config, #log {
+#manual, #topics, #reporttabs .tab-pane, #config, #log, #data_statistics {
 	overflow-y: auto;
 	min-height: 0;
 	height: 100%;
@@ -159,7 +159,7 @@ sub {
 }
 
 /* main */
-#startreports:disabled, #update:disabled, #topics_control button:disabled, #sendreports:disabled {
+#startreports:disabled, #update:disabled, #topics_control button:disabled, #sendreports:disabled, #get_statistics:disabled {
 	background: #fafafa;
 	cursor: default;
 	color: #D3D3D3;
@@ -180,7 +180,7 @@ sub {
 }
 
 /* settings */
-#savecfg {
+#savecfg, #get_statistics {
 	margin: 10px 0 10px 15px;
 }
 
@@ -230,6 +230,35 @@ sub {
 	margin: 15px 0 0 0;
 	padding: 5px 0 0 0;
 	border-top: 1px solid #000;
+}
+
+/* statistics */
+#table_statistics {
+	text-align: center;
+	font-size: small;
+	color: #444444;
+	margin: auto;
+	width: 99%;
+}
+
+#table_statistics * {
+	border: 1px solid #aaaaaa;
+}
+
+#table_statistics thead, #table_statistics tfoot {
+	background: #f6f6f6;
+}
+
+#table_statistics th {
+	padding: 5px;
+}
+
+.warning {
+	background: #fafa00;
+}
+
+.critical {
+	background: #ff4040;
 }
 
 /* topics */

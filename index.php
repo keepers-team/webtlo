@@ -40,17 +40,6 @@ $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
-//статистика
-$sub=array();
-$ss = "";
-if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
-	$ss = preg_replace("/[^0-9, ]/", "", $_POST["ss"]);
-	$sub = explode(" ", $ss);
-}else{
-	$sub = array_keys (isset($cfg['subsections']) ? $cfg['subsections'] : array());
-	$ss = implode(" ", $sub);
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -58,7 +47,7 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<title>web-TLO-0.9.3.3</title>
+		<title>web-TLO-0.9.3.4</title>
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
@@ -663,6 +652,7 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 									</div>
 								</div>
 							</div>
+							
 							<div class="card">
 								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#torrents-download">
 									<h6 class="mb-0">
@@ -690,8 +680,6 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 												</label>
 											</div>
 										</div>
-
-
 										<h5>Скачивание *.torrent файлов с заменой Passkey</h5>
 										<div class="form-group col-7">
 											<div class="row">
@@ -718,40 +706,42 @@ if(isset($_POST["ss"]) AND $_POST["ss"] <> ""){
 												</label>
 											</div>
 										</div>
-
-
-
 									</div>
 								</div>
 							</div>
-
 						</div>
 					</form>
 				</div>
 				<div id="reports" class="tab-pane fade" role="tabpanel"></div>
 				<div id="statistics" class="tab-pane fade" role="tabpanel">
-					<form class="form-inline">
-						<input title="" class="form-control form-control-sm col-10 mr-2 mb-2" id="ss" value="<?php echo $ss ?>">
-						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Получить статистику">
-					</form>
-					<table id="statistics_table" border="2" style="border-collapse: collapse; width:100%;">
-						<thead>
-							<tr>
-								<th colspan='2' style='text-align:center;'>Раздел</th>
-								<th colspan='10' style='text-align:center;'>Количество и вес раздач</th>
-							</tr>
-							<tr>
-								<th style='border-bottom: 2px solid black;'>ID</th>
-								<th style='border-bottom: 2px solid black;'>Заголовок</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>сc == 0</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.0 < cc <= 0.5</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.5 < сc <= 1.0</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>1.0 < сc <= 1.5</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>Всего в разделе</th>
-							</tr>
-						</thead>
-						<tbody></tbody>
-					</table>
+					<div>
+						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
+					</div>
+					<div id="data_statistics">
+						<table id="table_statistics">
+							<thead>
+								<tr>
+									<th colspan="2">Подраздел</th>
+									<th colspan="10">Количество и вес раздач</th>
+								</tr>
+								<tr>
+									<th>ID</th>
+									<th width="40%">Название</th>
+									<th colspan="2">сc == 0</th>
+									<th colspan="2">0.0 < cc <= 0.5</th>
+									<th colspan="2">0.5 < сc <= 1.0</th>
+									<th colspan="2">1.0 < сc <= 1.5</th>
+									<th colspan="2">Всего в подразделе</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<th colspan="12">&mdash;</th>
+								</tr>
+							</tbody>
+							<tfoot></tfoot>
+						</table>
+					</div>
 				</div>
 				<div id="journal" class="tab-pane fade" role="tabpanel">
 					<div id="log"></div>
