@@ -350,22 +350,20 @@ function getFilteredTopics(){
 	});
 }
 
-// скрыть фильтр если он был скрыт ранее
+// загрузка параметров фильтра из кук
 $(document).ready(function() {
-	if(Cookies.get('filter-state') === "false"){
-		$("#topics_filter").hide();
+	if ( Cookies.get( "filter-state" ) === "false" ) {
+		$( "#topics_filter" ).hide();
 	}
-	var filter_options = JSON.parse( Cookies.get( 'filter-options' ) );
-	jQuery.each( filter_options, function ( i, option ) {
-		$( "#topics_filter" ).find( "input[name='" + option[ "name" ] + "']" ).each( function () {
-			if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
-				if ( $( this ).val() === option[ "value" ] ) {
+	var filter_options = $.parseJSON ( Cookies.get( "filter-options" ) );
+	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false );
+	$.each( filter_options, function ( i, option ) {
+		$( "#topics_filter input[name='" + option.name + "']" ).each( function () {
+			if ( $( this ).val() === option.value ) {
+				if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
 					$( this ).prop( "checked", true );
-				} else {
-					$( this ).prop( "checked", false );
 				}
-			} else {
-				$( this ).val( option[ "value" ] );
+				$( this ).val( option.value );
 			}
 		} );
 	} );

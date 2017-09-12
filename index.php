@@ -31,11 +31,6 @@ $savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
 $retracker = ($cfg['retracker'] == 1 ? "checked" : "");
 $proxy_activate = ($cfg['proxy_activate'] == 1 ? "checked" : "");
 $avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
-$topic_checked = (in_array(2, $cfg['topics_status']) ? "checked" : "");
-$topic_not_checked = (in_array(0, $cfg['topics_status']) ? "checked" : "");
-$topic_not_decoration = (in_array(3, $cfg['topics_status']) ? "checked" : "");
-$topic_doubtfully = (in_array(8, $cfg['topics_status']) ? "checked" : "");
-$topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
@@ -144,9 +139,9 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 						</div>
 						<form method="post" id="topics_filter">
-							<div class="topics_filter" title="Фильтр раздач текущего подраздела">
+							<div class="topics_filter">
 								<div class="filter_block ui-widget">
-									<fieldset title="Статусы">
+									<fieldset title="Статусы раздач в торрент-клиенте">
 										<label>
 											<input type="radio" name="filter_status" value="1" />
 											храню
@@ -172,6 +167,30 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
 											<input type="checkbox" class="keepers" name="is_keepers" />
 											есть хранители
+										</label>
+									</fieldset>
+								</div>
+								<div class="filter_block ui-widget" title="Статусы раздач на трекере">
+									<fieldset>
+										<label>
+											<input type="checkbox" name="filter_tor_status[]" value="0" />
+											не проверено
+										</label>
+										<label>
+											<input type="checkbox" name="filter_tor_status[]" value="2" checked class="default" />
+											проверено
+										</label>
+										<label>
+											<input type="checkbox" name="filter_tor_status[]" value="3" />
+											недооформлено
+										</label>
+										<label>
+											<input type="checkbox" name="filter_tor_status[]" value="8" checked class="default" />
+											сомнительно
+										</label>
+										<label>
+											<input type="checkbox" name="filter_tor_status[]" value="10" />
+											временная
 										</label>
 									</fieldset>
 								</div>
@@ -264,7 +283,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</form>
 						<hr />
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
 							<div id="topics_result"></div>
 						</div>
 						<hr />
@@ -477,39 +496,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 							<h2>Настройки управления раздачами</h2>
 							<div>
-								<h3>Статусы раздач</h3>
-								<div id="tor_status">
-									<div>
-										<label title="не проверено">
-											<input class="tor_status" name="topics_status[]" value="0" type="checkbox" size="24" <?php echo $topic_not_checked ?> />
-											не проверено
-										</label>
-									</div>
-									<div>
-										<label title="проверено">
-											<input class="tor_status" name="topics_status[]" value="2" type="checkbox" size="24" <?php echo $topic_checked ?> />
-											проверено
-										</label>
-									</div>
-									<div>
-										<label title="недооформлено">
-											<input class="tor_status" name="topics_status[]" value="3" type="checkbox" size="24" <?php echo $topic_not_decoration ?> />
-											недооформлено
-										</label>
-									</div>
-									<div>
-										<label title="сомнительно">
-											<input class="tor_status" name="topics_status[]" value="8" type="checkbox" size="24" <?php echo $topic_doubtfully ?> />
-											сомнительно
-										</label>
-									</div>
-									<div>
-										<label title="временная">
-											<input class="tor_status" name="topics_status[]" value="10" type="checkbox" size="24" <?php echo $topic_temporary ?> />
-											временная
-										</label>
-									</div>											
-								</div>
 								<h3>Фильтрация раздач</h3>
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
 									Предлагать для хранения раздачи с количеством сидов не более:

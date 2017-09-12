@@ -102,9 +102,6 @@ function write_config($filename, $cfg, $subsections, $tcs){
 	}
 	$ini->write('other', 'qt', $q); // кол-во т.-клиентов
 	
-	// статусы раздач
-	if(isset($topics_status)) $ini->write('sections','topics_status',implode(',', $topics_status));
-	
 	// регулировка раздач
 	if( is_numeric( $peers ) ) $ini->write( 'topics_control', 'peers', $peers );
 	$ini->write( 'topics_control', 'leechers', isset( $leechers ) ? 1 : 0 );
@@ -206,7 +203,6 @@ function get_settings( $filename = 'config.ini' ){
 	$config['rule_reports'] = $ini->read('sections','rule_reports',10);
 	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
 	$config['avg_seeders_period'] = $ini->read('sections','avg_seeders_period',14);
-	$config['topics_status'] = explode(',', $ini->read('sections','topics_status','2,8'));
 	
 	// регулировка раздач
 	$config['topics_control']['peers'] = $ini->read( 'topics_control', 'peers', 10 );

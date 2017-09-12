@@ -63,6 +63,11 @@ try {
 		? $avg_seeders_period
 		: 0;
 	
+	// статус раздач на трекере
+	$tor_status = isset( $filter_tor_status ) && is_array( $filter_tor_status )
+		? implode( ',', $filter_tor_status )
+		: "";
+	
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
 			case 0:
@@ -75,7 +80,7 @@ try {
 				break;
 		}
 	} else {
-		$where = "dl = :dl AND ss = :forum_id AND Blacklist.topic_id IS NULL $kp";
+		$where = "dl = :dl AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
 		$param = array( 'dl' => $filter_status, 'forum_id' => $forum_id );
 	}
 	
