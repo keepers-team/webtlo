@@ -118,9 +118,10 @@ class Webtlo {
 	}
 	
 	// список раздач раздела
-	public function get_subsection_data( $subsections, $status = array(2,8), $get = 'ids' ) {
+	public function get_subsection_data( $subsections, $get = 'ids' ) {
 		//~ Log::append ( 'Получение списка раздач...' );
 		$ids = array();
+		$status = array( 0,2,3,8,10 );
 		foreach($subsections as $subsection){
 			$url = $this->api_url . '/v1/static/pvc/f/' . $subsection['id'] . '?api_key=' . $this->api_key;
 			$data = $this->request_exec($url);

@@ -30,7 +30,7 @@ try {
 
 	$filter_seeders_from = $_POST['filter_seeders_from'] != '' ? $_POST['filter_seeders_from'] : null;
 	$filter_seeders_to = $_POST['filter_seeders_to'] != '' ? $_POST['filter_seeders_to'] : null;
-	
+
 	// некорретный ввод значений сидов
 	//if(/* !is_numeric($filter_rule) || */!is_numeric($filter_seeders_from) || !is_numeric($filter_seeders_to) )
 	//	throw new Exception( "В фильтре введено некорректное значение сидов." );
@@ -89,6 +89,11 @@ try {
 		? $avg_seeders_period
 		: 0;
 
+	// статус раздач на трекере
+	$tor_status = isset( $filter_tor_status ) && is_array( $filter_tor_status )
+		? implode( ',', $filter_tor_status )
+		: "";
+
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
 			case 0:
@@ -100,12 +105,12 @@ try {
 				$param = array();
 				break;
 			case -3:
-				$where = "dl = $filter_status AND ss IN ($subsections_ids) AND Blacklist.topic_id IS NULL $kp";
+				$where = "dl = $filter_status AND ss IN ($subsections_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
 				$param = array();
 				break;
 		}
 	} else {
-		$where = "dl = :dl AND ss = :forum_id AND Blacklist.topic_id IS NULL $kp";
+		$where = "dl = :dl AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
 		$param = array( 'dl' => $filter_status, 'forum_id' => $forum_id );
 	}
 	
@@ -278,6 +283,7 @@ try {
 		$q++;
 	}
 	$part_of_data = array_slice($data, $start, $length);
+	$part_of_data = !empty($part_of_data) ? $part_of_data : 0;
 
 	$output = array(
 		"draw" => (int) $_POST["draw"],

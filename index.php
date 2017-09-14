@@ -31,11 +31,6 @@ $savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
 $retracker = ($cfg['retracker'] == 1 ? "checked" : "");
 $proxy_activate = ($cfg['proxy_activate'] == 1 ? "checked" : "");
 $avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
-$topic_checked = (in_array(2, $cfg['topics_status']) ? "checked" : "");
-$topic_not_checked = (in_array(0, $cfg['topics_status']) ? "checked" : "");
-$topic_not_decoration = (in_array(3, $cfg['topics_status']) ? "checked" : "");
-$topic_doubtfully = (in_array(8, $cfg['topics_status']) ? "checked" : "");
-$topic_temporary = (in_array(10, $cfg['topics_status']) ? "checked" : "");
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
@@ -154,9 +149,9 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 						</div>
 						<form method="post" id="topics_filter" class="form-inline">
-							<div class="topics_filter" title="Фильтр раздач текущего подраздела">
+							<div class="topics_filter">
 
-								<div class="btn-group" data-toggle="buttons" title="Статусы">
+								<div class="btn-group" data-toggle="buttons" title="Статусы раздач в торрент-клиенте">
 									<label class="btn btn-sm btn-outline-dark">
 										<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
 									</label>
@@ -172,6 +167,38 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<label class="btn btn-outline-dark btn-sm">
 										<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
 									</label>
+								</div>
+								<div class="btn-group">
+									<button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="Статусы раздач на трекере">
+										Статусы
+									</button>
+									<div class="dropdown-menu">
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label">
+												<input title="" value="0" type="checkbox" name="filter_tor_status[]"> не проверено (<span style="color: #C71585;">*</span>)
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label">
+												<input title="" value="2" type="checkbox" name="filter_tor_status[]" checked> проверено (<span style="color: #008000;">√</span>)
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label">
+												<input title="" value="3" type="checkbox" name="filter_tor_status[]"> недооформлено (<span style="color: red;">?</span>)
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label">
+												<input title="" value="8" type="checkbox" name="filter_tor_status[]" checked> сомнительно (<span style="color: #008000;">#</span>)
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label">
+												<input title="" value="10" type="checkbox" name="filter_tor_status[]"> временная (<span style="color: blue;">T</span>)
+											</label>
+										</a>
+									</div>
 								</div>
 
 								<div class="btn-group" data-toggle="buttons">
@@ -238,7 +265,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</table>
 						</div>
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>)</div>
 							<div id="topics_result"></div>
 						</div>
 					</div>
@@ -548,39 +575,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 								<div id="torrents-control" class="collapse" role="tabpanel">
 									<div class="card-body">
-										<h5>Статусы раздач</h5>
-										<div id="tor_status" class="form-group col-12">
-											<div class="form-check">
-												<label title="не проверено" class="form-check-label">
-													<input class="form-check-input" name="topics_status[]" value="0" type="checkbox" size="24" <?php echo $topic_not_checked ?>>
-													не проверено (<span style="color: #C71585;">*</span>)
-												</label>
-											</div>
-											<div class="form-check">
-												<label title="проверено" class="form-check-label">
-													<input class="form-check-input" name="topics_status[]" value="2" type="checkbox" size="24" <?php echo $topic_checked ?>>
-													проверено (<span style="color: #008000;">√</span>)
-												</label>
-											</div>
-											<div class="form-check">
-												<label title="недооформлено" class="form-check-label">
-													<input class="form-check-input" name="topics_status[]" value="3" type="checkbox" size="24" <?php echo $topic_not_decoration ?>>
-													недооформлено (<span style="color: red;">?</span>)
-												</label>
-											</div>
-											<div class="form-check">
-												<label title="сомнительно" class="form-check-label">
-													<input class="form-check-input" name="topics_status[]" value="8" type="checkbox" size="24" <?php echo $topic_doubtfully ?>>
-													сомнительно (<span style="color: #008000;">#</span>)
-												</label>
-											</div>
-											<div class="form-check">
-												<label title="временная" class="form-check-label">
-													<input class="form-check-input" name="topics_status[]" value="10" type="checkbox" size="24" <?php echo $topic_temporary ?>>
-													временная (<span style="color: blue;">T</span>)
-												</label>
-											</div>
-										</div>
 										<h5>Фильтрация раздач</h5>
 										<div class="form-group col-12">
 											<div class="row">
@@ -652,7 +646,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									</div>
 								</div>
 							</div>
-							
+
 							<div class="card">
 								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#torrents-download">
 									<h6 class="mb-0">

@@ -24,19 +24,17 @@
 		//TODO добавить сохранение состояния фильтра сверху таблицы
 		var filter_options = Cookies.get( 'filter-options' ) !== undefined ?
 			JSON.parse( Cookies.get( 'filter-options' ) ) : "default";
+		$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass('active');
 		if ( filter_options !== "default" ) {
 			jQuery.each( filter_options, function ( i, option ) {
-				$( "#topics_filter" ).find( "input[name='" + option[ "name" ] + "']" ).each( function () {
+				$( "#topics_filter" ).find( "input[name='" + option.name + "']" ).each( function () {
 					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
-						if ( $( this ).val() === option[ "value" ] ) {
+						if ( $( this ).val() === option.value ) {
 							$( this ).prop( "checked", true );
 							$( this ).parent().addClass('active')
-						} else {
-							$( this ).prop( "checked", false );
-							$( this ).parent().removeClass('active')
 						}
 					} else {
-						$( this ).val( option[ "value" ] );
+						$( this ).val( option.value );
 					}
 				} );
 			} );

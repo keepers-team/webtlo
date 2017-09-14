@@ -59,7 +59,7 @@ switch($_POST['m'])
 		try {
 			Log::clean();
 			$db = new Database();
-			$subsections = $db->get_forums_details($TT_subsections);
+			$subsections = $db->get_forums($TT_subsections);
 			$topics = $db->get_topics($TT_subsections, 1, $avg_seeders, $avg_seeders_period, 'na');
 			$reports = create_reports($subsections, $topics, $TT_login, $TT_rule_reports); unset($topics);
 			output_reports($reports, $TT_login);
@@ -76,7 +76,7 @@ switch($_POST['m'])
 		try {
 			$db = new Database();
 			$subsec = array_column_common($TT_subsections, 'id');
-			$subsections = $db->get_forums_details($subsec);
+			$subsections = $db->get_forums($subsec);
 			$topics = $db->get_topics($subsec, 1, $avg_seeders, $avg_seeders_period, 'na');
 			$reports = create_reports($subsections, $topics, $TT_login, $TT_rule_reports); unset($topics);
 			$send = new Reports($forum_url, $TT_login, $TT_password);
@@ -112,7 +112,7 @@ switch($_POST['m'])
 			unset($keepers);
 			$webtlo = new Webtlo($api_url, $api_key);
 			$subsections = $webtlo->get_cat_forum_tree($subsec); /* обновляем дерево разделов */
-			$ids = $webtlo->get_subsection_data($subsections, $topics_status);
+			$ids = $webtlo->get_subsection_data($subsections);
 			$webtlo->prepare_topics($ids, $tc_topics, $TT_rule_topics, $subsec, $avg_seeders);
 			echo json_encode( array('log' => Log::get() ) );
 		} catch (Exception $e) {

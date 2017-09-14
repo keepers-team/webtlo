@@ -42,7 +42,7 @@ try {
 	
 	foreach( $forums as $forums ) {
 	
-		$seeders = $webtlo->get_subsection_data( $forums, array(0,2,3,8,10), 'all' );
+		$seeders = $webtlo->get_subsection_data( $forums, 'all' );
 		$seeders = array_chunk( $seeders, 500, true );
 		
 		// записываем данные во временную таблицу
