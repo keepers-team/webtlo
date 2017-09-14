@@ -203,6 +203,14 @@ sub {
 	margin: 10px 15px 0 0;	
 }
 
+#accordion .card-header {
+	cursor: pointer;
+}
+
+#accordion .card-header a {
+	text-decoration: none;
+}
+
 #proxy_prop {
 	margin-top: 15px;
 }
@@ -238,7 +246,6 @@ sub {
 
 /* statistics */
 #table_statistics {
-	text-align: center;
 	font-size: small;
 	color: #444444;
 	margin: auto;
@@ -255,6 +262,7 @@ sub {
 
 #table_statistics th {
 	padding: 5px;
+	text-align: center;
 }
 
 .warning {

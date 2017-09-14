@@ -139,17 +139,17 @@ try {
 	);
 
 	$torrents_statuses = array(
-		0  => '<span class="tor-icon tor-not-approved">*</span>',
-		1  => '<span class="tor-icon tor-closed">x</span>',
-		2  => '<span class="tor-icon tor-approved">√</span>',
-		3  => '<span class="tor-icon tor-need-edit">?</span>',
-		4  => '<span class="tor-icon tor-need-edit">!</span>',
-		5  => '<span class="tor-icon tor-dup">D</span>',
-		7  => '<span class="tor-icon tor-consumed">∑</span>',
-		8  => '<span class="tor-icon tor-approved">#</span>',
-		9  => '<span class="tor-icon tor-checking">%</span>',
-		10 => '<span class="tor-icon tor-dup">T</span>',
-		11 => '<span class="tor-icon tor-dup">∏</span>'
+		0  => '<span class="tor-not-approved">*</span>',
+		1  => '<span class="tor-closed">x</span>',
+		2  => '<span class="tor-approved">√</span>',
+		3  => '<span class="tor-need-edit">?</span>',
+		4  => '<span class="tor-need-edit">!</span>',
+		5  => '<span class="tor-dup">D</span>',
+		7  => '<span class="tor-consumed">∑</span>',
+		8  => '<span class="tor-approved">#</span>',
+		9  => '<span class="tor-checking">%</span>',
+		10 => '<span class="tor-dup">T</span>',
+		11 => '<span class="tor-dup">∏</span>'
 	);
 
 	$filter_sort = $columns_names[$_POST['order'][0]['column']];
