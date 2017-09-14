@@ -319,6 +319,56 @@ sub {
 	vertical-align: middle;
 }
 
+.tor-status-resp {
+	padding: 2px 10px;
+}
+
+.tor-status-resp * {
+	color: #343a40;
+}
+
+.tor-status-resp input {
+	display: none;
+}
+
+.tor-status-checked {
+	margin-left: 15px;
+}
+
+.tor-icon {
+	margin-right: 10px;
+	font-weight: bold;
+}
+
+/* tor icons */
+.tor-approved {
+	color: #008000;
+}
+
+.tor-not-approved {
+	color: #c71585;
+}
+
+.tor-need-edit {
+	color: #ff0000;
+}
+
+.tor-dup {
+	color: #0000ff;
+}
+
+.tor-consumed {
+	color: #d26900;
+}
+
+.tor-closed {
+	color: #ff4500;
+}
+
+.tor-checking {
+	color: #2424ff;
+}
+
 /* topics result */
 .status_info {
 	display: flex;

@@ -173,29 +173,49 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Статусы
 									</button>
 									<div class="dropdown-menu">
-										<a class="dropdown-item" href="#">
+										<a class="dropdown-item tor-status-resp" href="#">
 											<label class="form-check-label">
-												<input title="" value="0" type="checkbox" name="filter_tor_status[]"> не проверено (<span style="color: #C71585;">*</span>)
+												<span class="tor-icon tor-not-approved">*</span> не проверено
+												<input value="0" type="checkbox" name="filter_tor_status[]">
+												<span class="tor-status-checked">
+													<i class="fa fa-check"></i>
+												</span>
 											</label>
 										</a>
-										<a class="dropdown-item" href="#">
+										<a class="dropdown-item tor-status-resp" href="#">
 											<label class="form-check-label">
-												<input title="" value="2" type="checkbox" name="filter_tor_status[]" checked> проверено (<span style="color: #008000;">√</span>)
+												<span class="tor-icon tor-approved">√</span> проверено
+												<input value="2" type="checkbox" name="filter_tor_status[]" checked>
+												<span class="tor-status-checked">
+													<i class="fa fa-check"></i>
+												</span>
 											</label>
 										</a>
-										<a class="dropdown-item" href="#">
+										<a class="dropdown-item tor-status-resp" href="#">
 											<label class="form-check-label">
-												<input title="" value="3" type="checkbox" name="filter_tor_status[]"> недооформлено (<span style="color: red;">?</span>)
+												<span class="tor-icon tor-need-edit">?</span> недооформлено
+												<input value="3" type="checkbox" name="filter_tor_status[]">
+												<span class="tor-status-checked">
+													<i class="fa fa-check"></i>
+												</span>
 											</label>
 										</a>
-										<a class="dropdown-item" href="#">
+										<a class="dropdown-item tor-status-resp" href="#">
 											<label class="form-check-label">
-												<input title="" value="8" type="checkbox" name="filter_tor_status[]" checked> сомнительно (<span style="color: #008000;">#</span>)
+												<span class="tor-icon tor-approved">#</span> сомнительно
+												<input value="8" type="checkbox" name="filter_tor_status[]" checked>
+												<span class="tor-status-checked">
+													<i class="fa fa-check"></i>
+												</span>
 											</label>
 										</a>
-										<a class="dropdown-item" href="#">
+										<a class="dropdown-item tor-status-resp" href="#">
 											<label class="form-check-label">
-												<input title="" value="10" type="checkbox" name="filter_tor_status[]"> временная (<span style="color: blue;">T</span>)
+												<span class="tor-icon tor-dup">T</span> временная
+												<input value="10" type="checkbox" name="filter_tor_status[]">
+												<span class="tor-status-checked">
+													<i class="fa fa-check"></i>
+												</span>
 											</label>
 										</a>
 									</div>
