@@ -202,7 +202,7 @@ try {
 
 		// список других хранителей
 		$keeper = isset( $keepers[$topic['id']] )
-			? '<span title="' . implode( ',', $keepers[$topic['id']] ) . '"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
+			? '<span data-toggle="tooltip" title="' . implode( ',', $keepers[$topic['id']] ) . '"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
 			: '';
 
 		// фильтрация по фразе
@@ -275,7 +275,7 @@ try {
 			"name"            => "<a href='{$forum_url}/forum/viewtopic.php?t={$topic['id']}'
 			                     target='_blank' title='{$topic['na']}'>{$topic['na']}</a>",
 			"alternatives"    => "<a href='{$forum_url}/forum/tracker.php?f={$topic['ss']}&nm={$search_string}' target='_blank'>>>></a>",
-			"keepers"         => "<span data-toggle='tooltip' title='{$keeper}'>{$keeper}</span>",
+			"keepers"         => $keeper,
 			"subsection"      => "<span data-toggle='tooltip' title='{$subsections_names[$topic['ss']]}'>{$topic['ss']}</span>",
 		];
 		$filtered_topics_count++ ;
