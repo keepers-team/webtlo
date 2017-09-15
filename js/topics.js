@@ -16,11 +16,28 @@ $( document ).ready( function () {
 
 	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", redrawTopicsList );
 
-	$( "#table_filter input, input[type=number]" ).on( "input",
-		redrawTopicsList );
+	$( "#table_filter input, input[type=number]" ).on( "input", function () {
+		var min = 0;
+		var max = 0;
+		if ( $( this ).is( "#filter_seeders_from" ) ) {
+			min = parseFloat( $( this ).val() );
+			max = parseFloat( $( "#filter_seeders_to" ).val() );
+			if ( min > max ) {
+				$( this ).val( max );
+			}
+		} else if ( ($( this ).is( "#filter_seeders_to" )) ) {
+			min = parseFloat( $( "#filter_seeders_from" ).val() );
+			max = parseFloat( $( this ).val() );
+			if ( $( this ).val() < min ) {
+				$( this ).val( min );
+			}
+		}
+		redrawTopicsList();
+	} );
 
 	//перерисовка таблицы при открытии главной
 	$('a[data-toggle="tab"][href="#main"]').on('shown.bs.tab', function (e) {
+		$.fn.dataTable.ext.errMode = "throw";
 		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === false ) {
 			//инициализация таблицы с топиками
 			var table = $( '#topics_table' )

@@ -296,7 +296,15 @@ try {
 	echo json_encode($output);
 	
 } catch (Exception $e) {
-	echo json_encode( array('error' => $e->getMessage()) );
+	echo json_encode( array(
+		"draw" => (int) $_POST["draw"],
+		"recordsTotal" => 0,
+		"recordsFiltered" => 0,
+		"data" => 0,
+		"count" => 0,
+		"size" => 0,
+		"error" => $e->getMessage()
+	) );
 }
 
 ?>
