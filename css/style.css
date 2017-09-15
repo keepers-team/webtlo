@@ -329,18 +329,29 @@ sub {
 
 .tor-status-resp {
 	padding: 2px 10px;
+	justify-content: left !important;
 }
 
 .tor-status-resp * {
 	color: #343a40;
 }
 
-.tor-status-resp input {
+.tor-status-resp input[type="checkbox"] {
 	display: none;
 }
 
-.tor-status-checked {
-	margin-left: 15px;
+.tor-status-resp > span:before {
+	font-family: "FontAwesome";
+	font-weight: bold;
+	font-style: normal;
+	width: 1em;
+	height: 1em;
+	content: '\f096';
+	margin-right: .3em;
+}
+
+.tor-status-resp input[type="checkbox"]:checked ~ span:before {
+	content: '\f046';
 }
 
 .tor-icon {

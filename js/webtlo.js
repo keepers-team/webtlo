@@ -40,6 +40,11 @@
 			} );
 		}
 
+		// предотвращаем закрытие фильтра по статусам раздач при клике
+		$('#topics_filter').find('.dropdown-menu').on('click', function(e) {
+			e.stopPropagation();
+		});
+
 		/* инициализация главного меню */
 		$( '#main_menu' ).find( ' a[href="' + Cookies.get( 'selected-tab' ) + '"]' ).tab( 'show' );
 	} );
