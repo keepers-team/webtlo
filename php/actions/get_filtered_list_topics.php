@@ -25,6 +25,7 @@ try {
 	parse_str( $_POST['filter'] );
 	$filter_by_name = $_POST['filter_by_name'];
 	$filter_by_keeper = $_POST['filter_by_keeper'];
+	$filter_by_subsection = $_POST['filter_by_subsection'];
 	$filter_date_release_from = $_POST['filter_date_release_from'];
 	$filter_date_release_until = $_POST['filter_date_release_until'];
 
@@ -212,6 +213,10 @@ try {
 
 		if (!empty($filter_by_keeper)) {
 			if( !mb_eregi($filter_by_keeper, $keeper) ) continue;
+		}
+
+		if (!empty($filter_by_subsection)) {
+			if( !mb_eregi($filter_by_subsection, $topic['ss']) ) continue;
 		}
 
 		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));

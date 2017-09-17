@@ -61,6 +61,7 @@ $( document ).ready( function () {
 							d.filter = $( "#topics_filter" ).serialize();
 							d.filter_by_name = $( "#filter_by_name" ).val();
 							d.filter_by_keeper = $( "#filter_by_keeper" ).val();
+							d.filter_by_subsection = $( "#filter_by_subsection" ).val();
 							d.filter_date_release_from = $( "#filter_date_release_from" ).val();
 							d.filter_date_release_until = $( "#filter_date_release_until" ).val();
 							d.filter_seeders_from = $( "#filter_seeders_from" ).val();
