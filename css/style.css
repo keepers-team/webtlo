@@ -328,7 +328,7 @@ sub {
 }
 
 .tor-status-resp {
-	justify-content: left !important;
+	justify-content: flex-start !important;
 }
 
 .tor-status-resp * {
@@ -339,22 +339,17 @@ sub {
 	display: none;
 }
 
-.tor-status-resp > span:before {
-	font-family: "FontAwesome";
-	font-weight: bold;
-	font-style: normal;
-	width: 1em;
-	height: 1em;
-	content: '\f096';
+.tor-status-resp > .fa {
 	margin-right: .3em;
+	visibility: hidden;
 }
 
-.tor-status-resp input[type="checkbox"]:checked ~ span:before {
-	content: '\f046';
+.tor-status-resp input[type="checkbox"]:checked ~ .fa {
+	visibility: visible;
 }
 
 .tor-icon {
-	margin-right: 10px;
+	width: 1em;
 	font-weight: bold;
 }
 

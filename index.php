@@ -176,31 +176,31 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="0" type="checkbox" name="filter_tor_status[]">
-												<span>не проверено <span class="tor-icon tor-not-approved">*</span></span>
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-not-approved">*</span> не проверено
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="2" type="checkbox" name="filter_tor_status[]" checked>
-												<span>проверено <span class="tor-icon tor-approved">√</span></span>
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">√</span> проверено
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="3" type="checkbox" name="filter_tor_status[]">
-												<span>недооформлено <span class="tor-icon tor-need-edit">?</span></span>
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-need-edit">?</span> недооформлено
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="8" type="checkbox" name="filter_tor_status[]" checked>
-												<span>сомнительно <span class="tor-icon tor-approved">#</span></span>
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">#</span> сомнительно
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="10" type="checkbox" name="filter_tor_status[]">
-												<span>временная <span class="tor-icon tor-dup">T</span></span>
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-dup">T</span> временная
 											</label>
 										</a>
 									</div>
