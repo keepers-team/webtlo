@@ -176,31 +176,31 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="0" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-not-approved">*</span> не проверено
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-not-approved">*</span><span>не проверено</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="2" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">√</span> проверено
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">√</span><span>проверено</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="3" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-need-edit">?</span> недооформлено
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-need-edit">?</span><span>недооформлено</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="8" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">#</span> сомнительно
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">#</span><span>сомнительно</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
 											<label class="form-check-label tor-status-resp">
 												<input value="10" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-dup">T</span> временная
+												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-dup">T</span><span>временная</span>
 											</label>
 										</a>
 									</div>
