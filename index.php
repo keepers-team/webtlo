@@ -45,7 +45,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<title>web-TLO-0.9.3.4</title>
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
-		<link rel="stylesheet" href="css/bootstrap-datepicker3.css">
+		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
 		<link rel="stylesheet" href="css/font-awesome.min.css">
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="icon" href="img/favicon.ico">
