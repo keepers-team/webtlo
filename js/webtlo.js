@@ -40,8 +40,6 @@
 					}
 				} );
 			} );
-		} else {
-			$('a[data-toggle="tab"][href="#main"]').tab('show');
 		}
 
 		// предотвращаем закрытие фильтра по статусам раздач при клике
@@ -50,8 +48,12 @@
 		});
 
 		/* инициализация главного меню */
-		$( '#main_menu' ).find( ' a[href="' + Cookies.get( 'selected-tab' ) + '"]' ).tab( 'show' );
-	} );
+		if ( Cookies.get( 'selected-tab' ) !== undefined ) {
+			$( '#main_menu' ).find( ' a[href="' + Cookies.get( 'selected-tab' ) + '"]' ).tab( 'show' );
+		} else {
+			$( 'a[data-toggle="tab"][href="#main"]' ).tab( 'show' );
+		}
+} );
 
 	/* сохранение открытой вкладки при перезагрузке страницы */
 	$( 'a[data-toggle="tab"]' ).on( 'shown.bs.tab', function () {
