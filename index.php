@@ -792,7 +792,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<!-- скрипты webtlo -->
 		<script src="js-libs/jquery.js"></script>
 		<script src="js-libs/bootstrap.bundle.min.js"></script>
-		<script src="js-libs/bootstrap.min.js"></script>
 		<script src="js-libs/external/jquery.mousewheel.js"></script>
 		<script src="js-libs/external/js.cookie.js"></script>
 		<script src="js-libs/bootstrap3-typeahead.js"></script>
