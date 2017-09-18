@@ -36,9 +36,9 @@ function output_reports($subsections, $login){
 		$q = 1;
 		foreach($subsection['messages'] as $message){
 			$msg[$subsection['id']][] = '<div class="card">
-											<div class="card-header" role="tab">
+											<div class="card-header" role="tab" data-toggle="collapse" data-parent="accordion-wtlo'.$subsection['id'].'" data-target="#tab' . $subsection['id'] . '-' . $q . '">
 												<h6 class="mb-0">
-													<a data-toggle="collapse" data-parent="accordion-wtlo'.$subsection['id'].'" href="#tab' . $subsection['id'] . '-' . $q . '">Сообщение ' . $q . '</a>
+													<a href="#tab' . $subsection['id'] . '-' . $q . '">Сообщение ' . $q . '</a>
 												</h6>
 											</div>
 											<div id="tab' . $subsection['id'] . '-' . $q . '" class="collapse" role="tabpanel">

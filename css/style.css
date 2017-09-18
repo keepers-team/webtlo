@@ -203,7 +203,7 @@ sub {
 	margin: 10px 15px 0 0;	
 }
 
-#accordion .card-header {
+.sub_settings .card-header {
 	cursor: pointer;
 }
 
