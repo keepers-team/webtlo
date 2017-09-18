@@ -31,7 +31,9 @@
 					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
 						if ( $( this ).val() === option.value ) {
 							$( this ).prop( "checked", true );
-							$( this ).parent().addClass('active')
+							if ($( this ).attr("name") !== "filter_tor_status[]") {
+								$( this ).parent().addClass('active')
+							}
 						}
 					} else {
 						$( this ).val( option.value );

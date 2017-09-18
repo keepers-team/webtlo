@@ -540,6 +540,7 @@ function getReleaseDateLimitTo( days ) {
 
 // сбросить настройки фильтра
 $( "#filter_reset" ).on( "click", function () {
+	var $topics_filter = $( "#topics_filter" );
 	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass('active');
 	$( "#filter_date_release_from" ).val( "" );
 	$( "#filter_date_release_until" ).datepicker( "setDate", getReleaseDateLimitTo( $( "#rule_date_release" ).val() ) );
@@ -548,7 +549,9 @@ $( "#filter_reset" ).on( "click", function () {
 	$( "#filter_by_name" ).val( "" );
 	$( "#filter_by_keeper" ).val( "" );
 	$( "#filter_avg_seeders_period" ).val( $( "#avg_seeders_period" ).val() );
-	$( "#topics_filter" ).find( ':input[value="0"]' ).prop( "checked", true ).change().parent().addClass('active');
+	$topics_filter.find( ':input[name!="filter_tor_status[]"][value="0"]' ).prop( "checked", true ).parent().addClass('active');
+	$topics_filter.find( ':input[name="filter_tor_status[]"]' ).prop( "checked", false );
+	$topics_filter.find( ':input[name="filter_tor_status[]"][value="2"], :input[name="filter_tor_status[]"][value="8"]' ).prop( "checked", true ).change();
 
 } );
 
