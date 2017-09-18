@@ -59,7 +59,7 @@ function blockActions() {
 	}
 }
 // выполнить функцию с задержкой
-/*function makeDelay(ms){
+function makeDelay(ms){
 	var timer = 0;
 	return function (callback, scope){
 		clearTimeout (timer);
@@ -67,7 +67,7 @@ function blockActions() {
              callback.apply(scope);
         }, ms);
 	}
-}*/
+}
 
 // сортировка в select
 function doSortSelect( select_id ) {

@@ -12,9 +12,14 @@ $( document ).ready( function () {
 	} );
 
 	// события при выборе свойств фильтра
-	$( "#topics_filter" ).find( "input[type=text], input[type=search]" ).on( "spin input", redrawTopicsList );
+	var delay = makeDelay (500);
+	$( "#topics_filter" ).find( "input[type=text], input[type=search]" ).on( "spin input", function () {
+		delay( redrawTopicsList, this );
+	} );
 
-	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", redrawTopicsList );
+	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", function () {
+		delay( redrawTopicsList, this );
+	} );
 
 	$( "#table_filter input, input[type=number]" ).on( "input", function () {
 		var min = 0;
@@ -32,7 +37,7 @@ $( document ).ready( function () {
 				$( this ).val( min );
 			}
 		}
-		redrawTopicsList();
+		delay( redrawTopicsList, this );
 	} );
 
 	//перерисовка таблицы при открытии главной
