@@ -24,8 +24,8 @@
 		//TODO добавить сохранение состояния фильтра сверху таблицы
 		var filter_options = Cookies.get( 'filter-options' ) !== undefined ?
 			JSON.parse( Cookies.get( 'filter-options' ) ) : "default";
-		$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass('active');
 		if ( filter_options !== "default" ) {
+			$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass('active');
 			jQuery.each( filter_options, function ( i, option ) {
 				$( "#topics_filter" ).find( "input[name='" + option.name + "']" ).each( function () {
 					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
@@ -40,6 +40,8 @@
 					}
 				} );
 			} );
+		} else {
+			$('a[data-toggle="tab"][href="#main"]').tab('show');
 		}
 
 		// предотвращаем закрытие фильтра по статусам раздач при клике
