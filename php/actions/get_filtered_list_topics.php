@@ -165,7 +165,7 @@ try {
 	
 	$q = 1;
 
-	$output = "";
+	$data = array();
 	$filtered_topics_count = 0;
 	$filtered_topics_size = 0;
 	
