@@ -466,22 +466,15 @@ $( "#topics" ).on( "click", ".topic", function ( event ) {
 		$( "#topics" ).closest( "div" )
 			.find( "input[type=checkbox]" )
 			.each( function () {
+				tag_this = parseInt( $( this ).attr( "tag" ) );
 				if ( direction == 'down' ) {
-					if ( parseInt( $( this ).attr( "tag" ) ) >= tag_first && parseInt( $( this ).attr( "tag" ) ) <= tag ) {
-						if ( !event.ctrlKey ) {
-							$( this ).prop( "checked", "true" );
-						} else {
-							$( this ).removeAttr( "checked" );
-						}
+					if ( tag_this >= tag_first && tag_this <= tag ) {
+						$( this ).prop( "checked", !event.ctrlKey );
 					}
 				}
 				if ( direction == 'up' ) {
-					if ( parseInt( $( this ).attr( "tag" ) ) <= tag_first && parseInt( $( this ).attr( "tag" ) ) >= tag ) {
-						if ( !event.ctrlKey ) {
-							$( this ).prop( "checked", "true" );
-						} else {
-							$( this ).removeAttr( "checked" );
-						}
+					if ( tag_this <= tag_first && tag_this >= tag ) {
+						$( this ).prop( "checked", !event.ctrlKey );
 					}
 				}
 			} );
