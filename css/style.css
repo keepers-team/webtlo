@@ -328,6 +328,7 @@ sub {
 }
 
 .tor-status-resp {
+	cursor: pointer;
 	justify-content: flex-start !important;
 }
 
