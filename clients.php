@@ -197,10 +197,10 @@ class utorrent {
 		$this->setSetting('dir_active_download_flag', true);
 		foreach($filename as $file){
 			if (!empty($savepath)) {
-				if ( $savepath_subfolder ) {
-					$savepath = $savepath . $file['id'] . substr( $savepath, -1 );
-				}
-				$this->setSetting('dir_active_download', urlencode($savepath));
+				$current_savepath = $savepath_subfolder
+					? $savepath . $file['id'] . substr( $savepath, -1 )
+					: $savepath;
+				$this->setSetting('dir_active_download', urlencode($current_savepath));
 			}
 			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
 			usleep( 500000 );
