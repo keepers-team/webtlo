@@ -11,8 +11,8 @@ try {
 	$client = new $tor_client[1] ( $tor_client[2], $tor_client[3], $tor_client[4], $tor_client[5], $tor_client[0] );
 	
 	$status = $client->is_online()
-		? "<img src=\"img/green.png\" />\"${tor_client[0]}\" сейчас доступен"
-		: "<img src=\"img/red.png\" />\"${tor_client[0]}\" сейчас недоступен";
+		? "<i class='fa fa-circle text-success'></i> \"${tor_client[0]}\" сейчас доступен"
+		: "<i class='fa fa-circle text-danger'></i> \"${tor_client[0]}\" сейчас недоступен";
 	
 	echo json_encode( array('log' => Log::get(), 'status' => $status) );
 	
