@@ -765,27 +765,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									</div>
 								</div>
 							</div>
-
-							<div class="card">
-								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#table-control">
-									<h6 class="mb-0">
-										<a class="collapsed" href="#table-control">Настройки столбцов таблицы</a>
-									</h6>
-								</div>
-								<div id="table-control" class="collapse" role="tabpanel">
-									<div class="card-body">
-										<h5>Отображать столбцы:</h5>
-										<div class="form-group col-12">
-											<div class="form-check">
-												<label title="" class="form-check-label">
-													<input class="toggle-vis form-check-input" value="2" type="checkbox" size="24">
-													1
-												</label>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
 						</div>
 					</form>
 				</div>
