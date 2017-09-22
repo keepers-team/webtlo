@@ -175,9 +175,26 @@ $( document ).ready( function () {
 						$( '[data-toggle="tooltip"]' ).tooltip()
 					} )
 				} );
+			var state = table.state.loaded().columns;
+			$.each(state, function (index, value) {
+				if (value.visible) {
+					$( ".columns-visibility" ).find( ':input[value="' + index + '"]' ).attr( 'checked', true );
+				}
+			});
 		}
-
 	});
+
+	$('.toggle-vis').on( 'change', function () {
+		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === true ) {
+			var table = $( '#topics_table' ).DataTable( {
+				retrieve: true
+			} );
+			// Get the column API object
+			var column = table.column( $( this ).val() );
+			// Toggle the visibility
+			column.visible( !column.visible() );
+		}
+	} );
 } );
 
 function redrawTopicsList() {

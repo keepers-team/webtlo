@@ -287,10 +287,6 @@ sub {
 }
 
 /* topics control */
-#topics_control, #topics_filter {
-	padding: 10px 10px 0 10px;
-}
-
 .download-replace {
 	letter-spacing: -5px;
 }
@@ -327,29 +323,33 @@ sub {
 	vertical-align: middle;
 }
 
-.tor-status-resp {
+.columns-visibility-option {
+	padding-left: 0;
+}
+
+.tor-status-resp, .columns-visibility-option {
 	cursor: pointer;
 	justify-content: flex-start !important;
 }
 
-.tor-status-resp * {
+.tor-status-resp *, .columns-visibility-option * {
 	color: #343a40;
 }
 
-.tor-status-resp input[type="checkbox"] {
+.tor-status-resp input[type="checkbox"], .columns-visibility-option input[type="checkbox"] {
 	display: none;
 }
 
-.tor-status-resp > .fa {
+.tor-status-resp > .fa, .columns-visibility-option > .fa {
 	margin-right: .3em;
 	visibility: hidden;
 }
 
-.tor-status-resp input[type="checkbox"]:checked ~ .fa {
+.tor-status-resp input[type="checkbox"]:checked ~ .fa, .columns-visibility-option input[type="checkbox"]:checked ~ .fa {
 	visibility: visible;
 }
 
-.tor-icon {
+.tor-status-icon {
 	width: 1em;
 	font-weight: bold;
 }
