@@ -88,7 +88,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</optgroup>
 					</select>
 					<div id="sub-data">
-						<div id="topics_control">
+						<div id="topics_control" class="pt-2">
 							<div id="filter" class="btn-group" role="group">
 								<!--<button type="button" id="filter_show" class="btn btn-sm btn-outline-dark" title="Скрыть или показать настройки фильтра">
 									<i class="fa fa-filter"></i>
@@ -148,84 +148,140 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div style="display:none;" id="process"></div>
 							</div>
 						</div>
-						<form method="post" id="topics_filter" class="form-inline">
-							<div class="topics_filter">
-
-								<div class="btn-group" data-toggle="buttons" title="Статусы раздач в торрент-клиенте">
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
-									</label>
-									<label class="btn btn-sm btn-outline-dark active">
-										<input type="radio" name="filter_status" value="0" autocomplete="off" checked> не храню
-									</label>
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
-									</label>
+						<div class="row pt-2">
+							<form method="post" id="topics_filter" class="col-10 form-inline">
+								<div class="topics_filter" title="Фильтр раздач текущего подраздела">
+									<div class="btn-group" data-toggle="buttons" title="Статусы раздач в торрент-клиенте">
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
+										</label>
+										<label class="btn btn-sm btn-outline-dark active">
+											<input type="radio" name="filter_status" value="0" autocomplete="off" checked> не храню
+										</label>
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
+										</label>
+									</div>
+										<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+										<label class="btn btn-outline-dark btn-sm">
+											<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
+										</label>
+									</div>
+									<div class="btn-group">
+										<button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="Статусы раздач на трекере">
+											Статусы
+										</button>
+										<div class="dropdown-menu">
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="0" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-not-approved">*</span><span>не проверено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="2" type="checkbox" name="filter_tor_status[]" checked>
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-approved">√</span><span>проверено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="3" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-need-edit">?</span><span>недооформлено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="8" type="checkbox" name="filter_tor_status[]" checked>
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-approved">#</span><span>сомнительно</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="10" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-dup">T</span><span>временная</span>
+												</label>
+											</a>
+										</div>
+									</div>
+									<div class="btn-group" data-toggle="buttons">
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
+										</label>
+										<label class="btn btn-sm btn-outline-dark active">
+											<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
+										</label>
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
+										</label>
+									</div>
+									<div class="filter_block">
+										<label for="filter_avg_seeders_period" title="Выберите произвольный период средних сидов">
+											<span class="mr-2">Период средних сидов:</span>
+											<input type="number" id="filter_avg_seeders_period" class="form-control form-control-sm" name="avg_seeders_period" value="<?php echo $cfg['avg_seeders_period'] ?>" min="1" max="30"/>
+										</label>
+									</div>
 								</div>
-
-								<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-									<label class="btn btn-outline-dark btn-sm">
-										<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
-									</label>
-								</div>
-								<div class="btn-group">
-									<button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="Статусы раздач на трекере">
-										Статусы
+							</form>
+							<div class="col-2 align-self-end">
+								<div class="dropdown">
+									<button class="btn btn-outline-dark btn-sm dropdown-toggle float-right" type="button" data-toggle="dropdown">
+										Столбцы
 									</button>
-									<div class="dropdown-menu">
+									<div class="dropdown-menu dropdown-menu-right columns-visibility">
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="0" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-not-approved">*</span><span>не проверено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="1" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Цвет</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="2" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">√</span><span>проверено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="2" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Статус</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="3" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-need-edit">?</span><span>недооформлено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="3" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Дата</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="8" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">#</span><span>сомнительно</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="4" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Размер</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="10" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-dup">T</span><span>временная</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="5" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Сиды</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="7" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Альтернативы</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="8" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Хранители</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="9" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Раздел</span>
 											</label>
 										</a>
 									</div>
 								</div>
-
-								<div class="btn-group" data-toggle="buttons">
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
-									</label>
-									<label class="btn btn-sm btn-outline-dark active">
-										<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
-									</label>
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
-									</label>
-								</div>
-
-								<div class="filter_block">
-									<label for="filter_avg_seeders_period" title="Выберите произвольный период средних сидов">
-										<span class="mr-2">Период средних сидов:</span>
-										<input type="number" id="filter_avg_seeders_period" class="form-control form-control-sm" name="avg_seeders_period" value="<?php echo $cfg['avg_seeders_period'] ?>" min="1" max="30"/>
-									</label>
-								</div>
 							</div>
-						</form>
+						</div>
+
 						<div id="topics">
 							<table id="topics_table" class="table table-hover" width="100%" cellspacing="0">
 								<thead>
@@ -272,7 +328,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</table>
 						</div>
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>)</div>
+							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
 							<div id="topics_result"></div>
 						</div>
 					</div>
@@ -707,6 +763,30 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</label>
 											</div>
 										</div>
+
+
+
+									</div>
+								</div>
+							</div>
+
+							<div class="card">
+								<div class="card-header" role="tab" data-toggle="collapse" data-parent="#accordion" data-target="#table-control">
+									<h6 class="mb-0">
+										<a class="collapsed" href="#table-control">Настройки столбцов таблицы</a>
+									</h6>
+								</div>
+								<div id="table-control" class="collapse" role="tabpanel">
+									<div class="card-body">
+										<h5>Отображать столбцы:</h5>
+										<div class="form-group col-12">
+											<div class="form-check">
+												<label title="" class="form-check-label">
+													<input class="toggle-vis form-check-input" value="2" type="checkbox" size="24">
+													1
+												</label>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -715,34 +795,28 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				</div>
 				<div id="reports" class="tab-pane fade" role="tabpanel"></div>
 				<div id="statistics" class="tab-pane fade" role="tabpanel">
-					<div>
-						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
-					</div>
-					<div id="data_statistics">
-						<table id="table_statistics">
-							<thead>
-								<tr>
-									<th colspan="2">Подраздел</th>
-									<th colspan="10">Количество и вес раздач</th>
-								</tr>
-								<tr>
-									<th>ID</th>
-									<th width="40%">Название</th>
-									<th colspan="2">сc == 0</th>
-									<th colspan="2">0.0 < cc <= 0.5</th>
-									<th colspan="2">0.5 < сc <= 1.0</th>
-									<th colspan="2">1.0 < сc <= 1.5</th>
-									<th colspan="2">Всего в подразделе</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<th colspan="12">&mdash;</th>
-								</tr>
-							</tbody>
-							<tfoot></tfoot>
-						</table>
-					</div>
+					<form class="form-inline">
+						<input title="" class="form-control form-control-sm col-10 mr-2 mb-2" id="ss" value="<?php echo $ss ?>">
+						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Получить статистику">
+					</form>
+					<table id="statistics_table" border="2" style="border-collapse: collapse; width:100%;">
+						<thead>
+							<tr>
+								<th colspan='2' style='text-align:center;'>Раздел</th>
+								<th colspan='10' style='text-align:center;'>Количество и вес раздач</th>
+							</tr>
+							<tr>
+								<th style='border-bottom: 2px solid black;'>ID</th>
+								<th style='border-bottom: 2px solid black;'>Заголовок</th>
+								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>сc == 0</th>
+								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.0 < cc <= 0.5</th>
+								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.5 < сc <= 1.0</th>
+								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>1.0 < сc <= 1.5</th>
+								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>Всего в разделе</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
 				</div>
 				<div id="journal" class="tab-pane fade" role="tabpanel">
 					<div id="log"></div>
