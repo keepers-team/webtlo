@@ -483,14 +483,14 @@ class Download {
 		$savedir = $edit ? $dir_torrents : $savedir;
 		if (empty($savedir))
 		{
-			$dl_log = '<span class="errors">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span>';
+			$dl_log = '<span class="text-danger">Не указан каталог для скачивания, проверьте настройки. Скачивание невозможно.</span>';
 			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 		}
 		$winsavedir = mb_convert_encoding( $savedir, 'Windows-1251', 'UTF-8' );
 		// проверяем существование указанного каталога
 		if (!is_writable($savedir) && !is_writable($winsavedir))
 		{
-			$dl_log = '<span class="errors">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span>';
+			$dl_log = '<span class="text-danger">Каталог "'.$savedir.'" не существует или недостаточно прав.	Скачивание невозможно.</span>';
 			throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 		}
 		// если задействованы подкаталоги
@@ -505,7 +505,7 @@ class Download {
 			// создался ли подкаталог
 			if (!$result)
 			{
-				$dl_log = '<span class="errors">Ошибка при создании подкаталога: неверно указан путь или недостаточно прав. Скачивание невозможно.</span>';
+				$dl_log = '<span class="text-danger">Ошибка при создании подкаталога: неверно указан путь или недостаточно прав. Скачивание невозможно.</span>';
 				throw new Exception( 'Ошибка при попытке скачать торрент-файлы.' );
 			}
 		}

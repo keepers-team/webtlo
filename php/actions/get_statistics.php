@@ -89,16 +89,16 @@ try {
 			$size = pow( 1024, 4 );
 			$state = $e['Size5'] + $e['Size0'] < $size
 				? $e['Size5'] + $e['Size0'] >= $size * 3 / 4
-					? 'warning'
+					? 'bg-warning'
 					: 'ok'
-				: 'critical';
+				: 'bg-danger';
 		} else {
 			$size = pow( 1024, 4 ) / 2;
 			$state = $e['Count5'] + $e['Count0'] < 1000 && $e['Size5'] + $e['Size0'] < $size
 				? $e['Count5'] + $e['Count0'] >= 500 || $e['Size5'] + $e['Size0'] >= $size / 2
-					? 'warning'
+					? 'bg-warning'
 					: 'ok'
-				: 'critical';
+				: 'bg-danger';
 		}
 		// байты
 		$e['Size0'] = convert_bytes( $e['Size0'] );
