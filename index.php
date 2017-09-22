@@ -51,7 +51,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
-		<div class="container-fluid">
+		<div class="container-fluid pt-1 pb-3">
 			<ul id="main_menu" class="nav nav-tabs" role="tablist">
 				<li class="nav-item">
 					<a href="#main" class="nav-link" data-toggle="tab" role="tab">Главная</a>
@@ -72,7 +72,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<a href="#manual" title="Открыть файл руководства" class="nav-link" data-toggle="tab" role="tab">FAQ</a>
 				</li>
 			</ul>
-			<div id="content" class="tab-content pl-2 pr-2 pb-2">
+			<div id="content" class="tab-content p-2 border border-top-0">
 				<div id="main" class="tab-pane fade show active" role="tabpanel">
 					<select id="subsections" class="form-control form-control-sm" title="Подраздел">
 						<optgroup id="subsections_stored" label="">
@@ -144,8 +144,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<i class="fa fa-paper-plane-o"></i> Отправить отчёты
 							</button>
 							<div id="indication">
-								<i id="loading" class="fa fa-spinner fa-pulse"></i>
-								<div style="display:none;" id="process"></div>
+								<i id="loading" class="fa fa-spinner fa-pulse ml-1"></i>
+								<div style="display:none;" id="process" class="ml-1"></div>
 							</div>
 						</div>
 						<div class="row pt-2">
@@ -326,15 +326,15 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</table>
 						</div>
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
-							<div id="topics_result"></div>
+							<div id="counter" class="ml-3 mr-3">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="topics_result" class="ml-3 mr-3"></div>
 						</div>
 					</div>
 				</div>
 
 				<div id="settings" class="tab-pane fade" role="tabpanel">
 					<div>
-						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-outline-dark">
+						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-outline-dark mb-2">
 					</div>
 					<form id="config">
 						<div class="sub_settings" id="accordion" role="tablist">
@@ -430,7 +430,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 								<div id="proxy" class="collapse" role="tabpanel">
 									<div class="card-body">
-										<div>
+										<div class="form-group">
 											<label class="form-check-label" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
 												<input class="form-check-input" name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?>>
 												использовать прокси-сервер (например, для обхода блокировки)
@@ -501,7 +501,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											<button name="online-tc" id="online-tc" type="button" class="btn btn-sm btn-outline-dark" title="Проверить доступность выбранного торрент-клиента в списке">
 												<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
 											</button>
-											<span id="result-tc"></span>
+											<span id="result-tc" class="ml-2"></span>
 										</p>
 										<div class="row">
 											<div class="col-5">
@@ -571,7 +571,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="ss-add" class="form-control form-control-sm" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" autocomplete="off">
 											</div>
 										</div>
-										<input id="ss-del" type="button" class="btn btn-sm btn-outline-dark" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
+										<input id="ss-del" type="button" class="btn btn-sm btn-outline-dark mb-3" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
 										<div class="row">
 											<label for="list-ss" class="col-2 col-form-label">Подраздел:</label>
 											<div class="col-10">
@@ -703,7 +703,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</label>
 											</div>
 										</div>
-										<p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</p>
+										<hr>
+										<span><small><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</small></span>
 									</div>
 								</div>
 							</div>
@@ -769,7 +770,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				<div id="reports" class="tab-pane fade" role="tabpanel"></div>
 				<div id="statistics" class="tab-pane fade" role="tabpanel">
 					<div>
-						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
+						<input id="get_statistics" type="submit" class="btn btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
 					</div>
 					<div id="data_statistics">
 						<table id="table_statistics">

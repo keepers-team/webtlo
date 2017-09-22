@@ -270,7 +270,7 @@ try {
 			"torrents_status" => $torrents_statuses[ $topic['st'] ],
 			"reg_date"        => date( 'd.m.Y', $topic['rg'] ),
 			"size"            => convert_bytes( $topic['si'] ),
-			"seeders"         => '<span class="seeders" title="Значение сидов">'
+			"seeders"         => '<span class="text-danger" title="Значение сидов">'
 			                     . round( $topic['avg'], 2 ) . '</span>',
 			"name"            => "<a href='{$forum_url}/forum/viewtopic.php?t={$topic['id']}'
 			                     target='_blank' title='{$topic['na']}'>{$topic['na']}</a>",
