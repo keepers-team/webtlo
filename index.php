@@ -753,7 +753,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													<input id="passkey" name="passkey" class="form-control form-control-sm" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
 												</div>
 											</div>
-
 											<div class="form-check">
 												<label class="form-check-label">
 													<input name="tor_for_user" class="form-check-input" type="checkbox" size="24" <?php echo $tor_for_user ?>>
@@ -761,9 +760,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</label>
 											</div>
 										</div>
-
-
-
 									</div>
 								</div>
 							</div>
@@ -799,24 +795,24 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<div id="data_statistics">
 						<table id="table_statistics">
 							<thead>
-							<tr>
-								<th colspan="2">Подраздел</th>
-								<th colspan="10">Количество и вес раздач</th>
-							</tr>
-							<tr>
-								<th>ID</th>
-								<th width="40%">Название</th>
-								<th colspan="2">сc == 0</th>
-								<th colspan="2">0.0 < cc <= 0.5</th>
-								<th colspan="2">0.5 < сc <= 1.0</th>
-								<th colspan="2">1.0 < сc <= 1.5</th>
-								<th colspan="2">Всего в подразделе</th>
-							</tr>
+								<tr>
+									<th colspan="2">Подраздел</th>
+									<th colspan="10">Количество и вес раздач</th>
+								</tr>
+								<tr>
+									<th>ID</th>
+									<th width="40%">Название</th>
+									<th colspan="2">сc == 0</th>
+									<th colspan="2">0.0 < cc <= 0.5</th>
+									<th colspan="2">0.5 < сc <= 1.0</th>
+									<th colspan="2">1.0 < сc <= 1.5</th>
+									<th colspan="2">Всего в подразделе</th>
+								</tr>
 							</thead>
 							<tbody>
-							<tr>
-								<th colspan="12">&mdash;</th>
-							</tr>
+								<tr>
+									<th colspan="12">&mdash;</th>
+								</tr>
 							</tbody>
 							<tfoot></tfoot>
 						</table>
