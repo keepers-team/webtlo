@@ -795,28 +795,34 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				</div>
 				<div id="reports" class="tab-pane fade" role="tabpanel"></div>
 				<div id="statistics" class="tab-pane fade" role="tabpanel">
-					<form class="form-inline">
-						<input title="" class="form-control form-control-sm col-10 mr-2 mb-2" id="ss" value="<?php echo $ss ?>">
-						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Получить статистику">
-					</form>
-					<table id="statistics_table" border="2" style="border-collapse: collapse; width:100%;">
-						<thead>
+					<div>
+						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
+					</div>
+					<div id="data_statistics">
+						<table id="table_statistics">
+							<thead>
 							<tr>
-								<th colspan='2' style='text-align:center;'>Раздел</th>
-								<th colspan='10' style='text-align:center;'>Количество и вес раздач</th>
+								<th colspan="2">Подраздел</th>
+								<th colspan="10">Количество и вес раздач</th>
 							</tr>
 							<tr>
-								<th style='border-bottom: 2px solid black;'>ID</th>
-								<th style='border-bottom: 2px solid black;'>Заголовок</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>сc == 0</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.0 < cc <= 0.5</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>0.5 < сc <= 1.0</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>1.0 < сc <= 1.5</th>
-								<th colspan='2' style='text-align:center; border-bottom: 2px solid black;'>Всего в разделе</th>
+								<th>ID</th>
+								<th width="40%">Название</th>
+								<th colspan="2">сc == 0</th>
+								<th colspan="2">0.0 < cc <= 0.5</th>
+								<th colspan="2">0.5 < сc <= 1.0</th>
+								<th colspan="2">1.0 < сc <= 1.5</th>
+								<th colspan="2">Всего в подразделе</th>
 							</tr>
-						</thead>
-						<tbody></tbody>
-					</table>
+							</thead>
+							<tbody>
+							<tr>
+								<th colspan="12">&mdash;</th>
+							</tr>
+							</tbody>
+							<tfoot></tfoot>
+						</table>
+					</div>
 				</div>
 				<div id="journal" class="tab-pane fade" role="tabpanel">
 					<div id="log"></div>
