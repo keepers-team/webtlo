@@ -214,7 +214,7 @@ try {
 			if( !mb_eregi($filter_by_keeper, $keeper) ) continue;
 		}
 
-		$icons = ($topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'green' : ($topic['ds'] >= $avg_seeders_period / 2 ? 'yellow' : 'red'));
+		$color = ( $topic['ds'] >= $avg_seeders_period || !isset($avg_seeders) ? 'text-success' : ( $topic['ds'] >= $avg_seeders_period / 2 ? 'text-warning' : 'text-danger'));
 
 		// подготовка строки поиска альтернативных раздач
 
@@ -266,11 +266,11 @@ try {
 			"checkbox"        => "<input type='checkbox' class='topic' tag='{$q}'
 			                     id='{$topic['id']}' subsection='{$topic['ss']}'
 			                     size='{$topic['si']}' hash='{$topic['hs']}' client='{$topic['cl']}' >",
-			"color"           => "<img title='{$topic['ds']}' src='img/{$icons}.png'>",
+			"color"           => "<i title='{$topic['ds']}' class='fa fa-circle {$color}'></i>",
 			"torrents_status" => $torrents_statuses[ $topic['st'] ],
 			"reg_date"        => date( 'd.m.Y', $topic['rg'] ),
 			"size"            => convert_bytes( $topic['si'] ),
-			"seeders"         => '<span class="seeders" title="Значение сидов">'
+			"seeders"         => '<span class="text-danger" title="Значение сидов">'
 			                     . round( $topic['avg'], 2 ) . '</span>',
 			"name"            => "<a href='{$forum_url}/forum/viewtopic.php?t={$topic['id']}'
 			                     target='_blank' title='{$topic['na']}'>{$topic['na']}</a>",

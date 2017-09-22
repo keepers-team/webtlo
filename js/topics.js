@@ -104,16 +104,13 @@ $( document ).ready( function () {
 						var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
 						var $topics_table_paginate = $( '#topics_table_paginate' );
 						var tableHeight;
-						if (this.api().page.info().pages > 1) {
-							tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
-							$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
-						} else {
-							tableHeight = $topics.height() - $dataTables_scrollHead.height() - 4 - 2;
-							$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
-						}
+						tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2 - 3;
+						$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 					},
-					"lengthChange": false,
-					"pageLength": 1000,
+					"lengthMenu": [ 50, 100, 200, 500, 1000 ],
+					"dom": "<'row'<'col-12'f>>" +
+						   "<'row'<'col-12'tr>>" +
+						   "<'row'<'col-5'l><'col-7'p>>",
 					"processing": true,
 					"searching": false,
 					"order": [ 5, 'asc' ],
@@ -175,9 +172,26 @@ $( document ).ready( function () {
 						$( '[data-toggle="tooltip"]' ).tooltip()
 					} )
 				} );
+			var state = table.state.loaded().columns;
+			$.each(state, function (index, value) {
+				if (value.visible) {
+					$( ".columns-visibility" ).find( ':input[value="' + index + '"]' ).attr( 'checked', true );
+				}
+			});
 		}
-
 	});
+
+	$('.toggle-vis').on( 'change', function () {
+		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === true ) {
+			var table = $( '#topics_table' ).DataTable( {
+				retrieve: true
+			} );
+			// Get the column API object
+			var column = table.column( $( this ).val() );
+			// Toggle the visibility
+			column.visible( !column.visible() );
+		}
+	} );
 } );
 
 function redrawTopicsList() {

@@ -43,7 +43,7 @@
 		}
 
 		// предотвращаем закрытие фильтра по статусам раздач при клике
-		$('#topics_filter').find('.dropdown-menu').on('click', function(e) {
+		$('#topics_filter .dropdown-menu, .columns-visibility').on('click', function(e) {
 			e.stopPropagation();
 		});
 

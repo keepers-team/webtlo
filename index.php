@@ -51,7 +51,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
-		<div class="container-fluid">
+		<div class="container-fluid pt-1 pb-3">
 			<ul id="main_menu" class="nav nav-tabs" role="tablist">
 				<li class="nav-item">
 					<a href="#main" class="nav-link" data-toggle="tab" role="tab">Главная</a>
@@ -72,7 +72,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<a href="#manual" title="Открыть файл руководства" class="nav-link" data-toggle="tab" role="tab">FAQ</a>
 				</li>
 			</ul>
-			<div id="content" class="tab-content pl-2 pr-2 pb-2">
+			<div id="content" class="tab-content p-2 border border-top-0">
 				<div id="main" class="tab-pane fade show active" role="tabpanel">
 					<select id="subsections" class="form-control form-control-sm" title="Подраздел">
 						<optgroup id="subsections_stored" label="">
@@ -88,7 +88,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</optgroup>
 					</select>
 					<div id="sub-data">
-						<div id="topics_control">
+						<div id="topics_control" class="pt-2">
 							<div id="filter" class="btn-group" role="group">
 								<!--<button type="button" id="filter_show" class="btn btn-sm btn-outline-dark" title="Скрыть или показать настройки фильтра">
 									<i class="fa fa-filter"></i>
@@ -144,88 +144,144 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<i class="fa fa-paper-plane-o"></i> Отправить отчёты
 							</button>
 							<div id="indication">
-								<i id="loading" class="fa fa-spinner fa-pulse"></i>
-								<div style="display:none;" id="process"></div>
+								<i id="loading" class="fa fa-spinner fa-pulse ml-1"></i>
+								<div style="display:none;" id="process" class="ml-1"></div>
 							</div>
 						</div>
-						<form method="post" id="topics_filter" class="form-inline">
-							<div class="topics_filter">
-
-								<div class="btn-group" data-toggle="buttons" title="Статусы раздач в торрент-клиенте">
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
-									</label>
-									<label class="btn btn-sm btn-outline-dark active">
-										<input type="radio" name="filter_status" value="0" autocomplete="off" checked> не храню
-									</label>
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
-									</label>
+						<div class="row pt-2">
+							<form method="post" id="topics_filter" class="col-10 form-inline">
+								<div class="topics_filter" title="Фильтр раздач текущего подраздела">
+									<div class="btn-group" data-toggle="buttons" title="Статусы раздач в торрент-клиенте">
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="filter_status" value="1" autocomplete="off"> храню
+										</label>
+										<label class="btn btn-sm btn-outline-dark active">
+											<input type="radio" name="filter_status" value="0" autocomplete="off" checked> не храню
+										</label>
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
+										</label>
+									</div>
+										<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+										<label class="btn btn-outline-dark btn-sm">
+											<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
+										</label>
+									</div>
+									<div class="btn-group">
+										<button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="Статусы раздач на трекере">
+											Статусы
+										</button>
+										<div class="dropdown-menu">
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="0" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-not-approved">*</span><span>не проверено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="2" type="checkbox" name="filter_tor_status[]" checked>
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-approved">√</span><span>проверено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="3" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-need-edit">?</span><span>недооформлено</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="8" type="checkbox" name="filter_tor_status[]" checked>
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-approved">#</span><span>сомнительно</span>
+												</label>
+											</a>
+											<a class="dropdown-item" href="#">
+												<label class="form-check-label tor-status-resp">
+													<input value="10" type="checkbox" name="filter_tor_status[]">
+													<span class="fa fa-check fa-fw"></span><span class="tor-status-icon tor-dup">T</span><span>временная</span>
+												</label>
+											</a>
+										</div>
+									</div>
+									<div class="btn-group" data-toggle="buttons">
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
+										</label>
+										<label class="btn btn-sm btn-outline-dark active">
+											<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
+										</label>
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
+										</label>
+									</div>
+									<div class="filter_block">
+										<label for="filter_avg_seeders_period" title="Выберите произвольный период средних сидов">
+											<span class="mr-2">Период средних сидов:</span>
+											<input type="number" id="filter_avg_seeders_period" class="form-control form-control-sm" name="avg_seeders_period" value="<?php echo $cfg['avg_seeders_period'] ?>" min="1" max="30"/>
+										</label>
+									</div>
 								</div>
-
-								<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-									<label class="btn btn-outline-dark btn-sm">
-										<input type="checkbox" name="avg_seeders_complete" autocomplete="off"> "зелёные"
-									</label>
-								</div>
-								<div class="btn-group">
-									<button class="btn btn-outline-dark btn-sm dropdown-toggle" type="button" data-toggle="dropdown" title="Статусы раздач на трекере">
-										Статусы
+							</form>
+							<div class="col-2 align-self-end">
+								<div class="dropdown">
+									<button class="btn btn-outline-dark btn-sm dropdown-toggle float-right" type="button" data-toggle="dropdown">
+										Столбцы
 									</button>
-									<div class="dropdown-menu">
+									<div class="dropdown-menu dropdown-menu-right columns-visibility">
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="0" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-not-approved">*</span><span>не проверено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="1" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Цвет</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="2" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">√</span><span>проверено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="2" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Статус</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="3" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-need-edit">?</span><span>недооформлено</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="3" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Дата</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="8" type="checkbox" name="filter_tor_status[]" checked>
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-approved">#</span><span>сомнительно</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="4" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Размер</span>
 											</label>
 										</a>
 										<a class="dropdown-item" href="#">
-											<label class="form-check-label tor-status-resp">
-												<input value="10" type="checkbox" name="filter_tor_status[]">
-												<span class="fa fa-check fa-fw"></span><span class="tor-icon tor-dup">T</span><span>временная</span>
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="5" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Сиды</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="7" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Альтернативы</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="8" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Хранители</span>
+											</label>
+										</a>
+										<a class="dropdown-item" href="#">
+											<label class="form-check-label columns-visibility-option">
+												<input title="" class="toggle-vis" value="9" type="checkbox">
+												<span class="fa fa-check fa-fw"></span><span>Раздел</span>
 											</label>
 										</a>
 									</div>
 								</div>
-
-								<div class="btn-group" data-toggle="buttons">
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
-									</label>
-									<label class="btn btn-sm btn-outline-dark active">
-										<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
-									</label>
-									<label class="btn btn-sm btn-outline-dark">
-										<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
-									</label>
-								</div>
-
-								<div class="filter_block">
-									<label for="filter_avg_seeders_period" title="Выберите произвольный период средних сидов">
-										<span class="mr-2">Период средних сидов:</span>
-										<input type="number" id="filter_avg_seeders_period" class="form-control form-control-sm" name="avg_seeders_period" value="<?php echo $cfg['avg_seeders_period'] ?>" min="1" max="30"/>
-									</label>
-								</div>
 							</div>
-						</form>
+						</div>
+
 						<div id="topics">
 							<table id="topics_table" class="table table-hover" width="100%" cellspacing="0">
 								<thead>
@@ -270,15 +326,15 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</table>
 						</div>
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>)</div>
-							<div id="topics_result"></div>
+							<div id="counter" class="ml-3 mr-3">Выбрано раздач: <b id="topics_count">0</b> (<span id="topics_size">0.00</span>) из <b id="filtered_topics_count">0</b> (<span id="filtered_topics_size">0.00</span>).</div>
+							<div id="topics_result" class="ml-3 mr-3"></div>
 						</div>
 					</div>
 				</div>
 
 				<div id="settings" class="tab-pane fade" role="tabpanel">
 					<div>
-						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-outline-dark">
+						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл" class="btn btn-outline-dark mb-2">
 					</div>
 					<form id="config">
 						<div class="sub_settings" id="accordion" role="tablist">
@@ -374,7 +430,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</div>
 								<div id="proxy" class="collapse" role="tabpanel">
 									<div class="card-body">
-										<div>
+										<div class="form-group">
 											<label class="form-check-label" title="Использовать при обращении к форуму прокси-сервер, например, для обхода блокировки.">
 												<input class="form-check-input" name="proxy_activate" id="proxy_activate" type="checkbox" size="24" <?php echo $proxy_activate ?>>
 												использовать прокси-сервер (например, для обхода блокировки)
@@ -445,7 +501,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											<button name="online-tc" id="online-tc" type="button" class="btn btn-sm btn-outline-dark" title="Проверить доступность выбранного торрент-клиента в списке">
 												<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
 											</button>
-											<span id="result-tc"></span>
+											<span id="result-tc" class="ml-2"></span>
 										</p>
 										<div class="row">
 											<div class="col-5">
@@ -515,7 +571,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<input id="ss-add" class="form-control form-control-sm" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" autocomplete="off">
 											</div>
 										</div>
-										<input id="ss-del" type="button" class="btn btn-sm btn-outline-dark" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
+										<input id="ss-del" type="button" class="btn btn-sm btn-outline-dark mb-3" value="Удалить текущий подраздел" title="Удалить выбранный подраздел">
 										<div class="row">
 											<label for="list-ss" class="col-2 col-form-label">Подраздел:</label>
 											<div class="col-10">
@@ -647,7 +703,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												</label>
 											</div>
 										</div>
-										<p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</p>
+										<hr>
+										<span><small><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</small></span>
 									</div>
 								</div>
 							</div>
@@ -697,7 +754,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 													<input id="passkey" name="passkey" class="form-control form-control-sm" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
 												</div>
 											</div>
-
 											<div class="form-check">
 												<label class="form-check-label">
 													<input name="tor_for_user" class="form-check-input" type="checkbox" size="24" <?php echo $tor_for_user ?>>
@@ -714,7 +770,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				<div id="reports" class="tab-pane fade" role="tabpanel"></div>
 				<div id="statistics" class="tab-pane fade" role="tabpanel">
 					<div>
-						<input id="get_statistics" type="submit" class="btn btn-sm btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
+						<input id="get_statistics" type="submit" class="btn btn-outline-dark mb-2" value="Отобразить статистику" title="Получить статистику по хранимым подразделам">
 					</div>
 					<div id="data_statistics">
 						<table id="table_statistics">
