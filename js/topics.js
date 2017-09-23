@@ -173,12 +173,14 @@ $( document ).ready( function () {
 						$( '[data-toggle="tooltip"]' ).tooltip()
 					} )
 				} );
-			var state = table.state.loaded().columns;
-			$.each(state, function (index, value) {
-				if (value.visible) {
-					$( ".columns-visibility" ).find( ':input[value="' + index + '"]' ).attr( 'checked', true );
-				}
-			});
+			var state = table.state.loaded();
+			if ( state !== null ) {
+				$.each( state.columns, function ( index, value ) {
+					if ( value.visible ) {
+						$( ".columns-visibility" ).find( ':input[value="' + index + '"]' ).attr( 'checked', true );
+					}
+				});
+			}
 		}
 	});
 
