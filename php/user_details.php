@@ -75,7 +75,7 @@ class UserDetails {
 		);
 		include_once dirname( __FILE__ ) . '/phpQuery.php';
 		$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
-		$keys = $html->find('table.user_details > tr:eq(8) > td')->text();
+		$keys = $html->find('table.user_details > tr:eq(9) > td')->text();
 		unset($html);
 		preg_match( '|.*bt: ([^ ]+).*api: ([^ ]+)|', $keys, $keys );
 		self::$bt = $keys[1];
