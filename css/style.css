@@ -274,9 +274,8 @@ label:hover {
 	font-size: small;
 }
 
-#result-tc img {
-	margin-top: -1.5px;
-	vertical-align: middle;
+#result-tc i {
+	margin: 0 5px;
 }
 
 #tc-prop {
@@ -388,6 +387,19 @@ label:hover {
 	margin: 10px 0 0;
 	font-size: small;
 	height: calc(100% - 36px);
+}
+
+/* color icons status */
+.text-success {
+	color: #28a745;
+}
+
+.text-warning {
+	color: #ffc107;
+}
+
+.text-danger {
+	color: #dc3545;
 }
 
 /* topics control */
