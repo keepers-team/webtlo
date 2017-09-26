@@ -134,7 +134,7 @@
 				$log.append(nowTime() + "Формирование отчётов завершено.<br />");
 				$("#reports").html(jQuery.trim(resp.report));
 
-				//выделение тела собщения двойным кликом (код должен идти после инициализации аккордиона, иначе handler клика будет затерт)
+				//выделение тела собщения двойным кликом
 				$( ".report_message" ).dblclick( function () {
 					var e = this;
 					if ( window.getSelection ) {
