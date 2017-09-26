@@ -49,6 +49,7 @@ $( document ).ready( function () {
 				.on( 'preXhr.dt', function () {
 					blockActions();
 					$( "#process" ).text( "Получение данных о раздачах..." );
+					$( '[data-toggle="tooltip"]' ).tooltip( 'hide' );
 				} )
 				.DataTable( {
 					serverSide: true,
