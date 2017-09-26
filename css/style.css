@@ -27,11 +27,11 @@ table {
 	font-size: 14px;
 }
 
-a:link {
+a {
 	color: #3333cc; /* 0000ff -> 0066cc, #3333cc */
 }
 
-a:visited {
+table a:visited {
 	color: #660066; /* 800080 -> #660066, 990099 */
 }
 
