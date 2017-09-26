@@ -129,50 +129,41 @@
 			},
 			success: function(response) {
 				var resp = eval("(" + response + ")");
-				$("#log").append(resp.log);
-				$("#log").append(nowTime() + "Формирование отчётов завершено.<br />");
+				var $log = $("#log");
+				$log.append(resp.log);
+				$log.append(nowTime() + "Формирование отчётов завершено.<br />");
 				$("#reports").html(jQuery.trim(resp.report));
-				//~ $("#reports").html(response);
-				
-				//инициализация горизонтальных вкладок отчетов
-				//var reporttabs = $("#reporttabs").tabs();
-				
-				//инициализация "аккордиона" сообщений
-				/*$( "div.acc" ).each(function(){
-					$(this).accordion({
-						collapsible: true,
-						heightStyle: "content"
-					});
-				});*/
-				
+
 				//выделение тела собщения двойным кликом (код должен идти после инициализации аккордиона, иначе handler клика будет затерт)
-				$("div.ui-accordion-content").dblclick(function() {
-					var e=this; 
-					if(window.getSelection){ 
-					var s=window.getSelection(); 
-					if(s.setBaseAndExtent){ 
-					s.setBaseAndExtent(e,0,e,e.innerText.length-1); 
-					}else{ 
-					var r=document.createRange(); 
-					r.selectNodeContents(e); 
-					s.removeAllRanges(); 
-					s.addRange(r);} 
-					}else if(document.getSelection){ 
-					var s=document.getSelection(); 
-					var r=document.createRange(); 
-					r.selectNodeContents(e); 
-					s.removeAllRanges(); 
-					s.addRange(r); 
-					}else if(document.selection){ 
-					var r=document.body.createTextRange(); 
-					r.moveToElementText(e); 
-					r.select();}
-				});
+				$( ".report_message" ).dblclick( function () {
+					var e = this;
+					if ( window.getSelection ) {
+						var s = window.getSelection();
+						if ( s.setBaseAndExtent ) {
+							s.setBaseAndExtent( e, 0, e, e.childNodes.length - 1 );
+						} else {
+							var r = document.createRange();
+							r.selectNodeContents( e );
+							s.removeAllRanges();
+							s.addRange( r );
+						}
+					} else if ( document.getSelection ) {
+						s = document.getSelection();
+						r = document.createRange();
+						r.selectNodeContents( e );
+						s.removeAllRanges();
+						s.addRange( r );
+					} else if ( document.selection ) {
+						r = document.body.createTextRange();
+						r.moveToElementText( e );
+						r.select();
+					}
+				} );
 				$( '#main_menu' ).find( ' a[href="#reports"]' ).removeClass( "disabled" );
 			},
 			complete: function() {
 				blockActions();
-			},
+			}
 		});
 	});
 	

@@ -43,7 +43,7 @@ function output_reports($subsections, $login){
 											</div>
 											<div id="tab' . $subsection['id'] . '-' . $q . '" class="collapse" role="tabpanel">
 												<div class="card-body">'.
-													'<div title="Выполните двойной клик для выделения всего сообщения">'.
+													'<div class="report_message" title="Выполните двойной клик для выделения всего сообщения">'.
 														str_replace('[br]', '', $message['text']) .
 													'</div>
 												</div>
