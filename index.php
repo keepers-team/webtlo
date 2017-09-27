@@ -384,19 +384,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											</div>
 										</div>
 										<div class="row">
-											<label for="TT_login" class="col-3 col-form-label">
+											<label for="tracker_username" class="col-3 col-form-label">
 												Логин:
 											</label>
 											<div class="col-2">
-												<input id="TT_login" name="TT_login" class="form-control form-control-sm" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>">
+												<input id="tracker_username" name="tracker_username" class="form-control form-control-sm" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>">
 											</div>
 										</div>
 										<div class="row">
-											<label for="TT_password" class="col-3 col-form-label">
+											<label for="tracker_password" class="col-3 col-form-label">
 												Пароль:
 											</label>
 											<div class="col-2">
-												<input id="TT_password" name="TT_password" class="form-control form-control-sm" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>">
+												<input id="tracker_password" name="tracker_password" class="form-control form-control-sm" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>">
 											</div>
 										</div>
 										<div class="row">
@@ -644,11 +644,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<h5>Фильтрация раздач</h5>
 										<div class="form-group col-12">
 											<div class="row">
-												<label for="TT_rule_topics" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
+												<label for="rule_topics" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
 													Предлагать для хранения раздачи с количеством сидов не более:
 												</label>
 												<div class="col-1">
-													<input id="TT_rule_topics" name="TT_rule_topics" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>">
+													<input id="rule_topics" name="rule_topics" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_topics'] ?>">
 												</div>
 											</div>
 											<div class="row">
@@ -660,14 +660,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 														<input id="rule_date_release" name="rule_date_release" class="form-control" type="number" min="0" size="2" value="<?php echo $cfg['rule_date_release'] ?>">
 														<span class="input-group-addon">дн.</span>
 													</div>
-												</div>
-											</div>
-											<div class="row">
-												<label for="TT_rule_reports" class="col-6 col-form-label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
-													Вносить в отчёты раздачи с количеством сидов не более:
-												</label>
-												<div class="col-1">
-													<input id="TT_rule_reports" name="TT_rule_reports" class="form-control form-control-sm" type="number" min="0" step="0.5" size="2" value="<?php echo $cfg['rule_reports'] ?>">
 												</div>
 											</div>
 											<div class="row">

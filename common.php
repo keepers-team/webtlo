@@ -81,77 +81,6 @@ class TIniFileEx {
     
 }
 
-function write_config($filename, $cfg, $subsections, $tcs){
-
-	parse_str($cfg);
-	$ini = new TIniFileEx($filename);
-	
-	// т.-клиенты
-	$q = 0;
-	if( isset($tcs) && is_array($tcs) ) {
-		foreach($tcs as $id => $tc){
-			$q++;
-			$ini->write( "torrent-client-$q", 'id', $id );
-			if( !empty($tc['cm']) )	$ini->write( "torrent-client-$q", 'comment', $tc['cm'] );
-			if( !empty($tc['cl']) ) $ini->write( "torrent-client-$q", 'client', $tc['cl'] );
-			if( !empty($tc['ht']) ) $ini->write( "torrent-client-$q", 'hostname', $tc['ht'] );
-			if( !empty($tc['pt']) ) $ini->write( "torrent-client-$q", 'port', $tc['pt'] );
-			if( isset($tc['lg']) ) $ini->write( "torrent-client-$q", 'login', $tc['lg'] );
-			if( isset($tc['pw']) ) $ini->write( "torrent-client-$q", 'password', $tc['pw'] );
-		}
-	}
-	$ini->write('other', 'qt', $q); // кол-во т.-клиентов
-	
-	// регулировка раздач
-	if( is_numeric( $peers ) ) $ini->write( 'topics_control', 'peers', $peers );
-	$ini->write( 'topics_control', 'leechers', isset( $leechers ) ? 1 : 0 );
-	$ini->write( 'topics_control', 'no_leechers', isset( $no_leechers ) ? 1 : 0 );
-	
-	// прокси
-	$ini->write('proxy', 'activate', isset($proxy_activate) ? 1 : 0);
-	if(isset($proxy_type)) $ini->write('proxy','type',$proxy_type);
-	if(isset($proxy_hostname)) $ini->write('proxy','hostname',$proxy_hostname);
-	if(isset($proxy_port)) $ini->write('proxy','port',$proxy_port);
-	if(isset($proxy_login)) $ini->write('proxy','login',$proxy_login);
-	if(isset($proxy_paswd)) $ini->write('proxy','password',$proxy_paswd);
-	
-	// подразделы
-	if(is_array($subsections)){
-		foreach($subsections as $subsec){
-			if(isset($subsec['na']) && $subsec['na'] != '') $ini->write($subsec['id'],'title',$subsec['na']);
-			if(isset($subsec['cl'])) $ini->write($subsec['id'],'client',!empty($subsec['cl']) ? $subsec['cl'] : '');
-			if(isset($subsec['lb'])) $ini->write($subsec['id'],'label',$subsec['lb']);
-			if(isset($subsec['fd'])) $ini->write($subsec['id'],'data-folder',$subsec['fd']);
-			if(isset($subsec['sub_folder'])) $ini->write($subsec['id'],'data-sub-folder',$subsec['sub_folder']);
-			if( !empty($subsec['ln']) ) $ini->write( $subsec['id'],'link',$subsec['ln'] );
-		}
-		$ini->write('sections','subsections', implode(',', array_column_common($subsections, 'id')));	
-	}
-	
-	// кураторы
-	if(isset($dir_torrents)) $ini->write('curators','dir_torrents',$dir_torrents);
-	if(isset($passkey)) $ini->write('curators','user_passkey',$passkey);
-	$ini->write( 'curators', 'tor_for_user', isset( $tor_for_user ) ? 1 : 0 );
-	
-	if( !empty( $TT_login ) ) $ini->write( 'torrent-tracker', 'login', $TT_login );
-	if( !empty( $TT_password ) ) $ini->write( 'torrent-tracker', 'password', $TT_password );
-	if( !empty( $user_id ) ) $ini->write( 'torrent-tracker', 'user_id', $user_id );
-	if( !empty( $bt_key ) ) $ini->write( 'torrent-tracker', 'bt_key', $bt_key );
-	if( !empty( $api_key ) ) $ini->write( 'torrent-tracker', 'api_key', $api_key );
-	if( !empty( $api_url ) ) $ini->write( 'torrent-tracker', 'api_url', $api_url );
-	if( !empty( $forum_url ) ) $ini->write( 'torrent-tracker', 'forum_url', $forum_url );
-	if( is_numeric($TT_rule_topics) ) $ini->write( 'sections', 'rule_topics', $TT_rule_topics );
-	if( is_numeric($rule_date_release) ) $ini->write( 'sections', 'rule_date_release', $rule_date_release );
-	if( is_numeric($TT_rule_reports) ) $ini->write( 'sections', 'rule_reports', $TT_rule_reports );
-	if( is_numeric($avg_seeders_period) ) $ini->write( 'sections', 'avg_seeders_period', $avg_seeders_period );
-	if(isset($savedir)) $ini->write('download','savedir',$savedir);
-	$ini->write('download','savesubdir',isset($savesubdir) ? 1 : 0);
-	$ini->write('sections', 'avg_seeders',isset($avg_seeders) ? 1 : 0);
-	$ini->write('download','retracker',isset($retracker) ? 1 : 0);
-	
-	echo $ini->updateFile(); // обновление файла с настройками
-}
-
 function get_settings( $filename = 'config.ini' ){
 	
 	$config = array();
@@ -162,7 +91,8 @@ function get_settings( $filename = 'config.ini' ){
 	$qt = $ini->read('other','qt','0');
 	for($i = 1; $i <= $qt; $i++){
 		$id = $ini->read( "torrent-client-$i", "id", $i );
-		$config['clients'][$id]['cm'] = $ini->read("torrent-client-$i","comment","");
+		$cm = $ini->read( "torrent-client-$i", "comment", "" );
+		$config['clients'][$id]['cm'] = $cm != "" ? $cm : $id;
 		$config['clients'][$id]['cl'] = $ini->read("torrent-client-$i","client","");
 		$config['clients'][$id]['ht'] = $ini->read("torrent-client-$i","hostname","");
 		$config['clients'][$id]['pt'] = $ini->read("torrent-client-$i","port","");
@@ -200,7 +130,6 @@ function get_settings( $filename = 'config.ini' ){
 	// раздачи
 	$config['rule_topics'] = $ini->read('sections','rule_topics',3);
 	$config['rule_date_release'] = $ini->read( 'sections', 'rule_date_release', 0 );
-	$config['rule_reports'] = $ini->read('sections','rule_reports',10);
 	$config['avg_seeders'] = $ini->read('sections','avg_seeders',0);
 	$config['avg_seeders_period'] = $ini->read('sections','avg_seeders_period',14);
 	
@@ -265,13 +194,34 @@ function convert_bytes($size) {
 	return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0';
 }
 
-function rmdir_recursive($dir, $basedir = false) {
-    foreach(scandir($dir) as $file) {
-        if ('.' === $file || '..' === $file) continue;
-        if (is_dir("$dir/$file")) rmdir_recursive("$dir/$file");
-        else unlink("$dir/$file");
+function rmdir_recursive( $path ) {
+    $return = true;
+    foreach ( scandir( $path ) as $next_path ) {
+        if ( '.' === $next_path || '..' === $next_path ) {
+	        continue;
+        }
+        if ( is_dir( "$path/$next_path" ) ) {
+            if ( ! is_writable( "$path/$next_path" ) ) {
+                return false;
+            }
+            $return = rmdir_recursive( "$path/$next_path" );
+        } else {
+            unlink( "$path/$next_path" );
+        }
     }
-    $basedir ? rmdir($dir) : false;
+    return ( $return && is_writable( $path ) ) ? rmdir( $path ) : false;
+}
+
+function mkdir_recursive( $path ) {
+	$return = false;
+	if ( is_writable( $path ) && is_dir( $path ) ) {
+		return true;
+	}
+	$prev_path = dirname( $path );
+	if ( $path != $prev_path ) {
+		$return = mkdir_recursive( $prev_path );
+	}
+    return ( $return && is_writable( $prev_path ) ) ? mkdir( $path ) : false;
 }
 
 function array_column_common(array $input, $columnKey, $indexKey = null) {

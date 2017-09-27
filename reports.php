@@ -1,72 +1,100 @@
 <?php
 
-function create_reports($subsections, $topics, $nick, $limit){
+function create_reports( $forum_ids, $tracker_username ) {
+	
+	Log::append ( "Получение данных о подразделах..." );
+	$in = str_repeat( '?,', count( $forum_ids ) - 1 ) . '?';
+	$forums = Db::query_database(
+		"SELECT * FROM Forums WHERE id IN ($in) ORDER BY na",
+		$forum_ids, true
+	);
+	if ( empty( $forums ) ) {
+		throw new Exception( "Error: Не получены данные о хранимых подразделах." );
+	}
+	
+	Log::append ( "Получение данных о раздачах..." );
+	$topics = Db::query_database(
+		"SELECT id,ss,na,si,st ".
+		"FROM Topics ".
+		"WHERE ss IN($in) AND dl = 1 OR dl = -2",
+		$forum_ids, true
+	);
+	if ( empty( $topics ) ) {
+		throw new Exception( "Error: Не получены данные о хранимых раздач." );
+	}
+	
+	// сортировка раздач
+	$topics = natsort_field( $topics, 'na' );
+	
 	$tmp = array();
 	$max = 119000;
 	$pattern = '[spoiler="№№ %%start%% — %%end%%"]<br />[list=1]<br />[*=%%start%%]%%list%%[/list]<br />[/spoiler]<br />';
-	$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
-	$length = mb_strlen($pattern, 'UTF-8');
-	foreach($topics as $topic){
-		if($topic['dl'] == 1 && $topic['ss'] != 0 && $topic['avg'] <= $limit){
-			if(!isset($tmp[$topic['ss']])){
-				$tmp[$topic['ss']]['start'] = 1;
-				$tmp[$topic['ss']]['lgth'] = 0;
-				$tmp[$topic['ss']]['dlsi'] = 0;
-				$tmp[$topic['ss']]['dlqt'] = 0;
-				$tmp[$topic['ss']]['qt'] = 0 ;
-			}
-			$str = '[url=viewtopic.php?t='.$topic['id'].']'.$topic['na'].'[/url] '.convert_bytes($topic['si']);
-			$lgth = mb_strlen($str, 'UTF-8');
-			$current = $tmp[$topic['ss']]['lgth'] + $lgth;
-			$available = $max - $length - ($tmp[$topic['ss']]['qt'] - $tmp[$topic['ss']]['start'] + 1) * 3;
-			if($current > $available){
-				$text = str_replace('%%start%%', $tmp[$topic['ss']]['start'], $pattern);
-				$text = str_replace('%%end%%', $tmp[$topic['ss']]['qt'], $text);
-				$tmp[$topic['ss']]['msg'][]['text'] = str_replace('%%list%%', implode('<br />[*]', $tmp[$topic['ss']]['str']), $text);
-				$tmp[$topic['ss']]['start'] = $tmp[$topic['ss']]['qt'] + 1;
-				$tmp[$topic['ss']]['lgth'] = 0;
-				unset($tmp[$topic['ss']]['str']);
-			}
-			$tmp[$topic['ss']]['lgth'] += $lgth;
-			$tmp[$topic['ss']]['str'][] = $str;
-			$tmp[$topic['ss']]['qt']++;
-			$tmp[$topic['ss']]['dlsi'] += $topic['si'];
-			$tmp[$topic['ss']]['dlqt']++;
+	$length = mb_strlen( $pattern, 'UTF-8' );
+	
+	foreach ( $topics as $topic ) {
+		if ( ! isset ( $tmp[ $topic['ss'] ] ) ) {
+			$tmp[$topic['ss']]['start'] = 1;
+			$tmp[$topic['ss']]['lgth'] = 0;
+			$tmp[$topic['ss']]['dlsi'] = 0;
+			$tmp[$topic['ss']]['dlqt'] = 0;
+			$tmp[$topic['ss']]['qt'] = 0 ;
 		}
+		$str = '[url=viewtopic.php?t='.$topic['id'].']'.$topic['na'].'[/url] '.convert_bytes( $topic['si'] );
+		$lgth = mb_strlen( $str, 'UTF-8' );
+		$current = $tmp[ $topic['ss'] ]['lgth'] + $lgth;
+		$available = $max - $length - ( $tmp[ $topic['ss'] ]['qt'] - $tmp[ $topic['ss'] ]['start'] + 1 ) * 3;
+		if ( $current > $available ) {
+			$text = str_replace( '%%start%%', $tmp[ $topic['ss'] ]['start'], $pattern );
+			$text = str_replace( '%%end%%', $tmp[ $topic['ss'] ]['qt'], $text );
+			$tmp[ $topic['ss'] ]['msg'][]['text'] = str_replace( '%%list%%', implode( '<br />[*]', $tmp[ $topic['ss'] ]['str'] ), $text );
+			$tmp[ $topic['ss'] ]['start'] = $tmp[ $topic['ss'] ]['qt'] + 1;
+			$tmp[ $topic['ss'] ]['lgth'] = 0;
+			unset( $tmp[ $topic['ss'] ]['str'] );
+		}
+		$tmp[ $topic['ss'] ]['lgth'] += $lgth;
+		$tmp[ $topic['ss'] ]['str'][] = $str;
+		$tmp[ $topic['ss'] ]['qt']++;
+		$tmp[ $topic['ss'] ]['dlsi'] += $topic['si'];
+		$tmp[ $topic['ss'] ]['dlqt']++;
 	}
-	$common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]<br /><br />'.
+	unset( $topics );
+	
+	$update_time = Db::query_database( "SELECT ud FROM Other", array(), true, PDO::FETCH_COLUMN );
+	$common = 'Актуально на: [b]' . date( 'd.m.Y', $update_time[0] ) . '[/b][br][br]<br /><br />'.
 			  'Общее количество хранимых раздач: [b]%%dlqt%%[/b] шт.[br]<br />'.
 			  'Общий вес хранимых раздач: [b]%%dlsi%%<br />[hr]<br />';
 	$dlqt = 0;
 	$dlsi = 0;
-	$exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', "" ) );
-	foreach($subsections as &$subsection){
-		if( !isset($tmp[$subsection['id']]) || in_array($subsection['id'], $exclude) ) continue;
-		if($tmp[$subsection['id']]['lgth'] != 0){
-			$text = str_replace('%%start%%', $tmp[$subsection['id']]['start'], $pattern);
-			$text = str_replace('%%end%%', $tmp[$subsection['id']]['qt'], $text);
-			$tmp[$subsection['id']]['msg'][]['text'] = str_replace('%%list%%', implode('<br />[*]', $tmp[$subsection['id']]['str']), $text);
+	$exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', '' ) );
+	foreach ( $forums as &$forum ) {
+		if ( ! isset ( $tmp[ $forum['id'] ] ) || in_array ( $forum['id'], $exclude) ) {
+			continue;
 		}
-		$subsection['messages'] = $tmp[$subsection['id']]['msg'];
-		$dlqt += $subsection['dlqt'] = $tmp[$subsection['id']]['dlqt'];
-		$dlsi += $subsection['dlsi'] = $tmp[$subsection['id']]['dlsi'];
-		$info = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]<br />'.
-				'Всего хранимых раздач в подразделе: ' . $subsection['dlqt'] . ' шт. / ' . convert_bytes($subsection['dlsi']) . '<br />';
-		$subsection['messages'][0]['text'] = $info . $subsection['messages'][0]['text'];
-		$header = '[url=viewforum.php?f='.$subsection['id'].'][u][color=#006699]'.preg_replace( '|.*» ?(.*)$|', '$1', $subsection['na'] ).'[/u][/color][/url] '.
-				  '| [url=tracker.php?f='.$subsection['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]<br /><br />'.
-				  'Актуально на: [color=darkblue]'. date('d.m.Y', $update_time[0]) . '[/color][br]<br />'.
-				  'Всего раздач в подразделе: ' . $subsection['qt'] .' шт. / ' . convert_bytes($subsection['si']) . '[br]<br />'.
+		if ( $tmp[ $forum['id'] ]['lgth'] != 0 ) {
+			$text = str_replace( '%%start%%', $tmp[ $forum['id'] ]['start'], $pattern );
+			$text = str_replace( '%%end%%', $tmp[ $forum['id'] ]['qt'], $text );
+			$tmp[ $forum['id'] ]['msg'][]['text'] = str_replace( '%%list%%', implode( '<br />[*]', $tmp[ $forum['id'] ]['str'] ), $text );
+		}
+		$forum['messages'] = $tmp[ $forum['id'] ]['msg'];
+		$dlqt += $forum['dlqt'] = $tmp[ $forum['id'] ]['dlqt'];
+		$dlsi += $forum['dlsi'] = $tmp[ $forum['id'] ]['dlsi'];
+		$info = 'Актуально на: [color=darkblue]' . date( 'd.m.Y', $update_time[0] ) . '[/color][br]<br />'.
+				'Всего хранимых раздач в подразделе: ' . $forum['dlqt'] . ' шт. / ' . convert_bytes( $forum['dlsi'] ) . '<br />';
+		$forum['messages'][0]['text'] = $info . $forum['messages'][0]['text'];
+		$header = '[url=viewforum.php?f='.$forum['id'].'][u][color=#006699]'.preg_replace( '|.*» ?(.*)$|', '$1', $forum['na'] ).'[/u][/color][/url] '.
+				  '| [url=tracker.php?f='.$forum['id'].'&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]<br /><br />'.
+				  'Актуально на: [color=darkblue]'. date( 'd.m.Y', $update_time[0] ) . '[/color][br]<br />'.
+				  'Всего раздач в подразделе: ' . $forum['qt'] .' шт. / ' . convert_bytes( $forum['si'] ) . '[br]<br />'.
 				  'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]<br />'.
 				  'Количество хранителей: %%count%%<br />[hr]<br />'.
-				  'Хранитель 1: [url=profile.php?mode=viewprofile&u='.urlencode( $nick ).'&name=1][u][color=#006699]'.$nick.'[/u][/color][/url] [color=gray]~>[/color] '. $subsection['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes($subsection['dlsi']) .'[br]<br /><br />';
-		$common .= '[url=viewtopic.php?p=%%ins' . $subsection['id'] . '%%#%%ins' .$subsection['id'] . '%%][u]'.$subsection['na'] . '[/u][/url] — ' .	$subsection['dlqt'] .' шт. ('. convert_bytes($subsection['dlsi']) . ')[br]<br />';
-		$subsection['header'] = $header;
+				  'Хранитель 1: [url=profile.php?mode=viewprofile&u='.urlencode( $tracker_username ).'&name=1][u][color=#006699]'.$tracker_username.'[/u][/color][/url] [color=gray]~>[/color] '. $forum['dlqt'] .' шт. [color=gray]~>[/color] '. convert_bytes( $forum['dlsi'] ) .'[br]<br /><br />';
+		$common .= '[url=viewtopic.php?p=%%ins' . $forum['id'] . '%%#%%ins' .$forum['id'] . '%%][u]'.$forum['na'] . '[/u][/url] — ' .	$forum['dlqt'] .' шт. ('. convert_bytes( $forum['dlsi'] ) . ')[br]<br />';
+		$forum['header'] = $header;
 	}
-	$common = str_replace('%%dlqt%%', empty($dlqt) ? 0 : $dlqt, $common);
-	$common = str_replace('%%dlsi%%', empty($dlsi) ? 0 : preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($dlsi)), $common);
-	$subsections['common'] = $common;
-	return $subsections;
+	$common = str_replace( '%%dlqt%%', empty( $dlqt ) ? 0 : $dlqt, $common );
+	$common = str_replace( '%%dlsi%%', empty( $dlsi ) ? 0 : preg_replace( '/ (?!.* )/', '[/b] ', convert_bytes( $dlsi ) ), $common );
+	$forums['common'] = $common;
+	return $forums;
 }
 
 class Reports {
@@ -236,26 +264,26 @@ class Reports {
 		return $post_id;
 	}
 	
-	public function send_reports($api_key, $api_url, $subsections, $data = array()){
+	public function send_reports( $api_key, $api_url, $subsections, $forum_links = array() ) {
 		Log::append ( 'Выполняется отправка отчётов на форум...' );
 		$common = $subsections['common'];
 		unset($subsections['common']);
-		// получаем ссылки на списки
-		foreach($data as $data){
-			$links[$data['id']] = preg_replace('/.*?([0-9]*)$/', '$1', $data['ln']);
-		}
+		// готовим ссылки на списки
+		$forum_links = array_map( function($e) {
+			return preg_replace( '/.*?([0-9]*)$/', '$1', $e );
+		}, $forum_links );
 		$send_exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', "" ) );
 		// отправка отчётов по каждому подразделу
 		foreach($subsections as &$subsection){
 			if( !isset($subsection['messages']) || in_array($subsection['id'], $send_exclude) ) continue;
-			if(empty($links[$subsection['id']])){
+			if(empty($forum_links[$subsection['id']])){
 				Log::append( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка на список, выполняется автоматический поиск темы...' );
-				$links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
-				if( !$links[$subsection['id']] ) {
+				$forum_links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
+				if( !$forum_links[$subsection['id']] ) {
 					Log::append ( 'Для подраздела № ' . $subsection['id'] . ' не удалось найти тему со списком, пропускаем...' );
 					continue;
 				}
-				TIniFileEx::write( $subsection['id'], 'link', $links[$subsection['id']] );
+				TIniFileEx::write( $subsection['id'], 'link', $forum_links[$subsection['id']] );
 			}
 			$i = 0; // +30
 			$j = 0; // количество своих сообщений
@@ -264,7 +292,7 @@ class Reports {
 			Log::append ( 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...' );
 			while($page > 0){
 				$data = $this->make_request(
-					$this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']]. '&start=' . $i
+					$this->forum_url . '/forum/viewtopic.php?t=' . $forum_links[$subsection['id']]. '&start=' . $i
 				);
 				$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 				$topic_main = $html->find('table#topic_main');
@@ -308,8 +336,8 @@ class Reports {
 				if(isset($keepers)){
 					Log::append ( 'Сканирование сообщений других хранителей для подраздела № ' . $subsection['id'] . '...' );
 					foreach($keepers as $nick => $ids){
-						$webtlo = new Webtlo($api_url, $api_key);
-						$topics = $webtlo->get_tor_topic_data($ids);
+						$api = new Api($api_url, $api_key);
+						$topics = $api->get_tor_topic_data($ids);
 						$stored[$nick]['dlsi'] = 0;
 						$stored[$nick]['dlqt'] = 0;
 						foreach($topics as $topic){
@@ -338,7 +366,7 @@ class Reports {
 				);
 				// отправка сообщения с шапкой
 				$this->send_message(
-					'editpost', $subsection['header'], $links[$subsection['id']], $post_author, '[Список] ' . $subsection['na']
+					'editpost', $subsection['header'], $forum_links[$subsection['id']], $post_author, '[Список] ' . $subsection['na']
 				);
 			}
 			unset($keepers);
@@ -349,7 +377,7 @@ class Reports {
 				if(empty($message['id'])){
 					Log::append ( 'Вставка дополнительного ' . $q . '-ого сообщения для подраздела № ' . $subsection['id'] . '...' );
 					$message['id'] = $this->send_message(
-						'reply', '[spoiler]' . $q . str_repeat('?', 119981 - count($q)) . '[/spoiler]', $links[$subsection['id']]
+						'reply', '[spoiler]' . $q . str_repeat('?', 119981 - count($q)) . '[/spoiler]', $forum_links[$subsection['id']]
 					);
 					$q++;
 					usleep(1500);
@@ -363,7 +391,7 @@ class Reports {
 				if(!empty($message['id'])){
 					Log::append ( 'Редактирование сообщения № ' . $message['id'] . ' для подраздела № ' . $subsection['id'] . '...' );
 					$this->send_message(
-						'editpost',	empty($message['text']) ? 'резерв' : $message['text'], $links[$subsection['id']], $message['id']
+						'editpost',	empty($message['text']) ? 'резерв' : $message['text'], $forum_links[$subsection['id']], $message['id']
 					);
 				}
 			}
@@ -390,8 +418,9 @@ class Reports {
 	
 	public function search_keepers ( $subsections ){
 		Log::append ( 'Получение списка раздач хранимых другими хранителями...' );
-		$keepers = array();
+		Db::query_database( "CREATE TEMP TABLE Keepers1 AS SELECT * FROM Keepers WHERE 0 = 1" );
 		foreach ( $subsections as &$subsection ) {
+			$keepers = array();
 			if ( empty( $subsection['ln'] ) ) {
 				$subsection['ln'] = $this->search_topic_id( $subsection['na'] );
 				if( !$subsection['ln'] ) {
@@ -425,7 +454,10 @@ class Reports {
 								$topic = pq($topic);
 								if(preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href'))){
 									$topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
-									$keepers[$topic_id][] = $nick;
+									$keepers[] = array(
+										'id' => $topic_id,
+										'nick' => $nick
+									);
 								}
 							}
 						}
@@ -434,9 +466,22 @@ class Reports {
 				$page--;
 				$i += 30;
 			}
+			if ( ! empty ( $keepers ) ) {
+				$keepers = array_chunk ( $keepers, 500 );
+				foreach ( $keepers as $keepers ) {
+					$select = Db::combine_set ( $keepers );
+					Db::query_database( "INSERT INTO temp.Keepers1 (topic_id,nick) $select" );
+				}
+			}
+			unset( $keepers );
+		}
+		$q = Db::query_database( "SELECT COUNT() FROM temp.Keepers1", array(), true, PDO::FETCH_COLUMN );
+		if ( $q[0] > 0 ) {
+			Log::append ( "Запись в базу данных списка раздач других хранителей..." );
+			Db::query_database( "INSERT INTO Keepers SELECT * FROM temp.Keepers1" );
+			Db::query_database( "DELETE FROM Keepers WHERE id NOT IN (SELECT Keepers.id FROM temp.Keepers1 LEFT JOIN Keepers ON temp.Keepers1.topic_id  = Keepers.topic_id AND temp.Keepers1.nick = Keepers.nick WHERE Keepers.id IS NOT NULL)" );
 		}
 		TIniFileEx::updateFile();
-		return $keepers;
 	}
 	
 	public function __destruct(){

@@ -14,20 +14,14 @@ try {
 	
 	// получение настроек
 	$cfg = get_settings();
-	$subsec = array_keys( $cfg['subsections'] );
-	
-	// получение данных из базы
-	$db = new Database();
-	$subsections = $db->get_forums_details( $subsec );
-	$topics = $db->get_topics( $subsec, 1, $cfg['avg_seeders'], $cfg['avg_seeders_period'], 'na' );
+	$forum_ids = array_keys( $cfg['subsections'] );
+	$forum_links = array_column_common( $cfg['subsections'], 'ln' );
 	
 	// формирование отчётов
-	$reports = create_reports( $subsections, $topics, $cfg['tracker_login'], $cfg['rule_reports'] );
-	unset($subsections);
-	unset($topics);
+	$reports = create_reports( $forum_ids, $cfg['tracker_login'] );
 	
 	$send = new Reports( $cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd'] );
-	$send->send_reports( $cfg['api_key'], $cfg['api_url'], $reports, $cfg['subsections'] );
+	$send->send_reports( $cfg['api_key'], $cfg['api_url'], $reports, $forum_links );
 	
 	$endtime = microtime(true);
 	

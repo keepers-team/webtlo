@@ -137,26 +137,27 @@ $ss_prop.on( "focusout", function () {
 		.attr( "data", cl + "|" + lb + "|" + fd + "|" + ln + "|" + sub_folder );
 } );
 
-/* получение идентификаторов подразделов */
-function listSubsections() {
-	var list = [];
+/* получение данных о подразделах */
+function getForumIds() {
+	var ids = [];
 	$list_ss.find( "option" ).each( function () {
-		if ( $( this ).val() != 0 ) {
-			list.push( $( this ).val() );
+		var value = $(this).val();
+		if ( value != 0 ) {
+			ids.push( value );
 		}
 	} );
-	return list.join( "," );
+	return ids;
 }
 
-function listDataSubsections() {
-	var list = {};
+function getForums() {
+	var forums = {};
 	$list_ss.find( "option" ).each( function () {
-		if ( $( this ).attr( "data" ) != 0 ) {
-			var value = $( this ).val();
-			var text = $( this ).text();
-			var data = $( this ).attr( "data" );
+		value = $( this ).val();
+		if ( value != 0 ) {
+			text = $( this ).text();
+			data = $( this ).attr( "data" );
 			data = data.split( "|" );
-			list[ value ] = {
+			forums[value] = {
 				"id": value,
 				"na": text,
 				"cl": data[ 0 ],
@@ -167,7 +168,22 @@ function listDataSubsections() {
 			};
 		}
 	} );
-	return list;
+	return forums;
+}
+
+function getForumLinks() {
+	var links = [];
+	$( "#list-ss option" ).each( function() {
+		value = $( this ).val();
+		if ( value != 0 ) {
+			data = $( this ).attr( "data" );
+			data = data.split( "|" );
+			if ( typeof data[3] !== "undefined" ) {
+				links[value] = data[3];
+			}
+		}
+	});
+	return links;
 }
 
 $( document ).ready( function () {

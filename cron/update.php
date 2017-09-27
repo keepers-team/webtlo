@@ -22,14 +22,14 @@ try {
 		throw new Exception ( "В настройках не указаны сканируемые подразделы." );
 	
 	// получение данных от т.-клиентов
-	$tc_topics = get_tor_client_data ( $cfg['clients'] );
+	$tor_clients_topics = get_tor_client_data ( $cfg['clients'] );
 	
 	// получение данных с api.rutracker.org
-	$subsec = array_keys ( $cfg['subsections'] );
-	$webtlo = new Webtlo ( $cfg['api_url'], $cfg['api_key'] );
-	$subsections = $webtlo->get_cat_forum_tree ( $subsec );
-	$ids = $webtlo->get_subsection_data ( $subsections );
-	$webtlo->prepare_topics($ids, $tc_topics, $cfg['rule_topics'], $subsec, $cfg['avg_seeders'], $cfg['avg_seeders_period']);
+	$forum_ids = array_keys ( $cfg['subsections'] );
+	$api = new Api ( $cfg['api_url'], $cfg['api_key'] );
+	$api->get_cat_forum_tree ( $forum_ids );
+	$topic_ids = $api->get_subsection_data ( $forum_ids );
+	$api->prepare_topics( $topic_ids, $tor_clients_topics, $forum_ids, $cfg['avg_seeders'] );
 	
 	$endtime = microtime(true);
 	Log::append ( "Обновление сведений завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с)." );

@@ -227,51 +227,34 @@ function listSelectedTopics() {
 
 // скачивание т.-файлов выделенных топиков
 $( ".tor_download" ).on( "click", function () {
-	var subsection = $( "#subsections" ).val();
-	var edit = $( this ).val();
-	var topics = listSelectedTopics.apply();
-	if ( topics == "" ) {
-		return;
-	}
-	$( "#log" ).append( nowTime() + "Начат процесс скачивания торрент-файлов...<br />" );
+	$( "#process" ).text( "Скачивание торрент-файлов..." );
+	var forum_id = $( "#subsections" ).val();
+	var replace_passkey = $( this ).val();
+	var ids = listSelectedTopics.apply();
 	var $data = $( "#config" ).serialize();
 	$.ajax( {
 		type: "POST",
 		context: this,
-		url: "actions.php",
-		data: { topics: topics, m: 'download', subsec: subsection, cfg: $data, edit: edit },
+		url: "php/actions/get_torrent_files.php",
+		data: { cfg:$data, ids:ids, forum_id:forum_id, replace_passkey:replace_passkey },
+		beforeSend: block_actions,
+		complete: block_actions,
 		success: function ( response ) {
-			var resp = eval( "(" + response + ")" );
-			$( "#log" ).append( resp.log );
-			$( "#topics_result" ).html( resp.dl_log );
-			//~ $("#log").html(response);
+			var response = $.parseJSON ( response );
+			$( "#log" ).append( response.log );
+			$( "#topics_result" ).html( response.result );
 		},
-		beforeSend: function () {
-			blockActions();
-			$( "#process" ).text( "Скачивание торрент-файлов..." );
-		},
-		complete: function () {
-			$( "#topics_list_" + subsection ).closest( "div" )
-				.find( "input[type=checkbox]" )
-				.each( function () {
-					$( this ).removeAttr( "checked" );
-				} );
-			blockActions();
-			//~ $("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
-		}
 	} );
 } );
 
 // "чёрный список"
 $( "#tor_blacklist" ).on( "click", function () {
-
 	var forum_id = $( "#subsections" ).val();
 	var value = forum_id != -2 ? 1 : 0;
 	var topics = listSelectedTopics.apply();
 	if ( topics == "" ) {
 		return;
 	}
-
 	$.ajax( {
 		type: "POST",
 		url: "php/actions/blacklist.php",
@@ -285,7 +268,7 @@ $( "#tor_blacklist" ).on( "click", function () {
 			redrawTopicsList();
 		},
 		complete: function () {
-			blockActions();
+			block_actions();
 		}
 	} );
 } );
@@ -304,7 +287,7 @@ $( "#tor_add" ).on( "click", function () {
 		url: "php/add_topics_to_client.php",
 		data: { topics: topics, /*client: cl_data, subsec: ss_data,*/ cfg: $data },
 		success: function ( response ) {
-			var resp = eval( "(" + response + ")" );
+			var resp = $.parseJSON( response );
 			$( "#log" ).append( resp.log );
 			$( "#topics_result" ).html( resp.add_log );
 			//~ $("#log").append(response);
@@ -335,7 +318,7 @@ $( "#tor_add" ).on( "click", function () {
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
 function execActionForTopics( action, remove_data, label, subsection ) {
 	var topics = listSelectedTopics.apply();
-	var clients = listTorClients();
+	var clients = getTorClients();
 	var force_start = "";
 	if ( topics == '' ) {
 		return;
@@ -512,34 +495,35 @@ $( document ).on( "dblclick", ".keeper", function ( e ) {
 	$( 'input[name=is_keepers][value="1"]' ).prop( "checked", true ).change().parent().addClass( 'active' );
 } );
 
-//~ // получение отфильтрованных раздач из базы
-//~ function getFilteredTopics(){
-//~ Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
-//~ forum_id = $("#subsections").val();
-//~ $config = $("#config").serialize();
-//~ $filter = $("#topics_filter").serialize();
-//~ $.ajax({
-//~ type: "POST",
-//~ url: "php/actions/get_filtered_list_topics.php",
-//~ data: { forum_id: forum_id, config: $config, filter: $filter },
-//~ success: function( response ) {
-//~ response = $.parseJSON(response);
-//~ if ( response.topics != null ) {
-//~ $("#topics").html(response.topics);
-//~ $("#filtered_topics_count").text( response.count );
-//~ $("#filtered_topics_size").text( convertBytes( response.size ) );
-//~ }
-//~ // $("#log").append(response);
-//~ },
-//~ beforeSend: function() {
-//~ block_actions();
-//~ $("#process").text( "Получение данных о раздачах..." );
-//~ },
-//~ complete: function() {
-//~ block_actions();
-//~ }
-//~ });
-//~ }
+// получение отфильтрованных раздач из базы
+/*function getFilteredTopics(){
+	Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
+	forum_id = $("#subsections").val();
+	$config = $("#config").serialize();
+	$filter = $("#topics_filter").serialize();
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_filtered_list_topics.php",
+		data: { forum_id: forum_id, config: $config, filter: $filter },
+		success: function( response ) {
+			response = $.parseJSON(response);
+			if ( response.topics != null ) {
+				$("#topics").html(response.topics);
+				$("#filtered_topics_count").text( response.count );
+				$("#filtered_topics_size").text( сonvertBytes( response.size ) );
+			}
+			//~ $("#log").append(response);
+		},
+		beforeSend: function() {
+			block_actions();
+			$("#process").text( "Получение данных о раздачах..." );
+		},
+		complete: function() {
+			block_actions();
+			showSizeAndAmount( 0, 0.00 );
+		}
+	});
+}*/
 
 
 // скрыть/показать фильтр
@@ -561,7 +545,7 @@ $( "#filter_reset" ).on( "click", function () {
 	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass( 'active' );
 	$( "#filter_date_release_from" ).val( "" );
 	$( "#filter_date_release_until" ).datepicker( "setDate", getReleaseDateLimitTo( $( "#rule_date_release" ).val() ) );
-	$( "#filter_seeders_to" ).val( $( "#TT_rule_topics" ).val() );
+	$( "#filter_seeders_to" ).val( $( "#rule_topics" ).val() );
 	$( "#filter_seeders_from" ).val( 0 );
 	$( "#filter_by_name" ).val( "" );
 	$( "#filter_by_keeper" ).val( "" );

@@ -2,7 +2,7 @@
 
 include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../clients.php';
-include dirname(__FILE__) . '/../api.php';
+include dirname(__FILE__) . '/download.php';
 
 $settings = get_settings();
 
@@ -50,19 +50,19 @@ Proxy::options( $active, $settings['proxy_type'], $proxy_address, $proxy_auth );
 
 $topics = $_POST['topics'];
 
-$tmpdir = dirname(dirname(__FILE__)) . '/tfiles/';
+$tmpdir = dirname(__FILE__) . '/../tfiles/';
 
 try {
 	$success = null;
 	
-	// создаём временный каталог
-	if(is_dir($tmpdir))
-		rmdir_recursive($tmpdir);
-	elseif(!mkdir($tmpdir))
-		throw new Exception( 'Не удалось создать временный каталог: "' . $tmpdir . '".' );
+	// очищаем временный каталог
+	if ( is_dir ( $tmpdir ) ) {
+		rmdir_recursive( $tmpdir );
+	}
 	
 	// скачиваем торрент-файлы
-	$dl                   = new Download ( $api_key, $tmpdir );
+	$dl                   = new Download ( $api_key );
+	$dl->create_directories( $tmpdir, $add_log );
 	$success              = $dl->download_torrent_files($forum_url, $user_id, $topics, $retracker, $add_log);
 	$quantity_of_torrents = preg_replace("|.*<span[^>]*?>(.*)</span>.*|si", '$1', $add_log); // кол-во
 	if ( empty ( $success ) ){
