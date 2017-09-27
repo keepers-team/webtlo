@@ -237,8 +237,8 @@ $( ".tor_download" ).on( "click", function () {
 		context: this,
 		url: "php/actions/get_torrent_files.php",
 		data: { cfg:$data, ids:ids, forum_id:forum_id, replace_passkey:replace_passkey },
-		beforeSend: block_actions,
-		complete: block_actions,
+		beforeSend: blockActions,
+		complete: blockActions,
 		success: function ( response ) {
 			var response = $.parseJSON ( response );
 			$( "#log" ).append( response.log );
@@ -268,7 +268,7 @@ $( "#tor_blacklist" ).on( "click", function () {
 			redrawTopicsList();
 		},
 		complete: function () {
-			block_actions();
+			blockActions();
 		}
 	} );
 } );
@@ -515,11 +515,11 @@ $( document ).on( "dblclick", ".keeper", function ( e ) {
 			//~ $("#log").append(response);
 		},
 		beforeSend: function() {
-			block_actions();
+			blockActions();
 			$("#process").text( "Получение данных о раздачах..." );
 		},
 		complete: function() {
-			block_actions();
+			blockActions();
 			showSizeAndAmount( 0, 0.00 );
 		}
 	});
