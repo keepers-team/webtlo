@@ -27,11 +27,11 @@ try {
 		$hashes = array_keys( $tc_topics );
 	
 	// получаем данные с api
-	$webtlo = new Webtlo( $cfg['api_url'], $cfg['api_key'] );
+	$api = new Api( $cfg['api_url'], $cfg['api_key'] );
 	Log::append( 'Получение идентификаторов хранимых раздач...' );
-	$ids = $webtlo->get_topic_id( $hashes );
+	$ids = $api->get_topic_id( $hashes );
 	Log::append( 'Получение сведений о пирах для хранимых раздач...' );
-	$topics = $webtlo->get_peer_stats( $ids );
+	$topics = $api->get_peer_stats( $ids );
 	
 	if( empty( $topics ) )
 		throw new Exception( 'Не получены данные о мгновенных пирах.' );

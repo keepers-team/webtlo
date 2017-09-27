@@ -18,7 +18,7 @@
 	});
 	
 	// фильтрация раздач, количество сидов
-	$("#TT_rule_topics, #TT_rule_reports, .filter_rule input[type=text]").spinner({
+	$("#rule_topics, .filter_rule input[type=text]").spinner({
 		min: 0,
 		step: 0.5,
 		mouseWheel: true
@@ -75,15 +75,13 @@
 	/* сохранение настроек */
 	$( "#savecfg" )
 	.on("click", function() {
-		tcs = listTorClients();
-		subsec = listDataSubsections();
-		//~ OnProxyProp();
+		forums = getForums();
+		tor_clients = getTorClients();
 		$data = $("#config").serialize();
-		//~ OffProxyProp();
 		$.ajax({
 			type: "POST",
-			url: "actions.php",
-			data: { m:'savecfg', tcs:tcs, cfg:$data, subsec:subsec },
+			url: "php/actions/set_config.php",
+			data: { cfg:$data, forums:forums, tor_clients:tor_clients },
 			beforeSend: function() {
 				$("#savecfg").prop("disabled", true);
 			},
@@ -98,10 +96,13 @@
 	
 	// получение статистики
 	$("#get_statistics").on( "click", function (e) {
+		// список подразделов
+		forum_ids = getForumIds();
 		$.ajax({
 			context: this,
 			type: "POST",
 			url: "php/actions/get_statistics.php",
+			data: { forum_ids:forum_ids },
 			beforeSend: function() {
 				$(this).prop( "disabled", true );
 			},
@@ -125,15 +126,13 @@
 			$("#log").append(errors);
 			return;
 		}
-		// получаем список т.-клиентов
-		tcs = listTorClients();
-		// подразделов
-		subsec = listSubsections();
+		// список подразделов
+		forum_ids = getForumIds();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
-			url: "actions.php",
-			data: { m:'reports', tcs:tcs, cfg:$data, subsec:subsec },
+			url: "php/actions/get_reports.php",
+			data: { cfg:$data, forum_ids:forum_ids },
 			beforeSend: function() {
 				block_actions();
 				$("#process").text( "Формирование отчётов..." );
@@ -192,12 +191,13 @@
 	$( "#sendreports" )
 	.click(function() {
 		// список подразделов
-		subsec = listDataSubsections();
+		forum_ids = getForumIds();
+		forum_links = getForumLinks();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
-			url: "actions.php",
-			data: { m:'send', cfg:$data, subsec:subsec },
+			url: "php/actions/send_reports.php",
+			data: { cfg:$data, forum_ids:forum_ids, forum_links:forum_links },
 			beforeSend: function() {
 				block_actions();
 				$("#process").text( "Отправка отчётов на форум..." );
@@ -221,17 +221,20 @@
 	.click(function() {
 		var errors = [];
 		if(!FormConfigCheck(errors)){
-			$("#topics").html("<br /><div>Проверьте настройки.<br />Для получения подробностей обратитесь к журналу событий.</div><br />");
+			$("#topics_result").text("Проверьте настройки. Для получения подробностей обратитесь к журналу событий.");
 			$("#log").append(errors);
 			return;
 		}
-		tcs = listTorClients();
-		subsec = listDataSubsections();
+		// список торрент-клиентов
+		tor_clients = getTorClients();
+		// список подразделов
+		forums = getForums();
+		forum_ids = getForumIds();
 		$data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
-			url: "actions.php",
-			data: { m:'update', tcs:tcs, cfg:$data, subsec:subsec },
+			url: "php/actions/update_info.php",
+			data: { cfg:$data, forums:forums, forum_ids:forum_ids, tor_clients:tor_clients },
 			beforeSend: function() {
 				block_actions();
 				$("#process").text( "Обновление сведений о раздачах..." );
@@ -240,6 +243,9 @@
 			success: function(response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
+				if ( response.result.length ) {
+					$("#topics_result").text( response.result );
+				}
 				getFilteredTopics();
 				$("#log").append(nowTime() + "Обновление сведений завершено.</br>");
 			},
@@ -253,12 +259,12 @@
 	/* проверка введённых данных */
 	function FormConfigCheck(errors){
 		return true;
-        var login = $('input[name=TT_login]').val();
-        var paswd = $('input[name=TT_password]').val();
+        var login = $('input[name=tracker_username]').val();
+        var paswd = $('input[name=tracker_password]').val();
         var api = $('input[name=api_key]').val();
         var subsections = $('textarea[name=TT_subsections]').val();
-        var rule_topics = $('input[name=TT_rule_topics]').val();
-        var rule_reports = $('input[name=TT_rule_reports]').val();
+        var rule_topics = $('input[name=rule_topics]').val();
+        var rule_reports = $('input[name=rule_reports]').val();
 		
 		if(!login) errors.push(nowTime() + 'Не заполнено поле "логин" в настройках торрент-трекера.<br />');
 		//~ if(!/^\w*$/.test(login)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "логин" в настройках торрент-трекера.<br />');
@@ -293,8 +299,8 @@ $("#proxy_activate").on("change", function() {
 $("#proxy_activate").change();
 
 // получение bt_key, api_key, user_id
-$("#TT_login, #TT_password").on("change", function() {
-	if( $("#TT_login").val() && $("#TT_password").val() ) {
+$("#tracker_username, #tracker_password").on("change", function() {
+	if( $("#tracker_username").val() && $("#tracker_password").val() ) {
 		if( !$("#bt_key").val() || !$("#api_key").val() || !$("#user_id").val() ) {
 			$data = $("#config").serialize();
 			$.ajax({

@@ -26,7 +26,7 @@ if($("select[id=list-tcs] option").size() > 1) {
 /* изменение свойств т.-клиента */
 $("#tc-prop").on("focusout", function(){
 	cm_old = $("#list-tcs option[value="+tc_change+"]").text();
-	cm = $("#TC_comment").val();
+	cm = $("#TC_comment").val() != "" ? $("#TC_comment").val() : tc_change;
 	cl = $("#TC_client").val();
 	ht = $("#TC_hostname").val();
 	pt = $("#TC_port").val();
@@ -158,14 +158,14 @@ $("#add-tc, #del-tc").click(listClientsRefresh);
 $("#tc-prop").focusout(listClientsRefresh);
 
 /* получение списка т.-клиентов */
-function listTorClients(){
-	var list = {};
-	$("#list-tcs option").each(function(){
-		val = $(this).val();
-		if( val != 0 ) {
-			data = $(this).attr("data");
-			data = data.split("|");
-			list[val] = {
+function getTorClients() {
+	var tor_clients = {};
+	$( "#list-tcs option" ).each( function() {
+		value = $( this ).val();
+		if ( value != 0 ) {
+			data = $( this ).attr( "data" );
+			data = data.split( "|" );
+			tor_clients[value] = {
 				"cm": data[0],
 				"cl": data[1],
 				"ht": data[2],
@@ -175,7 +175,7 @@ function listTorClients(){
 			};
 		}
 	});
-	return list;
+	return tor_clients;
 }
 
 window.onload=listClientsRefresh();

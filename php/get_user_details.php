@@ -6,10 +6,11 @@ try {
 	
 	parse_str( $_POST['cfg'] );
 
-	if( empty($TT_login) || empty($TT_password) )
+	if( empty( $tracker_username ) || empty( $tracker_password ) ) {
 		throw new Exception();
+	}
 	
-	UserDetails::get_details( $forum_url, $TT_login, $TT_password );
+	UserDetails::get_details( $forum_url, $tracker_username, $tracker_password );
 	
 	echo json_encode(
 		array(

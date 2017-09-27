@@ -18,51 +18,35 @@ function listSelectedTopics(){
 }
 
 // скачивание т.-файлов выделенных топиков
-$(".tor_download").on("click", function(){
-	subsection = $("#subsections").val();
-	edit = $(this).val();
-	topics = listSelectedTopics.apply();
-	if(topics == "") return;
-	$("#log").append(nowTime() + "Начат процесс скачивания торрент-файлов...<br />");
+$( ".tor_download" ).on( "click", function() {
+	$( "#process" ).text( "Скачивание торрент-файлов..." );
+	forum_id = $( "#subsections" ).val();
+	replace_passkey = $( this ).val();
+	ids = listSelectedTopics.apply();
 	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
 		context: this,
-		url: "actions.php",
-		data: { topics:topics, m:'download', subsec:subsection, cfg:$data, edit:edit },
-		success: function(response) {
-			var resp = eval("(" + response + ")");
-			$("#log").append(resp.log);
-			$("#topics_result").html(resp.dl_log);
-			//~ $("#log").html(response);
-		},
-		beforeSend: function() {
-			block_actions();
-			$("#process").text( "Скачивание торрент-файлов..." );
-		},
-		complete: function() {
-			$("#topics_list_"+subsection).closest("div")
-			.find("input[type=checkbox]")
-			.each(function() {
-			    $(this).removeAttr("checked");
-			});
-			block_actions();
-			//~ $("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
+		url: "php/actions/get_torrent_files.php",
+		data: { cfg:$data, ids:ids, forum_id:forum_id, replace_passkey:replace_passkey },
+		beforeSend: block_actions,
+		complete: block_actions,
+		success: function( response ) {
+			var response = $.parseJSON ( response );
+			$( "#log" ).append( response.log );
+			$( "#topics_result" ).html( response.result );
 		},
 	});
 });
 
 // "чёрный список"
 $( "#tor_blacklist" ).on( "click", function() {
-	
 	forum_id = $( "#subsections" ).val();
 	value = forum_id != -2 ? 1 : 0;
 	topics = listSelectedTopics.apply();
-	
 	if ( topics == "" ) {
 		return;
 	}
-	
 	$.ajax({
 		type: "POST",
 		url: "php/actions/blacklist.php",
@@ -79,7 +63,6 @@ $( "#tor_blacklist" ).on( "click", function() {
 			block_actions();
 		},
 	});
-	
 });
 
 // добавление раздач в торрент-клиент
@@ -186,7 +169,7 @@ $(".torrent_action").on("click", function(e){
 	subsection = $("#subsections").val();
 	action = $(this).val();
 	topics = listSelectedTopics.apply(); if(topics == '') return;
-	clients = listTorClients();
+	clients = getTorClients();
 	if( subsection > 0 ) {
 		data = $("#list-ss [value="+subsection+"]").attr("data");
 		data = data.split("|");
@@ -346,27 +329,32 @@ function getFilteredTopics(){
 		},
 		complete: function() {
 			block_actions();
+			showSizeAndAmount( 0, 0.00 );
 		}
 	});
 }
 
 // загрузка параметров фильтра из кук
-$(document).ready(function() {
-	if ( Cookies.get( "filter-state" ) === "false" ) {
+$( document ).ready( function() {
+	var filter_state = Cookies.get( "filter-state" );
+	var filter_options = Cookies.get( "filter-options" );
+	if ( filter_state === "false" ) {
 		$( "#topics_filter" ).hide();
 	}
-	var filter_options = $.parseJSON ( Cookies.get( "filter-options" ) );
-	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false );
-	$.each( filter_options, function ( i, option ) {
-		$( "#topics_filter input[name='" + option.name + "']" ).each( function () {
-			if ( $( this ).val() === option.value ) {
-				if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
-					$( this ).prop( "checked", true );
+	if ( typeof filter_options !== "undefined" ) {
+		filter_options = $.parseJSON ( filter_options );
+		$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false );
+		$.each( filter_options, function ( i, option ) {
+			$( "#topics_filter input[name='" + option.name + "']" ).each( function () {
+				if ( $( this ).val() === option.value ) {
+					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
+						$( this ).prop( "checked", true );
+					}
+					$( this ).val( option.value );
 				}
-				$( this ).val( option.value );
-			}
+			} );
 		} );
-	} );
+	}
 });
 
 // скрыть/показать фильтр
@@ -382,7 +370,7 @@ $("#filter_reset").on("click", function() {
 	$("#topics_filter input[type=search]").val("");
 	$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
 	$("#filter_date_release").datepicker("setDate", "-"+$("#rule_date_release").val());
-	$("#filter_rule, #filter_rule_to").val($("#TT_rule_topics").val());
+	$("#filter_rule, #filter_rule_to").val($("#rule_topics").val());
 	$("#filter_rule_from").val(0);
 	$("#filter_avg_seeders_period").val($("#avg_seeders_period").val());
 	$(".filter_rule_interval").hide();
@@ -394,14 +382,11 @@ $("#filter_reset").on("click", function() {
 var delay = makeDelay (500);
 $("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function() {
 	delay( getFilteredTopics, this );
-	showSizeAndAmount( 0, 0.00 );
 });
 
-$("#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release").on("change",
-	function () {
-		delay(getFilteredTopics, this);
-		showSizeAndAmount( 0, 0.00 );
-	});
+$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release" ).on( "change", function () {
+	delay( getFilteredTopics, this );
+});
 
 // есть/нет хранители
 $(".topics_filter .keepers").on("change", function(){

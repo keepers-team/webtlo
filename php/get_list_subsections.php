@@ -14,8 +14,8 @@ try {
 	
 	if ( empty ( $q[0] ) ) {
 		$cfg = get_settings ();
-		$webtlo = new Webtlo ( $cfg['api_url'], $cfg['api_key'] );
-		$webtlo->get_cat_forum_tree ();
+		$api = new Api ( $cfg['api_url'], $cfg['api_key'] );
+		$api->get_cat_forum_tree ();
 	}
 	
 	$subsections = array();

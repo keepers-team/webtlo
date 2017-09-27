@@ -21,10 +21,6 @@ try {
 	$reports = new Reports ( $cfg['forum_url'], $cfg['tracker_login'], $cfg['tracker_paswd'] );
 	$keepers = $reports->search_keepers ( $cfg['subsections'] );
 	
-	// пишем в базу
-	$db = new Database();
-	$db->set_keepers ( $keepers );
-	
 	$endtime = microtime(true);
 	Log::append ( "Обновление списка раздач других хранителей завершено (общее время выполнения: " . round($endtime-$starttime, 1) . " с)." );
 	

@@ -23,12 +23,12 @@ try {
 		throw new Exception( "Error: Средние сиды отключены в настройках." );
 	
 	// получение данных
-	$webtlo = new Webtlo( $cfg['api_url'], $cfg['api_key'] );
-	$forums = $webtlo->get_cat_forum_tree();
-	$forums = Db::query_database( "SELECT id,id,na FROM Forums WHERE id NOT IN (${cfg['subsec']})", array(), true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE );
-	$forums = array_chunk( $forums, 50, true);
+	$api = new Api( $cfg['api_url'], $cfg['api_key'] );
+	$api->get_cat_forum_tree();
+	$forum_ids = Db::query_database( "SELECT id FROM Forums WHERE id NOT IN (${cfg['subsec']})", array(), true, PDO::FETCH_NUM );
+	$forum_ids = array_chunk( $forum_ids, 50, true);
 	
-	if( empty( $forums ) )
+	if( empty( $forum_ids ) )
 		throw new Exception( "Error: Получен пустой список подразделов." );
 	
 	// получаем дату предыдущего обновления
@@ -40,9 +40,9 @@ try {
 	// создаём временную таблицу
 	Db::query_database( "CREATE TEMP TABLE Topics1 AS SELECT id,ss,st,se,rg,dl,qt,ds FROM Topics WHERE 0 = 1" );
 	
-	foreach( $forums as $forums ) {
+	foreach( $forum_ids as $forum_ids ) {
 	
-		$seeders = $webtlo->get_subsection_data( $forums, 'all' );
+		$seeders = $api->get_subsection_data( $forum_ids, 'all' );
 		$seeders = array_chunk( $seeders, 500, true );
 		
 		// записываем данные во временную таблицу
@@ -84,7 +84,7 @@ try {
 		}
 		unset( $seeders );
 	}
-	unset( $forums );
+	unset( $forum_ids );
 	
 	// удаляем перерегистрированные раздачи
 	if( !empty( $delete ) ) {

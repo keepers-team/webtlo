@@ -1,19 +1,14 @@
 <?php
 
-mb_internal_encoding( "UTF-8" );
-
 include dirname(__FILE__) . '/../../common.php';
-
-if ( !ini_get( 'date.timezone' ) ) {
-	date_default_timezone_set( 'Europe/Moscow' );
-}
-
-// получение настроек
-$cfg = get_settings();
 
 try {
 	
-	$forum_ids = array_keys( $cfg['subsections'] );
+	if ( empty( $_POST['forum_ids'] ) ) {
+		throw new Exception( "Не выбраны хранимые подразделы" );
+	}
+	
+	$forum_ids = $_POST['forum_ids'];
 	
 	foreach ( $forum_ids as $forum_id ) {
 		

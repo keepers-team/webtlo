@@ -129,26 +129,27 @@ $("#ss-prop").on("focusout", function(){
 		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln+"|"+sub_folder);
 });
 
-/* получение идентификаторов подразделов */
-function listSubsections(){
-	var list = [];
-	$("#list-ss option").each(function(){
-		if($(this).val() != 0) {
-			list.push($(this).val());
+/* получение данных о подразделах */
+function getForumIds() {
+	var ids = [];
+	$("#list-ss option").each( function() {
+		value = $(this).val();
+		if ( value != 0 ) {
+			ids.push( value );
 		}
 	});
-	return list.join(",");
+	return ids;
 }
 
-function listDataSubsections(){
-	var list = {};
-	$("#list-ss option").each(function(){
-		if($(this).attr("data") != 0) {
-			value = $(this).val();
-			text = $(this).text();
-			data = $(this).attr("data");
-			data = data.split("|");
-			list[value] = {
+function getForums() {
+	var forums = {};
+	$( "#list-ss option" ).each( function() {
+		value = $( this ).val();
+		if ( value != 0 ) {
+			text = $( this ).text();
+			data = $( this ).attr( "data" );
+			data = data.split( "|" );
+			forums[value] = {
 				"id": value,
 				"na": text,
 				"cl": data[0],
@@ -159,7 +160,22 @@ function listDataSubsections(){
 			};
 		}
 	});
-	return list;
+	return forums;
+}
+
+function getForumLinks() {
+	var links = [];
+	$( "#list-ss option" ).each( function() {
+		value = $( this ).val();
+		if ( value != 0 ) {
+			data = $( this ).attr( "data" );
+			data = data.split( "|" );
+			if ( typeof data[3] !== "undefined" ) {
+				links[value] = data[3];
+			}
+		}
+	});
+	return links;
 }
 
 $(document).ready(function() {

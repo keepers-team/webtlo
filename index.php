@@ -329,11 +329,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div>
 									<label>
 										Логин:
-										<input id="TT_login" name="TT_login" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
+										<input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
 									</label>
 									<label>
 										Пароль:
-										<input id="TT_password" name="TT_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
+										<input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
 									</label>
 								</div>																			
 								<div>
@@ -499,16 +499,12 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<h3>Фильтрация раздач</h3>
 								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
 									Предлагать для хранения раздачи с количеством сидов не более:
-									<input id="TT_rule_topics" name="TT_rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
+									<input id="rule_topics" name="rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
 								</label>
 								<label class="label" title="Укажите необходимое количество дней">
 									Предлагать для хранения раздачи старше
 									<input id="rule_date_release" name="rule_date_release" type="text" size="2" value="<?php echo $cfg['rule_date_release'] ?>" />
 									дн.
-								</label>
-								<label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 10)">
-									Вносить в отчёты раздачи с количеством сидов не более:
-									<input id="TT_rule_reports" name="TT_rule_reports" type="text" size="2" value="<?php echo $cfg['rule_reports'] ?>" />
 								</label>
 								<label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
 									<input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
