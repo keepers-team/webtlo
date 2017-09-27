@@ -12,7 +12,7 @@ $( document ).ready( function () {
 	} );
 
 	// события при выборе свойств фильтра
-	var delay = makeDelay (500);
+	var delay = makeDelay( 500 );
 	$( "#topics_filter" ).find( "input[type=text], input[type=search]" ).on( "spin input", function () {
 		delay( redrawTopicsList, this );
 	} );
@@ -33,7 +33,7 @@ $( document ).ready( function () {
 		} else if ( ($( this ).is( "#filter_seeders_to" )) ) {
 			min = parseFloat( $( "#filter_seeders_from" ).val() );
 			max = parseFloat( $( this ).val() );
-			if ( $( this ).val() < min ) {
+			if ( max < min ) {
 				$( this ).val( min );
 			}
 		}
@@ -41,7 +41,7 @@ $( document ).ready( function () {
 	} );
 
 	//перерисовка таблицы при открытии главной
-	$('a[data-toggle="tab"][href="#main"]').on('shown.bs.tab', function (e) {
+	$( 'a[data-toggle="tab"][href="#main"]' ).on( 'shown.bs.tab', function () {
 		$.fn.dataTable.ext.errMode = "throw";
 		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === false ) {
 			//инициализация таблицы с топиками
@@ -69,10 +69,10 @@ $( document ).ready( function () {
 							d.filter_seeders_to = $( "#filter_seeders_to" ).val();
 						},
 						dataSrc: function ( json ) {
-							$("#topics_count").text("0");
-							$("#topics_size").text("0.00");
-							$("#filtered_topics_count").text(json.count);
-							$("#filtered_topics_size").text(json.size);
+							$( "#topics_count" ).text( "0" );
+							$( "#topics_size" ).text( "0.00" );
+							$( "#filtered_topics_count" ).text( json.count );
+							$( "#filtered_topics_size" ).text( json.size );
 							return json.data;
 						}
 					},
@@ -98,7 +98,7 @@ $( document ).ready( function () {
 							"sortDescending": ": активировать для сортировки столбца по убыванию"
 						}
 					},
-					drawCallback: function(settings) {
+					drawCallback: function () {
 						var pagination = $( this ).closest( '.dataTables_wrapper' ).find( '.dataTables_paginate' );
 						pagination.toggle( this.api().page.info().pages > 1 );
 
@@ -111,8 +111,8 @@ $( document ).ready( function () {
 					},
 					"lengthMenu": [ 50, 100, 200, 500, 1000 ],
 					"dom": "<'row'<'col-12'f>>" +
-						   "<'row'<'col-12'tr>>" +
-						   "<'row'<'col-5'l><'col-7'p>>",
+					"<'row'<'col-12'tr>>" +
+					"<'row'<'col-5'l><'col-7'p>>",
 					"processing": true,
 					"searching": false,
 					"order": [ 5, 'asc' ],
@@ -180,12 +180,12 @@ $( document ).ready( function () {
 					if ( value.visible ) {
 						$( ".columns-visibility" ).find( ':input[value="' + index + '"]' ).attr( 'checked', true );
 					}
-				});
+				} );
 			}
 		}
-	});
+	} );
 
-	$('.toggle-vis').on( 'change', function () {
+	$( '.toggle-vis' ).on( 'change', function () {
 		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === true ) {
 			var table = $( '#topics_table' ).DataTable( {
 				retrieve: true
@@ -258,7 +258,7 @@ $( ".tor_download" ).on( "click", function () {
 				} );
 			blockActions();
 			//~ $("#log").append(nowTime() + "Скачивание торрент-файлов завершено.<br />");
-		},
+		}
 	} );
 } );
 
@@ -314,7 +314,7 @@ $( "#tor_add" ).on( "click", function () {
 					type: "POST",
 					context: this,
 					url: "php/mark_topics_in_database.php",
-					data: { success: resp.success, status: -1/*, /*client: value */},
+					data: { success: resp.success, status: -1/*, /*client: value */ },
 					success: function ( response ) {
 						$( "#log" ).append( response );
 						redrawTopicsList();
@@ -328,7 +328,7 @@ $( "#tor_add" ).on( "click", function () {
 		},
 		complete: function () {
 			blockActions();
-		},
+		}
 	} );
 } );
 
@@ -368,7 +368,7 @@ function execActionForTopics( action, remove_data, label, subsection ) {
 					success: function ( response ) {
 						$( "#log" ).append( response );
 						redrawTopicsList();
-					},
+					}
 				} );
 			}
 		},
@@ -378,7 +378,7 @@ function execActionForTopics( action, remove_data, label, subsection ) {
 		},
 		complete: function () {
 			blockActions();
-		},
+		}
 	} );
 }
 
@@ -388,7 +388,7 @@ $( "#remove_data, #remove, #set_custom_label, .torrent_action" ).on( "click", fu
 	var label = '';
 	var subsection = $( "#subsections" ).val();
 	if ( subsection > 0 ) {
-		var data = $( "#list-ss [value=" + subsection + "]" ).attr( "data" );
+		var data = $( "#list-ss" ).find( "[value=" + subsection + "]" ).attr( "data" );
 		data = data.split( "|" );
 		label = data[ 1 ];
 	}
@@ -417,7 +417,7 @@ $( "#remove_data, #remove, #set_custom_label, .torrent_action" ).on( "click", fu
 // вывод на экран кол-во, объём выбранных раздач
 function showSizeAndAmount( count, size ) {
 	$( "#topics_count" ).text( count );
-	$( "#topics_size" ).text( сonvertBytes( size ) );
+	$( "#topics_size" ).text( convertBytes( size ) );
 }
 
 function Counter() {
@@ -438,8 +438,8 @@ function countSizeAndAmount( thisElem ) {
 		action = thisElem.val();
 	}
 	var counter = new Counter();
-	var topics = $("#topics").find("input[type=checkbox]");
-	if (topics.length === 0) {
+	var topics = $( "#topics" ).find( "input[type=checkbox]" );
+	if ( topics.length === 0 ) {
 		showSizeAndAmount( 0, 0.00 );
 	} else {
 		topics.each( function () {
@@ -457,10 +457,10 @@ function countSizeAndAmount( thisElem ) {
 					}
 					break;
 				default:
-					addSizeAndAmount.call(counter, $(this));
+					addSizeAndAmount.call( counter, $( this ) );
 			}
-		});
-		showSizeAndAmount(counter.count, counter.size_all);
+		} );
+		showSizeAndAmount( counter.count, counter.size_all );
 	}
 }
 
@@ -470,18 +470,19 @@ $( "#tor_select, #tor_unselect" ).on( "click", function () {
 } );
 
 // выделение/снятие выделения интервала раздач
-$( "#topics" ).on( "click", ".topic", function ( event ) {
+var $topics = $( "#topics" );
+$topics.on( "click", ".topic", function ( event ) {
 	var subsection = $( "#subsections" ).val();
-	if ( !$( "#topics .topic" ).hasClass( "first-topic" ) ) {
+	if ( !$topics.find( ".topic" ).hasClass( "first-topic" ) ) {
 		$( this ).addClass( "first-topic" );
 		countSizeAndAmount( $( this ) );
 		return;
 	}
 	if ( event.shiftKey ) {
 		var tag = parseInt( $( this ).attr( "tag" ) ); // 2 - 20 = -18; 10 - 2 = 8;
-		var tag_first = parseInt( $( "#topics .first-topic" ).attr( "tag" ) );
+		var tag_first = parseInt( $topics.find( ".first-topic" ).attr( "tag" ) );
 		var direction = (tag_first - tag < 0 ? 'down' : 'up');
-		$( "#topics" ).closest( "div" )
+		$topics.closest( "div" )
 			.find( "input[type=checkbox]" )
 			.each( function () {
 				tag_this = parseInt( $( this ).attr( "tag" ) );
@@ -498,7 +499,7 @@ $( "#topics" ).on( "click", ".topic", function ( event ) {
 			} );
 	}
 	countSizeAndAmount( $( this ) );
-	$( "#topics .first-topic" ).removeClass( "first-topic" );
+	$topics.find( ".first-topic" ).removeClass( "first-topic" );
 	$( this ).addClass( "first-topic" );
 } );
 
@@ -513,31 +514,31 @@ $( document ).on( "dblclick", ".keeper", function ( e ) {
 
 //~ // получение отфильтрованных раздач из базы
 //~ function getFilteredTopics(){
-	//~ Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
-	//~ forum_id = $("#subsections").val();
-	//~ $config = $("#config").serialize();
-	//~ $filter = $("#topics_filter").serialize();
-	//~ $.ajax({
-		//~ type: "POST",
-		//~ url: "php/actions/get_filtered_list_topics.php",
-		//~ data: { forum_id: forum_id, config: $config, filter: $filter },
-		//~ success: function( response ) {
-			//~ response = $.parseJSON(response);
-			//~ if ( response.topics != null ) {
-				//~ $("#topics").html(response.topics);
-				//~ $("#filtered_topics_count").text( response.count );
-				//~ $("#filtered_topics_size").text( сonvertBytes( response.size ) );
-			//~ }
-			//~ // $("#log").append(response);
-		//~ },
-		//~ beforeSend: function() {
-			//~ block_actions();
-			//~ $("#process").text( "Получение данных о раздачах..." );
-		//~ },
-		//~ complete: function() {
-			//~ block_actions();
-		//~ }
-	//~ });
+//~ Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
+//~ forum_id = $("#subsections").val();
+//~ $config = $("#config").serialize();
+//~ $filter = $("#topics_filter").serialize();
+//~ $.ajax({
+//~ type: "POST",
+//~ url: "php/actions/get_filtered_list_topics.php",
+//~ data: { forum_id: forum_id, config: $config, filter: $filter },
+//~ success: function( response ) {
+//~ response = $.parseJSON(response);
+//~ if ( response.topics != null ) {
+//~ $("#topics").html(response.topics);
+//~ $("#filtered_topics_count").text( response.count );
+//~ $("#filtered_topics_size").text( convertBytes( response.size ) );
+//~ }
+//~ // $("#log").append(response);
+//~ },
+//~ beforeSend: function() {
+//~ block_actions();
+//~ $("#process").text( "Получение данных о раздачах..." );
+//~ },
+//~ complete: function() {
+//~ block_actions();
+//~ }
+//~ });
 //~ }
 
 
@@ -557,7 +558,7 @@ function getReleaseDateLimitTo( days ) {
 // сбросить настройки фильтра
 $( "#filter_reset" ).on( "click", function () {
 	var $topics_filter = $( "#topics_filter" );
-	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass('active');
+	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass( 'active' );
 	$( "#filter_date_release_from" ).val( "" );
 	$( "#filter_date_release_until" ).datepicker( "setDate", getReleaseDateLimitTo( $( "#rule_date_release" ).val() ) );
 	$( "#filter_seeders_to" ).val( $( "#TT_rule_topics" ).val() );
@@ -565,7 +566,7 @@ $( "#filter_reset" ).on( "click", function () {
 	$( "#filter_by_name" ).val( "" );
 	$( "#filter_by_keeper" ).val( "" );
 	$( "#filter_avg_seeders_period" ).val( $( "#avg_seeders_period" ).val() );
-	$topics_filter.find( ':input[name!="filter_tor_status[]"][value="0"]' ).prop( "checked", true ).parent().addClass('active');
+	$topics_filter.find( ':input[name!="filter_tor_status[]"][value="0"]' ).prop( "checked", true ).parent().addClass( 'active' );
 	$topics_filter.find( ':input[name="filter_tor_status[]"]' ).prop( "checked", false );
 	$topics_filter.find( ':input[name="filter_tor_status[]"][value="2"], :input[name="filter_tor_status[]"][value="8"]' ).prop( "checked", true ).change();
 
@@ -573,9 +574,9 @@ $( "#filter_reset" ).on( "click", function () {
 
 // есть/нет хранители
 $( 'input[name="is_keepers"]' ).on( "change", function () {
-	var is_keepers_val = $(this).val();
-	if (is_keepers_val === "0" || is_keepers_val === "-1") {
-		$( "#filter_by_keeper" ).val( "" );
-	}
+		var is_keepers_val = $( this ).val();
+		if ( is_keepers_val === "0" || is_keepers_val === "-1" ) {
+			$( "#filter_by_keeper" ).val( "" );
+		}
 	}
 );

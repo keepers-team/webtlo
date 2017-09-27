@@ -63,7 +63,6 @@ function addSubsection( subsection ) {
 	}
 	$list_ss.find( "option[value=" + vl + "]" ).prop( "selected", "selected" ).change();
 	subsection.id = '';
-	//TODO сортировать список топиков в PHP
 	doSortSelect( "list-ss" );
 	doSortSelect( "subsections_stored" );
 }
