@@ -1,3 +1,44 @@
+/* проверка введённых данных */
+function formConfigCheck( errors ) {
+	return true;
+	/*var login = $( 'input[name=TT_login]' ).val();
+	var paswd = $( 'input[name=TT_password]' ).val();
+	var api = $( 'input[name=api_key]' ).val();
+	var subsections = $( 'textarea[name=TT_subsections]' ).val();
+	var rule_topics = $( 'input[name=TT_rule_topics]' ).val();
+	var rule_reports = $( 'input[name=TT_rule_reports]' ).val();
+
+	if ( !login ) {
+		errors.push( nowTime() + 'Не заполнено поле "логин" в настройках торрент-трекера.<br />' );
+	}
+	//~ if(!/^\w*$/.test(login)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "логин" в настройках торрент-трекера.<br />');
+	if ( !paswd ) {
+		errors.push( nowTime() + 'Не заполнено поле "пароль" в настройках торрент-трекера.<br />' );
+	}
+	//~ if(!/^[A-Za-z0-9]*$/.test(paswd)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "пароль" в настройках торрент-трекера.<br />');
+	if ( !api ) {
+		errors.push( nowTime() + 'Не заполнено поле "api" в настройках торрент-трекера.<br />' );
+	}
+	//~ if(!/^[A-Za-z0-9]*$/.test(api)) errors.push('Указаны недопустимые символы в поле "api" в настройках торрент-трекера.<br />');
+	//~ if(!subsections) errors.push(nowTime() + 'Не заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
+	//~ if(!/^[0-9\,]*$/.test(subsections)) errors.push(nowTime() + 'Некорректно заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
+	if ( !rule_topics ) {
+		errors.push( nowTime() + 'Не заполнено поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />' );
+	}
+	//~ if(!/^[0-9]*$/.test(rule_topics)) errors.push(nowTime() + '<p>Указаны недопустимые символы в поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
+	if ( !rule_reports ) {
+		errors.push( nowTime() + 'Не заполнено поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />' );
+	}
+	if ( !/^[0-9]*$/.test( rule_reports ) ) {
+		errors.push( nowTime() + 'Указаны недопустимые символы в поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />' );
+	}
+	//~ alert(tcs);
+	if ( listTorClients() == '' ) {
+		errors.push( nowTime() + 'Добавьте хотя бы один торрент-клиент в настройках торрент-клиентов.<br />' );
+	}
+	return errors == '' ? true : false;*/
+}
+
 $( document ).ready( function () {
 	// дата релиза в фильтре
 	var filter_date_release_until = $( "#filter_date_release_until" );
@@ -105,7 +146,7 @@ $( "#get_statistics" ).on( "click", function () {
 $( "#startreports" )
 	.click( function () {
 		var errors = [];
-		if ( !FormConfigCheck( errors ) ) {
+		if ( !formConfigCheck( errors ) ) {
 			$( "#reports" ).html( "<br /><div>Проверьте настройки.<br />Для получения подробностей обратитесь к журналу событий.</div><br />" );
 			$( "#log" ).append( errors );
 			return;
@@ -194,7 +235,7 @@ $( "#sendreports" )
 $( "#update" )
 	.click( function () {
 		var errors = [];
-		if ( !FormConfigCheck( errors ) ) {
+		if ( !formConfigCheck( errors ) ) {
 			$( "#topics_result" ).html( "<div>Проверьте настройки. Для получения подробностей обратитесь к журналу событий.</div>" );
 			$( "#log" ).append( errors );
 			return;
@@ -223,47 +264,6 @@ $( "#update" )
 			}
 		} );
 	} );
-
-/* проверка введённых данных */
-function FormConfigCheck( errors ) {
-	return true;
-	/*var login = $( 'input[name=TT_login]' ).val();
-	var paswd = $( 'input[name=TT_password]' ).val();
-	var api = $( 'input[name=api_key]' ).val();
-	var subsections = $( 'textarea[name=TT_subsections]' ).val();
-	var rule_topics = $( 'input[name=TT_rule_topics]' ).val();
-	var rule_reports = $( 'input[name=TT_rule_reports]' ).val();
-
-	if ( !login ) {
-		errors.push( nowTime() + 'Не заполнено поле "логин" в настройках торрент-трекера.<br />' );
-	}
-	//~ if(!/^\w*$/.test(login)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "логин" в настройках торрент-трекера.<br />');
-	if ( !paswd ) {
-		errors.push( nowTime() + 'Не заполнено поле "пароль" в настройках торрент-трекера.<br />' );
-	}
-	//~ if(!/^[A-Za-z0-9]*$/.test(paswd)) errors.push(nowTime() + 'Указаны недопустимые символы в поле "пароль" в настройках торрент-трекера.<br />');
-	if ( !api ) {
-		errors.push( nowTime() + 'Не заполнено поле "api" в настройках торрент-трекера.<br />' );
-	}
-	//~ if(!/^[A-Za-z0-9]*$/.test(api)) errors.push('Указаны недопустимые символы в поле "api" в настройках торрент-трекера.<br />');
-	//~ if(!subsections) errors.push(nowTime() + 'Не заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
-	//~ if(!/^[0-9\,]*$/.test(subsections)) errors.push(nowTime() + 'Некорректно заполнено поле "индексы подразделов" в настройках сканируемых подразделов.<br />');
-	if ( !rule_topics ) {
-		errors.push( nowTime() + 'Не заполнено поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />' );
-	}
-	//~ if(!/^[0-9]*$/.test(rule_topics)) errors.push(nowTime() + '<p>Указаны недопустимые символы в поле "предлагать для хранения раздачи с кол-вом сидов не более" в настройках сканируемых подразделов.<br />');
-	if ( !rule_reports ) {
-		errors.push( nowTime() + 'Не заполнено поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />' );
-	}
-	if ( !/^[0-9]*$/.test( rule_reports ) ) {
-		errors.push( nowTime() + 'Указаны недопустимые символы в поле "количество сидов для формирования отчётов" в настройках сканируемых подразделов.<br />' );
-	}
-	//~ alert(tcs);
-	if ( listTorClients() == '' ) {
-		errors.push( nowTime() + 'Добавьте хотя бы один торрент-клиент в настройках торрент-клиентов.<br />' );
-	}
-	return errors == '' ? true : false;*/
-}
 
 // проверка закрывающего слеша
 $( "#savedir, #dir_torrents" ).on( "change", function () {

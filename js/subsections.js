@@ -1,4 +1,3 @@
-
 /* всё про работу с подразделами */
 
 // загрузка данных о выбранном подразделе на главной
@@ -35,166 +34,176 @@ $( '#ss-add' ).typeahead( {
 			return true;
 		}
 	}
-}).on("focusout", function(){
-	$(this).val("");
-});
+} ).on( "focusout", function () {
+	$( this ).val( "" );
+} );
 
-function addSubsection(subsection) {
-	if( subsection.id < 0 ) {
+var $list_ss = $( "#list-ss" );
+
+function addSubsection( subsection ) {
+	if ( subsection.id < 0 ) {
 		subsection.id = '';
 		return;
 	}
 	var lb = subsection.name;
-	var label = lb.replace(/.* » (.*)$/, '$1');
+	var label = lb.replace( /.* » (.*)$/, '$1' );
 	var vl = subsection.id;
-	q = 0;
-	$("#list-ss option").each(function(){
-		var val = $(this).val();
-		if(vl == val) q = 1;
-	});
-	if(q != 1) {
-		$("#list-ss").append('<option value="'+vl+'" data="|'+label+'||">'+lb+'</option>');
-		$("#subsections_stored").append('<option value="'+vl+'">'+lb+'</option>');
-		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
-		$("#ss-id").prop("disabled", true);
+	var q = 0;
+	$list_ss.find( "option" ).each( function () {
+		var val = $( this ).val();
+		if ( vl == val ) {
+			q = 1;
+		}
+	} );
+	if ( q != 1 ) {
+		$list_ss.append( '<option value="' + vl + '" data="|' + label + '||">' + lb + '</option>' );
+		$( "#subsections_stored" ).append( '<option value="' + vl + '">' + lb + '</option>' );
+		$( "#ss-prop .ss-prop, #list-ss" ).prop( "disabled", false );
+		$( "#ss-id" ).prop( "disabled", true );
 	}
-	$("#list-ss option[value="+vl+"]").prop("selected", "selected").change();
+	$list_ss.find( "option[value=" + vl + "]" ).prop( "selected", "selected" ).change();
 	subsection.id = '';
-	doSortSelect("list-ss");
-	doSortSelect("subsections_stored");
-	//redrawTopicsList();
+	//TODO сортировать список топиков в PHP
+	doSortSelect( "list-ss" );
+	doSortSelect( "subsections_stored" );
 }
 
 /* удалить подраздел */
-$("#ss-del").on("click", function() {
-	var forum_id = $("#list-ss").val();
-	if( forum_id ) {
-		i = $("#list-ss :selected").index();
-		$("#list-ss :selected").remove();
-		$("#subsections_stored [value="+forum_id+"]").remove();
-		q = $("select[id=list-ss] option").length;
-		if(q == 0) {
-			$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
-			$("#ss-client :first").prop("selected", "selected");
+$( "#ss-del" ).on( "click", function () {
+	var forum_id = $list_ss.val();
+	if ( forum_id ) {
+		var $list_ss_selected = $list_ss.find( ":selected" );
+		var i = $list_ss_selected.index();
+		$list_ss_selected.remove();
+		$( "#subsections_stored" ).find( "[value=" + forum_id + "]" ).remove();
+		q = $( "select[id=list-ss] option" ).length;
+		if ( q == 0 ) {
+			$( "#ss-prop .ss-prop, #list-ss" ).val( '' ).prop( "disabled", true );
+			$( "#ss-client" ).find( ":first" ).prop( "selected", "selected" );
 		} else {
-			q == i ? i : i++;
-			$("#list-ss :nth-child("+i+")").prop("selected", "selected").change();
+			i = q == i ? i : ++i;
+			$list_ss.find( ":nth-child(" + i + ")" ).prop( "selected", "selected" ).change();
 		}
-		$('#ss-add').val( '' );
+		$( '#ss-add' ).val( '' );
 	}
-});
+} );
 
 /* получение св-в выбранного подраздела */
 var ss_change;
 
-$("#list-ss").on("change", function(){
-	data = $("#list-ss :selected").attr("data");
-	data = data.split('|');
-	client = $("#ss-client option").filter(function() {
-		return $(this).val() == data[0];
-	}).val();
-	if( client )
-		$("#ss-client [value="+client+"]").prop("selected", "selected");
-	else
-		$("#ss-client :first").prop("selected", "selected");
-	$("#ss-label").val(data[1]);
-	$("#ss-folder").val(data[2]);
-	$("#ss-link").val(data[3]);
-	if (data[4]){
-		$("#ss-sub-folder").val(data[4]);
+$list_ss.on( "change", function () {
+	var $ss_client = $( "#ss-client" );
+	var $ss_sub_folder = $( "#ss-sub-folder" );
+	var data = $list_ss.find( ":selected" ).attr( "data" );
+	data = data.split( '|' );
+	var client = $ss_client.find( "option" ).filter( function () {
+		return $( this ).val() == data[ 0 ];
+	} ).val();
+	if ( client ) {
+		$ss_client.find( "[value=" + client + "]" ).prop( "selected", "selected" );
 	} else {
-		$("#ss-sub-folder :first").prop("selected", "selected");
+		$ss_client.find( ":first" ).prop( "selected", "selected" );
 	}
-	ss_change = $(this).val();
-	$("#ss-id").val(ss_change);
-});
+	$( "#ss-label" ).val( data[ 1 ] );
+	$( "#ss-folder" ).val( data[ 2 ] );
+	$( "#ss-link" ).val( data[ 3 ] );
+	if ( data[ 4 ] ) {
+		$ss_sub_folder.val( data[ 4 ] );
+	} else {
+		$ss_sub_folder.find( ":first" ).prop( "selected", "selected" );
+	}
+	ss_change = $( this ).val();
+	$( "#ss-id" ).val( ss_change );
+} );
 
+var $ss_prop = $( "#ss-prop" );
 /* при загрузке выбрать первый подраздел в списке */
-if($("select[id=list-ss] option").length > 0) {
-	$("#list-ss :first").prop("selected", "selected").change();
+if ( $( "select[id=list-ss] option" ).length > 0 ) {
+	$list_ss.find( ":first" ).prop( "selected", "selected" ).change();
 } else {
-	$("#ss-prop .ss-prop").prop("disabled", true);
+	$ss_prop.find( ".ss-prop" ).prop( "disabled", true );
 }
 
 /* изменение свойств подраздела */
-$("#ss-prop").on("focusout", function(){
-	cl = $("#ss-client :selected").val() != 0
-		? $("#ss-client :selected").val()
+$ss_prop.on( "focusout", function () {
+	var $ss_client_selected = $( "#ss-client" ).find( ":selected" );
+	var cl = $ss_client_selected.val() != 0
+		? $ss_client_selected.val()
 		: "";
-	lb = $("#ss-label").val();
-	fd = $("#ss-folder").val();
-	ln = $("#ss-link").val();
-	var sub_folder = $("#ss-sub-folder").val();
-	$("#list-ss option[value="+ss_change+"]")
-		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln+"|"+sub_folder);
-});
+	var lb = $( "#ss-label" ).val();
+	var fd = $( "#ss-folder" ).val();
+	var ln = $( "#ss-link" ).val();
+	var sub_folder = $( "#ss-sub-folder" ).val();
+	$list_ss.find( "option[value=" + ss_change + "]" )
+		.attr( "data", cl + "|" + lb + "|" + fd + "|" + ln + "|" + sub_folder );
+} );
 
 /* получение идентификаторов подразделов */
-function listSubsections(){
+function listSubsections() {
 	var list = [];
-	$("#list-ss option").each(function(){
-		if($(this).val() != 0) {
-			list.push($(this).val());
+	$list_ss.find( "option" ).each( function () {
+		if ( $( this ).val() != 0 ) {
+			list.push( $( this ).val() );
 		}
-	});
-	return list.join(",");
+	} );
+	return list.join( "," );
 }
 
-function listDataSubsections(){
+function listDataSubsections() {
 	var list = {};
-	$("#list-ss option").each(function(){
-		if($(this).attr("data") != 0) {
-			value = $(this).val();
-			text = $(this).text();
-			data = $(this).attr("data");
-			data = data.split("|");
-			list[value] = {
+	$list_ss.find( "option" ).each( function () {
+		if ( $( this ).attr( "data" ) != 0 ) {
+			var value = $( this ).val();
+			var text = $( this ).text();
+			var data = $( this ).attr( "data" );
+			data = data.split( "|" );
+			list[ value ] = {
 				"id": value,
 				"na": text,
-				"cl": data[0],
-				"lb": data[1],
-				"fd": data[2],
-				"ln": data[3],
-				"sub_folder": data[4]
+				"cl": data[ 0 ],
+				"lb": data[ 1 ],
+				"fd": data[ 2 ],
+				"ln": data[ 3 ],
+				"sub_folder": data[ 4 ]
 			};
 		}
-	});
+	} );
 	return list;
 }
 
-$(document).ready(function() {
+$( document ).ready( function () {
 
 	// fix у кого старые настройки
-	window.onload=function(){
+	window.onload = function () {
 		var pattern = [];
 
-		$("#list-ss option").each(function(){
-			text = $(this).text();
-			value = $(this).val();
-			if( text == "" ) {
-				pattern.push(value);
+		$list_ss.find( "option" ).each( function () {
+			var text = $( this ).text();
+			var value = $( this ).val();
+			if ( text == "" ) {
+				pattern.push( value );
 			}
-		});
+		} );
 
-		if(pattern.length){
-			$.ajax({
+		if ( pattern.length ) {
+			$.ajax( {
 				url: 'php/get_list_subsections.php',
 				type: 'GET',
-				data: { term : pattern },
-				success: function (response) {
-					subsection = $.parseJSON(response);
-					for (var i in subsection) {
+				data: { term: pattern },
+				success: function ( response ) {
+					var subsection = $.parseJSON( response );
+					for ( var i in subsection ) {
 						//~ text = $("#list-ss option[value="+subsection[i].value+"]").text();
-						data = $("#list-ss option[value="+subsection[i].value+"]").attr("data");
-						data = data.split("|");
-						label = subsection[i].label.replace(/.* » (.*)$/, '$1');
-						$("#list-ss option[value="+subsection[i].value+"]")
-							.attr("data", data[0]+'|'+label+'|'+data[2]+'|'+data[3])
-							.text(subsection[i].label);
+						var data = $list_ss.find( "option[value=" + subsection[ i ].value + "]" ).attr( "data" );
+						data = data.split( "|" );
+						var label = subsection[ i ].label.replace( /.* » (.*)$/, '$1' );
+						$list_ss.find( "option[value=" + subsection[ i ].value + "]" )
+							.attr( "data", data[ 0 ] + '|' + label + '|' + data[ 2 ] + '|' + data[ 3 ] )
+							.text( subsection[ i ].label );
 					}
-					$("#list-ss").change();
-				},
-			});
+					$list_ss.change();
+				}
+			} );
 		}
 	}
-});
+} );
