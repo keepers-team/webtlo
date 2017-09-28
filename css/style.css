@@ -270,8 +270,8 @@ thead tr:nth-child(1) th {
 	box-sizing: border-box;
 }
 
-#table_filter .input-group-sm>.input-group-addon {
-	padding: .25rem .1rem;;
+#filter_date_release_from ~ .input-group-addon, #filter_seeders_from ~ .input-group-addon {
+	padding: .25rem .1rem;
 }
 
 table.dataTable thead .sorting:before,

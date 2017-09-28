@@ -306,9 +306,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<th>
 											<input title="Название раздачи" data-toggle="tooltip" placeholder="Название раздачи" class="form-control form-control-sm" id="filter_by_name">
 										</th>
-										<th></th>
-										<th>
-											<input title="Хранители <br /><small>добавьте '!' перед ником (или частью ника) хранителя для поиска раздач которые хранит только этот хранитель</small>" data-html="true" data-toggle="tooltip" placeholder="Хранители" class="form-control form-control-sm" id="filter_by_keeper">
+										<th colspan="2">
+											<div class="input-group input-group-sm">
+												<span class="input-group-addon" title="Раздачи которые хранит только этот хранитель" data-toggle="tooltip">
+													<input title="" id="filter_by_unique_keeper" type="checkbox">
+												</span>
+												<input title="Хранители" data-toggle="tooltip" placeholder="Хранители" class="form-control" id="filter_by_keeper">
+											</div>
 										</th>
 										<th>
 											<input title="Раздел" data-toggle="tooltip" placeholder="Раздел" class="form-control form-control-sm" id="filter_by_subsection">

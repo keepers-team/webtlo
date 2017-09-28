@@ -17,7 +17,7 @@ $( document ).ready( function () {
 		delay( redrawTopicsList, this );
 	} );
 
-	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", function () {
+	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #table_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", function () {
 		delay( redrawTopicsList, this );
 	} );
 
@@ -62,6 +62,7 @@ $( document ).ready( function () {
 							d.filter = $( "#topics_filter" ).serialize();
 							d.filter_by_name = $( "#filter_by_name" ).val();
 							d.filter_by_keeper = $( "#filter_by_keeper" ).val();
+							d.filter_by_unique_keeper = $( "#filter_by_unique_keeper" ).prop( "checked" );
 							d.filter_by_subsection = $( "#filter_by_subsection" ).val();
 							d.filter_date_release_from = $( "#filter_date_release_from" ).val();
 							d.filter_date_release_until = $( "#filter_date_release_until" ).val();
