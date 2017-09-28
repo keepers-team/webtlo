@@ -213,8 +213,15 @@ try {
 			if( !mb_eregi($filter_by_name, $topic['na']) ) continue;
 		}
 
-		if (!empty($filter_by_keeper)) {
-			if( !mb_eregi($filter_by_keeper, $keeper) ) continue;
+		if ( ! empty( $filter_by_keeper ) ) {
+			$unique_keeper = $filter_by_keeper[0] === "!" ? true : false;
+			$current_filter_by_keeper = $unique_keeper ? substr($filter_by_keeper, 1) : $filter_by_keeper;
+			$number_of_keepers = count( $keepers[ $topic['id'] ] );
+			if ( $unique_keeper && ( $number_of_keepers > 1 ) ) {
+				continue;
+			} elseif ( ! mb_eregi( $current_filter_by_keeper, $keeper ) ) {
+				continue;
+			}
 		}
 
 		if (!empty($filter_by_subsection)) {
