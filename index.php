@@ -161,6 +161,9 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<label class="btn btn-sm btn-outline-dark">
 											<input type="radio" name="filter_status" value="-1" autocomplete="off"> качаю
 										</label>
+										<label class="btn btn-sm btn-outline-dark">
+											<input type="radio" name="filter_status" value="*" autocomplete="off"> все
+										</label>
 									</div>
 										<div class="btn-group" data-toggle="buttons" title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
 										<label class="btn btn-outline-dark btn-sm">
@@ -208,11 +211,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<label class="btn btn-sm btn-outline-dark">
 											<input type="radio" name="is_keepers" value="-1" autocomplete="off"> нет хранителей
 										</label>
-										<label class="btn btn-sm btn-outline-dark active">
-											<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
-										</label>
 										<label class="btn btn-sm btn-outline-dark">
 											<input type="radio" name="is_keepers" value="1" autocomplete="off"> есть хранители
+										</label>
+										<label class="btn btn-sm btn-outline-dark active">
+											<input type="radio" name="is_keepers" value="0" autocomplete="off" checked> все
 										</label>
 									</div>
 									<div class="filter_block">

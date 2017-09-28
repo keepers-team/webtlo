@@ -95,6 +95,8 @@ try {
 		? implode( ',', $filter_tor_status )
 		: "";
 
+	$filter_status = $filter_status === "*" ? "" : "dl = $filter_status AND";
+
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
 			case 0:
@@ -106,13 +108,13 @@ try {
 				$param = array();
 				break;
 			case -3:
-				$where = "dl = $filter_status AND ss IN ($subsections_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
+				$where = "$filter_status ss IN ($subsections_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
 				$param = array();
 				break;
 		}
 	} else {
-		$where = "dl = :dl AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
-		$param = array( 'dl' => $filter_status, 'forum_id' => $forum_id );
+		$where = "$filter_status ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
+		$param = array( 'forum_id' => $forum_id );
 	}
 	
 	// данные о раздачах
