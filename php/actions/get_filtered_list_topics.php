@@ -25,6 +25,7 @@ try {
 	parse_str( $_POST['filter'] );
 	$filter_by_name = $_POST['filter_by_name'];
 	$filter_by_keeper = $_POST['filter_by_keeper'];
+	$filter_by_unique_keeper = $_POST['filter_by_unique_keeper'];
 	$filter_by_subsection = $_POST['filter_by_subsection'];
 	$filter_date_release_from = $_POST['filter_date_release_from'];
 	$filter_date_release_until = $_POST['filter_date_release_until'];
@@ -213,12 +214,15 @@ try {
 			if( !mb_eregi($filter_by_name, $topic['na']) ) continue;
 		}
 
-		if ( ! empty( $filter_by_keeper ) ) {
-			$unique_keeper = $_POST['filter_by_unique_keeper'];
+		if ( $filter_by_unique_keeper === 'true' ) {
 			$number_of_keepers = count( $keepers[ $topic['id'] ] );
-			if ( ( $unique_keeper === 'true' ) && ( $number_of_keepers > 1 ) ) {
+			if ( $number_of_keepers > 1 ) {
 				continue;
-			} elseif ( ! mb_eregi( $filter_by_keeper, $keeper ) ) {
+			}
+		}
+
+		if ( ! empty( $filter_by_keeper ) ) {
+			if ( ! mb_eregi( $filter_by_keeper, $keeper ) ) {
 				continue;
 			}
 		}

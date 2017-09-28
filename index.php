@@ -308,7 +308,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										</th>
 										<th colspan="2">
 											<div class="input-group input-group-sm">
-												<span class="input-group-addon" title="Раздачи которые хранит только этот хранитель" data-toggle="tooltip">
+												<span class="input-group-addon" title="Раздачи которые хранит только 1 хранитель" data-toggle="tooltip">
 													<input title="" id="filter_by_unique_keeper" type="checkbox">
 												</span>
 												<input title="Хранители" data-toggle="tooltip" placeholder="Хранители" class="form-control" id="filter_by_keeper">
