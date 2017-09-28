@@ -141,7 +141,7 @@ class Reports {
 					$try_number++;
 					continue;
 				}
-				throw new Exception( "CURL ошибка: " . curl_error( $this->ch ) );
+				throw new Exception( "CURL ошибка: " . curl_error( $this->ch ) . " [$code]" );
 			}
 			return $data;
 		}

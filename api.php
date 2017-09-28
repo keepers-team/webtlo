@@ -46,7 +46,7 @@ class Api {
 					$try_number++;
 					continue;
 				}
-				throw new Exception( 'CURL ошибка: ' . curl_error( $this->ch ) );
+				throw new Exception( 'CURL ошибка: ' . curl_error( $this->ch ) . " [$code]" );
 			}
 			$data = json_decode( $json, true );
 			if ( isset( $data['error'] ) ) {

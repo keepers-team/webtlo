@@ -43,7 +43,7 @@ class UserDetails {
 					$try_number++;
 					continue;
 				}
-				throw new Exception( "CURL ошибка: " . curl_error( $ch ) );
+				throw new Exception( "CURL ошибка: " . curl_error( $ch ) . " [$code]" );
 			}
 			return $data;
 		}

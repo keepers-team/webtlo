@@ -89,7 +89,7 @@ class Download {
 						$try_number++;
 						continue;
 					}
-					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').' );
+					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . " (раздача ${topic['id']}) [$code]" );
 					break;
 				}
 				
