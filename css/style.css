@@ -14,15 +14,6 @@ body, body > div:nth-child(1), #content > div {
 	height: 100%;
 }
 
-#statistics_table {
-	height: calc(100% - 39px);
-}
-
-#statistics_table tbody {
-	height: calc(100% - 49px);
-	overflow-y: auto;
-}
-
 table {
 	font-size: 14px;
 }
@@ -105,6 +96,11 @@ table a:visited {
 	width: 100%;
 }
 
+#table_statistics tbody {
+	height: calc(100% - 49px);
+	overflow-y: auto;
+}
+
 #table_statistics * {
 	border: 1px solid #aaaaaa;
 }
@@ -116,6 +112,7 @@ table a:visited {
 #table_statistics th {
 	padding: 5px;
 	text-align: center;
+	font-weight: normal;
 }
 
 /* topics */
