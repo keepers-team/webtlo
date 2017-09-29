@@ -18,8 +18,9 @@ class Download {
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_SSL_VERIFYHOST => 2,
-			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
-			//~ CURLOPT_CONNECTTIMEOUT => 60
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 20,
+			CURLOPT_TIMEOUT => 20
 		));
 		curl_setopt_array( $this->ch, Proxy::$proxy );
 	}
@@ -67,18 +68,27 @@ class Download {
 			));
 			$torrent_file = $this->savedir . '[webtlo].t' . $topic['id'] . '.torrent';
 			if( PHP_OS == 'WINNT' ) $torrent_file = mb_convert_encoding( $torrent_file, 'Windows-1251', 'UTF-8' );
-			$n = 1; // кол-во попыток
-			while(true) {
+			$n = 1; // номер попытки
+			$try_number = 1; // номер попытки
+			$try = 3; // кол-во попыток
+			while ( true ) {
 				
 				// выходим после 3-х попыток
-				if($n >= 4) {
+				if ( $n >= $try || $try_number >= $try ) {
 					Log::append ( 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.' );
 					break;
 				}
 				
-				$json = curl_exec($this->ch);
+				$json = curl_exec( $this->ch );
 				
-				if($json === false) {
+				if ( $json === false ) {
+					$code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+					if ( $code == 0 && $try_number <= $try ) {
+						Log::append( "Повторная попытка $try_number/$try получить данные." );
+						sleep( 5 );
+						$try_number++;
+						continue;
+					}
 					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topic['id'] . ').' );
 					break;
 				}
@@ -95,7 +105,7 @@ class Download {
 				preg_match('|<title>(.*)</title>|si', mb_convert_encoding($json, 'UTF-8', 'Windows-1251'), $error);
 				if(!empty($error)) {
 					Log::append ( 'Error: ' . $error[1] . ' (' . $topic['id'] . ').' );
-					Log::append ( 'Повторная попытка ' . $n . '/3 скачать торрент-файл (' . $topic['id'] . ').' );
+					Log::append ( "Повторная попытка $n/$try скачать торрент-файл (${topic['id']}).");
 					sleep(40);
 					$n++;
 					continue;

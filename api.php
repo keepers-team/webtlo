@@ -18,35 +18,47 @@ class Api {
 	
 	private function init_curl(){
 		$this->ch = curl_init();
-		curl_setopt_array($this->ch, array(
-		    CURLOPT_RETURNTRANSFER => 1,
-		    CURLOPT_ENCODING => "gzip",
-		    CURLOPT_SSL_VERIFYPEER => false,
-		    CURLOPT_SSL_VERIFYHOST => 2,
-		    CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
-		    //~ CURLOPT_CONNECTTIMEOUT => 60
+		curl_setopt_array( $this->ch, array(
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_ENCODING => "gzip",
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 20,
+			CURLOPT_TIMEOUT => 20
 		));
-		curl_setopt_array($this->ch, Proxy::$proxy);
+		curl_setopt_array( $this->ch, Proxy::$proxy );
 	}
 	
-	private function request_exec($url){
-		$n = 1; // кол-во попыток
+	private function request_exec( $url ) {
+		$n = 1; // номер попытки
+		$try_number = 1; // номер попытки
+		$try = 3; // кол-во попыток
 		$data = array();
-		curl_setopt($this->ch, CURLOPT_URL, $url);
-		while(true){
-			$json = curl_exec($this->ch);
-			if($json === false) {
-				throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
+		curl_setopt( $this->ch, CURLOPT_URL, $url );
+		while ( true ) {
+			$json = curl_exec( $this->ch );
+			if ( $json === false ) {
+				$code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+				if ( $code == 0 && $try_number <= $try ) {
+					Log::append( "Повторная попытка $try_number/$try получить данные." );
+					sleep( 5 );
+					$try_number++;
+					continue;
+				}
+				throw new Exception( 'CURL ошибка: ' . curl_error( $this->ch ) );
 			}
-			$data = json_decode($json, true);
-			if(isset($data['error'])){
-				if($data['error']['code'] == '503' && $n <= 3){
-					Log::append ( 'Повторная попытка ' . $n . '/3 получить данные.' );
-					sleep(20);
+			$data = json_decode( $json, true );
+			if ( isset( $data['error'] ) ) {
+				if ( $data['error']['code'] == '503' && $n <= $try ) {
+					Log::append ( "Повторная попытка $n/$try получить данные." );
+					sleep( 20 );
 					$n++;
 					continue;
 				}
-				if( $data['error']['code'] == '404' ) break;
+				if ( $data['error']['code'] == '404' ) {
+					break;
+				}
 				throw new Exception( 'API ошибка: ' . $data['error']['text'] );
 			}
 			break;

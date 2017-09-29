@@ -123,14 +123,28 @@ class Reports {
 			CURLOPT_URL => $url,
 			CURLOPT_COOKIE => UserDetails::$cookie,
 			CURLOPT_POSTFIELDS => http_build_query($fields),
-			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 20,
+			CURLOPT_TIMEOUT => 20
 		));
 		curl_setopt_array($this->ch, Proxy::$proxy);
 		curl_setopt_array($this->ch, $options);
-		$data = curl_exec($this->ch);
-		if($data === false)
-			throw new Exception( 'CURL ошибка: ' . curl_error($this->ch) );
-		return $data;
+		$try_number = 1; // номер попытки
+		$try = 3; // кол-во попыток
+		while ( true ) {
+			$data = curl_exec( $this->ch );
+			if ( $data === false ) {
+				$code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+				if ( $code == 0 && $try_number <= $try ) {
+					Log::append( "Повторная попытка $try_number/$try получить данные." );
+					sleep( 5 );
+					$try_number++;
+					continue;
+				}
+				throw new Exception( "CURL ошибка: " . curl_error( $this->ch ) );
+			}
+			return $data;
+		}
 	}
 	
 	// поиск темы со списком
