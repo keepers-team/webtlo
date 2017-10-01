@@ -26,14 +26,27 @@ class UserDetails {
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_SSL_VERIFYHOST => 2,
 			CURLOPT_POSTFIELDS => http_build_query( $fields ),
-			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+			CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+			CURLOPT_CONNECTTIMEOUT => 20,
+			CURLOPT_TIMEOUT => 20
 		));
 		curl_setopt_array($ch, Proxy::$proxy);
-		$data = curl_exec($ch);
-		if( $data === false ) {
-			throw new Exception( 'CURL ошибка: ' . curl_error($ch) );
+		$try_number = 1; // номер попытки
+		$try = 3; // кол-во попыток
+		while ( true ) {
+			$data = curl_exec( $ch );
+			if ( $data === false ) {
+				$http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+				if ( $http_code == 0 && $try_number <= $try ) {
+					Log::append( "Повторная попытка $try_number/$try получить данные." );
+					sleep( 5 );
+					$try_number++;
+					continue;
+				}
+				throw new Exception( "CURL ошибка: " . curl_error( $ch ) . " [$http_code]" );
+			}
+			return $data;
 		}
-		return $data;
 	}
 	
 	public static function get_cookie( $login, $passwd ) {
