@@ -98,7 +98,7 @@ function get_settings( $filename = "" ) {
 		$id = $ini->read( "torrent-client-$i", "id", $i );
 		$cm = $ini->read( "torrent-client-$i", "comment", "" );
 		$config['clients'][$id]['cm'] = $cm != "" ? $cm : $id;
-		$config['clients'][$id]['cl'] = $ini->read("torrent-client-$i","client","");
+		$config['clients'][ $id ]['cl'] = $ini->read( "torrent-client-$i", "client", "utorrent" );
 		$config['clients'][$id]['ht'] = $ini->read("torrent-client-$i","hostname","");
 		$config['clients'][$id]['pt'] = $ini->read("torrent-client-$i","port","");
 		$config['clients'][$id]['lg'] = $ini->read("torrent-client-$i","login","");
@@ -119,7 +119,7 @@ function get_settings( $filename = "" ) {
 	}
 	if(isset($subsections)){
 		foreach($subsections as $id){
-			$config['subsections'][$id]['cl'] = $ini->read("$id","client","utorrent");
+			$config['subsections'][ $id ]['cl'] = $ini->read( "$id", "client", "0" );
 			$config['subsections'][$id]['lb'] = $ini->read("$id","label","");
 			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
@@ -187,6 +187,27 @@ function get_settings( $filename = "" ) {
 			$config['api_key'] = UserDetails::$api;
 			$config['user_id'] = UserDetails::$uid;
 		}
+	}
+
+	// user version
+	$user_version = $ini->read( 'other', 'user_version', 0 );
+	if ( $user_version < 1 ) {
+		$forum_ids = explode( ',', $config['subsec'] );
+		if ( ! empty( $forum_ids ) && is_array( $forum_ids ) ) {
+			$tor_clients_ids = array_keys( $config['clients'] );
+			$tor_clients_comments = array_column_common( $config['clients'], "cm" );
+			$tor_clients = array_combine( $tor_clients_comments, $tor_clients_ids );
+			foreach ( $forum_ids as $forum_id ) {
+				$forum_client = $ini->read( $forum_id, "client", "0" );
+				if ( isset( $tor_clients[ $forum_client ] ) ) {
+					$forum_client_correct = $tor_clients[ $forum_client ];
+					$ini->write( $forum_id, "client", $forum_client_correct );
+					$config['subsections'][ $forum_id ]['cl'] = $forum_client_correct;
+				}
+			}
+		}
+		$ini->write( 'other', 'user_version', 1 );
+		$ini->updateFile();
 	}
 	
 	return $config;

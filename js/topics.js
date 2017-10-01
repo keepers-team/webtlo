@@ -76,14 +76,12 @@ $(".tor_add").on("click", function(){
 	}
 	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
 	tmp = ss_data.split("|");
-	if(tmp[0] == "" && tmp[0] == 0){
+	if ( tmp[0] == "" || tmp[0] == 0 ) {
 		$("#topics_result").html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
 		return;
 	}
-	value = $("#list-tcs option").filter(function() {
-		return $(this).text() == tmp[0];
-	}).val();
-	if(!value){
+	cl_value = $("#list-tcs [value="+tmp[0]+"]").val();
+	if ( ! cl_value ) {
 		$("#topics_result").html("В настройках нет такого торрент-клиента: "+tmp[0]+"<br />");
 		return;
 	}

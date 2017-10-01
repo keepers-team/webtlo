@@ -90,9 +90,7 @@ var ss_change;
 $("#list-ss").on("change", function(){
 	data = $("#list-ss :selected").attr("data");
 	data = data.split('|');
-	client = $("#ss-client option").filter(function() {
-		return $(this).text() == data[0];
-	}).val();
+	client = $("#ss-client option[value="+data[0]+"]").val();
 	if( client )
 		$("#ss-client [value="+client+"]").prop("selected", "selected");
 	else
@@ -118,9 +116,7 @@ if($("select[id=list-ss] option").size() > 0) {
 
 /* изменение свойств подраздела */
 $("#ss-prop").on("focusout", function(){
-	cl = $("#ss-client :selected").val() != 0
-		? $("#ss-client :selected").text()
-		: "";
+	cl = $("#ss-client :selected").val();
 	lb = $("#ss-label").val();
 	fd = $("#ss-folder").val();
 	ln = $("#ss-link").val();
