@@ -17,9 +17,7 @@ try {
 		$tor_clients = $_POST['tor_clients'];
 	}
 	
-	$fileconfig = dirname( __FILE__ ) . '/../../config.ini';
-	
-	$ini = new TIniFileEx( $fileconfig );
+	$ini = new TIniFileEx();
 	
 	// торрент-клиенты
 	$q = 0;
