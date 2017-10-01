@@ -3,6 +3,8 @@
 function create_reports( $forum_ids, $tracker_username ) {
 	
 	Log::append ( "Получение данных о подразделах..." );
+	$forum_ids_exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', '' ) );
+	$forum_ids = array_values( array_diff( $forum_ids, $forum_ids_exclude ) );
 	$in = str_repeat( '?,', count( $forum_ids ) - 1 ) . '?';
 	$forums = Db::query_database(
 		"SELECT * FROM Forums WHERE id IN ($in) ORDER BY na",
@@ -65,9 +67,8 @@ function create_reports( $forum_ids, $tracker_username ) {
 			  'Общий вес хранимых раздач: [b]%%dlsi%%<br />[hr]<br />';
 	$dlqt = 0;
 	$dlsi = 0;
-	$exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', '' ) );
 	foreach ( $forums as &$forum ) {
-		if ( ! isset ( $tmp[ $forum['id'] ] ) || in_array ( $forum['id'], $exclude) ) {
+		if ( ! isset ( $tmp[ $forum['id'] ] ) ) {
 			continue;
 		}
 		if ( $tmp[ $forum['id'] ]['lgth'] != 0 ) {
@@ -272,10 +273,11 @@ class Reports {
 		$forum_links = array_map( function($e) {
 			return preg_replace( '/.*?([0-9]*)$/', '$1', $e );
 		}, $forum_links );
-		$send_exclude = explode( ',', TIniFileEx::read( 'reports', 'exclude', "" ) );
 		// отправка отчётов по каждому подразделу
 		foreach($subsections as &$subsection){
-			if( !isset($subsection['messages']) || in_array($subsection['id'], $send_exclude) ) continue;
+			if ( ! isset( $subsection['messages'] ) ) {
+				continue;
+			}
 			if(empty($forum_links[$subsection['id']])){
 				Log::append( 'Для подраздела № ' . $subsection['id'] . ' не указана ссылка на список, выполняется автоматический поиск темы...' );
 				$forum_links[$subsection['id']] = $this->search_topic_id( $subsection['na'] );
