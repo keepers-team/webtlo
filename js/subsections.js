@@ -95,9 +95,7 @@ $list_ss.on( "change", function () {
 	var $ss_sub_folder = $( "#ss-sub-folder" );
 	var data = $list_ss.find( ":selected" ).attr( "data" );
 	data = data.split( '|' );
-	var client = $ss_client.find( "option" ).filter( function () {
-		return $( this ).val() == data[ 0 ];
-	} ).val();
+	var client = $ss_client.find( "option [value=" + data[0] + "]" ).val();
 	if ( client ) {
 		$ss_client.find( "[value=" + client + "]" ).prop( "selected", "selected" );
 	} else {
@@ -126,9 +124,7 @@ if ( $( "select[id=list-ss] option" ).length > 0 ) {
 /* изменение свойств подраздела */
 $ss_prop.on( "focusout", function () {
 	var $ss_client_selected = $( "#ss-client" ).find( ":selected" );
-	var cl = $ss_client_selected.val() != 0
-		? $ss_client_selected.val()
-		: "";
+	var cl = $ss_client_selected.val();
 	var lb = $( "#ss-label" ).val();
 	var fd = $( "#ss-folder" ).val();
 	var ln = $( "#ss-link" ).val();
