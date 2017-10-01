@@ -13,14 +13,19 @@ class TIniFileEx {
     protected static $rcfg;
     protected static $wcfg;
     
-    public static $filename = "config.ini";
+    public static $filename;
     
-    public function __construct( $filename = "config.ini" ) {
-		self::$filename = $filename;
+    public function __construct( $filename = "" ) {
+		if ( ! empty( $filename ) ) {
+			self::$filename = dirname(__FILE__) . "/$filename";
+		}
         $this->loadFromFile();
     }
     
     private static function loadFromFile() {
+		if ( empty( self::$filename ) ) {
+			self::$filename = dirname(__FILE__) . "/config.ini";
+		}
 		self::$rcfg = is_readable( self::$filename )
 			? parse_ini_file( self::$filename, true )
 			: array();
@@ -81,11 +86,11 @@ class TIniFileEx {
     
 }
 
-function get_settings( $filename = 'config.ini' ){
+function get_settings( $filename = "" ) {
 	
 	$config = array();
 	
-	$ini = new TIniFileEx( dirname(__FILE__) . '/' . $filename );
+	$ini = new TIniFileEx( $filename );
 	
 	// торрент-клиенты
 	$qt = $ini->read('other','qt','0');
