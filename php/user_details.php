@@ -36,14 +36,14 @@ class UserDetails {
 		while ( true ) {
 			$data = curl_exec( $ch );
 			if ( $data === false ) {
-				$code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-				if ( $code == 0 && $try_number <= $try ) {
+				$http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
+				if ( $http_code == 0 && $try_number <= $try ) {
 					Log::append( "Повторная попытка $try_number/$try получить данные." );
 					sleep( 5 );
 					$try_number++;
 					continue;
 				}
-				throw new Exception( "CURL ошибка: " . curl_error( $ch ) . " [$code]" );
+				throw new Exception( "CURL ошибка: " . curl_error( $ch ) . " [$http_code]" );
 			}
 			return $data;
 		}

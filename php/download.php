@@ -82,14 +82,14 @@ class Download {
 				$json = curl_exec( $this->ch );
 				
 				if ( $json === false ) {
-					$code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
-					if ( $code == 0 && $try_number <= $try ) {
+					$http_code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+					if ( $http_code == 0 && $try_number <= $try ) {
 						Log::append( "Повторная попытка $try_number/$try получить данные." );
 						sleep( 5 );
 						$try_number++;
 						continue;
 					}
-					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . " (раздача ${topic['id']}) [$code]" );
+					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . " (раздача ${topic['id']}) [$http_code]" );
 					break;
 				}
 				

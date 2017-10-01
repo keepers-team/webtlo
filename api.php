@@ -39,14 +39,14 @@ class Api {
 		while ( true ) {
 			$json = curl_exec( $this->ch );
 			if ( $json === false ) {
-				$code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
-				if ( $code == 0 && $try_number <= $try ) {
+				$http_code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
+				if ( $http_code == 0 && $try_number <= $try ) {
 					Log::append( "Повторная попытка $try_number/$try получить данные." );
 					sleep( 5 );
 					$try_number++;
 					continue;
 				}
-				throw new Exception( 'CURL ошибка: ' . curl_error( $this->ch ) . " [$code]" );
+				throw new Exception( 'CURL ошибка: ' . curl_error( $this->ch ) . " [$http_code]" );
 			}
 			$data = json_decode( $json, true );
 			if ( isset( $data['error'] ) ) {
