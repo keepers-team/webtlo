@@ -119,7 +119,8 @@ function get_settings( $filename = "" ) {
 	}
 	if(isset($subsections)){
 		foreach($subsections as $id){
-			$config['subsections'][ $id ]['cl'] = $ini->read( "$id", "client", "0" );
+			$forum_client = $ini->read( $id, "client", 0 );
+			$config['subsections'][ $id ]['cl'] = $forum_client !== "" ? $forum_client : 0;
 			$config['subsections'][$id]['lb'] = $ini->read("$id","label","");
 			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
@@ -189,8 +190,10 @@ function get_settings( $filename = "" ) {
 		}
 	}
 
-	// user version
+	// версия конфига
 	$user_version = $ini->read( 'other', 'user_version', 0 );
+
+	// применение заплаток
 	if ( $user_version < 1 ) {
 		$forum_ids = explode( ',', $config['subsec'] );
 		if ( ! empty( $forum_ids ) && is_array( $forum_ids ) ) {
@@ -199,7 +202,7 @@ function get_settings( $filename = "" ) {
 			$tor_clients = array_combine( $tor_clients_comments, $tor_clients_ids );
 			foreach ( $forum_ids as $forum_id ) {
 				$forum_client = $ini->read( $forum_id, "client", "0" );
-				if ( isset( $tor_clients[ $forum_client ] ) ) {
+				if ( ! empty( $forum_client ) && isset( $tor_clients[ $forum_client ] ) ) {
 					$forum_client_correct = $tor_clients[ $forum_client ];
 					$ini->write( $forum_id, "client", $forum_client_correct );
 					$config['subsections'][ $forum_id ]['cl'] = $forum_client_correct;
