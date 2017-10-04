@@ -275,18 +275,46 @@ $( "#tor_blacklist" ).on( "click", function () {
 } );
 
 // добавление раздач в торрент-клиент
-$( "#tor_add" ).on( "click", function () {
-	var subsection = $( "#subsections" ).val();
-	var topics = listSelectedTopics.apply();
-	if ( topics == '' ) {
+$( "#tor_add" ).on( "click", function() {
+	var forum_id = $( "#subsections" ).val();
+	var topics_ids = listSelectedTopics.apply();
+	var forums = getForums();
+	var tor_clients = getTorClients();
+	if ( $.isEmptyObject( topics_ids ) ) {
+		showResult( "Не выделены раздачи для добавления" );
 		return;
 	}
-	var $data = $( "#config" ).serialize();
-	$.ajax( {
+	if ( $.isEmptyObject( forums ) ) {
+		showResult( "В настройках не найдены подразделы" );
+		return;
+	}
+	if ( $.isEmptyObject( tor_clients ) ) {
+		showResult( "В настройках не найдены торрент-клиенты" );
+		return;
+	}
+	forum_data = forums[ forum_id ];
+	if ( typeof forum_data === "undefined" ) {
+		showResult( "В настройках нет данных об указанном подразделе: " + forum_id );
+		return;
+	}
+	if ( forum_data.cl === "" || forum_data.cl === 0 ) {
+		showResult( "В настройках текущего подраздела не указан используемый торрент-клиент" );
+		return;
+	}
+	tor_client_data = tor_clients[ forum_data.cl ];
+	if ( typeof tor_client_data === "undefined" ) {
+		showResult( "В настройках нет данных об указанном торрент-клиенте: " + forum_data.cl );
+		return;
+	}
+	tor_client_data.id = forum_data.cl;
+	$( "#process" ).text( "Добавление раздач в торрент-клиент..." );
+	var config = $( "#config" ).serialize();
+	$.ajax({
 		type: "POST",
-		context: this,
 		url: "php/add_topics_to_client.php",
-		data: { topics: topics, /*client: cl_data, subsec: ss_data,*/ cfg: $data },
+		data: { cfg:config, topics:topics_ids, /*tor_client:tor_client_data, forum:forum_data*/ },
+		beforeSend: blockActions,
+		complete: blockActions,
 		success: function ( response ) {
 			var resp = $.parseJSON( response );
 			$( "#log" ).append( resp.log );
@@ -306,15 +334,8 @@ $( "#tor_add" ).on( "click", function () {
 				} );
 			}
 		},
-		beforeSend: function () {
-			blockActions();
-			$( "#process" ).text( "Добавление раздач в торрент-клиент..." );
-		},
-		complete: function () {
-			blockActions();
-		}
-	} );
-} );
+	});
+});
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
 function execActionForTopics( action, remove_data, label, subsection ) {

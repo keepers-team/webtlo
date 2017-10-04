@@ -66,7 +66,7 @@ $( "#del-tc" ).on( "click", function () {
 			return $( this ).text() == cl[ 0 ];
 		} ).val();
 		if ( !value ) {
-			$( this ).attr( "data", data.replace( /^[^|]*/, "" ) );
+			$( this ).attr( "data", data.replace( /^[^|]*/, "0" ) );
 		}
 	} );
 } );

@@ -626,8 +626,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 												<label for="ss-sub-folder" class="col-2 col-form-label">Создавать подкаталог для добавляемой раздачи:</label>
 												<div class="col-2">
 													<select id="ss-sub-folder" class="form-control form-control-sm ss-prop" title="Создавать подкаталог для данных добавляемой раздачи">
-														<option value="0">Нет</option>
-														<option value="1">С ID топика</option>
+														<option value="0">нет</option>
+														<option value="1">ID раздачи</option>
 														<!-- <option value="2">Запрашивать</option> -->
 													</select>
 												</div>
