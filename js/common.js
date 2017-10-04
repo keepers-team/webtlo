@@ -19,6 +19,10 @@ function сonvertBytes(size){
 	return size ? (size / Math.pow(1024, (i = Math.floor(Math.log(size) / Math.log(1024))))).toFixed(2) + filesizename[i] : '0.00';
 }
 
+function showResult( text ) {
+	$( "#topics_result" ).html( text );
+}
+
 /* проверка закрывающего слеша в конце */
 function CheckSlash(e){
 	var path = $(e).val();

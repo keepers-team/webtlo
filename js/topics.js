@@ -66,60 +66,51 @@ $( "#tor_blacklist" ).on( "click", function() {
 });
 
 // добавление раздач в торрент-клиент
-$(".tor_add").on("click", function(){
-	subsection = $("#subsections").val();
-	topics = listSelectedTopics.apply();
-	if(topics == '') return;
-	if(!$("#list-ss [value="+subsection+"]").val()){
-		$("#topics_result").html("В настройках подразделов нет такого идентификатора: "+subsection+".<br />");
+$( "#tor_add" ).on( "click", function() {
+	forum_id = $( "#subsections" ).val();
+	topics_ids = listSelectedTopics.apply();
+	forums = getForums();
+	tor_clients = getTorClients();
+	if ( $.isEmptyObject( topics_ids ) ) {
+		showResult( "Не выделены раздачи для добавления" );
 		return;
 	}
-	ss_data = $("#list-ss [value="+subsection+"]").attr("data");
-	tmp = ss_data.split("|");
-	if ( tmp[0] == "" || tmp[0] == 0 ) {
-		$("#topics_result").html("В настройках текущего подраздела не указан используемый торрент-клиент.<br />");
+	if ( $.isEmptyObject( forums ) ) {
+		showResult( "В настройках не найдены подразделы" );
 		return;
 	}
-	cl_value = $("#list-tcs [value="+tmp[0]+"]").val();
-	if ( ! cl_value ) {
-		$("#topics_result").html("В настройках нет такого торрент-клиента: "+tmp[0]+"<br />");
+	if ( $.isEmptyObject( tor_clients ) ) {
+		showResult( "В настройках не найдены торрент-клиенты" );
 		return;
 	}
-	cl_data = $("#list-tcs option").filter(function() {
-		return $(this).text() == tmp[0];
-	}).attr("data");
-	$data = $("#config").serialize();
+	forum_data = forums[ forum_id ];
+	if ( typeof forum_data === "undefined" ) {
+		showResult( "В настройках нет данных об указанном подразделе: " + forum_id );
+		return;
+	}
+	if ( forum_data.cl === "" || forum_data.cl === 0 ) {
+		showResult( "В настройках текущего подраздела не указан используемый торрент-клиент" );
+		return;
+	}
+	tor_client_data = tor_clients[ forum_data.cl ];
+	if ( typeof tor_client_data === "undefined" ) {
+		showResult( "В настройках нет данных об указанном торрент-клиенте: " + forum_data.cl );
+		return;
+	}
+	tor_client_data.id = forum_data.cl;
+	$( "#process" ).text( "Добавление раздач в торрент-клиент..." );
+	$config = $( "#config" ).serialize();
 	$.ajax({
 		type: "POST",
-		context: this,
-		url: "php/add_topics_to_client.php",
-		data: { topics:topics, client:cl_data, subsec:ss_data, cfg:$data },
-		success: function(response) {
-			var resp = eval("(" + response + ")");
-			$("#log").append(resp.log);
-			$("#topics_result").html(resp.add_log);
-			//~ $("#log").append(response);
-			if(resp.success != null){
-				// помечаем в базе добавленные раздачи
-			    $.ajax({
-				    type: "POST",
-				    context: this,
-					url: "php/mark_topics_in_database.php",
-					data: { success:resp.success, status:-1, client:value },
-					success: function(response) {
-						$("#log").append(response);
-						getFilteredTopics.apply(this);
-					}
-				});
-			}
-		},
-		beforeSend: function() {
-			block_actions();
-			$("#process").text( "Добавление раздач в торрент-клиент..." );
-		},
-		complete: function() {
-			block_actions();
-		},
+		url: "php/actions/add_topics_to_client.php",
+		data: { cfg:$config, topics_ids:topics_ids, tor_client:tor_client_data, forum:forum_data },
+		beforeSend: block_actions,
+		complete: block_actions,
+		success: function( response ) {
+			var response = $.parseJSON ( response );
+			$( "#log" ).append( response.log );
+			showResult( response.add_log );
+		}
 	});
 });
 

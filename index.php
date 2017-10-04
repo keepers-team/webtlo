@@ -96,7 +96,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</button>
 							</div>
 							<div id="new-torrents">
-								<button type="button" class="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
+								<button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
 									<i class="fa fa-plus" aria-hidden="true"></i>
 								</button>
 								<button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
@@ -487,8 +487,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<label class="flex">
 										Создавать подкаталог для добавляемой раздачи:
 										<select id="ss-sub-folder" class="myinput ss-prop" title="Создавать подкаталог для данных добавляемой раздачи">
-											<option value="0">Нет</option>
-											<option value="1">С ID топика</option>
+											<option value="0">нет</option>
+											<option value="1">ID раздачи</option>
 											<!-- <option value="2">Запрашивать</option> -->
 										</select>
 									</label>

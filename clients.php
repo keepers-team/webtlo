@@ -197,7 +197,7 @@ class utorrent {
 		$this->setSetting('dir_active_download_flag', true);
 		foreach($filename as $file){
 			if (!empty($savepath)) {
-				$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+				$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
 				$this->setSetting('dir_active_download', urlencode($current_savepath));
 			}
 			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
@@ -377,7 +377,7 @@ class transmission {
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		$success = array();
 		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
@@ -560,7 +560,7 @@ class vuze {
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		$success = array();
 		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
@@ -758,7 +758,7 @@ class deluge {
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
 			$localpath = $this->torrentDownload($file['filename']);
 			$json = $this->makeRequest(json_encode(array(
 				"method" => "web.add_torrents",
@@ -951,7 +951,7 @@ class qbittorrent {
 	// добавить торрент
 	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
 		foreach($filename as $file) {
-			$current_savepath = $savepath_subfolder ? $savepath . '/' . $file['id'] : $savepath;
+			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
 			$fields = http_build_query(array(
 				'urls' => $file['filename'], 'savepath' => !empty($savepath) ? $current_savepath : '', 'cookie' => $this->sid, 'label' => $label, 'category' => $label
 			), '', '&', PHP_QUERY_RFC3986);
