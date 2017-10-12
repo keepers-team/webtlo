@@ -56,7 +56,7 @@ try {
 	
 	// дополнительный слэш в конце каталога
 	if ( ! in_array( substr( $forum['fd'], -1 ), array( '\\', '/' ) ) ) {
-		$forum['fd'] .= strpos( $forum['fd'], '/' ) ? '\\' : '/';
+		$forum['fd'] .= strpos( $forum['fd'], '/' ) === false ? '\\' : '/';
 	}
 	
 	Log::append( "Добавление раздач в торрент-клиент..." );
