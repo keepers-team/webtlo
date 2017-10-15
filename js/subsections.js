@@ -56,7 +56,7 @@ function addSubsection( subsection ) {
 		}
 	} );
 	if ( q != 1 ) {
-		$list_ss.append( '<option value="' + vl + '" data="|' + label + '||">' + lb + '</option>' );
+		$list_ss.append( '<option value="' + vl + '" data="0|' + label + '||">' + lb + '</option>' );
 		$( "#subsections_stored" ).append( '<option value="' + vl + '">' + lb + '</option>' );
 		$( "#ss-prop .ss-prop, #list-ss" ).prop( "disabled", false );
 		$( "#ss-id" ).prop( "disabled", true );
