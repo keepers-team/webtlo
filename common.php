@@ -196,7 +196,7 @@ function get_settings( $filename = "" ) {
 	// применение заплаток
 	if ( $user_version < 1 ) {
 		$forum_ids = explode( ',', $config['subsec'] );
-		if ( ! empty( $forum_ids ) && is_array( $forum_ids ) ) {
+		if ( ! empty( $forum_ids ) && ! empty( $config['clients'] ) ) {
 			$tor_clients_ids = array_keys( $config['clients'] );
 			$tor_clients_comments = array_column_common( $config['clients'], "cm" );
 			$tor_clients = array_combine( $tor_clients_comments, $tor_clients_ids );
