@@ -224,7 +224,13 @@ function convert_bytes($size) {
 }
 
 function rmdir_recursive( $path ) {
-    $return = true;
+	$return = true;
+	if ( ! file_exists( $path ) ) {
+		return true;
+	}
+	if ( ! is_dir( $path ) ) {
+		return unlink( $path );
+	}
     foreach ( scandir( $path ) as $next_path ) {
         if ( '.' === $next_path || '..' === $next_path ) {
 	        continue;
@@ -243,6 +249,12 @@ function rmdir_recursive( $path ) {
 
 function mkdir_recursive( $path ) {
 	$return = false;
+	if ( PHP_OS == 'WINNT' ) {
+		$winpath = mb_convert_encoding( $path, 'Windows-1251', 'UTF-8' );
+		if ( is_writable( $winpath ) && is_dir( $winpath ) ) {
+			return true;
+		}
+	}
 	if ( is_writable( $path ) && is_dir( $path ) ) {
 		return true;
 	}
@@ -250,7 +262,11 @@ function mkdir_recursive( $path ) {
 	if ( $path != $prev_path ) {
 		$return = mkdir_recursive( $prev_path );
 	}
-    return ( $return && is_writable( $prev_path ) ) ? mkdir( $path ) : false;
+	if ( PHP_OS == 'WINNT' ) {
+		$winprev_path = mb_convert_encoding( $prev_path, 'Windows-1251', 'UTF-8' );
+		return ( $return && is_writable( $winprev_path ) && ! file_exists( $winpath ) ) ? mkdir( $winpath ) : false;
+	}
+    return ( $return && is_writable( $prev_path ) && ! file_exists( $path ) ) ? mkdir( $path ) : false;
 }
 
 function array_column_common(array $input, $columnKey, $indexKey = null) {
