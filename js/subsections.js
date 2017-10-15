@@ -52,7 +52,7 @@ function addSubsection(event, ui) {
 		if(vl == val) q = 1;
 	});
 	if(q != 1) {
-		$("#list-ss").append('<option value="'+vl+'" data="|'+label+'||">'+lb+'</option>');
+		$("#list-ss").append('<option value="'+vl+'" data="0|'+label+'||">'+lb+'</option>');
 		$("#subsections_stored").append('<option value="'+vl+'">'+lb+'</option>');
 		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
 		$("#ss-id").prop("disabled", true);
