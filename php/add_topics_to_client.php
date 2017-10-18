@@ -101,6 +101,10 @@ try {
 				$clients[ $client_id ]['pt'], $clients[ $client_id ]['lg'],
 				$clients[ $client_id ]['pw'], $clients[ $client_id ]['cm'] );
 			if($client->is_online()) {
+				// дополнительный слэш в конце каталога
+				if ( ! in_array( substr( $subsections[ $subsection_id ]['df'], -1 ), array( '\\', '/' ) ) ) {
+					$subsections[ $subsection_id ]['df'] .= strpos( $subsections[ $subsection_id ]['df'], '/' ) === false ? '\\' : '/';
+				}
 				$client->torrentAdd ( $torrents_chunk_for_client, $subsections[$subsection_id]['df'], $subsections[$subsection_id]['lb'], $subsections[$subsection_id]['sub_folder'] );
 				$success[$client_id] = array_column_common ( $torrents_chunk_for_client, 'id' );
 			}  else {
