@@ -13,8 +13,8 @@ if(isset($cfg['subsections'])){
 		$subsections_names[$id] = $ss['na'];
 	}
 	$subsections_ids = implode(', ', $subsections_ids);
+	$subsections_stored_ids = implode( ",", array_keys( $cfg['subsections'] ) );
 } else $subsections_ids = '';
-$subsections_stored_ids = implode(", ", array_keys($cfg['subsections']));
 
 try {
 	$start = $_POST['start'];
