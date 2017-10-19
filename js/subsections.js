@@ -95,7 +95,7 @@ $list_ss.on( "change", function () {
 	var $ss_sub_folder = $( "#ss-sub-folder" );
 	var data = $list_ss.find( ":selected" ).attr( "data" );
 	data = data.split( '|' );
-	var client = $ss_client.find( "option [value=" + data[0] + "]" ).val();
+	var client = $ss_client.find( "option[value=" + data[0] + "]" ).val();
 	if ( client ) {
 		$ss_client.find( "[value=" + client + "]" ).prop( "selected", "selected" );
 	} else {
