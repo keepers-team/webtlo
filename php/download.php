@@ -74,7 +74,7 @@ class Download {
 			while ( true ) {
 				
 				// выходим после 3-х попыток
-				if ( $n >= $try || $try_number >= $try ) {
+				if ( $n > $try || $try_number > $try ) {
 					Log::append ( 'Не удалось скачать торрент-файл для ' . $topic['id'] . '.' );
 					break;
 				}
@@ -83,13 +83,13 @@ class Download {
 				
 				if ( $json === false ) {
 					$http_code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
-					if ( $http_code == 0 && $try_number <= $try ) {
+					Log::append ( 'CURL ошибка: ' . curl_error( $this->ch ) . " (раздача ${topic['id']}) [$http_code]" );
+					if ( $http_code < 300 && $try_number <= $try ) {
 						Log::append( "Повторная попытка $try_number/$try получить данные." );
 						sleep( 5 );
 						$try_number++;
 						continue;
 					}
-					Log::append ( 'CURL ошибка: ' . curl_error($this->ch) . " (раздача ${topic['id']}) [$http_code]" );
 					break;
 				}
 				

@@ -40,7 +40,7 @@ class Api {
 			$json = curl_exec( $this->ch );
 			if ( $json === false ) {
 				$http_code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
-				if ( $http_code == 0 && $try_number <= $try ) {
+				if ( $http_code < 300 && $try_number <= $try ) {
 					Log::append( "Повторная попытка $try_number/$try получить данные." );
 					sleep( 5 );
 					$try_number++;

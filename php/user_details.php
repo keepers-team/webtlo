@@ -37,7 +37,7 @@ class UserDetails {
 			$data = curl_exec( $ch );
 			if ( $data === false ) {
 				$http_code = curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-				if ( $http_code == 0 && $try_number <= $try ) {
+				if ( $http_code < 300 && $try_number <= $try ) {
 					Log::append( "Повторная попытка $try_number/$try получить данные." );
 					sleep( 5 );
 					$try_number++;
