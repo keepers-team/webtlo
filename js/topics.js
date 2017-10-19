@@ -292,21 +292,6 @@ $( "#tor_add" ).on( "click", function() {
 		showResult( "В настройках не найдены торрент-клиенты" );
 		return;
 	}
-	forum_data = forums[ forum_id ];
-	if ( typeof forum_data === "undefined" ) {
-		showResult( "В настройках нет данных об указанном подразделе: " + forum_id );
-		return;
-	}
-	if ( forum_data.cl === "" || forum_data.cl === 0 ) {
-		showResult( "В настройках текущего подраздела не указан используемый торрент-клиент" );
-		return;
-	}
-	tor_client_data = tor_clients[ forum_data.cl ];
-	if ( typeof tor_client_data === "undefined" ) {
-		showResult( "В настройках нет данных об указанном торрент-клиенте: " + forum_data.cl );
-		return;
-	}
-	tor_client_data.id = forum_data.cl;
 	$( "#process" ).text( "Добавление раздач в торрент-клиент..." );
 	var config = $( "#config" ).serialize();
 	$.ajax({
