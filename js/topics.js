@@ -428,7 +428,7 @@ function countSizeAndAmount( thisElem ) {
 		action = thisElem.val();
 	}
 	var counter = new Counter();
-	var topics = $( "#topics" ).find( "input[type=checkbox]" );
+	var topics = $( "#topics" ).find( "input[class=topic][type=checkbox]" );
 	if ( topics.length === 0 ) {
 		showSizeAndAmount( 0, 0.00 );
 	} else {
