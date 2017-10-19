@@ -213,7 +213,7 @@ function redrawTopicsList() {
 function listSelectedTopics() {
 	var topics = [];
 	$( "#topics" ).closest( "div" )
-		.find( "input[type=checkbox]" )
+		.find( ".topic[type=checkbox]" )
 		.each( function () {
 			if ( $( this ).prop( "checked" ) ) {
 				var id = $( this ).attr( "id" );
@@ -428,7 +428,7 @@ function countSizeAndAmount( thisElem ) {
 		action = thisElem.val();
 	}
 	var counter = new Counter();
-	var topics = $( "#topics" ).find( "input[class=topic][type=checkbox]" );
+	var topics = $( "#topics" ).find( ".topic[type=checkbox]" );
 	if ( topics.length === 0 ) {
 		showSizeAndAmount( 0, 0.00 );
 	} else {
@@ -473,7 +473,7 @@ $topics.on( "click", ".topic", function ( event ) {
 		var tag_first = parseInt( $topics.find( ".first-topic" ).attr( "tag" ) );
 		var direction = (tag_first - tag < 0 ? 'down' : 'up');
 		$topics.closest( "div" )
-			.find( "input[type=checkbox]" )
+			.find( ".topic[type=checkbox]" )
 			.each( function () {
 				tag_this = parseInt( $( this ).attr( "tag" ) );
 				if ( direction == 'down' ) {
