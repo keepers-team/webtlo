@@ -193,12 +193,18 @@ class Api {
 	
 	// сведения о каждой раздаче
 	public function get_tor_topic_data($ids){
-		if(empty($ids)) return;
+		$topics = array();
+		if ( empty( $ids ) ) {
+			return $topics;
+		}
 		$ids = array_chunk($ids, $this->limit, false);
 		foreach($ids as &$value){
 			$value = implode(',', $value);
 			$url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $value;
 			$data = $this->request_exec($url);
+			if ( empty( $data['result'] ) ) {
+				continue;
+			}
 			foreach($data['result'] as $topic_id => $info){
 				if(is_array($info)) $topics[$topic_id] = $info;
 			}

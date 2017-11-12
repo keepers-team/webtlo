@@ -121,6 +121,8 @@ class Reports {
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_SSL_VERIFYHOST => 2,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_MAXREDIRS => 2,
 			CURLOPT_URL => $url,
 			CURLOPT_COOKIE => UserDetails::$cookie,
 			CURLOPT_POSTFIELDS => http_build_query($fields),
@@ -325,6 +327,9 @@ class Reports {
 					foreach($topic_main->find('tbody') as $row){
 						$row = pq($row);
 						$post = str_replace('post_', '', $row->attr('id'));
+						if ( empty( $post ) ) {
+							continue;
+						}
 						if($post_author != $post && !empty($post)){
 							$nick = $row->find('p.nick > a')->text();
 							if($nick == $this->login){
