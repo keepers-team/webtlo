@@ -7,7 +7,6 @@ subsections.selectmenu({
 	width: "calc(100% - 36px)",
 	change: function( event, ui ) {
 		getFilteredTopics();
-		showSizeAndAmount( 0, 0.00 );
 		Cookies.set('saved_forum_id', ui.item.value);
 	},
 	create: function ( event, ui ) {

@@ -3,101 +3,134 @@
 include dirname(__FILE__) . '/../common.php';
 include dirname(__FILE__) . '/../clients.php';
 
-if(isset($_POST['topics'])){
-	$topics = $_POST['topics'];
-	if(!empty($topics) && is_array($topics)){
-		$cm = array_diff( array_unique(array_column_common($topics, 'client')), array('') );
-		foreach($topics as $topic){
-			if(!empty($topic['client'])){
-				$hashes[$topic['client']]['hash'][] = $topic['hash'];
-				$hashes[$topic['client']]['id'][] = $topic['id'];
-			}
-		}
-	}
-}
-
-if(isset($_POST['clients'])) {
-	$clients = $_POST['clients'];
-	if(!empty($clients) && is_array($clients)){
-		foreach($clients as $id => $client){
-			if(in_array($id, $cm))
-				$tcs[$id] = $client;
-		}
-	}
-}
-
-$action = isset($_POST['action']) ? $_POST['action'] : '';
-$data = isset($_POST['remove_data']) ? $_POST['remove_data'] : '';
-$force = isset($_POST['force_start']) ? $_POST['force_start'] : '';
-$label = isset($_POST['label']) ? $_POST['label'] : '';
-
-$ids = array();
-
 try {
+
+	$result = "";
+
+	// поддерживаемые действия
+	$actions = array(
+		"set_label",
+		"start",
+		"stop",
+		"remove"
+	);
+
+	$action = isset( $_POST['action'] ) ? $_POST['action'] : "";
+	$label = isset( $_POST['label'] ) ? $_POST['label'] : "";
+	$remove_data = isset( $_POST['remove_data'] ) ? $_POST['remove_data'] : "";
+	$force_start = isset( $_POST['force_start'] ) ? $_POST['force_start'] : "";
+
+	if ( ! in_array( $action, $actions ) ) {
+		$result = "Попытка выполнить неизвестное действие";
+		throw new Exception();
+	}
+
+	if ( empty( $_POST['topics_ids'] ) ) {
+		$result = "Выберите раздачи";
+		throw new Exception();
+	}
+
+	if ( empty( $_POST['tor_clients'] ) ) {
+		$result = "В настройках не найдены торрент-клиенты";
+		throw new Exception();
+	}
+
+	$tor_clients = $_POST['tor_clients'];
+	parse_str( $_POST['topics_ids'] );
 	
-	if(empty($action)){
-		$result = 'Не указано действие, которое требуется выполнить.<br />';
-		throw new Exception();
-	}
-	if(empty($cm)){
-		$result = 'Выбранные раздачи не привязаны ни к одному из торрент-клиентов.<br />';
-		throw new Exception();
-	}
-	if(!isset($hashes)){
-		$result = 'Не получены данные о выбранных раздачах.<br />';
-		throw new Exception();
-	}
-	if(!isset($tcs)){
-		$result = 'Не удалось найти ни одного из необходимых торрент-клиентов в настройках.<br />';
-		throw new Exception();
-	}
-	if(empty($label) && $action == 'set_label'){
-		$result = 'Попытка установить пустую метку.<br />';
-		throw new Exception();
-	}
+	Log::append( 'Начато выполнение действия "' . $action . '" для выбранных раздач...' );
 	
-	Log::append ( 'Начато выполнение действия "'.$action.'" для выбранных раздач...' );
-	Log::append ( 'Количество затрагиваемых торрент-клиентов: '.count($cm).'.' );
+	Log::append( "Получение хэшей раздач с привязкой к торрент-клиенту..." );
+
+	$topics_ids = implode( ',', $topics_ids );
+	$hashes = Db::query_database(
+		"SELECT cl,hs FROM Topics WHERE id IN ($topics_ids)",
+		array(),
+		true,
+		PDO::FETCH_GROUP|PDO::FETCH_COLUMN
+	);
+	unset( $topics_ids );
+
+	if ( empty( $hashes ) ) {
+		$result = "Не получены данные о выбранных раздачах";
+		throw new Exception();
+	}
+
+	Log::append( "Количество затрагиваемых торрент-клиентов: " . count( $hashes ) . "." );
 	
-	foreach ( $cm as $cm ) {
-		if ( isset( $tcs[$cm] ) ) {
-			$client = new $tcs[$cm]['cl'] ( $tcs[$cm]['ht'], $tcs[$cm]['pt'], $tcs[$cm]['lg'], $tcs[$cm]['pw'], $tcs[$cm]['cm'] );
-			if ( $client->is_online() ) {
-				switch ( $action ) {
-					case 'set_label':
-						Log::append ( $client->setLabel($hashes[$cm]['hash'], $label) );
-						break;
-					case 'stop':
-						Log::append ( $client->torrentStop($hashes[$cm]['hash']) );
-						break;
-					case 'start':
-						Log::append ( $client->torrentStart($hashes[$cm]['hash'], $force) );
-						break;
-					case 'remove':
-						Log::append ( $client->torrentRemove($hashes[$cm]['hash'], $data) );
-						break;
-					default:
-						$result = 'Невозможно выполнить действие: "'.$action.'".<br />';
-						throw new Exception();
-				}
-				$ids += $hashes[$cm]['id'];
-				Log::append ( 'Действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" выполнено ('.count($hashes[$cm]['id']).').' );
-			} else {
-				Log::append ( 'Error: действие "'.$action.'" для "'.$tcs[$cm]['cm'].'" не выполнено.' );
-				continue;
-			}
+	foreach ( $hashes as $tor_client_id => $hashes ) {
+
+		if ( empty( $hashes ) ) {
+			continue;
 		}
+
+		if ( empty( $tor_clients[ $tor_client_id ] ) ) {
+			Log::append( "В настройках нет данных о торрент-клиенте с идентификатором \"$tor_client_id\"" );
+			continue;
+		}
+
+		// данные текущего торрент-клиента
+		$tor_client = $tor_clients[ $tor_client_id ];
+
+		$client = new $tor_client['cl'] ( $tor_client['ht'], $tor_client['pt'], $tor_client['lg'], $tor_client['pw'], $tor_client['cm'] );
+
+		// проверка доступности торрент-клиента
+		if ( ! $client->is_online() ) {
+			Log::append ( 'Error: торрент-клиент "' . $tor_client['cm'] . '" в данный момент недоступен.' );
+			continue;
+		}
+
+		switch ( $action ) {
+			
+			case 'set_label':
+				Log::append( $client->setLabel( $hashes, $label ) );
+				break;
+			
+			case 'stop':
+				Log::append( $client->torrentStop( $hashes ) );
+				break;
+			
+			case 'start':
+				Log::append( $client->torrentStart( $hashes, $force_start) );
+				break;
+			
+			case 'remove':
+				Log::append( $client->torrentRemove( $hashes, $remove_data) );
+				// помечаем в базе удаление
+				$hashes_remove = array_chunk( $hashes, 500 );
+				foreach ( $hashes_remove as $hashes_remove ) {
+					$in = str_repeat( '?,', count( $hashes_remove ) ) . '?';
+					Db::query_database(
+						"UPDATE Topics SET dl = 0, cl = '' WHERE hs IN ($in)",
+						$hashes_remove
+					);
+					unset( $in );
+				}
+				break;
+		}
+
+		Log::append( 'Действие "' . $action . '" для торрент-клиента "' . $tor_client['cm'] . '" выполнено (' . count( $hashes ) . ').' );
+
+		unset( $hashes_remove );
+		unset( $tor_client );
+
 	}
-	$result = 'Действие "'.$action.'" выполнено. За подробностями обратитесь к журналу.<br />';
-	Log::append ( 'Выполнение действия "'.$action.'" завершено.' );
-	// выводим на экран
-	echo json_encode(array('log' => Log::get(), 'result' => $result, 'ids' => empty($ids) ? null : $ids));
-	//~ echo Log::get();
 	
-} catch (Exception $e) {
-	Log::append ( $e->getMessage() );
-	echo json_encode(array('log' => Log::get(), 'result' => $result, 'ids' => null));
-	//~ echo Log::get();
+	$result = 'Действие "' . $action . '" выполнено. За подробностями обратитесь к журналу';
+
+	Log::append( 'Выполнение действия "' . $action . '" завершено.' );
+
+	echo json_encode( array(
+		'log' => Log::get(),
+		'result' => $result
+	));
+	
+} catch ( Exception $e ) {
+	Log::append( $e->getMessage() );
+	echo json_encode( array(
+		'log' => Log::get(),
+		'result' => $result
+	));
 }
 
 ?>

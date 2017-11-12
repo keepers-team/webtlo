@@ -192,21 +192,21 @@ class utorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+	public function torrentAdd( $topics, $savepath = "", $label = "", $savepath_subfolder = 0 ) {
 		//~ $this->setSetting('dir_add_label', 1);
 		$this->setSetting('dir_active_download_flag', true);
-		foreach($filename as $file){
-			if (!empty($savepath)) {
-				$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
+		foreach ( $topics as $topic_id => $topic ) {
+			if ( ! empty( $savepath ) ) {
+				$current_savepath = $savepath_subfolder ? $savepath . $topic_id : $savepath;
 				$this->setSetting('dir_active_download', urlencode($current_savepath));
 			}
-			$this->makeRequest("?action=add-url&s=".urlencode($file['filename']), false);
+			$this->makeRequest("?action=add-url&s=".urlencode( $topic['filename']), false );
 			usleep( 500000 );
 		}
 		if ( empty( $label ) ) {
 			return;
 		}
-		$this->setProperties(array_column_common($filename, 'hash'), 'label', $label);
+		$this->setProperties( array_column_common( $topics, 'hash' ), 'label', $label );
 	}
 	
 	// изменение свойств торрента
@@ -374,14 +374,14 @@ class transmission {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+	public function torrentAdd( $topics, $savepath = "", $label = "", $savepath_subfolder = 0 ) {
 		$success = array();
-		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
+		foreach ( $topics as $topic_id => $topic ) {
+			$current_savepath = $savepath_subfolder ? $savepath . $topic_id : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $file['filename'] . '",
+					"filename" : "' . $topic['filename'] . '",
 					"paused" : "false"'
 					. (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
@@ -391,7 +391,7 @@ class transmission {
 					$success[] = $json['arguments']['torrent-added']['hashString'];
 				}
 				if( !empty( $json['arguments']['torrent-duplicate'] ) ) {
-					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте (${file['id']})." );
+					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте ($topic_id)." );
 				}
 			}
 		}
@@ -557,14 +557,14 @@ class vuze {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
+	public function torrentAdd( $topics, $savepath = "", $label = "", $savepath_subfolder = 0 ) {
 		$success = array();
-		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
+		foreach ( $topics as $topic_id => $topic ) {
+			$current_savepath = $savepath_subfolder ? $savepath . $topic_id : $savepath;
 			$json = $this->makeRequest('{
 				"method" : "torrent-add",
 				"arguments" : {
-					"filename" : "' . $file['filename'] . '",
+					"filename" : "' . $topic['filename'] . '",
 					"paused" : "false"'
 					. (!empty($savepath) ? ', "download-dir" : "' . quotemeta($current_savepath) . '"' : '') .
 				'}
@@ -574,7 +574,7 @@ class vuze {
 					$success[] = $json['arguments']['torrent-added']['hashString'];
 				}
 				if( !empty( $json['arguments']['torrent-duplicate'] ) ) {
-					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте (${file['id']})." );
+					Log::append( "Warning: Эта раздача уже раздаётся в торрент-клиенте ($topic_id)." );
 				}
 			}
 		}
@@ -756,10 +756,10 @@ class deluge {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
-		foreach($filename as $file){
-			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
-			$localpath = $this->torrentDownload($file['filename']);
+	public function torrentAdd( $topics, $savepath = "", $label = "", $savepath_subfolder = 0 ) {
+		foreach ( $topics as $topic_id => $topic ) {
+			$current_savepath = $savepath_subfolder ? $savepath . $topic_id : $savepath;
+			$localpath = $this->torrentDownload( $topic['filename'] );
 			$json = $this->makeRequest(json_encode(array(
 				"method" => "web.add_torrents",
 				"params" => [[array(
@@ -770,9 +770,11 @@ class deluge {
 			)));
 			//~ return $json['result'] == 1 ? true : false;
 		}
-		if(empty($label)) return;
-		sleep(round(count($filename) / 3) + 1); // < 3 дольше ожидание
-		$this->setLabel(array_column_common($filename, 'hash'), $label);
+		if ( empty( $label ) ) {
+			return;
+		}
+		sleep( round( count( $topics ) / 3 ) + 1 ); // < 3 дольше ожидание
+		$this->setLabel( array_column_common( $topics, 'hash' ), $label );
 	}
 	
 	// загрузить торрент локально
@@ -949,13 +951,17 @@ class qbittorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "", $savepath_subfolder = 0) {
-		foreach($filename as $file) {
-			$current_savepath = $savepath_subfolder ? $savepath . $file['id'] : $savepath;
-			$fields = http_build_query(array(
-				'urls' => $file['filename'], 'savepath' => !empty($savepath) ? $current_savepath : '', 'cookie' => $this->sid, 'label' => $label, 'category' => $label
+	public function torrentAdd( $topics, $savepath = "", $label = "", $savepath_subfolder = 0 ) {
+		foreach ( $topics as $topic_id => $topic ) {
+			$current_savepath = $savepath_subfolder ? $savepath . $topic_id : $savepath;
+			$fields = http_build_query( array(
+				'urls' => $topic['filename'],
+				'savepath' => ! empty( $savepath ) ? $current_savepath : '',
+				'cookie' => $this->sid,
+				'label' => $label,
+				'category' => $label
 			), '', '&', PHP_QUERY_RFC3986);
-			$this->makeRequest($fields, 'command/download', false);
+			$this->makeRequest( $fields, 'command/download', false );
 		}
 	}
 	
@@ -1139,9 +1145,9 @@ class ktorrent {
 	}
 	
 	// добавить торрент
-	public function torrentAdd($filename, $savepath = "", $label = "") {
-		foreach($filename as $filename){
-			$json = $this->makeRequest('action?load_torrent=' . $filename['filename'], false); // 200 OK
+	public function torrentAdd( $topics, $savepath = "", $label = "" ) {
+		foreach ( $topics as $topic_id => $topic ) {
+			$json = $this->makeRequest( 'action?load_torrent=' . $topic['filename'], false ); // 200 OK
 		}
 	}
 	
@@ -1269,16 +1275,16 @@ class rtorrent {
     }
 
     // добавить торрент
-    public function torrentAdd($filename, $savepath = "", $label = "") {
+    public function torrentAdd( $topics, $savepath = "", $label = "" ) {
         // TODO: Придумать, как установить метку для раздачи.
         // TODO: Скорее всего не сработает установка метки потому что на момент
         // TODO: запроса торрент еще не будет добавлен :-/
         $result_ok = 0;
         $result_fail = 0;
-        foreach($filename as $fn){
-            $this->makeRequest("load_start", $fn['filename']) === false ? $result_fail += 1 : $result_ok += 1;
-            if ($label) {
-                $this->makeRequest("d.set_custom1", array($fn["hash"], $label) );
+        foreach ( $topics as $topic_id => $topic ) {
+            $this->makeRequest("load_start", $topic['filename']) === false ? $result_fail += 1 : $result_ok += 1;
+            if ( ! empty( $label ) ) {
+                $this->makeRequest( "d.set_custom1", array( $topic['hash'], $label ) );
             }
         }
         Log::append ( 'Добавлено раздач успешно: ' . $result_ok . '. С ошибкой: ' . $result_fail);

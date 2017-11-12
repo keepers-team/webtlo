@@ -41,7 +41,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.4</title>
+		<title>web-TLO-0.9.3.5</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -88,10 +88,10 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								</button>
 							</div>
 							<div id="select">
-								<button type="button" class="tor_select" value="select" title="Выделить все раздачи текущего подраздела">
+								<button type="button" class="tor_select" value="1" title="Выделить все раздачи текущего подраздела">
 									<i class="fa fa-check-square-o" aria-hidden="true"></i>
 								</button>
-								<button type="button" class="tor_unselect" value="unselect" title="Снять выделение всех раздач текущего подраздела">
+								<button type="button" class="tor_select" title="Снять выделение всех раздач текущего подраздела">
 									<i class="fa fa-square-o" aria-hidden="true"></i>
 								</button>
 							</div>
@@ -287,7 +287,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<div id="topics_result"></div>
 						</div>
 						<hr />
-						<div id="topics"></div>
+						<form id="topics" method="post"></form>
 					</div>
 				</div>
 				<div id="settings" class="content">

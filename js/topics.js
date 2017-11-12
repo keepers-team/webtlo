@@ -1,283 +1,296 @@
 
 /* работа с топиками */
 
-// получить список выделенных раздач
-function listSelectedTopics(){
-	var topics = [];
-	$("#topics").closest("div")
-	.find("input[type=checkbox]")
-	.each(function() {
-		if($(this).prop("checked")) {
-			id = $(this).attr("id");
-			hash = $(this).attr("hash");
-			client = $(this).attr("client");
-			topics.push({id: id, hash: hash, client: client});
+// получение отфильтрованных раздач из базы
+function getFilteredTopics() {
+	Cookies.set( "filter-options", $( "#topics_filter" ).serializeArray() );
+	var forum_id = $( "#subsections" ).val();
+	var config = $( "#config" ).serialize();
+	var filter = $( "#topics_filter" ).serialize();
+	$( "#process" ).text( "Получение данных о раздачах..." );
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_filtered_list_topics.php",
+		data: {
+			forum_id: forum_id,
+			filter: filter,
+			cfg: config
+		},
+		beforeSend: block_actions,
+		complete: block_actions,
+		success: function( response ) {
+			var response = $.parseJSON( response );
+			if ( response.topics != null ) {
+				$( "#topics" ).html( response.topics );
+				$( "#filtered_topics_count" ).text( response.count );
+				$( "#filtered_topics_size" ).text( сonvertBytes( response.size ) );
+			}
+			showCountSizeSelectedTopics();
 		}
 	});
-	return topics;
 }
+
+/* действия с раздачами */
 
 // скачивание т.-файлов выделенных топиков
 $( ".tor_download" ).on( "click", function() {
+	var forum_id = $( "#subsections" ).val();
+	var replace_passkey = $( this ).val();
+	var topics_ids = $("#topics").serialize();
+	if ( $.isEmptyObject( topics_ids ) ) {
+		showResult( "Выберите раздачи" );
+		return;
+	}
+	var config = $( "#config" ).serialize();
 	$( "#process" ).text( "Скачивание торрент-файлов..." );
-	forum_id = $( "#subsections" ).val();
-	replace_passkey = $( this ).val();
-	ids = listSelectedTopics.apply();
-	$data = $("#config").serialize();
 	$.ajax({
 		type: "POST",
 		context: this,
 		url: "php/actions/get_torrent_files.php",
-		data: { cfg:$data, ids:ids, forum_id:forum_id, replace_passkey:replace_passkey },
+		data: {
+			cfg: config,
+			topics_ids: topics_ids,
+			forum_id: forum_id,
+			replace_passkey: replace_passkey
+		},
 		beforeSend: block_actions,
 		complete: block_actions,
 		success: function( response ) {
-			var response = $.parseJSON ( response );
+			var response = $.parseJSON( response );
 			$( "#log" ).append( response.log );
-			$( "#topics_result" ).html( response.result );
+			showResult( response.result );
 		},
 	});
 });
 
 // "чёрный список"
 $( "#tor_blacklist" ).on( "click", function() {
-	forum_id = $( "#subsections" ).val();
-	value = forum_id != -2 ? 1 : 0;
-	topics = listSelectedTopics.apply();
-	if ( topics == "" ) {
+	var forum_id = $( "#subsections" ).val();
+	var value = forum_id != -2 ? 1 : 0;
+	var topics_ids = $("#topics").serialize();
+	if ( $.isEmptyObject( topics_ids ) ) {
+		showResult( "Выберите раздачи" );
 		return;
 	}
+	$("#process").text( "Редактирование \"чёрного списка\" раздач..." );
 	$.ajax({
 		type: "POST",
 		url: "php/actions/blacklist.php",
-		data: { topics:topics, value:value },
-		beforeSend: function() {
-			block_actions();
-			$("#process").text( "Редактирование \"чёрного списка\" раздач..." );
+		data: {
+			topics_ids: topics_ids,
+			value: value
 		},
+		beforeSend: block_actions,
+		complete: block_actions,
 		success: function( response ) {
-			$( "#topics_result" ).html( response );
-			getFilteredTopics.apply( this );
-		},
-		complete: function() {
-			block_actions();
-		},
+			showResult( response );
+			getFilteredTopics();
+		}
 	});
 });
 
 // добавление раздач в торрент-клиент
 $( "#tor_add" ).on( "click", function() {
-	forum_id = $( "#subsections" ).val();
-	topics_ids = listSelectedTopics.apply();
-	forums = getForums();
-	tor_clients = getTorClients();
+	var topics_ids = $("#topics").serialize();
 	if ( $.isEmptyObject( topics_ids ) ) {
-		showResult( "Не выделены раздачи для добавления" );
+		showResult( "Выберите раздачи" );
 		return;
 	}
+	var forums = getForums();
 	if ( $.isEmptyObject( forums ) ) {
 		showResult( "В настройках не найдены подразделы" );
 		return;
 	}
+	var tor_clients = getTorClients();
 	if ( $.isEmptyObject( tor_clients ) ) {
 		showResult( "В настройках не найдены торрент-клиенты" );
 		return;
 	}
-	forum_data = forums[ forum_id ];
-	if ( typeof forum_data === "undefined" ) {
-		showResult( "В настройках нет данных об указанном подразделе: " + forum_id );
-		return;
-	}
-	if ( forum_data.cl === "" || forum_data.cl === 0 ) {
-		showResult( "В настройках текущего подраздела не указан используемый торрент-клиент" );
-		return;
-	}
-	tor_client_data = tor_clients[ forum_data.cl ];
-	if ( typeof tor_client_data === "undefined" ) {
-		showResult( "В настройках нет данных об указанном торрент-клиенте: " + forum_data.cl );
-		return;
-	}
-	tor_client_data.id = forum_data.cl;
 	$( "#process" ).text( "Добавление раздач в торрент-клиент..." );
-	$config = $( "#config" ).serialize();
+	var config = $( "#config" ).serialize();
 	$.ajax({
 		type: "POST",
 		url: "php/actions/add_topics_to_client.php",
-		data: { cfg:$config, topics_ids:topics_ids, tor_client:tor_client_data, forum:forum_data },
+		data: {
+			cfg: config,
+			topics_ids: topics_ids,
+			tor_clients: tor_clients,
+			forums: forums
+		},
 		beforeSend: block_actions,
 		complete: block_actions,
 		success: function( response ) {
-			var response = $.parseJSON ( response );
+			var response = $.parseJSON( response );
 			$( "#log" ).append( response.log );
-			showResult( response.add_log );
+			showResult( response.result );
+			getFilteredTopics();
 		}
 	});
 });
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
-function exec_action_for_topics(){
-	$("#dialog").dialog("close");
+function execActionTopics( topics_ids, tor_clients, action, label, force_start, remove_data ) {
+	$( "#dialog" ).dialog( "close" );
+	$( "#process" ).text( "Управление раздачами..." );
 	$.ajax({
 		type: "POST",
 		context: this,
 		url: "php/exec_actions_topics.php",
-		data: { topics:topics, clients:clients, action:action, remove_data:remove_data, force_start:force_start, label:label },
-		success: function(response) {
-			resp = $.parseJSON(response);
-			$("#log").append(resp.log);
-			$("#topics_result").html(resp.result);
-			//~ $("#log").append(response);
-			if(resp.ids != null && action == 'remove'){
-				status = subsection == 0 ? '' : 0;
-				// помечаем в базе удалённые раздачи
-			    $.ajax({
-				    type: "POST",
-				    context: this,
-					url: "php/mark_topics_in_database.php",
-					data: { success:resp.ids, status:status, client:'' },
-					success: function(response) {
-						$("#log").append(response);
-						getFilteredTopics.apply(this);
-					},
-				});
+		data: {
+			topics_ids: topics_ids,
+			tor_clients: tor_clients,
+			action: action,
+			remove_data: remove_data,
+			force_start: force_start,
+			label: label
+		},
+		beforeSend: block_actions,
+		complete: block_actions,
+		success: function( response ) {
+			var response = $.parseJSON( response );
+			$( "#log" ).append( response.log );
+			showResult( response.result );
+			if ( action == 'remove' ) {
+				getFilteredTopics();
 			}
-		},
-		beforeSend: function() {
-			block_actions();
-			$("#process").text( "Управление раздачами..." );
-		},
-		complete: function() {
-			block_actions();
-		},
+		}
 	});
 }
 
-$(".torrent_action").on("click", function(e){
-	var button = this;
-	remove_data = ""; force_start = ""; label = "";
-	subsection = $("#subsections").val();
-	action = $(this).val();
-	topics = listSelectedTopics.apply(); if(topics == '') return;
-	clients = getTorClients();
-	if( subsection > 0 ) {
-		data = $("#list-ss [value="+subsection+"]").attr("data");
-		data = data.split("|");
+$( ".torrent_action" ).on( "click", function( e ) {
+	var topics_ids = $( "#topics" ).serialize();
+	if ( $.isEmptyObject( topics_ids ) ) {
+		showResult( "Выберите раздачи" );
+		return;
+	}
+	var tor_clients = getTorClients();
+	if ( $.isEmptyObject( tor_clients ) ) {
+		showResult( "В настройках не найдены торрент-клиенты" );
+		return;
+	}
+	var action = $( this ).val();
+	var subsection = $( "#subsections" ).val();
+	var label = "", remove_data = "", force_start = "";
+	if ( subsection > 0 ) {
+		var data = $( "#list-ss [value="+subsection+"]" ).attr( "data" );
+		data = data.split( "|" );
 		label = data[1];
 	}
-	if(action == 'remove'){
-		$("#dialog").dialog({
-			buttons: [{ text: "Да", click: function() { remove_data = true; exec_action_for_topics.apply(button); }},
-				{ text: "Нет", click: function() { exec_action_for_topics.apply(button); }}],
-			modal: true,
-			resizable: false,
-			//~ position: [ 'center', 200 ]
-		}).text('Удалить загруженные файлы раздач с диска ?');
-		$("#dialog").dialog("open");
+	if ( action == "remove" ) {
+		$( "#dialog" ).dialog(
+			{
+				buttons: [
+					{
+						text: "Да",
+						click: function() {
+							remove_data = true;
+							execActionTopics( topics_ids, tor_clients, action, label, force_start, remove_data );
+						}
+					},
+					{
+						text: "Нет",
+						click: function() {
+							execActionTopics( topics_ids, tor_clients, action, label, force_start, remove_data );
+						}
+					}
+				],
+				modal: true,
+				resizable: false,
+				//~ position: [ 'center', 200 ]
+			}
+		).text( 'Удалить загруженные файлы раздач с диска ?' );
+		$( "#dialog" ).dialog( "open" );
 		return;
 	}
-	if(action == 'set_label' && (e.ctrlKey || subsection == 0)){
-		$("#dialog").dialog({
-			buttons: [{ text: "ОК", click: function() { label = $("#any_label").val(); exec_action_for_topics.apply(button); }}],
-			modal: true,
-			resizable: false,
-			//~ position: [ 'center', 200 ]
-		}).html('<label>Установить метку: <input id="any_label" size="27" />');
-		$("#dialog").dialog("open");
+	if ( action == "set_label" && ( e.ctrlKey || subsection == 0 ) ) {
+		$("#dialog").dialog(
+			{
+				buttons: [
+					{
+						text: "ОК",
+						click: function() {
+							label = $( "#any_label" ).val();
+							execActionTopics( topics_ids, tor_clients, action, label, force_start, remove_data );
+						}
+					}
+				],
+				modal: true,
+				resizable: false,
+				//~ position: [ 'center', 200 ]
+			}
+		).html( '<label>Установить метку: <input id="any_label" size="27" />' );
+		$( "#dialog" ).dialog( "open" );
 		return;
 	}
-	exec_action_for_topics.apply(this);
+	execActionTopics( topics_ids, tor_clients, action, label, force_start, remove_data );
 });
 
-// вывод на экран кол-во, объём выбранных раздач
-function showSizeAndAmount( count, size ) {
+/* выбранные/выделенные раздачи */
+
+// вывод на экран кол-во, объём выделенных раздач
+function showCountSizeSelectedTopics( count = 0, size = 0.00 ) {
 	$( "#topics_count" ).text( count );
 	$( "#topics_size" ).text( сonvertBytes( size ) );
 }
 
-function Counter() {
-	this.count = 0;
-	this.size_all = 0
-}
-
-function addSizeAndAmount( element ) {
-	var size = element.attr( "size" );
-	this.size_all += parseInt( size );
-	this.count++;
-}
-
-// получение данных и вывод на экран кол-во, объём выделенных/остортированных раздач
-function countSizeAndAmount(thisElem) {
-	var action = 0;
-	if ( thisElem !== undefined ) {
-		action = thisElem.val();
+// получение кол-ва, объёма выделенных раздач
+function getCountSizeSelectedTopics() {
+	var topics = $( "#topics" ).find( ".topic[type=checkbox]:checked" );
+	if ( $.isEmptyObject( topics ) ) {
+		showCountSizeSelectedTopics();
+		return;
 	}
-	var counter = new Counter();
-	var topics = $("#topics").find("input[type=checkbox]");
-	if (topics.length === 0) {
-		showSizeAndAmount( 0, 0.00 );
-	} else {
-		topics.each(function () {
-			switch (action) {
-				case "select":
-					$(this).prop("checked", "true");
-					addSizeAndAmount.call(counter, $(this));
-					break;
-				case "unselect":
-					$(this).removeAttr("checked");
-					break;
-				case "on":
-					if ($(this).prop("checked")) {
-						addSizeAndAmount.call(counter, $(this));
-					}
-					break;
-				default:
-					addSizeAndAmount.call(counter, $(this));
-			}
-		});
-		showSizeAndAmount(counter.count, counter.size_all);
-	}
+	var size = 0;
+	var count = 0;
+	topics.each( function() {
+		var data = this.dataset;
+		size += parseInt( data.size );
+		count++;
+	});
+	showCountSizeSelectedTopics( count, size );
 }
 
 // кнопка выделить все / отменить выделение
-$(".tor_select, .tor_unselect").on("click", function(){
-	countSizeAndAmount($(this))
+$( ".tor_select" ).on( "click", function() {
+	var value = $( this ).val();
+	$( "#topics" ).find( ".topic[type=checkbox]" ).prop( "checked", Boolean( value ) );
+	getCountSizeSelectedTopics();
 });
 
 // выделение/снятие выделения интервала раздач
-$("#topics").on("click", ".topic", function(event){
-	subsection = $("#subsections").val();
-	if(!$("#topics .topic").hasClass("first-topic")){
-		$(this).addClass("first-topic");
-		countSizeAndAmount($(this));
+$( "#topics" ).on( "click", ".topic", function( event ) {
+	if ( ! $( "#topics .topic" ).hasClass( "first-topic" ) ) {
+		$( this ).addClass( "first-topic" );
+		getCountSizeSelectedTopics();
 		return;
 	}
-	if(event.shiftKey){
-		tag = parseInt($(this).attr("tag")); // 2 - 20 = -18; 10 - 2 = 8;
-		tag_first = parseInt($("#topics .first-topic").attr("tag"));
-		direction = (tag_first - tag < 0 ? 'down' : 'up');
-		$("#topics").closest("div")
-		.find("input[type=checkbox]")
-		.each(function(){
-			if(direction == 'down'){
-				if(parseInt($(this).attr("tag")) >= tag_first && parseInt($(this).attr("tag")) <= tag){
-					if(!event.ctrlKey) $(this).prop("checked", "true");
-					else $(this).removeAttr("checked");
+	if ( event.shiftKey ) {
+		var data = this.dataset;
+		var tag = parseInt( data.tag ); // 2 - 20 = -18; 10 - 2 = 8;
+		var data_first = document.querySelector( "#topics .first-topic" ).dataset;
+		var tag_first = parseInt( data_first.tag );
+		var direction = tag_first - tag < 0 ? "down" : "up";
+		$( "#topics" ).closest( "form" ).find( ".topic[type=checkbox]" ).each( function() {
+			var data_this = this.dataset;
+			var tag_this = parseInt( data_this.tag );
+			if ( direction == "down" ) {
+				if ( tag_this >= tag_first && tag_this <= tag ) {
+					$( this ).prop( "checked", ! event.ctrlKey );
 				}
 			}
-			if(direction == 'up'){
-				if(parseInt($(this).attr("tag")) <= tag_first && parseInt($(this).attr("tag")) >= tag){
-					if(!event.ctrlKey) $(this).prop("checked", "true");
-					else $(this).removeAttr("checked");
+			if ( direction == "up" ) {
+				if ( tag_this <= tag_first && tag_this >= tag ) {
+					$( this ).prop( "checked", ! event.ctrlKey );
 				}
 			}
 		});
 	}
-	countSizeAndAmount($(this));
-	$("#topics .first-topic").removeClass("first-topic");
-	$(this).addClass("first-topic");
+	$( "#topics .first-topic" ).removeClass( "first-topic" );
+	$( this ).addClass( "first-topic" );
+	getCountSizeSelectedTopics();
 });
 
-// фильтр
+/* фильтр раздач */
 
 // вкл/выкл интервал сидов
 $("input[name=filter_interval]").on("click", function(){
@@ -292,36 +305,6 @@ $(document).on("dblclick",".keeper",function(e){
 	$('#filter_by_keeper').prop("checked", true);
 	$('input[name=is_keepers][type="checkbox"]').prop("checked", true).change();
 });
-
-// получение отфильтрованных раздач из базы
-function getFilteredTopics(){
-	Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
-	forum_id = $("#subsections").val();
-	$config = $("#config").serialize();
-	$filter = $("#topics_filter").serialize();
-	$.ajax({
-		type: "POST",
-		url: "php/actions/get_filtered_list_topics.php",
-		data: { forum_id: forum_id, config: $config, filter: $filter },
-		success: function( response ) {
-			response = $.parseJSON(response);
-			if ( response.topics != null ) {
-				$("#topics").html(response.topics);
-				$("#filtered_topics_count").text( response.count );
-				$("#filtered_topics_size").text( сonvertBytes( response.size ) );
-			}
-			//~ $("#log").append(response);
-		},
-		beforeSend: function() {
-			block_actions();
-			$("#process").text( "Получение данных о раздачах..." );
-		},
-		complete: function() {
-			block_actions();
-			showSizeAndAmount( 0, 0.00 );
-		}
-	});
-}
 
 // загрузка параметров фильтра из кук
 $( document ).ready( function() {
@@ -370,11 +353,11 @@ $("#filter_reset").on("click", function() {
 // события при выборе свойств фильтра
 var delay = makeDelay (500);
 $("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function() {
-	delay( getFilteredTopics, this );
+	delay( getFilteredTopics );
 });
 
 $( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release" ).on( "change", function () {
-	delay( getFilteredTopics, this );
+	delay( getFilteredTopics );
 });
 
 // есть/нет хранители

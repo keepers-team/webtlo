@@ -22,7 +22,7 @@ function create_reports( $forum_ids, $tracker_username ) {
 		$forum_ids, true
 	);
 	if ( empty( $topics ) ) {
-		throw new Exception( "Error: Не получены данные о хранимых раздач." );
+		throw new Exception( "Error: Не получены данные о хранимых раздачах." );
 	}
 	
 	// сортировка раздач

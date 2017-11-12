@@ -7,7 +7,7 @@ mb_regex_encoding('UTF-8');
 try {
 	
 	$forum_id = $_POST['forum_id'];
-	parse_str( $_POST['config'] );
+	parse_str( $_POST['cfg'] );
 	parse_str( $_POST['filter'] );
 	
 	// некорретный ввод значений сидов
@@ -86,7 +86,7 @@ try {
 	
 	// данные о раздачах
 	$topics = Db::query_database(
-		"SELECT Topics.id,ss,na,hs,si,st,rg,dl,cl,$qt as ds,$avg as avg ".
+		"SELECT Topics.id,na,si,rg,$qt as ds,$avg as avg ".
 		"FROM Topics LEFT JOIN Seeders on Seeders.id = Topics.id ".
 		"LEFT JOIN (SELECT * FROM Keepers GROUP BY topic_id) Keepers ON Topics.id = Keepers.topic_id ".
 		"LEFT JOIN (SELECT * FROM Blacklist GROUP BY topic_id) Blacklist ON Topics.id = Blacklist.topic_id ".
@@ -151,7 +151,7 @@ try {
 		
 		$output .=
 			'<div id="topic_' . $topic['id'] . '" class="topic_data"><label>
-				<input type="checkbox" class="topic" tag="'.$q++.'" id="'.$topic['id'].'" subsection="'.$topic['ss'].'" size="'.$topic['si'].'" hash="'.$topic['hs'].'" client="'.$topic['cl'].'" >
+				<input type="checkbox" name="topics_ids[]" class="topic" value="'.$topic['id'].'" data-size="'.$topic['si'].'" data-tag="'.$q++.'">
 				<i title="" class="fa fa-circle '.$icons.'"></i>
 				<span title="Дата регистрации раздачи">[' . date( 'd.m.Y', $topic['rg'] ) . ']</span>
 				<a href="'.$forum_url.'/forum/viewtopic.php?t='.$topic['id'].'" target="_blank">'.$topic['na'].'</a>'.' ('.convert_bytes($topic['si']).')'.' - '.'<span class="seeders" title="Значение сидов">'.round($topic['avg'], 2).'</span>'.

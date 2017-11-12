@@ -2,39 +2,35 @@
 
 include dirname(__FILE__) . '/../../common.php';
 
-// массив раздач
-$ids = isset( $_POST['topics'] )
-	? array_column_common( $_POST['topics'], 'id' )
-	: array();
-	
-$value = empty( $_POST['value'] ) ? 0 : 1;
-
 try {
-	
-	if ( empty( $ids ) ) {
-		throw new Exception( "Error: Не получены идентификаторы выделенных раздач." );
+
+	if ( empty( $_POST['topics_ids'] ) ) {
+		$result = "Выберите раздачи";
+		throw new Exception();
 	}
+
+	parse_str( $_POST['topics_ids'] );
 	
-	$ids = array_chunk( $ids, 500 );
+	$value = empty( $_POST['value'] ) ? 0 : 1;
 	
-	foreach ( $ids as $ids ) {
-		
-		
+	$topics_ids = array_chunk( $topics_ids, 500 );
+	
+	foreach ( $topics_ids as $topics_ids ) {
 		switch ( $value ) {
 			case 0:
-				$in = str_repeat( '?,', count( $ids ) - 1 ) . '?';
-				Db::query_database( "DELETE FROM Blacklist WHERE topic_id IN ($in)", $ids );
+				$in = str_repeat( '?,', count( $topics_ids ) - 1 ) . '?';
+				Db::query_database( "DELETE FROM Blacklist WHERE topic_id IN ($in)", $topics_ids );
 				break;
 			case 1:
-				$select = str_repeat( 'SELECT ? UNION ALL ', count( $ids ) - 1 ) . ' SELECT ?';
-				Db::query_database( "INSERT INTO Blacklist (topic_id) $select", $ids );
+				$select = str_repeat( 'SELECT ? UNION ALL ', count( $topics_ids ) - 1 ) . ' SELECT ?';
+				Db::query_database( "INSERT INTO Blacklist (topic_id) $select", $topics_ids );
 				break;
 			default:
-				throw new Exception( "Error: Неизвестное событие." );
+				throw new Exception( "Error: Неизвестное событие" );
 		}
 	}
 	
-	echo 'Обновление "чёрного списка" раздач успешно завершено.';
+	echo 'Обновление "чёрного списка" раздач успешно завершено';
 	
 } catch ( Exception $e ) {
 	

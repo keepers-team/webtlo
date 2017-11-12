@@ -5,39 +5,53 @@ include dirname(__FILE__) . '/../download.php';
 
 try {
 	
-	$dl_log = "";
+	$result = "";
 	
-	if ( empty ( $_POST['ids'] ) ) {
+	if ( empty( $_POST['topics_ids'] ) ) {
+		$result = "Выберите раздачи";
 		throw new Exception();
 	}
 	
 	// парсим настройки
-	if ( isset ( $_POST['cfg'] ) ) {
+	if ( isset( $_POST['cfg'] ) ) {
 		parse_str( $_POST['cfg'] );
+	}
+	
+	if ( empty( $api_key ) ) {
+		$result = "В настройках не указан хранительский ключ API";
+		throw new Exception();
+	}
+	
+	if ( empty( $user_id ) ) {
+		$result = "В настройках не указан хранительский ключ ID";
+		throw new Exception();
 	}
 	
 	if ( isset( $_POST['replace_passkey'] ) ) {
 		$replace_passkey = $_POST['replace_passkey'];
 	}
 	
-	if ( empty ( $api_key ) ) {
-		throw new Exception( "Error: Не указан хранительский ключ API." );
-	}
-	
-	if ( empty ( $user_id ) ) {
-		throw new Exception( "Error: Не указан хранительский ключ ID." );
-	}
-	
 	$retracker = isset( $retracker ) ? 1 : 0;
 	$tor_for_user = isset( $tor_for_user ) ? 1 : 0;
 	$forum_id = isset ( $_POST['forum_id'] ) ? $_POST['forum_id'] : 0;
-	$ids = $_POST['ids'];
+	parse_str( $_POST['topics_ids'] );
 	
+	// дополнительный слэш в конце каталога
+	if ( ! empty( $savedir ) && ! in_array( substr( $savedir, -1 ), array( '\\', '/' ) ) ) {
+		$savedir .= strpos( $savedir, '/' ) === false ? '\\' : '/';
+	}
+	
+	// подгтовка каталогов
 	$savedir = empty ( $replace_passkey )
-		? isset( $savesubdir )
+		? ! empty( $savedir ) && isset( $savesubdir )
 			? $savedir . 'tfiles_' . $forum_id . '_' . date( "d.m.Y_H.i.s" ) . '_' . $rule_topics . substr( $savedir, -1 )
 			: $savedir
 		: $dir_torrents;
+	
+	if ( empty( $savedir ) ) {
+		$result = "В настройках не указан каталог для скачивания торрент-файлов";
+		throw new Exception();
+	}
 	
 	// прокси
 	$activate = isset( $proxy_activate ) ? 1 : 0;
@@ -45,21 +59,32 @@ try {
 	$proxy_auth = "$proxy_login:$proxy_paswd";
 	Proxy::options( $activate, $proxy_type, $proxy_address, $proxy_auth );
 	
-	// скачивание
-	$dl = new Download( $api_key );
-	$dl->create_directories( $savedir, $dl_log );
-	$dl->download_torrent_files( $forum_url, $user_id, $ids, $retracker, $dl_log, $passkey, $replace_passkey, $tor_for_user );
+	// создание каталогов
+	if ( ! mkdir_recursive( $savedir ) ) {
+		$result = "Не удалось создать каталог \"$savedir\": неверно указан путь или недостаточно прав";
+		throw new Exception();
+	}
+	
+	// скачивание торрент-файлов
+	$start = microtime( true );
+	$download = new Download( $api_key );
+	$download->savedir = $savedir;
+	$downloaded_files = $download->download_torrent_files( $forum_url, $user_id, $topics_ids, $retracker, $passkey, $replace_passkey, $tor_for_user );
+	$downloaded_count = count( $downloaded_files );
+	$end = microtime( true );
+	
+	$result = "Сохранено в каталоге \"$savedir\": $downloaded_count шт. (за " . round( $end - $start, 1 ). " с).";
 	
 	echo json_encode(array(
 		'log' => Log::get(),
-		'result' => $dl_log
+		'result' => $result
 	));
 	
 } catch ( Exception $e ) {
 	Log::append( $e->getMessage() );
 	echo json_encode(array(
 		'log' => Log::get(),
-		'result' => $dl_log
+		'result' => $result
 	));
 }
 
