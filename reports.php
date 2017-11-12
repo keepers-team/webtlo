@@ -136,7 +136,7 @@ class Reports {
 		$try = 3; // кол-во попыток
 		while ( true ) {
 			$data = curl_exec( $this->ch );
-			if ( $data === false ) {
+			if ( $data === false  || !strlen($data) ) {
 				$http_code = curl_getinfo( $this->ch, CURLINFO_HTTP_CODE );
 				if ( $http_code == 0 && $try_number <= $try ) {
 					Log::append( "Повторная попытка $try_number/$try получить данные." );
@@ -309,9 +309,11 @@ class Reports {
 			// получение данных со страниц
 			Log::append ( 'Поиск своих сообщений в теме для подраздела № ' . $subsection['id'] . '...' );
 			while($page > 0){
-				$data = $this->make_request(
-					$this->forum_url . '/forum/viewtopic.php?t=' . $forum_links[$subsection['id']]. '&start=' . $i
-				);
+				$topic_url = $this->forum_url . '/forum/viewtopic.php?t=' . $links[$subsection['id']];
+				if($i > 0){
+					$topic_url .= '&start=' . $i;
+				}
+				$data = $this->make_request($topic_url);
 				$html = phpQuery::newDocumentHTML($data, 'UTF-8');
 				$topic_main = $html->find('table#topic_main');
 				$pages = $html->find('a.pg:last')->prev();
