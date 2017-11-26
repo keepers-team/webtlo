@@ -41,7 +41,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.5</title>
+		<title>web-TLO-0.9.3.6</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -121,7 +121,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-pause" aria-hidden="true"></i>
 								</button>
 								<button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
-									<i class="fa fa-times text-danger" aria-hidden="true"></i>
+									<i class="fa fa-times" aria-hidden="true"></i>
 								</button>
 							</div>
 							<button id="update" name="update" type="button" title="Обновить сведения о раздачах">
