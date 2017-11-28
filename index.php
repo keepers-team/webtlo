@@ -42,7 +42,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<title>web-TLO-0.9.3.4</title>
+		<title>web-TLO-0.9.3.7</title>
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
@@ -456,6 +456,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 														<option value="socks4" <?php echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?> >SOCKS4</option>
 														<option value="socks4a" <?php echo ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?> >SOCKS4A</option>
 														<option value="socks5" <?php echo ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?> >SOCKS5</option>
+														<option value="socks5h" <?php echo ($cfg['proxy_type'] == 'socks5h' ? "selected" : "") ?> >SOCKS5H</option>
 													</select>
 												</div>
 											</div>
