@@ -317,7 +317,7 @@ class Proxy {
 	protected static $type;
 	protected static $address;
 	
-	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5 );
+	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7 );
 	
 	public static function options ( $active = false, $type = "http", $address = "", $auth = "" ) {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
