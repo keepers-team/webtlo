@@ -146,9 +146,9 @@ function get_settings( $filename = "" ) {
 	
 	// прокси
 	$config['proxy_activate'] = $ini->read('proxy','activate',0);
-	$config['proxy_type'] = $ini->read('proxy','type','http');
-	$config['proxy_hostname'] = $ini->read('proxy','hostname','195.82.146.100');
-	$config['proxy_port'] = $ini->read('proxy','port',3128);
+	$config['proxy_type'] = $ini->read( 'proxy', 'type', 'socks5h' );
+	$config['proxy_hostname'] = $ini->read( 'proxy', 'hostname', 'px1.blockme.site' );
+	$config['proxy_port'] = $ini->read( 'proxy', 'port', 33128 );
 	$config['proxy_login'] = $ini->read('proxy','login','');
 	$config['proxy_paswd'] = $ini->read('proxy','password','');
 	$config['proxy_address'] = $config['proxy_hostname'] . ':' . $config['proxy_port'];
