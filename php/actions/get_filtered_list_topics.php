@@ -7,6 +7,7 @@ mb_regex_encoding('UTF-8');
 try {
 	
 	$forum_id = $_POST['forum_id'];
+	$forum_ids = $_POST['forum_ids'];
 	parse_str( $_POST['cfg'] );
 	parse_str( $_POST['filter'] );
 	
@@ -70,14 +71,21 @@ try {
 	
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
+			// хранимые раздачи из других подразделов
 			case 0:
 				$where = "dl = -2 AND Blacklist.topic_id IS NULL";
 				$param = array();
 				break;
+			// раздачи из чёрного списка
 			case -2:
 				$where = "Blacklist.topic_id IS NOT NULL";
 				$param = array();
 				break;
+			// раздачи из всех хранимых подразделов
+			case -3:
+				$forum_ids = implode( $forum_ids, ',' );
+				$where = "dl = :dl AND ss IN ($forum_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
+				$param = array( 'dl' => $filter_status );
 		}
 	} else {
 		$where = "dl = :dl AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";

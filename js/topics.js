@@ -5,6 +5,7 @@
 function getFilteredTopics() {
 	Cookies.set( "filter-options", $( "#topics_filter" ).serializeArray() );
 	var forum_id = $( "#subsections" ).val();
+	var forum_ids = getForumIds();
 	var config = $( "#config" ).serialize();
 	var filter = $( "#topics_filter" ).serialize();
 	$( "#process" ).text( "Получение данных о раздачах..." );
@@ -13,6 +14,7 @@ function getFilteredTopics() {
 		url: "php/actions/get_filtered_list_topics.php",
 		data: {
 			forum_id: forum_id,
+			forum_ids: forum_ids,
 			filter: filter,
 			cfg: config
 		},

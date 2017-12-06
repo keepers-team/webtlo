@@ -75,6 +75,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
 -->
 							<option value="-2">Раздачи из "чёрного списка"</option>
+							<option value="-3">Раздачи из всех хранимых подразделов</option>
 						</optgroup>
 					</select>
 					<div id="sub-data">
