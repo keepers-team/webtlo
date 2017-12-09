@@ -33,11 +33,9 @@ try {
 					t.st,
 					t.ss,
 					(CAST((IFNULL(t.se, 0)+IFNULL(s.d0 , 0)+IFNULL(s.d1 , 0)+IFNULL(s.d2 , 0)+IFNULL(s.d3 , 0)+IFNULL(s.d4 , 0)+IFNULL(s.d5 , 0)+IFNULL(s.d6 , 0)+IFNULL(s.d7 , 0)+IFNULL(s.d8 , 0)+IFNULL(s.d9 , 0)+
-					IFNULL(s.d10, 0)+IFNULL(s.d11, 0)+IFNULL(s.d12, 0)+IFNULL(s.d13, 0)+IFNULL(s.d14, 0)+IFNULL(s.d15, 0)+IFNULL(s.d16, 0)+IFNULL(s.d17, 0)+IFNULL(s.d18, 0)+IFNULL(s.d19, 0)+IFNULL(s.d20, 0)+
-					IFNULL(s.d21, 0)+IFNULL(s.d22, 0)+IFNULL(s.d23, 0)+IFNULL(s.d24, 0)+IFNULL(s.d25, 0)+IFNULL(s.d26, 0)+IFNULL(s.d27, 0)+IFNULL(s.d28, 0)+IFNULL(s.d29, 0)) as FLOAT)) /
+					IFNULL(s.d10, 0)+IFNULL(s.d11, 0)+IFNULL(s.d12, 0)+IFNULL(s.d13, 0)) as FLOAT)) /
 					((IFNULL(t.qt, 0)+IFNULL(s.q0 , 0)+IFNULL(s.q1 , 0)+IFNULL(s.q2 , 0)+IFNULL(s.q3 , 0)+IFNULL(s.q4 , 0)+IFNULL(s.q5 , 0)+IFNULL(s.q6 , 0)+IFNULL(s.q7 , 0)+IFNULL(s.q8 , 0)+IFNULL(s.q9 , 0)+
-					IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0)+IFNULL(s.q14, 0)+IFNULL(s.q15, 0)+IFNULL(s.q16, 0)+IFNULL(s.q17, 0)+IFNULL(s.q18, 0)+IFNULL(s.q19, 0)+IFNULL(s.q20, 0)+
-					IFNULL(s.q21, 0)+IFNULL(s.q22, 0)+IFNULL(s.q23, 0)+IFNULL(s.q24, 0)+IFNULL(s.q25, 0)+IFNULL(s.q26, 0)+IFNULL(s.q27, 0)+IFNULL(s.q28, 0)+IFNULL(s.q29, 0))) AS se
+					IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0))) AS se
 				FROM Topics t
 				LEFT JOIN Seeders s ON t.id = s.id
 				WHERE ss = :ss
