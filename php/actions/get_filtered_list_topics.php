@@ -84,12 +84,14 @@ try {
 			// раздачи из всех хранимых подразделов
 			case -3:
 				$forum_ids = implode( $forum_ids, ',' );
-				$where = "dl = :dl AND ss IN ($forum_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
-				$param = array( 'dl' => $filter_status );
+				$filter_status = implode( $filter_status, ',' );
+				$where = "dl IN ($filter_status) AND ss IN ($forum_ids) AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
+				$param = array();
 		}
 	} else {
-		$where = "dl = :dl AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
-		$param = array( 'dl' => $filter_status, 'forum_id' => $forum_id );
+		$filter_status = implode( $filter_status, ',' );
+		$where = "dl IN ($filter_status) AND ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
+		$param = array( 'forum_id' => $forum_id );
 	}
 	
 	// данные о раздачах
