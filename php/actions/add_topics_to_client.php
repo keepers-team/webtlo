@@ -77,6 +77,7 @@ try {
 		throw new Exception();
 	}
 	
+	$tor_clients_ids = array();
 	$added_files_total = 0;
 	$tor_clients_total = 0;
 
@@ -180,8 +181,11 @@ try {
 		
 		Log::append( 'Добавлено раздач в торрент-клиент "' . $tor_client['cm'] . '": ' . $downloaded_count . ' шт.' );
 
+		if ( ! in_array( $tor_client_id, $tor_clients_ids ) ) {
+			$tor_clients_ids[] = $tor_client_id;
+		}
+
 		$added_files_total += $downloaded_count;
-		$tor_clients_total++;
 
 		unset( $downloaded_files );
 		unset( $uploaded_files );
@@ -190,6 +194,8 @@ try {
 		unset( $forum );
 		
 	}
+
+	$tor_clients_total = count( $tor_clients_ids );
 
 	$result = "Задействовано торрент-клиентов — $tor_clients_total, добавлено раздач всего — $added_files_total шт.";
 
