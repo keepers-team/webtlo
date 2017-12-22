@@ -41,7 +41,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.7</title>
+		<title>web-TLO-0.9.3.8</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -492,6 +492,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											<option value="0">нет</option>
 											<option value="1">ID раздачи</option>
 											<!-- <option value="2">Запрашивать</option> -->
+										</select>
+									</label>
+									<label class="flex">
+										Скрывать раздачи в общем списке:
+										<select id="ss-hide-topics" class="myinput ss-prop" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
+											<option value="0">нет</option>
+											<option value="1">да</option>
 										</select>
 									</label>
 								</fieldset>

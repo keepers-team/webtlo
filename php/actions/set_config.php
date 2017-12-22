@@ -93,6 +93,9 @@ try {
 			if ( isset ( $forum['ln'] ) ) {
 				$ini->write( $forum['id'], 'link', $forum['ln'] );
 			}
+			if ( isset ( $forum['hide_topics'] ) ) {
+				$ini->write( $forum['id'], 'hide-topics', $forum['hide_topics'] );
+			}
 		}
 		$ini->write( 'sections', 'subsections', implode( ',', array_keys( $forums ) ) );	
 	}

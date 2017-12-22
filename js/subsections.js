@@ -51,7 +51,7 @@ function addSubsection(event, ui) {
 		if(vl == val) q = 1;
 	});
 	if(q != 1) {
-		$("#list-ss").append('<option value="'+vl+'" data="0|'+label+'||">'+lb+'</option>');
+		$("#list-ss").append('<option value="'+vl+'" data="0|'+label+'||||0">'+lb+'</option>');
 		$("#subsections_stored").append('<option value="'+vl+'">'+lb+'</option>');
 		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
 		$("#ss-id").prop("disabled", true);
@@ -102,6 +102,7 @@ $("#list-ss").on("change", function(){
 	} else {
 		$("#ss-sub-folder :first").prop("selected", "selected");
 	}
+	$("#ss-hide-topics [value="+data[5]+"]").prop("selected", "selected");
 	ss_change = $(this).val();
 	$("#ss-id").val(ss_change);
 });
@@ -120,16 +121,22 @@ $("#ss-prop").on("focusout", function(){
 	fd = $("#ss-folder").val();
 	ln = $("#ss-link").val();
 	var sub_folder = $("#ss-sub-folder").val();
+	var hide_topics = $("#ss-hide-topics :selected").val();
 	$("#list-ss option[value="+ss_change+"]")
-		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln+"|"+sub_folder);
+		.attr("data", cl+"|"+lb+"|"+fd+"|"+ln+"|"+sub_folder+"|"+hide_topics);
 });
 
 /* получение данных о подразделах */
-function getForumIds() {
+function getForumIds( forum_id = "" ) {
 	var ids = [];
 	$("#list-ss option").each( function() {
-		value = $(this).val();
+		var value = $(this).val();
 		if ( value != 0 ) {
+			var data = $(this).attr("data");
+			data = data.split('|');
+			if ( forum_id !== "" && forum_id == -3 && data[5] == 1 ) {
+				return true;
+			}
 			ids.push( value );
 		}
 	});
@@ -151,7 +158,8 @@ function getForums() {
 				"lb": data[1],
 				"fd": data[2],
 				"ln": data[3],
-				"sub_folder": data[4]
+				"sub_folder": data[4],
+				"hide_topics": data[5]
 			};
 		}
 	});

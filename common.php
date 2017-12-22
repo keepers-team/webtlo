@@ -125,6 +125,7 @@ function get_settings( $filename = "" ) {
 			$config['subsections'][$id]['df'] = $ini->read("$id","data-folder","");
 			$config['subsections'][$id]['ln'] = $ini->read("$id","link","");
 			$config['subsections'][$id]['sub_folder'] = $ini->read("$id","data-sub-folder","");
+			$config['subsections'][$id]['hide_topics'] = $ini->read( $id, "hide-topics", 0 );
 			$config['subsections'][$id]['id'] = $id;
 			$config['subsections'][$id]['na'] = isset( $titles[$id] )
 				? $titles[$id]

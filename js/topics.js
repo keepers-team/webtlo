@@ -5,7 +5,7 @@
 function getFilteredTopics() {
 	Cookies.set( "filter-options", $( "#topics_filter" ).serializeArray() );
 	var forum_id = $( "#subsections" ).val();
-	var forum_ids = getForumIds();
+	var forum_ids = getForumIds( forum_id );
 	var config = $( "#config" ).serialize();
 	var filter = $( "#topics_filter" ).serialize();
 	$( "#process" ).text( "Получение данных о раздачах..." );
