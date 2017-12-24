@@ -162,7 +162,7 @@
 					if(window.getSelection){ 
 					var s=window.getSelection(); 
 					if(s.setBaseAndExtent){ 
-					s.setBaseAndExtent(e,0,e,e.innerText.length-1); 
+					s.setBaseAndExtent(e,0,e,e.childNodes.length); 
 					}else{ 
 					var r=document.createRange(); 
 					r.selectNodeContents(e); 
