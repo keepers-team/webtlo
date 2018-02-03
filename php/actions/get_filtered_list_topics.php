@@ -68,6 +68,11 @@ try {
 	$tor_status = isset( $filter_tor_status ) && is_array( $filter_tor_status )
 		? implode( ',', $filter_tor_status )
 		: "";
+
+	// если не выбран статус раздач
+	if ( ! isset( $filter_status ) ) {
+		$filter_status = array();
+	}
 	
 	if( $forum_id < 1 ) {
 		switch( $forum_id ) {
