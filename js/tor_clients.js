@@ -60,11 +60,10 @@ $("#del-tc").on("click", function() {
 	$("#list-ss option").each(function(){
 		data = $(this).attr("data");
 		cl = data.split("|");
-		value = $("#list-tcs option").filter(function() {
-			return $(this).text() == cl[0];
-		}).val();
-		if(!value)
+		var client_id = $("#list-tcs option[value="+cl[0]+"]").val();
+		if ( typeof client_id == "undefined" ) {
 			$(this).attr("data", data.replace(/^[^|]*/, "0"));
+		}
 	});
 });
 
