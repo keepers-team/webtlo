@@ -25,7 +25,7 @@ try {
 	// получение данных
 	$api = new Api( $cfg['api_url'], $cfg['api_key'] );
 	$api->get_cat_forum_tree();
-	$forum_ids = Db::query_database( "SELECT id FROM Forums WHERE id NOT IN (${cfg['subsec']})", array(), true, PDO::FETCH_NUM );
+	$forum_ids = Db::query_database( "SELECT id FROM Forums WHERE id NOT IN (${cfg['subsec']})", array(), true, PDO::FETCH_COLUMN );
 	$forum_ids = array_chunk( $forum_ids, 50, true);
 	
 	if( empty( $forum_ids ) )
