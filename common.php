@@ -146,9 +146,9 @@ function get_settings( $filename = "" ) {
 	
 	// прокси
 	$config['proxy_activate'] = $ini->read('proxy','activate',0);
-	$config['proxy_type'] = $ini->read('proxy','type','http');
-	$config['proxy_hostname'] = $ini->read('proxy','hostname','195.82.146.100');
-	$config['proxy_port'] = $ini->read('proxy','port',3128);
+	$config['proxy_type'] = $ini->read( 'proxy', 'type', 'socks5h' );
+	$config['proxy_hostname'] = $ini->read( 'proxy', 'hostname', 'px1.blockme.site' );
+	$config['proxy_port'] = $ini->read( 'proxy', 'port', 33128 );
 	$config['proxy_login'] = $ini->read('proxy','login','');
 	$config['proxy_paswd'] = $ini->read('proxy','password','');
 	$config['proxy_address'] = $config['proxy_hostname'] . ':' . $config['proxy_port'];
@@ -317,7 +317,7 @@ class Proxy {
 	protected static $type;
 	protected static $address;
 	
-	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5 );
+	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7 );
 	
 	public static function options ( $active = false, $type = "http", $address = "", $auth = "" ) {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
