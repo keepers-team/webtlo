@@ -23,15 +23,16 @@ try {
 	$forum_id = $_POST['forum_id'];
 	parse_str( $_POST['config'] );
 	parse_str( $_POST['filter'] );
-	$filter_by_name = $_POST['filter_by_name'];
-	$filter_by_keeper = $_POST['filter_by_keeper'];
-	$filter_by_unique_keeper = $_POST['filter_by_unique_keeper'];
-	$filter_by_subsection = $_POST['filter_by_subsection'];
-	$filter_date_release_from = $_POST['filter_date_release_from'];
-	$filter_date_release_until = $_POST['filter_date_release_until'];
+	$filter_by_torrent_status = json_decode( $_POST['filter_by_torrent_status'] );
+	$filter_by_name               = $_POST['filter_by_name'];
+	$filter_by_keeper             = $_POST['filter_by_keeper'];
+	$filter_by_unique_keeper      = $_POST['filter_by_unique_keeper'];
+	$filter_by_subsection         = $_POST['filter_by_subsection'];
+	$filter_by_date_release_from  = $_POST['filter_by_date_release_from'];
+	$filter_by_date_release_until = $_POST['filter_by_date_release_until'];
 
-	$filter_seeders_from = $_POST['filter_seeders_from'] != '' ? $_POST['filter_seeders_from'] : null;
-	$filter_seeders_to = $_POST['filter_seeders_to'] != '' ? $_POST['filter_seeders_to'] : null;
+	$filter_seeders_from = $_POST['filter_by_seeders_from'] != '' ? $_POST['filter_by_seeders_from'] : null;
+	$filter_seeders_to = $_POST['filter_by_seeders_to'] != '' ? $_POST['filter_by_seeders_to'] : null;
 
 	// некорретный ввод значений сидов
 	//if(/* !is_numeric($filter_rule) || */!is_numeric($filter_seeders_from) || !is_numeric($filter_seeders_to) )
@@ -49,8 +50,8 @@ try {
 		throw new Exception( "В фильтре введено некорректное значение для периода средних сидов." );
 	
 	// некорректная дата
-	$date_release_from = DateTime::createFromFormat( "d.m.Y", $filter_date_release_from );
-	$date_release_until = DateTime::createFromFormat( "d.m.Y", $filter_date_release_until );
+	$date_release_from = DateTime::createFromFormat( "d.m.Y", $filter_by_date_release_from );
+	$date_release_until = DateTime::createFromFormat( "d.m.Y", $filter_by_date_release_until );
 	
 	// если включены средние сиды
 	if( isset($avg_seeders) ) {
@@ -92,8 +93,8 @@ try {
 		: 0;
 
 	// статус раздач на трекере
-	$tor_status = isset( $filter_tor_status ) && is_array( $filter_tor_status )
-		? implode( ',', $filter_tor_status )
+	$tor_status = isset( $filter_by_torrent_status ) && is_array( $filter_by_torrent_status )
+		? implode( ',', $filter_by_torrent_status )
 		: "";
 
 	$filter_status = $filter_status === "*" ? "" : "dl = $filter_status AND";
@@ -117,7 +118,7 @@ try {
 		$where = "$filter_status ss = :forum_id AND st IN ($tor_status) AND Blacklist.topic_id IS NULL $kp";
 		$param = array( 'forum_id' => $forum_id );
 	}
-	
+
 	// данные о раздачах
 	$topics = Db::query_database(
 		"SELECT Topics.id,ss,na,hs,si,st,rg,dl,cl,$qt as ds,$avg as avg ".
@@ -139,7 +140,7 @@ try {
 		4 => 'si',
 		5 => 'avg',
 		6 => 'na',
-		8 => 'ss'
+		9 => 'ss'
 	);
 
 	$torrents_statuses = array(
@@ -208,6 +209,40 @@ try {
 		$keeper = isset( $keepers[$topic['id']] )
 			? '<span data-toggle="tooltip" title="' . implode( ',', $keepers[$topic['id']] ) . '"><span class="keeper">' . implode( '</span>, <span class="keeper">', $keepers[$topic['id']] ) . '</span></span>'
 			: '';
+
+		$topic_keepers_amount = isset( $keepers[$topic['id']] ) ? count( $keepers[ $topic['id'] ] ) : 0;
+		//фильтрация по количеству хранителей
+		if ( $keepers_amount_condition !== "all" ) {
+			if ( isset( $keepers_amount ) ) {
+				if ( is_numeric( $keepers_amount ) ) {
+					if ( $keepers_amount_condition === "=" ) {
+						if ( $topic_keepers_amount != $keepers_amount ) {
+							continue;
+						}
+					}
+					if ( $keepers_amount_condition === "<" ) {
+						if ( $topic_keepers_amount >= $keepers_amount ) {
+							continue;
+						}
+					}
+					if ( $keepers_amount_condition === ">" ) {
+						if ( $topic_keepers_amount <= $keepers_amount ) {
+							continue;
+						}
+					}
+					if ( $keepers_amount_condition === "=<" ) {
+						if ( $topic_keepers_amount > $keepers_amount ) {
+							continue;
+						}
+					}
+					if ( $keepers_amount_condition === "=>" ) {
+						if ( $topic_keepers_amount < $keepers_amount ) {
+							continue;
+						}
+					}
+				}
+			}
+		}
 
 		// фильтрация по фразе
 		if (!empty($filter_by_name)) {

@@ -4,11 +4,11 @@
 var $subsections = $( "#subsections" );
 $subsections.on( "change", function () {
 	redrawTopicsList();
-	Cookies.set( 'saved_forum_id', $subsections.val() );
+	localStorage.setItem( 'saved_forum_id', $subsections.val() );
 } );
 
-if ( typeof(Cookies.get( 'saved_forum_id' )) !== "undefined" ) {
-	$subsections.val( parseInt( Cookies.get( 'saved_forum_id' ) ) );
+if ( localStorage.getItem( 'saved_forum_id' ) !== null ) {
+	$subsections.val( parseInt( localStorage.getItem( 'saved_forum_id' ) ) );
 }
 
 /* добавить подраздел */

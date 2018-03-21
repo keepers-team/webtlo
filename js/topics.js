@@ -1,11 +1,20 @@
 $( document ).ready( function () {
 
+	var $table_filter = $( '.table_filter' );
+	//начальная установка значений по умочланию popover фильтра в LocalStorage
+	if ( localStorage.filterByDateReleaseUntil === undefined ) {
+		localStorage.setItem( "filterByDateReleaseUntil", $( $table_filter.eq( 1 ).attr( "data-content" ) ).find( "#filterByDateReleaseUntil" ).val() );
+	}
+	if ( localStorage.filterBySeedersUntil === undefined ) {
+		localStorage.setItem( "filterBySeedersUntil", $( $table_filter.eq( 2 ).attr( "data-content" ) ).find( "#filterBySeedersUntil" ).val() );
+	}
+	if ( localStorage.filterByTorrentStatus === undefined ) {
+		localStorage.filterByTorrentStatus = JSON.stringify( [2, 8] );
+	}
 
 	var $topics = $( '#topics' );
 	var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
 	var $topics_table_paginate = $( '#topics_table_paginate' );
-	var tableHeight = $topics.height() - $dataTables_scrollHead.height() - 2;
-	$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 	$( window ).bind( 'resize', function () {
 		var tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2;
 		$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
@@ -13,29 +22,26 @@ $( document ).ready( function () {
 
 	// события при выборе свойств фильтра
 	var delay = makeDelay( 500 );
-	$( "#topics_filter" ).find( "input[type=text], input[type=search]" ).on( "spin input", function () {
+	var $topics_filter = $( "#topics_filter" );
+	$topics_filter.find( "select, input[type=text], input[type=search], input[type=number]" ).on( "spin input", function () {
+			delay( redrawTopicsList, this );
+	} );
+
+	$topics_filter.find( "input[type=radio], input[type=checkbox]" ).on( "change", function () {
 		delay( redrawTopicsList, this );
 	} );
 
-	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox], #table_filter input[type=checkbox], #filter_date_release_from, #filter_date_release_until" ).on( "change", function () {
-		delay( redrawTopicsList, this );
-	} );
-
-	$( "#table_filter input, input[type=number]" ).on( "input", function () {
-		var min = 0;
-		var max = 0;
-		if ( $( this ).is( "#filter_seeders_from" ) ) {
-			min = parseFloat( $( this ).val() );
-			max = parseFloat( $( "#filter_seeders_to" ).val() );
-			if ( min > max ) {
-				$( this ).val( max );
-			}
-		} else if ( ($( this ).is( "#filter_seeders_to" )) ) {
-			min = parseFloat( $( "#filter_seeders_from" ).val() );
-			max = parseFloat( $( this ).val() );
-			if ( max < min ) {
-				$( this ).val( min );
-			}
+	$( document ).on( "change", ".popover input", function () {
+		if ( $( this ).attr( 'name' ) === 'filterByTorrentStatus' ) {
+			localStorage.filterByTorrentStatus = JSON.stringify(
+				$( "input[name=filterByTorrentStatus]" ).map( function () {
+					if ( $( this ).prop( "checked" ) ) {
+						return parseInt( $( this ).val() );
+					}
+				} ).get()
+			);
+		} else {
+			localStorage.setItem( $( this ).attr( 'id' ), $( this ).val() );
 		}
 		delay( redrawTopicsList, this );
 	} );
@@ -57,17 +63,46 @@ $( document ).ready( function () {
 						url: 'php/actions/get_filtered_list_topics.php',
 						type: 'POST',
 						data: function ( d ) {
+							//отображение активных popover фильтров
+							var active_filter = [];
+							if ( localStorage.filterByTorrentStatus !== undefined ) {
+								if ( JSON.parse( localStorage.filterByTorrentStatus ).length !== 0 ) {
+									active_filter.push( 0 );
+								}
+							}
+							if ( ( localStorage.filterByDateReleaseFrom !== undefined && localStorage.filterByDateReleaseFrom !== "" ) ||
+								( localStorage.filterByDateReleaseUntil !== undefined && localStorage.filterByDateReleaseUntil !== "") ) {
+								active_filter.push( 1 );
+							}
+							if ( localStorage.filterBySeedersFrom !== undefined || localStorage.filterBySeedersUntil !== undefined ) {
+								active_filter.push( 2 );
+							}
+							if ( localStorage.filterByTitle !== undefined && localStorage.filterByTitle !== "" ) {
+								active_filter.push( 3 );
+							}
+							if ( localStorage.filterByKeeperNickname !== undefined && localStorage.filterByKeeperNickname !== "" ) {
+								active_filter.push( 4 );
+							}
+							if ( localStorage.filterBySubsection !== undefined && localStorage.filterBySubsection !== "" ) {
+								active_filter.push( 5 );
+							}
+							$( "#topics_table_wrapper" ).find( "thead th i" ).removeClass( "active_filter" );
+							$.each( active_filter, function ( index, value ) {
+								$( "#topics_table_wrapper" ).find( "thead i " ).eq( value ).addClass( "active_filter" );
+							} );
+							//установка параметров фильтров для отправки на сервер
 							d.forum_id = $( "#subsections" ).val();
 							d.config = $( "#config" ).serialize();
 							d.filter = $( "#topics_filter" ).serialize();
-							d.filter_by_name = $( "#filter_by_name" ).val();
-							d.filter_by_keeper = $( "#filter_by_keeper" ).val();
-							d.filter_by_unique_keeper = $( "#filter_by_unique_keeper" ).prop( "checked" );
-							d.filter_by_subsection = $( "#filter_by_subsection" ).val();
-							d.filter_date_release_from = $( "#filter_date_release_from" ).val();
-							d.filter_date_release_until = $( "#filter_date_release_until" ).val();
-							d.filter_seeders_from = $( "#filter_seeders_from" ).val();
-							d.filter_seeders_to = $( "#filter_seeders_to" ).val();
+							d.filter_by_torrent_status = localStorage.getItem( "filterByTorrentStatus" );
+							d.filter_by_date_release_from = localStorage.getItem( "filterByDateReleaseFrom" );
+							d.filter_by_date_release_until = localStorage.getItem( "filterByDateReleaseUntil" );
+							d.filter_by_seeders_from = localStorage.getItem( "filterBySeedersFrom" );
+							d.filter_by_seeders_to = localStorage.getItem( "filterBySeedersUntil" );
+							d.filter_by_name = localStorage.getItem( "filterByTitle" );
+							d.filter_by_keeper = localStorage.getItem( "filterByKeeperNickname" );
+							d.filter_by_unique_keeper = localStorage.getItem( "filterByKeepersQuantity" );
+							d.filter_by_subsection = localStorage.getItem( "filterBySubsection" );
 						},
 						dataSrc: function ( json ) {
 							$( "#topics_count" ).text( "0" );
@@ -106,8 +141,7 @@ $( document ).ready( function () {
 						var $topics = $( '#topics' );
 						var $dataTables_scrollHead = $( '.dataTables_scrollHead' );
 						var $topics_table_paginate = $( '#topics_table_paginate' );
-						var tableHeight;
-						tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2 - 3;
+						var tableHeight = $topics.height() - $dataTables_scrollHead.height() - $topics_table_paginate.height() - 4 - 2 - 3;
 						$( '.dataTables_scrollBody' ).css( 'height', tableHeight + 'px' );
 					},
 					"lengthMenu": [ 50, 100, 200, 500, 1000 ],
@@ -124,20 +158,20 @@ $( document ).ready( function () {
 						{
 							"orderable": false,
 							"data": "checkbox",
-							"width": "21px"
+							"width": "15px"
 						},
 						{
 							"orderable": false,
 							"data": "color",
-							"width": "23px"
+							"width": "15px"
 						},
 						{
 							"data": "torrents_status",
-							"width": "1px"
+							"width": "40px"
 						},
 						{
 							"data": "reg_date",
-							"width": "55px"
+							"width": "99px"
 						},
 						{
 							"data": "size",
@@ -145,7 +179,7 @@ $( document ).ready( function () {
 						},
 						{
 							"data": "seeders",
-							"width": "25px"
+							"width": "55px"
 						},
 						{
 							"data": "name"
@@ -162,7 +196,7 @@ $( document ).ready( function () {
 						},
 						{
 							"data": "subsection",
-							"width": "25px"
+							"width": "52px"
 						}
 					],
 					"scrollY": "400px"
@@ -172,7 +206,10 @@ $( document ).ready( function () {
 
 					//инициализация тултипов
 					$( function () {
-						$( '[data-toggle="tooltip"]' ).tooltip()
+						$( document ).tooltip({
+							container: 'body',
+							selector: '[data-toggle="tooltip"]'
+						})
 					} )
 				} );
 			var state = table.state.loaded();
@@ -186,6 +223,98 @@ $( document ).ready( function () {
 		}
 	} );
 
+	$( 'th' ).on( "click", function ( event ) {
+		if ( $( event.target ).is( "i" ) ) {
+			event.stopImmediatePropagation();
+		}
+	} );
+
+	$table_filter.popover( {
+		html: true,
+		container: 'body',
+		trigger: 'click',
+		placement: 'top'
+	} ).on( 'show.bs.popover', function ( e ) {
+		$( '.table_filter' ).not( this ).popover( 'hide' );
+	} ).on( 'inserted.bs.popover', function () {
+		// дата релиза в фильтре
+		$( ".input-daterange" ).datepicker( {
+			autoclose: true,
+			clearBtn: true,
+			container: 'body',
+			endDate: "today",
+			format: 'dd.mm.yyyy',
+			language: "ru",
+			todayHighlight: true,
+			todayBtn: "linked"
+		} ).on( "clearDate", function(e) {
+			$('.input-daterange input').each(function() {
+				$( this ).datepicker( 'clearDates' );
+				localStorage.setItem( $( this ).attr( "id" ), "" );
+				//localStorage.removeItem( $( this ).attr( "id" ) );
+			});
+		});
+		//восстановление данных из LocalStorage в popovers
+		$( 'input[name=filterByTorrentStatus]' ).each( function () {
+			if ( $.inArray( parseInt( $( this ).val() ), JSON.parse( localStorage.filterByTorrentStatus ) ) !== -1) {
+				$( this ).prop( "checked", true );
+			} else {
+				$( this ).prop( "checked", false );
+			}
+		} );
+		if ( ( localStorage.filterByDateReleaseFrom !== undefined ) ) {
+			$( "#filterByDateReleaseFrom" ).datepicker('setDate', localStorage.getItem( "filterByDateReleaseFrom" ));
+		}
+		if ( ( localStorage.filterByDateReleaseUntil !== undefined ) ) {
+			$( "#filterByDateReleaseUntil" ).datepicker('setDate', localStorage.getItem( "filterByDateReleaseUntil" ));
+		}
+		if ( ( localStorage.filterBySeedersFrom !== undefined ) ) {
+			$( "#filterBySeedersFrom" ).val( localStorage.getItem( "filterBySeedersFrom" ) );
+		}
+		if ( ( localStorage.filterBySeedersUntil !== undefined ) ) {
+			$( "#filterBySeedersUntil" ).val( localStorage.getItem( "filterBySeedersUntil" ) );
+		}
+		if ( ( localStorage.filterByTitle !== undefined ) ) {
+			$( "#filterByTitle" ).val( localStorage.getItem( "filterByTitle" ) );
+		}
+		if ( ( localStorage.filterByKeeperNickname !== undefined ) ) {
+			$( "#filterByKeeperNickname" ).val( localStorage.getItem( "filterByKeeperNickname" ) );
+		}
+		if ( ( localStorage.filterBySubsection !== undefined ) ) {
+			$( "#filterBySubsection" ).val( localStorage.getItem( "filterBySubsection" ) );
+		}
+
+		$( document ).on( "change", "#filterBySeedersFrom, #filterBySeedersUntil", function () {
+			var min = 0;
+			var max = 0;
+			if ( $( this ).is( "#filterBySeedersFrom" ) ) {
+				min = parseFloat( $( this ).val() );
+				max = parseFloat( $( "#filterBySeedersUntil" ).val() );
+				if ( min > max ) {
+					$( this ).val( max );
+					localStorage.filterBySeedersFrom = max;
+				}
+			} else if ( $( this ).is( "#filterBySeedersUntil" ) ) {
+				min = parseFloat( $( "#filterBySeedersFrom" ).val() );
+				max = parseFloat( $( this ).val() );
+				if ( max < min ) {
+					$( this ).val( min );
+					localStorage.filterBySeedersUntil = min;
+				}
+			}
+		} );
+	} );
+
+	/*$('body').on('click', function (e) {
+		//did not click a popover toggle, or icon in popover toggle, or popover
+		if ($(e.target).data('toggle') !== 'popover'
+			&& $(e.target).parents('[data-toggle="popover"]').length === 0
+			&& $(e.target).parents('.popover.in').length === 0) {
+			$('[data-toggle="popover"]').popover('hide');
+		}
+	});*/
+
+	// show/hide columns
 	$( '.toggle-vis' ).on( 'change', function () {
 		if ( $.fn.dataTable.isDataTable( '#topics_table' ) === true ) {
 			var table = $( '#topics_table' ).DataTable( {
@@ -200,7 +329,7 @@ $( document ).ready( function () {
 } );
 
 function redrawTopicsList() {
-	Cookies.set( 'filter-options', $( "#topics_filter" ).serializeArray() );
+	localStorage.setItem( 'filter-options', JSON.stringify( $( "#topics_filter" ).serializeArray() ) );
 	var table = $( '#topics_table' ).DataTable( {
 		retrieve: true
 	} );
@@ -532,6 +661,17 @@ $( document ).on( "dblclick", ".keeper", function ( e ) {
 	});
 }*/
 
+$( '#keepers_amount_condition' ).on( 'change', function () {
+	if ( $( '#keepers_amount_condition' ).val() === "all" ) {
+		$( '#keepers_amount' ).prop( 'disabled', true );
+	} else {
+		var $keepers_amount = $( '#keepers_amount' );
+		$keepers_amount.prop( 'disabled', false );
+		if ( $keepers_amount.val() === "" ) {
+			$keepers_amount.val( "0" )
+		}
+	}
+} );
 
 // скрыть/показать фильтр
 /*$( "#filter_show" ).on( "click", function () {
@@ -550,24 +690,17 @@ function getReleaseDateLimitTo( days ) {
 $( "#filter_reset" ).on( "click", function () {
 	var $topics_filter = $( "#topics_filter" );
 	$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass( 'active' );
-	$( "#filter_date_release_from" ).val( "" );
-	$( "#filter_date_release_until" ).datepicker( "setDate", getReleaseDateLimitTo( $( "#rule_date_release" ).val() ) );
-	$( "#filter_seeders_to" ).val( $( "#rule_topics" ).val() );
-	$( "#filter_seeders_from" ).val( 0 );
-	$( "#filter_by_name" ).val( "" );
-	$( "#filter_by_keeper" ).val( "" );
+	$topics_filter.find( ':input[name="filter_status"][value="0"]' ).prop( "checked", true ).parent().addClass( 'active' );
+	$( "#keepers_amount_condition" ).val( "all" );
+	$( "#keepers_amount" ).val( "0" );
 	$( "#filter_avg_seeders_period" ).val( $( "#avg_seeders_period" ).val() );
-	$topics_filter.find( ':input[name!="filter_tor_status[]"][value="0"]' ).prop( "checked", true ).parent().addClass( 'active' );
-	$topics_filter.find( ':input[name="filter_tor_status[]"]' ).prop( "checked", false );
-	$topics_filter.find( ':input[name="filter_tor_status[]"][value="2"], :input[name="filter_tor_status[]"][value="8"]' ).prop( "checked", true ).change();
-
+	localStorage.setItem( 'filterByTorrentStatus', JSON.stringify( [2, 8] ) );
+	localStorage.setItem( 'filterByDateReleaseFrom', "" );
+	localStorage.setItem( "filterByDateReleaseUntil", $( $( '.table_filter' ).eq( 1 ).attr( "data-content" ) ).find( "#filterByDateReleaseUntil" ).val() );
+	localStorage.setItem( 'filterBySeedersFrom', "0" );
+	localStorage.setItem( 'filterBySeedersUntil', $( "#rule_topics" ).val() );
+	localStorage.setItem( 'filterByTitle', "" );
+	localStorage.setItem( 'filterByKeeperNickname', "" );
+	localStorage.setItem( 'filterBySubsection', "" );
+	redrawTopicsList();
 } );
-
-// есть/нет хранители
-$( 'input[name="is_keepers"]' ).on( "change", function () {
-		var is_keepers_val = $( this ).val();
-		if ( is_keepers_val === "0" || is_keepers_val === "-1" ) {
-			$( "#filter_by_keeper" ).val( "" );
-		}
-	}
-);

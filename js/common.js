@@ -95,8 +95,3 @@ function doSortSelect( select_id ) {
 	});
 	$('#'+select_id).empty().html(sortedVals);
 }*/
-
-// убираем outline после нажатия кнопок
-$( ".btn" ).click( function () {
-	$( this ).blur();
-} );
