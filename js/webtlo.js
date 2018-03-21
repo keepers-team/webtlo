@@ -40,19 +40,7 @@ function formConfigCheck( errors ) {
 }
 
 $( document ).ready( function () {
-	// дата релиза в фильтре
-	var filter_date_release_until = $( "#filter_date_release_until" );
-	var filter_date_release = $( "#filter_date_release_from, #filter_date_release_until" );
-	filter_date_release.datepicker( {
-		language: "ru",
-		format: 'dd.mm.yyyy',
-		endDate: "today",
-		autoclose: true,
-		defaultViewDate: "today",
-		todayHighlight: true,
-		todayBtn: "linked"
-	} );
-	filter_date_release_until.datepicker( "setDate", getReleaseDateLimitTo( filter_date_release_until.attr( "data-registered-until" ) ) );
+
 
 	// скрыть фильтр если он был скрыт ранее
 	/*if ( Cookies.get( 'filter-state' ) === "false" ) {
@@ -60,30 +48,36 @@ $( document ).ready( function () {
 	}*/
 
 	// восстановить состояние опций фильтра
-	//TODO добавить сохранение состояния фильтра сверху таблицы
-	var filter_options = Cookies.get( 'filter-options' ) !== undefined ?
-		JSON.parse( Cookies.get( 'filter-options' ) ) : "default";
+	var filter_options = localStorage.getItem( 'filter-options' ) !== null ?
+		JSON.parse( localStorage.getItem( 'filter-options' ) ) : "default";
 	if ( filter_options !== "default" ) {
 		$( "#topics_filter input[type=radio], #topics_filter input[type=checkbox]" ).prop( "checked", false ).parent().removeClass( 'active' );
 		jQuery.each( filter_options, function ( i, option ) {
-			$( "#topics_filter" ).find( "input[name='" + option.name + "']" ).each( function () {
-				if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
-					if ( $( this ).val() === option.value ) {
-						$( this ).prop( "checked", true );
-						if ( $( this ).attr( "name" ) !== "filter_tor_status[]" ) {
-							$( this ).parent().addClass( 'active' )
+			if ( option.name === "keepers_amount_condition" ) {
+				$( "#keepers_amount_condition" ).val( option.value )
+			} else {
+				$( "#topics_filter" ).find( "input[name='" + option.name + "']" ).each( function () {
+					if ( $( this ).attr( "type" ) === "checkbox" || $( this ).attr( "type" ) === "radio" ) {
+						if ( $( this ).val() === option.value ) {
+							$( this ).prop( "checked", true );
+							if ( $( this ).attr( "name" ) !== "filter_status[]" ) {
+								$( this ).parent().addClass( 'active' )
+							}
+						}
+					} else {
+						$( this ).val( option.value );
+						if ( option.name === "keepers_amount" ) {
+							$( this ).prop( "disabled", false );
 						}
 					}
-				} else {
-					$( this ).val( option.value );
-				}
-			} );
+				} );
+			}
 		} );
 	}
 
 	/* инициализация главного меню (вкладок) */
-	if ( Cookies.get( 'selected-tab' ) !== undefined ) {
-		$( '#main_menu' ).find( ' a[href="' + Cookies.get( 'selected-tab' ) + '"]' ).tab( 'show' );
+	if ( localStorage.getItem( 'selected-tab' ) !== null ) {
+		$( '#main_menu' ).find( ' a[href="' + localStorage.getItem( 'selected-tab' ) + '"]' ).tab( 'show' );
 	} else {
 		$( 'a[data-toggle="tab"][href="#main"]' ).tab( 'show' );
 	}
@@ -96,7 +90,7 @@ $( '#topics_filter .dropdown-menu, .columns-visibility' ).on( 'click', function 
 
 /* сохранение открытой вкладки при перезагрузке страницы */
 $( 'a[data-toggle="tab"]' ).on( 'shown.bs.tab', function () {
-	Cookies.set( 'selected-tab', ($( this ).attr( 'href' ) === "#reports" ? "#main" : $( this ).attr( 'href' )) );
+	localStorage.setItem( 'selected-tab', ($( this ).attr( 'href' ) === "#reports" ? "#main" : $( this ).attr( 'href' )) );
 } );
 
 /* сохранение настроек */
