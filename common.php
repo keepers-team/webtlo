@@ -177,20 +177,6 @@ function get_settings( $filename = "" ) {
 	// установка настроек прокси
 	Proxy::options( $config['proxy_activate'], $config['proxy_type'], $config['proxy_address'], $config['proxy_auth'] );
 	
-	// получение bt_key, api_key, user_id
-	if( !empty($config['tracker_login']) && !empty($config['tracker_paswd']) ) {
-		if( empty($config['bt_key']) || empty($config['api_key']) || empty($config['user_id']) ) {
-			UserDetails::get_details( $config['forum_url'], $config['tracker_login'], $config['tracker_paswd'] );
-			$ini->write( 'torrent-tracker', 'bt_key', UserDetails::$bt );
-			$ini->write( 'torrent-tracker', 'api_key', UserDetails::$api );
-			$ini->write( 'torrent-tracker', 'user_id', UserDetails::$uid );
-			$ini->updateFile();
-			$config['bt_key'] = UserDetails::$bt;
-			$config['api_key'] = UserDetails::$api;
-			$config['user_id'] = UserDetails::$uid;
-		}
-	}
-
 	// версия конфига
 	$user_version = $ini->read( 'other', 'user_version', 0 );
 

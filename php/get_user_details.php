@@ -10,6 +10,12 @@ try {
 		throw new Exception();
 	}
 	
+	// прокси
+	$activate = isset( $proxy_activate ) ? 1 : 0;
+	$proxy_address = "$proxy_hostname:$proxy_port";
+	$proxy_auth = "$proxy_login:$proxy_paswd";
+	Proxy::options( $activate, $proxy_type, $proxy_address, $proxy_auth );
+
 	UserDetails::get_details( $forum_url, $tracker_username, $tracker_password );
 	
 	echo json_encode(
