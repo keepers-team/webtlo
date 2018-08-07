@@ -7,6 +7,7 @@ class Api {
 	protected $ch;
 	protected $api_key;
 	protected $api_url;
+	protected $request_count = 0;
 	
 	public function __construct($api_url, $api_key = ""){
 		Log::append ( 'Получение данных с ' . $api_url . '...' );
@@ -31,6 +32,14 @@ class Api {
 	}
 	
 	private function request_exec( $url ) {
+		
+		// таймаут запросов
+		if ( $this->request_count == 3 ) {
+			sleep( 1 );
+			$this->request_count = 0;
+		}
+		$this->request_count++;
+		
 		$n = 1; // номер попытки
 		$try_number = 1; // номер попытки
 		$try = 3; // кол-во попыток
