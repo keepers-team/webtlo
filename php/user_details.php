@@ -102,7 +102,7 @@ class UserDetails {
 			array( CURLOPT_COOKIE => self::$cookie )
 		);
 		$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
-		preg_match("|.*form_token : '([^,]*)',.*|si", $html->find('script:first'), $form_token);
+		preg_match("|.*form_token[^']*'([^,]*)',.*|si", $html->find('script:first'), $form_token);
 		if( empty($form_token[1]) )
 			throw new Exception( 'Error: Не получен form_token.' );
 		self::$form_token = $form_token[1];
