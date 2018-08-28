@@ -324,3 +324,46 @@ $("#tracker_username, #tracker_password").on("change", function() {
 		}
 	}
 });
+
+// проверка доступности форума и API
+$( "#check_mirrors_access" ).on( "click", function() {
+	$(this).attr( "disabled", true );
+	var check_list = [ 'forum_url', 'api_url' ];
+	var check_count = check_list.length;
+	var result_list = [ 'text-danger', 'text-success' ];
+	var $data = $( "#config" ).serialize();
+	$.each( check_list, function( index, value ) {
+		var element = "#" + value;
+		var url = $( element ).val();
+		if ( typeof url === "undefined" || $.isEmptyObject( url ) ) {
+			check_count--;
+			if ( check_count == 0 ) {
+				$( "#check_mirrors_access" ).attr( "disabled", false );
+			}
+			$( element ).siblings( "i" ).removeAttr( "class" );
+			return true;
+		}
+		$.ajax({
+			type: "POST",
+			url: "php/actions/check_mirror_access.php",
+			data: { cfg:$data, url:url },
+			success: function( response ) {
+				$( element ).siblings( "i" ).removeAttr( "class" );
+				var result = result_list[ response ];
+				if ( typeof result !== "undefined" ) {
+					$( element ).siblings( "i" ).addClass( "fa fa-circle " + result );
+				}
+			},
+			beforeSend: function() {
+				$( element ).siblings( "i" ).removeAttr( "class" );
+				$( element ).siblings( "i" ).addClass( "fa fa-spinner fa-spin" );
+			},
+			complete: function() {
+				check_count--;
+				if ( check_count == 0 ) {
+					$( "#check_mirrors_access" ).attr( "disabled", false );
+				}
+			}
+		});
+	});
+});

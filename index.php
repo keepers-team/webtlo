@@ -41,7 +41,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.9</title>
+		<title>web-TLO-0.9.3.10</title>
 		<script src="jquery-ui-1.12.1/jquery.js"></script>
 		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
 		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
@@ -299,6 +299,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						<div class="sub_settings">
 							<h2>Настройки авторизации на форуме</h2>
 							<div>
+								<input id="check_mirrors_access" type="button" value="Проверить доступ" title="Проверить доступность форума и API" />
 								<div>
 									<label>
 										Используемый адрес форума:
@@ -312,6 +313,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											<option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?> >https://rutracker.org</option>
 											<option value="https://rutracker.nl" <?php echo ($cfg['forum_url'] == 'https://rutracker.nl' ? "selected" : "") ?> >https://rutracker.nl</option>
 										</select>
+										<i id="forum_url_result" class=""></i>
 									</label>
 								</div>
 								<div>
@@ -325,6 +327,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											<option value="https://api.t-ru.org" <?php echo ($cfg['api_url'] == 'https://api.t-ru.org' ? "selected" : "") ?> >https://api.t-ru.org</option>
 											<option value="https://api.rutracker.org" <?php echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?> >https://api.rutracker.org</option>
 										</select>
+										<i id="api_url_result" class=""></i>
 									</label>
 								</div>
 								<div>
