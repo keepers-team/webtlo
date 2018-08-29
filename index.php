@@ -78,7 +78,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<option value="-3">Раздачи из всех хранимых подразделов</option>
 						</optgroup>
 					</select>
-					<div id="sub-data">
+					<div id="topics_data">
 						<div id="topics_control">
 							<div id="filter">
 								<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра">
@@ -597,7 +597,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</thead>
 							<tbody>
 								<tr>
-									<th colspan="12">&mdash;</th>
+									<td colspan="12">&mdash;</td>
 								</tr>
 							</tbody>
 							<tfoot></tfoot>
@@ -605,7 +605,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</div>
 				</div>
 				<div id="journal" class="content">
-					<div id="log"></div>
+					<div>
+						<button type="button" id="clear_log" title="Очистить содержимое лога">
+							Очистить лог
+						</button>
+					</div>
+					<div id="log_tabs" class="menu">
+						<ul class="menu">
+							<li class="menu"><a href="#log" class="menu">Лог</a></li>
+						</ul>
+						<div id="log_content">
+							<div id="log"></div>
+						</div>
+					</div>
 				</div>
 				<div id="manual" class="content">
 					<object data="manual.pdf" type="application/pdf" width="100%" height="100%"></object>

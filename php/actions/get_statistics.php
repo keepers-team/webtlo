@@ -100,7 +100,7 @@ try {
 		$e['Size15'] = convert_bytes( $e['Size15'] );
 		$e['si'] = convert_bytes( $e['si'] );
 		$e = implode( "", array_map( function($e) {
-			return "<th>$e</th>";
+			return "<td>$e</td>";
 		}, $e ));
 		return "<tr class=\"$state\">$e</tr>";
 	}, $statistics ));

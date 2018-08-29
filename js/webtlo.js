@@ -1,9 +1,10 @@
 //~ $(document).ready(function() {
 	
 	/* инициализация кнопок */
-	$("#topics_control button, #savecfg, #get_statistics").button();
+	$("#topics_control button, #savecfg, #get_statistics, #clear_log").button();
 	$("#select, #control, #new-torrents, #filter").buttonset();
-	
+	$("#log_tabs").tabs();
+
 	// период хранения средних сидов
 	$("#avg_seeders_period, #filter_avg_seeders_period").spinner({
 		min: 1,
@@ -366,4 +367,9 @@ $( "#check_mirrors_access" ).on( "click", function() {
 			}
 		});
 	});
+});
+
+// очистка лога
+$( "#clear_log" ).on( "click", function() {
+	$("#log").text("");
 });
