@@ -373,3 +373,33 @@ $( "#check_mirrors_access" ).on( "click", function() {
 $( "#clear_log" ).on( "click", function() {
 	$("#log").text("");
 });
+
+// чтение лога из файла
+$( "#log_tabs" ).on( "tabsactivate", function( event, ui ) {
+	// current tab
+	var element_new = $( ui.newTab ).children( "a" );
+	var name_new = $( element_new ).text();
+	if ( ! element_new.hasClass( "log_file" ) ) {
+		return true;
+	}
+	// previous tab
+	var element_old = $( ui.oldTab ).children( "a" );
+	var name_old = $( element_old ).text();
+	if ( element_old.hasClass( "log_file" ) ) {
+		$( "#log_" + name_old ).text( "" );
+	}
+	// request
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_log_content.php",
+		data: { log_file: name_new },
+		success: function( response ) {
+			if ( typeof response !== "undefined" ) {
+				$( "#log_" + name_new ).html( response );
+			}
+		},
+		beforeSend: function() {
+			$( "#log_" + name_new ).html( "<i class=\"fa fa-spinner fa-pulse\"></i>" );
+		}
+	});
+});

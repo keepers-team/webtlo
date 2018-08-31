@@ -613,9 +613,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					<div id="log_tabs" class="menu">
 						<ul class="menu">
 							<li class="menu"><a href="#log" class="menu">Лог</a></li>
+							<li class="menu"><a href="#log_update" class="menu log_file">update</a></li>
+							<li class="menu"><a href="#log_keepers" class="menu log_file">keepers</a></li>
+							<li class="menu"><a href="#log_reports" class="menu log_file">reports</a></li>
+							<li class="menu"><a href="#log_control" class="menu log_file">control</a></li>
+							<li class="menu"><a href="#log_seeders" class="menu log_file">seeders</a></li>
 						</ul>
 						<div id="log_content">
 							<div id="log"></div>
+							<div id="log_update"></div>
+							<div id="log_keepers"></div>
+							<div id="log_reports"></div>
+							<div id="log_control"></div>
+							<div id="log_seeders"></div>
 						</div>
 					</div>
 				</div>
