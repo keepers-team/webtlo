@@ -146,7 +146,8 @@ function get_settings( $filename = "" ) {
 	$config['topics_control']['no_leechers'] = $ini->read( 'topics_control', 'no_leechers', 1 );
 	
 	// прокси
-	$config['proxy_activate'] = $ini->read('proxy','activate',0);
+	$config['proxy_activate_forum'] = $ini->read( 'proxy', 'activate_forum', 0 );
+	$config['proxy_activate_api'] = $ini->read( 'proxy', 'activate_api', 0) ;
 	$config['proxy_type'] = $ini->read( 'proxy', 'type', 'socks5h' );
 	$config['proxy_hostname'] = $ini->read( 'proxy', 'hostname', 'px1.blockme.site' );
 	$config['proxy_port'] = $ini->read( 'proxy', 'port', 33128 );
@@ -174,9 +175,6 @@ function get_settings( $filename = "" ) {
 	$config['user_passkey'] = $ini->read('curators','user_passkey','');
 	$config['tor_for_user'] = $ini->read( 'curators', 'tor_for_user', 0 );
 	
-	// установка настроек прокси
-	Proxy::options( $config['proxy_activate'], $config['proxy_type'], $config['proxy_address'], $config['proxy_auth'] );
-	
 	// версия конфига
 	$user_version = $ini->read( 'other', 'user_version', 0 );
 
@@ -199,6 +197,20 @@ function get_settings( $filename = "" ) {
 		$ini->write( 'other', 'user_version', 1 );
 		$ini->updateFile();
 	}
+
+	if ( $user_version < 2 ) {
+		$proxy_activate = $ini->read( 'proxy', 'activate', 0 );
+		$config['proxy_activate_forum'] = $proxy_activate;
+		$ini->write( 'proxy', 'activate_forum', $proxy_activate );
+		$ini->write( 'other', 'user_version', 2 );
+		$ini->updateFile();
+	}
+	
+	// установка настроек прокси
+	Proxy::options(
+		$config['proxy_activate_forum'], $config['proxy_activate_api'],
+		$config['proxy_type'], $config['proxy_address'], $config['proxy_auth']
+	);
 	
 	return $config;
 	
@@ -298,7 +310,10 @@ function natsort_field( array $input, $field, $direct = 1 ) {
 // установка параметров прокси
 class Proxy {
 	
-	public static $proxy = array();
+	public static $proxy = array(
+		'forum_url' => array(),
+		'api_url' => array()
+	);
 	
 	protected static $auth;
 	protected static $type;
@@ -306,22 +321,32 @@ class Proxy {
 	
 	private static $types = array( 'http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7 );
 	
-	public static function options ( $active = false, $type = "http", $address = "", $auth = "" ) {
+	public static function options ( $activate_forum, $activate_api, $type, $address = "", $auth = "" ) {
 		self::$type = (array_key_exists($type, self::$types) ? self::$types[$type] : null );
 		self::$address = (in_array(null, explode(':', $address)) ? null : $address);
 		self::$auth = (in_array(null, explode(':', $auth)) ? null : $auth);
-		self::$proxy = $active ? self::set_proxy() : array();
-		Log::append ( $active
-			? 'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address . '".'
-			: 'Прокси-сервер не используется.'
-		);
+		if ( $activate_forum || $activate_api ) {
+			self::$proxy = self::set_proxy( $activate_forum, $activate_api );
+			Log::append(
+				'Используется ' . mb_strtoupper ( $type ) . '-прокси: "' . $address .
+				'" для форума('. $activate_forum .') и API(' . $activate_api . ').'
+			);
+		} else {
+			Log::append( 'Прокси-сервер не используется.' );
+		}
 	}
 	
-	private static function set_proxy () {
-		return array(
+	private static function set_proxy( $activate_forum, $activate_api ) {
+		$param = array(
 			CURLOPT_PROXYTYPE => self::$type,
 			CURLOPT_PROXY => self::$address,
 			CURLOPT_PROXYUSERPWD => self::$auth
+		);
+		$param_forum = $activate_forum ? $param : array();
+		$param_api = $activate_api ? $param : array();
+		return array(
+			'forum_url' => $param_forum,
+			'api_url' => $param_api
 		);
 	}
 	

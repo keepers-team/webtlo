@@ -130,7 +130,7 @@ class Reports {
 			CURLOPT_CONNECTTIMEOUT => 20,
 			CURLOPT_TIMEOUT => 20
 		));
-		curl_setopt_array($this->ch, Proxy::$proxy);
+		curl_setopt_array( $this->ch, Proxy::$proxy['forum_url'] );
 		curl_setopt_array($this->ch, $options);
 		$try_number = 1; // номер попытки
 		$try = 3; // кол-во попыток

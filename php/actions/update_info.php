@@ -33,10 +33,11 @@ try {
 	$tor_clients_topics = get_tor_client_data( $tor_clients );
 	
 	// прокси
-	$activate = isset( $proxy_activate ) ? 1 : 0;
+	$activate_forum = isset( $proxy_activate_forum ) ? 1 : 0;
+	$activate_api = isset( $proxy_activate_api ) ? 1 : 0;
 	$proxy_address = "$proxy_hostname:$proxy_port";
 	$proxy_auth = "$proxy_login:$proxy_paswd";
-	Proxy::options( $activate, $proxy_type, $proxy_address, $proxy_auth );
+	Proxy::options( $activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth );
 	
 	// получение раздач хранимых др. хранителями
 	$reports = new Reports( $forum_url, $tracker_username, $tracker_password );

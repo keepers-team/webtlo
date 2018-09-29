@@ -16,11 +16,16 @@ if ( empty( $url ) ) {
     return;
 }
 
+if ( isset( $_POST['url_type'] ) ) {
+    $url_type = $_POST['url_type'];
+}
+
 // прокси
-$activate = isset( $proxy_activate ) ? 1 : 0;
+$activate_forum = isset( $proxy_activate_forum ) ? 1 : 0;
+$activate_api = isset( $proxy_activate_api ) ? 1 : 0;
 $proxy_address = "$proxy_hostname:$proxy_port";
 $proxy_auth = "$proxy_login:$proxy_paswd";
-Proxy::options( $activate, $proxy_type, $proxy_address, $proxy_auth );
+Proxy::options( $activate_forum, $activate_api, $proxy_type, $proxy_address, $proxy_auth );
 
 $ch = curl_init();
 
@@ -38,7 +43,7 @@ curl_setopt_array( $ch, array(
     CURLOPT_URL => $url,
 ));
 
-curl_setopt_array( $ch, Proxy::$proxy );
+curl_setopt_array( $ch, Proxy::$proxy[ $url_type ] );
 
 // номер попытки
 $try_number = 1;

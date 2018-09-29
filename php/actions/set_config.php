@@ -55,7 +55,8 @@ try {
 	$ini->write( 'topics_control', 'no_leechers', isset ( $no_leechers ) ? 1 : 0 );
 	
 	// прокси
-	$ini->write( 'proxy', 'activate', isset ( $proxy_activate ) ? 1 : 0 );
+	$ini->write( 'proxy', 'activate_forum', isset ( $proxy_activate_forum ) ? 1 : 0 );
+	$ini->write( 'proxy', 'activate_api', isset ( $proxy_activate_api ) ? 1 : 0 );
 	if ( isset ( $proxy_type ) ) {
 		$ini->write( 'proxy', 'type', $proxy_type );
 	}

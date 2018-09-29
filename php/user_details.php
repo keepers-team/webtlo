@@ -30,7 +30,7 @@ class UserDetails {
 			CURLOPT_CONNECTTIMEOUT => 20,
 			CURLOPT_TIMEOUT => 20
 		));
-		curl_setopt_array($ch, Proxy::$proxy);
+		curl_setopt_array( $ch, Proxy::$proxy['forum_url'] );
 		$try_number = 1; // номер попытки
 		$try = 3; // кол-во попыток
 		while ( true ) {

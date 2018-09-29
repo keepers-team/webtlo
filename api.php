@@ -28,7 +28,7 @@ class Api {
 			CURLOPT_CONNECTTIMEOUT => 20,
 			CURLOPT_TIMEOUT => 20
 		));
-		curl_setopt_array( $this->ch, Proxy::$proxy );
+		curl_setopt_array( $this->ch, Proxy::$proxy['api_url'] );
 	}
 	
 	private function request_exec( $url ) {
