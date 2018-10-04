@@ -38,7 +38,7 @@ try {
 	$last->setTimestamp( $se[0] )->setTime( 0, 0, 0 );
 	
 	// создаём временную таблицу
-	Db::query_database( "CREATE TEMP TABLE Topics1 AS SELECT id,ss,st,se,rg,dl,qt,ds FROM Topics WHERE 0 = 1" );
+	Db::query_database( "CREATE TEMP TABLE Topics1 AS SELECT id,ss,st,si,se,rg,dl,qt,ds FROM Topics WHERE 0 = 1" );
 	
 	foreach( $forum_ids as $forum_ids ) {
 	
@@ -50,7 +50,7 @@ try {
 			$in = str_repeat( '?,', count( $seeders ) - 1 ) . '?';
 			$values = Db::query_database( "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($in)", array_keys( $seeders ), true, PDO::FETCH_ASSOC|PDO::FETCH_UNIQUE );
 			foreach( $seeders as $topic_id => $value ) {
-				// $info: 0 - tor_status, 1 - seeders, 2 - reg_time, 3 - subsection
+				// $info: 0 - tor_status, 1 - seeders, 2 - reg_time, 3 - size, 4 - subsection
 				$info = explode( ',', $value );
 				$days = 0;
 				$sum_updates = 1;
@@ -68,8 +68,9 @@ try {
 						$delete[] = $topic_id;
 					}
 				}
-				$tmp[$topic_id]['ss'] = $info[3];
+				$tmp[$topic_id]['ss'] = $info[4];
 				$tmp[$topic_id]['st'] = $info[0];
+				$tmp[$topic_id]['si'] = $info[3];
 				$tmp[$topic_id]['se'] = $sum_seeders;
 				$tmp[$topic_id]['rg'] = $info[2];
 				$tmp[$topic_id]['dl'] = 0;
@@ -95,7 +96,7 @@ try {
 	$q = Db::query_database( "SELECT COUNT() FROM temp.Topics1", array(), true, PDO::FETCH_COLUMN );
 	if ( $q[0] > 0 ) {
 		Log::append ( 'Запись в базу данных сведений о сидах...' );
-		Db::query_database( "INSERT INTO Topics (id,ss,st,se,rg,dl,qt,ds) SELECT * FROM temp.Topics1 WHERE id NOT IN ( SELECT id FROM Topics WHERE dl = -2 )" );
+		Db::query_database( "INSERT INTO Topics (id,ss,st,si,se,rg,dl,qt,ds) SELECT * FROM temp.Topics1 WHERE id NOT IN ( SELECT id FROM Topics WHERE dl = -2 )" );
 		Db::query_database( "DELETE FROM Topics WHERE id IN ( SELECT Topics.id FROM Topics LEFT JOIN temp.Topics1 ON Topics.id = temp.Topics1.id WHERE temp.Topics1.id IS NULL AND Topics.ss NOT IN (${cfg['subsec']}) AND Topics.dl <> -2 )" );
 	}
 	
