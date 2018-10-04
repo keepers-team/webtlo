@@ -39,6 +39,7 @@ try {
 				FROM Topics t
 				LEFT JOIN Seeders s ON t.id = s.id
 				WHERE ss = :ss
+				AND strftime('%s', 'now') - rg >= 2592000
 			) AS seeds
 			INNER JOIN Forums f ON seeds.ss = f.id",
 			array( 'ss' => $forum_id ), true
