@@ -199,47 +199,105 @@ class Reports {
 		return false;
 	}
 	
-	public function search_all_stored_topics( $topic_id ) {
-		$i = 0; // +30
-		$page = 1; // количество страниц
-		$now_date = new DateTime('now');
-		$keepers = array();
-		// получение данных со страниц
-		while( $page > 0 ) {
+	public function scanning_viewforum( $forum_id ) {
+	    if ( empty( $forum_id ) ) {
+			return false;
+	    }
+	    $topics_ids = array();
+	    $i = 0;
+	    $page = 1;
+	    while ( $page > 0 ) {
+			$data = $this->make_request( $this->forum_url . "/forum/viewforum.php?f=$forum_id&start=$i" );
+	        $html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
+	        unset( $data );
+	        $topic_main = $html->find( 'table.forum > tr.hl-tr' );
+	        $pages = $html->find( 'a.pg:last' )->prev();
+	        if ( ! empty( $pages ) && $i == 0 ) {
+				$page = $html->find( 'a.pg:last' )->prev()->text();
+	        }
+			unset( $html );
+			if ( ! empty( $topic_main ) ) {
+	            $topic_main = pq( $topic_main );
+	            foreach( $topic_main as $row ) {
+					$row = pq( $row );
+					$topic_icon = $row->find( 'img.topic_icon' )->attr( 'src' );
+	                // получаем ссылки на темы со списками
+					if ( preg_match ( '/.*(folder|folder_new)\.gif$/i', $topic_icon ) ) {
+	                    $topic_id = $row->find( 'a.topictitle' )->attr( 'href' );
+	                    $topics_ids[] = preg_replace( '/.*?([0-9]*)$/', '$1', $topic_id );
+	                }
+	            }
+	        }
+	        $page--;
+			$i += 50;
+			phpQuery::unloadDocuments();
+	    }
+	    return $topics_ids;
+	}
+
+	public function scanning_viewtopic( $topic_id, $exclude = false, $reg_days = 30 ) {
+	    if ( empty( $topic_id ) ) {
+			return false;
+	    }
+	    $keepers = array();
+	    $i = 0;
+		$page = 1;
+		while ( $page > 0 ) {
 			$data = $this->make_request( $this->forum_url . "/forum/viewtopic.php?t=$topic_id&start=$i" );
 			$html = phpQuery::newDocumentHTML( $data, 'UTF-8' );
-			$topic_main = $html->find('table#topic_main');
-			$pages = $html->find('a.pg:last')->prev();
-			if( !empty($pages) && $i == 0 )
-				$page = $html->find('a.pg:last')->prev()->text();
-			unset($html);
-			if( !empty($topic_main) ) {
-				$topic_main = pq($topic_main);
+			unset( $data );
+			$topic_main = $html->find( 'table#topic_main' );
+			$pages = $html->find( 'a.pg:last' )->prev();
+			if ( ! empty( $pages ) && $i == 0 ) {
+				$page = $html->find( 'a.pg:last' )->prev()->text();
+			}
+			unset( $html );
+			if ( ! empty( $topic_main ) ) {
+				$topic_main = pq( $topic_main );
 				foreach( $topic_main->find('tbody') as $row ) {
-					$row = pq($row);
-					$post_id = $row->attr('id');
-					if( empty($post_id) ) continue;
-					$posted = $row->find('.p-link')->text();
-					$posted_since = $row->find('.posted_since')->text();
-					if( preg_match('|(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})|', $posted_since, $since) )
+					$row = pq( $row );
+					$post_id = $row->attr( 'id' );
+					if ( empty( $post_id ) ) {
+						continue;
+					}
+					// если нужны только чужие посты
+					$nickname = $row->find( 'p.nick > a' )->text();
+					if ( $exclude && $nickname == $this->login ) {
+						continue;
+					}
+					// вытаскиваем дату отправки/редактирования сообщения
+					$posted = $row->find( '.p-link' )->text();
+					$posted_since = $row->find( '.posted_since' )->text();
+					if ( preg_match( '/(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})/', $posted_since, $since ) ) {
 						$posted = $since[0];
+					}
 					$posted = str_replace( $this->months_ru, $this->months, $posted );
-					$topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
-					// пропускаем сообщение, если оно старше 30 дней
-					if( $now_date->diff($topic_date)->format('%a') > 30 ) continue;
+					$topic_date = DateTime::createFromFormat( 'd-M-y H:i', $posted );
+					// пропускаем сообщение, если оно старше $reg_days дней
+					if ( Date::now()->diff( $topic_date )->format( '%a' ) > $reg_days ) {
+						continue;
+					}
 					// получаем id раздач хранимых другими хранителями
-					foreach( $row->find('a.postLink') as $topic ) {
-						$topic = pq($topic);
-						if( preg_match('/viewtopic.php\?t=[0-9]+$/', $topic->attr('href')) ) {
-							$keepers[] = preg_replace('/.*?([0-9]*)$/', '$1', $topic->attr('href'));
+					$topics = $row->find( 'a.postLink' );
+					if ( ! empty( $topics ) ) {
+						foreach ( $topics as $topic ) {
+							$topic = pq( $topic );
+							if ( preg_match( '/viewtopic.php\?t=[0-9]+$/', $topic->attr( 'href' ) ) ) {
+								$topic_id = preg_replace( '/.*?([0-9]*)$/', '$1', $topic->attr( 'href' ) );
+								$keepers[] = $exclude
+									? array( 'id' => $topic_id, 'nick' => $nickname )
+									: $topic_id;
+							}
 						}
 					}
+					unset( $topics );
 				}
 			}
 			$page--;
 			$i += 30;
+			phpQuery::unloadDocuments();
 		}
-		return $keepers;
+	    return $keepers;
 	}
 	
 	private function send_message($mode, $message, $topic_id, $post_id = "", $subject = ""){

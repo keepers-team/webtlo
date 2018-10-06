@@ -161,9 +161,9 @@ function get_settings( $filename = "" ) {
 	$config['tracker_paswd'] = $ini->read('torrent-tracker','password','');
 	$config['bt_key'] = $ini->read('torrent-tracker','bt_key','');
 	$config['api_key'] = $ini->read('torrent-tracker','api_key','');
-	$config['api_url'] = $ini->read('torrent-tracker','api_url','http://api.t-ru.org');
+	$config['api_url'] = $ini->read('torrent-tracker','api_url','https://api.t-ru.org');
 	$config['user_id'] = $ini->read('torrent-tracker','user_id','');
-	$config['forum_url'] = $ini->read('torrent-tracker','forum_url','http://rutracker.cr');
+	$config['forum_url'] = $ini->read('torrent-tracker','forum_url','https://rutracker.cr');
 	
 	// загрузки
 	$config['save_dir'] = $ini->read('download','savedir','C:\Temp\\');
@@ -350,6 +350,19 @@ class Proxy {
 		);
 	}
 	
+}
+
+// текущая дата
+class Date {
+
+	private static $now;
+	
+	public static function now() {
+		if ( empty( self::$now ) ) {
+			self::$now = new DateTime( 'now' );
+		}
+		return self::$now;
+	}
 }
 
 ?>
