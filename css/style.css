@@ -7,6 +7,7 @@
 /* @import url("./reset.css"); */
 
 /* general */
+
 html, body {
 	width: calc(100% - 10px);
 	height: calc(100% - 10px);
@@ -46,7 +47,7 @@ h2 {
 h3 {
 	margin: 15px 0 10px 0;
 	font-weight: bold;
-}	
+}
 
 hr {
 	clear: both;
@@ -59,14 +60,14 @@ input[type="text"] {
 }
 
 sup, sub {
-    vertical-align: baseline;
-    position: relative;
-    font-size: .7em;
-    line-height: 1;
+	vertical-align: baseline;
+	position: relative;
+	font-size: .7em;
+	line-height: 1;
 }
 
 sup {
-    bottom: 1.4ex;
+	bottom: 1.4ex;
 }
 
 sub {
@@ -74,6 +75,7 @@ sub {
 }
 
 /* fix widgets ui */
+
 ul.menu.ui-tabs-nav {
 	background: #fff;
 	border: 0;
@@ -101,12 +103,23 @@ li.menu.ui-tabs-active {
 	padding: 0;
 }
 
+.ui-menu-item {
+	font-size: small;
+}
+
 #ui-datepicker-div {
 	font-size: small;
 }
 
 .ui-button {
 	padding: .4em .6em;
+}
+
+.ui-button:disabled {
+	background: #fafafa;
+	cursor: default;
+	color: #d3d3d3;
+	border: 1px solid #d3d3d3;
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {
@@ -123,7 +136,15 @@ li.menu.ui-tabs-active {
 	background: none;
 }
 
+/* selectmenu context menu height */
+
+.menu-overflow {
+	height: auto;
+	max-height: 400px;
+}
+
 /* menu */
+
 #menutabs {
 	margin: 0;
 	padding: 0;
@@ -133,13 +154,14 @@ li.menu.ui-tabs-active {
 #content {
 	border: 1px solid #d3d3d3;
 	border-radius: 4px;
-	box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 	margin: 0;
 	padding: 10px;
 	height: calc(100% - 56px);
 }
 
 /* main */
+
 #main {
 	margin: 0;
 	padding: 0;
@@ -149,11 +171,11 @@ li.menu.ui-tabs-active {
 	height: calc(100% - 2px);
 }
 
-#subsections-button {
+#main-subsections-button {
 	margin-bottom: 10px;
 }
 
-#subsections-button *, #subsections-menu * {
+#main-subsections-button *, #main-subsections-menu * {
 	font-size: small;
 }
 
@@ -171,15 +193,9 @@ li.menu.ui-tabs-active {
 }
 
 /* topics control */
+
 #topics_control {
 	padding: 10px 10px 5px 10px;
-}
-
-#topics_control button:disabled {
-	background: #fafafa;
-	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
 }
 
 .download-replace {
@@ -192,6 +208,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics filter */
+
 .filter_block {
 	display: inline-block;
 	vertical-align: top;
@@ -224,6 +241,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics result */
+
 .status_info {
 	display: flex;
 }
@@ -259,6 +277,7 @@ li.menu.ui-tabs-active {
 }
 
 /* topics */
+
 #topics {
 	margin: 0;
 	padding: 0 10px;
@@ -272,6 +291,7 @@ li.menu.ui-tabs-active {
 }
 
 /* color icons status */
+
 .text-success {
 	color: #28a745;
 }
@@ -285,6 +305,7 @@ li.menu.ui-tabs-active {
 }
 
 /* settings */
+
 #settings {
 	margin: 0;
 	padding: 0;
@@ -328,7 +349,7 @@ li.menu.ui-tabs-active {
 
 .block-settings span {
 	display: inline-block;
-	margin: 10px 15px 0 0;	
+	margin: 10px 15px 0 0;
 }
 
 #settings label {
@@ -361,10 +382,6 @@ li.menu.ui-tabs-active {
 
 #proxy_prop {
 	margin-top: 10px;
-}
-
-#online-tc {
-	padding: 1px 5px;
 }
 
 #online-tc img {
@@ -439,6 +456,7 @@ li.menu.ui-tabs-active {
 }
 
 /* reports */
+
 #reports {
 	margin: 0;
 	padding: 0;
@@ -446,35 +464,27 @@ li.menu.ui-tabs-active {
 	flex-direction: column;
 	box-sizing: border-box;
 	height: calc(100% - 2px);
-}
-
-#reporttabs {
-	margin: 0;
-	padding: 0;
 	font-size: small;
+}
+
+#reports-content {
+	margin: 0;
+	padding: 5px 10px 0 10px;
+	/* padding: 0; */
+	flex: 1;
 	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
-	height: calc(100% - 34px);
 }
 
-#reporttabs div {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	box-sizing: border-box;
+#reports-subsections-button {
+	margin-bottom: 5px;
 }
 
-.report a {
-	text-decoration: underline;
-}
-
-.rp-header {
-	font-weight: bold;
+#reports-subsections-menu * {
+	font-size: small;
 }
 
 /* statistics */
+
 #statistics {
 	margin: 0;
 	padding: 0;
@@ -488,13 +498,6 @@ li.menu.ui-tabs-active {
 	margin: 0 0 10px 15px;
 	padding: .3em .7em;
 	font-size: 85%;
-}
-
-#get_statistics:disabled {
-	background: #fafafa;
-	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
 }
 
 #data_statistics {
@@ -532,6 +535,7 @@ li.menu.ui-tabs-active {
 }
 
 /* journal */
+
 #journal {
 	margin: 0;
 	padding: 0;
@@ -571,6 +575,7 @@ li.menu.ui-tabs-active {
 }
 
 /* manual */
+
 #manual {
 	margin: 0;
 	padding: 0;

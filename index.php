@@ -3,35 +3,59 @@
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
-include dirname(__FILE__) . '/common.php';
-
-if(!ini_get('date.timezone')) date_default_timezone_set('Europe/Moscow');
+include_once dirname(__FILE__) . '/php/common.php';
 
 // получение настроек
 $cfg = get_settings();
-	
+
 // торрент-клиенты
-if(isset($cfg['clients'])){
-	foreach($cfg['clients'] as $id => $tc){
-		$tcs[] = '<option value="'.$id.'" data="'.implode('|', $tc).'">'.$tc['cm'].'</option>';
-	}
-	$tcs = implode('', $tcs);
-} else $tcs = '';
+$tcs = '';
+$ss_tcs = '';
+if (isset($cfg['clients'])) {
+    $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
+    foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
+        $tcs .= sprintf(
+            $tor_client_option_pattern,
+            $tor_client_id,
+            implode('|', $tor_client_info),
+            $tor_client_info['cm']
+        );
+        $ss_tcs .= sprintf(
+            $tor_client_option_pattern,
+            $tor_client_id,
+            '',
+            $tor_client_info['cm']
+        );
+    }
+}
 
 // подразделы
-if(isset($cfg['subsections'])){
-	foreach($cfg['subsections'] as $id => &$ss){
-		$subsections[] = '<option value="'.$id.'" data="'.implode('|', $ss).'">'.$ss['na'].'</option>';
-	}
-	$subsections = implode('', $subsections);
-} else $subsections = '';
+$subsections = '';
+$subsections_settings = '';
+if (isset($cfg['subsections'])) {
+    $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
+    foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
+        $subsections_settings .= sprintf(
+            $forum_option_pattern,
+            $forum_id,
+            implode('|', $forum_info),
+            $forum_info['na']
+        );
+        $subsections .= sprintf(
+            $forum_option_pattern,
+            $forum_id,
+            '',
+            $forum_info['na']
+        );
+    }
+}
 
 // чекбоксы
-$savesubdir = ($cfg['savesub_dir'] == 1 ? "checked" : "");
-$retracker = ($cfg['retracker'] == 1 ? "checked" : "");
-$proxy_activate_forum = ( $cfg['proxy_activate_forum'] == 1 ? "checked" : "" );
-$proxy_activate_api = ( $cfg['proxy_activate_api'] == 1 ? "checked" : "" );
-$avg_seeders = ($cfg['avg_seeders'] == 1 ? "checked" : "");
+$savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
+$retracker = $cfg['retracker'] == 1 ? "checked" : "";
+$proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
+$proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
+$avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
 $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
@@ -42,17 +66,16 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-0.9.3.11</title>
-		<script src="jquery-ui-1.12.1/jquery.js"></script>
-		<script src="jquery-ui-1.12.1/jquery-ui.js"></script>
-		<script src="jquery-ui-1.12.1/datepicker-ru.js"></script>
-		<script src="jquery-ui-1.12.1/external/jquery.mousewheel.js"></script>
-		<script src="jquery-ui-1.12.1/external/js.cookie.js"></script>
+		<title>web-TLO-1.0.0.0</title>
+		<script src="jquery/jquery.js"></script>
+		<script src="jquery/jquery-ui.js"></script>
+		<script src="jquery/external/datepicker-ru.js"></script>
+		<script src="jquery/external/jquery.mousewheel.js"></script>
+		<script src="jquery/external/js.cookie.js"></script>
 		<link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
-		<link rel="stylesheet" href="jquery-ui-1.12.1/jquery-ui.css" />
+		<link rel="stylesheet" href="jquery/jquery-ui.css" />
 		<link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
 		<link rel="stylesheet" href="css/font-awesome.min.css">
-		<link rel="icon" href="img/favicon.ico">
 	</head>
 	<body>
 		<div id="menutabs" class="menu">
@@ -66,8 +89,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 			</ul>
 			<div id="content">
 				<div id="main" class="content">
-					<select id="subsections">
-						<optgroup id="subsections_stored">
+					<select id="main-subsections">
+						<optgroup id="main-subsections-stored">
 							<?php echo $subsections ?>
 						</optgroup>
 						<optgroup label="Прочее">
@@ -81,7 +104,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 					</select>
 					<div id="topics_data">
 						<div id="topics_control">
-							<div id="filter">
+							<div id="toolbar-filter-topics">
 								<button type="button" id="filter_show" title="Скрыть или показать настройки фильтра">
 									<i class="fa fa-filter" aria-hidden="true"></i>
 								</button>
@@ -89,7 +112,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-undo" aria-hidden="true"></i>
 								</button>
 							</div>
-							<div id="select">
+							<div id="toolbar-select-topics">
 								<button type="button" class="tor_select" value="1" title="Выделить все раздачи текущего подраздела">
 									<i class="fa fa-check-square-o" aria-hidden="true"></i>
 								</button>
@@ -97,7 +120,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-square-o" aria-hidden="true"></i>
 								</button>
 							</div>
-							<div id="new-torrents">
+							<div id="toolbar-new-torrents">
 								<button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
 									<i class="fa fa-plus" aria-hidden="true"></i>
 								</button>
@@ -108,11 +131,11 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-download download-replace" aria-hidden="true"></i>
 									<i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
 								</button>
+							</div>
+							<div id="toolbar-control-topics">
 								<button type="button" id="tor_blacklist" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
 									<i class="fa fa-ban" aria-hidden="true"></i>
 								</button>
-							</div>
-							<div id="control">
 								<button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
 									<i class="fa fa-tag" aria-hidden="true"></i>
 								</button>
@@ -126,13 +149,10 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 									<i class="fa fa-times" aria-hidden="true"></i>
 								</button>
 							</div>
-							<button id="update" name="update" type="button" title="Обновить сведения о раздачах">
+							<button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
 								<i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
 							</button>
-							<button id="startreports" name="startreports" type="button" title="Сформировать отчёты для вставки на форум">
-								<i class="fa fa-file-text-o" aria-hidden="true"></i> Создать отчёты
-							</button>
-							<button id="sendreports" name="sendreports" type="button" title="Отправить отчёты на форум">
+							<button id="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
 							<div id="indication">
@@ -145,15 +165,15 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div class="filter_block ui-widget">
 									<fieldset title="Статусы раздач в торрент-клиенте">
 										<label>
-											<input type="checkbox" name="filter_status[]" value="1" />
+											<input type="checkbox" name="filter_client_status[]" value="1" />
 											храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_status[]" value="0" checked class="default" />
+											<input type="checkbox" name="filter_client_status[]" value="null" checked class="default" />
 											не храню
 										</label>
 										<label>
-											<input type="checkbox" name="filter_status[]" value="-1" />
+											<input type="checkbox" name="filter_client_status[]" value="0" />
 											качаю
 										</label>
 									</fieldset>
@@ -175,28 +195,28 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<div class="filter_block ui-widget" title="Статусы раздач на трекере">
 									<fieldset>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="0" />
+											<input type="checkbox" name="filter_tracker_status[]" value="0" />
 											не проверено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="2" checked class="default" />
+											<input type="checkbox" name="filter_tracker_status[]" value="2" checked class="default" />
 											проверено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="3" />
+											<input type="checkbox" name="filter_tracker_status[]" value="3" />
 											недооформлено
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="8" checked class="default" />
+											<input type="checkbox" name="filter_tracker_status[]" value="8" checked class="default" />
 											сомнительно
 										</label>
 										<label>
-											<input type="checkbox" name="filter_tor_status[]" value="10" />
+											<input type="checkbox" name="filter_tracker_status[]" value="10" />
 											временная
 										</label>
 									</fieldset>
 								</div>
-								<div class="filter_block ui-widget" title="Сортировка">
+								<div id="filter-sort-block" class="filter_block ui-widget" title="Сортировка">
 									<fieldset>
 										<label>
 											<input type="radio" name="filter_sort_direction" value="1" checked class="default" />
@@ -217,7 +237,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											по объёму
 										</label>
 										<label>
-											<input type="radio" name="filter_sort" value="avg" checked class="default" />
+											<input type="radio" name="filter_sort" value="se" checked class="default" />
 											по количеству сидов
 										</label>
 										<label>
@@ -285,7 +305,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						</form>
 						<hr />
 						<div class="status_info">
-							<div id="counter">Выбрано раздач: <span id="topics_count" class="rp-header">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="rp-header">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
+							<div id="counter">Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="bold">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
 							<div id="topics_result"></div>
 						</div>
 						<hr />
@@ -294,13 +314,17 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 				</div>
 				<div id="settings" class="content">
 					<div>
-						<input id="savecfg" name="savecfg" type="button" value="Сохранить настройки" title="Записать настройки в файл">
+						<button type="button" id="savecfg" title="Записать настройки в файл">
+							Сохранить настройки
+						</button>
 					</div>
 					<form id="config">
 						<div class="sub_settings">
 							<h2>Настройки авторизации на форуме</h2>
 							<div>
-								<input id="check_mirrors_access" type="button" value="Проверить доступ" title="Проверить доступность форума и API" />
+								<button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
+									Проверить доступ
+								</button>
 								<div>
 									<label>
 										Используемый адрес форума:
@@ -340,7 +364,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Пароль:
 										<input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
 									</label>
-								</div>																			
+								</div>
 								<div>
 									<label>
 										Ключ bt:
@@ -408,15 +432,19 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<h2>Настройки торрент-клиентов</h2>
 							<div>
 								<p>
-									<input name="add-tc" id="add-tc" type="button" value="Добавить" title="Добавить новый торрент-клиент в список" />
-									<input name="del-tc" id="del-tc" type="button" value="Удалить" title="Удалить выбранный торрент-клиент из списка" />
-									<button name="online-tc" id="online-tc" type="button" title="Проверить доступность выбранного торрент-клиента в списке">
+									<button type="button" id="add-tc" title="Добавить новый торрент-клиент в список">
+										Добавить
+									</button>
+									<button type="button" id="del-tc" title="Удалить выбранный торрент-клиент из списка">
+										Удалить
+									</button>
+									<button type="button" id="online-tc" title="Проверить доступность выбранного торрент-клиента в списке">
 										<i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
 									</button>
 									<span id="result-tc"></span>
 								</p>
-								
-								<div class="block-settings">											
+
+								<div class="block-settings">
 									<select id="list-tcs" size=10>
 										<option value=0 data="0" disabled>список торрент-клиентов</option>
 										<?php echo $tcs ?>
@@ -470,7 +498,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 								<label class="flex">
 									Подраздел:
 									<select name="list-ss" id="list-ss">
-										<?php echo $subsections ?>
+										<?php echo $subsections_settings ?>
 									</select>
 								</label>
 								<fieldset id="ss-prop">
@@ -482,6 +510,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Торрент-клиент:
 										<select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
 											<option value=0>не выбран</option>
+											<?php echo $ss_tcs ?>
 										</select>
 									</label>
 									<label class="flex">
@@ -492,7 +521,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										Каталог для данных:
 										<input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
 									</label>
-									<label class="flex">
+									<label style="display:none;" class="flex">
 										Ссылка на список:
 										<input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
 									</label>
@@ -577,8 +606,22 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							</div>
 						</div>
 					</form>
-				</div>					
-				<div id="reports" class="content"></div>
+				</div>
+				<div id="reports" class="content">
+					<select id="reports-subsections">
+						<optgroup>
+							<option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
+						</optgroup>
+						<optgroup id="reports-subsections-stored">
+							<?php echo $subsections ?>
+						</optgroup>
+						<optgroup>
+							<option value="0">Сводный отчёт</option>
+						</optgroup>
+					</select>
+					<hr />
+					<div id="reports-content"></div>
+				</div>
 				<div id="statistics" class="content">
 					<div>
 						<button type="button" id="get_statistics" title="Получить статистику по хранимым подразделам">
@@ -646,7 +689,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 		<script type="text/javascript" src="js/common.js"></script>
 		<script type="text/javascript" src="js/tor_clients.js"></script>
 		<script type="text/javascript" src="js/subsections.js"></script>
-		<script type="text/javascript" src="js/webtlo.js"></script>
-		<script type="text/javascript" src="js/topics.js"></script>		
+		<script type="text/javascript" src="js/actions.js"></script>
+		<script type="text/javascript" src="js/widgets.js"></script>
+		<script type="text/javascript" src="js/topics.js"></script>
 	</body>
 </html>
