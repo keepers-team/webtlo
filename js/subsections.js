@@ -34,6 +34,29 @@ $(document).ready(function () {
 		.selectmenu("menuWidget")
 		.addClass("menu-overflow");
 
+	// прокрутка подразделов на главной
+	$("#main-subsections-button").on("mousewheel", function (event, delta) {
+		var hidden = $("#main-subsections-menu").attr("aria-hidden");
+		if (hidden == "false") {
+			return false;
+		}
+		var forum_id = $("#main-subsections").val();
+		var element = $("#main-subsections [value=" + forum_id + "]").parent().attr("id");
+		if (typeof element === "undefined") {
+			return false;
+		}
+		var size = $("#main-subsections-stored option").size();
+		var selected = $("#main-subsections").prop("selectedIndex");
+		selected = selected - delta;
+		if (selected == size) {
+			selected = 0;
+		}
+		$("#main-subsections-stored :eq(" + selected + ")").prop("selected", "selected");
+		$("#main-subsections").selectmenu("refresh");
+		subsections_delay(getFilteredTopics);
+		return false;
+	});
+
 	// получение свойств выбранного подраздела
 	$("#list-ss").on("change", function () {
 		var data = $("#list-ss :selected").attr("data");
@@ -109,6 +132,9 @@ $(document).ready(function () {
 	}
 
 });
+
+// задержка при прокрутке подразделов
+var subsections_delay = makeDelay(500);
 
 function addSubsection(event, ui) {
 	if (ui.item.value < 0) {

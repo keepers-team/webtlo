@@ -92,6 +92,29 @@ $(document).ready(function () {
         .selectmenu("menuWidget")
         .addClass("menu-overflow");
 
+    // прокрутка подразделов в отчётах
+    $("#reports-subsections-button").on("mousewheel", function (event, delta) {
+        var hidden = $("#reports-subsections-menu").attr("aria-hidden");
+        if (hidden == "false") {
+            return false;
+        }
+        var forum_id = $("#reports-subsections").val();
+        var element = $("#reports-subsections [value=" + forum_id + "]").parent().attr("id");
+        if (typeof element === "undefined") {
+            return false;
+        }
+        var size = $("#reports-subsections-stored option").size();
+        var selected = $("#reports-subsections").prop("selectedIndex");
+        selected = selected - delta - 1;
+        if (selected == size) {
+            selected = 0;
+        }
+        $("#reports-subsections-stored :eq(" + selected + ")").prop("selected", "selected");
+        $("#reports-subsections").selectmenu("refresh");
+        subsections_delay(getReport);
+        return false;
+    });
+
     // инициализация диалога для установки произвольной метки
     $("#dialog").dialog({
         autoOpen: false,

@@ -75,8 +75,8 @@ function doSortSelectByValue(select_id) {
 }
 
 // получение отчётов
-function getReport(event, ui) {
-	var forum_id = ui.item.value;
+function getReport() {
+	var forum_id = $("#reports-subsections").val();
 	if ($.isEmptyObject(forum_id)) {
 		return false;
 	}
