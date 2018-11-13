@@ -81,4 +81,4 @@ while (true) {
 curl_close($ch);
 
 // отправляем ответ
-echo $http_code == 200 ? '1' : '0';
+echo strpos($data, "Location: " . $url) === false ? '0' : '1';
