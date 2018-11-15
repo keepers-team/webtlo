@@ -448,6 +448,15 @@ class Db
 
         }
 
+		if ($version[0]['user_version'] < 5) {
+			// создание индексов для полей, участвующих в запросах get_filtered_list_topics
+			self::query_database('create index idx_topics_ss on topics(ss)');
+			self::query_database('create index idx_topics_st on topics(st)');
+			self::query_database('create index idx_topics_hs on topics(hs)');
+
+			self::query_database('PRAGMA user_version = 5');		
+		}
+		
     }
 
 }
