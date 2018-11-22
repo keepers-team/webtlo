@@ -48,11 +48,14 @@ try {
     foreach ($topics_ids as $topics_ids) {
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
         $hashes_query = Db::query_database(
-            "SELECT cl,Clients.hs FROM Clients
-            LEFT JOIN Topics ON Topics.hs = Clients.hs
-            LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Clients.hs
-            WHERE Topics.id IN ($in) OR TopicsUntracked.id IN ($in)
-            AND Clients.hs IS NOT NULL",
+            "SELECT cl,hs FROM Clients
+            WHERE hs IN (
+                SELECT hs FROM (
+                    SELECT id,hs FROM Topics
+                    UNION
+                    SELECT id,hs FROM TopicsUntracked
+                ) WHERE id IN ($in)
+            )",
             $topics_ids,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
