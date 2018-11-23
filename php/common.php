@@ -30,17 +30,15 @@ function get_settings($filename = "")
     }
 
     // подразделы
-    $config['subsec'] = $ini->read("sections", "subsections", "");
-    if (!empty($config['subsec'])) {
-        $subsections = explode(',', $config['subsec']);
+    $subsections = explode(',', $ini->read("sections", "subsections", ""));
+    if (!empty($subsections)) {
+        $in = str_repeat('?,', count($subsections) - 1) . '?';
         $titles = Db::query_database(
-            'SELECT id,na FROM Forums WHERE id IN (' . $config['subsec'] . ')',
-            array(),
+            "SELECT id,na FROM Forums WHERE id IN ($in)",
+            $subsections,
             true,
             PDO::FETCH_KEY_PAIR
         );
-    }
-    if (isset($subsections)) {
         foreach ($subsections as $id) {
             $forum_client = $ini->read($id, "client", 0);
             $config['subsections'][$id]['cl'] = $forum_client !== "" ? $forum_client : 0;
@@ -101,12 +99,11 @@ function get_settings($filename = "")
 
     // применение заплаток
     if ($user_version < 1) {
-        $forum_ids = explode(',', $config['subsec']);
-        if (!empty($forum_ids) && !empty($config['clients'])) {
+        if (!empty($subsections) && !empty($config['clients'])) {
             $tor_clients_ids = array_keys($config['clients']);
             $tor_clients_comments = array_column_common($config['clients'], "cm");
             $tor_clients = array_combine($tor_clients_comments, $tor_clients_ids);
-            foreach ($forum_ids as $forum_id) {
+            foreach ($subsections as $forum_id) {
                 $forum_client = $ini->read($forum_id, "client", "0");
                 if (!empty($forum_client) && isset($tor_clients[$forum_client])) {
                     $forum_client_correct = $tor_clients[$forum_client];
