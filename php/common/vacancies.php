@@ -1,58 +1,77 @@
 <?php
 
+$starttime = microtime(true);
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-// исключить/включить подразделы
-// через запятую, без пробелов
-$include = "";
-$exclude = "";
+Log::append("Начат процесс формирования вакансий...");
 
-// период ср. сидов
-$avg_period = 14;
-
-$exclude = explode(',', $exclude);
-$include = explode(',', $include);
-
-// получаем настройки
+// получение настроек
 $cfg = get_settings();
 
+// настройки вакансий
+$vacancies = $cfg['vacancies'];
+
+// проверка настроек
+if (empty($vacancies['send_topic_id'])) {
+    throw new Exception("Error: Не указан send_topic_id");
+}
+
+if (empty($vacancies['send_post_id'])) {
+    throw new Exception("Error: Не указан send_post_id");
+}
+
+if (empty($cfg['tracker_login'])) {
+    throw new Exception("Error: Не указано имя пользователя для доступа к форуму");
+}
+
+if (empty($cfg['tracker_paswd'])) {
+    throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
+}
+
+// исключить/включить подразделы
+$exclude = explode(',', $vacancies['exclude_forums_ids']);
+$include = explode(',', $vacancies['include_forums_ids']);
+
 // создаём временную таблицу
-Db::query_database("CREATE TEMP TABLE Keepers2 (id INT NOT NULL)");
+Db::query_database("CREATE TEMP TABLE VacanciesKeepers (id INT NOT NULL)");
 
 // просканировать все актуальные списки
-$reports = new Reports(
-    $cfg['forum_url'],
-    $cfg['tracker_login'],
-    $cfg['tracker_paswd']
-);
-$topics_ids = $reports->scanning_viewforum(1584);
-foreach ($topics_ids as $topic_id) {
-    $keepers = $reports->scanning_viewtopic($topic_id, 30);
-    if (!empty($keepers)) {
-        foreach ($keepers as &$keeper) {
-            if (empty($keeper['topics_ids'])) {
-                continue;
-            }
-            $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 500);
-            foreach ($keeper['topics_ids'] as $keeper_topics_ids) {
-                $select = str_repeat('SELECT ? UNION ALL ', count($keeper_topics_ids) - 1) . 'SELECT ?';
-                Db::query_database(
-                    "INSERT INTO temp.Keepers2 (id) $select",
-                    $keeper_topics_ids
-                );
-                unset($select);
+if ($vacancies['scan_reports']) {
+    $reports = new Reports(
+        $cfg['forum_url'],
+        $cfg['tracker_login'],
+        $cfg['tracker_paswd']
+    );
+    $topics_ids = $reports->scanning_viewforum(1584);
+    Log::append("Найдено тем со списками: " . count($topics_ids) . " шт.");
+    foreach ($topics_ids as $topic_id) {
+        $keepers = $reports->scanning_viewtopic($topic_id, $vacancies['scan_posted_days']);
+        if (!empty($keepers)) {
+            foreach ($keepers as &$keeper) {
+                if (empty($keeper['topics_ids'])) {
+                    continue;
+                }
+                $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 500);
+                foreach ($keeper['topics_ids'] as $keeper_topics_ids) {
+                    $select = str_repeat('SELECT ? UNION ALL ', count($keeper_topics_ids) - 1) . 'SELECT ?';
+                    Db::query_database(
+                        "INSERT INTO temp.VacanciesKeepers (id) $select",
+                        $keeper_topics_ids
+                    );
+                    unset($select);
+                }
             }
         }
+        unset($keepers);
+        unset($keeper);
     }
-    unset($keepers);
-    unset($keeper);
+    unset($topics_ids);
 }
-unset($topics_ids);
-unset($reports);
 
 // формируем ср. сиды
-for ($i = 0; $i < $avg_period; $i++) {
+for ($i = 0; $i < $vacancies['avg_seeders_period']; $i++) {
     $avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
     $avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
 }
@@ -61,13 +80,15 @@ $sum_qt = implode('+', $avg['sum_qt']);
 $avg = "( se * 1. + $sum_se ) / ( qt + $sum_qt )";
 
 // получаем из локальной базы список малосидируемых раздач
+$avg_seeders_value = $vacancies['avg_seeders_value'];
+$reg_time_seconds = $vacancies['reg_time_seconds'];
 $in = str_repeat('?,', count($exclude) - 1) . '?';
 $ids = Db::query_database(
     "SELECT ss,si FROM Topics
     LEFT JOIN Seeders ON Seeders.id = Topics.id
-    WHERE st IN (0,2,3,8,10) AND ss NOT IN ($in) AND $avg <= 0.5
-    AND strftime('%s','now') - rg >= 2592000
-    AND Topics.id NOT IN (SELECT id FROM temp.Keepers2)",
+    WHERE st IN (0,2,3,8,10) AND ss NOT IN ($in) AND $avg <= $avg_seeders_value
+    AND strftime('%s','now') - rg >= $reg_time_seconds
+    AND Topics.id NOT IN (SELECT id FROM temp.VacanciesKeepers)",
     $exclude,
     true,
     PDO::FETCH_COLUMN | PDO::FETCH_GROUP
@@ -95,31 +116,46 @@ $forums = array_map(function ($a) {
     }, $a);
 }, $forums);
 
+// всего вакантных раздач
+$total_count_vacant_topics = 0;
+$total_size_vacant_topics = 0;
+
 // приводим данные к требуемому виду
 foreach ($ids as $forum_id => $tor_sizes) {
     if (!isset($forums[$forum_id])) {
         continue;
     }
     $title = $forums[$forum_id]['na'];
+    $count_vacant_topics = count($tor_sizes);
+    $size_vacant_topics = array_sum($tor_sizes);
     switch (count($title)) {
         case 2:
             $topics[$title[0]][$title[1]]['root']['id'] = $forum_id;
-            $topics[$title[0]][$title[1]]['root']['qt'] = count($tor_sizes);
-            $topics[$title[0]][$title[1]]['root']['si'] = array_sum($tor_sizes);
+            $topics[$title[0]][$title[1]]['root']['qt'] = $count_vacant_topics;
+            $topics[$title[0]][$title[1]]['root']['si'] = $size_vacant_topics;
             $topics[$title[0]][$title[1]]['root']['sum_qt'] = $forums[$forum_id]['qt'];
             $topics[$title[0]][$title[1]]['root']['sum_si'] = $forums[$forum_id]['si'];
             break;
         case 3:
             $topics[$title[0]][$title[1]][$title[2]]['id'] = $forum_id;
-            $topics[$title[0]][$title[1]][$title[2]]['qt'] = count($tor_sizes);
-            $topics[$title[0]][$title[1]][$title[2]]['si'] = array_sum($tor_sizes);
+            $topics[$title[0]][$title[1]][$title[2]]['qt'] = $count_vacant_topics;
+            $topics[$title[0]][$title[1]][$title[2]]['si'] = $size_vacant_topics;
             $topics[$title[0]][$title[1]][$title[2]]['sum_qt'] = $forums[$forum_id]['qt'];
             $topics[$title[0]][$title[1]][$title[2]]['sum_si'] = $forums[$forum_id]['si'];
             break;
     }
+    $total_count_vacant_topics += $count_vacant_topics;
+    $total_size_vacant_topics += $size_vacant_topics;
+    unset($count_vacant_topics);
+    unset($size_vacant_topics);
 }
 unset($forums);
 unset($ids);
+
+$total_size_vacant_topics = convert_bytes($total_size_vacant_topics);
+
+Log::append("Всего вакантных раздач: " . $total_count_vacant_topics . " шт.");
+Log::append("Объём вакантных раздач: " . $total_size_vacant_topics);
 
 // сортируем по названию корневого раздела
 uksort($topics, function ($a, $b) {
@@ -127,9 +163,9 @@ uksort($topics, function ($a, $b) {
 });
 
 $output = "";
-$forum_pattern = '[spoiler="%s | %s шт. | %s"]%s[/spoiler]\n';
+$forum_pattern = '[spoiler="%s | %s шт. | %s"]%s[/spoiler]';
 $sub_forum_pattern = '[url=tracker.php?f=%s&tm=-1&o=10&s=1&oop=1]' .
-    '[color=%s][u]%s[/u][/color][/url] - %s шт. (%s)\n';
+    '[color=%s][u]%s[/u][/color][/url] — %s шт. (%s)[br]';
 
 // формируем список вакансий
 foreach ($topics as $forum => &$sub_forums) {
@@ -193,7 +229,7 @@ foreach ($topics as $forum => &$sub_forums) {
             }
         }
         if (!empty($sub_forum_list)) {
-            $forum_list .= '\n[b]' . $sub_forum . '[/b]\n\n' . $sub_forum_list;
+            $forum_list .= '[br][b]' . $sub_forum . '[/b][br][br]' . $sub_forum_list;
         }
     }
     if (!empty($forum_list)) {
@@ -206,3 +242,28 @@ foreach ($topics as $forum => &$sub_forums) {
         );
     }
 }
+
+// отправляем вакансии на форум
+if (!empty($output)) {
+    if (!isset($reports)) {
+        $reports = new Reports(
+            $cfg['forum_url'],
+            $cfg['tracker_login'],
+            $cfg['tracker_paswd']
+        );
+    }
+    $output = 'Актуально на: [b]' . date('d.m.Y') . '[/b][br]' .
+        'Всего вакантных раздач: [b]' . $total_count_vacant_topics . ' шт.[/b][br]' .
+        'Объём вакантных раздач: [b]' . $total_size_vacant_topics . '[/b][br]' .
+        $output;
+    $reports->send_message(
+        'editpost',
+        $output,
+        $vacancies['send_topic_id'],
+        $vacancies['send_post_id']
+    );
+}
+
+$endtime = microtime(true);
+
+Log::append("Формирование вакансий завершено за " . convert_seconds($endtime - $starttime));
