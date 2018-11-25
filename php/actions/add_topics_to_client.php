@@ -206,18 +206,16 @@ try {
 
         $filename_url_pattern = "http://$dirname_url/[webtlo].t%s.torrent";
 
-        // сохранение в подкаталог
-        if ($forum['sub_folder']) {
-            $forum['fd'] .= $topic_id;
-        }
-
         // добавление раздач
         foreach ($torrent_files_downloaded as $topic_id) {
+            // каталог для данных
+            $savepath = $forum['sub_folder'] ? $forum['fd'] . $topic_id : $forum['fd'];
+            // путь до торрент-файла на сервере
             $filename_url = sprintf(
                 $filename_url_pattern,
                 $topic_id
             );
-            $client->torrentAdd($filename_url, $forum['fd']);
+            $client->torrentAdd($filename_url, $savepath);
             $torrent_files_added[] = $topic_id;
             // ждём полсекунды
             usleep(500000);
