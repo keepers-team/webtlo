@@ -53,6 +53,9 @@ $tor_status = array(0, 2, 3, 8, 10);
 $current_update_time = new DateTime();
 $previous_update_time = new DateTime();
 
+// всего раздач без сидов
+$total_topics_no_seeders = 0;
+
 foreach ($forums_ids as $forum_id) {
 
     // пропускаем хранимые подразделы
@@ -137,6 +140,11 @@ foreach ($forums_ids as $forum_id) {
 
             if (!in_array($topic_data[0], $tor_status)) {
                 continue;
+            }
+
+            // считаем раздачи без сидов
+            if ($topic_data[1] == 0) {
+                $total_topics_no_seeders++;
             }
 
             $days_update = 0;
@@ -250,6 +258,8 @@ if (
     || $count_renew[0] > 0
 ) {
     Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
+    Log::append("Обработано раздач: " . $count_update[0] + $count_renew[0] . " шт.");
+    Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
