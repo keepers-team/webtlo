@@ -423,6 +423,16 @@ li.menu.ui-tabs-active {
 	margin: 10px 15px 0 0;
 }
 
+#list-tcs optgroup {
+	font-weight: normal;
+	color: #808080;
+}
+
+#list-tcs option {
+	color: #000;
+	margin: 0 0 0 -18.5px;
+}
+
 #ss-add {
 	display: block;
 	width: 100%;

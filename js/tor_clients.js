@@ -38,7 +38,7 @@ $(document).ready(function () {
 				$(this).attr("data", data.replace(/^[^|]*/, cm));
 			}
 		});
-		doSortSelect("list-tcs");
+		doSortSelect("list-tcs optgroup");
 	});
 
 	// добавить т.-клиент в список
@@ -80,13 +80,13 @@ $(document).ready(function () {
 			} else {
 				cm_new = cm_new.replace(/\|/g, '');
 			}
-			$("#list-tcs").append('<option value="' + q + '" data="' + cm_new + '|' + cl +
+			$("#list-tcs optgroup").append('<option value="' + q + '" data="' + cm_new + '|' + cl +
 				'|' + ht + '|' + pt + '|' + lg + '|' + pw + '">' + cm_new + '</option>');
 		} else {
-			$("#list-tcs").append('<option value="' + q + '" data="client1|utorrent||||">client1</option>');
+			$("#list-tcs optgroup").append('<option value="' + q + '" data="client1|utorrent||||">client1</option>');
 		}
 		$("#list-tcs option[value=" + q + "]").prop("selected", "selected").change();
-		doSortSelect("list-tcs");
+		doSortSelect("list-tcs optgroup");
 	});
 
 	// удалить т.-клиент из списка
@@ -95,7 +95,7 @@ $(document).ready(function () {
 			var i = $("#list-tcs :selected").index();
 			$("#list-tcs :selected").remove();
 			var q = $("select[id=list-tcs] option").size();
-			if (q == 1) {
+			if (q == 0) {
 				$("#tc-prop .tc-prop").val('').prop("disabled", true);
 			} else {
 				q == i ? i : i++;
@@ -145,8 +145,8 @@ $(document).ready(function () {
 	});
 
 	// при загрузке выбрать первый т.-клиент в списке
-	if ($("select[id=list-tcs] option").size() > 1) {
-		$("#list-tcs :nth-child(2)").prop("selected", "selected").change();
+	if ($("select[id=list-tcs] option").size() > 0) {
+		$("#list-tcs :nth-child(1)").prop("selected", "selected").change();
 	} else {
 		$("#tc-prop .tc-prop").prop("disabled", true);
 	}

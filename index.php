@@ -446,8 +446,9 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 								<div class="block-settings">
 									<select id="list-tcs" size=10>
-										<option value=0 data="0" disabled>список торрент-клиентов</option>
-										<?php echo $tcs ?>
+										<optgroup label="список торрент-клиентов">
+											<?php echo $tcs ?>
+										</optgroup>
 									</select>
 								</div>
 								<div class="block-settings" id="tc-prop">
