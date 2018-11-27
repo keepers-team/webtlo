@@ -257,8 +257,9 @@ if (
     $count_update[0] > 0
     || $count_renew[0] > 0
 ) {
+    $total_topics_update = $count_update[0] + $count_renew[0];
     Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
-    Log::append("Обработано раздач: " . $count_update[0] + $count_renew[0] . " шт.");
+    Log::append("Обработано раздач: " . $total_topics_update . " шт.");
     Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
