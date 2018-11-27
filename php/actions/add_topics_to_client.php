@@ -172,14 +172,6 @@ try {
 
         $count_downloaded = count($torrent_files_downloaded);
 
-        // дополнительный слэш в конце каталога
-        if (
-            !empty($forum['fd'])
-            && !in_array(substr($forum['fd'], -1), array('\\', '/'))
-        ) {
-            $forum['fd'] .= strpos($forum['fd'], '/') === false ? '\\' : '/';
-        }
-
         // подключаемся к торрент-клиенту
         $client = new $tor_client['cl'](
             $tor_client['ht'],
@@ -206,16 +198,29 @@ try {
 
         $filename_url_pattern = "http://$dirname_url/[webtlo].t%s.torrent";
 
+        // убираем последний слэш в пути каталога для данных
+        if (preg_match('/(\/|\\\\)$/', $forum['fd'])) {
+            $forum['fd'] = substr($forum['fd'], 0, -1);
+        }
+
+        // определяем направление слэша в пути каталога для данных
+        $slash = strpos($forum['fd'], '/') === false ? '\\' : '/';
+
         // добавление раздач
         foreach ($torrent_files_downloaded as $topic_id) {
-            // каталог для данных
-            $savepath = $forum['sub_folder'] ? $forum['fd'] . $topic_id : $forum['fd'];
+            // подкаталог для данных
+            if (
+                $forum['sub_folder']
+                && !empty($forum['fd'])
+            ) {
+                $forum['fd'] .= $slash . $topic_id;
+            }
             // путь до торрент-файла на сервере
             $filename_url = sprintf(
                 $filename_url_pattern,
                 $topic_id
             );
-            $client->torrentAdd($filename_url, $savepath);
+            $client->torrentAdd($filename_url, $forum['fd']);
             $torrent_files_added[] = $topic_id;
             // ждём полсекунды
             usleep(500000);

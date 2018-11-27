@@ -315,7 +315,7 @@ class transmission
             ),
         );
         if (!empty($savepath)) {
-            $request['arguments']['download-dir'] = quotemeta($savepath);
+            $request['arguments']['download-dir'] = $savepath;
         }
         $data = $this->makeRequest($request);
         if (empty($data['arguments'])) {
@@ -529,7 +529,7 @@ class vuze
             ),
         );
         if (!empty($savepath)) {
-            $request['arguments']['download-dir'] = quotemeta($savepath);
+            $request['arguments']['download-dir'] = $savepath;
         }
         $data = $this->makeRequest($request);
         if (empty($data['arguments'])) {
