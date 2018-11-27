@@ -30,8 +30,9 @@ function get_settings($filename = "")
     }
 
     // подразделы
-    $subsections = explode(',', $ini->read("sections", "subsections", ""));
+    $subsections = $ini->read("sections", "subsections", "");
     if (!empty($subsections)) {
+        $subsections = explode(',', $subsections);
         $in = str_repeat('?,', count($subsections) - 1) . '?';
         $titles = Db::query_database(
             "SELECT id,na FROM Forums WHERE id IN ($in)",
@@ -112,13 +113,19 @@ function get_settings($filename = "")
 
     // применение заплаток
     if ($user_version < 1) {
-        if (!empty($subsections) && !empty($config['clients'])) {
+        if (
+            !empty($subsections)
+            && !empty($config['clients'])
+        ) {
             $tor_clients_ids = array_keys($config['clients']);
             $tor_clients_comments = array_column_common($config['clients'], "cm");
             $tor_clients = array_combine($tor_clients_comments, $tor_clients_ids);
             foreach ($subsections as $forum_id) {
                 $forum_client = $ini->read($forum_id, "client", "0");
-                if (!empty($forum_client) && isset($tor_clients[$forum_client])) {
+                if (
+                    !empty($forum_client)
+                    && isset($tor_clients[$forum_client])
+                ) {
                     $forum_client_correct = $tor_clients[$forum_client];
                     $ini->write($forum_id, "client", $forum_client_correct);
                     $config['subsections'][$forum_id]['cl'] = $forum_client_correct;

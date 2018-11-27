@@ -59,7 +59,10 @@ $total_topics_no_seeders = 0;
 foreach ($forums_ids as $forum_id) {
 
     // пропускаем хранимые подразделы
-    if (array_key_exists($forum_id, $cfg['subsections'])) {
+    if (
+        isset($cfg['subsections'])
+        && array_key_exists($forum_id, $cfg['subsections'])
+    ) {
         continue;
     }
 
