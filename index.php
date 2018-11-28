@@ -155,6 +155,9 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 							<button id="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
 								<i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
 							</button>
+							<button id="control_torrents" name="control_torrents" type="button" title="Выполнить регулировку раздач в торрент-клиентах">
+								<i class="fa fa-adjust" aria-hidden="true"></i> Регулировка раздач
+							</button>
 							<div id="indication">
 								<i id="loading" class="fa fa-spinner fa-pulse"></i>
 								<div style="display:none;" id="process"></div>

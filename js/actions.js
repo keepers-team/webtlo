@@ -41,6 +41,26 @@ $(document).ready(function () {
 		});
 	});
 
+	// регулировка раздач
+	$("#control_torrents").on("click", function () {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/control_torrents.php",
+			beforeSend: function () {
+				block_actions();
+				$("#process").text("Регулировка раздач...");
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				$("#topics_result").text(response.result);
+			},
+			complete: function () {
+				block_actions();
+			},
+		});
+	});
+
 	// сохранение настроек
 	$("#savecfg").on("click", function () {
 		var forums = getForums();
