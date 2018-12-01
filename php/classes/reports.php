@@ -9,6 +9,7 @@ class Reports
     protected $ch;
     protected $login;
     protected $forum_url;
+    protected $blocking_send;
 
     private $months = array(
         'Jan',
@@ -329,6 +330,21 @@ class Reports
 
     public function send_message($mode, $message, $topic_id, $post_id = "", $subject = "")
     {
+        // блокировка отправки сообщений
+        if (!isset($this->blocking_send)) {
+            $data = $this->make_request(
+                $this->forum_url . "/forum/viewtopic.php?t=4546540"
+            );
+            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
+            unset($data);
+            $topic_title = $html->find('a#topic-title')->text();
+            unset($html);
+            phpQuery::unloadDocuments();
+            $this->blocking_send = preg_match('/#1$/', $topic_title);
+            if (!$this->blocking_send) {
+                throw new Exception("Отправка отчётов заблокирована. Обратитесь на форум для выяснения причин блокировки.");
+            }
+        }
         $message = str_replace('<br />', '', $message);
         $message = str_replace('[br]', "\n", $message);
         // получение form_token
