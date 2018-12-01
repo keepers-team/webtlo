@@ -186,6 +186,9 @@ try {
         if ($forum_id > 0) {
             $forums_ids = array($forum_id);
         } else {
+            if (!isset($cfg['subsections'])) {
+                throw new Exception();
+            }
             foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 if (!$subsection['hide_topics']) {
                     $forums_ids[] = $forum_id;
