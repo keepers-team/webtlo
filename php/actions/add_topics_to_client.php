@@ -54,13 +54,24 @@ try {
     $topics_ids = array_chunk($topics_ids['topics_ids'], 999);
     foreach ($topics_ids as $topics_ids) {
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
-        $forums_topics_ids += Db::query_database(
+        $forums_topics_ids_tmp = Db::query_database(
             "SELECT ss,id FROM Topics WHERE id IN ($in)",
             $topics_ids,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         unset($in);
+        foreach ($forums_topics_ids_tmp as $forum_id => $forums_topics_ids_tmp) {
+            if (isset($forums_topics_ids[$forum_id])) {
+                $forums_topics_ids[$forum_id] = array_merge(
+                    $forums_topics_ids[$forum_id],
+                    $forums_topics_ids_tmp
+                );
+            } else {
+                $forums_topics_ids[$forum_id] = $forums_topics_ids_tmp;
+            }
+        }
+        unset($forums_topics_ids_tmp);
     }
     unset($topics_ids);
 
