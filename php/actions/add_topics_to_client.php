@@ -219,19 +219,20 @@ try {
 
         // добавление раздач
         foreach ($torrent_files_downloaded as $topic_id) {
-            // подкаталог для данных
-            if (
-                $forum['sub_folder']
-                && !empty($forum['fd'])
-            ) {
-                $forum['fd'] .= $slash . $topic_id;
+            $savepath = '';
+            if (!empty($forum['fd'])) {
+                $savepath = $forum['fd'];
+                // подкаталог для данных
+                if ($forum['sub_folder']) {
+                    $savepath .= $slash . $topic_id;
+                }
             }
             // путь до торрент-файла на сервере
             $filename_url = sprintf(
                 $filename_url_pattern,
                 $topic_id
             );
-            $client->torrentAdd($filename_url, $forum['fd']);
+            $client->torrentAdd($filename_url, $savepath);
             $torrent_files_added[] = $topic_id;
             // ждём полсекунды
             usleep(500000);
