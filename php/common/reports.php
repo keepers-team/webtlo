@@ -104,6 +104,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // количество раздач
     $topics_count = count($topics);
 
+    // очищаем $tmp перед заполнением
+    unset($tmp);
+
     // формируем списки
     foreach ($topics as $topic) {
         if (empty($tmp)) {
@@ -309,8 +312,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $tmp['dlqt'],
         convert_bytes($tmp['dlsi'])
     );
-
-    unset($tmp);
 
 }
 
