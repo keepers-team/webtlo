@@ -24,6 +24,18 @@ if (empty($cfg['tracker_paswd'])) {
     throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
 }
 
+// update_time[0] время последнего обновления сведений
+$update_time = Db::query_database(
+    "SELECT ud FROM UpdateTime WHERE id = 7777",
+    array(),
+    true,
+    PDO::FETCH_COLUMN
+);
+
+if (empty($update_time[0])) {
+    throw new Exception("Error: Отсутствует метка времени последнего обновления сведений");
+}
+
 // исключаемые подразделы
 $exclude_forums = TIniFileEx::read('reports', 'exclude', '');
 $exclude_forums = explode(',', $exclude_forums);
@@ -40,12 +52,14 @@ $spoiler_length = mb_strlen($pattern_spoiler, 'UTF-8');
 $sumdlqt = 0;
 $sumdlsi = 0;
 
-// update_time[0] время последнего обновления сведений
-$update_time = Db::query_database(
-    "SELECT ud FROM UpdateTime WHERE id = 7777",
-    array(),
-    true,
-    PDO::FETCH_COLUMN
+// список подразделов в сводный
+$common_forums = array();
+
+// подключаемся к форуму
+$reports = new Reports(
+    $cfg['forum_url'],
+    $cfg['tracker_login'],
+    $cfg['tracker_paswd']
 );
 
 foreach ($cfg['subsections'] as $forum_id => $subsection) {
@@ -140,14 +154,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
     'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
         $tmp['msg'][0];
-
-    if (!isset($reports)) {
-        $reports = new Reports(
-            $cfg['forum_url'],
-            $cfg['tracker_login'],
-            $cfg['tracker_paswd']
-        );
-    }
 
     // ищем тему со списками
     $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
