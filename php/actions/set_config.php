@@ -80,6 +80,7 @@ try {
     }
 
     // подразделы
+    $ini->write('sections', 'subsections', '');
     if (
         isset($forums)
         && is_array($forums)

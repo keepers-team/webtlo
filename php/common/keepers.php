@@ -36,52 +36,55 @@ if (!isset($reports)) {
     );
 }
 
+if (isset($cfg['subsections'])) {
+
 // получаем данные
-foreach ($cfg['subsections'] as $forum_id => $subsection) {
+    foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
-    $topic_id = $reports->search_topic_id($subsection['na']);
+        $topic_id = $reports->search_topic_id($subsection['na']);
 
-    if (empty($topic_id)) {
-        Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
-        continue;
-    }
-
-    Log::append("Сканирование подраздела № $forum_id...");
-
-    $keepers = $reports->scanning_viewtopic($topic_id);
-
-    if (!empty($keepers)) {
-        foreach ($keepers as &$keeper) {
-            if (
-                empty($keeper['topics_ids'])
-                || $keeper['nickname'] == $cfg['tracker_login']
-            ) {
-                continue;
-            }
-            $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 333);
-            foreach ($keeper['topics_ids'] as $topics_ids) {
-                $select = str_repeat(
-                    'SELECT ?,?,? UNION ALL ',
-                    count($topics_ids) - 1
-                ) . 'SELECT ?,?,?';
-                foreach ($topics_ids as $topic_id) {
-                    $keepers_topics_ids[] = $topic_id;
-                    $keepers_topics_ids[] = $keeper['nickname'];
-                    $keepers_topics_ids[] = $keeper['posted'];
-                }
-                Db::query_database(
-                    "INSERT INTO temp.KeepersNew (id,nick,posted) $select",
-                    $keepers_topics_ids
-                );
-                unset($keepers_topics_ids);
-                unset($select);
-            }
+        if (empty($topic_id)) {
+            Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
+            continue;
         }
-        unset($keepers);
-        unset($keeper);
-    }
-}
 
+        Log::append("Сканирование подраздела № $forum_id...");
+
+        $keepers = $reports->scanning_viewtopic($topic_id);
+
+        if (!empty($keepers)) {
+            foreach ($keepers as &$keeper) {
+                if (
+                    empty($keeper['topics_ids'])
+                    || $keeper['nickname'] == $cfg['tracker_login']
+                ) {
+                    continue;
+                }
+                $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 333);
+                foreach ($keeper['topics_ids'] as $topics_ids) {
+                    $select = str_repeat(
+                        'SELECT ?,?,? UNION ALL ',
+                        count($topics_ids) - 1
+                    ) . 'SELECT ?,?,?';
+                    foreach ($topics_ids as $topic_id) {
+                        $keepers_topics_ids[] = $topic_id;
+                        $keepers_topics_ids[] = $keeper['nickname'];
+                        $keepers_topics_ids[] = $keeper['posted'];
+                    }
+                    Db::query_database(
+                        "INSERT INTO temp.KeepersNew (id,nick,posted) $select",
+                        $keepers_topics_ids
+                    );
+                    unset($keepers_topics_ids);
+                    unset($select);
+                }
+            }
+            unset($keepers);
+            unset($keeper);
+        }
+    }
+
+}
 // записываем изменения в локальную базу
 $count_keepers = Db::query_database(
     "SELECT COUNT() FROM temp.KeepersNew",
