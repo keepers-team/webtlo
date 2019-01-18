@@ -188,5 +188,7 @@ Db::query_database(
         SELECT Clients.hs FROM temp.ClientsNew LEFT JOIN Clients
         ON temp.ClientsNew.hs = Clients.hs AND temp.ClientsNew.cl = Clients.cl
         WHERE Clients.hs IS NOT NULL
+    ) OR cl NOT IN (
+        SELECT DISTINCT cl FROM temp.ClientsNew
     )"
 );

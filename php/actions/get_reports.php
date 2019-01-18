@@ -62,7 +62,7 @@ try {
         // вытаскиваем из базы хранимое
         $stored = Db::query_database(
             "SELECT ss,COUNT(),SUM(si) FROM Topics
-			LEFT JOIN Clients ON Topics.hs = Clients.hs
+			LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
 			WHERE dl IN (1,-1) AND ss IN ($in) GROUP BY ss",
             $forums_ids,
             true,
@@ -124,7 +124,7 @@ try {
         // получение данных о раздачах
         $topics = Db::query_database(
             "SELECT Topics.id,ss,na,si,st FROM Topics
-			LEFT JOIN Clients ON Topics.hs = Clients.hs
+			LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
 			WHERE ss = ? AND dl IN (1,-1)",
             array($forum_id),
             true
