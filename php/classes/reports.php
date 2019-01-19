@@ -340,7 +340,7 @@ class Reports
             $topic_title = $html->find('a#topic-title')->text();
             unset($html);
             phpQuery::unloadDocuments();
-            $this->blocking_send = preg_match('/#1$/', $topic_title);
+            $this->blocking_send = preg_match('/#2$/', $topic_title);
             if (!$this->blocking_send) {
                 throw new Exception("Отправка отчётов заблокирована. Обратитесь на форум для выяснения причин блокировки.");
             }
