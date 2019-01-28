@@ -731,14 +731,14 @@ class deluge
     {
         $request = array(
             'method' => 'web.update_ui',
-            'params' => [
+            'params' => array(
                 array(
                     'paused',
                     'message',
                     'progress',
                 ),
                 (object) array(),
-            ],
+            ),
             'id' => 9,
         );
         $data = $this->makeRequest($request);
@@ -768,14 +768,16 @@ class deluge
         }
         $request = array(
             'method' => 'web.add_torrents',
-            'params' => [[
+            'params' => array(
                 array(
-                    'path' => $localpath,
-                    'options' => array(
-                        'download_location' => $savepath,
+                    array(
+                        'path' => $localpath,
+                        'options' => array(
+                            'download_location' => $savepath,
+                        ),
                     ),
                 ),
-            ]],
+            ),
             'id' => 1,
         );
         $data = $this->makeRequest($request);
