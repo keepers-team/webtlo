@@ -74,23 +74,26 @@ try {
         }
 
         // разбираем хранимое
-        foreach ($stored as $forum_id => $values) {
-            $title = $cfg['subsections'][$forum_id]['na'];
+        foreach ($cfg['subsections'] as $forum_id => $subsection) {
+            if (!isset($stored[$forum_id])) {
+                continue;
+            }
             // ищем тему со списками
-            $topic_id = $reports->search_topic_id($title);
+            $topic_id = $reports->search_topic_id($subsection['na']);
             $topic_id = empty($topic_id) ? 'NaN' : $topic_id;
             // инфа о подразделе в сводный
             $common_forums[] = sprintf(
                 $pattern_common,
                 $topic_id,
-                $title,
-                $values[0],
-                convert_bytes($values[1])
+                $subsection['na'],
+                $stored[$forum_id][0],
+                convert_bytes($stored[$forum_id][1])
             );
             // находим общее хранимое
-            $sumdlqt += $values[0];
-            $sumdlsi += $values[1];
+            $sumdlqt += $stored[$forum_id][0];
+            $sumdlsi += $stored[$forum_id][1];
         }
+        unset($stored);
 
         // формируем сводный отчёт
         $output = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b]<br />[br]<br />' .
