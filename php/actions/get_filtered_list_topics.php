@@ -277,6 +277,15 @@ try {
             $filter['filter_sort_direction']
         );
 
+        // фильтрация по фразе е=ё
+        if (!empty($filter['filter_phrase'])) {
+            $filter['filter_phrase'] = preg_replace(
+                '/[её]/ui',
+                '(е|ё)',
+                $filter['filter_phrase']
+            );
+        }
+
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             // фильтрация по дате релиза
