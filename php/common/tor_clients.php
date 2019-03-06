@@ -102,7 +102,7 @@ if (!empty($cfg['clients'])) {
     $untracked_hashes = Db::query_database(
         "SELECT Clients.hs FROM Clients
         LEFT JOIN Topics ON Topics.hs = Clients.hs
-        WHERE ss NOT IN ($in) AND Clients.dl IN (1,-1)",
+        WHERE Topics.id IS NULL OR ss NOT IN ($in) AND Clients.dl IN (1,-1)",
         $forums_ids,
         true,
         PDO::FETCH_COLUMN
