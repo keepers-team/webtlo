@@ -9,13 +9,14 @@ class UserDetails
     public static $api;
     public static $uid;
     public static $cookie;
+    public static $captcha;
     public static $forum_url;
     public static $form_token;
 
-    public static function get_details($forum_url, $login, $passwd)
+    public static function get_details($forum_url, $login, $passwd, $cap_fields = array())
     {
         self::$forum_url = $forum_url;
-        self::get_cookie($login, $passwd);
+        self::get_cookie($login, $passwd, $cap_fields);
         self::get_keys();
     }
 
@@ -55,30 +56,52 @@ class UserDetails
         }
     }
 
-    public static function get_cookie($login, $passwd)
+    public static function get_cookie($login, $passwd, $cap_fields = array())
     {
         $passwd = mb_convert_encoding($passwd, 'Windows-1251', 'UTF-8');
         $login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
+        $fields = array(
+            'login_username' => "$login",
+            'login_password' => "$passwd",
+            'login' => 'Вход',
+        );
+        $fields += $cap_fields;
         $data = self::make_request(
             self::$forum_url . '/forum/login.php',
-            array(
-                'login_username' => "$login",
-                'login_password' => "$passwd",
-                'login' => 'Вход',
-            ),
+            $fields,
             array(CURLOPT_HEADER => 1)
         );
         preg_match("|.*bb_session=[^-]*-([0-9]*)|", $data, $uid);
         preg_match("|.*(bb_session=[^;]*);.*|", $data, $cookie);
-        if (empty($uid[1]) || empty($cookie[1])) {
+        if (
+            empty($uid[1])
+            || empty($cookie[1])
+        ) {
             preg_match('|<title> *(.*)</title>|si', $data, $title);
             if (!empty($title)) {
                 if ($title[1] == 'rutracker.org') {
                     preg_match('|<h4[^>]*?>(.*)</h4>|si', $data, $text);
                     if (!empty($text)) {
+                        $html = phpQuery::newDocumentHTML($data, 'UTF-8');
+                        $captcha = $html->find('div.mrg_16 > table tr')->eq(2);
+                        unset($html);
+                        if (!empty($captcha)) {
+                            $captcha = pq($captcha);
+                            $captcha_img = $captcha->find('img')->attr('src');
+                            $captcha_img = file_get_contents($captcha_img);
+                            file_put_contents(
+                                dirname(__FILE__) . '/../../data/captcha.jpg',
+                                $captcha_img
+                            );
+                            foreach ($captcha->find('input') as $input) {
+                                $input = pq($input);
+                                self::$captcha[] = $input->attr('name');
+                                self::$captcha[] = $input->val();
+                            }
+                        }
                         Log::append('Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.');
+                        phpQuery::unloadDocuments();
                     }
-
                 } else {
                     Log::append('Error: ' . mb_convert_encoding($title[1], 'UTF-8', 'Windows-1251') . '.');
                 }

@@ -74,16 +74,49 @@ function doSortSelectByValue(select_id) {
 	$('#' + select_id).empty().html(sortedVals);
 }
 
+// сохранение настроек
+function setSettings() {
+	var forums = getForums();
+	var tor_clients = getTorClients();
+	var $data = $("#config").serialize();
+	$.ajax({
+		context: this,
+		type: "POST",
+		url: "php/actions/set_config.php",
+		data: {
+			cfg: $data,
+			forums: forums,
+			tor_clients: tor_clients
+		},
+		beforeSend: function () {
+			$(this).prop("disabled", true);
+		},
+		success: function (response) {
+			$("#log").append(response);
+		},
+		complete: function () {
+			$(this).prop("disabled", false);
+		},
+	});
+}
+
 // получение отчётов
 function getReport() {
+	$("#dialog").dialog("close");
 	var forum_id = $("#reports-subsections").val();
+	var cap_code = $("#cap_code").val();
+	var cap_fields = $("#cap_fields").val();
 	if ($.isEmptyObject(forum_id)) {
 		return false;
 	}
 	$.ajax({
 		type: "POST",
 		url: "php/actions/get_reports.php",
-		data: { forum_id: forum_id },
+		data: {
+			forum_id: forum_id,
+			cap_code: cap_code,
+			cap_fields: cap_fields,
+		},
 		beforeSend: function () {
 			$("#reports-subsections").selectmenu("disable");
 			$("#reports-content").html("<i class=\"fa fa-spinner fa-pulse\"></i>");
@@ -124,6 +157,34 @@ function getReport() {
 					r.select();
 				}
 			});
+			if (!$.isEmptyObject(response.captcha)) {
+				$("#dialog").dialog(
+					{
+						buttons: [
+							{
+								text: "OK",
+								click: function () {
+									var username_correct = $("#tracker_username_correct").val();
+									var password_correct = $("#tracker_password_correct").val();
+									$("#tracker_username").val(username_correct);
+									$("#tracker_password").val(password_correct);
+									setSettings();
+									getReport();
+								},
+							},
+						],
+						modal: true,
+						resizable: false,
+						// position: [ 'center', 200 ]
+					}
+				).html('Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
+					'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br />' +
+					'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
+					'<div><img src="data/captcha.jpg?' + new Date().valueOf() + '" /></div>' +
+					'<input id="cap_code" size="27" />');
+				$("#dialog").dialog("open");
+				console.log(new Date().valueOf());
+			}
 		},
 		complete: function () {
 			$("#reports-subsections").selectmenu("enable");

@@ -40,12 +40,12 @@ class Reports
         'Дек',
     );
 
-    public function __construct($forum_url, $login, $paswd)
+    public function __construct($forum_url, $login, $paswd, $cap_fields = array())
     {
         $this->login = $login;
         $this->forum_url = $forum_url;
         UserDetails::$forum_url = $forum_url;
-        UserDetails::get_cookie($login, $paswd);
+        UserDetails::get_cookie($login, $paswd, $cap_fields);
         $this->ch = curl_init();
     }
 

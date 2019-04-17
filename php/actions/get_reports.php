@@ -10,6 +10,21 @@ try {
         $forum_id = (int) $_POST['forum_id'];
     }
 
+    // капча
+    if (
+        isset($_POST['cap_code'])
+        && isset($_POST['cap_fields'])
+    ) {
+        $cap_code = $_POST['cap_code'];
+        $cap_fields = explode(',', $_POST['cap_fields']);
+        $cap_fields = array(
+            "$cap_fields[0]" => "$cap_fields[1]",
+            "$cap_fields[2]" => "$cap_code",
+        );
+    } else {
+        $cap_fields = array();
+    }
+
     if (
         !is_int($forum_id)
         || $forum_id < 0
@@ -45,7 +60,8 @@ try {
     $reports = new Reports(
         $cfg['forum_url'],
         $cfg['tracker_login'],
-        $cfg['tracker_paswd']
+        $cfg['tracker_paswd'],
+        $cap_fields
     );
 
     if ($forum_id === 0) {
@@ -299,6 +315,7 @@ try {
     echo json_encode(array(
         'report' => $output,
         'log' => Log::get(),
+        'captcha' => '',
     ));
 
 } catch (Exception $e) {
@@ -307,6 +324,7 @@ try {
     echo json_encode(array(
         'log' => Log::get(),
         'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />",
+        'captcha' => UserDetails::$captcha,
     ));
 
 }

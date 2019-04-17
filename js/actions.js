@@ -62,30 +62,7 @@ $(document).ready(function () {
 	});
 
 	// сохранение настроек
-	$("#savecfg").on("click", function () {
-		var forums = getForums();
-		var tor_clients = getTorClients();
-		var $data = $("#config").serialize();
-		$.ajax({
-			context: this,
-			type: "POST",
-			url: "php/actions/set_config.php",
-			data: {
-				cfg: $data,
-				forums: forums,
-				tor_clients: tor_clients
-			},
-			beforeSend: function () {
-				$(this).prop("disabled", true);
-			},
-			success: function (response) {
-				$("#log").append(response);
-			},
-			complete: function () {
-				$(this).prop("disabled", false);
-			},
-		});
-	});
+	$("#savecfg").on("click", setSettings);
 
 	// проверка доступности форума и API
 	$("#check_mirrors_access").on("click", function () {
