@@ -247,6 +247,7 @@ try {
         $count_added = count($torrent_files_added);
 
         // создаём временную таблицу
+        Db::query_database("DROP TABLE IF EXISTS temp.Hashes");
         Db::query_database(
             "CREATE TEMP TABLE Hashes AS
             SELECT hs FROM Clients WHERE 0 = 1"
