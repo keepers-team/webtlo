@@ -282,7 +282,7 @@ try {
             $filter['filter_phrase'] = preg_replace(
                 '/[её]/ui',
                 '(е|ё)',
-                $filter['filter_phrase']
+                quotemeta($filter['filter_phrase'])
             );
         }
 
