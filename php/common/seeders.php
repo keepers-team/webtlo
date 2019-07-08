@@ -177,7 +177,7 @@ foreach ($forums_ids as $forum_id) {
                 );
                 // удаляем перерегистрированую раздачу
                 // чтобы очистить значения сидов для старой раздачи
-                if (isset($previous_data['id'])) {
+                if ($previous_data['rg'] != $topic_data[2]) {
                     $topics_delete[] = $topic_id;
                 }
                 unset($previous_data);
@@ -235,7 +235,7 @@ foreach ($forums_ids as $forum_id) {
 if (isset($topics_delete)) {
     $topics_delete = array_chunk($topics_delete, 500);
     foreach ($topics_delete as $topics_delete) {
-        $in = str_repaet('?,', count($topics_delete) - 1) . '?';
+        $in = str_repeat('?,', count($topics_delete) - 1) . '?';
         Db::query_database(
             "DELETE FROM Topics WHERE id IN ($in)",
             $topics_delete
