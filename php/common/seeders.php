@@ -268,7 +268,7 @@ if (
     Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
     Log::append("Обработано раздач: " . $total_topics_update . " шт.");
     Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
-    Log::append("Перезалитых раздач: " . $total_topics_delete);
+    Log::append("Перезалитых раздач: " . $total_topics_delete . " шт.");
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
