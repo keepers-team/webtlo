@@ -56,6 +56,9 @@ $previous_update_time = new DateTime();
 // всего раздач без сидов
 $total_topics_no_seeders = 0;
 
+// всего перезалитых раздач
+$total_topics_delete = 0;
+
 foreach ($forums_ids as $forum_id) {
 
     // пропускаем хранимые подразделы
@@ -233,6 +236,7 @@ foreach ($forums_ids as $forum_id) {
 // удаляем перерегистрированные раздачи
 // чтобы очистить значения сидов для старой раздачи
 if (isset($topics_delete)) {
+    $total_topics_delete = count($topics_delete);
     $topics_delete = array_chunk($topics_delete, 500);
     foreach ($topics_delete as $topics_delete) {
         $in = str_repeat('?,', count($topics_delete) - 1) . '?';
@@ -264,6 +268,7 @@ if (
     Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
     Log::append("Обработано раздач: " . $total_topics_update . " шт.");
     Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
+    Log::append("Перезалитых раздач: " . $total_topics_delete);
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
