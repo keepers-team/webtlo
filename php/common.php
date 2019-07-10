@@ -108,6 +108,18 @@ function get_settings($filename = "")
         'include_forums_ids' => $ini->read('vacancies', 'include_forums_ids', ''),
     );
 
+    // таймауты
+    $config['curl_setopt'] = array(
+        'api' => array(
+            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'api_timeout', 20),
+            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'api_connecttimeout', 20),
+        ),
+        'forum' => array(
+            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'forum_timeout', 20),
+            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 20),
+        ),
+    );
+
     // версия конфига
     $user_version = $ini->read('other', 'user_version', 0);
 

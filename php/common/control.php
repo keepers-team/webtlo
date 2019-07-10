@@ -70,6 +70,8 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
         // подключаемся к api
         if (!isset($api)) {
             $api = new Api($cfg['api_url'], $cfg['api_key']);
+            // применяем таймауты
+            $api->curl_setopts($cfg['curl_setopt']['api']);
             Log::append("Получение данных о пирах...");
         }
 

@@ -11,6 +11,8 @@ if (!isset($cfg)) {
 // подключаемся к api
 if (!isset($api)) {
     $api = new Api($cfg['api_url'], $cfg['api_key']);
+    // применяем таймауты
+    $api->curl_setopts($cfg['curl_setopt']['api']);
 }
 
 // обновление дерева подразделов

@@ -107,6 +107,9 @@ try {
         $cfg['user_id']
     );
 
+    // применяем таймауты
+    $download->curl_setopts($cfg['curl_setopt']['forum']);
+
     foreach ($topics_ids['topics_ids'] as $topic_id) {
         $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
         if ($data === false) {

@@ -34,6 +34,8 @@ if (!isset($reports)) {
         $cfg['tracker_login'],
         $cfg['tracker_paswd']
     );
+    // применяем таймауты
+    $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
 if (isset($cfg['subsections'])) {

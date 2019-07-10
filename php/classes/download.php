@@ -25,10 +25,13 @@ class Download
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20,
         ));
         curl_setopt_array($this->ch, Proxy::$proxy['forum_url']);
+    }
+
+    public function curl_setopts($options)
+    {
+        curl_setopt_array($this->ch, $options);
     }
 
     public function get_torrent_file($topic_id, $add_retracker = 0)

@@ -62,6 +62,9 @@ $reports = new Reports(
     $cfg['tracker_paswd']
 );
 
+// применяем таймауты
+$reports->curl_setopts($cfg['curl_setopt']['forum']);
+
 foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     Log::append("Отправка отчётов для подраздела № $forum_id...");

@@ -115,6 +115,8 @@ if (!empty($cfg['clients'])) {
         // подключаемся к api
         if (!isset($api)) {
             $api = new Api($cfg['api_url'], $cfg['api_key']);
+            // применяем таймауты
+            $api->curl_setopts($cfg['curl_setopt']['api']);
         }
 
         $untracked_ids = $api->get_topic_id($untracked_hashes);

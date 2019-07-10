@@ -64,6 +64,9 @@ try {
         $cap_fields
     );
 
+    // применяем таймауты
+    $reports->curl_setopts($cfg['curl_setopt']['forum']);
+
     if ($forum_id === 0) {
 
         // сводный отчёт

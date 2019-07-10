@@ -44,6 +44,8 @@ if ($vacancies['scan_reports']) {
         $cfg['tracker_login'],
         $cfg['tracker_paswd']
     );
+    // применяем таймауты
+    $reports->curl_setopts($cfg['curl_setopt']['forum']);
     $topics_ids = $reports->scanning_viewforum(1584);
     Log::append("Найдено тем со списками: " . count($topics_ids) . " шт.");
     foreach ($topics_ids as $topic_id) {
@@ -251,6 +253,8 @@ if (!empty($output)) {
             $cfg['tracker_login'],
             $cfg['tracker_paswd']
         );
+        // применяем таймауты
+        $reports->curl_setopts($cfg['curl_setopt']['forum']);
     }
     $output = 'Актуально на: [b]' . date('d.m.Y') . '[/b][br]' .
         'Всего вакантных раздач: [b]' . $total_count_vacant_topics . ' шт.[/b][br]' .

@@ -49,6 +49,11 @@ class Reports
         $this->ch = curl_init();
     }
 
+    public function curl_setopts($options)
+    {
+        curl_setopt_array($this->ch, $options);
+    }
+
     private function make_request($url, $fields = array(), $options = array())
     {
         curl_setopt_array($this->ch, array(
@@ -61,8 +66,6 @@ class Reports
             CURLOPT_COOKIE => UserDetails::$cookie,
             CURLOPT_POSTFIELDS => http_build_query($fields),
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20,
         ));
         curl_setopt_array($this->ch, Proxy::$proxy['forum_url']);
         curl_setopt_array($this->ch, $options);
@@ -342,7 +345,8 @@ class Reports
             phpQuery::unloadDocuments();
             $this->blocking_send = preg_match('/#2$/', $topic_title);
             if (!$this->blocking_send) {
-                throw new Exception("Отправка отчётов заблокирована. Обратитесь на форум для выяснения причин блокировки.");
+                Log::append("Notice: Установите актуальную версию web-TLO для корректной отправки отчётов");
+                throw new Exception("Error: Отправка отчётов для текущей версии web-TLO заблокирована");
             }
         }
         $message = str_replace('<br />', '', $message);
