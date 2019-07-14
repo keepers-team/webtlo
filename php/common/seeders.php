@@ -88,7 +88,7 @@ foreach ($forums_ids as $forum_id) {
 
     // если не прошёл час
     if ($time_diff < 3600) {
-        Log::append("Warning: Не требуется обновление для подраздела № " . $forum_id);
+        Log::append("Notice: Не требуется обновление для подраздела № " . $forum_id);
         continue;
     }
 
@@ -96,7 +96,8 @@ foreach ($forums_ids as $forum_id) {
     $topics_data = $api->get_forum_topics_data($forum_id);
 
     if (empty($topics_data['result'])) {
-        throw new Exception("Error: Не получены данные о подразделе № " . $forum_id);
+        Log::append("Error: Не получены данные о подразделе № " . $forum_id);
+        continue;
     }
 
     // количество и вес раздач
