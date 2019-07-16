@@ -22,11 +22,11 @@ Db::query_database(
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds FROM Topics WHERE 0 = 1"
+    SELECT id,ss,se,st,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsRenew AS
-    SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1"
+    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 
 // подключаемся к api
@@ -119,7 +119,7 @@ if (isset($cfg['subsections'])) {
                     continue;
                 }
 
-                if (count($topic_data) < 4) {
+                if (count($topic_data) < 5) {
                     throw new Exception("Error: Недостаточно элементов в ответе");
                 }
 
@@ -154,6 +154,7 @@ if (isset($cfg['subsections'])) {
                         'rg' => $topic_data[2],
                         'qt' => $sum_updates,
                         'ds' => $days_update,
+                        'pt' => $topic_data[4],
                     );
                     // удаляем перерегистрированую раздачу
                     // в том числе, чтобы очистить значения сидов для старой раздачи
@@ -184,6 +185,7 @@ if (isset($cfg['subsections'])) {
                     'st' => $topic_data[0],
                     'qt' => $sum_updates,
                     'ds' => $days_update,
+                    'pt' => $topic_data[4],
                 );
             }
             unset($topics_data_previous);
@@ -263,11 +265,11 @@ if (
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds)
+        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
         SELECT * FROM temp.TopicsUpdate"
     );
     Db::query_database(
-        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)
+        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt)
         SELECT * FROM temp.TopicsRenew"
     );
     $forums_ids = array_keys($forums_update_time);

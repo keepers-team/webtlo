@@ -66,7 +66,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-1.0.0.4</title>
+		<title>web-TLO-1.0.1.0</title>
 		<script src="jquery/jquery.js"></script>
 		<script src="jquery/jquery-ui.js"></script>
 		<script src="jquery/external/datepicker-ru.js"></script>
@@ -264,16 +264,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											в имени хранителя
 										</label>
 									</fieldset>
-									<fieldset class="filter_common">
-										<label title="Выберите произвольный период средних сидов">
-											Период средних сидов:
-											<input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
-										</label>
-										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
-											Дата регистрации до:
-											<input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
-										</label>
-									</fieldset>
 								</div>
 								<div class="filter_block filter_rule ui-widget" title="Сиды">
 									<label title="Использовать интервал сидов">
@@ -301,6 +291,36 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<label class="filter_rule_value" title="Конечное количество сидов">
 											до
 											<input type="text" id="filter_rule_to" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+										</label>
+									</fieldset>
+								</div>
+							</div>
+							<div class="topics_filter">
+								<div class="filter_block ui-widget">
+									<fieldset title="Приоритеты раздач на трекере">
+										<label>
+											<input type="checkbox" name="keeping_priority[]" value="0" />
+											низкий
+										</label>
+										<label>
+											<input type="checkbox" name="keeping_priority[]" value="1" checked class="default" />
+											обычный
+										</label>
+										<label>
+											<input type="checkbox" name="keeping_priority[]" value="2" checked class="default" />
+											высокий
+										</label>
+									</fieldset>
+								</div>
+								<div class="filter_block ui-widget">
+									<fieldset class="filter_common">
+										<label title="Выберите произвольный период средних сидов">
+											Период средних сидов:
+											<input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
+										</label>
+										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
+											Дата регистрации до:
+											<input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
 										</label>
 									</fieldset>
 								</div>

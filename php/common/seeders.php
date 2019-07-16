@@ -143,7 +143,7 @@ foreach ($forums_ids as $forum_id) {
                 continue;
             }
 
-            if (count($topic_data) < 4) {
+            if (count($topic_data) < 5) {
                 throw new Exception("Error: Недостаточно элементов в ответе");
             }
 

@@ -201,7 +201,7 @@ try {
         $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
-        $pattern_statement = "SELECT Topics.id,na,si,rg%s FROM Topics
+        $pattern_statement = "SELECT Topics.id,na,si,rg,pt%s FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
 			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
@@ -288,6 +288,10 @@ try {
 
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
+            // фильтрация по приоритету
+            if (!in_array($topic_data['pt'], $filter['keeping_priority'])) {
+                continue;
+            }
             // фильтрация по дате релиза
             if ($topic_data['rg'] > $date_release->format('U')) {
                 continue;
