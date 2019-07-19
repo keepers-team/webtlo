@@ -166,7 +166,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 						<form method="post" id="topics_filter">
 							<div class="topics_filter">
 								<div class="filter_block ui-widget">
-									<fieldset title="Статусы раздач в торрент-клиенте">
+									<fieldset title="Статус раздач в торрент-клиенте">
 										<label>
 											<input type="checkbox" name="filter_client_status[]" value="1" />
 											храню
@@ -180,22 +180,37 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											качаю
 										</label>
 									</fieldset>
-									<fieldset>
-										<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-											<input type="checkbox" name="avg_seeders_complete" />
-											"зелёные"
+									<hr />
+									<fieldset title="Направление сортировки раздач">
+										<label>
+											<input type="radio" name="filter_sort_direction" value="1" checked class="default sort" />
+											по возрастанию
 										</label>
-										<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
-											<input type="checkbox" class="keepers" name="not_keepers" />
-											нет хранителей
+										<label>
+											<input type="radio" name="filter_sort_direction" value="-1" class="sort" />
+											по убыванию
 										</label>
-										<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
-											<input type="checkbox" class="keepers" name="is_keepers" />
-											есть хранители
+									</fieldset>
+									<fieldset title="Критерий сортировки раздач">
+										<label>
+											<input type="radio" name="filter_sort" value="na" class="sort" />
+											по названию
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="si" class="sort" />
+											по объёму
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="se" checked class="default sort" />
+											по количеству сидов
+										</label>
+										<label>
+											<input type="radio" name="filter_sort" value="rg" class="sort" />
+											по дате регистрации
 										</label>
 									</fieldset>
 								</div>
-								<div class="filter_block ui-widget" title="Статусы раздач на трекере">
+								<div class="filter_block ui-widget" title="Статус раздач на трекере">
 									<fieldset>
 										<label>
 											<input type="checkbox" name="filter_tracker_status[]" value="0" />
@@ -218,59 +233,70 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 											временная
 										</label>
 									</fieldset>
-								</div>
-								<div id="filter-sort-block" class="filter_block ui-widget" title="Сортировка">
-									<fieldset>
+									<hr />
+									<fieldset title="Приоритет раздач на трекере">
 										<label>
-											<input type="radio" name="filter_sort_direction" value="1" checked class="default" />
-											по возрастанию
+											<input type="checkbox" name="keeping_priority[]" value="0" />
+											низкий
 										</label>
 										<label>
-											<input type="radio" name="filter_sort_direction" value="-1" />
-											по убыванию
-										</label>
-									</fieldset>
-									<fieldset>
-										<label>
-											<input type="radio" name="filter_sort" value="na" />
-											по названию
+											<input type="checkbox" name="keeping_priority[]" value="1" checked class="default" />
+											обычный
 										</label>
 										<label>
-											<input type="radio" name="filter_sort" value="si" />
-											по объёму
-										</label>
-										<label>
-											<input type="radio" name="filter_sort" value="se" checked class="default" />
-											по количеству сидов
-										</label>
-										<label>
-											<input type="radio" name="filter_sort" value="rg" />
-											по дате регистрации
+											<input type="checkbox" name="keeping_priority[]" value="2" checked class="default" />
+											высокий
 										</label>
 									</fieldset>
 								</div>
-								<div class="filter_block ui-widget" title="Поиск по фразе">
-									<fieldset>
-										<label title="Введите фразу для поиска">
+								<div class="filter_block ui-widget" title="">
+									<fieldset class="filter_common">
+										<label title="Выберите произвольный период средних сидов">
+											Период средних сидов:
+											<input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
+										</label>
+										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
+											Дата регистрации до:
+											<input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
+										</label>
+									</fieldset>
+									<hr />
+									<fieldset title="Поиск раздач по фразе">
+										<label>
 											Поиск по фразе:
 											<input type="search" name="filter_phrase" size="20"/>
 										</label>
-										<label>
+										<label title="Искать совпадение в названии раздачи">
 											<input type="radio" name="filter_by_phrase" value="1" checked class="default" />
 											в названии раздачи
 										</label>
-										<label>
+										<label title="Искать совпадение в имени хранителя">
 											<input type="radio" name="filter_by_phrase" id="filter_by_keeper" value="0" />
 											в имени хранителя
 										</label>
 									</fieldset>
 								</div>
-								<div class="filter_block filter_rule ui-widget" title="Сиды">
+								<div class="filter_block filter_rule ui-widget" title="">
+									<fieldset>
+										<label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+											<input type="checkbox" name="avg_seeders_complete" />
+											"зелёные"
+										</label>
+										<label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
+											<input type="checkbox" class="keepers" name="not_keepers" />
+											нет хранителей
+										</label>
+										<label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+											<input type="checkbox" class="keepers" name="is_keepers" />
+											есть хранители
+										</label>
+									</fieldset>
+									<hr />
 									<label title="Использовать интервал сидов">
 										<input type="checkbox" name="filter_interval" />
 										интервал
 									</label>
-									<fieldset class="filter_rule_one">
+									<fieldset class="filter_rule_one" title="Количество сидов на раздаче">
 										<label>
 											<input type="radio" name="filter_rule_direction" value="1" checked class="default" />
 											не более
@@ -291,36 +317,6 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 										<label class="filter_rule_value" title="Конечное количество сидов">
 											до
 											<input type="text" id="filter_rule_to" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
-										</label>
-									</fieldset>
-								</div>
-							</div>
-							<div class="topics_filter">
-								<div class="filter_block ui-widget">
-									<fieldset title="Приоритеты раздач на трекере">
-										<label>
-											<input type="checkbox" name="keeping_priority[]" value="0" />
-											низкий
-										</label>
-										<label>
-											<input type="checkbox" name="keeping_priority[]" value="1" checked class="default" />
-											обычный
-										</label>
-										<label>
-											<input type="checkbox" name="keeping_priority[]" value="2" checked class="default" />
-											высокий
-										</label>
-									</fieldset>
-								</div>
-								<div class="filter_block ui-widget">
-									<fieldset class="filter_common">
-										<label title="Выберите произвольный период средних сидов">
-											Период средних сидов:
-											<input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
-										</label>
-										<label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
-											Дата регистрации до:
-											<input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
 										</label>
 									</fieldset>
 								</div>

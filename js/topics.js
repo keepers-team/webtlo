@@ -381,7 +381,7 @@ function getFilteredTopics() {
 			$("#tor_blacklist").button("disable");
 		}
 		$(".topics_filter input").prop("disabled", true);
-		$("#filter-sort-block input").prop("disabled", false);
+		$(".topics_filter input.sort").prop("disabled", false);
 		$("#toolbar-new-torrents").buttonset("disable");
 		$("#filter_avg_seeders_period").spinner("disable");
 		$("#filter_rule").spinner("disable");

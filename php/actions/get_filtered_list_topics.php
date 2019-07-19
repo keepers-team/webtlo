@@ -145,6 +145,10 @@ try {
             throw new Exception("Не выбраны статусы раздач для трекера");
         }
 
+        if (empty($filter['keeping_priority'])) {
+            throw new Exception("Не выбраны приоритеты раздач для трекера");
+        }
+
         if (empty($filter['filter_client_status'])) {
             throw new Exception("Не выбраны статусы раздач для торрент-клиента");
         }

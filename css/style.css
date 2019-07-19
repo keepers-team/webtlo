@@ -219,20 +219,33 @@ li.menu.ui-tabs-active {
 	margin-bottom: 5px;
 }
 
+.topics_filter hr {
+	color: #f6f6f6;
+	margin: 6px 0;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+}
+
+.topics_filter input[type=text] {
+	width: 25px;
+}
+
 .topics_filter label {
 	display: block;
 }
 
-.filter_rule fieldset {
-	margin-top: 5px;
+.filter_rule_value {
+	margin: 6px 0 0 6px;
 }
 
-.filter_rule_value {
-	margin-top: 5px;
-	text-align: center;
+.filter_common {
+	margin-top: 3px;
 }
 
 .filter_common label {
+	margin-bottom: 10px;
+}
+
+.filter_common label:last-child {
 	margin-bottom: 5px;
 }
 
