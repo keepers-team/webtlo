@@ -34,11 +34,11 @@ Db::query_database(
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds FROM Topics WHERE 0 = 1"
+    SELECT id,ss,se,st,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsRenew AS
-    SELECT id,ss,se,si,st,rg,qt,ds FROM Topics WHERE 0 = 1"
+    SELECT id,ss,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 
 // подключаемся к api
@@ -180,6 +180,7 @@ foreach ($forums_ids as $forum_id) {
                     'rg' => $topic_data[2],
                     'qt' => $sum_updates,
                     'ds' => $days_update,
+                    'pt' => $topic_data[4],
                 );
                 // удаляем перерегистрированую раздачу
                 // чтобы очистить значения сидов для старой раздачи
@@ -210,6 +211,7 @@ foreach ($forums_ids as $forum_id) {
                 'st' => $topic_data[0],
                 'qt' => $sum_updates,
                 'ds' => $days_update,
+                'pt' => $topic_data[4],
             );
         }
         unset($topics_data_previous);
@@ -275,11 +277,11 @@ if (
     Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds)
+        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
         SELECT * FROM temp.TopicsUpdate"
     );
     Db::query_database(
-        "INSERT INTO Topics (id,ss,se,si,st,rg,qt,ds)
+        "INSERT INTO Topics (id,ss,se,si,st,rg,qt,ds,pt)
         SELECT * FROM temp.TopicsRenew"
     );
     $forums_ids = array_keys($forums_update_time);

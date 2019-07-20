@@ -88,7 +88,10 @@ $in = str_repeat('?,', count($exclude) - 1) . '?';
 $ids = Db::query_database(
     "SELECT ss,si FROM Topics
     LEFT JOIN Seeders ON Seeders.id = Topics.id
-    WHERE st IN (0,2,3,8,10) AND ss NOT IN ($in) AND $avg <= $avg_seeders_value
+    WHERE pt > 0
+    AND st IN (0,2,3,8,10)
+    AND ss NOT IN ($in)
+    AND $avg <= $avg_seeders_value
     AND strftime('%s','now') - rg >= $reg_time_seconds
     AND Topics.id NOT IN (SELECT id FROM temp.VacanciesKeepers)",
     $exclude,
