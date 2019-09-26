@@ -999,7 +999,7 @@ class qbittorrent
     }
 
     /**
-     * проверка поддерживается ли api клиента (api версии 2.2 и выше)
+     * проверка поддерживается ли api клиента (api версии 2.0 и выше)
      * @return bool
      */
     private function is_api_supported_version()
