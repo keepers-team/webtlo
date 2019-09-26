@@ -1197,7 +1197,7 @@ class qbittorrent
         }, $hashes);
         $this->makeRequest(
             'hashes=' . implode('|', $hashes),
-            'api/v2/torrents/pause',
+            'api/v2/torrents/delete',
             false
         );
     }
