@@ -1196,7 +1196,7 @@ class qbittorrent
             return strtolower($hashes);
         }, $hashes);
         $this->makeRequest(
-            'hashes=' . implode('|', $hashes),
+            'hashes=' . implode('|', $hashes) . ($data ? '&deleteFiles=true' : ''),
             'api/v2/torrents/delete',
             false
         );
