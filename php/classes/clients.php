@@ -1192,8 +1192,8 @@ class qbittorrent
      */
     public function torrentRemove($hashes, $data = false)
     {
-        $hashes = array_map(function ($hashes) {
-            return strtolower($hashes);
+        $hashes = array_map(function ($hash) {
+            return strtolower($hash);
         }, $hashes);
         $this->makeRequest(
             'hashes=' . implode('|', $hashes) . ($data ? '&deleteFiles=true' : ''),
