@@ -929,17 +929,46 @@ class deluge
 class qbittorrent
 {
 
+    /**
+     * @var string
+     */
     private static $base = "http://%s:%s/%s";
 
+    /**
+     * @var string
+     */
     public $host;
+    /**
+     * @var string
+     */
     public $port;
+    /**
+     * @var string
+     */
     public $login;
+    /**
+     * @var string
+     */
     public $paswd;
+    /**
+     * @var string
+     */
     public $comment;
 
+    /**
+     * @var string
+     */
     protected $sid;
-    protected $api;
 
+    /**
+     * qbittorrent constructor.
+     *
+     * @param string $host
+     * @param string $port
+     * @param string $login
+     * @param string $paswd
+     * @param string $comment
+     */
     public function __construct($host = "", $port = "", $login = "", $paswd = "", $comment = "")
     {
         $this->host = $host;
@@ -949,32 +978,27 @@ class qbittorrent
         $this->comment = $comment;
     }
 
+    /**
+     * @return bool
+     */
     public function is_online()
     {
         if (!$this->getSID()) {
             return false;
         }
-        if (!$this->version_api()) {
-            Log::append('Версия торрент-клиента не поддерживается.');
-            return false;
-        }
         return true;
     }
 
-    // версия API
-    private function version_api()
-    {
-        $this->api = $this->makeRequest("", 'version/api', true);
-        return $this->api < 7 ? false : true;
-    }
-
-    // получение идентификатора сессии
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     private function getSID()
     {
         // Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login'),
+            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'api/v2/auth/login'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
                 array(
@@ -1001,7 +1025,15 @@ class qbittorrent
         return false;
     }
 
-    // выполнение запроса
+    /**
+     * выполнение запроса
+     * @param        $fields
+     * @param string $url
+     * @param bool $decode
+     * @param array $options
+     *
+     * @return bool|mixed|string
+     */
     private function makeRequest($fields, $url = "", $decode = true, $options = array())
     {
         $ch = curl_init();
@@ -1021,10 +1053,15 @@ class qbittorrent
         return $decode ? json_decode($req, true) : $req;
     }
 
-    // получение списка раздач
+    /**
+     * получение списка раздач от клиента
+     *
+     * @return array|bool array[hash] => status,
+     * false в случае пустого ответа от клиента
+     */
     public function getTorrents()
     {
-        $data = $this->makeRequest('', 'query/torrents');
+        $data = $this->makeRequest('', 'api/v2/torrents/info');
         if (empty($data)) {
             return false;
         }
@@ -1042,7 +1079,11 @@ class qbittorrent
         return isset($torrents) ? $torrents : array();
     }
 
-    // добавить торрент
+    /**
+     * добавить торрент
+     * @param string $filename url до .torrent файла
+     * @param string $savepath путь куда сохранять загружаемые данные
+     */
     public function torrentAdd($filename, $savepath = "")
     {
         $request = http_build_query(
@@ -1055,97 +1096,107 @@ class qbittorrent
             '&',
             PHP_QUERY_RFC3986
         );
-        $this->makeRequest($request, 'command/download', false);
+        $this->makeRequest($request, 'api/v2/torrents/add', false);
     }
 
-    // установка метки
-    public function setLabel($hash, $label = "")
+    /**
+     * установка метки
+     * @param array $hashes
+     * @param string $label
+     */
+    public function setLabel($hashes, $label = "")
     {
-        $hash = array_map(function ($hash) {
+        $hashes = array_map(function ($hash) {
             return strtolower($hash);
-        }, $hash);
-        if ($this->api < 10) {
-            $fields = http_build_query(
-                array(
-                    'hashes' => implode('|', $hash),
-                    'label' => $label,
-                ),
-                '',
-                '&',
-                PHP_QUERY_RFC3986
-            );
-            $this->makeRequest($fields, 'command/setLabel', false);
-        } else {
-            $fields = http_build_query(
-                array(
-                    'hashes' => implode('|', $hash),
-                    'category' => $label,
-                ),
-                '',
-                '&',
-                PHP_QUERY_RFC3986
-            );
-            $this->makeRequest($fields, 'command/setCategory', false);
-        }
+        }, $hashes);
+        $fields = http_build_query(
+            array(
+                'hashes' => implode('|', $hashes),
+                'category' => $label,
+            ),
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        );
+        $this->makeRequest($fields, 'api/v2/torrents/setCategory', false);
     }
 
-    // запустить все
+    /**
+     *запустить все раздачи (unused)
+     */
     public function startAll()
     {
         $this->makeRequest(
             "",
-            'command/resumeAll',
+            'api/v2/torrents/resume',
             false
         );
     }
 
-    // запуск раздач
-    public function torrentStart($hash, $force = false)
+    /**
+     * запуск раздач перечисленных в $hash
+     * @param array $hashes
+     * @param bool  $force
+     */
+    public function torrentStart($hashes, $force = false)
     {
-        foreach ($hash as $hash) {
-            $this->makeRequest(
-                'hash=' . strtolower($hash),
-                'command/resume',
-                false
-            );
-        }
-    }
-
-    // остановка раздач
-    public function torrentStop($hash)
-    {
-        foreach ($hash as $hash) {
-            $this->makeRequest(
-                'hash=' . strtolower($hash),
-                'command/pause',
-                false
-            );
-        }
-    }
-
-    // удаление раздач
-    public function torrentRemove($hash, $data = false)
-    {
-        $hash = array_map(function ($hash) {
+        $hashes = array_map(function ($hash) {
             return strtolower($hash);
-        }, $hash);
+        }, $hashes);
         $this->makeRequest(
-            'hashes=' . implode('|', $hash),
-            'command/delete' . ($data ? 'Perm' : ''),
+            'hashes=' . implode('|', $hashes),
+            'api/v2/torrents/resume',
             false
         );
     }
 
-    // проверить локальные данные раздач
-    public function torrentRecheck($hash)
+    /**
+     * остановка раздач
+     * @param array $hashes
+     */
+    public function torrentStop($hashes)
     {
-        foreach ($hash as $hash) {
-            $this->makeRequest(
-                'hash=' . strtolower($hash),
-                'command/recheck',
-                false
-            );
-        }
+        $hashes = array_map(function ($hash) {
+            return strtolower($hash);
+        }, $hashes);
+        $this->makeRequest(
+            'hashes=' . implode('|', $hashes),
+            'api/v2/torrents/pause',
+            false
+        );
+    }
+
+    /**
+     * удаление раздач
+     * @param array $hashes
+     * @param bool  $data
+     */
+    public function torrentRemove($hashes, $data = false)
+    {
+        $hashes = array_map(function ($hash) {
+            return strtolower($hash);
+        }, $hashes);
+        $this->makeRequest(
+            'hashes=' . implode('|', $hashes) . ($data ? '&deleteFiles=true' : ''),
+            'api/v2/torrents/delete',
+            false
+        );
+    }
+
+    /**
+     * перепроверить локальные данные раздач (unused)
+     * @param array $hashes
+     */
+    public function torrentRecheck($hashes)
+    {
+        $hashes = array_map(function ($hash) {
+            return strtolower($hash);
+        }, $hashes);
+        $this->makeRequest(
+            'hashes=' . implode('|', $hashes),
+            '/api/v2/torrents/recheck',
+            false
+        );
     }
 
 }
