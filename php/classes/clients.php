@@ -991,21 +991,7 @@ class qbittorrent
         if (!$this->getSID()) {
             return false;
         }
-        if (!$this->is_api_supported_version()) {
-            Log::append('Версия торрент-клиента не поддерживается.');
-            return false;
-        }
         return true;
-    }
-
-    /**
-     * проверка поддерживается ли api клиента (api версии 2.0 и выше)
-     * @return bool
-     */
-    private function is_api_supported_version()
-    {
-        $this->api = $this->makeRequest("", 'api/v2/app/webapiVersion', true);
-        return $this->api < 2.0 ? false : true;
     }
 
     /**
