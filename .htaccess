@@ -1,8 +1,7 @@
 AddDefaultCharset UTF-8
 
 <Files ~ "\.(ini|db|log)$">
-	Order deny,allow
-	Deny from all
+	Require all denied
 </Files>
 
 <IfModule mod_php5.c>

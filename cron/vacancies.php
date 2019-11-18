@@ -3,10 +3,10 @@
 try {
 
     // файл лога
-    $filelog = "control.log";
+    $filelog = "vacancies.log";
 
     // дёргаем скрипт
-    include_once dirname(__FILE__) . '/../php/common/control.php';
+    include_once dirname(__FILE__) . '/../php/common/vacancies.php';
 
     // записываем в лог
     Log::write($filelog);
