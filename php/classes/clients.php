@@ -305,12 +305,12 @@ class transmission
     }
 
     // добавить торрент
-    public function torrentAdd($filename, $savepath = "")
+    public function torrentAdd($torrent_file_path, $savepath = "")
     {
         $request = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'filename' => $filename,
+                'metainfo' => base64_encode(file_get_contents($torrent_file_path)),
                 'paused' => false,
             ),
         );
@@ -519,12 +519,12 @@ class vuze
     }
 
     // добавить торрент
-    public function torrentAdd($filename, $savepath = "")
+    public function torrentAdd($torrent_file_path, $savepath = "")
     {
         $request = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'filename' => $filename,
+                'metainfo' => base64_encode(file_get_contents($torrent_file_path)),
                 'paused' => false,
             ),
         );
@@ -1081,20 +1081,19 @@ class qbittorrent
 
     /**
      * добавить торрент
-     * @param string $filename url до .torrent файла
-     * @param string $savepath путь куда сохранять загружаемые данные
+     * @param string $torrent_file_path путь до .torrent файла, включая имя файла
+     * @param string $save_path путь куда сохранять загружаемые данные
      */
-    public function torrentAdd($filename, $savepath = "")
+    public function torrentAdd($torrent_file_path, $save_path = "")
     {
-        $request = http_build_query(
-            array(
-                'urls' => $filename,
-                'savepath' => $savepath,
-                'cookie' => $this->sid,
-            ),
-            '',
-            '&',
-            PHP_QUERY_RFC3986
+        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+            $torrent_data = new CurlFile($torrent_file_path, 'application/x-bittorrent');
+        } else {
+            $torrent_data = '@' . $torrent_file_path;
+        }
+        $request = array(
+            'torrents' => $torrent_data,
+            'savepath' => $save_path,
         );
         $this->makeRequest($request, 'api/v2/torrents/add', false);
     }

@@ -228,10 +228,21 @@ try {
                 }
             }
             // путь до торрент-файла на сервере
-            $filename_url = sprintf(
-                $filename_url_pattern,
-                $topic_id
-            );
+            if (
+                $tor_client['cl'] == "qbittorrent"
+                || $tor_client['cl'] == "transmission"
+                || $tor_client['cl'] == "vuze"
+            ) {
+                $filename_url = sprintf(
+                    $torrent_files_path_pattern,
+                    $topic_id
+                );
+            } else {
+                $filename_url = sprintf(
+                    $filename_url_pattern,
+                    $topic_id
+                );
+            }
             $client->torrentAdd($filename_url, $savepath);
             $torrent_files_added[] = $topic_id;
             // ждём полсекунды
