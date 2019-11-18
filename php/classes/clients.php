@@ -1081,21 +1081,20 @@ class qbittorrent
 
     /**
      * добавить торрент
-     * @param string $filename url до .torrent файла
-     * @param string $savepath путь куда сохранять загружаемые данные
+     * @param string $filename путь до .torrent файла
+     * @param string $save_path путь куда сохранять загружаемые данные
      */
-    public function torrentAdd($filename, $savepath = "")
+    public function torrentAdd($filename, $save_path = "")
     {
-        $request = http_build_query(
-            array(
-                'urls' => $filename,
-                'savepath' => $savepath,
-                'cookie' => $this->sid,
-            ),
-            '',
-            '&',
-            PHP_QUERY_RFC3986
-        );
+        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+            $torrent_data = new CurlFile($filename, 'application/x-bittorrent');
+        } else {
+            $torrent_data = '@' . $filename;
+        }
+        $request = [
+            'torrents' => $torrent_data,
+            'savepath' => $save_path,
+        ];
         $this->makeRequest($request, 'api/v2/torrents/add', false);
     }
 
