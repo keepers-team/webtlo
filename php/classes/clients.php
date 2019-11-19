@@ -310,7 +310,7 @@ class transmission
         $request = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'filename' => $filename,
+                'metainfo' => base64_encode(file_get_contents($filename)),
                 'paused' => false,
             ),
         );
