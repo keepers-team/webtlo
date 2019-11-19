@@ -228,7 +228,7 @@ try {
                 }
             }
             // путь до торрент-файла на сервере
-            if ($tor_client['cl'] == "qbittorrent") {
+            if (($tor_client['cl'] == "qbittorrent") || ($tor_client['cl'] == "transmission")) {
                 $filename_url = sprintf(
                     $torrent_files_path_pattern,
                     $topic_id
