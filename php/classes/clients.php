@@ -1081,7 +1081,7 @@ class qbittorrent
 
     /**
      * добавить торрент
-     * @param string $filename путь до .torrent файла
+     * @param string $torrent_file_path путь до .torrent файла включая имя файла
      * @param string $save_path путь куда сохранять загружаемые данные
      */
     public function torrentAdd($torrent_file_path, $save_path = "")
