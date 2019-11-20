@@ -519,12 +519,12 @@ class vuze
     }
 
     // добавить торрент
-    public function torrentAdd($filename, $savepath = "")
+    public function torrentAdd($torrent_file_path, $savepath = "")
     {
         $request = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'metainfo' => base64_encode(file_get_contents($filename)),
+                'metainfo' => base64_encode(file_get_contents($torrent_file_path)),
                 'paused' => false,
             ),
         );
@@ -1084,12 +1084,12 @@ class qbittorrent
      * @param string $filename путь до .torrent файла
      * @param string $save_path путь куда сохранять загружаемые данные
      */
-    public function torrentAdd($filename, $save_path = "")
+    public function torrentAdd($torrent_file_path, $save_path = "")
     {
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-            $torrent_data = new CurlFile($filename, 'application/x-bittorrent');
+            $torrent_data = new CurlFile($torrent_file_path, 'application/x-bittorrent');
         } else {
-            $torrent_data = '@' . $filename;
+            $torrent_data = '@' . $torrent_file_path;
         }
         $request = [
             'torrents' => $torrent_data,
