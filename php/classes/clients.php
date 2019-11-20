@@ -305,12 +305,12 @@ class transmission
     }
 
     // добавить торрент
-    public function torrentAdd($file, $savepath = "")
+    public function torrentAdd($torrent_file_path, $savepath = "")
     {
         $request = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'metainfo' => base64_encode(file_get_contents($file)),
+                'metainfo' => base64_encode(file_get_contents($torrent_file_path)),
                 'paused' => false,
             ),
         );
