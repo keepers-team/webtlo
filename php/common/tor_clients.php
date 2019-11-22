@@ -11,35 +11,35 @@ if (!isset($cfg)) {
 
 // создаём временные таблицы
 Db::query_database(
-    "CREATE TEMP TABLE ClientsNew AS
-        SELECT hs,cl,dl FROM Clients WHERE 0 = 1"
+    'CREATE TEMP TABLE ClientsNew AS
+        SELECT hs,cl,dl FROM Clients WHERE 0 = 1'
 );
 
 Db::query_database(
-    "CREATE TEMP TABLE TopicsUntrackedNew AS
-        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1"
+    'CREATE TEMP TABLE TopicsUntrackedNew AS
+        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1'
 );
 
 if (!empty($cfg['clients'])) {
+    Log::append('Сканирование торрент-клиентов...');
 
-    Log::append("Сканирование торрент-клиентов...");
-
-    Log::append("Количество торрент-клиентов: " . count($cfg['clients']));
+    Log::append('Количество торрент-клиентов: ' . count($cfg['clients']));
 
     foreach ($cfg['clients'] as $client_id => $client_info) {
 
+        /**
+         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+         */
         $client = new $client_info['cl'](
             $client_info['ht'],
             $client_info['pt'],
             $client_info['lg'],
-            $client_info['pw'],
-            $client_info['cm']
+            $client_info['pw']
         );
 
         $count_torrents = 0;
 
-        if ($client->is_online()) {
-
+        if ($client->isOnline()) {
             $torrents = $client->getTorrents();
 
             if (empty($torrents)) {
@@ -64,31 +64,27 @@ if (!empty($cfg['clients'])) {
 
             foreach ($torrents_set as $torrents_set) {
                 $select = Db::combine_set($torrents_set);
-                Db::query_database("INSERT INTO temp.ClientsNew (hs,cl,dl) $select");
+                Db::query_database('INSERT INTO temp.ClientsNew (hs,cl,dl) ' . $select);
                 unset($select);
             }
             unset($torrents_set);
-
         }
 
-        Log::append($client_info['cm'] . ' (' . $client_info['cl'] . ") — получено раздач: $count_torrents шт.");
-
+        Log::append($client_info['cm'] . ' (' . $client_info['cl'] . ') — получено раздач: ' . $count_torrents . '  шт.');
     }
 
     $count_clients = Db::query_database(
-        "SELECT COUNT() FROM temp.ClientsNew",
+        'SELECT COUNT() FROM temp.ClientsNew',
         array(),
         true,
         PDO::FETCH_COLUMN
     );
 
     if ($count_clients[0] > 0) {
-
         Db::query_database(
-            "INSERT INTO Clients (hs,cl,dl)
-            SELECT * FROM temp.ClientsNew"
+            'INSERT INTO Clients (hs,cl,dl)
+            SELECT * FROM temp.ClientsNew'
         );
-
     }
 
     if (isset($cfg['subsections'])) {
@@ -100,17 +96,16 @@ if (!empty($cfg['clients'])) {
     }
 
     $untracked_hashes = Db::query_database(
-        "SELECT Clients.hs FROM Clients
+        'SELECT Clients.hs FROM Clients
         LEFT JOIN Topics ON Topics.hs = Clients.hs
-        WHERE Topics.id IS NULL OR ss NOT IN ($in) AND Clients.dl IN (1,-1)",
+        WHERE Topics.id IS NULL OR ss NOT IN (' . $in . ') AND Clients.dl IN (1,-1)',
         $forums_ids,
         true,
         PDO::FETCH_COLUMN
     );
 
     if (!empty($untracked_hashes)) {
-
-        Log::append("Найдено сторонних раздач: " . count($untracked_hashes) . " шт.");
+        Log::append('Найдено сторонних раздач: ' . count($untracked_hashes) . ' шт.');
 
         // подключаемся к api
         if (!isset($api)) {
@@ -123,12 +118,11 @@ if (!empty($cfg['clients'])) {
         unset($untracked_hashes);
 
         if (!empty($untracked_ids)) {
-
             $untracked_data = $api->get_tor_topic_data($untracked_ids);
             unset($untracked_ids);
 
             if (empty($untracked_data)) {
-                throw new Exception("Error: Не удалось получить данные о раздачах");
+                throw new Exception('Error: Не удалось получить данные о раздачах');
             }
 
             foreach ($untracked_data as $topic_id => $topic_data) {
@@ -153,13 +147,13 @@ if (!empty($cfg['clients'])) {
             foreach ($untracked_set as $untracked_set) {
                 $select = Db::combine_set($untracked_set);
                 unset($untracked_set);
-                Db::query_database("INSERT INTO temp.TopicsUntrackedNew $select");
+                Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
                 unset($select);
             }
             unset($untracked_set);
 
             $count_untracked = Db::query_database(
-                "SELECT COUNT() FROM temp.TopicsUntrackedNew",
+                'SELECT COUNT() FROM temp.TopicsUntrackedNew',
                 array(),
                 true,
                 PDO::FETCH_COLUMN
@@ -167,30 +161,27 @@ if (!empty($cfg['clients'])) {
 
             if ($count_untracked[0] > 0) {
                 Db::query_database(
-                    "INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
-                    SELECT * FROM temp.TopicsUntrackedNew"
+                    'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
+                    SELECT * FROM temp.TopicsUntrackedNew'
                 );
             }
-
         }
-
     }
 
     Db::query_database(
-        "DELETE FROM TopicsUntracked
+        'DELETE FROM TopicsUntracked
         WHERE id NOT IN (
             SELECT id FROM temp.TopicsUntrackedNew
-        )"
+        )'
     );
-
 }
 
 Db::query_database(
-    "DELETE FROM Clients WHERE hs NOT IN (
+    'DELETE FROM Clients WHERE hs NOT IN (
         SELECT Clients.hs FROM temp.ClientsNew LEFT JOIN Clients
         ON temp.ClientsNew.hs = Clients.hs AND temp.ClientsNew.cl = Clients.cl
         WHERE Clients.hs IS NOT NULL
     ) OR cl NOT IN (
         SELECT DISTINCT cl FROM temp.ClientsNew
-    )"
+    )'
 );
