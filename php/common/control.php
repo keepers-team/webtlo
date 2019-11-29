@@ -25,6 +25,9 @@ $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
 
 foreach ($cfg['clients'] as $client_id => $client_info) {
 
+    /**
+     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+     */
     $client = new $client_info['cl'](
         $client_info['ht'],
         $client_info['pt'],
@@ -35,7 +38,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
 
     if ($client->is_online()) {
 
-        $torrents = $client->getTorrents();
+        $torrents = $client->get_torrents();
 
         if (empty($torrents)) {
             Log::append('Warning: Не удалось получить данные о раздачах от торрент-клиента "' . $client_info['cm'] . '"');
@@ -131,7 +134,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $count_start = count($control_hashes['start']);
             $control_hashes['start'] = array_chunk($control_hashes['start'], 100);
             foreach ($control_hashes['start'] as $start) {
-                $client->torrentStart($start);
+                $client->start_torrents($start);
             }
             Log::append('Запрос на запуск раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_start . ')');
         }
@@ -141,7 +144,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $count_stop = count($control_hashes['stop']);
             $control_hashes['stop'] = array_chunk($control_hashes['stop'], 100);
             foreach ($control_hashes['stop'] as $stop) {
-                $client->torrentStop($stop);
+                $client->stop_torrents($stop);
             }
             Log::append('Запрос на остановку раздач торрент-клиенту "' . $client_info['cm'] . "\" отправлен ($count_stop)");
         }

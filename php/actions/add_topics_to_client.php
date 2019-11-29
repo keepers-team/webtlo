@@ -184,6 +184,9 @@ try {
         $count_downloaded = count($torrent_files_downloaded);
 
         // подключаемся к торрент-клиенту
+        /**
+         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+         */
         $client = new $tor_client['cl'](
             $tor_client['ht'],
             $tor_client['pt'],
@@ -228,11 +231,18 @@ try {
                 }
             }
             // путь до торрент-файла на сервере
-            $filename_url = sprintf(
-                $filename_url_pattern,
-                $topic_id
-            );
-            $client->torrentAdd($filename_url, $savepath);
+            if (($tor_client['cl'] == "qbittorrent") || ($tor_client['cl'] == "transmission") || ($tor_client['cl'] == "vuze")) {
+                $filename_url = sprintf(
+                    $torrent_files_path_pattern,
+                    $topic_id
+                );
+            } else {
+                $filename_url = sprintf(
+                    $filename_url_pattern,
+                    $topic_id
+                );
+            }
+            $client->add_torrent($filename_url, $savepath);
             $torrent_files_added[] = $topic_id;
             // ждём полсекунды
             usleep(500000);
@@ -284,7 +294,7 @@ try {
             // ждём добавления раздач, чтобы проставить метку
             sleep(round(count($topics_hashes) / 3) + 1); // < 3 дольше ожидание
             // устанавливаем метку
-            $client->setLabel($topics_hashes, $forum['lb']);
+            $client->set_label($topics_hashes, $forum['lb']);
             unset($topics_hashes);
         }
 

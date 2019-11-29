@@ -8,6 +8,9 @@ try {
     //~  0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
     $tor_client = $_POST['tor_client'];
 
+    /**
+     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+     */
     $client = new $tor_client[1](
         $tor_client[2],
         $tor_client[3],

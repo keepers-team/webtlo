@@ -28,6 +28,9 @@ if (!empty($cfg['clients'])) {
 
     foreach ($cfg['clients'] as $client_id => $client_info) {
 
+        /**
+         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+         */
         $client = new $client_info['cl'](
             $client_info['ht'],
             $client_info['pt'],
@@ -40,7 +43,7 @@ if (!empty($cfg['clients'])) {
 
         if ($client->is_online()) {
 
-            $torrents = $client->getTorrents();
+            $torrents = $client->get_torrents();
 
             if (empty($torrents)) {
                 Log::append('Warning: Не удалось получить данные о раздачах от торрент-клиента "' . $client_info['cm'] . '"');

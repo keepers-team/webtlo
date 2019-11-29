@@ -96,6 +96,9 @@ try {
         // данные текущего торрент-клиента
         $tor_client = $tor_clients[$tor_client_id];
 
+        /**
+         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+         */
         $client = new $tor_client['cl']($tor_client['ht'], $tor_client['pt'], $tor_client['lg'], $tor_client['pw'], $tor_client['cm']);
 
         // проверка доступности торрент-клиента
