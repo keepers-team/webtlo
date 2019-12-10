@@ -60,7 +60,7 @@ try {
     // создание подкаталога
     if (
         empty($replace_passkey)
-        && isset($cfg['savesub_dir'])
+        && $cfg['savesub_dir'] == 1
     ) {
         $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
     }
