@@ -311,6 +311,7 @@ class DOMDocumentWrapper {
 //		return strpos($markup, '<?xml') !== false && stripos($markup, 'xhtml') === false;
 		return strpos(substr($markup, 0, 100), '<'.'?xml') !== false;
 	}
+
 	protected function contentTypeToArray($contentType) {
 		$matches = explode(';', trim(strtolower($contentType)));
 		if (isset($matches[1])) {
@@ -386,7 +387,7 @@ class DOMDocumentWrapper {
 			.($xhtml ? '/' : '')
 			.'>';
 		if (strpos($html, '<head') === false) {
-			if (strpos($hltml, '<html') === false) {
+			if (strpos($html, '<html') === false) {
 				return $meta.$html;
 			} else {
 				return preg_replace(
@@ -655,7 +656,7 @@ class DOMDocumentWrapper {
 	 *
 	 * @param $tag
 	 * @param $xml
-	 * @return unknown_type
+	 * @return string
 	 * @author mjaque at ilkebenson dot com
 	 * @link http://php.net/manual/en/domdocument.savehtml.php#81256
 	 */
