@@ -110,19 +110,19 @@ try {
         switch ($action) {
 
             case 'set_label':
-                Log::append($client->setLabel($hashes, $label));
+                Log::append($client->set_label($hashes, $label));
                 break;
 
             case 'stop':
-                Log::append($client->torrentStop($hashes));
+                Log::append($client->stop_torrents($hashes));
                 break;
 
             case 'start':
-                Log::append($client->torrentStart($hashes, $force_start));
+                Log::append($client->start_torrents($hashes, $force_start));
                 break;
 
             case 'remove':
-                Log::append($client->torrentRemove($hashes, $remove_data));
+                Log::append($client->remove_torrents($hashes, $remove_data));
                 // помечаем в базе удаление
                 $hashes_remove = array_chunk($hashes, 500);
                 foreach ($hashes_remove as $hashes_remove) {

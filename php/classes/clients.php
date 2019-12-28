@@ -68,12 +68,6 @@ abstract class Torrent_Client
     }
 
     /**
-     * получение идентификатора сессии и запись его в $this->sid
-     * @return bool true в случе успеха, false в случае неудачи
-     */
-    abstract protected function get_sid();
-
-    /**
      * получение списка загруженных на 100% раздач от клиента
      * @return array|bool array[hash] => status,
      * false в случае пустого ответа от клиента
@@ -310,6 +304,10 @@ class transmission extends Torrent_Client
 
     protected static $base = "http://%s:%s/transmission/rpc";
 
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     protected function get_sid()
     {
         $ch = curl_init();
@@ -503,6 +501,10 @@ class deluge extends Torrent_Client
 
     protected static $base = "http://%s:%s/json";
 
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     protected function get_sid()
     {
         // Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
@@ -820,6 +822,10 @@ class qbittorrent extends Torrent_Client
 
     protected static $base = "http://%s:%s/%s";
 
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     protected function get_sid()
     {
         // Log::append ( 'Попытка подключиться к торрент-клиенту "' . $this->comment . '"...' );
@@ -1032,6 +1038,10 @@ class ktorrent extends Torrent_Client
         return false;
     }
 
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     protected function get_sid()
     {
         $ch = curl_init();
@@ -1225,6 +1235,10 @@ class rtorrent extends Torrent_Client
     // http://localhost/RPC2
     protected static $base = "http://%s";
 
+    /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
     protected function get_sid()
     {
         return $this->make_request("get_name") ? true : false;
