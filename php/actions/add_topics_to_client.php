@@ -199,7 +199,7 @@ try {
         }
 
         // формирование пути до файла на сервере
-        $dirname_url = $_SERVER['HTTP_HOST'] . str_replace(
+        $dirname_url = $_SERVER['SERVER_ADDR'] . ':' . $_SERVER['SERVER_PORT'] . str_replace(
             'php/', '', substr(
                 $_SERVER['SCRIPT_NAME'], 0, strpos(
                     $_SERVER['SCRIPT_NAME'], '/', 1
