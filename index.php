@@ -66,7 +66,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>web-TLO-1.0.1.0</title>
+		<title>web-TLO-1.0.2.0</title>
 		<script src="jquery/jquery.js"></script>
 		<script src="jquery/jquery-ui.js"></script>
 		<script src="jquery/external/datepicker-ru.js"></script>
