@@ -147,7 +147,7 @@ class Utorrent extends TorrentClient
         if (!empty($headersMatches)) {
             $this->guid = $headersMatches[1];
         }
-        preg_match('|<div id=\' token \'.+>(.*)<\/div>|', $response, $responseMatches);
+        preg_match('|<div id=\'token\'.+>(.*)<\/div>|', $response, $responseMatches);
         if (!empty($responseMatches)) {
             $this->token = $responseMatches[1];
             return true;
