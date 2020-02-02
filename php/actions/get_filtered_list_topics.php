@@ -35,6 +35,7 @@ try {
     // -1 - незарегистрированные
     // -2 - черный список
     // -3 - все хранимые
+    // -4 - дублирующиеся раздачи
 
     // topic_data => tag,id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
@@ -52,7 +53,6 @@ try {
     $filtered_topics_size = 0;
 
     if ($forum_id == 0) {
-
         // сторонние раздачи
         $topics = Db::query_database(
             'SELECT id,na,si,rg,ss,se FROM TopicsUntracked',
@@ -130,6 +130,89 @@ try {
                     round($topic_data['se'])
                 ),
                 $topic_data['comment']
+            );
+        }
+    } elseif ($forum_id == -4) {
+        // дублирующиеся раздачи
+        if ($cfg['avg_seeders']) {
+            if (!is_numeric($filter['avg_seeders_period'])) {
+                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+            }
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
+            for ($dayNumber = 0; $dayNumber < $filter['avg_seeders_period']; $dayNumber++) {
+                $statementTotal['seeders'][] = 'CASE WHEN d' . $dayNumber . ' IS "" OR d' . $dayNumber . ' IS NULL THEN 0 ELSE d' . $dayNumber . ' END';
+                $statementTotal['updates'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE q' . $dayNumber . ' END';
+                $statementTotal['values'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE 1 END';
+            }
+            $statementTotalValues = implode('+', $statementTotal['values']);
+            $statementTotalUpdates = implode('+', $statementTotal['updates']);
+            $statementTotalSeeders = implode('+', $statementTotal['seeders']);
+            $statementAverageSeeders = 'CASE WHEN ' . $statementTotalValues . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $statementTotalSeeders . ') / ( qt + ' . $statementTotalUpdates . ') END';
+            $statementFields = array(
+                $statementTotalValues . ' as ds',
+                $statementAverageSeeders . ' as se'
+            );
+            $statementLeftJoin[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
+        } else {
+            $statementFields[] = 'se';
+        }
+        $statementSQL = 'SELECT Topics.id,hs,na,si,rg%s FROM Topics %s
+            WHERE Topics.hs IN (SELECT hs FROM Clients GROUP BY hs HAVING count(*) > 1)';
+        $statement = sprintf(
+            $statementSQL,
+            ',' . implode(',', $statementFields),
+            ' ' . implode(' ', $statementLeftJoin)
+        );
+        $topicsData = Db::query_database($statement, array(), true);
+        $topicsData = natsort_field(
+            $topicsData,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
+        foreach ($topicsData as $topicID => $topicData) {
+            $outputLine = '';
+            $filtered_topics_count++;
+            $filtered_topics_size += $topicData['si'];
+            foreach ($pattern_topic_data as $field => $pattern) {
+                if (isset($topicData[$field])) {
+                    $outputLine .= $pattern;
+                }
+            }
+            $stateAverageSeeders = '';
+            if (isset($topicData['ds'])) {
+                if ($topicData['ds'] < $filter['avg_seeders_period']) {
+                    $stateAverageSeeders = $topicData['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
+                } else {
+                    $stateAverageSeeders = 'text-success';
+                }
+            }
+            $statement = 'SELECT cl FROM Clients WHERE hs = ?';
+            $listTorrentClientsIDs = Db::query_database(
+                $statement,
+                array($topicData['hs']),
+                true,
+                PDO::FETCH_COLUMN
+            );
+            $listTorrentClientsNames = array_map(function ($e) use ($cfg) {
+                return $cfg['clients'][$e]['cm'];
+            }, $listTorrentClientsIDs);
+            natsort($listTorrentClientsNames);
+            $listTorrentClientsNames = '~> ' . implode(', ', $listTorrentClientsNames);
+            $output .= sprintf(
+                $pattern_topic_block,
+                sprintf(
+                    $outputLine,
+                    $filtered_topics_count,
+                    $topicData['id'],
+                    $topicData['na'],
+                    $topicData['si'],
+                    convert_bytes($topicData['si']),
+                    date('d.m.Y', $topicData['rg']),
+                    round($topicData['se']),
+                    $stateAverageSeeders
+                ),
+                $listTorrentClientsNames
             );
         }
     } elseif ($forum_id == -3 || $forum_id > 0) {

@@ -67,7 +67,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-1.0.2.0</title>
+    <title>web-TLO-1.0.2.1</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -96,12 +96,13 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                         <?php echo $subsections ?>
                     </optgroup>
                     <optgroup label="Прочее">
+                        <option value="-2">Раздачи из "чёрного списка"</option>
+                        <option value="-3">Раздачи из всех хранимых подразделов</option>
+                        <option value="-4">Хранимые дублирующиеся раздачи</option>
                         <option value="0">Хранимые раздачи из других подразделов</option>
                         <!--
                             <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
--->
-                        <option value="-2">Раздачи из "чёрного списка"</option>
-                        <option value="-3">Раздачи из всех хранимых подразделов</option>
+                        -->
                     </optgroup>
                 </select>
                 <div id="topics_data">
