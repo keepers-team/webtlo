@@ -41,7 +41,7 @@ try {
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
     $pattern_topic_data = array(
         'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
-        'ds' => ' <i class="fa fa-circle %8$s"></i>',
+        'ds' => ' <i class="fa %9$s %8$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
         'na' => '<a href="' . $cfg['forum_url'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
         'si' => ' (%5$s)',
@@ -284,7 +284,7 @@ try {
         $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
-        $pattern_statement = 'SELECT Topics.id,na,si,rg,pt%s FROM Topics
+        $pattern_statement = 'SELECT Topics.id,na,si,rg,pt,dl%s FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
 			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
@@ -434,6 +434,16 @@ try {
                     $data .= $pattern;
                 }
             }
+            // тип пульки: раздаю, качаю, на паузе
+            if ($topic_data['dl'] == '1') {
+                $stateTorrentClient = 'fa-arrow-up';
+            } elseif ($topic_data['dl'] == '0') {
+                $stateTorrentClient = 'fa-arrow-down';
+            } elseif ($topic_data['dl'] == '-1') {
+                $stateTorrentClient = 'fa-pause';
+            } else {
+                $stateTorrentClient = 'fa-circle';
+            }
             // цвет пульки
             $bullet = '';
             if (isset($topic_data['ds'])) {
@@ -443,6 +453,7 @@ try {
                     $bullet = 'text-success';
                 }
             }
+            // выводим строку
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(
@@ -454,7 +465,8 @@ try {
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
-                    $bullet
+                    $bullet,
+                    $stateTorrentClient
                 ),
                 $keepers_list
             );
