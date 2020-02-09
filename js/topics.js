@@ -178,6 +178,7 @@ $(document).ready(function () {
 			&& (
 				e.ctrlKey
 				|| subsection == 0
+				|| subsection == -4
 			)
 		) {
 			$("#dialog").dialog(
@@ -388,6 +389,10 @@ function getFilteredTopics() {
 		$("#filter_rule_from").spinner("disable");
 		$("#filter_rule_to").spinner("disable");
 		$("#filter_date_release").datepicker("disable");
+		if (forum_id == -4) {
+			$("#filter_avg_seeders_period").spinner("enable");
+			$(".tor_remove").button("disable");
+		}
 	}
 	// запоминаем параметры фильтра в куки
 	Cookies.set("filter-options", $("#topics_filter").serializeAllArray());

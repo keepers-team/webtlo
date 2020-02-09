@@ -158,7 +158,10 @@ if (isset($cfg['subsections'])) {
                     );
                     // удаляем перерегистрированую раздачу
                     // в том числе, чтобы очистить значения сидов для старой раздачи
-                    if ($previous_data['rg'] != $topic_data[2]) {
+                    if (
+                        isset($previous_data['rg'])
+                        && $previous_data['rg'] != $topic_data[2]
+                    ) {
                         $topics_delete[] = $topic_id;
                     }
                     unset($previous_data);

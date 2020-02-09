@@ -6,18 +6,18 @@ include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
 
-Log::append("Начат процесс регулировки раздач в торрент-клиентах...");
+Log::append('Начат процесс регулировки раздач в торрент-клиентах...');
 
 // получение настроек
 $cfg = get_settings();
 
 // проверка настроек
 if (empty($cfg['clients'])) {
-    throw new Exception("Error: Не удалось получить список торрент-клиентов");
+    throw new Exception('Error: Не удалось получить список торрент-клиентов');
 }
 
 if (empty($cfg['subsections'])) {
-    throw new Exception("Error: Не выбраны хранимые подразделы");
+    throw new Exception('Error: Не выбраны хранимые подразделы');
 }
 
 $forums_ids = array_keys($cfg['subsections']);
@@ -25,16 +25,17 @@ $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
 
 foreach ($cfg['clients'] as $client_id => $client_info) {
 
+    /**
+     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+     */
     $client = new $client_info['cl'](
         $client_info['ht'],
         $client_info['pt'],
         $client_info['lg'],
-        $client_info['pw'],
-        $client_info['cm']
+        $client_info['pw']
     );
 
-    if ($client->is_online()) {
-
+    if ($client->isOnline()) {
         $torrents = $client->getTorrents();
 
         if (empty($torrents)) {
@@ -56,7 +57,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
         foreach ($torrents_hashes as $torrents_hashes) {
             $hs = str_repeat('?,', count($torrents_hashes) - 1) . '?';
             $topics_hashes_query = Db::query_database(
-                "SELECT hs FROM Topics WHERE hs IN ($hs) AND ss IN ($ss)",
+                'SELECT hs FROM Topics WHERE hs IN (' . $hs . ') AND ss IN (' . $ss . ')',
                 array_merge($torrents_hashes, $forums_ids),
                 true,
                 PDO::FETCH_COLUMN
@@ -72,7 +73,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $api = new Api($cfg['api_url'], $cfg['api_key']);
             // применяем таймауты
             $api->curl_setopts($cfg['curl_setopt']['api']);
-            Log::append("Получение данных о пирах...");
+            Log::append('Получение данных о пирах...');
         }
 
         // получаем данные о пирах
@@ -104,11 +105,9 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             // стопим только, если есть сиды
             if (
                 $topic_data['seeders']
-                && (
-                    $peers > $cfg['topics_control']['peers']
+                && ($peers > $cfg['topics_control']['peers']
                     || !$cfg['topics_control']['no_leechers']
-                    && !$topic_data['leechers']
-                )
+                    && !$topic_data['leechers'])
             ) {
                 if ($tor_client_status == 1) {
                     $control_hashes['stop'][] = $hash_info;
@@ -131,7 +130,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $count_start = count($control_hashes['start']);
             $control_hashes['start'] = array_chunk($control_hashes['start'], 100);
             foreach ($control_hashes['start'] as $start) {
-                $client->torrentStart($start);
+                $client->startTorrents($start);
             }
             Log::append('Запрос на запуск раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_start . ')');
         }
@@ -141,17 +140,15 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
             $count_stop = count($control_hashes['stop']);
             $control_hashes['stop'] = array_chunk($control_hashes['stop'], 100);
             foreach ($control_hashes['stop'] as $stop) {
-                $client->torrentStop($stop);
+                $client->stopTorrents($stop);
             }
-            Log::append('Запрос на остановку раздач торрент-клиенту "' . $client_info['cm'] . "\" отправлен ($count_stop)");
+            Log::append('Запрос на остановку раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_stop . ')');
         }
 
         unset($control_hashes);
-
     }
-
 }
 
 $endtime = microtime(true);
 
-Log::append("Регулировка раздач в торрент-клиентах завершена за " . convert_seconds($endtime - $starttime));
+Log::append('Регулировка раздач в торрент-клиентах завершена за ' . convert_seconds($endtime - $starttime));

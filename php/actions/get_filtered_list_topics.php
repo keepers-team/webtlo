@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
 
     if (isset($_POST['forum_id'])) {
@@ -12,7 +11,7 @@ try {
         !isset($forum_id)
         || !is_numeric($forum_id)
     ) {
-        throw new Exception("Некорректный идентификатор подраздела: $forum_id");
+        throw new Exception('Некорректный идентификатор подраздела: ' . $forum_id);
     }
 
     // получаем настройки
@@ -25,17 +24,18 @@ try {
     parse_str($_POST['filter'], $filter);
 
     if (!isset($filter['filter_sort'])) {
-        throw new Exception("Не выбрано поле для сортировки");
+        throw new Exception('Не выбрано поле для сортировки');
     }
 
     if (!isset($filter['filter_sort_direction'])) {
-        throw new Exception("Не выбрано направление сортировки");
+        throw new Exception('Не выбрано направление сортировки');
     }
 
     // 0 - из других подразделов
     // -1 - незарегистрированные
     // -2 - черный список
     // -3 - все хранимые
+    // -4 - дублирующиеся раздачи
 
     // topic_data => tag,id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
@@ -53,10 +53,9 @@ try {
     $filtered_topics_size = 0;
 
     if ($forum_id == 0) {
-
         // сторонние раздачи
         $topics = Db::query_database(
-            "SELECT id,na,si,rg,ss,se FROM TopicsUntracked",
+            'SELECT id,na,si,rg,ss,se FROM TopicsUntracked',
             array(),
             true
         );
@@ -91,16 +90,14 @@ try {
                 '#' . $topic_data['ss']
             );
         }
-
     } elseif ($forum_id == -2) {
-
         // находим значение за последний день
         $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
         // чёрный список
         $topics = Db::query_database(
-            "SELECT Topics.id,na,si,rg,$se,comment FROM Topics
+            'SELECT Topics.id,na,si,rg,' . $se . ',comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
-			WHERE Blacklist.id IS NOT NULL",
+			WHERE Blacklist.id IS NOT NULL',
             array(),
             true
         );
@@ -135,22 +132,102 @@ try {
                 $topic_data['comment']
             );
         }
-
+    } elseif ($forum_id == -4) {
+        // дублирующиеся раздачи
+        if ($cfg['avg_seeders']) {
+            if (!is_numeric($filter['avg_seeders_period'])) {
+                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+            }
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
+            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
+            for ($dayNumber = 0; $dayNumber < $filter['avg_seeders_period']; $dayNumber++) {
+                $statementTotal['seeders'][] = 'CASE WHEN d' . $dayNumber . ' IS "" OR d' . $dayNumber . ' IS NULL THEN 0 ELSE d' . $dayNumber . ' END';
+                $statementTotal['updates'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE q' . $dayNumber . ' END';
+                $statementTotal['values'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE 1 END';
+            }
+            $statementTotalValues = implode('+', $statementTotal['values']);
+            $statementTotalUpdates = implode('+', $statementTotal['updates']);
+            $statementTotalSeeders = implode('+', $statementTotal['seeders']);
+            $statementAverageSeeders = 'CASE WHEN ' . $statementTotalValues . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $statementTotalSeeders . ') / ( qt + ' . $statementTotalUpdates . ') END';
+            $statementFields = array(
+                $statementTotalValues . ' as ds',
+                $statementAverageSeeders . ' as se'
+            );
+            $statementLeftJoin[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
+        } else {
+            $statementFields[] = 'se';
+        }
+        $statementSQL = 'SELECT Topics.id,hs,na,si,rg%s FROM Topics %s
+            WHERE Topics.hs IN (SELECT hs FROM Clients GROUP BY hs HAVING count(*) > 1)';
+        $statement = sprintf(
+            $statementSQL,
+            ',' . implode(',', $statementFields),
+            ' ' . implode(' ', $statementLeftJoin)
+        );
+        $topicsData = Db::query_database($statement, array(), true);
+        $topicsData = natsort_field(
+            $topicsData,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
+        foreach ($topicsData as $topicID => $topicData) {
+            $outputLine = '';
+            $filtered_topics_count++;
+            $filtered_topics_size += $topicData['si'];
+            foreach ($pattern_topic_data as $field => $pattern) {
+                if (isset($topicData[$field])) {
+                    $outputLine .= $pattern;
+                }
+            }
+            $stateAverageSeeders = '';
+            if (isset($topicData['ds'])) {
+                if ($topicData['ds'] < $filter['avg_seeders_period']) {
+                    $stateAverageSeeders = $topicData['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
+                } else {
+                    $stateAverageSeeders = 'text-success';
+                }
+            }
+            $statement = 'SELECT cl FROM Clients WHERE hs = ?';
+            $listTorrentClientsIDs = Db::query_database(
+                $statement,
+                array($topicData['hs']),
+                true,
+                PDO::FETCH_COLUMN
+            );
+            $listTorrentClientsNames = array_map(function ($e) use ($cfg) {
+                return $cfg['clients'][$e]['cm'];
+            }, $listTorrentClientsIDs);
+            natsort($listTorrentClientsNames);
+            $listTorrentClientsNames = '~> ' . implode(', ', $listTorrentClientsNames);
+            $output .= sprintf(
+                $pattern_topic_block,
+                sprintf(
+                    $outputLine,
+                    $filtered_topics_count,
+                    $topicData['id'],
+                    $topicData['na'],
+                    $topicData['si'],
+                    convert_bytes($topicData['si']),
+                    date('d.m.Y', $topicData['rg']),
+                    round($topicData['se']),
+                    $stateAverageSeeders
+                ),
+                $listTorrentClientsNames
+            );
+        }
     } elseif ($forum_id == -3 || $forum_id > 0) {
-
         // все хранимые раздачи
-
         // не выбраны статусы раздач
         if (empty($filter['filter_tracker_status'])) {
-            throw new Exception("Не выбраны статусы раздач для трекера");
+            throw new Exception('Не выбраны статусы раздач для трекера');
         }
 
         if (empty($filter['keeping_priority'])) {
-            throw new Exception("Не выбраны приоритеты раздач для трекера");
+            throw new Exception('Не выбраны приоритеты раздач для трекера');
         }
 
         if (empty($filter['filter_client_status'])) {
-            throw new Exception("Не выбраны статусы раздач для торрент-клиента");
+            throw new Exception('Не выбраны статусы раздач для торрент-клиента');
         }
 
         // некорретный ввод значения сидов
@@ -159,31 +236,31 @@ try {
                 !is_numeric($filter['filter_rule_interval']['from'])
                 || !is_numeric($filter['filter_rule_interval']['to'])
             ) {
-                throw new Exception("В фильтре введено некорректное значение сидов");
+                throw new Exception('В фильтре введено некорректное значение сидов');
             }
             if (
                 $filter['filter_rule_interval']['from'] < 0
                 || $filter['filter_rule_interval']['to'] < 0
             ) {
-                throw new Exception("Значение сидов в фильтре должно быть больше 0");
+                throw new Exception('Значение сидов в фильтре должно быть больше 0');
             }
             if ($filter['filter_rule_interval']['from'] > $filter['filter_rule_interval']['to']) {
-                throw new Exception("Начальное значение сидов в фильтре должно быть меньше или равно конечному значению");
+                throw new Exception('Начальное значение сидов в фильтре должно быть меньше или равно конечному значению');
             }
         } else {
             if (!is_numeric($filter['filter_rule'])) {
-                throw new Exception("В фильтре введено некорректное значение сидов");
+                throw new Exception('В фильтре введено некорректное значение сидов');
             }
 
             if ($filter['filter_rule'] < 0) {
-                throw new Exception("Значение сидов в фильтре должно быть больше 0");
+                throw new Exception('Значение сидов в фильтре должно быть больше 0');
             }
         }
 
         // некорректная дата
         $date_release = DateTime::createFromFormat('d.m.Y', $filter['filter_date_release']);
         if (!$date_release) {
-            throw new Exception("В фильтре введена некорректная дата создания релиза");
+            throw new Exception('В фильтре введена некорректная дата создания релиза');
         }
 
         // хранимые подразделы
@@ -205,11 +282,11 @@ try {
         $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
-        $pattern_statement = "SELECT Topics.id,na,si,rg,pt%s FROM Topics
+        $pattern_statement = 'SELECT Topics.id,na,si,rg,pt%s FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
 			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
-			WHERE ss IN ($ss) AND st IN ($st) AND ($dl) AND Blacklist.id IS NULL%s";
+			WHERE ss IN (' . $ss . ') AND st IN (' . $st . ') AND (' . $dl . ') AND Blacklist.id IS NULL%s';
 
         $fields = array();
         $where = array();
@@ -218,23 +295,23 @@ try {
         if ($cfg['avg_seeders']) {
             // некорректный период средних сидов
             if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception("В фильтре введено некорректное значение для периода средних сидов");
+                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
             }
             // жёсткое ограничение на 30 дней для средних сидов
             $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
             $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
             for ($i = 0; $i < $filter['avg_seeders_period']; $i++) {
-                $avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
-                $avg['sum_qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE q$i END";
-                $avg['qt'][] = "CASE WHEN q$i IS \"\" OR q$i IS NULL THEN 0 ELSE 1 END";
+                $avg['sum_se'][] = 'CASE WHEN d' . $i . ' IS "" OR d' . $i . ' IS NULL THEN 0 ELSE d' . $i . ' END';
+                $avg['sum_qt'][] = 'CASE WHEN q' . $i . ' IS "" OR q' . $i . ' IS NULL THEN 0 ELSE q' . $i . ' END';
+                $avg['qt'][] = 'CASE WHEN q' . $i . ' IS "" OR q' . $i . ' IS NULL THEN 0 ELSE 1 END';
             }
             $qt = implode('+', $avg['qt']);
             $sum_qt = implode('+', $avg['sum_qt']);
             $sum_se = implode('+', $avg['sum_se']);
-            $avg = "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END";
+            $avg = 'CASE WHEN ' . $qt . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $sum_se . ') / ( qt + ' . $sum_qt . ') END';
 
-            $fields[] = "$qt as ds";
-            $fields[] = "$avg as se";
+            $fields[] = $qt . ' as ds';
+            $fields[] = $avg . ' as se';
             $left_join[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
         } else {
             $fields[] = 'se';
@@ -249,9 +326,9 @@ try {
 
         // данные о других хранителях
         $keepers = Db::query_database(
-            "SELECT id,nick FROM Keepers WHERE id IN (
-                SELECT id FROM Topics WHERE ss IN ($ss)
-            )",
+            'SELECT id,nick FROM Keepers WHERE id IN (
+                SELECT id FROM Topics WHERE ss IN (' . $ss . ')
+            )',
             $forums_ids,
             true,
             PDO::FETCH_COLUMN | PDO::FETCH_GROUP
@@ -380,7 +457,6 @@ try {
                 $keepers_list
             );
         }
-
     }
 
     echo json_encode(array(
@@ -389,14 +465,11 @@ try {
         'size' => $filtered_topics_size,
         'count' => $filtered_topics_count,
     ));
-
 } catch (Exception $e) {
-
     echo json_encode(array(
         'log' => $e->getMessage(),
         'topics' => null,
         'size' => 0,
         'count' => 0,
     ));
-
 }
