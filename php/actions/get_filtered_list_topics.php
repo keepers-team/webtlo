@@ -134,6 +134,8 @@ try {
         }
     } elseif ($forum_id == -4) {
         // дублирующиеся раздачи
+        $statementFields = array();
+        $statementLeftJoin = array();
         if ($cfg['avg_seeders']) {
             if (!is_numeric($filter['avg_seeders_period'])) {
                 throw new Exception('В фильтре введено некорректное значение для периода средних сидов');

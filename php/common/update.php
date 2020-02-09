@@ -33,7 +33,7 @@ Db::query_database(
 if (!isset($api)) {
     $api = new Api($cfg['api_url'], $cfg['api_key']);
     // применяем таймауты
-    $api->curl_setopts($cfg['curl_setopt']['api']);
+    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
 }
 
 // все открытые раздачи
@@ -44,9 +44,7 @@ $current_update_time = new DateTime();
 $previous_update_time = new DateTime();
 
 if (isset($cfg['subsections'])) {
-
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-
         // получаем дату предыдущего обновления
         $update_time = Db::query_database(
             "SELECT ud FROM UpdateTime WHERE id = ?",
@@ -69,7 +67,7 @@ if (isset($cfg['subsections'])) {
         }
 
         // получаем данные о раздачах
-        $topics_data = $api->get_forum_topics_data($forum_id);
+        $topics_data = $api->getForumTopicsData($forum_id);
 
         if (empty($topics_data['result'])) {
             Log::append("Error: Не получены данные о подразделе № " . $forum_id);
@@ -99,7 +97,6 @@ if (isset($cfg['subsections'])) {
         unset($topics_data);
 
         foreach ($topics_result as $topics_result) {
-
             // получаем данные о раздачах за предыдущее обновление
             $topics_ids = array_keys($topics_result);
             $in = str_repeat('?,', count($topics_ids) - 1) . '?';
@@ -114,7 +111,6 @@ if (isset($cfg['subsections'])) {
             // разбираем раздачи
             // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes )
             foreach ($topics_result as $topic_id => $topic_data) {
-
                 if (empty($topic_data)) {
                     continue;
                 }
@@ -197,7 +193,7 @@ if (isset($cfg['subsections'])) {
             if (isset($db_topics_renew)) {
                 $topics_renew_ids = array_keys($db_topics_renew);
                 $in = str_repeat('?,', count($topics_renew_ids) - 1) . '?';
-                $topics_data = $api->get_tor_topic_data($topics_renew_ids);
+                $topics_data = $api->getTorrentTopicData($topics_renew_ids);
                 unset($topics_renew_ids);
                 if (empty($topics_data)) {
                     throw new Exception("Error: Не получены дополнительные данные о раздачах");
@@ -227,11 +223,9 @@ if (isset($cfg['subsections'])) {
                 unset($select);
             }
             unset($db_topics_update);
-
         }
         unset($topics_result);
     }
-
 }
 
 // удаляем перерегистрированные раздачи

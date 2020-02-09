@@ -45,7 +45,7 @@ Db::query_database(
 if (!isset($api)) {
     $api = new Api($cfg['api_url'], $cfg['api_key']);
     // применяем таймауты
-    $api->curl_setopts($cfg['curl_setopt']['api']);
+    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
 }
 
 // все открытые раздачи
@@ -62,7 +62,6 @@ $total_topics_no_seeders = 0;
 $total_topics_delete = 0;
 
 foreach ($forums_ids as $forum_id) {
-
     // пропускаем хранимые подразделы
     if (
         isset($cfg['subsections'])
@@ -93,7 +92,7 @@ foreach ($forums_ids as $forum_id) {
     }
 
     // получаем данные о раздачах
-    $topics_data = $api->get_forum_topics_data($forum_id);
+    $topics_data = $api->getForumTopicsData($forum_id);
 
     if (empty($topics_data['result'])) {
         Log::append("Error: Не получены данные о подразделе № " . $forum_id);
@@ -123,7 +122,6 @@ foreach ($forums_ids as $forum_id) {
     unset($topics_data);
 
     foreach ($topics_result as $topics_result) {
-
         // получаем данные о раздачах за предыдущее обновление
         $topics_ids = array_keys($topics_result);
         $in = str_repeat('?,', count($topics_ids) - 1) . '?';
@@ -138,7 +136,6 @@ foreach ($forums_ids as $forum_id) {
         // разбираем раздачи
         // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes )
         foreach ($topics_result as $topic_id => $topic_data) {
-
             if (empty($topic_data)) {
                 continue;
             }
@@ -233,7 +230,6 @@ foreach ($forums_ids as $forum_id) {
             unset($select);
         }
         unset($db_topics_update);
-
     }
     unset($topics_result);
 }

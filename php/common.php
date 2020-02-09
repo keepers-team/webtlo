@@ -8,7 +8,6 @@ include_once dirname(__FILE__) . '/classes/settings.php';
 
 function get_settings($filename = "")
 {
-
     $config = array();
 
     $ini = new TIniFileEx($filename);
@@ -166,7 +165,6 @@ function get_settings($filename = "")
     );
 
     return $config;
-
 }
 
 function convert_bytes($size)

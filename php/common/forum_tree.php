@@ -12,7 +12,7 @@ if (!isset($cfg)) {
 if (!isset($api)) {
     $api = new Api($cfg['api_url'], $cfg['api_key']);
     // применяем таймауты
-    $api->curl_setopts($cfg['curl_setopt']['api']);
+    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
 }
 
 // обновление дерева подразделов
@@ -27,9 +27,8 @@ if (
     empty($forum_tree_update)
     || $forum_tree_update[0] > 3600
 ) {
-
     // получение дерева подразделов
-    $forum_tree = $api->get_cat_forum_tree();
+    $forum_tree = $api->getCategoryForumTree();
 
     if (empty($forum_tree['result'])) {
         throw new Exception("Error: Не удалось получить дерево подразделов");
@@ -60,7 +59,7 @@ if (
     unset($forum_tree);
 
     // получение количества и веса раздач по разделам
-    $forum_size = $api->forum_size();
+    $forum_size = $api->getCategoryForumVolume();
 
     if (empty($forum_size['result'])) {
         throw new Exception("Error: Не удалось получить количество и вес раздач по разделам");
@@ -117,5 +116,4 @@ if (
 
     unset($forum_tree_update_current);
     unset($forum_tree_update);
-
 }

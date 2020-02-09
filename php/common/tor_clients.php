@@ -111,14 +111,14 @@ if (!empty($cfg['clients'])) {
         if (!isset($api)) {
             $api = new Api($cfg['api_url'], $cfg['api_key']);
             // применяем таймауты
-            $api->curl_setopts($cfg['curl_setopt']['api']);
+            $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
         }
 
-        $untracked_ids = $api->get_topic_id($untracked_hashes);
+        $untracked_ids = $api->getTopicID($untracked_hashes);
         unset($untracked_hashes);
 
         if (!empty($untracked_ids)) {
-            $untracked_data = $api->get_tor_topic_data($untracked_ids);
+            $untracked_data = $api->getTorrentTopicData($untracked_ids);
             unset($untracked_ids);
 
             if (empty($untracked_data)) {

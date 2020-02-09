@@ -10,7 +10,6 @@ class Log
         if (!empty($message)) {
             self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
         }
-
     }
 
     public static function get($break = '<br />')
@@ -18,7 +17,6 @@ class Log
         if (!empty(self::$log)) {
             return implode($break, self::$log) . $break;
         }
-
     }
 
     public static function write($filelog)
@@ -47,7 +45,6 @@ class Log
             if (!rename($filelog, preg_replace('|.log$|', '.1.log', $filelog))) {
                 echo "Не удалось переименовать файл лога.";
             }
-
         }
     }
 
@@ -55,5 +52,4 @@ class Log
     {
         self::$log = array();
     }
-
 }

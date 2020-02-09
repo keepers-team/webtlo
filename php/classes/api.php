@@ -1,221 +1,276 @@
 <?php
 
+/**
+ * Class Api
+ * Класс для работы с API форума
+ */
 class Api
 {
+    /**
+     * @var resource
+     */
+    private $ch;
 
-    private $limit;
+    /**
+     * @var string
+     */
+    private $formatURL;
 
-    protected $ch;
-    protected $api_key;
-    protected $api_url;
-    protected $request_count = 0;
+    /**
+     * @var int
+     */
+    private $numberRequest = 0;
 
-    public function __construct($api_url, $api_key = "")
-    {
-        Log::append('Используется зеркало для API: ' . $api_url);
-        $this->api_key = $api_key;
-        $this->api_url = $api_url;
-        $this->init_curl();
-        $this->get_limit();
-    }
+    /**
+     * @var int
+     */
+    private $limitNumberTopicsInRequest;
 
-    private function init_curl()
+    /**
+     * default constructor
+     * @param string $addressApi
+     * @param string $userKeyApi
+     */
+    public function __construct($addressApi, $userKeyApi = '')
     {
         $this->ch = curl_init();
         curl_setopt_array($this->ch, array(
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_ENCODING => "gzip",
+            CURLOPT_ENCODING => 'gzip',
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
         ));
         curl_setopt_array($this->ch, Proxy::$proxy['api_url']);
+        Log::append('Используется зеркало для API: ' . $addressApi);
+        $this->formatURL = $addressApi . '/v1/%s?api_key=' . $userKeyApi . '%s';
+        $this->getLimitNumberTopics();
     }
 
-    public function curl_setopts($options)
+    /**
+     * выполнение запроса к API
+     * @param string $request
+     * @param array|string $params
+     * @return bool|mixed|array
+     */
+    private function makeRequest($request, $params = '')
+    {
+        // таймаут запросов
+        if ($this->numberRequest == 3) {
+            $this->numberRequest = 0;
+            sleep(1);
+        }
+        $this->numberRequest++;
+        // повторные попытки
+        $connectionNumberTry = 1;
+        $responseNumberTry = 1;
+        $maxNumberTry = 3;
+        // выполнение запроса
+        $params = $this->implodeParams('&', $params);
+        $url = sprintf($this->formatURL, $request, $params);
+        curl_setopt($this->ch, CURLOPT_URL, $url);
+        while (true) {
+            $response = curl_exec($this->ch);
+            if ($response === false) {
+                $responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    Log::append('Повторная попытка ' . $connectionNumberTry . '/' . $maxNumberTry . ' подключения');
+                    sleep(5);
+                    $connectionNumberTry++;
+                    continue;
+                }
+                throw new Exception('CURL ошибка: ' . curl_error($this->ch) . ' [' . $responseHttpCode . ']');
+            }
+            $response = json_decode($response, true);
+            if (isset($response['error'])) {
+                if (
+                    $response['error']['code'] == '503'
+                    && $responseNumberTry <= $maxNumberTry
+                ) {
+                    Log::append('Повторная попытка ' . $responseNumberTry . '/' . $maxNumberTry . 'получить данные');
+                    sleep(20);
+                    $responseNumberTry++;
+                    continue;
+                }
+                if ($response['error']['code'] == '404') {
+                    break;
+                }
+                throw new Exception('API ошибка: ' . $response['error']['text']);
+            }
+            break;
+        }
+        return isset($response['result']) ? $response : false;
+    }
+
+    /**
+     * "склеивание" параметров в строку
+     * @param string $glue
+     * @param array|string $params
+     * @return string
+     */
+    private function implodeParams($glue, $params)
+    {
+        $params = is_array($params) ? $params : array($params);
+        return $glue . implode($glue, $params);
+    }
+
+    /**
+     * ограничение на количество запрашиваемых данных
+     */
+    private function getLimitNumberTopics()
+    {
+        $response = $this->makeRequest('get_limit');
+        $this->limitNumberTopicsInRequest = $response === false ? 100 : (int)$response['result']['limit'];
+    }
+
+    /**
+     * установка пользовательских параметров для cURL
+     * @param array $options
+     */
+    public function setUserConnectionOptions($options)
     {
         curl_setopt_array($this->ch, $options);
     }
 
-    private function request_exec($url)
+    /**
+     * соответствие ID статуса раздачи его названию
+     * @return bool|array
+     */
+    public function getTorrentStatusTitles()
     {
-        // таймаут запросов
-        if ($this->request_count == 3) {
-            sleep(1);
-            $this->request_count = 0;
+        return $this->makeRequest('get_tor_status_titles');
+    }
+
+    /**
+     * дерево разделов
+     * @return bool|array
+     */
+    public function getCategoryForumTree()
+    {
+        return $this->makeRequest('static/cat_forum_tree');
+    }
+
+    /**
+     * количество и вес раздач по разделам
+     * @return bool|array
+     */
+    public function getCategoryForumVolume()
+    {
+        return $this->makeRequest('static/forum_size');
+    }
+
+    /**
+     * данные о раздачах по ID раздела
+     * @param int|string $forumID
+     * @return bool|array
+     */
+    public function getForumTopicsData($forumID)
+    {
+        if (empty($forumID)) {
+            return false;
         }
-        $this->request_count++;
-        // выполнение запроса
-        $n = 1; // номер попытки
-        $try_number = 1; // номер попытки
-        $try = 3; // кол-во попыток
-        $data = array();
-        curl_setopt($this->ch, CURLOPT_URL, $url);
-        while (true) {
-            $json = curl_exec($this->ch);
-            if ($json === false) {
-                $http_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-                if (
-                    $http_code < 300
-                    && $try_number <= $try
-                ) {
-                    Log::append("Повторная попытка $try_number/$try получить данные");
-                    sleep(5);
-                    $try_number++;
-                    continue;
-                }
-                throw new Exception('CURL ошибка: ' . curl_error($this->ch) . " [$http_code]");
+        return $this->makeRequest('static/pvc/f/' . $forumID);
+    }
+
+    /**
+     * количество пиров по ID или HASH
+     * @param array $topicsValues
+     * @param string $searchBy
+     * @return bool|array
+     */
+    public function getPeerStats($topicsValues, $searchBy = 'topic_id')
+    {
+        if (empty($topicsValues)) {
+            return false;
+        }
+        $topicsData = array();
+        $topicsValues = array_chunk($topicsValues, $this->limitNumberTopicsInRequest);
+        foreach ($topicsValues as $topicsValues) {
+            $params = array(
+                'by=' . $searchBy,
+                'val=' . implode(',', $topicsValues)
+            );
+            $response = $this->makeRequest('get_peer_stats', $params);
+            if ($response === false) {
+                continue;
             }
-            $data = json_decode($json, true);
-            if (isset($data['error'])) {
-                if (
-                    $data['error']['code'] == '503'
-                    && $n <= $try
-                ) {
-                    Log::append("Повторная попытка $n/$try получить данные");
-                    sleep(20);
-                    $n++;
-                    continue;
-                }
-                if ($data['error']['code'] == '404') {
-                    break;
-                }
-                throw new Exception('API ошибка: ' . $data['error']['text']);
-            }
-            break;
-        }
-        return $data;
-    }
-
-    // Ограничение на количество запрашиваемых данных
-    private function get_limit()
-    {
-        $url = $this->api_url . '/v1/get_limit?api_key=' . $this->api_key;
-        $data = $this->request_exec($url);
-        $this->limit = empty($data['result']['limit']) ? 100 : $data['result']['limit'];
-    }
-
-    // Соответствие ID статуса раздачи его названию
-    public function get_tor_status_titles()
-    {
-        $url = $this->api_url . '/v1/get_tor_status_titles?api_key=' . $this->api_key;
-        $data = $this->request_exec($url);
-        if (empty($data['result'])) {
-            return false;
-        }
-        return $data;
-    }
-
-    // Дерево разделов
-    public function get_cat_forum_tree()
-    {
-        $url = $this->api_url . '/v1/static/cat_forum_tree?api_key=' . $this->api_key;
-        $data = $this->request_exec($url);
-        if (empty($data['result'])) {
-            return false;
-        }
-        return $data;
-    }
-
-    // Количество и вес раздач по разделам
-    public function forum_size()
-    {
-        $url = $this->api_url . '/v1/static/forum_size?api_key=' . $this->api_key;
-        $data = $this->request_exec($url);
-        if (empty($data['result'])) {
-            return false;
-        }
-        return $data;
-    }
-
-    // Данные о раздачах по ID раздела
-    public function get_forum_topics_data($forum_id)
-    {
-        if (empty($forum_id)) {
-            return false;
-        }
-        $url = $this->api_url . "/v1/static/pvc/f/$forum_id?api_key=" . $this->api_key;
-        $data = $this->request_exec($url);
-        if (empty($data['result'])) {
-            return false;
-        }
-        return $data;
-    }
-
-    // Количество пиров по ID или HASH
-    public function get_peer_stats($ids, $by = 'topic_id')
-    {
-        if (empty($ids)) {
-            return false;
-        }
-        $topics = array();
-        $ids = array_chunk($ids, $this->limit);
-        foreach ($ids as $ids) {
-            $value = implode(',', $ids);
-            $url = $this->api_url . "/v1/get_peer_stats?by=$by&api_key=" . $this->api_key . '&val=' . $value;
-            $data = $this->request_exec($url);
-            unset($value);
-            foreach ($data['result'] as $topic_id => $topic) {
-                if (!empty($topic)) {
-                    $topics[$topic_id] = array_combine(
+            foreach ($response['result'] as $topicID => $topicData) {
+                if (!empty($topicData)) {
+                    $topicsData[$topicID] = array_combine(
                         array(
                             'seeders',
                             'leechers',
                             'seeder_last_seen',
                         ),
-                        $topic
+                        $topicData
                     );
                 }
             }
         }
-        return $topics;
+        return $topicsData;
     }
 
-    // ID темы по HASH торрента
-    public function get_topic_id($hashes)
+    /**
+     * ID темы по HASH торрента
+     * @param array $topicsHashes
+     * @return bool|array
+     */
+    public function getTopicID($topicsHashes)
     {
-        if (empty($hashes)) {
+        if (empty($topicsHashes)) {
             return false;
         }
-        $ids = array();
-        $hashes = array_chunk($hashes, $this->limit);
-        foreach ($hashes as $hashes) {
-            $value = implode(',', $hashes);
-            $url = $this->api_url . '/v1/get_topic_id?by=hash&api_key=' . $this->api_key . '&val=' . $value;
-            $data = $this->request_exec($url);
-            unset($value);
-            foreach ($data['result'] as $hash => $id) {
-                if (!empty($id)) {
-                    $ids[$hash] = $id;
-                }
-            }
-        }
-        return $ids;
-    }
-
-    // Данные о раздаче по ID темы
-    public function get_tor_topic_data($ids)
-    {
-        if (empty($ids)) {
-            return false;
-        }
-        $topics = array();
-        $ids = array_chunk($ids, $this->limit);
-        foreach ($ids as $ids) {
-            $value = implode(',', $ids);
-            $url = $this->api_url . '/v1/get_tor_topic_data?by=topic_id&api_key=' . $this->api_key . '&val=' . $value;
-            $data = $this->request_exec($url);
-            unset($value);
-            if (empty($data['result'])) {
+        $topicsData = array();
+        $topicsHashes = array_chunk($topicsHashes, $this->limitNumberTopicsInRequest);
+        foreach ($topicsHashes as $topicsHashes) {
+            $params = array(
+                'by=hash',
+                'val=' . implode(',', $topicsHashes)
+            );
+            $response = $this->makeRequest('get_topic_id', $params);
+            if ($response === false) {
                 continue;
             }
-            foreach ($data['result'] as $topic_id => $info) {
-                if (is_array($info)) {
-                    $topics[$topic_id] = $info;
+            foreach ($response['result'] as $topicHash => $topicID) {
+                if (!empty($topicID)) {
+                    $topicsData[$topicHash] = $topicID;
                 }
             }
         }
-        return $topics;
+        return $topicsData;
+    }
+
+    /**
+     * данные о раздаче по ID темы
+     * @param array $topicsIDs
+     * @return bool|array
+     */
+    public function getTorrentTopicData($topicsIDs)
+    {
+        if (empty($topicsIDs)) {
+            return false;
+        }
+        $topicsData = array();
+        $topicsIDs = array_chunk($topicsIDs, $this->limitNumberTopicsInRequest);
+        foreach ($topicsIDs as $topicsIDs) {
+            $params = array(
+                'by=topic_id',
+                'val=' . implode(',', $topicsIDs)
+            );
+            $response = $this->makeRequest('get_tor_topic_data', $params);
+            if ($response === false) {
+                continue;
+            }
+            foreach ($response['result'] as $topicID => $topicData) {
+                if (is_array($topicData)) {
+                    $topicsData[$topicID] = $topicData;
+                }
+            }
+        }
+        return $topicsData;
     }
 
     public function __destruct()
