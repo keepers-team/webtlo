@@ -445,11 +445,11 @@ try {
             if ($topic_data['dl'] == '1') {
                 $topic_data['dl'] = 'fa-arrow-up';
             } else if ($topic_data['dl'] == '0') {
-                $topic_data['dl'] = 'fa-circle';
+                $topic_data['dl'] = 'fa-arrow-down';
             } else if ($topic_data['dl'] == '-1') {
                 $topic_data['dl'] = 'fa-pause';
             } else {
-                $topic_data['dl'] = 'fa-arrow-down';
+                $topic_data['dl'] = 'fa-circle';
             }
 
             $output .= sprintf(
