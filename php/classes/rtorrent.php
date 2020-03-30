@@ -2,35 +2,32 @@
 
 /**
  * Class Rtorrent
- * Supported by rTorrent 0.9.x and later
+ * Supported by rTorrent 0.9.7 and later
  * Added by: advers222@ya.ru
  */
 class Rtorrent extends TorrentClient
 {
-    // предлагается вводить ссылку полностью в веб интерфейсе
-    // потому что при нескольких клиентах вполне может меняться последняя часть (RPC2)
-    // http://localhost/RPC2
-    protected static $base = 'http://%s';
+
+    protected static $base = 'http://%s/RPC2';
 
     /**
-     * получение идентификатора сессии и запись его в $this->sid
+     * получение имени сеанса
      * @return bool true в случе успеха, false в случае неудачи
      */
     protected function getSID()
     {
-        return $this->makeRequest('get_name') ? true : false;
+        return $this->makeRequest('session.name') ? true : false;
     }
 
     /**
      * выполнение запроса
-     * @param $cmd
-     * @param null $param
+     * @param $command
+     * @param $params
      * @return bool|mixed
      */
-    public function makeRequest($command, $params = null)
+    public function makeRequest($command, $params = '')
     {
-        // XML RPC запрос
-        $request = xmlrpc_encode_request($command, $params);
+        $request = xmlrpc_encode_request($command, $params, array('escaping' => 'markup', 'encoding' => 'UTF-8'));
         $header = array(
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
@@ -48,86 +45,152 @@ class Rtorrent extends TorrentClient
             return false;
         }
         curl_close($ch);
-        // Грязный хак для приведения ответа XML RPC к понятному для PHP
-        return xmlrpc_decode(str_replace('i8>', 'i4>', $response));
+        $response = xmlrpc_decode(str_replace('i8>', 'i4>', $response));
+        if (is_array($response)) {
+            foreach ($response as $keyName => $responseData) {
+                if (is_array($responseData)) {
+                    if (array_key_exists('faultCode', $responseData)) {
+                        $faultString = $responseData['faultString'];
+                        break;
+                    }
+                } elseif ($keyName == 'faultString') {
+                    $faultString = $responseData;
+                    break;
+                }
+            }
+        }
+        if (isset($faultString)) {
+            Log::append('Error: ' . $faultString);
+            return false;
+        }
+        // return 0 on success
+        return $response;
     }
 
     public function getTorrents()
     {
-        $data = $this->makeRequest(
-            'd.multicall',
-            array(
-                'main',
-                'd.get_hash=',
-                'd.get_state=',
-                'd.get_complete=',
-            )
+        $response = $this->makeRequest(
+            'd.multicall2',
+            array('', 'main', 'd.hash=', 'd.state=', 'd.complete=', 'd.message=')
         );
-        if (empty($data)) {
+        if ($response === false) {
             return false;
         }
-        // ответ в формате array(HASH, STATE active/stopped, COMPLETED)
-        foreach ($data as $torrent) {
-            // $status:
-            //        0 - Не скачано
-            //        1 - Скачано и активно
-            //        -1 - Скачано и остановлено
-            if ($torrent[2]) {
-                $status = $torrent[1] ? 1 : -1;
-            } else {
-                $status = 0;
+        $torrents = array();
+        foreach ($response as $torrent) {
+            if (empty($torrent[3])) {
+                if ($torrent[2]) {
+                    $status = $torrent[1] ? 1 : -1;
+                } else {
+                    $status = 0;
+                }
+                $torrents[$torrent[0]] = $status;
             }
-            $torrents[$torrent[0]] = $status;
         }
-        return isset($torrents) ? $torrents : array();
+        return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '', $label = '')
+    public function addTorrent($torrentFilePath, $savePath = '')
     {
-        $result = $this->makeRequest('load_start', $torrentFilePath); // === false
+        $makeDirectory = array('', 'mkdir', '-p', '--', $savePath);
+        if (empty($savePath)) {
+            $savePath = '$directory.default=';
+            $makeDirectory = array('', 'true');
+        }
+        $torrentFile = fopen($torrentFilePath, 'br');
+        if ($torrentFile === false) {
+            Log::append('Error: не удалось загрузить файл ' . $torrentFilePath);
+            return false;
+        }
+        $torrentFile = stream_get_contents($torrentFile);
+        xmlrpc_set_type($torrentFile, 'base64');
+        return $this->makeRequest(
+            'system.multicall',
+            array(
+                array(
+                    array(
+                        'methodName' => 'execute2',
+                        'params' => $makeDirectory
+                    ),
+                    array(
+                        'methodName' => 'load.raw_start',
+                        'params' => array(
+                            '',
+                            $torrentFile,
+                            'd.delete_tied=',
+                            'd.directory.set=' . addcslashes($savePath, ' ')
+                        )
+                    )
+                )
+            )
+        );
     }
 
     public function setLabel($hashes, $label = '')
     {
+        if (empty($label)) {
+            return false;
+        }
+        $label = rawurlencode($label);
         foreach ($hashes as $hash) {
-            $result = $this->makeRequest('d.set_custom1', array($hash, $label)); // === false
+            $this->makeRequest('d.custom1.set', array($hash, $label));
         }
     }
 
-    public function startTorrents($hashes, $force = false)
+    public function startTorrents($hashes, $forceStart = false)
     {
         foreach ($hashes as $hash) {
-            $result = $this->makeRequest('d.start', $hash); // === false
-        }
-    }
-
-    /**
-     * пауза раздач (unused)
-     * @param $hashes
-     */
-    public function pauseTorrents($hashes)
-    {
-        foreach ($hashes as $hash) {
-            $result = $this->makeRequest('d.pause', $hash); // === false
-        }
-    }
-
-    public function recheckTorrents($hashes)
-    {
-        foreach ($hashes as $hash) {
-            $result = $this->makeRequest('d.check_hash', $hash); // === false
+            $this->makeRequest('d.start', $hash);
         }
     }
 
     public function stopTorrents($hashes)
     {
         foreach ($hashes as $hash) {
-            $result = $this->makeRequest('d.stop', $hash); // === false
+            $this->makeRequest('d.stop', $hash);
         }
     }
 
-    public function removeTorrents($hashes, $data = false)
+    public function removeTorrents($hashes, $deleteLocalData = false)
     {
-        Log::append('Удаление раздачи не реализовано.');
+        foreach ($hashes as $hash) {
+            $executeDeleteLocalData = array('', 'true');
+            if ($deleteLocalData) {
+                $dataPath = $this->makeRequest('d.data_path', $hash);
+                if (!empty($dataPath)) {
+                    $executeDeleteLocalData =  array('', 'rm', '-rf', '--', $dataPath);
+                }
+            }
+            $this->makeRequest(
+                'system.multicall',
+                array(
+                    array(
+                        array(
+                            'methodName' => 'd.custom5.set',
+                            'params' => array($hash, 1),
+                        ),
+                        array(
+                            'methodName' => 'd.delete_tied',
+                            'params' => array($hash),
+                        ),
+                        array(
+                            'methodName' => 'd.erase',
+                            'params' => array($hash)
+                        ),
+                        array(
+                            'methodName' => 'execute2',
+                            'params' => $executeDeleteLocalData
+                        )
+                    )
+                )
+            );
+        }
+    }
+
+    public function recheckTorrents($hashes)
+    {
+        foreach ($hashes as $hash) {
+            $this->makeRequest('d.check_hash', $hash);
+        }
     }
 }

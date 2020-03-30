@@ -47,7 +47,7 @@ try {
     parse_str($_POST['topics_ids'], $topics_ids);
 
     // список торрент-клиентов, которые поддерживают передачу содержимого торрент-файла в запросе
-    $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze');
+    $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze', 'rtorrent');
 
     Log::append('Запущен процесс добавления раздач в торрент-клиенты...');
 
