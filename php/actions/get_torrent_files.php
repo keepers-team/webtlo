@@ -81,23 +81,20 @@ try {
         );
     }
 
-    Log::append($replace_passkey
-        ? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
-        : 'Выполняется скачивание торрент-файлов...'
+    Log::append(
+        $replace_passkey
+            ? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
+            : 'Выполняется скачивание торрент-файлов...'
     );
 
     // скачивание торрент-файлов
-    $download = new Download(
-        $cfg['forum_url'],
-        $cfg['api_key'],
-        $cfg['user_id']
-    );
+    $download = new TorrentDownload($cfg['forum_url']);
 
     // применяем таймауты
-    $download->curl_setopts($cfg['curl_setopt']['forum']);
+    $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
 
     foreach ($topics_ids['topics_ids'] as $topic_id) {
-        $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
+        $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topic_id, $cfg['retracker']);
         if ($data === false) {
             continue;
         }
@@ -145,7 +142,6 @@ try {
         'log' => Log::get(),
         'result' => $result,
     ));
-
 } catch (Exception $e) {
 
     Log::append($e->getMessage());
@@ -153,5 +149,4 @@ try {
         'log' => Log::get(),
         'result' => $result,
     ));
-
 }

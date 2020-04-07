@@ -75,26 +75,12 @@ $(document).ready(function () {
 			showResult("Выберите раздачи");
 			return false;
 		}
-		var forums = getForums();
-		if ($.isEmptyObject(forums)) {
-			showResult("В настройках не найдены подразделы");
-			return false;
-		}
-		var tor_clients = getTorClients();
-		if ($.isEmptyObject(tor_clients)) {
-			showResult("В настройках не найдены торрент-клиенты");
-			return false;
-		}
 		$("#process").text("Добавление раздач в торрент-клиент...");
-		var config = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "php/actions/add_topics_to_client.php",
 			data: {
-				cfg: config,
-				topics_ids: topics_ids,
-				tor_clients: tor_clients,
-				forums: forums
+				topics_ids: topics_ids
 			},
 			beforeSend: function () {
 				block_actions();

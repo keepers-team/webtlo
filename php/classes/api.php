@@ -56,7 +56,8 @@ class Api
     private function makeRequest($request, $params = '')
     {
         // таймаут запросов
-        if ($this->numberRequest == 3) {
+        $maxNumberRequest = 3;
+        if ($this->numberRequest == $maxNumberRequest) {
             $this->numberRequest = 0;
             sleep(1);
         }
@@ -273,6 +274,9 @@ class Api
         return $topicsData;
     }
 
+    /**
+     * default destructor
+     */
     public function __destruct()
     {
         curl_close($this->ch);

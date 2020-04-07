@@ -9,25 +9,24 @@ try {
 
     $result = '';
 
-    // проверка данных
+    // список ID раздач
     if (empty($_POST['topics_ids'])) {
         $result = 'Выберите раздачи';
         throw new Exception();
     }
+    parse_str($_POST['topics_ids'], $topics_ids);
 
-    if (empty($_POST['forums'])) {
+    // получение настроек
+    $cfg = get_settings();
+
+    if (empty($cfg['subsections'])) {
         $result = 'В настройках не найдены хранимые подразделы';
         throw new Exception();
     }
 
-    if (empty($_POST['tor_clients'])) {
+    if (empty($cfg['clients'])) {
         $result = 'В настройках не найдены торрент-клиенты';
         throw new Exception();
-    }
-
-    // парсим настройки
-    if (isset($_POST['cfg'])) {
-        parse_str($_POST['cfg'], $cfg);
     }
 
     if (empty($cfg['api_key'])) {
@@ -39,12 +38,6 @@ try {
         $result = 'В настройках не указан хранительский ключ ID';
         throw new Exception();
     }
-
-    // разбираем настройки
-    $forums = $_POST['forums'];
-    $tor_clients = $_POST['tor_clients'];
-    $cfg['retracker'] = isset($cfg['retracker']) ? 1 : 0;
-    parse_str($_POST['topics_ids'], $topics_ids);
 
     // список торрент-клиентов, которые поддерживают передачу содержимого торрент-файла в запросе
     $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze', 'rtorrent');
@@ -82,21 +75,6 @@ try {
         throw new Exception();
     }
 
-    // параметры прокси
-    $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
-    $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
-    $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
-    $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
-
-    // устанавливаем прокси
-    Proxy::options(
-        $activate_forum,
-        $activate_api,
-        $cfg['proxy_type'],
-        $proxy_address,
-        $proxy_auth
-    );
-
     // каталог для сохранения торрент-файлов
     $torrent_files_dir = 'data/tfiles';
 
@@ -115,18 +93,24 @@ try {
     $tor_clients_ids = array();
     $torrent_files_added_total = 0;
 
+    // скачивание торрент-файлов
+    $download = new TorrentDownload($cfg['forum_url']);
+
+    // применяем таймауты
+    $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
+
     foreach ($forums_topics_ids as $forum_id => $topics_ids) {
         if (empty($topics_ids)) {
             continue;
         }
 
-        if (!isset($forums[$forum_id])) {
+        if (!isset($cfg['subsections'][$forum_id])) {
             Log::append('В настройках нет данных о подразделе с идентификатором "' . $forum_id . '"');
             continue;
         }
 
         // данные текущего подраздела
-        $forum = $forums[$forum_id];
+        $forum = $cfg['subsections'][$forum_id];
 
         if (empty($forum['cl'])) {
             Log::append('К подразделу "' . $forum_id . '" не привязан торрент-клиент');
@@ -136,13 +120,13 @@ try {
         // идентификатор торрент-клиента
         $tor_client_id = $forum['cl'];
 
-        if (empty($tor_clients[$tor_client_id])) {
+        if (empty($cfg['clients'][$tor_client_id])) {
             Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $tor_client_id . '"');
             continue;
         }
 
         // данные текущего торрент-клиента
-        $tor_client = $tor_clients[$tor_client_id];
+        $tor_client = $cfg['clients'][$tor_client_id];
 
         // шаблон для сохранения
         $torrent_files_path_pattern = $torrent_files_path . '/[webtlo].t%s.torrent';
@@ -150,15 +134,8 @@ try {
             $torrent_files_path_pattern = mb_convert_encoding($torrent_files_path_pattern, 'Windows-1251', 'UTF-8');
         }
 
-        // скачивание торрент-файлов
-        $download = new Download(
-            $cfg['forum_url'],
-            $cfg['api_key'],
-            $cfg['user_id']
-        );
-
         foreach ($topics_ids as $topic_id) {
-            $data = $download->get_torrent_file($topic_id, $cfg['retracker']);
+            $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topic_id, $cfg['retracker']);
             if ($data === false) {
                 continue;
             }
@@ -219,18 +196,18 @@ try {
         $filename_url_pattern = 'http://' . $dirname_url . '/[webtlo].t%s.torrent';
 
         // убираем последний слэш в пути каталога для данных
-        if (preg_match('/(\/|\\\\)$/', $forum['fd'])) {
-            $forum['fd'] = substr($forum['fd'], 0, -1);
+        if (preg_match('/(\/|\\\\)$/', $forum['df'])) {
+            $forum['df'] = substr($forum['df'], 0, -1);
         }
 
         // определяем направление слэша в пути каталога для данных
-        $slash = strpos($forum['fd'], '/') === false ? '\\' : '/';
+        $slash = strpos($forum['df'], '/') === false ? '\\' : '/';
 
         // добавление раздач
         foreach ($torrent_files_downloaded as $topic_id) {
             $save_path = '';
-            if (!empty($forum['fd'])) {
-                $save_path = $forum['fd'];
+            if (!empty($forum['df'])) {
+                $save_path = $forum['df'];
                 // подкаталог для данных
                 if ($forum['sub_folder']) {
                     $save_path .= $slash . $topic_id;
