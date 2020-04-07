@@ -97,12 +97,11 @@ class Rtorrent extends TorrentClient
             $savePath = '$directory.default=';
             $makeDirectory = array('', 'true');
         }
-        $torrentFile = fopen($torrentFilePath, 'br');
+        $torrentFile = file_get_contents($torrentFilePath, false, stream_context_create());
         if ($torrentFile === false) {
             Log::append('Error: не удалось загрузить файл ' . $torrentFilePath);
             return false;
         }
-        $torrentFile = stream_get_contents($torrentFile);
         xmlrpc_set_type($torrentFile, 'base64');
         return $this->makeRequest(
             'system.multicall',

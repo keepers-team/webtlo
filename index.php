@@ -488,7 +488,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                                             <option value="deluge" title="WebUi   plugin">Deluge</option>
                                             <option value="qbittorrent">qBittorrent</option>
                                             <option value="ktorrent">KTorrent</option>
-                                            <option value="rtorrent">rTorrent 0.9.x</option>
+                                            <option value="rtorrent">rTorrent</option>
                                         </select>
                                     </label>
                                 </div>
