@@ -601,25 +601,6 @@ li.menu.ui-tabs-active {
 
 #manual {
 	margin: 0;
-	padding: 0;
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
-	height: calc(100% - 2px);
-}
-
-#manual object {
-	border: 1px solid #aaa;
-}
-
-#manual:before {
-	content: "\f110";
-	font-family: FontAwesome, serif;
-	font-size: 100px;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	margin: -50px 0 0 -50px;
-	animation: fa-spin 2s infinite linear;
-	z-index: -1;
+	padding: 20px;
+	line-height: 1.5;
 }

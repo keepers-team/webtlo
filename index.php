@@ -67,7 +67,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-1.0.2.2</title>
+    <title>web-TLO-1.0.2.3</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -87,7 +87,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
             <li class="menu"><a href="#reports" class="menu">Отчёты</a></li>
             <li class="menu"><a href="#statistics" class="menu">Статистика</a></li>
             <li class="menu"><a href="#journal" class="menu">Журнал</a></li>
-            <li class="menu"><a href="#manual" title="Открыть файл руководства">FAQ</a></li>
+            <li class="menu"><a href="#manual" class="menu">О программе</a></li>
         </ul>
         <div id="content">
             <div id="main" class="content">
@@ -700,7 +700,10 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                 </div>
             </div>
             <div id="manual" class="content">
-                <object data="manual.pdf" type="application/pdf" width="100%" height="100%"></object>
+                <p>web-TLO</p>
+                <p>Простое веб-приложение для управления торрентами</p>
+                <p><a href="https://github.com/berkut-174/webtlo/wiki" target="_blank">https://github.com/berkut-174/webtlo/wiki</a></p>
+                <p>Copyright © 2016-2020 Alexander Shemetov</p>
             </div>
         </div>
     </div>
