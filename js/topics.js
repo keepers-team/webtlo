@@ -282,7 +282,18 @@ $(document).ready(function () {
 	});
 
 	$("#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release").on("change", function () {
-		filter_delay(getFilteredTopics);
+		if (!filter_hold) {
+			filter_delay(getFilteredTopics);
+		}
+	});
+
+	$("#topics_filter").find("input[type=radio], input[type=checkbox]").on("click", function (e) {
+		filter_hold = e.ctrlKey;
+	}).on("keyup", function (e) {
+		if (e.keyCode == 17) {
+			filter_hold = false;
+			filter_delay(getFilteredTopics);
+		}
 	});
 
 	// есть/нет хранители
@@ -340,8 +351,12 @@ $(document).ready(function () {
 
 });
 
+
 // задержка при выборе свойств фильтра
-var filter_delay = makeDelay(500);
+var filter_delay = makeDelay(600);
+
+// подавление срабатывания фильтрации раздач
+var filter_hold = false;
 
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
