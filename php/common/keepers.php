@@ -30,7 +30,7 @@ Db::query_database(
 // подключаемся к форуму
 if (!isset($reports)) {
     $reports = new Reports(
-        $cfg['forum_url'],
+        $cfg['forum_address'],
         $cfg['tracker_login'],
         $cfg['tracker_paswd']
     );

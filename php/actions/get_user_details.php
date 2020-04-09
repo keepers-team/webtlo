@@ -31,7 +31,7 @@ try {
 
     // получаем ключи пользователя
     UserDetails::get_details(
-        $cfg['forum_url'],
+        $cfg['forum_address'],
         $cfg['tracker_username'],
         $cfg['tracker_password']
     );

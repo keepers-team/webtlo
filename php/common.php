@@ -80,9 +80,19 @@ function get_settings($filename = "")
     $config['tracker_paswd'] = $ini->read('torrent-tracker', 'password', '');
     $config['bt_key'] = $ini->read('torrent-tracker', 'bt_key', '');
     $config['api_key'] = $ini->read('torrent-tracker', 'api_key', '');
-    $config['api_url'] = $ini->read('torrent-tracker', 'api_url', 'https://api.t-ru.org');
+    $config['api_url'] = basename($ini->read('torrent-tracker', 'api_url', 'api.t-ru.org'));
+    $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom', ''));
+    $config['api_ssl'] = $ini->read('torrent-tracker', 'api_ssl', 1);
     $config['user_id'] = $ini->read('torrent-tracker', 'user_id', '');
-    $config['forum_url'] = $ini->read('torrent-tracker', 'forum_url', 'https://rutracker.cr');
+    $config['forum_url'] = basename($ini->read('torrent-tracker', 'forum_url', 'rutracker.org'));
+    $config['forum_url_custom'] = basename($ini->read('torrent-tracker', 'forum_url_custom', ''));
+    $config['forum_ssl'] = $ini->read('torrent-tracker', 'forum_ssl', 1);
+    $api_schema = $config['api_ssl'] ? 'https' : 'http';
+    $forum_schema = $config['api_ssl'] ? 'https' : 'http';
+    $api_url = $config['api_url'] == 'custom' ? $config['api_url_custom'] : $config['api_url'];
+    $forum_url = $config['forum_url'] == 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
+    $config['api_address'] = $api_schema . '://' . $api_url;
+    $config['forum_address'] = $forum_schema . '://' . $forum_url;
 
     // загрузки
     $config['save_dir'] = $ini->read('download', 'savedir', 'C:\Temp\\');

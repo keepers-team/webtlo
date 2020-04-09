@@ -5,8 +5,8 @@ class Proxy
 {
 
     public static $proxy = array(
-        'forum_url' => array(),
-        'api_url' => array(),
+        'forum' => array(),
+        'api' => array(),
     );
 
     protected static $auth;
@@ -44,8 +44,8 @@ class Proxy
         $param_forum = $activate_forum ? $param : array();
         $param_api = $activate_api ? $param : array();
         return array(
-            'forum_url' => $param_forum,
-            'api_url' => $param_api,
+            'forum' => $param_forum,
+            'api' => $param_api,
         );
     }
 }

@@ -393,6 +393,10 @@ li.menu.ui-tabs-active {
 	margin-bottom: 5px;
 }
 
+#forum_url_params label, #api_url_params label {
+	margin: 0;
+}
+
 #proxy_prop {
 	margin-top: 10px;
 }

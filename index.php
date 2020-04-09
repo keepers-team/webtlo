@@ -60,6 +60,49 @@ $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
 $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
 $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
+// вставка option в select
+
+// формат строки option
+$optionFormat = '<option value="%s" %s>%s</option>';
+
+// стандартные адреса
+$forumAddressList = array(
+    'rutracker.org',
+    'rutracker.net',
+    'rutracker.nl',
+    'custom'
+);
+
+$apiAddressList = array(
+    'api.t-ru.org',
+    'api.rutracker.org',
+    'custom'
+);
+
+// адреса форума
+$optionForumAddress = '';
+foreach ($forumAddressList as $value) {
+    $selected = '';
+    if ($value == $cfg['forum_url']) {
+        $selected = 'selected';
+    }
+    $text = $value == 'custom' ? 'другой' : $value;
+    $optionForumAddress .= sprintf($optionFormat, $value, $selected, $text);
+}
+$forumVerifySSL = $cfg['forum_ssl'] ? 'checked' : '';
+
+// адреса api
+$optionApiAddress = '';
+foreach ($apiAddressList as $value) {
+    $selected = '';
+    if ($value == $cfg['api_url']) {
+        $selected = 'selected';
+    }
+    $text = $value == 'custom' ? 'другой' : $value;
+    $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
+}
+$apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
+
 ?>
 
 <!DOCTYPE html>
@@ -347,35 +390,33 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                             <button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
                                 Проверить доступ
                             </button>
-                            <div>
+                            <div id="forum_url_params">
                                 <label>
                                     Используемый адрес форума:
                                     <select name="forum_url" id="forum_url" class="myinput">
-                                        <option value="http://rutracker.cr" <?php echo ($cfg['forum_url'] == 'http://rutracker.cr' ? "selected" : "") ?>>http://rutracker.cr</option>
-                                        <option value="http://rutracker.net" <?php echo ($cfg['forum_url'] == 'http://rutracker.net' ? "selected" : "") ?>>http://rutracker.net</option>
-                                        <option value="http://rutracker.org" <?php echo ($cfg['forum_url'] == 'http://rutracker.org' ? "selected" : "") ?>>http://rutracker.org</option>
-                                        <option value="http://rutracker.nl" <?php echo ($cfg['forum_url'] == 'http://rutracker.nl' ? "selected" : "") ?>>http://rutracker.nl</option>
-                                        <option value="https://rutracker.cr" <?php echo ($cfg['forum_url'] == 'https://rutracker.cr' ? "selected" : "") ?>>https://rutracker.cr</option>
-                                        <option value="https://rutracker.net" <?php echo ($cfg['forum_url'] == 'https://rutracker.net' ? "selected" : "") ?>>https://rutracker.net</option>
-                                        <option value="https://rutracker.org" <?php echo ($cfg['forum_url'] == 'https://rutracker.org' ? "selected" : "") ?>>https://rutracker.org</option>
-                                        <option value="https://rutracker.nl" <?php echo ($cfg['forum_url'] == 'https://rutracker.nl' ? "selected" : "") ?>>https://rutracker.nl</option>
+                                        <?php echo $optionForumAddress ?>
                                     </select>
-                                    <i id="forum_url_result" class=""></i>
                                 </label>
+                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
+                                <label title="Использовать SSL/TLS">
+                                    <input id="forum_ssl" name="forum_ssl" type="checkbox" <?php echo $forumVerifySSL ?> />
+                                    SSL/TLS
+                                </label>
+                                <i id="forum_url_result" class=""></i>
                             </div>
-                            <div>
+                            <div id="api_url_params">
                                 <label>
                                     Используемый адрес API:
                                     <select name="api_url" id="api_url" class="myinput">
-                                        <option value="http://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'http://api.rutracker.cc' ? "selected" : "") ?>>http://api.rutracker.cc</option>
-                                        <option value="http://api.t-ru.org" <?php echo ($cfg['api_url'] == 'http://api.t-ru.org' ? "selected" : "") ?>>http://api.t-ru.org</option>
-                                        <option value="http://api.rutracker.org" <?php echo ($cfg['api_url'] == 'http://api.rutracker.org' ? "selected" : "") ?>>http://api.rutracker.org</option>
-                                        <option value="https://api.rutracker.cc" <?php echo ($cfg['api_url'] == 'https://api.rutracker.cc' ? "selected" : "") ?>>https://api.rutracker.cc</option>
-                                        <option value="https://api.t-ru.org" <?php echo ($cfg['api_url'] == 'https://api.t-ru.org' ? "selected" : "") ?>>https://api.t-ru.org</option>
-                                        <option value="https://api.rutracker.org" <?php echo ($cfg['api_url'] == 'https://api.rutracker.org' ? "selected" : "") ?>>https://api.rutracker.org</option>
+                                        <?php echo $optionApiAddress ?>
                                     </select>
-                                    <i id="api_url_result" class=""></i>
                                 </label>
+                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
+                                <label title="Использовать SSL/TLS">
+                                    <input id="api_ssl" name="api_ssl" type="checkbox" <?php echo $apiVerifySSL ?> />
+                                    SSL/TLS
+                                </label>
+                                <i id="api_url_result" class=""></i>
                             </div>
                             <div>
                                 <label>
@@ -484,8 +525,8 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                                         <select name="TC_client" id="TC_client" class="tc-prop">
                                             <option value="utorrent">uTorrent</option>
                                             <option value="transmission">Transmission</option>
-                                            <option value="vuze" title="Web Remote   plugin">Vuze</option>
-                                            <option value="deluge" title="WebUi   plugin">Deluge</option>
+                                            <option value="vuze" title="Web Remote plugin">Vuze</option>
+                                            <option value="deluge" title="WebUi plugin">Deluge</option>
                                             <option value="qbittorrent">qBittorrent</option>
                                             <option value="ktorrent">KTorrent</option>
                                             <option value="rtorrent">rTorrent</option>
@@ -596,7 +637,7 @@ $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
                                 <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
-                            <p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к п.5 <a target="_blank" href="manual.pdf">руководства</a> за подробностями.</p>
+                            <p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к <a target="_blank" href="https://github.com/berkut-174/webtlo/wiki/Automation-scripts">этой</a> странице за подробностями.</p>
                         </div>
                         <h2>Настройки загрузки торрент-файлов</h2>
                         <div>

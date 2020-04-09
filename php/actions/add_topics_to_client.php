@@ -94,7 +94,7 @@ try {
     $torrent_files_added_total = 0;
 
     // скачивание торрент-файлов
-    $download = new TorrentDownload($cfg['forum_url']);
+    $download = new TorrentDownload($cfg['forum_address']);
 
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);

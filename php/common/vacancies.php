@@ -40,7 +40,7 @@ Db::query_database("CREATE TEMP TABLE VacanciesKeepers (id INT NOT NULL)");
 // просканировать все актуальные списки
 if ($vacancies['scan_reports']) {
     $reports = new Reports(
-        $cfg['forum_url'],
+        $cfg['forum_address'],
         $cfg['tracker_login'],
         $cfg['tracker_paswd']
     );
@@ -252,7 +252,7 @@ foreach ($topics as $forum => &$sub_forums) {
 if (!empty($output)) {
     if (!isset($reports)) {
         $reports = new Reports(
-            $cfg['forum_url'],
+            $cfg['forum_address'],
             $cfg['tracker_login'],
             $cfg['tracker_paswd']
         );

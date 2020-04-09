@@ -58,7 +58,7 @@ try {
 
     // подключаемся к форуму
     $reports = new Reports(
-        $cfg['forum_url'],
+        $cfg['forum_address'],
         $cfg['tracker_login'],
         $cfg['tracker_paswd'],
         $cap_fields

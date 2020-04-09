@@ -7,6 +7,11 @@ if (isset($_POST['url'])) {
     $url = $_POST['url'];
 }
 
+// свой проверяемый url
+if (isset($_POST['url_custom'])) {
+    $url_custom = $_POST['url_custom'];
+}
+
 // тип url
 if (isset($_POST['url_type'])) {
     $url_type = $_POST['url_type'];
@@ -18,6 +23,16 @@ if (
 ) {
     return false;
 }
+
+if ($url == 'custom') {
+    if (empty($url_custom)) {
+        return false;
+    }
+    $url = $url_custom;
+}
+
+$schema = isset($_POST['ssl']) ? 'https' : 'http';
+$address = $schema . '://' . basename($url);
 
 // парсим настройки
 if (isset($_POST['cfg'])) {
@@ -52,7 +67,7 @@ curl_setopt_array($ch, array(
     CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
     CURLOPT_CONNECTTIMEOUT => 20,
     CURLOPT_TIMEOUT => 20,
-    CURLOPT_URL => $url,
+    CURLOPT_URL => $address,
 ));
 
 curl_setopt_array($ch, Proxy::$proxy[$url_type]);
@@ -81,4 +96,4 @@ while (true) {
 curl_close($ch);
 
 // отправляем ответ
-echo strpos($data, "Location: " . $url) === false ? '0' : '1';
+echo strpos($data, "Location: " . $address) === false ? '0' : '1';

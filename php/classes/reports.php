@@ -67,7 +67,7 @@ class Reports
             CURLOPT_POSTFIELDS => http_build_query($fields),
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
         ));
-        curl_setopt_array($this->ch, Proxy::$proxy['forum_url']);
+        curl_setopt_array($this->ch, Proxy::$proxy['forum']);
         curl_setopt_array($this->ch, $options);
         $try_number = 1; // номер попытки
         $try = 3; // кол-во попыток

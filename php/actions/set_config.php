@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
 
     // парсим настройки
@@ -124,8 +123,14 @@ try {
     if (isset($cfg['api_url'])) {
         $ini->write('torrent-tracker', 'api_url', $cfg['api_url']);
     }
+    if (isset($cfg['api_url_custom'])) {
+        $ini->write('torrent-tracker', 'api_url_custom', $cfg['api_url_custom']);
+    }
     if (isset($cfg['forum_url'])) {
         $ini->write('torrent-tracker', 'forum_url', $cfg['forum_url']);
+    }
+    if (isset($cfg['forum_url_custom'])) {
+        $ini->write('torrent-tracker', 'forum_url_custom', $cfg['forum_url_custom']);
     }
     if (isset($cfg['tracker_username'])) {
         $ini->write('torrent-tracker', 'login', $cfg['tracker_username']);
@@ -142,6 +147,8 @@ try {
     if (isset($cfg['api_key'])) {
         $ini->write('torrent-tracker', 'api_key', $cfg['api_key']);
     }
+    $ini->write('torrent-tracker', 'api_ssl', isset($cfg['api_ssl']) ? 1 : 0);
+    $ini->write('torrent-tracker', 'forum_ssl', isset($cfg['forum_ssl']) ? 1 : 0);
 
     // загрузка торрент-файлов
     if (isset($cfg['savedir'])) {
@@ -175,10 +182,8 @@ try {
     $ini->updateFile();
 
     echo Log::get();
-
 } catch (Exception $e) {
 
     Log::append($e->getMessage());
     echo Log::get();
-
 }

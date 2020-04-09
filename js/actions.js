@@ -64,22 +64,35 @@ $(document).ready(function () {
 	// сохранение настроек
 	$("#savecfg").on("click", setSettings);
 
+	// произвольные адреса для форума и api
+	$("#forum_url, #api_url").on("change", function () {
+		var value = $(this).val();
+		var name = $(this).attr("name");
+		if (value == 'custom') {
+			$("#" + name + "_custom").attr("type", "text");
+		} else {
+			$("#" + name + "_custom").attr("type", "hidden");
+		}
+	}).change();
+
 	// проверка доступности форума и API
 	$("#check_mirrors_access").on("click", function () {
 		$(this).attr("disabled", true);
-		var check_list = ['forum_url', 'api_url'];
+		var check_list = ['forum', 'api'];
 		var check_count = check_list.length;
 		var result_list = ['text-danger', 'text-success'];
 		var $data = $("#config").serialize();
 		$.each(check_list, function (index, value) {
-			var element = "#" + value;
+			var element = "#" + value + "_url";
 			var url = $(element).val();
+			var url_custom = $(element + "_custom").val();
+			var ssl = $("#" + value + "_ssl").val();
 			if (typeof url === "undefined" || $.isEmptyObject(url)) {
 				check_count--;
 				if (check_count == 0) {
 					$("#check_mirrors_access").attr("disabled", false);
 				}
-				$(element).siblings("i").removeAttr("class");
+				$(element + "_params i").removeAttr("class");
 				return true;
 			}
 			$.ajax({
@@ -88,18 +101,20 @@ $(document).ready(function () {
 				data: {
 					cfg: $data,
 					url: url,
+					url_custom: url_custom,
+					ssl: ssl,
 					url_type: value
 				},
 				success: function (response) {
-					$(element).siblings("i").removeAttr("class");
+					$(element + "_params i").removeAttr("class");
 					var result = result_list[response];
 					if (typeof result !== "undefined") {
-						$(element).siblings("i").addClass("fa fa-circle " + result);
+						$(element + "_params i").addClass("fa fa-circle " + result);
 					}
 				},
 				beforeSend: function () {
-					$(element).siblings("i").removeAttr("class");
-					$(element).siblings("i").addClass("fa fa-spinner fa-spin");
+					$(element + "_params i").removeAttr("class");
+					$(element + "_params i").addClass("fa fa-spinner fa-spin");
 				},
 				complete: function () {
 					check_count--;

@@ -109,7 +109,7 @@ if (!empty($cfg['clients'])) {
 
         // подключаемся к api
         if (!isset($api)) {
-            $api = new Api($cfg['api_url'], $cfg['api_key']);
+            $api = new Api($cfg['api_address'], $cfg['api_key']);
             // применяем таймауты
             $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
         }
