@@ -96,4 +96,4 @@ while (true) {
 curl_close($ch);
 
 // отправляем ответ
-echo strpos($data, "Location: " . $address) === false ? '0' : '1';
+echo stripos($data, "location: " . $address) === false ? '0' : '1';
