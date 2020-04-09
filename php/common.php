@@ -120,12 +120,12 @@ function get_settings($filename = "")
     // таймауты
     $config['curl_setopt'] = array(
         'api' => array(
-            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'api_timeout', 20),
-            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'api_connecttimeout', 20),
+            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'api_timeout', 40),
+            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'api_connecttimeout', 40),
         ),
         'forum' => array(
-            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'forum_timeout', 20),
-            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 20),
+            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'forum_timeout', 40),
+            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 40),
         ),
     );
 
