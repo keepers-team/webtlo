@@ -197,7 +197,9 @@ try {
                 PDO::FETCH_COLUMN
             );
             $listTorrentClientsNames = array_map(function ($e) use ($cfg) {
-                return $cfg['clients'][$e]['cm'];
+                if (isset($cfg['clients'][$e])) {
+                    return $cfg['clients'][$e]['cm'];
+                }
             }, $listTorrentClientsIDs);
             natsort($listTorrentClientsNames);
             $listTorrentClientsNames = '~> ' . implode(', ', $listTorrentClientsNames);
@@ -212,7 +214,8 @@ try {
                     convert_bytes($topicData['si']),
                     date('d.m.Y', $topicData['rg']),
                     round($topicData['se']),
-                    $stateAverageSeeders
+                    $stateAverageSeeders,
+                    ''
                 ),
                 $listTorrentClientsNames
             );

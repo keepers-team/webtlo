@@ -88,7 +88,7 @@ class Utorrent extends TorrentClient
                 if (
                     $torrentState[0]
                     && $torrentState[4]
-                    && $torrentState[4] == 1000
+                    && $torrent[4] == 1000
                 ) {
                     $torrentStatus = !$torrentState[2] && $torrentState[7] ? 1 : -1;
                 } else {

@@ -88,7 +88,7 @@ function get_settings($filename = "")
     $config['forum_url_custom'] = basename($ini->read('torrent-tracker', 'forum_url_custom', ''));
     $config['forum_ssl'] = $ini->read('torrent-tracker', 'forum_ssl', 1);
     $api_schema = $config['api_ssl'] ? 'https' : 'http';
-    $forum_schema = $config['api_ssl'] ? 'https' : 'http';
+    $forum_schema = $config['forum_ssl'] ? 'https' : 'http';
     $api_url = $config['api_url'] == 'custom' ? $config['api_url_custom'] : $config['api_url'];
     $forum_url = $config['forum_url'] == 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
     $config['api_address'] = $api_schema . '://' . $api_url;

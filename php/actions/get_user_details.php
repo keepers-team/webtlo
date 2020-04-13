@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/user_details.php';
 
@@ -29,9 +28,14 @@ try {
         $proxy_auth
     );
 
+    // адрес форума
+    $forum_schema = isset($cfg['forum_ssl']) ? 'https' : 'http';
+    $forum_url = $cfg['forum_url'] == 'custom' ? $cfg['forum_url_custom'] : $cfg['forum_url'];
+    $forum_address = $forum_schema . '://' . $forum_url;
+
     // получаем ключи пользователя
     UserDetails::get_details(
-        $cfg['forum_address'],
+        $forum_address,
         $cfg['tracker_username'],
         $cfg['tracker_password']
     );
@@ -44,7 +48,6 @@ try {
             'log' => Log::get(),
         )
     );
-
 } catch (Exception $e) {
 
     Log::append($e->getMessage());
@@ -56,5 +59,4 @@ try {
             'log' => Log::get(),
         )
     );
-
 }
