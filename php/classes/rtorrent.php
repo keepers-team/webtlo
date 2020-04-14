@@ -102,6 +102,12 @@ class Rtorrent extends TorrentClient
             Log::append('Error: не удалось загрузить файл ' . $torrentFilePath);
             return false;
         }
+        preg_match('|publisher-url[0-9]*:(https?\:\/\/[^\?]*\?t=[0-9]*)|', $torrentFile, $matches);
+        if (isset($matches[1])) {
+            $torrentComment = 'VRS24mrker' . rawurlencode($matches[1]);
+        } else {
+            $torrentComment = 'VRS24mrker';
+        }
         xmlrpc_set_type($torrentFile, 'base64');
         return $this->makeRequest(
             'system.multicall',
@@ -117,7 +123,8 @@ class Rtorrent extends TorrentClient
                             '',
                             $torrentFile,
                             'd.delete_tied=',
-                            'd.directory.set=' . addcslashes($savePath, ' ')
+                            'd.directory.set=' . addcslashes($savePath, ' '),
+                            'd.custom2.set=' . $torrentComment
                         )
                     )
                 )
