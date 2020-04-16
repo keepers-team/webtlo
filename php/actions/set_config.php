@@ -176,6 +176,12 @@ try {
     ) {
         $ini->write('sections', 'avg_seeders_period', $cfg['avg_seeders_period']);
     }
+    if (
+        isset($cfg['avg_seeders_period_outdated'])
+        && is_numeric($cfg['avg_seeders_period_outdated'])
+    ) {
+        $ini->write('sections', 'avg_seeders_period_outdated', $cfg['avg_seeders_period_outdated']);
+    }
     $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
 
     // обновление файла с настройками

@@ -215,7 +215,7 @@ try {
                     date('d.m.Y', $topicData['rg']),
                     round($topicData['se']),
                     $stateAverageSeeders,
-                    ''
+                    'fa-circle'
                 ),
                 $listTorrentClientsNames
             );

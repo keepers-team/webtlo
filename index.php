@@ -618,6 +618,11 @@ $apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
                                 <input id="rule_date_release" name="rule_date_release" type="text" size="2" value="<?php echo $cfg['rule_date_release'] ?>" />
                                 дн.
                             </label>
+                            <label class="label" title="Если перерыв между обновлениями сведений составит больше этого периода, то накопленные данные о сидах будут считаться устаревшими (по умолчанию: 7)">
+                                Допустимый период простоя между обновлениями:
+                                <input id="avg_seeders_period_outdated" name="avg_seeders_period_outdated" type="text" size="2" value="<?php echo $cfg['avg_seeders_period_outdated'] ?>" />
+                                дн.
+                            </label>
                             <label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
                                 <input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
                                 находить среднее значение количества сидов за

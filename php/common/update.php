@@ -41,7 +41,7 @@ $tor_status = array(0, 2, 3, 8, 10);
 
 // время текущего и предыдущего обновления
 $current_update_time = new DateTime();
-$previous_update_time = new DateTime();
+$previousUpdateTime = new DateTime();
 
 if (isset($cfg['subsections'])) {
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
@@ -87,10 +87,15 @@ if (isset($cfg['subsections'])) {
         $current_update_time->setTimestamp($topics_data['update_time']);
 
         // предыдущее обновление в DateTime
-        $previous_update_time->setTimestamp($update_time[0])->setTime(0, 0, 0);
+        $previousUpdateTime->setTimestamp($update_time[0]);
 
         // разница в днях между обновлениями сведений
-        $days_diff = $current_update_time->diff($previous_update_time)->format('%d');
+        $daysDiffActual = $current_update_time->diff($previousUpdateTime)->format('%d');
+        $daysDiffAdjusted = $current_update_time->diff($previousUpdateTime->setTime(0, 0, 0))->format('%d');
+
+        // данные о сидах устарели
+        $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
+        $avgSeedersOutdated = $cfg['avg_seeders'] && $update_time[0] != 0 && $daysDiffActual >= $avgSeedersPeriodOutdated;
 
         // разбиваем result по 500 раздач
         $topics_result = array_chunk($topics_data['result'], 500, true);
@@ -109,7 +114,7 @@ if (isset($cfg['subsections'])) {
             unset($topics_ids);
 
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes )
+            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority )
             foreach ($topics_result as $topic_id => $topic_data) {
                 if (empty($topic_data)) {
                     continue;
@@ -132,12 +137,23 @@ if (isset($cfg['subsections'])) {
                     $previous_data = $topics_data_previous[$topic_id];
                 }
 
+                // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
+                // в том числе, чтобы очистить значения сидов для старой раздачи
+                $isTopicDataDelete = false;
+                if (
+                    $avgSeedersOutdated
+                    || isset($previous_data['rg'])
+                    && $previous_data['rg'] != $topic_data[2]
+                ) {
+                    $topics_delete[] = $topic_id;
+                    $isTopicDataDelete = true;
+                }
+
                 // получить для раздачи info_hash и topic_title
-                // если новая раздача или перерегистрированная
                 if (
                     empty($previous_data)
-                    || $previous_data['rg'] != $topic_data[2]
                     || $previous_data['lgth'] == 0
+                    || $isTopicDataDelete
                 ) {
                     $db_topics_renew[$topic_id] = array(
                         'id' => $topic_id,
@@ -152,14 +168,6 @@ if (isset($cfg['subsections'])) {
                         'ds' => $days_update,
                         'pt' => $topic_data[4],
                     );
-                    // удаляем перерегистрированую раздачу
-                    // в том числе, чтобы очистить значения сидов для старой раздачи
-                    if (
-                        isset($previous_data['rg'])
-                        && $previous_data['rg'] != $topic_data[2]
-                    ) {
-                        $topics_delete[] = $topic_id;
-                    }
                     unset($previous_data);
                     continue;
                 }
@@ -168,7 +176,7 @@ if (isset($cfg['subsections'])) {
                 if ($cfg['avg_seeders']) {
                     $days_update = $previous_data['ds'];
                     // по прошествии дня
-                    if ($days_diff > 0) {
+                    if ($daysDiffAdjusted > 0) {
                         $days_update++;
                     } else {
                         $sum_updates += $previous_data['qt'];

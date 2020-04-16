@@ -16,7 +16,7 @@ $(document).ready(function () {
     $("#menutabs li.menu").removeClass("ui-corner-top").addClass("ui-corner-left");
 
     // период хранения средних сидов
-    $("#avg_seeders_period, #filter_avg_seeders_period").spinner({
+    $("#avg_seeders_period, #filter_avg_seeders_period, #avg_seeders_period_outdated").spinner({
         min: 1,
         max: 30,
         mouseWheel: true

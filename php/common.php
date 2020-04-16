@@ -58,6 +58,7 @@ function get_settings($filename = "")
     $config['rule_date_release'] = $ini->read('sections', 'rule_date_release', 0);
     $config['avg_seeders'] = $ini->read('sections', 'avg_seeders', 0);
     $config['avg_seeders_period'] = $ini->read('sections', 'avg_seeders_period', 14);
+    $config['avg_seeders_period_outdated'] = $ini->read('sections', 'avg_seeders_period_outdated', 7);
 
     // регулировка раздач
     $config['topics_control']['peers'] = $ini->read('topics_control', 'peers', 10);
