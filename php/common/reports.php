@@ -91,7 +91,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topics = Db::query_database(
         "SELECT Topics.id,ss,na,si,st FROM Topics
 		LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-		WHERE ss = ? AND dl IN (1,-1)",
+		WHERE ss = ? AND dl IN (1,-1) AND se / qt <= 10",
         array($forum_id),
         true
     );
