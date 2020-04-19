@@ -177,8 +177,8 @@ if (!empty($cfg['clients'])) {
 }
 
 Db::query_database(
-    'DELETE FROM Clients WHERE hs NOT IN (
-        SELECT Clients.hs FROM temp.ClientsNew LEFT JOIN Clients
+    'DELETE FROM Clients WHERE hs || cl NOT IN (
+        SELECT Clients.hs || Clients.cl FROM temp.ClientsNew LEFT JOIN Clients
         ON temp.ClientsNew.hs = Clients.hs AND temp.ClientsNew.cl = Clients.cl
         WHERE Clients.hs IS NOT NULL
     ) OR cl NOT IN (
