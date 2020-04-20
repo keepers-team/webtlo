@@ -38,19 +38,21 @@ if (!isset($reports)) {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
+$numberForumsScanned = 0;
+
 if (isset($cfg['subsections'])) {
-
-// получаем данные
+    // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-
         $topic_id = $reports->search_topic_id($subsection['na']);
 
         if (empty($topic_id)) {
             Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
             continue;
+        } else {
+            $numberForumsScanned++;
         }
 
-        Log::append("Сканирование подраздела № $forum_id...");
+        // Log::append("Сканирование подраздела № $forum_id...");
 
         $keepers = $reports->scanning_viewtopic($topic_id);
 
@@ -85,7 +87,6 @@ if (isset($cfg['subsections'])) {
             unset($keeper);
         }
     }
-
 }
 // записываем изменения в локальную базу
 $count_keepers = Db::query_database(
@@ -96,7 +97,7 @@ $count_keepers = Db::query_database(
 );
 
 if ($count_keepers[0] > 0) {
-
+    Log::append("Просканировано подразделов: " . $numberForumsScanned . " шт.");
     Log::append("Запись в базу данных списка раздач других хранителей...");
 
     Db::query_database("INSERT INTO Keepers SELECT * FROM temp.KeepersNew");
@@ -108,7 +109,6 @@ if ($count_keepers[0] > 0) {
             WHERE Keepers.id IS NOT NULL
         )"
     );
-
 }
 
 $endtime = microtime(true);

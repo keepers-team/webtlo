@@ -135,8 +135,7 @@ class Reports
                     if (!empty($topic_title)) {
                         $topic_title = explode('»', str_replace('[Список] ', '', $topic_title));
                         $topic_title = array_map('trim', $topic_title);
-                        $diff = array_diff($topic_title, $title);
-                        if (empty($diff)) {
+                        if ($title === $topic_title) {
                             $topic_id = $row->find('a.topictitle')->attr('href');
                             $topic_id = preg_replace('/.*?([0-9]*)$/', '$1', $topic_id);
                             phpQuery::unloadDocuments();
@@ -398,5 +397,4 @@ class Reports
     {
         curl_close($this->ch);
     }
-
 }

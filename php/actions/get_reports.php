@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/reports.php';
 
@@ -68,7 +67,6 @@ try {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
     if ($forum_id === 0) {
-
         // сводный отчёт
         $sumdlqt = 0;
         $sumdlsi = 0;
@@ -82,7 +80,7 @@ try {
         $stored = Db::query_database(
             "SELECT ss,COUNT(),SUM(si) FROM Topics
 			LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-			WHERE dl IN (1,-1) AND ss IN ($in) GROUP BY ss",
+			WHERE dl IN (1,-1) AND ss IN ($in) AND se / qt <= 10 GROUP BY ss",
             $forums_ids,
             true,
             PDO::FETCH_NUM | PDO::FETCH_UNIQUE
@@ -116,12 +114,10 @@ try {
 
         // формируем сводный отчёт
         $output = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b]<br />[br]<br />' .
-        'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.<br />' .
-        'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '<br />[hr]<br />' .
-        implode('<br />', $common_forums);
-
+            'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.<br />' .
+            'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '<br />[hr]<br />' .
+            implode('<br />', $common_forums);
     } else {
-
         // хранимые подразделы
 
         // const & pattern
@@ -209,7 +205,7 @@ try {
 
         // дописываем в начало первого сообщения
         $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color]<br />' .
-        'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
+            'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
             '<br />' . $tmp['msg'][0];
 
         // собираем сообщения
@@ -264,12 +260,12 @@ try {
         unset($keepers);
 
         $tmp['header'] = '[url=viewforum.php?f=' . $forum_id . '][u][color=#006699]' . preg_replace('/.*» ?(.*)$/', '$1', $forum[$forum_id]['na']) . '[/u][/color][/url] ' .
-        '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br />[br]<br />' .
-        'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color]<br />' .
-        'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '<br />' .
-        'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%<br />' .
-        'Количество хранителей: %%kpqt%%<br />[hr]<br />' .
-        'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '<br />';
+            '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url]<br />[br]<br />' .
+            'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color]<br />' .
+            'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '<br />' .
+            'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%<br />' .
+            'Количество хранителей: %%kpqt%%<br />[hr]<br />' .
+            'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '<br />';
 
         // значения хранимого для шапки
         $count_keepers = 1;
@@ -312,7 +308,6 @@ try {
         $output = $tmp['header'] . $tmp['msg'];
 
         unset($tmp);
-
     }
 
     echo json_encode(array(
@@ -320,14 +315,11 @@ try {
         'log' => Log::get(),
         'captcha' => '',
     ));
-
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
     echo json_encode(array(
         'log' => Log::get(),
         'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />",
         'captcha' => UserDetails::$captcha,
     ));
-
 }

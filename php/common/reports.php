@@ -66,8 +66,7 @@ $reports = new Reports(
 $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
 foreach ($cfg['subsections'] as $forum_id => $subsection) {
-
-    Log::append("Отправка отчётов для подраздела № $forum_id...");
+    // Log::append("Отправка отчётов для подраздела № $forum_id...");
 
     // исключаем подразделы
     if (in_array($forum_id, $exclude_forums)) {
@@ -158,7 +157,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // дописываем в начало первого сообщения
     $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
-    'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
+        'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
         $tmp['msg'][0];
 
     // ищем тему со списками
@@ -169,7 +168,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         continue;
     }
 
-    Log::append("Сканирование списков...");
+    // Log::append("Сканирование списков...");
 
     // сканируем имеющиеся списки
     $keepers = $reports->scanning_viewtopic($topic_id);
@@ -219,13 +218,13 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     }
     unset($keepers);
 
-    Log::append("Найдено своих сообщений: " . count($posts_ids));
+    // Log::append("Найдено своих сообщений: " . count($posts_ids));
 
     // вставка доп. сообщений
     if (count($tmp['msg']) > count($posts_ids)) {
         $count_post_reply = count($tmp['msg']) - count($posts_ids);
         for ($i = 1; $i <= $count_post_reply; $i++) {
-            Log::append("Вставка дополнительного $i-ого сообщения...");
+            // Log::append("Вставка дополнительного $i-ого сообщения...");
             $message = '[spoiler]' . $i . str_repeat('?', 119981 - mb_strlen($i)) . '[/spoiler]';
             $posts_ids[] = $reports->send_message(
                 'reply',
@@ -239,7 +238,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // редактирование сообщений
     foreach ($posts_ids as $index => $post_id) {
         $post_number = $index + 1;
-        Log::append("Редактирование сообщения № $post_number...");
+        // Log::append("Редактирование сообщения № $post_number...");
         $message = empty($tmp['msg'][$index]) ? 'резерв' : $tmp['msg'][$index];
         $reports->send_message(
             'editpost',
@@ -253,12 +252,12 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // работа с шапкой
     if ($cfg['tracker_login'] == $author_nickname) {
         $tmp['header'] = '[url=viewforum.php?f=' . $forum_id . '][u][color=#006699]' . preg_replace('/.*» ?(.*)$/', '$1', $forum[$forum_id]['na']) . '[/u][/color][/url] ' .
-        '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]' .
-        'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
-        'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '[br]' .
-        'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]' .
-        'Количество хранителей: %%kpqt%%[hr]' .
-        'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
+            '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]' .
+            'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
+            'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '[br]' .
+            'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]' .
+            'Количество хранителей: %%kpqt%%[hr]' .
+            'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
         // значения хранимого для шапки
         $count_keepers = 1;
         $sumdlqt_keepers = $tmp['dlqt'];
@@ -294,7 +293,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             ),
             $tmp['header']
         );
-        Log::append('Отправка шапки...');
+        // Log::append('Отправка шапки...');
         // отправка сообщения с шапкой
         $reports->send_message(
             'editpost',
@@ -315,8 +314,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $tmp['dlqt'],
         convert_bytes($tmp['dlsi'])
     );
-
 }
+
+Log::append("Обработано подразделов: " . count($common_forums) . " шт.");
 
 // работаем со сводным отчётом
 $common_exclude = TIniFileEx::read('reports', 'common', 1);
@@ -324,9 +324,9 @@ $common_exclude = TIniFileEx::read('reports', 'common', 1);
 if ($common_exclude) {
     // формируем сводный отчёт
     $common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]' .
-    'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.[br]' .
-    'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '[hr]' .
-    implode('[br]', $common_forums);
+        'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.[br]' .
+        'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '[hr]' .
+        implode('[br]', $common_forums);
     // ищем сообщение со сводным
     $post_id = $reports->search_post_id(4275633, true);
     $common_mode = empty($post_id) ? 'reply' : 'editpost';
