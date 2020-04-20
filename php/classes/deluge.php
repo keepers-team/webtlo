@@ -138,13 +138,15 @@ class Deluge extends TorrentClient
         foreach ($data['result']['torrents'] as $hash => $torrent) {
             if ($torrent['message'] == 'OK') {
                 if ($torrent['progress'] == 100) {
-                    $status = $torrent['paused'] ? -1 : 1;
+                    $torrentStatus = $torrent['paused'] ? -1 : 1;
                 } else {
-                    $status = 0;
+                    $torrentStatus = 0;
                 }
-                $hash = strtoupper($hash);
-                $torrents[$hash] = $status;
+            } else {
+                $torrentStatus = -2;
             }
+            $hash = strtoupper($hash);
+            $torrents[$hash] = $torrentStatus;
         }
         return isset($torrents) ? $torrents : array();
     }

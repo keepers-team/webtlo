@@ -94,8 +94,10 @@ class Utorrent extends TorrentClient
                 } else {
                     $torrentStatus = 0;
                 }
-                $torrents[$torrent[0]] = $torrentStatus;
+            } else {
+                $torrentStatus = -2;
             }
+            $torrents[$torrent[0]] = $torrentStatus;
         }
         return isset($torrents) ? $torrents : array();
     }

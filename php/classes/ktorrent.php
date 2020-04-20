@@ -140,13 +140,15 @@ class Ktorrent extends TorrentClient
         foreach ($data['torrent'] as $torrent) {
             if ($torrent['status'] != 'Ошибка') {
                 if ($torrent['percentage'] == 100) {
-                    $status = $torrent['status'] == 'Пауза' ? -1 : 1;
+                    $torrentStatus = $torrent['status'] == 'Пауза' ? -1 : 1;
                 } else {
-                    $status = 0;
+                    $torrentStatus = 0;
                 }
-                $hash = strtoupper($torrent['info_hash']);
-                $torrents[$hash] = $status;
+            } else {
+                $torrentStatus = -2;
             }
+            $hash = strtoupper($torrent['info_hash']);
+            $torrents[$hash] = $torrentStatus;
         }
         return isset($torrents) ? $torrents : array();
     }

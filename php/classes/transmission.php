@@ -104,13 +104,15 @@ class Transmission extends TorrentClient
         foreach ($data['arguments']['torrents'] as $torrent) {
             if (empty($torrent['error'])) {
                 if ($torrent['percentDone'] == 1) {
-                    $status = $torrent['status'] == 0 ? -1 : 1;
+                    $torrentStatus = $torrent['status'] == 0 ? -1 : 1;
                 } else {
-                    $status = 0;
+                    $torrentStatus = 0;
                 }
-                $hash = strtoupper($torrent['hashString']);
-                $torrents[$hash] = $status;
+            } else {
+                $torrentStatus = -2;
             }
+            $hash = strtoupper($torrent['hashString']);
+            $torrents[$hash] = $torrentStatus;
         }
         return isset($torrents) ? $torrents : false;
     }

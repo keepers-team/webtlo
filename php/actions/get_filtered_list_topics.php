@@ -284,7 +284,7 @@ try {
 
         $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
         $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
-        $dl = 'abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
+        $dl = 'dl IS NOT -2 AND abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
         $pattern_statement = 'SELECT Topics.id,na,si,rg,pt,dl%s FROM Topics

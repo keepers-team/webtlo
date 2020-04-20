@@ -81,13 +81,15 @@ class Qbittorrent extends TorrentClient
         foreach ($data as $torrent) {
             if ($torrent['state'] != 'error') {
                 if ($torrent['progress'] == 1) {
-                    $status = $torrent['state'] == 'pausedUP' ? -1 : 1;
+                    $torrentStatus = $torrent['state'] == 'pausedUP' ? -1 : 1;
                 } else {
-                    $status = 0;
+                    $torrentStatus = 0;
                 }
-                $hash = strtoupper($torrent['hash']);
-                $torrents[$hash] = $status;
+            } else {
+                $torrentStatus = -2;
             }
+            $hash = strtoupper($torrent['hash']);
+            $torrents[$hash] = $torrentStatus;
         }
         return isset($torrents) ? $torrents : array();
     }

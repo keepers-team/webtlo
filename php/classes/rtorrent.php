@@ -80,12 +80,14 @@ class Rtorrent extends TorrentClient
         foreach ($response as $torrent) {
             if (empty($torrent[3])) {
                 if ($torrent[2]) {
-                    $status = $torrent[1] ? 1 : -1;
+                    $torrentStatus = $torrent[1] ? 1 : -1;
                 } else {
-                    $status = 0;
+                    $torrentStatus = 0;
                 }
-                $torrents[$torrent[0]] = $status;
+            } else {
+                $torrentStatus = -2;
             }
+            $torrents[$torrent[0]] = $torrentStatus;
         }
         return $torrents;
     }
