@@ -43,7 +43,17 @@ class Db
 
     public static function create()
     {
-        self::$db = new PDO('sqlite:' . dirname(__FILE__) . '/../../data/webtlo.db');
+        // файл базы данных
+        $databaseFilename = dirname(__FILE__) . '/../../data/webtlo.db';
+        $databaseFilename = normalizePath($databaseFilename);
+        $databaseDirname = dirname($databaseFilename);
+        if (
+            !mkdir_recursive($databaseDirname)
+            || !is_writable($databaseDirname)
+        ) {
+            throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+        }
+        self::$db = new PDO('sqlite:' . $databaseFilename);
         // список подразделов
         $statements[] = array(
             'CREATE TABLE IF NOT EXISTS Forums (',

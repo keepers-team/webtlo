@@ -265,6 +265,25 @@ function mkdir_recursive($path)
     return ($return && is_writable($prev_path) && !file_exists($path)) ? mkdir($path) : false;
 }
 
+function normalizePath($path)
+{
+    $path = str_replace('//', '/', $path);
+    $parts = explode('/', $path);
+    $out = array();
+    foreach ($parts as $part) {
+        if ($part == '.') {
+            continue;
+        }
+        if ($part == '..') {
+            array_pop($out);
+            continue;
+        }
+        $out[] = $part;
+    }
+    $delimiter = PHP_OS == 'WINNT' ? '\\' : '/';
+    return implode($delimiter, $out);
+}
+
 function array_column_common(array $input, $columnKey, $indexKey = null)
 {
     $array = array();

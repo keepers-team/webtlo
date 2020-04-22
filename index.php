@@ -3,105 +3,109 @@
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
-include_once dirname(__FILE__) . '/php/common.php';
+try {
+    include_once dirname(__FILE__) . '/php/common.php';
 
-// получение настроек
-$cfg = get_settings();
+    // получение настроек
+    $cfg = get_settings();
 
-// торрент-клиенты
-$tcs = '';
-$ss_tcs = '';
-if (isset($cfg['clients'])) {
-    $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
-    foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
-        $tcs .= sprintf(
-            $tor_client_option_pattern,
-            $tor_client_id,
-            implode('|', $tor_client_info),
-            $tor_client_info['cm']
-        );
-        $ss_tcs .= sprintf(
-            $tor_client_option_pattern,
-            $tor_client_id,
-            '',
-            $tor_client_info['cm']
-        );
+    // торрент-клиенты
+    $tcs = '';
+    $ss_tcs = '';
+    if (isset($cfg['clients'])) {
+        $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
+        foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
+            $tcs .= sprintf(
+                $tor_client_option_pattern,
+                $tor_client_id,
+                implode('|', $tor_client_info),
+                $tor_client_info['cm']
+            );
+            $ss_tcs .= sprintf(
+                $tor_client_option_pattern,
+                $tor_client_id,
+                '',
+                $tor_client_info['cm']
+            );
+        }
     }
-}
 
-// подразделы
-$subsections = '';
-$subsections_settings = '';
-if (isset($cfg['subsections'])) {
-    $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
-    foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
-        $subsections_settings .= sprintf(
-            $forum_option_pattern,
-            $forum_id,
-            implode('|', $forum_info),
-            $forum_info['na']
-        );
-        $subsections .= sprintf(
-            $forum_option_pattern,
-            $forum_id,
-            '',
-            $forum_info['na']
-        );
+    // подразделы
+    $subsections = '';
+    $subsections_settings = '';
+    if (isset($cfg['subsections'])) {
+        $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
+        foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
+            $subsections_settings .= sprintf(
+                $forum_option_pattern,
+                $forum_id,
+                implode('|', $forum_info),
+                $forum_info['na']
+            );
+            $subsections .= sprintf(
+                $forum_option_pattern,
+                $forum_id,
+                '',
+                $forum_info['na']
+            );
+        }
     }
-}
 
-// чекбоксы
-$savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
-$retracker = $cfg['retracker'] == 1 ? "checked" : "";
-$proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
-$proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
-$avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
-$leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
-$no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
-$tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
+    // чекбоксы
+    $savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
+    $retracker = $cfg['retracker'] == 1 ? "checked" : "";
+    $proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
+    $proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
+    $avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
+    $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
+    $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
+    $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
 
-// вставка option в select
+    // вставка option в select
 
-// формат строки option
-$optionFormat = '<option value="%s" %s>%s</option>';
+    // формат строки option
+    $optionFormat = '<option value="%s" %s>%s</option>';
 
-// стандартные адреса
-$forumAddressList = array(
-    'rutracker.org',
-    'rutracker.net',
-    'rutracker.nl',
-    'custom'
-);
+    // стандартные адреса
+    $forumAddressList = array(
+        'rutracker.org',
+        'rutracker.net',
+        'rutracker.nl',
+        'custom'
+    );
 
-$apiAddressList = array(
-    'api.t-ru.org',
-    'api.rutracker.org',
-    'custom'
-);
+    $apiAddressList = array(
+        'api.t-ru.org',
+        'api.rutracker.org',
+        'custom'
+    );
 
-// адреса форума
-$optionForumAddress = '';
-foreach ($forumAddressList as $value) {
-    $selected = '';
-    if ($value == $cfg['forum_url']) {
-        $selected = 'selected';
+    // адреса форума
+    $optionForumAddress = '';
+    foreach ($forumAddressList as $value) {
+        $selected = '';
+        if ($value == $cfg['forum_url']) {
+            $selected = 'selected';
+        }
+        $text = $value == 'custom' ? 'другой' : $value;
+        $optionForumAddress .= sprintf($optionFormat, $value, $selected, $text);
     }
-    $text = $value == 'custom' ? 'другой' : $value;
-    $optionForumAddress .= sprintf($optionFormat, $value, $selected, $text);
-}
-$forumVerifySSL = $cfg['forum_ssl'] ? 'checked' : '';
+    $forumVerifySSL = $cfg['forum_ssl'] ? 'checked' : '';
 
-// адреса api
-$optionApiAddress = '';
-foreach ($apiAddressList as $value) {
-    $selected = '';
-    if ($value == $cfg['api_url']) {
-        $selected = 'selected';
+    // адреса api
+    $optionApiAddress = '';
+    foreach ($apiAddressList as $value) {
+        $selected = '';
+        if ($value == $cfg['api_url']) {
+            $selected = 'selected';
+        }
+        $text = $value == 'custom' ? 'другой' : $value;
+        $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
     }
-    $text = $value == 'custom' ? 'другой' : $value;
-    $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
+    $apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
+} catch (Exception $e) {
+    // $e->getMessage();
 }
-$apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
 
 ?>
 
