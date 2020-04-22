@@ -52,11 +52,11 @@ if ($vacancies['scan_reports']) {
         $keepers = $reports->scanning_viewtopic($topic_id, $vacancies['scan_posted_days']);
         if (!empty($keepers)) {
             foreach ($keepers as &$keeper) {
-                if (empty($keeper['topics_ids'])) {
+                if (empty($keeper['topics_ids'][1])) {
                     continue;
                 }
-                $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 500);
-                foreach ($keeper['topics_ids'] as $keeper_topics_ids) {
+                $keeper['topics_ids'][1] = array_chunk($keeper['topics_ids'][1], 500);
+                foreach ($keeper['topics_ids'][1] as $keeper_topics_ids) {
                     $select = str_repeat('SELECT ? UNION ALL ', count($keeper_topics_ids) - 1) . 'SELECT ?';
                     Db::query_database(
                         "INSERT INTO temp.VacanciesKeepers (id) $select",

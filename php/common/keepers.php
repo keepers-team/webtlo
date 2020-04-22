@@ -64,23 +64,26 @@ if (isset($cfg['subsections'])) {
                 ) {
                     continue;
                 }
-                $keeper['topics_ids'] = array_chunk($keeper['topics_ids'], 333);
-                foreach ($keeper['topics_ids'] as $topics_ids) {
-                    $select = str_repeat(
-                        'SELECT ?,?,? UNION ALL ',
-                        count($topics_ids) - 1
-                    ) . 'SELECT ?,?,?';
-                    foreach ($topics_ids as $topic_id) {
-                        $keepers_topics_ids[] = $topic_id;
-                        $keepers_topics_ids[] = $keeper['nickname'];
-                        $keepers_topics_ids[] = $keeper['posted'];
+                foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
+                    $topics_ids = array_chunk($keeperTopicsIDs, 250);
+                    foreach ($topics_ids as $topics_ids) {
+                        $select = str_repeat(
+                            'SELECT ?,?,?,? UNION ALL ',
+                            count($topics_ids) - 1
+                        ) . 'SELECT ?,?,?,?';
+                        foreach ($topics_ids as $topic_id) {
+                            $keepers_topics_ids[] = $topic_id;
+                            $keepers_topics_ids[] = $keeper['nickname'];
+                            $keepers_topics_ids[] = $keeper['posted'];
+                            $keepers_topics_ids[] = $index;
+                        }
+                        Db::query_database(
+                            "INSERT INTO temp.KeepersNew (id,nick,posted,complete) $select",
+                            $keepers_topics_ids
+                        );
+                        unset($keepers_topics_ids);
+                        unset($select);
                     }
-                    Db::query_database(
-                        "INSERT INTO temp.KeepersNew (id,nick,posted) $select",
-                        $keepers_topics_ids
-                    );
-                    unset($keepers_topics_ids);
-                    unset($select);
                 }
             }
             unset($keepers);

@@ -310,11 +310,11 @@ class Reports
                             $topic = pq($topic);
                             $href = $topic->attr('href');
                             if (preg_match('/viewtopic.php\?t=[0-9]+$/', $href)) {
-                                $keepers[$index]['topics_ids'][] = preg_replace(
-                                    '/.*?([0-9]*)$/',
-                                    '$1',
-                                    $href
-                                );
+                                $keeperTopicID = preg_replace('/.*?([0-9]*)$/', '$1', $href);
+                                $keepers[$index]['topics_ids'][1][] = $keeperTopicID;
+                            } elseif (preg_match('/viewtopic.php\?t=[0-9]+#dl$/', $href)) {
+                                $keeperTopicID = preg_replace('/.*?([0-9]*)#dl$/', '$1', $href);
+                                $keepers[$index]['topics_ids'][0][] = $keeperTopicID;
                             }
                         }
                     }
@@ -326,7 +326,7 @@ class Reports
             $i += 30;
             phpQuery::unloadDocuments();
         }
-        // array( 'post_id', 'nickname', 'posted', topics_ids' => array( topic_id,.. ) )
+        // array( 'post_id', 'nickname', 'posted', topics_ids' => array( [0] => array( ...), [1] => array(...) ) )
         return $keepers;
     }
 

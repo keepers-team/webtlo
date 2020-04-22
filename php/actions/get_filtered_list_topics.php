@@ -38,7 +38,7 @@ try {
     // -4 - дублирующиеся раздачи
 
     // topic_data => tag,id,na,si,convert(si)rg,se,ds
-    $pattern_topic_block = '<div class="topic_data"><label>%s</label> <span class="bold">%s</span></div>';
+    $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = array(
         'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
         'ds' => ' <i class="fa %9$s %8$s"></i>',
@@ -87,7 +87,7 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     $topic_data['se']
                 ),
-                '#' . $topic_data['ss']
+                '<span class="bold">#' . $topic_data['ss'] . '</span>'
             );
         }
     } elseif ($forum_id == -2) {
@@ -129,7 +129,7 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'])
                 ),
-                $topic_data['comment']
+                '<span class="bold">' . $topic_data['comment'] . '</span>'
             );
         }
     } elseif ($forum_id == -4) {
@@ -198,7 +198,7 @@ try {
             );
             $listTorrentClientsNames = array_map(function ($e) use ($cfg) {
                 if (isset($cfg['clients'][$e])) {
-                    return $cfg['clients'][$e]['cm'];
+                    return '<span class="bold">' . $cfg['clients'][$e]['cm'] . '</span>';
                 }
             }, $listTorrentClientsIDs);
             natsort($listTorrentClientsNames);
@@ -331,12 +331,12 @@ try {
 
         // данные о других хранителях
         $keepers = Db::query_database(
-            'SELECT id,nick FROM Keepers WHERE id IN (
+            'SELECT id,nick,complete FROM Keepers WHERE id IN (
                 SELECT id FROM Topics WHERE ss IN (' . $ss . ')
             )',
             $forums_ids,
             true,
-            PDO::FETCH_COLUMN | PDO::FETCH_GROUP
+            PDO::FETCH_ASSOC | PDO::FETCH_GROUP
         );
 
         $statement = sprintf(
@@ -412,10 +412,23 @@ try {
             // список хранителей на раздаче
             $keepers_list = '';
             if (isset($keepers[$topic_data['id']])) {
-                $keepers_list = array_map(function ($e) {
-                    return '<span class="keeper">' . $e . '</span>';
+                $formatKeeperList = '<i class="fa fa-arrow-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
+                $keepers_list = array_map(function ($e) use ($formatKeeperList) {
+                    if ($e['complete'] == 1) {
+                        $stateKeeperArrow = 'up';
+                        $stateKeeperColor = 'success';
+                    } else {
+                        $stateKeeperArrow = 'down';
+                        $stateKeeperColor = 'danger';
+                    }
+                    return sprintf(
+                        $formatKeeperList,
+                        $stateKeeperArrow,
+                        $stateKeeperColor,
+                        $e['nick']
+                    );
                 }, $keepers[$topic_data['id']]);
-                $keepers_list = '~> ' . implode(', ', $keepers_list);
+                $keepers_list = '| ' . implode(', ', $keepers_list);
             }
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {

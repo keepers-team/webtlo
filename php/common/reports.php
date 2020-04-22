@@ -6,7 +6,7 @@ include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
 
-Log::append("Начато выполнение процесса отправки отчётов...");
+Log::append("Начат процесс отправки отчётов...");
 
 // получение настроек
 $cfg = get_settings();
@@ -88,9 +88,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // получение данных о раздачах
     $topics = Db::query_database(
-        "SELECT Topics.id,ss,na,si,st FROM Topics
-		LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-		WHERE ss = ? AND dl IN (1,-1) AND se / qt <= 10",
+        "SELECT Topics.id,ss,na,si,st,dl FROM Topics
+		LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1,0) GROUP BY hs) Clients ON Topics.hs = Clients.hs
+		WHERE ss = ? AND dl IN (1,-1,0) AND se / qt <= 10",
         array($forum_id),
         true
     );
@@ -116,17 +116,25 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $tmp['lgth'] = 0;
             $tmp['dlsi'] = 0;
             $tmp['dlqt'] = 0;
+            $tmp['dlsisub'] = 0;
+            $tmp['dlqtsub'] = 0;
         }
+        $topicLink = $topic['dl'] == 1 ? $topic['id'] : $topic['id'] . '#dl';
         $str = sprintf(
             $pattern_topic,
-            $topic['id'],
+            $topicLink,
             $topic['na'],
             convert_bytes($topic['si'])
         );
         $lgth = mb_strlen($str, 'UTF-8');
         $tmp['str'][] = $str;
         $tmp['lgth'] += $lgth;
-        $tmp['dlsi'] += $topic['si'];
+        if ($topic['dl'] == 0) {
+            $tmp['dlqtsub']++;
+            $tmp['dlsisub'] += $topic['si'];
+        } else {
+            $tmp['dlsi'] += $topic['si'];
+        }
         $tmp['dlqt']++;
         $current_length = $tmp['lgth'] + $lgth;
         $available_length = $message_length_max - $spoiler_length - ($tmp['dlqt'] - $tmp['start'] + 1) * 3;
@@ -155,9 +163,13 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         continue;
     }
 
+    // вычитаем раздачи на загрузке
+    $tmp['dlqt'] -= $tmp['dlqtsub'];
+
     // дописываем в начало первого сообщения
     $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
-        'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) .
+        'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '[br]' .
+        'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) .
         $tmp['msg'][0];
 
     // ищем тему со списками
@@ -173,50 +185,57 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // сканируем имеющиеся списки
     $keepers = $reports->scanning_viewtopic($topic_id);
 
-    if (empty($keepers)) {
-        Log::append("Error: Не удалось просканировать списки для подраздела № $forum_id");
-        continue;
-    }
-
-    // разбираем инфу, полученную из списков
-    foreach ($keepers as $index => $keeper) {
-        // array( 'post_id', 'nickname', 'posted', 'topics_ids' => array(...) )
-        if ($index == 0) {
-            $author_post_id = $keeper['post_id'];
-            $author_nickname = $keeper['nickname'];
-            continue;
-        }
-        // запоминаем свои сообщения
-        if ($keeper['nickname'] == $cfg['tracker_login']) {
-            $posts_ids[] = $keeper['post_id'];
-            continue;
-        }
-        // считаем сообщения других хранителей в подразделе
-        if (
-            !empty($keeper['topics_ids'])
-            && $cfg['tracker_login'] == $author_nickname
-        ) {
-            $topics_ids = array_chunk($keeper['topics_ids'], 500);
-            foreach ($topics_ids as $topics_ids) {
-                $in = str_repeat('?,', count($topics_ids) - 1) . '?';
-                $values = Db::query_database(
-                    "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
-                    $topics_ids,
-                    true,
-                    PDO::FETCH_NUM
-                );
-                if (!isset($stored[$keeper['nickname']])) {
-                    $stored[$keeper['nickname']]['dlqt'] = 0;
-                    $stored[$keeper['nickname']]['dlsi'] = 0;
-                }
-                $stored[$keeper['nickname']]['dlqt'] += $values[0][0];
-                $stored[$keeper['nickname']]['dlsi'] += $values[0][1];
-                unset($values);
+    if ($keepers !== false) {
+        // разбираем инфу, полученную из списков
+        foreach ($keepers as $index => $keeper) {
+            // array( 'post_id', 'nickname', 'posted', 'topics_ids' => array(...) )
+            if ($index == 0) {
+                $author_post_id = $keeper['post_id'];
+                $author_nickname = $keeper['nickname'];
+                continue;
             }
-            unset($topics_ids);
+            // запоминаем свои сообщения
+            if ($keeper['nickname'] == $cfg['tracker_login']) {
+                $posts_ids[] = $keeper['post_id'];
+                continue;
+            }
+            // считаем сообщения других хранителей в подразделе
+            if (
+                $cfg['tracker_login'] == $author_nickname
+                && !isset($stored[$keeper['nickname']])
+            ) {
+                $stored[$keeper['nickname']]['dlqt'] = 0;
+                $stored[$keeper['nickname']]['dlsi'] = 0;
+                $stored[$keeper['nickname']]['dlqtsub'] = 0;
+                $stored[$keeper['nickname']]['dlsisub'] = 0;
+            }
+            if (empty($keeper['topics_ids'])) {
+                continue;
+            }
+            foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
+                $topics_ids = array_chunk($keeperTopicsIDs, 500);
+                foreach ($topics_ids as $topics_ids) {
+                    $in = str_repeat('?,', count($topics_ids) - 1) . '?';
+                    $values = Db::query_database(
+                        "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
+                        $topics_ids,
+                        true,
+                        PDO::FETCH_NUM
+                    );
+                    if ($index == 1) {
+                        $stored[$keeper['nickname']]['dlqt'] += $values[0][0];
+                        $stored[$keeper['nickname']]['dlsi'] += $values[0][1];
+                    } else {
+                        $stored[$keeper['nickname']]['dlqtsub'] += $values[0][0];
+                        $stored[$keeper['nickname']]['dlsisub'] += $values[0][1];
+                    }
+                    unset($values);
+                }
+                unset($topics_ids);
+            }
         }
+        unset($keepers);
     }
-    unset($keepers);
 
     // Log::append("Найдено своих сообщений: " . count($posts_ids));
 
@@ -256,12 +275,15 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
             'Всего раздач в подразделе: ' . $forum[$forum_id]['qt'] . ' шт. / ' . convert_bytes($forum[$forum_id]['si']) . '[br]' .
             'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]' .
+            'Всего скачиваемых раздач в подразделе: %%dlqtsub%% шт. / %%dlsisub%%[br]' .
             'Количество хранителей: %%kpqt%%[hr]' .
             'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
         // значения хранимого для шапки
         $count_keepers = 1;
         $sumdlqt_keepers = $tmp['dlqt'];
         $sumdlsi_keepers = $tmp['dlsi'];
+        $sumdlqtsub_keepers = $tmp['dlqtsub'];
+        $sumdlsisub_keepers = $tmp['dlsisub'];
         // учитываем хранимое другими
         if (isset($stored)) {
             foreach ($stored as $nickname => $values) {
@@ -276,6 +298,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 );
                 $sumdlqt_keepers += $values['dlqt'];
                 $sumdlsi_keepers += $values['dlsi'];
+                $sumdlqtsub_keepers += $values['dlqtsub'];
+                $sumdlsisub_keepers += $values['dlsisub'];
             }
         }
         unset($stored);
@@ -284,11 +308,15 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             array(
                 '%%dlqt%%',
                 '%%dlsi%%',
+                '%%dlqtsub%%',
+                '%%dlsisub%%',
                 '%%kpqt%%',
             ),
             array(
                 $sumdlqt_keepers,
                 convert_bytes($sumdlsi_keepers),
+                $sumdlqtsub_keepers,
+                convert_bytes($sumdlsisub_keepers),
                 $count_keepers,
             ),
             $tmp['header']
@@ -342,4 +370,4 @@ if ($common_exclude) {
 
 $endtime = microtime(true);
 
-Log::append("Отправка отчётов завершена за " . convert_seconds($endtime - $starttime));
+Log::append("Завершён процесс отправки отчётов за " . convert_seconds($endtime - $starttime));
