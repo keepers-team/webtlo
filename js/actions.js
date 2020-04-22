@@ -140,19 +140,54 @@ $(document).ready(function () {
 		) {
 			return false;
 		}
+		var cap_code = $("#cap_code").val();
+		var cap_fields = $("#cap_fields").val();
 		var $data = $("#config").serialize();
 		$.ajax({
 			type: "POST",
 			url: "php/actions/get_user_details.php",
 			data: {
-				cfg: $data
+				cfg: $data,
+				cap_code: cap_code,
+				cap_fields: cap_fields
 			},
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				$("#bt_key").val(response.bt_key);
-				$("#api_key").val(response.api_key);
-				$("#user_id").val(response.user_id);
+				if (!$.isEmptyObject(response.captcha)) {
+					$("#dialog").dialog(
+						{
+							buttons: [
+								{
+									text: "OK",
+									click: function () {
+										var username_correct = $("#tracker_username_correct").val();
+										var password_correct = $("#tracker_password_correct").val();
+										$("#tracker_username").val(username_correct);
+										$("#tracker_password").val(password_correct);
+										$("#tracker_username").change();
+										$("#dialog").dialog("close");
+									},
+								},
+							],
+							modal: true,
+							resizable: false,
+							// position: [ 'center', 200 ]
+						}
+					).html('<span class="text-danger">Вы видите это сообщение, потому что ввели неверные логин и/или пароль</span><br /><br />' +
+						'Введите правильные данные для авторизации на форуме RuTracker.org ниже и нажмите "ОК"<br /><br />'+
+						'Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
+						'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br /><br />' +
+						'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
+						'<div><img src="data/captcha.jpg?' + new Date().valueOf() + '" /></div>' +
+						'<input id="cap_code" size="27" />');
+					$("#dialog").dialog("open");
+				} else {
+					$("#bt_key").val(response.bt_key);
+					$("#api_key").val(response.api_key);
+					$("#user_id").val(response.user_id);
+					setSettings();
+				}
 			},
 		});
 	});

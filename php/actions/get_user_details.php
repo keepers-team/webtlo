@@ -13,6 +13,21 @@ try {
         throw new Exception();
     }
 
+    // капча
+    if (
+        isset($_POST['cap_code'])
+        && isset($_POST['cap_fields'])
+    ) {
+        $cap_code = $_POST['cap_code'];
+        $cap_fields = explode(',', $_POST['cap_fields']);
+        $cap_fields = array(
+            $cap_fields[0] => $cap_fields[1],
+            $cap_fields[2] => $cap_code,
+        );
+    } else {
+        $cap_fields = array();
+    }
+
     // параметры прокси
     $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
     $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
@@ -37,7 +52,8 @@ try {
     UserDetails::get_details(
         $forum_address,
         $cfg['tracker_username'],
-        $cfg['tracker_password']
+        $cfg['tracker_password'],
+        $cap_fields
     );
 
     echo json_encode(
@@ -45,17 +61,18 @@ try {
             'bt_key' => UserDetails::$bt,
             'api_key' => UserDetails::$api,
             'user_id' => UserDetails::$uid,
+            'captcha' => '',
             'log' => Log::get(),
         )
     );
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
     echo json_encode(
         array(
             'bt_key' => '',
             'api_key' => '',
             'user_id' => '',
+            'captcha' => UserDetails::$captcha,
             'log' => Log::get(),
         )
     );
