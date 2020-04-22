@@ -76,17 +76,18 @@ try {
     }
 
     // каталог для сохранения торрент-файлов
-    $torrent_files_dir = 'data/tfiles';
+    $directoryTorrentFiles = 'data/tfiles';
 
     // полный путь до каталога для сохранения торрент-файлов
-    $torrent_files_path = dirname(__FILE__) . '/../../' . $torrent_files_dir;
+    $localFullPath = dirname(__FILE__) . '/../../' . $directoryTorrentFiles;
+    $localFullPath = realpath($localFullPath);
 
     // очищаем каталог от старых торрент-файлов
-    rmdir_recursive($torrent_files_path);
+    rmdir_recursive($localFullPath);
 
     // создаём каталог для торрент-файлов
-    if (!mkdir_recursive($torrent_files_path)) {
-        $result = 'Не удалось создать каталог "' . $torrent_files_path . '": неверно указан путь или недостаточно прав';
+    if (!mkdir_recursive($localFullPath)) {
+        $result = 'Не удалось создать каталог "' . $localFullPath . '": неверно указан путь или недостаточно прав';
         throw new Exception();
     }
 
@@ -129,7 +130,7 @@ try {
         $tor_client = $cfg['clients'][$tor_client_id];
 
         // шаблон для сохранения
-        $torrent_files_path_pattern = $torrent_files_path . '/[webtlo].t%s.torrent';
+        $torrent_files_path_pattern = $localFullPath . '/[webtlo].t%s.torrent';
         if (PHP_OS == 'WINNT') {
             $torrent_files_path_pattern = mb_convert_encoding($torrent_files_path_pattern, 'Windows-1251', 'UTF-8');
         }
@@ -179,21 +180,20 @@ try {
         }
 
         // формирование пути до файла на сервере
-        $dirname_url = $_SERVER['SERVER_ADDR'] . ':' . $_SERVER['SERVER_PORT'] . str_replace(
-            'php/',
-            '',
-            substr(
-                $_SERVER['SCRIPT_NAME'],
-                0,
-                strpos(
-                    $_SERVER['SCRIPT_NAME'],
-                    '/',
-                    1
-                ) + 1
-            )
-        ) . $torrent_files_dir;
-
-        $filename_url_pattern = 'http://' . $dirname_url . '/[webtlo].t%s.torrent';
+        $formatServerPath = '%s://%s:%s/%s';
+        $scriptServerPath = explode('/', $_SERVER['SCRIPT_NAME']);
+        $schemeServerPath = empty($_SERVER['HTTPS']) ? 'http' : 'https';
+        $addressServerPath = $cfg['torrent_files_access_method'] == 'hostname' ? $_SERVER['SERVER_NAME'] : $_SERVER['SERVER_ADDR'];
+        $dirnameServerPath = count($scriptServerPath) < 5 ? $scriptServerPath[0] : $scriptServerPath[1] . '/';
+        $dirnameServerPath .= $directoryTorrentFiles;
+        $formatServerFullPath = sprintf(
+            $formatServerPath,
+            $schemeServerPath,
+            $addressServerPath,
+            $_SERVER['SERVER_PORT'],
+            $dirnameServerPath
+        );
+        $formatServerFullPath .= '/[webtlo].t%s.torrent';
 
         // убираем последний слэш в пути каталога для данных
         if (preg_match('/(\/|\\\\)$/', $forum['df'])) {
@@ -222,7 +222,7 @@ try {
                 );
             } else {
                 $filename_url = sprintf(
-                    $filename_url_pattern,
+                    $formatServerFullPath,
                     $topic_id
                 );
             }
