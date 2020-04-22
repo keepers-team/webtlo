@@ -131,7 +131,7 @@ function get_settings($filename = "")
     );
 
     // метод доступа к торрент-файлам
-    $config['torrent_files_access_method'] = $ini->read('main', 'access_method', 'ip');
+    $config['torrent_files_access_method'] = $ini->read('main', 'torrent_files_access_method', 'ip');
 
     // версия конфига
     $user_version = $ini->read('other', 'user_version', 0);
@@ -183,9 +183,9 @@ function get_settings($filename = "")
 
 function convert_bytes($size)
 {
-    $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
+    $filesizename = array(" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
     $i = $size >= pow(1024, 4) ? 3 : floor(log($size, 1024));
-    return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0';
+    return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0 B';
 }
 
 function convert_seconds($seconds, $leadzeros = false)
