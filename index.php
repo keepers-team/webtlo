@@ -394,6 +394,10 @@ try {
                             <button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
                                 Проверить доступ
                             </button>
+                            <button type="button" id="forum_auth" title="Авторизоваться на форуме">
+                                Авторизоваться
+                                <i id="forum_auth_result"></i>
+                            </button>
                             <div id="forum_url_params">
                                 <label>
                                     Используемый адрес форума:
@@ -422,29 +426,33 @@ try {
                                 </label>
                                 <i id="api_url_result" class=""></i>
                             </div>
-                            <div>
-                                <label>
-                                    Логин:
-                                    <input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
-                                </label>
-                                <label>
-                                    Пароль:
-                                    <input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
-                                </label>
+                            <div id="forum_auth_params">
+                                <div>
+                                    <label>
+                                        Логин:
+                                        <input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
+                                    </label>
+                                    <label>
+                                        Пароль:
+                                        <input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label>
-                                    Ключ bt:
-                                    <input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
-                                </label>
-                                <label>
-                                    Ключ api:
-                                    <input id="api_key" name="api_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
-                                </label>
-                                <label>
-                                    Ключ id:
-                                    <input id="user_id" name="user_id" class="myinput user_details" type="text" size="24" title="Идентификатор пользователя" value="<?php echo $cfg['user_id'] ?>" />
-                                </label>
+                            <div id="api_auth_params">
+                                <div>
+                                    <label>
+                                        Ключ bt:
+                                        <input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
+                                    </label>
+                                    <label>
+                                        Ключ api:
+                                        <input id="api_key" name="api_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
+                                    </label>
+                                    <label>
+                                        Ключ id:
+                                        <input id="user_id" name="user_id" class="myinput user_details" type="text" size="24" title="Идентификатор пользователя" value="<?php echo $cfg['user_id'] ?>" />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <h2>Настройки прокси-сервера</h2>

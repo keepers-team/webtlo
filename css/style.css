@@ -389,7 +389,7 @@ li.menu.ui-tabs-active {
 	padding: 0 3px;
 }
 
-#check_mirrors_access {
+#check_mirrors_access, #forum_auth {
 	margin-bottom: 5px;
 }
 

@@ -9,6 +9,8 @@ try {
     if (
         empty($cfg['tracker_username'])
         || empty($cfg['tracker_password'])
+        || empty($cfg['forum_url'])
+        || empty($cfg['forum_ssl'])
     ) {
         throw new Exception();
     }

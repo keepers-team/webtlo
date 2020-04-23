@@ -87,12 +87,18 @@ $(document).ready(function () {
 			var url = $(element).val();
 			var url_custom = $(element + "_custom").val();
 			var ssl = $("#" + value + "_ssl").val();
+			$(element).prop("disabled", true);
+			$(element + "_custom").prop("disabled", true);
+			$("#" + value + "_ssl").prop("disabled", true);
 			if (typeof url === "undefined" || $.isEmptyObject(url)) {
 				check_count--;
 				if (check_count == 0) {
 					$("#check_mirrors_access").attr("disabled", false);
 				}
 				$(element + "_params i").removeAttr("class");
+				$(element).prop("disabled", false);
+				$(element + "_custom").prop("disabled", false);
+				$("#" + value + "_ssl").prop("disabled", false);
 				return true;
 			}
 			$.ajax({
@@ -107,6 +113,9 @@ $(document).ready(function () {
 				},
 				success: function (response) {
 					$(element + "_params i").removeAttr("class");
+					$(element).prop("disabled", false);
+					$(element + "_custom").prop("disabled", false);
+					$("#" + value + "_ssl").prop("disabled", false);
 					var result = result_list[response];
 					if (typeof result !== "undefined") {
 						$(element + "_params i").addClass("fa fa-circle " + result);
@@ -126,20 +135,23 @@ $(document).ready(function () {
 		});
 	});
 
+	$("#forum_url_params").on("change", function () {
+		$("#forum_url_result").removeAttr("class");
+	});
+
+	$("#api_url_params").on("change", function () {
+		$("#api_url_result").removeAttr("class");
+	});
+
 	// получение bt_key, api_key, user_id
-	$("#tracker_username, #tracker_password").on("change", function () {
+	$("#forum_auth").on("click", function () {
 		if (
 			!$("#tracker_username").val()
 			&& !$("#tracker_password").val()
 		) {
 			return false;
-		} else if (
-			$("#bt_key").val()
-			&& $("#api_key").val()
-			&& $("#user_id").val()
-		) {
-			return false;
 		}
+		$(this).attr("disabled", true);
 		var cap_code = $("#cap_code").val();
 		var cap_fields = $("#cap_fields").val();
 		var $data = $("#config").serialize();
@@ -151,10 +163,12 @@ $(document).ready(function () {
 				cap_code: cap_code,
 				cap_fields: cap_fields
 			},
+			context: this,
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
 				if (!$.isEmptyObject(response.captcha)) {
+					$("#forum_auth_result").removeAttr("class").addClass("fa fa-circle text-danger");
 					$("#dialog").dialog(
 						{
 							buttons: [
@@ -165,7 +179,7 @@ $(document).ready(function () {
 										var password_correct = $("#tracker_password_correct").val();
 										$("#tracker_username").val(username_correct);
 										$("#tracker_password").val(password_correct);
-										$("#tracker_username").change();
+										$("#forum_auth").click();
 										$("#dialog").dialog("close");
 									},
 								},
@@ -175,7 +189,7 @@ $(document).ready(function () {
 							// position: [ 'center', 200 ]
 						}
 					).html('<span class="text-danger">Вы видите это сообщение, потому что ввели неверные логин и/или пароль</span><br /><br />' +
-						'Введите правильные данные для авторизации на форуме RuTracker.org ниже и нажмите "ОК"<br /><br />'+
+						'Введите правильные данные для авторизации на форуме RuTracker.org ниже и нажмите "ОК"<br /><br />' +
 						'Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
 						'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br /><br />' +
 						'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
@@ -183,14 +197,43 @@ $(document).ready(function () {
 						'<input id="cap_code" size="27" />');
 					$("#dialog").dialog("open");
 				} else {
-					$("#bt_key").val(response.bt_key);
-					$("#api_key").val(response.api_key);
-					$("#user_id").val(response.user_id);
-					setSettings();
+					$("#forum_auth_result").removeAttr("class");
+					if (
+						!$.isEmptyObject(response.bt_key)
+						&& !$.isEmptyObject(response.api_key)
+						&& !$.isEmptyObject(response.user_id)
+					) {
+						$("#forum_auth_result").addClass("fa fa-circle text-success");
+						$("#bt_key").val(response.bt_key);
+						$("#api_key").val(response.api_key);
+						$("#user_id").val(response.user_id);
+						setSettings();
+					} else {
+						$("#forum_auth_result").addClass("fa fa-circle text-danger");
+					}
 				}
 			},
+			beforeSend: function () {
+				$("#forum_auth_result").removeAttr("class");
+				$("#forum_auth_result").addClass("fa fa-spinner fa-spin");
+			},
+			complete: function () {
+				$(this).attr("disabled", false);
+			}
 		});
 	});
+
+	$("#forum_auth_params, #api_auth_params").on("input", function () {
+		$("#forum_auth_result").removeAttr("class");
+	});
+
+	$("#forum_auth_params, #api_auth_params").on("keypress", function () {
+		var disabled = $("#forum_auth").attr("disabled");
+		if (typeof disabled !== "undefined") {
+			return false;
+		}
+	});
+
 
 	// проверка закрывающего слеша
 	$("#savedir, #dir_torrents").on("change", function () {
