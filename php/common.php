@@ -267,8 +267,13 @@ function mkdir_recursive($path)
 
 function normalizePath($path)
 {
-    $path = str_replace('//', '/', $path);
-    $parts = explode('/', $path);
+    if (PHP_OS == 'WINNT') {
+        $delimiter = '\\';
+        $path = str_replace('/', '\\', $path);
+    } else {
+        $delimiter = '/';
+    }
+    $parts = explode($delimiter, $path);
     $out = array();
     foreach ($parts as $part) {
         if ($part == '.') {
@@ -280,7 +285,6 @@ function normalizePath($path)
         }
         $out[] = $part;
     }
-    $delimiter = PHP_OS == 'WINNT' ? '\\' : '/';
     return implode($delimiter, $out);
 }
 
