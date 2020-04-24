@@ -189,20 +189,42 @@ try {
                     $stateAverageSeeders = 'text-success';
                 }
             }
-            $statement = 'SELECT cl FROM Clients WHERE hs = ?';
+            $statement = 'SELECT cl,dl FROM Clients WHERE hs = ? ORDER BY cl';
             $listTorrentClientsIDs = Db::query_database(
                 $statement,
                 array($topicData['hs']),
-                true,
-                PDO::FETCH_COLUMN
+                true
             );
-            $listTorrentClientsNames = array_map(function ($e) use ($cfg) {
-                if (isset($cfg['clients'][$e])) {
-                    return '<span class="bold">' . $cfg['clients'][$e]['cm'] . '</span>';
+            // сортировка торрент-клиентов
+            $sortOrderTorrentClients = array_flip(array_keys($cfg['clients']));
+            usort($listTorrentClientsIDs, function ($a, $b) use ($sortOrderTorrentClients) {
+                return $sortOrderTorrentClients[$a['cl']] - $sortOrderTorrentClients[$b['cl']];
+            });
+            $formatTorrentClientList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="bold text-%2$s">%3$s</i>';
+            $listTorrentClientsNames = array_map(function ($e) use ($cfg, $formatTorrentClientList) {
+                if (isset($cfg['clients'][$e['cl']])) {
+                    if ($e['dl'] == '1') {
+                        $stateTorrentClientStatus = 'arrow-up';
+                        $stateTorrentClientColor = 'success';
+                    } elseif ($e['dl'] == '0') {
+                        $stateTorrentClientStatus = 'arrow-down';
+                        $stateTorrentClientColor = 'danger';
+                    } elseif ($e['dl'] == '-1') {
+                        $stateTorrentClientStatus = 'pause';
+                        $stateTorrentClientColor = 'success';
+                    } else {
+                        $stateTorrentClientStatus = 'times';
+                        $stateTorrentClientColor = 'danger';
+                    }
+                    return sprintf(
+                        $formatTorrentClientList,
+                        $stateTorrentClientStatus,
+                        $stateTorrentClientColor,
+                        $cfg['clients'][$e['cl']]['cm']
+                    );
                 }
             }, $listTorrentClientsIDs);
-            natsort($listTorrentClientsNames);
-            $listTorrentClientsNames = '~> ' . implode(', ', $listTorrentClientsNames);
+            $listTorrentClientsNames = '| ' . implode(', ', $listTorrentClientsNames);
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(
