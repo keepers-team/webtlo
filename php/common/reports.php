@@ -106,7 +106,10 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // количество раздач
     $topics_count = count($topics);
 
-    // очищаем $tmp перед заполнением
+    // очищаем данные в цикле
+    unset($posts_ids);
+    unset($keepers);
+    unset($stored);
     unset($tmp);
 
     // формируем списки
@@ -155,7 +158,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             unset($tmp['str']);
         }
     }
-    unset($topics_count);
     unset($topics);
 
     if (empty($tmp['msg'])) {
@@ -234,7 +236,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 unset($topics_ids);
             }
         }
-        unset($keepers);
     }
 
     // Log::append("Найдено своих сообщений: " . count($posts_ids));
@@ -266,7 +267,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $post_id
         );
     }
-    unset($posts_ids);
 
     // работа с шапкой
     if ($cfg['tracker_login'] == $author_nickname) {
@@ -302,7 +302,6 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 $sumdlsisub_keepers += $values['dlsisub'];
             }
         }
-        unset($stored);
         // вставляем общее хранимое в шапку
         $tmp['header'] = str_replace(
             array(
