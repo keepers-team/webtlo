@@ -122,7 +122,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $tmp['dlsisub'] = 0;
             $tmp['dlqtsub'] = 0;
         }
-        $topicLink = $topic['dl'] == 1 ? $topic['id'] : $topic['id'] . '#dl';
+        $topicLink = $topic['dl'] == 0 ? $topic['id'] . '#dl' : $topic['id'];
         $str = sprintf(
             $pattern_topic,
             $topicLink,
