@@ -195,7 +195,7 @@ li.menu.ui-tabs-active {
 /* topics control */
 
 #topics_control {
-	padding: 10px 10px 5px 10px;
+	padding: 10px;
 }
 
 .download-replace {
@@ -217,6 +217,11 @@ li.menu.ui-tabs-active {
 
 .filter_block fieldset {
 	margin-bottom: 5px;
+}
+
+#topics_filter {
+	padding-bottom: 5px;
+	margin-top: -5px;
 }
 
 .topics_filter hr {
@@ -257,6 +262,9 @@ li.menu.ui-tabs-active {
 
 .status_info {
 	display: flex;
+	border-top: 1px solid #aaa;
+	border-bottom: 1px solid #aaa;
+	padding: 5px 0;
 }
 
 #topics_result {
@@ -293,7 +301,7 @@ li.menu.ui-tabs-active {
 
 #topics {
 	margin: 0;
-	padding: 0 10px;
+	padding: 5px 10px 0 10px;
 	flex: 1;
 	overflow-y: auto;
 	height: calc(100% - 92px);

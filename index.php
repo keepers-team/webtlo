@@ -114,7 +114,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-1.0.3.1</title>
+    <title>web-TLO-2.0.0</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -372,12 +372,10 @@ try {
                             </div>
                         </div>
                     </form>
-                    <hr />
                     <div class="status_info">
                         <div id="counter">Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="bold">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
                         <div id="topics_result"></div>
                     </div>
-                    <hr />
                     <form id="topics" method="post"></form>
                 </div>
             </div>
