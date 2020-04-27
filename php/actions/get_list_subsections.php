@@ -4,7 +4,6 @@ include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
 try {
-
     if (empty($_GET['term'])) {
         return false;
     }
@@ -37,7 +36,6 @@ try {
     }
 
     echo json_encode($forums);
-
 } catch (Exception $e) {
     echo json_encode(array(array(
         'label' => $e->getMessage(),

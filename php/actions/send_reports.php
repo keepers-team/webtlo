@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../common/reports.php';
 
@@ -12,9 +11,7 @@ try {
             'result' => '',
         )
     );
-
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
     echo json_encode(
         array(
@@ -22,5 +19,4 @@ try {
             'result' => "В процессе отправки отчётов были ошибки. Для получения подробностей обратитесь к журналу событий.",
         )
     );
-
 }

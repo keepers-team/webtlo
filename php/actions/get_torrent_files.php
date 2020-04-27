@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     $starttime = microtime(true);
 
     include_once dirname(__FILE__) . '/../common.php';
@@ -143,7 +142,6 @@ try {
         'result' => $result,
     ));
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
     echo json_encode(array(
         'log' => Log::get(),

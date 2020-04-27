@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
 
     // получение настроек
@@ -12,7 +11,6 @@ try {
     }
 
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-
         $request = "SELECT
                 f.id AS id,
                 f.na AS na,
@@ -49,7 +47,6 @@ try {
         );
 
         $statistics[$forum_id] = $data[0];
-
     }
 
     // 10
@@ -137,12 +134,9 @@ try {
         'tbody' => $tbody,
         'tfoot' => $tfoot,
     ));
-
 } catch (Exception $e) {
-
     echo json_encode(array(
         'tbody' => '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>',
         'tfoot' => '',
     ));
-
 }

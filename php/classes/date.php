@@ -18,5 +18,4 @@ class Date
         }
         return self::$now;
     }
-
 }

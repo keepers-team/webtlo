@@ -1,7 +1,6 @@
 <?php
 
 try {
-
     include_once dirname(__FILE__) . '/../common.php';
 
     if (empty($_POST['topics_ids'])) {
@@ -32,9 +31,6 @@ try {
     }
 
     echo 'Обновление "чёрного списка" раздач успешно завершено';
-
 } catch (Exception $e) {
-
     echo $e->getMessage();
-
 }

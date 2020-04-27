@@ -189,7 +189,6 @@ try {
 
     echo Log::get();
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
     echo Log::get();
 }

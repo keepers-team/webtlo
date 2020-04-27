@@ -202,7 +202,7 @@ try {
         // дописываем в начало первого сообщения
         $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color]<br />' .
             'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '<br />' .
-            'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) . '<br />' . 
+            'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) . '<br />' .
             $tmp['msg'][0];
 
         // собираем сообщения

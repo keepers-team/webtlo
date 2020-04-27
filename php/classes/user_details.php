@@ -154,5 +154,4 @@ class UserDetails
 
         self::$form_token = $form_token[1];
     }
-
 }

@@ -64,8 +64,7 @@ class TIniFileEx
         }
         Log::append(file_put_contents(self::$filename, $result)
             ? 'Настройки успешно сохранены в файл.'
-            : 'Не удалось записать настройки в файл.'
-        );
+            : 'Не удалось записать настройки в файл.');
     }
 
     //~ public function eraseSection( $section ) {
@@ -90,5 +89,4 @@ class TIniFileEx
     //~ }
     //~ return array();
     //~ }
-
 }
