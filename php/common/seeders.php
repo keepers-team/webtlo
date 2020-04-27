@@ -10,6 +10,9 @@ Log::append("Начато обновление информации о сида�
 // обновляем дерево подразделов
 include_once dirname(__FILE__) . '/forum_tree.php';
 
+// обновляем список высокоприоритетных раздач
+include_once dirname(__FILE__) . '/high_priority_topics.php';
+
 // получаем список подразделов
 $forums_ids = Db::query_database(
     "SELECT id FROM Forums WHERE qt > 0 AND si > 0",
@@ -144,7 +147,10 @@ foreach ($forums_ids as $forum_id) {
                 throw new Exception("Error: Недостаточно элементов в ответе");
             }
 
-            if (!in_array($topic_data[0], $tor_status)) {
+            if (
+                !in_array($topic_data[0], $tor_status)
+                || $topic_data[4] == 2
+            ) {
                 continue;
             }
 
@@ -271,12 +277,6 @@ if (
     $count_update[0] > 0
     || $count_renew[0] > 0
 ) {
-    $total_topics_update = $count_update[0] + $count_renew[0];
-    Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
-    Log::append("Обработано раздач: " . $total_topics_update . " шт.");
-    Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
-    Log::append("Перезалитых раздач: " . $total_topics_delete . " шт.");
-    Log::append("Запись в базу данных сведений о раздачах...");
     // переносим данные в основную таблицу
     Db::query_database(
         "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
@@ -293,7 +293,7 @@ if (
             SELECT Topics.id FROM Topics
             LEFT JOIN temp.TopicsUpdate ON Topics.id = temp.TopicsUpdate.id
             LEFT JOIN temp.TopicsRenew ON Topics.id = temp.TopicsRenew.id
-            WHERE temp.TopicsUpdate.id IS NULL AND temp.TopicsRenew.id IS NULL AND Topics.ss IN ($in)
+            WHERE temp.TopicsUpdate.id IS NULL AND temp.TopicsRenew.id IS NULL AND Topics.ss IN ($in) AND Topics.pt <> 2
         )"
     );
     // время последнего обновления для каждого подраздела
@@ -307,6 +307,12 @@ if (
         "INSERT INTO UpdateTime (id,ud)
         SELECT id,ud FROM temp.UpdateTimeNow"
     );
+    $total_topics_update = $count_update[0] + $count_renew[0];
+    Log::append("Обработано подразделов: " . count($forums_update_time) . " шт.");
+    Log::append("Обработано раздач: " . $total_topics_update . " шт.");
+    Log::append("Раздач без сидов: " . $total_topics_no_seeders . " шт.");
+    Log::append("Перезалитых раздач: " . $total_topics_delete . " шт.");
+    // Log::append("Запись в базу данных сведений о раздачах...");
 }
 
 $endtime = microtime(true);

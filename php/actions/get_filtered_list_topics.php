@@ -36,6 +36,7 @@ try {
     // -2 - черный список
     // -3 - все хранимые
     // -4 - дублирующиеся раздачи
+    // -5 - высокоприоритетные раздачи
 
     // topic_data => tag,id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
@@ -242,7 +243,11 @@ try {
                 $listTorrentClientsNames
             );
         }
-    } elseif ($forum_id == -3 || $forum_id > 0) {
+    } elseif (
+        $forum_id == -3
+        || $forum_id > 0
+        || $forum_id == -5
+    ) {
         // все хранимые раздачи
         // не выбраны статусы раздач
         if (empty($filter['filter_tracker_status'])) {
@@ -250,7 +255,11 @@ try {
         }
 
         if (empty($filter['keeping_priority'])) {
-            throw new Exception('Не выбраны приоритеты раздач для трекера');
+            if ($forum_id == -5) {
+                $filter['keeping_priority'] = array(2);
+            } else {
+                throw new Exception('Не выбраны приоритеты раздач для трекера');
+            }
         }
 
         if (empty($filter['filter_client_status'])) {
@@ -293,14 +302,25 @@ try {
         // хранимые подразделы
         if ($forum_id > 0) {
             $forums_ids = array($forum_id);
-        } else {
-            if (!isset($cfg['subsections'])) {
-                throw new Exception();
+        } elseif ($forum_id == -5) {
+            $forums_ids = Db::query_database(
+                'SELECT DISTINCT(ss) FROM Topics WHERE pt = 2',
+                array(),
+                true,
+                PDO::FETCH_COLUMN
+            );
+            if (empty($forums_ids)) {
+                $forums_ids = array(0);
             }
-            foreach ($cfg['subsections'] as $forum_id => $subsection) {
-                if (!$subsection['hide_topics']) {
-                    $forums_ids[] = $forum_id;
+        } else {
+            if (isset($cfg['subsections'])) {
+                foreach ($cfg['subsections'] as $forum_id => $subsection) {
+                    if (!$subsection['hide_topics']) {
+                        $forums_ids[] = $forum_id;
+                    }
                 }
+            } else {
+                $forums_ids = array(0);
             }
         }
 

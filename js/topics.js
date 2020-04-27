@@ -165,6 +165,7 @@ $(document).ready(function () {
 				e.ctrlKey
 				|| subsection == 0
 				|| subsection == -4
+				|| subsection == -5
 			)
 		) {
 			$("#dialog").dialog(
@@ -365,6 +366,7 @@ function getFilteredTopics() {
 	if (
 		forum_id > 0
 		|| forum_id == -3
+		|| forum_id == -5
 	) {
 		$(".topics_filter input").prop("disabled", false);
 		$("#toolbar-new-torrents").buttonset("enable");
@@ -374,6 +376,13 @@ function getFilteredTopics() {
 		$("#filter_rule_from").spinner("enable");
 		$("#filter_rule_to").spinner("enable");
 		$("#filter_date_release").datepicker("enable");
+		if (forum_id == -5) {
+			$("#tor_add").button("disable");
+			$(".topics_filter input[name^='keeping_priority']").prop("disabled", true);
+		} else {
+			$("#tor_add").button("enable");
+			$(".topics_filter input[name^='keeping_priority']").prop("disabled", false);
+		}
 	} else {
 		if (forum_id == -2) {
 			$("#toolbar-control-topics").buttonset("disable");

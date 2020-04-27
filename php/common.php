@@ -13,8 +13,9 @@ Db::create();
 $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
 $avgSeedersPeriodOutdatedSeconds = $avgSeedersPeriodOutdated * 86400;
 Db::query_database(
-    "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER))",
-    array($avgSeedersPeriodOutdatedSeconds)
+    "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(:ud as INTEGER)) AND pt <> 2
+    OR strftime('%s', 'now') - (SELECT ud FROM UpdateTime WHERE id = 9999) > CAST(:ud as INTEGER) AND pt = 2",
+    array(':ud' => $avgSeedersPeriodOutdatedSeconds)
 );
 Db::query_database(
     "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",

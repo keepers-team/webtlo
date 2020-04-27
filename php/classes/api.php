@@ -275,6 +275,24 @@ class Api
     }
 
     /**
+     * список ID раздач с высоким приоритетом хранения
+     * @return bool|array
+     */
+    public function getTopicsIDsHighPriority()
+    {
+        return $this->makeRequest('static/pvc/high_priority_topic_ids.json.gz');
+    }
+
+    /**
+     * данные о раздачах с высоким приоритетом хранения
+     * @return bool|array
+     */
+    public function getTopicsHighPriority()
+    {
+        return $this->makeRequest('static/pvc/high_priority_topics.json.gz');
+    }
+
+    /**
      * default destructor
      */
     public function __destruct()
