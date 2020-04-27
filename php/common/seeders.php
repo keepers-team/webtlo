@@ -112,15 +112,10 @@ foreach ($forums_ids as $forum_id) {
     $current_update_time->setTimestamp($topics_data['update_time']);
 
     // предыдущее обновление в DateTime
-    $previousUpdateTime->setTimestamp($update_time[0]);
+    $previousUpdateTime->setTimestamp($update_time[0])->setTime(0, 0, 0);
 
     // разница в днях между обновлениями сведений
-    $daysDiffActual = $current_update_time->diff($previousUpdateTime)->format('%d');
-    $daysDiffAdjusted = $current_update_time->diff($previousUpdateTime->setTime(0, 0, 0))->format('%d');
-
-    // данные о сидах устарели
-    $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
-    $avgSeedersOutdated = $cfg['avg_seeders'] && $update_time[0] != 0 && $daysDiffActual >= $avgSeedersPeriodOutdated;
+    $daysDiffAdjusted = $current_update_time->diff($previousUpdateTime)->format('%d');
 
     // разбиваем result по 500 раздач
     $topics_result = array_chunk($topics_data['result'], 500, true);
@@ -167,16 +162,16 @@ foreach ($forums_ids as $forum_id) {
                 $previous_data = $topics_data_previous[$topic_id];
             }
 
-            // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
+            // удалить перерегистрированную раздачу
             // в том числе, чтобы очистить значения сидов для старой раздачи
-            $isTopicDataDelete = false;
             if (
-                $avgSeedersOutdated
-                || isset($previous_data['rg'])
+                isset($previous_data['rg'])
                 && $previous_data['rg'] != $topic_data[2]
             ) {
                 $topics_delete[] = $topic_id;
                 $isTopicDataDelete = true;
+            } else {
+                $isTopicDataDelete = false;
             }
 
             // получить для раздачи info_hash и topic_title

@@ -6,6 +6,21 @@ include_once dirname(__FILE__) . '/classes/db.php';
 include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 
+// подключаемся к базе
+Db::create();
+
+// данные о сидах устарели
+$avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
+$avgSeedersPeriodOutdatedSeconds = $avgSeedersPeriodOutdated * 86400;
+Db::query_database(
+    "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER))",
+    array($avgSeedersPeriodOutdatedSeconds)
+);
+Db::query_database(
+    "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
+    array($avgSeedersPeriodOutdatedSeconds)
+);
+
 function get_settings($filename = "")
 {
     $config = array();
