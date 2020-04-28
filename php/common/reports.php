@@ -129,16 +129,17 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $topic['na'],
             convert_bytes($topic['si'])
         );
-        $lgth = mb_strlen($str, 'UTF-8');
-        $tmp['str'][] = $str;
-        $tmp['lgth'] += $lgth;
         if ($topic['dl'] == 0) {
             $tmp['dlqtsub']++;
             $tmp['dlsisub'] += $topic['si'];
+            $str .= ' :!: ';
         } else {
             $tmp['dlsi'] += $topic['si'];
         }
         $tmp['dlqt']++;
+        $lgth = mb_strlen($str, 'UTF-8');
+        $tmp['str'][] = $str;
+        $tmp['lgth'] += $lgth;
         $current_length = $tmp['lgth'] + $lgth;
         $available_length = $message_length_max - $spoiler_length - ($tmp['dlqt'] - $tmp['start'] + 1) * 3;
         if (
