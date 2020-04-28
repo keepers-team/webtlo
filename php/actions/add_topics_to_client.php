@@ -80,7 +80,7 @@ try {
 
     // полный путь до каталога для сохранения торрент-файлов
     $localFullPath = dirname(__FILE__) . '/../../' . $directoryTorrentFiles;
-    $localFullPath = realpath($localFullPath);
+    $localFullPath = normalizePath($localFullPath);
 
     // очищаем каталог от старых торрент-файлов
     rmdir_recursive($localFullPath);
