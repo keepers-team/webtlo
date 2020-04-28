@@ -114,14 +114,26 @@ class UserDetails
 
     public static function get_keys()
     {
+        $keys = '';
         $data = self::make_request(
             self::$forum_url . '/forum/profile.php?u=' . self::$uid,
             array('mode' => 'viewprofile'),
             array(CURLOPT_COOKIE => self::$cookie)
         );
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
-        $keys = $html->find('table.user_details > tr:eq(9) > td')->text();
+        $rows = $html->find('table.user_details');
         unset($html);
+        $rows = pq($rows);
+        foreach ($rows->find('tr') as $row) {
+            $row = pq($row);
+            $title = $row->find('th')->text();
+            if ($title == 'Хранительские ключи:') {
+                $keys = $row->find('td')->text();
+                unset($row);
+                break;
+            }
+        }
+        unset($rows);
         preg_match('|.*bt: ([^ ]+).*api: ([^ ]+)|', $keys, $keys);
         self::$bt = $keys[1];
         self::$api = $keys[2];
