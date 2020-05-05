@@ -25,17 +25,28 @@ class Transmission extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
+        $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        preg_match('|.*\r\n(X-Transmission-Session-Id: .*?)(\r\n.*)|', $response, $matches);
-        if (!empty($matches)) {
-            $this->sid = $matches[1];
-            return true;
+        if ($responseHttpCode == 401) {
+            Log::append('Error: Не удалось авторизоваться в веб-интерфейсе торрент-клиента');
+            Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
+        } elseif ($responseHttpCode == 405) {
+            $request = array('method' => 'session-get');
+            $response = $this->makeRequest($request);
+            if ($response !== false) {
+                return true;
+            }
+        } elseif ($responseHttpCode == 409) {
+            preg_match('|.*\r\n(X-Transmission-Session-Id: .*?)(\r\n.*)|', $response, $matches);
+            if (!empty($matches)) {
+                $this->sid = $matches[1];
+                return true;
+            }
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
+        Log::append('Error: Не удалось подключиться к веб-интерфейсу торрент-клиента');
         return false;
     }
 
