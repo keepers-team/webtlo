@@ -110,6 +110,11 @@ class Qbittorrent extends TorrentClient
 
     public function setLabel($hashes, $label = '')
     {
+        $clientCategories = json_decode($this->getAllCategoriesFromClient(), true);
+        if (!array_key_exists($label, $clientCategories)) {
+            $this->addNewCategory($label);
+        }
+
         $hashes = array_map(function ($hash) {
             return strtolower($hash);
         }, $hashes);
@@ -120,6 +125,19 @@ class Qbittorrent extends TorrentClient
             PHP_QUERY_RFC3986
         );
         $this->makeRequest('api/v2/torrents/setCategory', $fields, false);
+    }
+
+    private function getAllCategoriesFromClient()
+    {
+        return $this->makeRequest('api/v2/torrents/categories', "", false);
+    }
+
+    private function addNewCategory($categoryName)
+    {
+        $fields = array(
+            'category' => $categoryName,
+        );
+        $this->makeRequest('api/v2/torrents/createCategory', $fields, false);
     }
 
     public function startTorrents($hashes, $force = false)
