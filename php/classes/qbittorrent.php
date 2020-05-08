@@ -110,6 +110,7 @@ class Qbittorrent extends TorrentClient
 
     public function setLabel($hashes, $label = '')
     {
+        $label = trim($label);
         $clientCategories = json_decode($this->getAllCategoriesFromClient(), true);
         if (!array_key_exists($label, $clientCategories)) {
             $this->addNewCategory($label);
