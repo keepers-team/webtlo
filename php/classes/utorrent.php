@@ -55,7 +55,7 @@ class Utorrent extends TorrentClient
      * @param array $options
      * @return bool|mixed|string
      */
-    private function makeRequest($url, $decode = true, $options = array())
+    private function makeRequest($url, $fields = '', $options = array())
     {
         $url = preg_replace('|^\?|', '?token=' . $this->token . '&', $url);
         $ch = curl_init();
@@ -64,6 +64,7 @@ class Utorrent extends TorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_COOKIE => 'GUID=' . $this->guid,
+            CURLOPT_POSTFIELDS => $fields
         ));
         curl_setopt_array($ch, $options);
         $response = curl_exec($ch);
@@ -72,16 +73,22 @@ class Utorrent extends TorrentClient
             return false;
         }
         curl_close($ch);
-        return $decode ? json_decode($response, true) : $response;
+        $response = json_decode($response, true);
+        if (isset($response['error'])) {
+            Log::append('Error: ' . $response['error']);
+            return false;
+        }
+        return $response;
     }
 
     public function getTorrents()
     {
-        $data = $this->makeRequest('?list=1');
-        if (empty($data['torrents'])) {
+        $response = $this->makeRequest('?list=1');
+        if ($response === false) {
             return false;
         }
-        foreach ($data['torrents'] as $torrent) {
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
             $torrentState = decbin($torrent[1]);
             // 0 - Started, 2 - Paused, 3 - Error, 4 - Checked, 7 - Loaded, 100% Downloads
             if (!$torrentState[3]) {
@@ -99,16 +106,21 @@ class Utorrent extends TorrentClient
             }
             $torrents[$torrent[0]] = $torrentStatus;
         }
-        return isset($torrents) ? $torrents : array();
+        return $torrents;
     }
 
-    public function addTorrent($filename, $savePath = '')
+    public function addTorrent($torrentFilePath, $savePath = '')
     {
         $this->setSetting('dir_active_download_flag', true);
         if (!empty($savePath)) {
             $this->setSetting('dir_active_download', urlencode($savePath));
         }
-        $this->makeRequest('?action=add-url&s=' . urlencode($filename), false);
+        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
+            $torrentData = new CurlFile($torrentFilePath, 'application/x-bittorrent');
+        } else {
+            $torrentData = '@' . $torrentFilePath;
+        }
+        return $this->makeRequest('?action=add-file', array('torrent_file' => $torrentData));
     }
 
     /**
@@ -121,7 +133,7 @@ class Utorrent extends TorrentClient
     {
         $request = preg_replace('|^(.*)$|', 'hash=$0&s=' . $property . '&v=' . urlencode($value), $hash);
         $request = implode('&', $request);
-        $this->makeRequest('?action=setprops&' . $request, false);
+        return $this->makeRequest('?action=setprops&' . $request);
     }
 
     /**
@@ -131,7 +143,7 @@ class Utorrent extends TorrentClient
      */
     public function setSetting($setting, $value)
     {
-        $this->makeRequest('?action=setsetting&s=' . $setting . '&v=' . $value, false);
+        return $this->makeRequest('?action=setsetting&s=' . $setting . '&v=' . $value);
     }
 
     /**
@@ -148,37 +160,28 @@ class Utorrent extends TorrentClient
 
     public function setLabel($hash, $label = '')
     {
-        $this->setProperties($hash, 'label', $label);
+        return $this->setProperties($hash, 'label', $label);
     }
 
     public function startTorrents($hashes, $force = false)
     {
         $action = $force ? 'forcestart' : 'start';
-        $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes), false);
-    }
-
-    /**
-     * пауза раздач (unused)
-     * @param $hashes
-     */
-    public function pauseTorrents($hashes)
-    {
-        $this->makeRequest('?action=pause' . $this->implodeParams('&hash=', $hashes), false);
+        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes));
     }
 
     public function recheckTorrents($hashes)
     {
-        $this->makeRequest('?action=recheck' . $this->implodeParams('&hash=', $hashes), false);
+        return $this->makeRequest('?action=recheck' . $this->implodeParams('&hash=', $hashes));
     }
 
     public function stopTorrents($hashes)
     {
-        $this->makeRequest('?action=stop' . $this->implodeParams('&hash=', $hashes), false);
+        return $this->makeRequest('?action=stop' . $this->implodeParams('&hash=', $hashes));
     }
 
     public function removeTorrents($hashes, $deleteLocalData = false)
     {
         $action = $deleteLocalData ? 'removedata' : 'remove';
-        $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes), false);
+        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes));
     }
 }

@@ -40,7 +40,7 @@ try {
     }
 
     // список торрент-клиентов, которые поддерживают передачу содержимого торрент-файла в запросе
-    $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze', 'rtorrent', 'deluge');
+    $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze', 'rtorrent', 'deluge', 'utorrent');
 
     Log::append('Запущен процесс добавления раздач в торрент-клиенты...');
 
