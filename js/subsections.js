@@ -4,35 +4,30 @@
 $(document).ready(function () {
 
 	// последний выбранный подраздел
-	var ss_change;
+	var editableForumID;
 
 	// загрузка данных о выбранном подразделе на главной
 	$("#main-subsections").selectmenu({
 		width: "calc(100% - 36px)",
 		change: function (event, ui) {
+			showResultTopics();
 			getFilteredTopics();
-			Cookies.set('saved_forum_id', ui.item.value);
+			Cookies.set("saved_forum_id", ui.item.value);
 		},
 		create: function (event, ui) {
-			var forum_id = Cookies.get('saved_forum_id');
-			if (typeof forum_id !== "undefined") {
-				$("#main-subsections").val(forum_id);
+			var forumID = Cookies.get("saved_forum_id");
+			if (typeof forumID !== "undefined") {
+				$("#main-subsections").val(forumID);
 				$("#main-subsections").selectmenu("refresh");
 			}
 		},
 		open: function (event, ui) {
 			// выделяем жирным в списке
-			var active = $("#main-subsections-button").attr("aria-activedescendant");
-			$("#main-subsections-menu div[role=option]").css({
-				"font-weight": "normal"
-			});
-			$("#" + active).css({
-				"font-weight": "bold"
-			});
+			var selectedForumID = $("#main-subsections-button").attr("aria-activedescendant");
+			$("#main-subsections-menu div[role=option]").css({ "font-weight": "normal" });
+			$("#" + selectedForumID).css({ "font-weight": "bold" });
 		},
-	})
-		.selectmenu("menuWidget")
-		.addClass("menu-overflow");
+	}).selectmenu("menuWidget").addClass("menu-overflow");
 
 	// прокрутка подразделов на главной
 	$("#main-subsections-button").on("mousewheel", function (event, delta) {
@@ -40,8 +35,8 @@ $(document).ready(function () {
 		if (hidden == "false") {
 			return false;
 		}
-		var forum_id = $("#main-subsections").val();
-		var element = $("#main-subsections [value=" + forum_id + "]").parent().attr("id");
+		var forumID = $("#main-subsections").val();
+		var element = $("#main-subsections [value=" + forumID + "]").parent().attr("id");
 		if (typeof element === "undefined") {
 			return false;
 		}
@@ -53,49 +48,49 @@ $(document).ready(function () {
 		}
 		$("#main-subsections-stored :eq(" + selected + ")").prop("selected", "selected");
 		$("#main-subsections").selectmenu("refresh");
-		subsections_delay(getFilteredTopics);
+		forumDataShowDelay(getFilteredTopics);
 		return false;
 	});
 
 	// получение свойств выбранного подраздела
-	$("#list-ss").on("change", function () {
-		var data = $("#list-ss :selected").attr("data");
-		data = data.split('|');
-		var client = $("#ss-client option[value=" + data[0] + "]").val();
-		if (client) {
-			$("#ss-client [value=" + client + "]").prop("selected", "selected");
-		}
-		else {
-			$("#ss-client :first").prop("selected", "selected");
-		}
-		$("#ss-label").val(data[1]);
-		$("#ss-folder").val(data[2]);
-		$("#ss-link").val(data[3]);
-		if (data[4]) {
-			$("#ss-sub-folder").val(data[4]);
+	$("#list-forums").on("change", function () {
+		var forumData = $("#list-forums :selected").data();
+		var torrentClientID = $("#forum-client option[value=" + forumData.client + "]").val();
+		if (typeof torrentClientID === "undefined") {
+			$("#forum-client :first").prop("selected", "selected");
 		} else {
-			$("#ss-sub-folder :first").prop("selected", "selected");
+			$("#forum-client [value=" + torrentClientID + "]").prop("selected", "selected");
 		}
-		$("#ss-hide-topics [value=" + data[5] + "]").prop("selected", "selected");
-		ss_change = $(this).val();
-		$("#ss-id").val(ss_change);
+		if ($.isEmptyObject(forumData.subdirectory)) {
+			$("#forum-subdirectory :first").prop("selected", "selected");
+		} else {
+			$("#forum-subdirectory").val(forumData.subdirectory);
+		}
+		$("#forum-label").val(forumData.label);
+		$("#forum-savepath").val(forumData.savepath);
+		$("#forum-hide-topics [value=" + forumData.hide + "]").prop("selected", "selected");
+		editableForumID = $(this).val();
+		$("#forum-id").val(editableForumID);
 	});
 
 	// изменение свойств подраздела
-	$("#ss-prop").on("focusout", function () {
-		var cl = $("#ss-client :selected").val();
-		var lb = $("#ss-label").val();
-		var fd = $("#ss-folder").val();
-		var ln = $("#ss-link").val();
-		var sub_folder = $("#ss-sub-folder").val();
-		var hide_topics = $("#ss-hide-topics :selected").val();
-		$("#list-ss option[value=" + ss_change + "]")
-			.attr("data", cl + "|" + lb + "|" + fd + "|" + ln + "|" + sub_folder + "|" + hide_topics);
+	$("#forum-props").on("focusout", function () {
+		var forumClient = $("#forum-client :selected").val();
+		var forumLabel = $("#forum-label").val();
+		var forumSavePath = $("#forum-savepath").val();
+		var forumSubdirectory = $("#forum-subdirectory").val();
+		var forumHideTopics = $("#forum-hide-topics :selected").val();
+		var optionForum = $("#list-forums option[value=" + editableForumID + "]");
+		optionForum.attr("data-client", forumClient).data("client", forumClient);
+		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
+		optionForum.attr("data-savepath", forumSavePath).data("savepath", forumSavePath);
+		optionForum.attr("data-subdirectory", forumSubdirectory).data("subdirectory", forumSubdirectory);
+		optionForum.attr("data-hide", forumHideTopics).data("hide", forumHideTopics);
 	});
 
 	// добавить подраздел
-	$("#ss-add").autocomplete({
-		source: 'php/actions/get_list_subsections.php',
+	$("#add-forum").autocomplete({
+		source: "php/actions/get_list_subsections.php",
 		delay: 1000,
 		select: addSubsection
 	}).on("focusout", function () {
@@ -103,89 +98,89 @@ $(document).ready(function () {
 	});
 
 	// удалить подраздел
-	$("#ss-del").on("click", function () {
-		var forum_id = $("#list-ss").val();
-		if (forum_id) {
-			var i = $("#list-ss :selected").index();
-			$("#list-ss :selected").remove();
-			$("#main-subsections-stored [value=" + forum_id + "]").remove();
-			$("#reports-subsections-stored [value=" + forum_id + "]").remove();
-			var q = $("select[id=list-ss] option").size();
-			if (q == 0) {
-				$("#ss-prop .ss-prop, #list-ss").val('').prop("disabled", true);
-				$("#ss-client :first").prop("selected", "selected");
-			} else {
-				q == i ? i : i++;
-				$("#list-ss :nth-child(" + i + ")").prop("selected", "selected").change();
-			}
-			$("#main-subsections").selectmenu("refresh");
-			$("#reports-subsections").selectmenu("refresh");
-			getFilteredTopics();
+	$("#remove-forum").on("click", function () {
+		var forumID = $("#list-forums").val();
+		if (typeof forumID === "undefined") {
+			return false;
 		}
+		var optionIndex = $("#list-forums :selected").index();
+		$("#list-forums :selected").remove();
+		$("#main-subsections-stored [value=" + forumID + "]").remove();
+		$("#reports-subsections-stored [value=" + forumID + "]").remove();
+		var optionTotal = $("select[id=list-forums] option").size();
+		if (optionTotal == 0) {
+			$(".forum-props, #list-forums").val("").prop("disabled", true);
+			$("#forum-client :first").prop("selected", "selected");
+		} else {
+			if (optionTotal != optionIndex) {
+				optionIndex++;
+			}
+			$("#list-forums :nth-child(" + optionIndex + ")").prop("selected", "selected").change();
+		}
+		$("#main-subsections").selectmenu("refresh");
+		$("#reports-subsections").selectmenu("refresh");
+		getFilteredTopics();
 	});
 
 	// при загрузке выбрать первый подраздел в списке
-	if ($("select[id=list-ss] option").size() > 0) {
-		$("#list-ss :first").prop("selected", "selected").change();
+	if ($("select[id=list-forums] option").size() > 0) {
+		$("#list-forums :first").prop("selected", "selected").change();
 	} else {
-		$("#ss-prop .ss-prop").prop("disabled", true);
+		$(".forum-props").prop("disabled", true);
 	}
 
 });
 
 // задержка при прокрутке подразделов
-var subsections_delay = makeDelay(500);
+var forumDataShowDelay = makeDelay(500);
 
 function addSubsection(event, ui) {
 	if (ui.item.value < 0) {
-		ui.item.value = '';
+		ui.item.value = "";
 		return false;
 	}
-	var lb = ui.item.label;
-	var label = lb.replace(/.* » (.*)$/, '$1');
-	var vl = ui.item.value;
-	var q = 0;
-	$("#list-ss option").each(function () {
-		var val = $(this).val();
-		if (vl == val) {
-			q = 1;
-		}
-	});
-	if (q != 1) {
-		var main_selected = $("#main-subsections").val();
-		var reports_selected = $("#reports-subsections").val();
-		$("#list-ss").append('<option value="' + vl + '" data="0|' + label + '||||0">' + lb + '</option>');
-		$("#main-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
-		$("#reports-subsections-stored").append('<option value="' + vl + '">' + lb + '</option>');
-		$("#ss-prop .ss-prop, #list-ss").prop("disabled", false);
-		$("#ss-id").prop("disabled", true);
+	var forumTitle = ui.item.label;
+	var forumLabel = forumTitle.replace(/.* » /, "");
+	var forumID = ui.item.value;
+	if ($("#list-forums option[value=" + forumID + "]").length == 0) {
+		var mainSelectedForumID = $("#main-subsections").val();
+		var reportsSelectedForumID = $("#reports-subsections").val();
+		$("#list-forums").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
+		var optionForum = $("#list-forums option[value=" + forumID + "]");
+		optionForum.attr("data-client", 0).data("client", 0);
+		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
+		optionForum.attr("data-savepath", "").data("savepath", "");
+		optionForum.attr("data-subdirectory", "").data("subdirectory", "");
+		optionForum.attr("data-hide", 0).data("hide", 0);
+		optionForum.text(forumTitle);
+		$("#main-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
+		$("#reports-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
+		$(".forum-props, #list-forums").prop("disabled", false);
+		$("#forum-id").prop("disabled", true);
 	}
-	$("#list-ss option[value=" + vl + "]").prop("selected", "selected").change();
-	ui.item.value = '';
-	doSortSelect("list-ss");
+	$("#list-forums option[value=" + forumID + "]").prop("selected", "selected").change();
+	ui.item.value = "";
+	doSortSelect("list-forums");
 	doSortSelect("main-subsections-stored");
 	doSortSelect("reports-subsections-stored");
-	$("#main-subsections").val(main_selected).selectmenu("refresh");
-	$("#reports-subsections").val(reports_selected).selectmenu("refresh");
+	$("#main-subsections").val(mainSelectedForumID).selectmenu("refresh");
+	$("#reports-subsections").val(reportsSelectedForumID).selectmenu("refresh");
 }
 
 function getForums() {
 	var forums = {};
-	$("#list-ss option").each(function () {
-		var value = $(this).val();
-		if (value != 0) {
-			var text = $(this).text();
-			var data = $(this).attr("data");
-			data = data.split("|");
-			forums[value] = {
-				"id": value,
-				"na": text,
-				"cl": data[0],
-				"lb": data[1],
-				"fd": data[2],
-				"ln": data[3],
-				"sub_folder": data[4],
-				"hide_topics": data[5]
+	$("#list-forums option").each(function () {
+		var forumID = $(this).val();
+		if (forumID != 0) {
+			var forumTitle = $(this).text();
+			var forumData = $(this).data();
+			forums[forumID] = {
+				"title": forumTitle,
+				"client": forumData.client,
+				"label": forumData.label,
+				"savepath": forumData.savepath,
+				"subdirectory": forumData.subdirectory,
+				"hide": forumData.hide
 			};
 		}
 	});

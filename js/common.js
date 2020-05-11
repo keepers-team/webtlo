@@ -4,22 +4,22 @@
 /* текущее время */
 function nowTime() {
 	var now = new Date();
-	var day = (now.getDate() < 10 ? '0' : '') + now.getDate();
-	var month = (parseInt(now.getMonth() + 1) < 10 ? '0' : '') + parseInt(now.getMonth() + 1);
+	var day = (now.getDate() < 10 ? "0" : "") + now.getDate();
+	var month = (parseInt(now.getMonth() + 1) < 10 ? "0" : "") + parseInt(now.getMonth() + 1);
 	var year = now.getFullYear();
-	var hours = (now.getHours() < 10 ? '0' : '') + now.getHours();
-	var minutes = (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
-	var seconds = (now.getSeconds() < 10 ? '0' : '') + now.getSeconds();
-	return day + '.' + month + '.' + year + ' ' + hours + ':' + minutes + ':' + seconds + ' ';
+	var hours = (now.getHours() < 10 ? "0" : "") + now.getHours();
+	var minutes = (now.getMinutes() < 10 ? "0" : "") + now.getMinutes();
+	var seconds = (now.getSeconds() < 10 ? "0" : "") + now.getSeconds();
+	return day + "." + month + "." + year + " " + hours + ":" + minutes + ":" + seconds + " ";
 }
 
 /* перевод байт */
 function сonvertBytes(size) {
 	var filesizename = [" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
-	return size ? (size / Math.pow(1024, (i = Math.floor(Math.log(size) / Math.log(1024))))).toFixed(2) + filesizename[i] : '0.00';
+	return size ? (size / Math.pow(1024, (i = Math.floor(Math.log(size) / Math.log(1024))))).toFixed(2) + filesizename[i] : "0.00";
 }
 
-function showResult(text) {
+function showResultTopics(text = "") {
 	$("#topics_result").html(text);
 }
 
@@ -58,20 +58,30 @@ function makeDelay(ms) {
 }
 
 // сортировка в select
-function doSortSelect(select_id) {
-	var sortedVals = $.makeArray($('#' + select_id + ' option')).sort(function (a, b) {
-		if ($(a).val() == 0) return -1;
-		return $(a).text().toUpperCase() > $(b).text().toUpperCase() ? 1 : $(a).text().toUpperCase() < $(b).text().toUpperCase() ? -1 : 0;
+function doSortSelect(selectID) {
+	$("#" + selectID).toggle();
+	var sortedVals = $.makeArray($("#" + selectID + " option")).sort(function (a, b) {
+		if ($(a).val() == 0) {
+			return -1;
+		}
+		var textA = $(a).text().toUpperCase();
+		var textB = $(b).text().toUpperCase();
+		return textA.localeCompare(textB, undefined, { numeric: true, sensitivity: "base" });
 	});
-	$('#' + select_id).empty().html(sortedVals);
+	$("#" + selectID).empty().html(sortedVals).toggle();
 }
 
-function doSortSelectByValue(select_id) {
-	var sortedVals = $.makeArray($('#' + select_id + ' option')).sort(function (a, b) {
-		if ($(a).val() == 0) return -1;
-		return $(a).val().toUpperCase() > $(b).val().toUpperCase() ? 1 : $(a).val().toUpperCase() < $(b).val().toUpperCase() ? -1 : 0;
+function doSortSelectByValue(selectID) {
+	$("#" + selectID).toggle();
+	var sortedVals = $.makeArray($("#" + selectID + " option")).sort(function (a, b) {
+		if ($(a).val() == 0) {
+			return -1;
+		}
+		var textA = $(a).text().toUpperCase();
+		var textB = $(b).text().toUpperCase();
+		return textA.localeCompare(textB, undefined, { numeric: true, sensitivity: "base" });
 	});
-	$('#' + select_id).empty().html(sortedVals);
+	$("#" + selectID).empty().html(sortedVals).toggle();
 }
 
 // сохранение настроек
@@ -163,7 +173,7 @@ function getReport() {
 (function ($) {
 	$.fn.serializeAllArray = function () {
 		var data = $(this).serializeArray();
-		$(':disabled[name]', this).each(function () {
+		$(":disabled[name]", this).each(function () {
 			if (
 				(
 					$(this).attr("type") === "checkbox"

@@ -111,7 +111,7 @@ $(document).ready(function () {
         }
         $("#reports-subsections-stored :eq(" + selected + ")").prop("selected", "selected");
         $("#reports-subsections").selectmenu("refresh");
-        subsections_delay(getReport);
+        forumDataShowDelay(getReport);
         return false;
     });
 

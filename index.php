@@ -9,48 +9,6 @@ try {
     // получение настроек
     $cfg = get_settings();
 
-    // торрент-клиенты
-    $tcs = '';
-    $ss_tcs = '';
-    if (isset($cfg['clients'])) {
-        $tor_client_option_pattern = '<option value="%s" data="%s">%s</option>';
-        foreach ($cfg['clients'] as $tor_client_id => $tor_client_info) {
-            $tcs .= sprintf(
-                $tor_client_option_pattern,
-                $tor_client_id,
-                implode('|', $tor_client_info),
-                $tor_client_info['cm']
-            );
-            $ss_tcs .= sprintf(
-                $tor_client_option_pattern,
-                $tor_client_id,
-                '',
-                $tor_client_info['cm']
-            );
-        }
-    }
-
-    // подразделы
-    $subsections = '';
-    $subsections_settings = '';
-    if (isset($cfg['subsections'])) {
-        $forum_option_pattern = '<option value="%s" data="%s">%s</option>';
-        foreach ($cfg['subsections'] as $forum_id => &$forum_info) {
-            $subsections_settings .= sprintf(
-                $forum_option_pattern,
-                $forum_id,
-                implode('|', $forum_info),
-                $forum_info['na']
-            );
-            $subsections .= sprintf(
-                $forum_option_pattern,
-                $forum_id,
-                '',
-                $forum_info['na']
-            );
-        }
-    }
-
     // чекбоксы
     $savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
@@ -63,8 +21,10 @@ try {
 
     // вставка option в select
 
-    // формат строки option
+    // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
+    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s"';
+    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s"';
 
     // стандартные адреса
     $forumAddressList = array(
@@ -103,6 +63,63 @@ try {
         $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
     }
     $apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
+
+    // торрент-клиенты
+    $optionTorrentClients = '';
+    $optionTorrentClientsDataset = '';
+    if (isset($cfg['clients'])) {
+        foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
+            $datasetTorrentClient = sprintf(
+                $datasetFormatTorrentClient,
+                $torrentClientData['cm'],
+                $torrentClientData['cl'],
+                $torrentClientData['ht'],
+                $torrentClientData['pt'],
+                $torrentClientData['lg'],
+                $torrentClientData['pw']
+            );
+            $optionTorrentClients .= sprintf(
+                $optionFormat,
+                $torrentClientID,
+                '',
+                $torrentClientData['cm']
+            );
+            $optionTorrentClientsDataset .= sprintf(
+                $optionFormat,
+                $torrentClientID,
+                $datasetTorrentClient,
+                $torrentClientData['cm']
+            );
+        }
+    }
+
+    // хранимые подразделы
+    $optionForums = '';
+    $optionForumsDataset = '';
+    if (isset($cfg['subsections'])) {
+        foreach ($cfg['subsections'] as $forumID => $forumData) {
+            $datasetForum = sprintf(
+                $datasetFormatForum,
+                $forumData['cl'],
+                $forumData['lb'],
+                $forumData['df'],
+                $forumData['sub_folder'],
+                $forumData['hide_topics']
+            );
+            $optionForums .= sprintf(
+                $optionFormat,
+                $forumID,
+                '',
+                $forumData['na']
+            );
+            $optionForumsDataset .= sprintf(
+                $optionFormat,
+                $forumID,
+                $datasetForum,
+                $forumData['na']
+            );
+        }
+    }
 } catch (Exception $e) {
     // $e->getMessage();
 }
@@ -140,7 +157,7 @@ try {
             <div id="main" class="content">
                 <select id="main-subsections">
                     <optgroup id="main-subsections-stored">
-                        <?php echo $subsections ?>
+                        <?php echo $optionForums ?>
                     </optgroup>
                     <optgroup label="Прочее">
                         <option value="-2">Раздачи из "чёрного списка"</option>
@@ -506,34 +523,34 @@ try {
                         <h2>Настройки торрент-клиентов</h2>
                         <div>
                             <p>
-                                <button type="button" id="add-tc" title="Добавить новый торрент-клиент в список">
+                                <button type="button" id="add-torrent-client" title="Добавить новый торрент-клиент в список">
                                     Добавить
                                 </button>
-                                <button type="button" id="del-tc" title="Удалить выбранный торрент-клиент из списка">
+                                <button type="button" id="remove-torrent-client" title="Удалить выбранный торрент-клиент из списка">
                                     Удалить
                                 </button>
-                                <button type="button" id="online-tc" title="Проверить доступность выбранного торрент-клиента в списке">
+                                <button type="button" id="connect-torrent-client" title="Проверить доступность выбранного торрент-клиента в списке">
                                     <i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
                                 </button>
-                                <span id="result-tc"></span>
+                                <span id="torrent-client-response"></span>
                             </p>
 
                             <div class="block-settings">
-                                <select id="list-tcs" size=10>
+                                <select id="list-torrent-clients" size=10>
                                     <optgroup label="список торрент-клиентов">
-                                        <?php echo $tcs ?>
+                                        <?php echo $optionTorrentClientsDataset ?>
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="block-settings" id="tc-prop">
+                            <div class="block-settings" id="torrent-client-props">
                                 <div>
                                     <label>
                                         Название (комментарий)
-                                        <input name="TC_comment" id="TC_comment" class="tc-prop" type="text" size="24" title="Комментарий" />
+                                        <input name="torrent-client-comment" id="torrent-client-comment" class="torrent-client-props" type="text" size="24" title="Комментарий" />
                                     </label>
                                     <label>
                                         Торрент-клиент
-                                        <select name="TC_client" id="TC_client" class="tc-prop">
+                                        <select name="torrent-client-type" id="torrent-client-type" class="torrent-client-props">
                                             <option value="utorrent">uTorrent</option>
                                             <option value="transmission">Transmission</option>
                                             <option value="vuze" title="Web Remote plugin">Vuze</option>
@@ -547,62 +564,58 @@ try {
                                 <div>
                                     <label>
                                         IP-адрес/сетевое имя:
-                                        <input name="TC_hostname" id="TC_hostname" class="tc-prop" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." />
+                                        <input name="torrent-client-hostname" id="torrent-client-hostname" class="torrent-client-props" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." />
                                     </label>
                                     <label>
                                         Порт:
-                                        <input name="TC_port" id="TC_port" class="tc-prop" type="text" size="24" title="Порт веб-интерфейса торрент-клиента." />
+                                        <input name="torrent-client-port" id="torrent-client-port" class="torrent-client-props" type="text" size="24" title="Порт веб-интерфейса торрент-клиента." />
                                     </label>
                                 </div>
                                 <div>
                                     <label>
                                         Логин:
-                                        <input name="TC_login" id="TC_login" class="tc-prop" type="text" size="24" title="Логин для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
+                                        <input name="torrent-client-login" id="torrent-client-login" class="torrent-client-props" type="text" size="24" title="Логин для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
                                     </label>
                                     <label>
                                         Пароль:
-                                        <input name="TC_password" id="TC_password" class="tc-prop" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
+                                        <input name="torrent-client-password" id="torrent-client-password" class="torrent-client-props" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
                                     </label>
                                 </div>
                             </div>
                         </div>
                         <h2>Настройки сканируемых подразделов</h2>
                         <div>
-                            <input id="ss-add" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
-                            <input id="ss-del" type="button" value="Удалить" title="Удалить выбранный подраздел" />
+                            <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
+                            <input id="remove-forum" type="button" value="Удалить" title="Удалить выбранный подраздел" />
                             <label class="flex">
                                 Подраздел:
-                                <select name="list-ss" id="list-ss">
-                                    <?php echo $subsections_settings ?>
+                                <select name="list-forums" id="list-forums">
+                                    <?php echo $optionForumsDataset ?>
                                 </select>
                             </label>
-                            <fieldset id="ss-prop">
+                            <fieldset id="forum-props">
                                 <label class="flex">
                                     Индекс:
-                                    <input disabled id="ss-id" class="myinput ss-prop" type="text" title="Индекс подраздела" />
+                                    <input disabled id="forum-id" class="myinput forum-props" type="text" title="Индекс подраздела" />
                                 </label>
                                 <label class="flex">
                                     Торрент-клиент:
-                                    <select id="ss-client" class="myinput ss-prop" title="Добавлять раздачи текущего подраздела в торрент-клиент">
+                                    <select id="forum-client" class="myinput forum-props" title="Добавлять раздачи текущего подраздела в торрент-клиент">
                                         <option value=0>не выбран</option>
-                                        <?php echo $ss_tcs ?>
+                                        <?php echo $optionTorrentClients ?>
                                     </select>
                                 </label>
                                 <label class="flex">
                                     Метка:
-                                    <input id="ss-label" class="myinput ss-prop" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)" />
+                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)" />
                                 </label>
                                 <label class="flex">
                                     Каталог для данных:
-                                    <input id="ss-folder" class="myinput ss-prop" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
-                                </label>
-                                <label style="display:none;" class="flex">
-                                    Ссылка на список:
-                                    <input id="ss-link" class="myinput ss-prop" type="text" size="55" title="Ссылка для отправки отчётов на форум (например, https://rutracker.org/forum/viewtopic.php?t=3572968)" />
+                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
                                 </label>
                                 <label class="flex">
                                     Создавать подкаталог для добавляемой раздачи:
-                                    <select id="ss-sub-folder" class="myinput ss-prop" title="Создавать подкаталог для данных добавляемой раздачи">
+                                    <select id="forum-subdirectory" class="myinput forum-props" title="Создавать подкаталог для данных добавляемой раздачи">
                                         <option value="0">нет</option>
                                         <option value="1">ID раздачи</option>
                                         <!-- <option value="2">Запрашивать</option> -->
@@ -610,7 +623,7 @@ try {
                                 </label>
                                 <label class="flex">
                                     Скрывать раздачи в общем списке:
-                                    <select id="ss-hide-topics" class="myinput ss-prop" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
+                                    <select id="forum-hide-topics" class="myinput forum-props" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
@@ -693,7 +706,7 @@ try {
                         <option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
                     </optgroup>
                     <optgroup id="reports-subsections-stored">
-                        <?php echo $subsections ?>
+                        <?php echo $optionForums ?>
                     </optgroup>
                     <optgroup>
                         <option value="0">Сводный отчёт</option>

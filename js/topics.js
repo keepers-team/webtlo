@@ -7,7 +7,7 @@ $(document).ready(function () {
 	$(".tor_download").on("click", function () {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
-			showResult("Выберите раздачи");
+			showResultTopics("Выберите раздачи");
 			return false;
 		}
 		var forum_id = $("#main-subsections").val();
@@ -33,7 +33,7 @@ $(document).ready(function () {
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				showResult(response.result);
+				showResultTopics(response.result);
 			},
 		});
 	});
@@ -42,7 +42,7 @@ $(document).ready(function () {
 	$("#tor_blacklist").on("click", function () {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
-			showResult("Выберите раздачи");
+			showResultTopics("Выберите раздачи");
 			return false;
 		}
 		var forum_id = $("#main-subsections").val();
@@ -62,7 +62,7 @@ $(document).ready(function () {
 				block_actions();
 			},
 			success: function (response) {
-				showResult(response);
+				showResultTopics(response);
 				getFilteredTopics();
 			}
 		});
@@ -72,7 +72,7 @@ $(document).ready(function () {
 	$("#tor_add").on("click", function () {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
-			showResult("Выберите раздачи");
+			showResultTopics("Выберите раздачи");
 			return false;
 		}
 		$("#process").text("Добавление раздач в торрент-клиент...");
@@ -91,7 +91,7 @@ $(document).ready(function () {
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				showResult(response.result);
+				showResultTopics(response.result);
 				getFilteredTopics();
 			}
 		});
@@ -101,12 +101,12 @@ $(document).ready(function () {
 	$(".torrent_action").on("click", function (e) {
 		var topics_ids = $("#topics").serialize();
 		if ($.isEmptyObject(topics_ids)) {
-			showResult("Выберите раздачи");
+			showResultTopics("Выберите раздачи");
 			return false;
 		}
 		var tor_clients = getTorClients();
 		if ($.isEmptyObject(tor_clients)) {
-			showResult("В настройках не найдены торрент-клиенты");
+			showResultTopics("В настройках не найдены торрент-клиенты");
 			return false;
 		}
 		var action = $(this).val();
@@ -115,9 +115,8 @@ $(document).ready(function () {
 		var remove_data = "";
 		var force_start = "";
 		if (subsection > 0) {
-			var data = $("#list-ss [value=" + subsection + "]").attr("data");
-			data = data.split("|");
-			label = data[1];
+			var forumData = $("#list-forums [value=" + subsection + "]").data();
+			label = forumData.label;
 		}
 		if (action == "remove") {
 			$("#dialog").dialog(
@@ -319,6 +318,9 @@ $(document).ready(function () {
 		$('input[name=is_keepers][type="checkbox"]').prop("checked", true).change();
 	});
 
+	// очистка topics_result при изменениях на странице
+	$("#topics_data").on("change input spin", showResultTopics);
+
 	// загрузка параметров фильтра из кук
 	var filter_state = Cookies.get("filter-state");
 	var filter_options = Cookies.get("filter-options");
@@ -425,7 +427,7 @@ function getFilteredTopics() {
 		success: function (response) {
 			response = $.parseJSON(response);
 			if (response.log.length) {
-				$("#topics_result").text(response.log);
+				showResultTopics(response.log);
 			}
 			if (response.topics != null) {
 				$("#topics").html(response.topics);
@@ -483,7 +485,7 @@ function execActionTopics(topics_ids, tor_clients, action, label, force_start, r
 		success: function (response) {
 			response = $.parseJSON(response);
 			$("#log").append(response.log);
-			showResult(response.result);
+			showResultTopics(response.result);
 			if (action == 'remove') {
 				getFilteredTopics();
 			}

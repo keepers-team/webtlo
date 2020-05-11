@@ -5,21 +5,21 @@ try {
     include_once dirname(__FILE__) . '/../classes/clients.php';
 
     //~  0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
-    $tor_client = $_POST['tor_client'];
+    $torrentClient = $_POST['tor_client'];
 
     /**
      * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
      */
-    $client = new $tor_client[1](
-        $tor_client[2],
-        $tor_client[3],
-        $tor_client[4],
-        $tor_client[5]
+    $client = new $torrentClient['type'](
+        $torrentClient['hostname'],
+        $torrentClient['port'],
+        $torrentClient['login'],
+        $torrentClient['password']
     );
 
     $status = $client->isOnline()
-        ? '<i class="fa fa-circle text-success"></i>"' . $tor_client[0] . '" сейчас доступен'
-        : '<i class="fa fa-circle text-danger"></i>"' . $tor_client[0] . '" сейчас недоступен';
+        ? '<i class="fa fa-circle text-success"></i>"' . $torrentClient['comment'] . '" сейчас доступен'
+        : '<i class="fa fa-circle text-danger"></i>"' . $torrentClient['comment'] . '" сейчас недоступен';
 
     echo json_encode(
         array(
@@ -29,7 +29,7 @@ try {
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    $status = 'Не удалось проверить доступность торрент-клиента "' . $tor_client[0] . '"';
+    $status = 'Не удалось проверить доступность торрент-клиента "' . $torrentClient['comment'] . '"';
     echo json_encode(
         array(
             'log' => Log::get(),

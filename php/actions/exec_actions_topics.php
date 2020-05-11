@@ -97,16 +97,16 @@ try {
         /**
          * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
          */
-        $client = new $tor_client['cl'](
-            $tor_client['ht'],
-            $tor_client['pt'],
-            $tor_client['lg'],
-            $tor_client['pw']
+        $client = new $tor_client['type'](
+            $tor_client['hostname'],
+            $tor_client['port'],
+            $tor_client['login'],
+            $tor_client['password']
         );
 
         // проверка доступности торрент-клиента
         if (!$client->isOnline()) {
-            Log::append('Error: торрент-клиент "' . $tor_client['cm'] . '" в данный момент недоступен.');
+            Log::append('Error: торрент-клиент "' . $tor_client['comment'] . '" в данный момент недоступен.');
             continue;
         }
 
@@ -138,7 +138,7 @@ try {
                 break;
         }
 
-        Log::append('Действие "' . $action . '" для торрент-клиента "' . $tor_client['cm'] . '" выполнено (' . count($hashes) . ').');
+        Log::append('Действие "' . $action . '" для торрент-клиента "' . $tor_client['comment'] . '" выполнено (' . count($hashes) . ').');
 
         unset($hashes_remove);
         unset($tor_client);

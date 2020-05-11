@@ -12,7 +12,7 @@ $(document).ready(function () {
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				$("#topics_result").text(response.result);
+				showResultTopics(response.result);
 				getFilteredTopics();
 			},
 			complete: function () {
@@ -33,7 +33,7 @@ $(document).ready(function () {
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				$("#topics_result").text(response.result);
+				showResultTopics(response.result);
 			},
 			complete: function () {
 				block_actions();
@@ -53,7 +53,7 @@ $(document).ready(function () {
 			success: function (response) {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
-				$("#topics_result").text(response.result);
+				showResultTopics(response.result);
 			},
 			complete: function () {
 				block_actions();

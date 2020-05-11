@@ -13,41 +13,42 @@ try {
     }
 
     if (isset($_POST['tor_clients'])) {
-        $tor_clients = $_POST['tor_clients'];
+        $torrentClients = $_POST['tor_clients'];
     }
 
     $ini = new TIniFileEx();
 
     // торрент-клиенты
-    $q = 0;
+    $torrentClientNumber = 0;
     if (
-        isset($tor_clients)
-        && is_array($tor_clients)
+        isset($torrentClients)
+        && is_array($torrentClients)
     ) {
-        foreach ($tor_clients as $id => $tor_client) {
-            $q++;
-            $ini->write("torrent-client-$q", 'id', $id);
-            if (isset($tor_client['cm'])) {
-                $ini->write("torrent-client-$q", 'comment', empty($tor_client['cm']) ? $id : $tor_client['cm']);
+        foreach ($torrentClients as $torrentClientID => $torrentClientData) {
+            $torrentClientNumber++;
+            $torrentClientSection = 'torrent-client-' . $torrentClientNumber;
+            $ini->write($torrentClientSection, 'id', $torrentClientID);
+            if (isset($torrentClientData['comment'])) {
+                $ini->write($torrentClientSection, 'comment', trim($torrentClientData['comment']));
             }
-            if (isset($tor_client['cl'])) {
-                $ini->write("torrent-client-$q", 'client', $tor_client['cl']);
+            if (isset($torrentClientData['type'])) {
+                $ini->write($torrentClientSection, 'client', $torrentClientData['type']);
             }
-            if (isset($tor_client['ht'])) {
-                $ini->write("torrent-client-$q", 'hostname', $tor_client['ht']);
+            if (isset($torrentClientData['hostname'])) {
+                $ini->write($torrentClientSection, 'hostname', trim($torrentClientData['hostname']));
             }
-            if (isset($tor_client['pt'])) {
-                $ini->write("torrent-client-$q", 'port', $tor_client['pt']);
+            if (isset($torrentClientData['port'])) {
+                $ini->write($torrentClientSection, 'port', trim($torrentClientData['port']));
             }
-            if (isset($tor_client['lg'])) {
-                $ini->write("torrent-client-$q", 'login', $tor_client['lg']);
+            if (isset($torrentClientData['login'])) {
+                $ini->write($torrentClientSection, 'login', trim($torrentClientData['login']));
             }
-            if (isset($tor_client['pw'])) {
-                $ini->write("torrent-client-$q", 'password', $tor_client['pw']);
+            if (isset($torrentClientData['password'])) {
+                $ini->write($torrentClientSection, 'password', trim($torrentClientData['password']));
             }
         }
     }
-    $ini->write('other', 'qt', $q); // кол-во торрент-клиентов
+    $ini->write('other', 'qt', $torrentClientNumber); // кол-во торрент-клиентов
 
     // регулировка раздач
     if (
@@ -66,16 +67,16 @@ try {
         $ini->write('proxy', 'type', $cfg['proxy_type']);
     }
     if (isset($cfg['proxy_hostname'])) {
-        $ini->write('proxy', 'hostname', $cfg['proxy_hostname']);
+        $ini->write('proxy', 'hostname', trim($cfg['proxy_hostname']));
     }
     if (isset($cfg['proxy_port'])) {
-        $ini->write('proxy', 'port', $cfg['proxy_port']);
+        $ini->write('proxy', 'port', trim($cfg['proxy_port']));
     }
     if (isset($cfg['proxy_login'])) {
-        $ini->write('proxy', 'login', $cfg['proxy_login']);
+        $ini->write('proxy', 'login', trim($cfg['proxy_login']));
     }
     if (isset($cfg['proxy_paswd'])) {
-        $ini->write('proxy', 'password', $cfg['proxy_paswd']);
+        $ini->write('proxy', 'password', trim($cfg['proxy_paswd']));
     }
 
     // подразделы
@@ -84,75 +85,73 @@ try {
         isset($forums)
         && is_array($forums)
     ) {
-        foreach ($forums as $forum) {
-            if (isset($forum['na'])) {
-                $ini->write($forum['id'], 'title', $forum['na']);
+        foreach ($forums as $forumID => $forumData) {
+            if (isset($forumData['title'])) {
+                $ini->write($forumID, 'title', trim($forumData['title']));
             }
-            if (isset($forum['cl'])) {
-                $ini->write($forum['id'], 'client', empty($forum['cl']) ? '' : $forum['cl']);
+            if (isset($forumData['client'])) {
+                $ini->write($forumID, 'client', $forumData['client']);
             }
-            if (isset($forum['lb'])) {
-                $ini->write($forum['id'], 'label', $forum['lb']);
+            if (isset($forumData['label'])) {
+                $ini->write($forumID, 'label', trim($forumData['label']));
             }
-            if (isset($forum['fd'])) {
-                $ini->write($forum['id'], 'data-folder', $forum['fd']);
+            if (isset($forumData['savepath'])) {
+                $ini->write($forumID, 'data-folder', trim($forumData['savepath']));
             }
-            if (isset($forum['sub_folder'])) {
-                $ini->write($forum['id'], 'data-sub-folder', $forum['sub_folder']);
+            if (isset($forumData['subdirectory'])) {
+                $ini->write($forumID, 'data-sub-folder', $forumData['subdirectory']);
             }
-            if (isset($forum['ln'])) {
-                $ini->write($forum['id'], 'link', $forum['ln']);
-            }
-            if (isset($forum['hide_topics'])) {
-                $ini->write($forum['id'], 'hide-topics', $forum['hide_topics']);
+            if (isset($forumData['hide'])) {
+                $ini->write($forumID, 'hide-topics', $forumData['hide']);
             }
         }
-        $ini->write('sections', 'subsections', implode(',', array_keys($forums)));
+        $forumsIDs = implode(',', array_keys($forums));
+        $ini->write('sections', 'subsections', $forumsIDs);
     }
 
     // кураторы
     if (isset($cfg['dir_torrents'])) {
-        $ini->write('curators', 'dir_torrents', $cfg['dir_torrents']);
+        $ini->write('curators', 'dir_torrents', trim($cfg['dir_torrents']));
     }
     if (isset($cfg['passkey'])) {
-        $ini->write('curators', 'user_passkey', $cfg['passkey']);
+        $ini->write('curators', 'user_passkey', trim($cfg['passkey']));
     }
     $ini->write('curators', 'tor_for_user', isset($cfg['tor_for_user']) ? 1 : 0);
 
     // форум / api
     if (isset($cfg['api_url'])) {
-        $ini->write('torrent-tracker', 'api_url', $cfg['api_url']);
+        $ini->write('torrent-tracker', 'api_url', trim($cfg['api_url']));
     }
     if (isset($cfg['api_url_custom'])) {
-        $ini->write('torrent-tracker', 'api_url_custom', $cfg['api_url_custom']);
+        $ini->write('torrent-tracker', 'api_url_custom', trim($cfg['api_url_custom']));
     }
     if (isset($cfg['forum_url'])) {
-        $ini->write('torrent-tracker', 'forum_url', $cfg['forum_url']);
+        $ini->write('torrent-tracker', 'forum_url', trim($cfg['forum_url']));
     }
     if (isset($cfg['forum_url_custom'])) {
-        $ini->write('torrent-tracker', 'forum_url_custom', $cfg['forum_url_custom']);
+        $ini->write('torrent-tracker', 'forum_url_custom', trim($cfg['forum_url_custom']));
     }
     if (isset($cfg['tracker_username'])) {
-        $ini->write('torrent-tracker', 'login', $cfg['tracker_username']);
+        $ini->write('torrent-tracker', 'login', trim($cfg['tracker_username']));
     }
     if (isset($cfg['tracker_password'])) {
-        $ini->write('torrent-tracker', 'password', $cfg['tracker_password']);
+        $ini->write('torrent-tracker', 'password', trim($cfg['tracker_password']));
     }
     if (isset($cfg['user_id'])) {
-        $ini->write('torrent-tracker', 'user_id', $cfg['user_id']);
+        $ini->write('torrent-tracker', 'user_id', trim($cfg['user_id']));
     }
     if (isset($cfg['bt_key'])) {
-        $ini->write('torrent-tracker', 'bt_key', $cfg['bt_key']);
+        $ini->write('torrent-tracker', 'bt_key', trim($cfg['bt_key']));
     }
     if (isset($cfg['api_key'])) {
-        $ini->write('torrent-tracker', 'api_key', $cfg['api_key']);
+        $ini->write('torrent-tracker', 'api_key', trim($cfg['api_key']));
     }
     $ini->write('torrent-tracker', 'api_ssl', isset($cfg['api_ssl']) ? 1 : 0);
     $ini->write('torrent-tracker', 'forum_ssl', isset($cfg['forum_ssl']) ? 1 : 0);
 
     // загрузка торрент-файлов
     if (isset($cfg['savedir'])) {
-        $ini->write('download', 'savedir', $cfg['savedir']);
+        $ini->write('download', 'savedir', trim($cfg['savedir']));
     }
     $ini->write('download', 'savesubdir', isset($cfg['savesubdir']) ? 1 : 0);
     $ini->write('download', 'retracker', isset($cfg['retracker']) ? 1 : 0);
@@ -162,25 +161,25 @@ try {
         isset($cfg['rule_topics'])
         && is_numeric($cfg['rule_topics'])
     ) {
-        $ini->write('sections', 'rule_topics', $cfg['rule_topics']);
+        $ini->write('sections', 'rule_topics', trim($cfg['rule_topics']));
     }
     if (
         isset($cfg['rule_date_release'])
         && is_numeric($cfg['rule_date_release'])
     ) {
-        $ini->write('sections', 'rule_date_release', $cfg['rule_date_release']);
+        $ini->write('sections', 'rule_date_release', trim($cfg['rule_date_release']));
     }
     if (
         isset($cfg['avg_seeders_period'])
         && is_numeric($cfg['avg_seeders_period'])
     ) {
-        $ini->write('sections', 'avg_seeders_period', $cfg['avg_seeders_period']);
+        $ini->write('sections', 'avg_seeders_period', trim($cfg['avg_seeders_period']));
     }
     if (
         isset($cfg['avg_seeders_period_outdated'])
         && is_numeric($cfg['avg_seeders_period_outdated'])
     ) {
-        $ini->write('sections', 'avg_seeders_period_outdated', $cfg['avg_seeders_period_outdated']);
+        $ini->write('sections', 'avg_seeders_period_outdated', trim($cfg['avg_seeders_period_outdated']));
     }
     $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
 
