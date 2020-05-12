@@ -7,7 +7,6 @@
  */
 class Rtorrent extends TorrentClient
 {
-
     protected static $base = 'http://%s/RPC2';
 
     /**
@@ -101,7 +100,7 @@ class Rtorrent extends TorrentClient
         }
         $torrentFile = file_get_contents($torrentFilePath, false, stream_context_create());
         if ($torrentFile === false) {
-            Log::append('Error: не удалось загрузить файл ' . $torrentFilePath);
+            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
             return false;
         }
         preg_match('|publisher-url[0-9]*:(https?\:\/\/[^\?]*\?t=[0-9]*)|', $torrentFile, $matches);
@@ -134,71 +133,96 @@ class Rtorrent extends TorrentClient
         );
     }
 
-    public function setLabel($hashes, $label = '')
+    public function setLabel($torrentHashes, $labelName = '')
     {
-        if (empty($label)) {
+        if (empty($labelName)) {
             return false;
         }
-        $label = rawurlencode($label);
-        foreach ($hashes as $hash) {
-            $this->makeRequest('d.custom1.set', array($hash, $label));
+        $result = null;
+        $labelName = rawurlencode($labelName);
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest('d.custom1.set', array($torrentHash, $labelName));
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function startTorrents($hashes, $forceStart = false)
+    public function startTorrents($torrentHashes, $forceStart = false)
     {
-        foreach ($hashes as $hash) {
-            $this->makeRequest('d.start', $hash);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest('d.start', $torrentHash);
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function stopTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
-        foreach ($hashes as $hash) {
-            $this->makeRequest('d.stop', $hash);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest('d.stop', $torrentHash);
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        foreach ($hashes as $hash) {
-            $executeDeleteLocalData = array('', 'true');
-            if ($deleteLocalData) {
-                $dataPath = $this->makeRequest('d.data_path', $hash);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $executeDeleteFiles = array('', 'true');
+            if ($deleteFiles) {
+                $dataPath = $this->makeRequest('d.data_path', $torrentHash);
                 if (!empty($dataPath)) {
-                    $executeDeleteLocalData =  array('', 'rm', '-rf', '--', $dataPath);
+                    $executeDeleteFiles = array('', 'rm', '-rf', '--', $dataPath);
                 }
             }
-            $this->makeRequest(
+            $response = $this->makeRequest(
                 'system.multicall',
                 array(
                     array(
                         array(
                             'methodName' => 'd.custom5.set',
-                            'params' => array($hash, 1),
+                            'params' => array($torrentHash, 1),
                         ),
                         array(
                             'methodName' => 'd.delete_tied',
-                            'params' => array($hash),
+                            'params' => array($torrentHash),
                         ),
                         array(
                             'methodName' => 'd.erase',
-                            'params' => array($hash)
+                            'params' => array($torrentHash)
                         ),
                         array(
                             'methodName' => 'execute2',
-                            'params' => $executeDeleteLocalData
+                            'params' => $executeDeleteFiles
                         )
                     )
                 )
             );
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function recheckTorrents($hashes)
+    public function recheckTorrents($torrentHashes)
     {
-        foreach ($hashes as $hash) {
-            $this->makeRequest('d.check_hash', $hash);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest('d.check_hash', $torrentHash);
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 }

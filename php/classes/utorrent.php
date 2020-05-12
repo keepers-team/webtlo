@@ -6,11 +6,10 @@
  */
 class Utorrent extends TorrentClient
 {
-
     protected static $base = 'http://%s:%s/gui/%s';
 
-    protected $token;
     protected $guid;
+    protected $token;
 
     /**
      * получение токена
@@ -28,7 +27,7 @@ class Utorrent extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
         $responseInfo = curl_getinfo($ch);
@@ -44,7 +43,7 @@ class Utorrent extends TorrentClient
             return true;
         }
         Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
+        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         return false;
     }
 
@@ -116,11 +115,11 @@ class Utorrent extends TorrentClient
             $this->setSetting('dir_active_download', urlencode($savePath));
         }
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-            $torrentData = new CurlFile($torrentFilePath, 'application/x-bittorrent');
+            $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
         } else {
-            $torrentData = '@' . $torrentFilePath;
+            $torrentFile = '@' . $torrentFilePath;
         }
-        return $this->makeRequest('?action=add-file', array('torrent_file' => $torrentData));
+        return $this->makeRequest('?action=add-file', array('torrent_file' => $torrentFile));
     }
 
     /**
@@ -129,9 +128,9 @@ class Utorrent extends TorrentClient
      * @param $property
      * @param $value
      */
-    public function setProperties($hash, $property, $value)
+    public function setProperties($hashes, $property, $value)
     {
-        $request = preg_replace('|^(.*)$|', 'hash=$0&s=' . $property . '&v=' . urlencode($value), $hash);
+        $request = preg_replace('|^(.*)$|', 'hash=$0&s=' . $property . '&v=' . urlencode($value), $hashes);
         $request = implode('&', $request);
         return $this->makeRequest('?action=setprops&' . $request);
     }
@@ -158,30 +157,30 @@ class Utorrent extends TorrentClient
         return $glue . implode($glue, $params);
     }
 
-    public function setLabel($hash, $label = '')
+    public function setLabel($torrentHashes, $labelName = '')
     {
-        return $this->setProperties($hash, 'label', $label);
+        return $this->setProperties($torrentHashes, 'label', $labelName);
     }
 
-    public function startTorrents($hashes, $force = false)
+    public function startTorrents($torrentHashes, $forceStart = false)
     {
-        $action = $force ? 'forcestart' : 'start';
-        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes));
+        $action = $forceStart ? 'forcestart' : 'start';
+        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function recheckTorrents($hashes)
+    public function recheckTorrents($torrentHashes)
     {
-        return $this->makeRequest('?action=recheck' . $this->implodeParams('&hash=', $hashes));
+        return $this->makeRequest('?action=recheck' . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function stopTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
-        return $this->makeRequest('?action=stop' . $this->implodeParams('&hash=', $hashes));
+        return $this->makeRequest('?action=stop' . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        $action = $deleteLocalData ? 'removedata' : 'remove';
-        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $hashes));
+        $action = $deleteFiles ? 'removedata' : 'remove';
+        return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $torrentHashes));
     }
 }

@@ -6,10 +6,10 @@
  */
 class Qbittorrent extends TorrentClient
 {
+    protected static $base = 'http://%s:%s/%s';
 
     private $categories;
-
-    protected static $base = 'http://%s:%s/%s';
+    private $responseHttpCode;
 
     /**
      * получение идентификатора сессии и запись его в $this->sid
@@ -32,17 +32,23 @@ class Qbittorrent extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
+        $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        preg_match('|Set-Cookie: ([^;]+);|i', $response, $matches);
-        if (!empty($matches)) {
-            $this->sid = $matches[1];
-            return true;
+        if ($responseHttpCode == 200) {
+            preg_match('|Set-Cookie: ([^;]+);|i', $response, $matches);
+            if (!empty($matches)) {
+                $this->sid = $matches[1];
+                return true;
+            }
+        } elseif ($responseHttpCode == 403) {
+            Log::append('Error: User\'s IP is banned for too many failed login attempts');
+        } else {
+            Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента');
+            Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
         return false;
     }
 
@@ -55,14 +61,15 @@ class Qbittorrent extends TorrentClient
      *
      * @return bool|mixed|string
      */
-    private function makeRequest($url, $fields = '', $decode = true, $options = array())
+    private function makeRequest($url, $fields = '', $options = array())
     {
+        $this->responseHttpCode = null;
         $ch = curl_init();
         curl_setopt_array($ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
-            CURLOPT_POSTFIELDS => $fields,
+            CURLOPT_POSTFIELDS => $fields
         ));
         curl_setopt_array($ch, $options);
         $response = curl_exec($ch);
@@ -70,17 +77,19 @@ class Qbittorrent extends TorrentClient
             Log::append('CURL ошибка: ' . curl_error($ch));
             return false;
         }
+        $this->responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        return $decode ? json_decode($response, true) : $response;
+        return $this->responseHttpCode == 200 ? json_decode($response, true) : false;
     }
 
     public function getTorrents()
     {
-        $data = $this->makeRequest('api/v2/torrents/info');
-        if (empty($data)) {
+        $response = $this->makeRequest('api/v2/torrents/info');
+        if ($response === false) {
             return false;
         }
-        foreach ($data as $torrent) {
+        $torrents = array();
+        foreach ($response as $torrent) {
             if ($torrent['state'] != 'error') {
                 if ($torrent['progress'] == 1) {
                     $torrentStatus = $torrent['state'] == 'pausedUP' ? -1 : 1;
@@ -90,48 +99,65 @@ class Qbittorrent extends TorrentClient
             } else {
                 $torrentStatus = -2;
             }
-            $hash = strtoupper($torrent['hash']);
-            $torrents[$hash] = $torrentStatus;
+            $torrentHash = strtoupper($torrent['hash']);
+            $torrents[$torrentHash] = $torrentStatus;
         }
-        return isset($torrents) ? $torrents : array();
+        return $torrents;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-            $torrentData = new CurlFile($torrentFilePath, 'application/x-bittorrent');
+            $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
         } else {
-            $torrentData = '@' . $torrentFilePath;
+            $torrentFile = '@' . $torrentFilePath;
         }
         $fields = array(
-            'torrents' => $torrentData,
+            'torrents' => $torrentFile,
             'savepath' => $savePath,
         );
-        $this->makeRequest('api/v2/torrents/add', $fields, false);
+        $response = $this->makeRequest('api/v2/torrents/add', $fields);
+        if (
+            $response === false
+            && $this->responseHttpCode == 415
+        ) {
+            Log::append('Error: Torrent file is not valid');
+        }
+        return $response;
     }
 
-    public function setLabel($hashes, $label = '')
+    public function setLabel($torrentHashes, $labelName = '')
     {
         if ($this->categories === null) {
             $this->categories = $this->makeRequest('api/v2/torrents/categories');
+            if ($this->categories === false) {
+                return false;
+            }
         }
         if (
             is_array($this->categories)
-            && !array_key_exists($label, $this->categories)
+            && !array_key_exists($labelName, $this->categories)
         ) {
-            $this->createCategory($label);
-            $this->categories[$label] = array();
+            $this->createCategory($labelName);
+            $this->categories[$labelName] = array();
         }
-        $hashes = array_map(function ($hash) {
-            return strtolower($hash);
-        }, $hashes);
         $fields = http_build_query(
-            array('hashes' => implode('|', $hashes), 'category' => $label),
+            array(
+                'hashes' => implode('|', array_map('strtolower', $torrentHashes)),
+                'category' => $labelName
+            ),
             '',
             '&',
             PHP_QUERY_RFC3986
         );
-        $this->makeRequest('api/v2/torrents/setCategory', $fields, false);
+        $response = $this->makeRequest('api/v2/torrents/setCategory', $fields);
+        if (
+            $response === false
+            && $this->responseHttpCode == 409
+        ) {
+            Log::append('Error: Category name does not exist');
+        }
+        return $response;
     }
 
     public function createCategory($categoryName, $savePath = '')
@@ -140,43 +166,42 @@ class Qbittorrent extends TorrentClient
             'category' => $categoryName,
             'savePath' => $savePath
         );
-        $this->makeRequest('api/v2/torrents/createCategory', $fields, false);
+        $response = $this->makeRequest('api/v2/torrents/createCategory', $fields);
+        if ($response === false) {
+            if ($this->responseHttpCode == 400) {
+                Log::append('Error: Category name is empty');
+            } elseif ($this->responseHttpCode == 409) {
+                Log::append('Error: Category name is invalid');
+            }
+        }
+        return $response;
     }
 
-    public function startTorrents($hashes, $force = false)
+    public function startTorrents($torrentHashes, $forceStart = false)
     {
-        $hashes = array_map(function ($hash) {
-            return strtolower($hash);
-        }, $hashes);
-        $fields = 'hashes=' . implode('|', $hashes);
-        $this->makeRequest('api/v2/torrents/resume', $fields, false);
+        $fields = array('hashes' => implode('|', array_map('strtolower', $torrentHashes)));
+        return $this->makeRequest('api/v2/torrents/resume', $fields);
     }
 
-    public function stopTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
-        $hashes = array_map(function ($hash) {
-            return strtolower($hash);
-        }, $hashes);
-        $fields = 'hashes=' . implode('|', $hashes);
-        $this->makeRequest('api/v2/torrents/pause', $fields, false);
+        $fields = array('hashes' => implode('|', array_map('strtolower', $torrentHashes)));
+        return $this->makeRequest('api/v2/torrents/pause', $fields);
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        $hashes = array_map(function ($hash) {
-            return strtolower($hash);
-        }, $hashes);
-        $action = $deleteLocalData ? '&deleteFiles=true' : '';
-        $fields = 'hashes=' . implode('|', $hashes) . $action;
-        $this->makeRequest('api/v2/torrents/delete', $fields, false);
+        $deleteFiles = $deleteFiles ? 'true' : 'false';
+        $fields = array(
+            'hashes' => implode('|', array_map('strtolower', $torrentHashes)),
+            'deleteFiles' => $deleteFiles
+        );
+        return $this->makeRequest('api/v2/torrents/delete', $fields);
     }
 
-    public function recheckTorrents($hashes)
+    public function recheckTorrents($torrentHashes)
     {
-        $hashes = array_map(function ($hash) {
-            return strtolower($hash);
-        }, $hashes);
-        $fields = 'hashes=' . implode('|', $hashes);
-        $this->makeRequest('/api/v2/torrents/recheck', $fields, false);
+        $fields = array('hashes' => implode('|', array_map('strtolower', $torrentHashes)));
+        return $this->makeRequest('/api/v2/torrents/recheck', $fields);
     }
 }

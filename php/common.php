@@ -145,9 +145,6 @@ function get_settings($filename = "")
         ),
     );
 
-    // метод доступа к торрент-файлам
-    $config['torrent_files_access_method'] = $ini->read('main', 'torrent_files_access_method', 'ip');
-
     // версия конфига
     $user_version = $ini->read('other', 'user_version', 0);
 

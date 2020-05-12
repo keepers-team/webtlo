@@ -6,7 +6,6 @@
  */
 class Transmission extends TorrentClient
 {
-
     protected static $base = 'http://%s:%s/transmission/rpc';
 
     /**
@@ -34,8 +33,8 @@ class Transmission extends TorrentClient
             Log::append('Error: Не удалось авторизоваться в веб-интерфейсе торрент-клиента');
             Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         } elseif ($responseHttpCode == 405) {
-            $request = array('method' => 'session-get');
-            $response = $this->makeRequest($request);
+            $fields = array('method' => 'session-get');
+            $response = $this->makeRequest($fields);
             if ($response !== false) {
                 return true;
             }
@@ -68,36 +67,41 @@ class Transmission extends TorrentClient
             CURLOPT_POSTFIELDS => json_encode($fields),
         ));
         curl_setopt_array($ch, $options);
-        $i = 1; // номер попытки
-        $n = 3; // количество попыток
+        $responseNumberTry = 1;
+        $maxNumberTry = 3;
         while (true) {
             $response = curl_exec($ch);
             if ($response === false) {
                 Log::append('CURL ошибка: ' . curl_error($ch));
-                curl_close($ch);
                 return false;
             }
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $response = json_decode($response, true);
+            curl_close($ch);
             if ($response['result'] != 'success') {
-                if (empty($response['result']) && $i <= $n) {
-                    Log::append('Повторная попытка ' . $i . '/' . $n . ' выполнить запрос.');
+                if (
+                    empty($response['result'])
+                    && $responseNumberTry <= $maxNumberTry
+                ) {
+                    Log::append('Повторная попытка ' . $responseNumberTry . '/' . $maxNumberTry . ' выполнить запрос');
+                    $responseNumberTry++;
                     sleep(10);
-                    $i++;
                     continue;
                 }
-                $error = empty($response['result']) ? 'Неизвестная ошибка' : $response['result'];
-                Log::append('Error: ' . $error);
-                curl_close($ch);
+                if (empty($response['result'])) {
+                    Log::append('Error: Неизвестная ошибка (' . $responseHttpCode . ')');
+                } else {
+                    Log::append('Error: ' . $response['result']);
+                }
                 return false;
             }
-            curl_close($ch);
-            return $response;
+            return $response['arguments'];
         }
     }
 
     public function getTorrents()
     {
-        $request = array(
+        $fields = array(
             'method' => 'torrent-get',
             'arguments' => array(
                 'fields' => array(
@@ -108,11 +112,12 @@ class Transmission extends TorrentClient
                 ),
             ),
         );
-        $data = $this->makeRequest($request);
-        if (empty($data['arguments']['torrents'])) {
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
             return false;
         }
-        foreach ($data['arguments']['torrents'] as $torrent) {
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
             if (empty($torrent['error'])) {
                 if ($torrent['percentDone'] == 1) {
                     $torrentStatus = $torrent['status'] == 0 ? -1 : 1;
@@ -122,87 +127,85 @@ class Transmission extends TorrentClient
             } else {
                 $torrentStatus = -2;
             }
-            $hash = strtoupper($torrent['hashString']);
-            $torrents[$hash] = $torrentStatus;
+            $torrentHash = strtoupper($torrent['hashString']);
+            $torrents[$torrentHash] = $torrentStatus;
         }
-        return isset($torrents) ? $torrents : false;
+        return $torrents;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
     {
-        $request = array(
+        $torrentFile = file_get_contents($torrentFilePath);
+        if ($torrentFile === false) {
+            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
+            return false;
+        }
+        $fields = array(
             'method' => 'torrent-add',
             'arguments' => array(
-                'metainfo' => base64_encode(file_get_contents($torrentFilePath)),
+                'metainfo' => base64_encode($torrentFile),
                 'paused' => false,
             ),
         );
         if (!empty($savePath)) {
-            $request['arguments']['download-dir'] = $savePath;
+            $fields['download-dir'] = $savePath;
         }
-        $data = $this->makeRequest($request);
-        if (empty($data['arguments'])) {
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
             return false;
         }
-        // if ( ! empty( $data['arguments']['torrent-added'] ) ) {
-        //     $hash = $data['arguments']['torrent-added']['hashString']
-        //     $success[] = strtoupper( $hash );
-        // }
-        if (!empty($data['arguments']['torrent-duplicate'])) {
-            $hash = $data['arguments']['torrent-duplicate']['hashString'];
-            Log::append('Warning: Эта раздача уже раздаётся в торрент-клиенте (' . $hash . ').');
+        if (!empty($response['torrent-added'])) {
+            $torrentHash = $response['torrent-added']['hashString'];
+        } elseif (!empty($response['torrent-duplicate'])) {
+            $torrentHash = $response['torrent-duplicate']['hashString'];
+            Log::append('Notice: Эта раздача уже раздаётся в торрент-клиенте (' . $torrentHash . ')');
         }
-        // return $success;
+        return $torrentHash;
     }
 
-    public function setLabel($hashes, $label = '')
+    public function setLabel($torrentHashes, $labelName = '')
     {
-        return 'Торрент-клиент не поддерживает установку меток.';
+        Log::append('Error: Торрент-клиент не поддерживает установку меток');
+        return false;
     }
 
-    public function startTorrents($hashes, $force = false)
+    public function startTorrents($torrentHashes, $forceStart = false)
     {
-        $method = $force ? 'torrent-start-now' : 'torrent-start';
-        $request = array(
+        $method = $forceStart ? 'torrent-start-now' : 'torrent-start';
+        $fields = array(
             'method' => $method,
-            'arguments' => array(
-                'ids' => $hashes,
-            ),
+            'arguments' => array('ids' => $torrentHashes),
         );
-        $data = $this->makeRequest($request);
+        return $this->makeRequest($fields);
     }
 
-    public function stopTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
-        $request = array(
+        $fields = array(
             'method' => 'torrent-stop',
-            'arguments' => array(
-                'ids' => $hashes,
-            ),
+            'arguments' => array('ids' => $torrentHashes),
         );
-        $data = $this->makeRequest($request);
+        return $this->makeRequest($fields);
     }
 
-    public function recheckTorrents($hashes)
+    public function recheckTorrents($torrentHashes)
     {
-        $request = array(
+        $fields = array(
             'method' => 'torrent-verify',
-            'arguments' => array(
-                'ids' => $hashes,
-            ),
+            'arguments' => array('ids' => $torrentHashes),
         );
-        $data = $this->makeRequest($request);
+        return $this->makeRequest($fields);
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        $request = array(
+        $fields = array(
             'method' => 'torrent-remove',
             'arguments' => array(
-                'ids' => $hashes,
-                'delete-local-data' => $deleteLocalData,
+                'ids' => $torrentHashes,
+                'delete-local-data' => $deleteFiles,
             ),
         );
-        $data = $this->makeRequest($request);
+        return $this->makeRequest($fields);
     }
 }

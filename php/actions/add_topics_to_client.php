@@ -14,7 +14,7 @@ try {
         $result = 'Выберите раздачи';
         throw new Exception();
     }
-    parse_str($_POST['topics_ids'], $topics_ids);
+    parse_str($_POST['topics_ids'], $topicsIDs);
 
     // получение настроек
     $cfg = get_settings();
@@ -39,36 +39,33 @@ try {
         throw new Exception();
     }
 
-    // список торрент-клиентов, которые поддерживают передачу содержимого торрент-файла в запросе
-    $raw_torrent_data_support_list = array('qbittorrent', 'transmission', 'vuze', 'rtorrent', 'deluge', 'utorrent');
-
     Log::append('Запущен процесс добавления раздач в торрент-клиенты...');
 
     // получение ID раздач с привязкой к подразделу
     $forums_topics_ids = array();
-    $topics_ids = array_chunk($topics_ids['topics_ids'], 999);
-    foreach ($topics_ids as $topics_ids) {
-        $in = str_repeat('?,', count($topics_ids) - 1) . '?';
+    $topicsIDs = array_chunk($topicsIDs['topics_ids'], 999);
+    foreach ($topicsIDs as $topicsIDs) {
+        $in = str_repeat('?,', count($topicsIDs) - 1) . '?';
         $forums_topics_ids_tmp = Db::query_database(
             'SELECT ss,id FROM Topics WHERE id IN (' . $in . ')',
-            $topics_ids,
+            $topicsIDs,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         unset($in);
-        foreach ($forums_topics_ids_tmp as $forum_id => $forums_topics_ids_tmp) {
-            if (isset($forums_topics_ids[$forum_id])) {
-                $forums_topics_ids[$forum_id] = array_merge(
-                    $forums_topics_ids[$forum_id],
+        foreach ($forums_topics_ids_tmp as $forumID => $forums_topics_ids_tmp) {
+            if (isset($forums_topics_ids[$forumID])) {
+                $forums_topics_ids[$forumID] = array_merge(
+                    $forums_topics_ids[$forumID],
                     $forums_topics_ids_tmp
                 );
             } else {
-                $forums_topics_ids[$forum_id] = $forums_topics_ids_tmp;
+                $forums_topics_ids[$forumID] = $forums_topics_ids_tmp;
             }
         }
         unset($forums_topics_ids_tmp);
     }
-    unset($topics_ids);
+    unset($topicsIDs);
 
     if (empty($forums_topics_ids)) {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
@@ -91,7 +88,7 @@ try {
         throw new Exception();
     }
 
-    $tor_clients_ids = array();
+    $usedTorrentClientsIDs = array();
     $torrent_files_added_total = 0;
 
     // скачивание торрент-файлов
@@ -100,34 +97,34 @@ try {
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
 
-    foreach ($forums_topics_ids as $forum_id => $topics_ids) {
-        if (empty($topics_ids)) {
+    foreach ($forums_topics_ids as $forumID => $topicsIDs) {
+        if (empty($topicsIDs)) {
             continue;
         }
 
-        if (!isset($cfg['subsections'][$forum_id])) {
-            Log::append('В настройках нет данных о подразделе с идентификатором "' . $forum_id . '"');
+        if (!isset($cfg['subsections'][$forumID])) {
+            Log::append('В настройках нет данных о подразделе с идентификатором "' . $forumID . '"');
             continue;
         }
 
         // данные текущего подраздела
-        $forum = $cfg['subsections'][$forum_id];
+        $forum = $cfg['subsections'][$forumID];
 
         if (empty($forum['cl'])) {
-            Log::append('К подразделу "' . $forum_id . '" не привязан торрент-клиент');
+            Log::append('К подразделу "' . $forumID . '" не привязан торрент-клиент');
             continue;
         }
 
         // идентификатор торрент-клиента
-        $tor_client_id = $forum['cl'];
+        $torrentClientID = $forum['cl'];
 
-        if (empty($cfg['clients'][$tor_client_id])) {
-            Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $tor_client_id . '"');
+        if (empty($cfg['clients'][$torrentClientID])) {
+            Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $torrentClientID . '"');
             continue;
         }
 
         // данные текущего торрент-клиента
-        $tor_client = $cfg['clients'][$tor_client_id];
+        $torrentClient = $cfg['clients'][$torrentClientID];
 
         // шаблон для сохранения
         $torrent_files_path_pattern = $localFullPath . '/[webtlo].t%s.torrent';
@@ -135,8 +132,8 @@ try {
             $torrent_files_path_pattern = mb_convert_encoding($torrent_files_path_pattern, 'Windows-1251', 'UTF-8');
         }
 
-        foreach ($topics_ids as $topic_id) {
-            $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topic_id, $cfg['retracker']);
+        foreach ($topicsIDs as $topicID) {
+            $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicID, $cfg['retracker']);
             if ($data === false) {
                 continue;
             }
@@ -144,19 +141,19 @@ try {
             $file_put_contents = file_put_contents(
                 sprintf(
                     $torrent_files_path_pattern,
-                    $topic_id
+                    $topicID
                 ),
                 $data
             );
             if ($file_put_contents === false) {
-                Log::append('Произошла ошибка при сохранении торрент-файла (' . $topic_id . ')');
+                Log::append('Произошла ошибка при сохранении торрент-файла (' . $topicID . ')');
                 continue;
             }
-            $torrent_files_downloaded[] = $topic_id;
+            $torrent_files_downloaded[] = $topicID;
         }
 
         if (empty($torrent_files_downloaded)) {
-            Log::append('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $tor_client['cm'] . '"');
+            Log::append('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $torrentClient['cm'] . '"');
             continue;
         }
 
@@ -166,34 +163,18 @@ try {
         /**
          * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
          */
-        $client = new $tor_client['cl'](
-            $tor_client['ht'],
-            $tor_client['pt'],
-            $tor_client['lg'],
-            $tor_client['pw']
+        $client = new $torrentClient['cl'](
+            $torrentClient['ht'],
+            $torrentClient['pt'],
+            $torrentClient['lg'],
+            $torrentClient['pw']
         );
 
         // проверяем доступность торрент-клиента
         if (!$client->isOnline()) {
-            Log::append('Error: торрент-клиент "' . $tor_client['cm'] . '" в данный момент недоступен');
+            Log::append('Error: торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен');
             continue;
         }
-
-        // формирование пути до файла на сервере
-        $formatServerPath = '%s://%s:%s/%s';
-        $scriptServerPath = explode('/', $_SERVER['SCRIPT_NAME']);
-        $schemeServerPath = empty($_SERVER['HTTPS']) ? 'http' : 'https';
-        $addressServerPath = $cfg['torrent_files_access_method'] == 'hostname' ? $_SERVER['SERVER_NAME'] : $_SERVER['SERVER_ADDR'];
-        $dirnameServerPath = count($scriptServerPath) < 5 ? $scriptServerPath[0] : $scriptServerPath[1] . '/';
-        $dirnameServerPath .= $directoryTorrentFiles;
-        $formatServerFullPath = sprintf(
-            $formatServerPath,
-            $schemeServerPath,
-            $addressServerPath,
-            $_SERVER['SERVER_PORT'],
-            $dirnameServerPath
-        );
-        $formatServerFullPath .= '/[webtlo].t%s.torrent';
 
         // убираем последний слэш в пути каталога для данных
         if (preg_match('/(\/|\\\\)$/', $forum['df'])) {
@@ -201,40 +182,32 @@ try {
         }
 
         // определяем направление слэша в пути каталога для данных
-        $slash = strpos($forum['df'], '/') === false ? '\\' : '/';
+        $delimiter = strpos($forum['df'], '/') === false ? '\\' : '/';
 
         // добавление раздач
-        foreach ($torrent_files_downloaded as $topic_id) {
-            $save_path = '';
+        foreach ($torrent_files_downloaded as $topicID) {
+            $savePath = '';
             if (!empty($forum['df'])) {
-                $save_path = $forum['df'];
+                $savePath = $forum['df'];
                 // подкаталог для данных
                 if ($forum['sub_folder']) {
-                    $save_path .= $slash . $topic_id;
+                    $savePath .= $delimiter . $topicID;
                 }
             }
             // путь до торрент-файла на сервере
-            $raw_torrent_data_support = in_array($tor_client['cl'], $raw_torrent_data_support_list);
-            if ($raw_torrent_data_support) {
-                $filename_url = sprintf(
-                    $torrent_files_path_pattern,
-                    $topic_id
-                );
-            } else {
-                $filename_url = sprintf(
-                    $formatServerFullPath,
-                    $topic_id
-                );
-            }
-            $client->addTorrent($filename_url, $save_path);
-            $torrent_files_added[] = $topic_id;
+            $torrentFilePath = sprintf(
+                $torrent_files_path_pattern,
+                $topicID
+            );
+            $client->addTorrent($torrentFilePath, $savePath);
+            $torrent_files_added[] = $topicID;
             // ждём полсекунды
             usleep(500000);
         }
         unset($torrent_files_downloaded);
 
         if (empty($torrent_files_added)) {
-            Log::append('Нет удалось добавить раздачи в торрент-клиент "' . $tor_client['cm'] . '"');
+            Log::append('Нет удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
             continue;
         }
 
@@ -264,7 +237,7 @@ try {
         Db::query_database(
             'INSERT INTO Clients (hs,cl,dl)
             SELECT hs,?,? FROM temp.Hashes',
-            array($tor_client_id, 0)
+            array($torrentClientID, 0)
         );
 
         if (!empty($forum['lb'])) {
@@ -282,20 +255,20 @@ try {
             unset($topics_hashes);
         }
 
-        Log::append('Добавлено раздач в торрент-клиент "' . $tor_client['cm'] . '": ' . $count_added . ' шт.');
+        Log::append('Добавлено раздач в торрент-клиент "' . $torrentClient['cm'] . '": ' . $count_added . ' шт.');
 
-        if (!in_array($tor_client_id, $tor_clients_ids)) {
-            $tor_clients_ids[] = $tor_client_id;
+        if (!in_array($torrentClientID, $usedTorrentClientsIDs)) {
+            $usedTorrentClientsIDs[] = $torrentClientID;
         }
 
         $torrent_files_added_total += $count_added;
 
-        unset($tor_client);
+        unset($torrentClient);
         unset($client);
         unset($forum);
     }
 
-    $tor_clients_total = count($tor_clients_ids);
+    $tor_clients_total = count($usedTorrentClientsIDs);
 
     $result = 'Задействовано торрент-клиентов — ' . $tor_clients_total . ', добавлено раздач всего — ' . $torrent_files_added_total . ' шт.';
 

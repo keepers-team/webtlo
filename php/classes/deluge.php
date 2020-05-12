@@ -6,9 +6,9 @@
  */
 class Deluge extends TorrentClient
 {
-    private $labels;
-
     protected static $base = 'http://%s:%s/json';
+
+    private $labels;
 
     /**
      * получение идентификатора сессии и запись его в $this->sid
@@ -33,7 +33,7 @@ class Deluge extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
         curl_close($ch);
@@ -77,8 +77,8 @@ class Deluge extends TorrentClient
             }
             return true;
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
+        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента');
+        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         return false;
     }
 
@@ -127,12 +127,12 @@ class Deluge extends TorrentClient
             ),
             'id' => 9,
         );
-        $result = $this->makeRequest($fields);
-        if ($result === false) {
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
             return false;
         }
         $torrents = array();
-        foreach ($result as $hash => $torrent) {
+        foreach ($response as $hashString => $torrent) {
             if ($torrent['message'] == 'OK') {
                 if ($torrent['progress'] == 100) {
                     $torrentStatus = $torrent['paused'] ? -1 : 1;
@@ -142,8 +142,8 @@ class Deluge extends TorrentClient
             } else {
                 $torrentStatus = -2;
             }
-            $hash = strtoupper($hash);
-            $torrents[$hash] = $torrentStatus;
+            $torrentHash = strtoupper($hashString);
+            $torrents[$torrentHash] = $torrentStatus;
         }
         return $torrents;
     }
@@ -189,10 +189,10 @@ class Deluge extends TorrentClient
      * @param string $label
      * @return bool
      */
-    private function createLabel($label)
+    private function createLabel($labelName)
     {
-        $label = str_replace(' ', '_', $label);
-        if (!preg_match('|^[aA-zZ0-9\-_]+$|', $label)) {
+        $labelName = str_replace(' ', '_', $labelName);
+        if (!preg_match('|^[aA-zZ0-9\-_]+$|', $labelName)) {
             Log::append('Error: В названии метки присутствуют недопустимые символы');
             return false;
         }
@@ -211,82 +211,92 @@ class Deluge extends TorrentClient
         if ($this->labels === false) {
             return false;
         }
-        if (in_array($label, $this->labels)) {
+        if (in_array($labelName, $this->labels)) {
             return true;
         }
-        $this->labels[] = $label;
+        $this->labels[] = $labelName;
         $fields = array(
             'method' => 'label.add',
-            'params' => array($label),
+            'params' => array($labelName),
             'id' => 3,
         );
         return $this->makeRequest($fields);
     }
 
-    public function setLabel($hashes, $label = '')
+    public function setLabel($torrentHashes, $labelName = '')
     {
-        $createdLabel = $this->createLabel($label);
+        $createdLabel = $this->createLabel($labelName);
         if ($createdLabel === false) {
             return false;
         }
-        foreach ($hashes as $hash) {
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
             $fields = array(
                 'method' => 'label.set_torrent',
                 'params' => array(
-                    strtolower($hash),
-                    $label,
+                    strtolower($torrentHash),
+                    $labelName,
                 ),
                 'id' => 3,
             );
-            $this->makeRequest($fields);
+            $response = $this->makeRequest($fields);
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function startTorrents($hashes, $force = false)
+    public function startTorrents($torrentHashes, $forceStart = false)
     {
         $fields = array(
             'method' => 'core.resume_torrent',
             'params' => array(
-                array_map('strtolower', $hashes),
+                array_map('strtolower', $torrentHashes)
             ),
             'id' => 4,
         );
         return $this->makeRequest($fields);
     }
 
-    public function stopTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
         $fields = array(
             'method' => 'core.pause_torrent',
             'params' => array(
-                array_map('strtolower', $hashes),
+                array_map('strtolower', $torrentHashes)
             ),
             'id' => 8,
         );
         return $this->makeRequest($fields);
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        foreach ($hashes as $hash) {
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
             $fields = array(
                 'method' => 'core.remove_torrent',
                 'params' => array(
-                    strtolower($hash),
-                    $deleteLocalData,
+                    strtolower($torrentHash),
+                    $deleteFiles,
                 ),
                 'id' => 6,
             );
-            $this->makeRequest($fields);
+            $response = $this->makeRequest($fields);
+            if ($response === false) {
+                $result = false;
+            }
         }
+        return $result;
     }
 
-    public function recheckTorrents($hashes)
+    public function recheckTorrents($torrentHashes)
     {
         $fields = array(
             'method' => 'core.force_recheck',
             'params' => array(
-                array_map('strtolower', $hashes),
+                array_map('strtolower', $torrentHashes)
             ),
             'id' => 5,
         );

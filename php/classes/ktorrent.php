@@ -2,11 +2,10 @@
 
 /**
  * Class Ktorrent
- * Supported by KTorrent 4.3.1 and later
+ * Supported by KTorrent 4.3.1
  */
 class Ktorrent extends TorrentClient
 {
-
     protected static $base = 'http://%s:%s/%s';
 
     protected $challenge;
@@ -37,7 +36,7 @@ class Ktorrent extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
         curl_close($ch);
@@ -46,8 +45,8 @@ class Ktorrent extends TorrentClient
             $this->challenge = sha1($matches[1] . $this->password);
             return $this->getSID();
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
+        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента');
+        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         return false;
     }
 
@@ -59,12 +58,7 @@ class Ktorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(
-                self::$base,
-                $this->host,
-                $this->port,
-                'login?page=interface.html'
-            ),
+            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login?page=interface.html'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
                 array(
@@ -78,7 +72,7 @@ class Ktorrent extends TorrentClient
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту.');
+            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
             return false;
         }
         curl_close($ch);
@@ -88,19 +82,17 @@ class Ktorrent extends TorrentClient
             return true;
         }
         Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту.');
+        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
         return false;
     }
 
     /**
      * выполнение запроса
      * @param $url
-     * @param bool $decode
      * @param array $options
-     * @param bool $xml
-     * @return bool|false|mixed|string
+     * @return bool|mixed
      */
-    private function makeRequest($url, $decode = true, $options = array(), $xml = false)
+    private function makeRequest($url, $options = array())
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
@@ -114,116 +106,172 @@ class Ktorrent extends TorrentClient
             Log::append('CURL ошибка: ' . curl_error($ch));
             return false;
         }
+        $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        if ($xml) {
-            $response = new SimpleXMLElement($response);
-            $response = json_encode($response);
-        }
-        return $decode ? json_decode($response, true) : $response;
+        return $responseHttpCode == 200 ? $response : false;
     }
 
-    public function getTorrents($full = false)
+    private function getTorrentsData()
     {
-        $data = $this->makeRequest(
-            'data/torrents.xml',
-            true,
-            array(CURLOPT_POST => false),
-            true
-        );
-        if (empty($data['torrent'])) {
+        $response = $this->makeRequest('data/torrents.xml');
+        if ($response === false) {
             return false;
         }
+        $response = new SimpleXMLElement($response);
+        $response = json_decode(json_encode($response), true);
         // вывод отличается, если в клиенте только одна раздача
-        if ($full) {
-            return $data;
+        if (
+            isset($response['torrent'])
+            && !is_array(array_shift($response['torrent']))
+        ) {
+            $response['torrent'] = array($response['torrent']);
         }
-        foreach ($data['torrent'] as $torrent) {
-            if ($torrent['status'] != 'Ошибка') {
-                if ($torrent['percentage'] == 100) {
-                    $torrentStatus = $torrent['status'] == 'Пауза' ? -1 : 1;
+        return $response;
+    }
+
+    public function getTorrents()
+    {
+        $response = $this->getTorrentsData();
+        $torrents = array();
+        if (isset($response['torrent'])) {
+            foreach ($response['torrent'] as $torrent) {
+                if ($torrent['status'] != 'Ошибка') {
+                    if ($torrent['percentage'] == 100) {
+                        $torrentStatus = $torrent['status'] == 'Пауза' ? -1 : 1;
+                    } else {
+                        $torrentStatus = 0;
+                    }
                 } else {
-                    $torrentStatus = 0;
+                    $torrentStatus = -2;
                 }
-            } else {
-                $torrentStatus = -2;
+                $torrentHash = strtoupper($torrent['info_hash']);
+                $torrents[$torrentHash] = $torrentStatus;
             }
-            $hash = strtoupper($torrent['info_hash']);
-            $torrents[$hash] = $torrentStatus;
         }
-        return isset($torrents) ? $torrents : array();
+        return $torrents;
     }
 
-    public function addTorrent($filename, $savePath = '')
+    public function addTorrent($torrentFilePath, $savePath = '')
     {
-        $this->makeRequest('action?load_torrent=' . $filename, false); // 200 OK
-    }
-
-    public function setLabel($hashes, $label = '')
-    {
-        return 'Торрент-клиент не поддерживает установку меток.';
-    }
-
-    /**
-     * запустить все (unused)
-     */
-    public function startAllTorrents()
-    {
-        $this->makeRequest('action?startall=true');
-    }
-
-    public function startTorrents($hashes, $force = false)
-    {
-        $torrents = $this->getTorrents(true);
-        if ($torrents === false) {
+        /**
+         * https://cgit.kde.org/ktorrent.git/tree/plugins/webinterface/torrentposthandler.cpp#n55
+         * клиент не терпит две пустых строки между заголовком запроса и его телом
+         * библиотека cURL как раз формирует двойной отступ
+         */
+        $torrentFile = file_get_contents($torrentFilePath);
+        if ($torrentFile === false) {
+            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
             return false;
         }
-        $hashesFromClient = array_flip(
-            array_column_common($torrents['torrent'], 'info_hash')
-        );
-        unset($torrents);
-        foreach ($hashes as $hash) {
-            if (isset($hashesFromClient[strtolower($hash)])) {
-                $this->makeRequest('action?start=' . $hashesFromClient[strtolower($hash)]);
-            }
-        }
-    }
+        $boundary = uniqid();
+        $content  = '------' . $boundary . _BR_
+            . 'Content-Disposition: form-data; name="load_torrent"; filename="' . basename($torrentFile) . '"' . _BR_
+            . "Content-Type: application/x-bittorrent" . _BR_
+            . _BR_
+            . $torrentFile . _BR_
+            . '------' . $boundary . _BR_
+            . 'Content-Disposition: form-data; name="Upload Torrent"' . _BR_
+            . _BR_
+            . 'Upload Torrent' . _BR_
+            . '------' . $boundary . '--';
 
-    public function stopTorrents($hashes)
-    {
-        $torrents = $this->getTorrents(true);
-        if ($torrents === false) {
+        $header = array(
+            'Content-Type: multipart/form-data; boundary=------' . $boundary . _BR_
+                . 'Content-Length: ' . strlen($content) . _BR_
+                . 'Cookie: ' . $this->sid
+        );
+        $context = stream_context_create(
+            array(
+                'http' => array(
+                    'method' => 'POST',
+                    'header' => $header,
+                    'content' => $content
+                )
+            )
+        );
+        $response = file_get_contents(
+            sprintf(self::$base, $this->host, $this->port, 'torrent/load?page=interface.html'),
+            false,
+            $context
+        );
+        if ($response === false) {
             return false;
         }
-        $hashesFromClient = array_flip(
-            array_column_common($torrents['torrent'], 'info_hash')
-        );
-        unset($torrents);
-        foreach ($hashes as $hash) {
-            if (isset($hashesFromClient[strtolower($hash)])) {
-                $this->makeRequest('action?stop=' . $hashesFromClient[strtolower($hash)]);
-            }
-        }
+        return $response;
     }
 
-    public function removeTorrents($hashes, $deleteLocalData = false)
+    public function setLabel($torrentHashes, $labelName = '')
     {
-        $torrents = $this->getTorrents(true);
-        if ($torrents === false) {
+        Log::append('Торрент-клиент не поддерживает установку меток');
+        return false;
+    }
+
+    public function startTorrents($torrentHashes, $forceStart = false)
+    {
+        $response = $this->getTorrentsData();
+        if ($response === false) {
             return false;
         }
-        $hashesFromClient = array_flip(
-            array_column_common($torrents['torrent'], 'info_hash')
-        );
-        unset($torrents);
-        foreach ($hashes as $hash) {
-            if (isset($hashesFromClient[strtolower($hash)])) {
-                $this->makeRequest('action?remove=' . $hashesFromClient[strtolower($hash)]);
+        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        unset($response);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $torrentHash = strtolower($torrentHash);
+            if (isset($torrents[$torrentHash])) {
+                $response = $this->makeRequest('action?start=' . $torrents[$torrentHash]);
+                if ($response === false) {
+                    $result = false;
+                }
             }
         }
+        return $result;
     }
 
-    public function recheckTorrents($hashes)
+    public function stopTorrents($torrentHashes)
     {
-        return 'Торрент-клиент не поддерживает проверку локальных данных.';
+        $response = $this->getTorrentsData();
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        unset($response);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $torrentHash = strtolower($torrentHash);
+            if (isset($torrents[$torrentHash])) {
+                $response = $this->makeRequest('action?stop=' . $torrents[$torrentHash]);
+                if ($response === false) {
+                    $result = false;
+                }
+            }
+        }
+        return $result;
+    }
+
+    public function removeTorrents($torrentHashes, $deleteFiles = false)
+    {
+        $response = $this->getTorrentsData();
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        unset($response);
+        $result = null;
+        foreach ($torrentHashes as $torrentHash) {
+            $torrentHash = strtolower($torrentHash);
+            if (isset($torrents[$torrentHash])) {
+                $response = $this->makeRequest('action?remove=' . $torrents[$torrentHash]);
+                if ($response === false) {
+                    $result = false;
+                }
+            }
+        }
+        return $result;
+    }
+
+    public function recheckTorrents($torrentHashes)
+    {
+        Log::append('Торрент-клиент не поддерживает проверку локальных данных');
+        return false;
     }
 }

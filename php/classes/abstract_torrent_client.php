@@ -62,49 +62,55 @@ abstract class TorrentClient
     }
 
     /**
-     * получение списка загруженных на 100% раздач от торрент-клиента
-     * @return array|bool array[hash] => status,
-     * false в случае пустого ответа от торрент-клиента
+     * получение списка раздач от торрент-клиента
+     * @return bool|array array[torrentHash] => torrentStatus
+     * torrentStatus: 0 (скачивается), 1 (сидируется), -1 (сидируется на паузе), -2 (с ошибкой)
      */
     abstract public function getTorrents();
 
     /**
      * добавить торрент
-     * @param string $torrentFilePath путь до .torrent файла включая имя файла
-     * @param string $savePath путь куда сохранять загружаемые данные
+     * @param string $torrentFilePath полный локальный путь до .torrent файла включая его имя
+     * @param string $savePath полный путь до каталога куда сохранять загружаемые данные
+     * @return bool|mixed
      */
     abstract public function addTorrent($torrentFilePath, $savePath = '');
 
     /**
-     * установка метки у раздач перечисленных в $hashes
-     * @param array $hashes хэши раздач
-     * @param string $label метка
+     * установка метки у раздач перечисленных в $torrentHashes
+     * @param array $torrentHashes хэши раздач
+     * @param string $labelName имя метки
+     * @return bool|mixed
      */
-    abstract public function setLabel($hashes, $label = '');
+    abstract public function setLabel($torrentHashes, $labelName = '');
 
     /**
-     * запуск раздач перечисленных в $hashes
-     * @param array $hashes хэши раздач
-     * @param bool $force
+     * запуск раздач перечисленных в $torrentHashes
+     * @param array $torrentHashes хэши раздач
+     * @param bool $forceStart принудительный запуск
+     * @return bool|mixed
      */
-    abstract public function startTorrents($hashes, $force = false);
+    abstract public function startTorrents($torrentHashes, $forceStart = false);
 
     /**
-     * остановка раздач перечисленных в $hashes
-     * @param array $hashes
+     * остановка раздач перечисленных в $torrentHashes
+     * @param array $torrentHashes хэши раздач
+     * @return bool|mixed
      */
-    abstract public function stopTorrents($hashes);
+    abstract public function stopTorrents($torrentHashes);
 
     /**
-     * удаление раздач перечисленных в $hashes
-     * @param array $hashes
-     * @param bool $deleteLocalData
+     * удаление раздач перечисленных в $torrentHashes
+     * @param array $torrentHashes хэши раздач
+     * @param bool $deleteFiles удалить раздачу вместе с данными
+     * @return bool|mixed
      */
-    abstract public function removeTorrents($hashes, $deleteLocalData = false);
+    abstract public function removeTorrents($torrentHashes, $deleteFiles = false);
 
     /**
      * перепроверить локальные данные раздач (unused)
-     * @param array $hashes
+     * @param array $torrentHashes
+     * @return bool|mixed
      */
-    abstract public function recheckTorrents($hashes);
+    abstract public function recheckTorrents($torrentHashes);
 }
