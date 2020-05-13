@@ -11,6 +11,7 @@ try {
      * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
      */
     $client = new $torrentClient['type'](
+        $torrentClient['ssl'],
         $torrentClient['hostname'],
         $torrentClient['port'],
         $torrentClient['login'],

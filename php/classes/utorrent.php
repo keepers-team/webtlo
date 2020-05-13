@@ -6,7 +6,7 @@
  */
 class Utorrent extends TorrentClient
 {
-    protected static $base = 'http://%s:%s/gui/%s';
+    protected static $base = '%s://%s:%s/gui/%s';
 
     protected $guid;
     protected $token;
@@ -19,7 +19,7 @@ class Utorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'token.html'),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'token.html'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
@@ -59,7 +59,7 @@ class Utorrent extends TorrentClient
         $url = preg_replace('|^\?|', '?token=' . $this->token . '&', $url);
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_COOKIE => 'GUID=' . $this->guid,

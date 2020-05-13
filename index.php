@@ -23,7 +23,7 @@ try {
 
     // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
-    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s"';
+    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s"';
     $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s"';
 
     // стандартные адреса
@@ -76,7 +76,8 @@ try {
                 $torrentClientData['ht'],
                 $torrentClientData['pt'],
                 $torrentClientData['lg'],
-                $torrentClientData['pw']
+                $torrentClientData['pw'],
+                $torrentClientData['ssl']
             );
             $optionTorrentClients .= sprintf(
                 $optionFormat,
@@ -131,7 +132,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.1.4</title>
+    <title>web-TLO-2.1.5</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -534,9 +535,8 @@ try {
                                 </button>
                                 <span id="torrent-client-response"></span>
                             </p>
-
                             <div class="block-settings">
-                                <select id="list-torrent-clients" size=10>
+                                <select id="list-torrent-clients" size=12>
                                     <optgroup label="список торрент-клиентов">
                                         <?php echo $optionTorrentClientsDataset ?>
                                     </optgroup>
@@ -545,11 +545,11 @@ try {
                             <div class="block-settings" id="torrent-client-props">
                                 <div>
                                     <label>
-                                        Название (комментарий)
-                                        <input name="torrent-client-comment" id="torrent-client-comment" class="torrent-client-props" type="text" size="24" title="Комментарий" />
+                                        Название:
+                                        <input name="torrent-client-comment" id="torrent-client-comment" class="torrent-client-props" type="text" size="50" title="Произвольное название торрент-клиента (комментарий)" />
                                     </label>
                                     <label>
-                                        Торрент-клиент
+                                        Торрент-клиент:
                                         <select name="torrent-client-type" id="torrent-client-type" class="torrent-client-props">
                                             <option value="utorrent">uTorrent</option>
                                             <option value="transmission">Transmission</option>
@@ -565,6 +565,8 @@ try {
                                     <label>
                                         IP-адрес/сетевое имя:
                                         <input name="torrent-client-hostname" id="torrent-client-hostname" class="torrent-client-props" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." />
+                                        <input name="torrent-client-ssl" id="torrent-client-ssl" class="torrent-client-props" type="checkbox" title="Использовать SSL/TLS" />
+                                        SSL/TLS
                                     </label>
                                     <label>
                                         Порт:

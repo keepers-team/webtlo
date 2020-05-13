@@ -164,6 +164,7 @@ try {
          * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
          */
         $client = new $torrentClient['cl'](
+            $torrentClient['ssl'],
             $torrentClient['ht'],
             $torrentClient['pt'],
             $torrentClient['lg'],

@@ -429,17 +429,19 @@ li.menu.ui-tabs-active {
 }
 
 #torrent-client-props label {
-	display: inline-block;
-	vertical-align: top;
+	display: block;
+}
+
+#torrent-client-props label * {
+	vertical-align: middle;
 }
 
 .torrent-client-props {
-	display: block;
-	margin: 10px 0;
+	margin: 5px 0;
 }
 
 #list-torrent-clients {
-	width: 500px;
+	width: 400px;
 	padding: 0 3px;
 	margin: 10px 15px 0 0;
 }

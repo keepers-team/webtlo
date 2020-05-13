@@ -6,7 +6,7 @@
  */
 class Qbittorrent extends TorrentClient
 {
-    protected static $base = 'http://%s:%s/%s';
+    protected static $base = '%s://%s:%s/%s';
 
     private $categories;
     private $responseHttpCode;
@@ -19,7 +19,7 @@ class Qbittorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'api/v2/auth/login'),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'api/v2/auth/login'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
                 array(
@@ -66,7 +66,7 @@ class Qbittorrent extends TorrentClient
         $this->responseHttpCode = null;
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
             CURLOPT_POSTFIELDS => $fields

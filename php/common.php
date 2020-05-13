@@ -39,6 +39,7 @@ function get_settings($filename = "")
         $config['clients'][$id]['pt'] = $ini->read("torrent-client-$i", "port", "");
         $config['clients'][$id]['lg'] = $ini->read("torrent-client-$i", "login", "");
         $config['clients'][$id]['pw'] = $ini->read("torrent-client-$i", "password", "");
+        $config['clients'][$id]['ssl'] = $ini->read("torrent-client-$i", "ssl", 0);
     }
     if (isset($config['clients']) && is_array($config['clients'])) {
         $config['clients'] = natsort_field($config['clients'], 'cm');

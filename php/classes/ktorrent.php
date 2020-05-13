@@ -6,7 +6,7 @@
  */
 class Ktorrent extends TorrentClient
 {
-    protected static $base = 'http://%s:%s/%s';
+    protected static $base = '%s://%s:%s/%s';
 
     protected $challenge;
 
@@ -23,7 +23,7 @@ class Ktorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login/challenge.xml'),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'login/challenge.xml'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
                 array(
@@ -58,7 +58,7 @@ class Ktorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, 'login?page=interface.html'),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'login?page=interface.html'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
                 array(
@@ -96,7 +96,7 @@ class Ktorrent extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port, $url),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
         ));
@@ -166,7 +166,7 @@ class Ktorrent extends TorrentClient
         $boundary = uniqid();
         $content  = '------' . $boundary . _BR_
             . 'Content-Disposition: form-data; name="load_torrent"; filename="' . basename($torrentFile) . '"' . _BR_
-            . "Content-Type: application/x-bittorrent" . _BR_
+            . 'Content-Type: application/x-bittorrent' . _BR_
             . _BR_
             . $torrentFile . _BR_
             . '------' . $boundary . _BR_
@@ -189,15 +189,11 @@ class Ktorrent extends TorrentClient
                 )
             )
         );
-        $response = file_get_contents(
-            sprintf(self::$base, $this->host, $this->port, 'torrent/load?page=interface.html'),
+        return file_get_contents(
+            sprintf(self::$base, $this->scheme, $this->host, $this->port, 'torrent/load?page=interface.html'),
             false,
             $context
         );
-        if ($response === false) {
-            return false;
-        }
-        return $response;
     }
 
     public function setLabel($torrentHashes, $labelName = '')

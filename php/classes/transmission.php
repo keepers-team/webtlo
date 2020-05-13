@@ -6,7 +6,7 @@
  */
 class Transmission extends TorrentClient
 {
-    protected static $base = 'http://%s:%s/transmission/rpc';
+    protected static $base = '%s://%s:%s/transmission/rpc';
 
     /**
      * получение идентификатора сессии и запись его в $this->sid
@@ -16,7 +16,7 @@ class Transmission extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
@@ -60,7 +60,7 @@ class Transmission extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HTTPHEADER => array($this->sid),

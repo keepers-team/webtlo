@@ -46,6 +46,7 @@ try {
             if (isset($torrentClientData['password'])) {
                 $ini->write($torrentClientSection, 'password', trim($torrentClientData['password']));
             }
+            $ini->write($torrentClientSection, 'ssl', $torrentClientData['ssl']);
         }
     }
     $ini->write('other', 'qt', $torrentClientNumber); // кол-во торрент-клиентов

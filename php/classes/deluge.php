@@ -6,7 +6,7 @@
  */
 class Deluge extends TorrentClient
 {
-    protected static $base = 'http://%s:%s/json';
+    protected static $base = '%s://%s:%s/json';
 
     private $labels;
 
@@ -23,7 +23,7 @@ class Deluge extends TorrentClient
             'id' => 7
         );
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_POSTFIELDS => json_encode($fields),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => 'gzip',
@@ -94,7 +94,7 @@ class Deluge extends TorrentClient
     {
         $ch = curl_init();
         curl_setopt_array($ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->host, $this->port),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
             CURLOPT_ENCODING => 'gzip',

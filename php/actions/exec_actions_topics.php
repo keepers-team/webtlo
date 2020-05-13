@@ -98,6 +98,7 @@ try {
          * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
          */
         $client = new $tor_client['type'](
+            $torrentClient['ssl'],
             $tor_client['hostname'],
             $tor_client['port'],
             $tor_client['login'],

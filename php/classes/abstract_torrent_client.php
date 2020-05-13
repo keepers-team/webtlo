@@ -15,6 +15,11 @@ abstract class TorrentClient
     /**
      * @var string
      */
+    protected $scheme;
+
+    /**
+     * @var string
+     */
     protected $host;
 
     /**
@@ -39,13 +44,15 @@ abstract class TorrentClient
 
     /**
      * default constructor
+     * @param bool|int $ssl
      * @param string $host
      * @param string $port
      * @param string $login
      * @param string $password
      */
-    public function __construct($host, $port, $login = '', $password = '')
+    public function __construct($ssl, $host, $port, $login = '', $password = '')
     {
+        $this->scheme = $ssl ? 'https' : 'http';
         $this->host = $host;
         $this->port = $port;
         $this->login = $login;

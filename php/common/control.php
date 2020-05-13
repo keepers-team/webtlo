@@ -28,6 +28,7 @@ foreach ($cfg['clients'] as $client_id => $client_info) {
      * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
      * */
     $client = new $client_info['cl'](
+        $client_info['ssl'],
         $client_info['ht'],
         $client_info['pt'],
         $client_info['lg'],
