@@ -76,6 +76,18 @@ class Transmission extends TorrentClient
                 return false;
             }
             $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if (
+                $responseHttpCode == 409
+                && $responseNumberTry <= $maxNumberTry
+            ) {
+                $responseNumberTry++;
+                preg_match('|<code>(.*)</code>|', $response, $matches);
+                if (!empty($matches)) {
+                    curl_setopt_array($ch, array(CURLOPT_HTTPHEADER => array($matches[1])));
+                    $this->sid = $matches[1];
+                    continue;
+                }
+            }
             $response = json_decode($response, true);
             curl_close($ch);
             if ($response['result'] != 'success') {
