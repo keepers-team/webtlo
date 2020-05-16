@@ -61,10 +61,11 @@ $(document).ready(function () {
 		} else {
 			$("#forum-client [value=" + torrentClientID + "]").prop("selected", "selected");
 		}
-		if ($.isEmptyObject(forumData.subdirectory)) {
+		var subdirectory = $("#forum-subdirectory option[value=" + forumData.subdirectory + "]").val();
+		if (typeof subdirectory === "undefined") {
 			$("#forum-subdirectory :first").prop("selected", "selected");
 		} else {
-			$("#forum-subdirectory").val(forumData.subdirectory);
+			$("#forum-subdirectory [value=" + forumData.subdirectory + "]").prop("selected", "selected");
 		}
 		$("#forum-label").val(forumData.label);
 		$("#forum-savepath").val(forumData.savepath);
