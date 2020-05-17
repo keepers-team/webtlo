@@ -32,6 +32,8 @@ class Ktorrent extends TorrentClient
                 )
             ),
             CURLOPT_HEADER => true,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         $response = curl_exec($ch);
         if ($response === false) {
@@ -68,6 +70,8 @@ class Ktorrent extends TorrentClient
                 )
             ),
             CURLOPT_HEADER => true,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         $response = curl_exec($ch);
         if ($response === false) {
@@ -99,16 +103,30 @@ class Ktorrent extends TorrentClient
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            return false;
+        $maxNumberTry = 3;
+        $connectionNumberTry = 1;
+        while (true) {
+            $response = curl_exec($ch);
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($response === false) {
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    $connectionNumberTry++;
+                    sleep(1);
+                    continue;
+                }
+                Log::append('CURL ошибка: ' . curl_error($ch));
+                return false;
+            }
+            curl_close($ch);
+            return $responseHttpCode == 200 ? $response : false;
         }
-        $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        return $responseHttpCode == 200 ? $response : false;
     }
 
     private function getTorrentsData()

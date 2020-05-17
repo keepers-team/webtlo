@@ -37,33 +37,48 @@ class Rtorrent extends TorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
-        $response = curl_exec($ch);
-        if (curl_errno($ch)) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            return false;
-        }
-        curl_close($ch);
-        $response = xmlrpc_decode(str_replace('i8>', 'i4>', $response));
-        if (is_array($response)) {
-            foreach ($response as $keyName => $responseData) {
-                if (is_array($responseData)) {
-                    if (array_key_exists('faultCode', $responseData)) {
-                        $faultString = $responseData['faultString'];
+        $maxNumberTry = 3;
+        $connectionNumberTry = 1;
+        while (true) {
+            $response = curl_exec($ch);
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if (curl_errno($ch)) {
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    $connectionNumberTry++;
+                    sleep(1);
+                    continue;
+                }
+                Log::append('CURL ошибка: ' . curl_error($ch));
+                return false;
+            }
+            curl_close($ch);
+            $response = xmlrpc_decode(str_replace('i8>', 'i4>', $response));
+            if (is_array($response)) {
+                foreach ($response as $keyName => $responseData) {
+                    if (is_array($responseData)) {
+                        if (array_key_exists('faultCode', $responseData)) {
+                            $faultString = $responseData['faultString'];
+                            break;
+                        }
+                    } elseif ($keyName == 'faultString') {
+                        $faultString = $responseData;
                         break;
                     }
-                } elseif ($keyName == 'faultString') {
-                    $faultString = $responseData;
-                    break;
                 }
             }
+            if (isset($faultString)) {
+                Log::append('Error: ' . $faultString);
+                return false;
+            }
+            // return 0 on success
+            return $response;
         }
-        if (isset($faultString)) {
-            Log::append('Error: ' . $faultString);
-            return false;
-        }
-        // return 0 on success
-        return $response;
     }
 
     public function getTorrents()

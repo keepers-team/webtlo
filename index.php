@@ -132,7 +132,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.1.7</title>
+    <title>web-TLO-2.1.8</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>

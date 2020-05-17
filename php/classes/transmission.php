@@ -20,6 +20,8 @@ class Transmission extends TorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         $response = curl_exec($ch);
         if ($response === false) {
@@ -65,17 +67,28 @@ class Transmission extends TorrentClient
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HTTPHEADER => array($this->sid),
             CURLOPT_POSTFIELDS => json_encode($fields),
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         curl_setopt_array($ch, $options);
-        $responseNumberTry = 1;
         $maxNumberTry = 3;
+        $responseNumberTry = 1;
+        $connectionNumberTry = 1;
         while (true) {
             $response = curl_exec($ch);
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             if ($response === false) {
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    $connectionNumberTry++;
+                    sleep(1);
+                    continue;
+                }
                 Log::append('CURL ошибка: ' . curl_error($ch));
                 return false;
             }
-            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             if (
                 $responseHttpCode == 409
                 && $responseNumberTry <= $maxNumberTry

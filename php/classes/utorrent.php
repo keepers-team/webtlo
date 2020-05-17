@@ -23,6 +23,8 @@ class Utorrent extends TorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         $response = curl_exec($ch);
         if ($response === false) {
@@ -63,21 +65,36 @@ class Utorrent extends TorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_COOKIE => 'GUID=' . $this->guid,
-            CURLOPT_POSTFIELDS => $fields
+            CURLOPT_POSTFIELDS => $fields,
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            return false;
+        $maxNumberTry = 3;
+        $connectionNumberTry = 1;
+        while (true) {
+            $response = curl_exec($ch);
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($response === false) {
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    $connectionNumberTry++;
+                    sleep(1);
+                    continue;
+                }
+                Log::append('CURL ошибка: ' . curl_error($ch));
+                return false;
+            }
+            curl_close($ch);
+            $response = json_decode($response, true);
+            if (isset($response['error'])) {
+                Log::append('Error: ' . $response['error']);
+                return false;
+            }
+            return $response;
         }
-        curl_close($ch);
-        $response = json_decode($response, true);
-        if (isset($response['error'])) {
-            Log::append('Error: ' . $response['error']);
-            return false;
-        }
-        return $response;
     }
 
     public function getTorrents()

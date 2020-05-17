@@ -29,6 +29,8 @@ class Deluge extends TorrentClient
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_HEADER => true,
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         $response = curl_exec($ch);
         if ($response === false) {
@@ -100,20 +102,35 @@ class Deluge extends TorrentClient
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_POSTFIELDS => json_encode($fields),
             CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            CURLOPT_CONNECTTIMEOUT => 20,
+            CURLOPT_TIMEOUT => 20
         ));
         curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            return false;
-        }
-        curl_close($ch);
-        $response = json_decode($response, true);
-        if ($response['error'] === null) {
-            return $response['result'];
-        } else {
-            Log::append('Error: ' . $response['error']['message'] . ' (' . $response['error']['code'] . ')');
-            return false;
+        $maxNumberTry = 3;
+        $connectionNumberTry = 1;
+        while (true) {
+            $response = curl_exec($ch);
+            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($response === false) {
+                if (
+                    $responseHttpCode < 300
+                    && $connectionNumberTry <= $maxNumberTry
+                ) {
+                    $connectionNumberTry++;
+                    sleep(1);
+                    continue;
+                }
+                Log::append('CURL ошибка: ' . curl_error($ch));
+                return false;
+            }
+            curl_close($ch);
+            $response = json_decode($response, true);
+            if ($response['error'] === null) {
+                return $response['result'];
+            } else {
+                Log::append('Error: ' . $response['error']['message'] . ' (' . $response['error']['code'] . ')');
+                return false;
+            }
         }
     }
 
