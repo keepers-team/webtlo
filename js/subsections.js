@@ -151,7 +151,7 @@ function addSubsection(event, ui) {
 		optionForum.attr("data-client", 0).data("client", 0);
 		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
 		optionForum.attr("data-savepath", "").data("savepath", "");
-		optionForum.attr("data-subdirectory", "").data("subdirectory", "");
+		optionForum.attr("data-subdirectory", 0).data("subdirectory", 0);
 		optionForum.attr("data-hide", 0).data("hide", 0);
 		optionForum.text(forumTitle);
 		$("#main-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
