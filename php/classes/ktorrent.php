@@ -182,7 +182,7 @@ class Ktorrent extends TorrentClient
             return false;
         }
         $boundary = uniqid();
-        $content  = '------' . $boundary . _BR_
+        $content = '------' . $boundary . _BR_
             . 'Content-Disposition: form-data; name="load_torrent"; filename="' . basename($torrentFile) . '"' . _BR_
             . 'Content-Type: application/x-bittorrent' . _BR_
             . _BR_

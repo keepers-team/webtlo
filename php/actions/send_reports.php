@@ -3,7 +3,6 @@
 try {
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../common/reports.php';
-
     // выводим лог
     echo json_encode(
         array(

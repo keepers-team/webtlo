@@ -7,159 +7,141 @@ include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
 
 Log::append('Начат процесс регулировки раздач в торрент-клиентах...');
-
 // получение настроек
 $cfg = get_settings();
-
 // проверка настроек
 if (empty($cfg['clients'])) {
     throw new Exception('Error: Не удалось получить список торрент-клиентов');
 }
-
 if (empty($cfg['subsections'])) {
     throw new Exception('Error: Не выбраны хранимые подразделы');
 }
-
-$forums_ids = array_keys($cfg['subsections']);
-$ss = str_repeat('?,', count($forums_ids) - 1) . '?';
-
-foreach ($cfg['clients'] as $client_id => $client_info) {
+$forumsIDs = array_keys($cfg['subsections']);
+$placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
+foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     /**
      * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
      * */
-    $client = new $client_info['cl'](
-        $client_info['ssl'],
-        $client_info['ht'],
-        $client_info['pt'],
-        $client_info['lg'],
-        $client_info['pw']
+    $client = new $torrentClientData['cl'](
+        $torrentClientData['ssl'],
+        $torrentClientData['ht'],
+        $torrentClientData['pt'],
+        $torrentClientData['lg'],
+        $torrentClientData['pw']
     );
-
     // проверка доступности торрент-клиента
     if ($client->isOnline() === false) {
         continue;
     }
-
     // получение данных от торрент-клиента
     $torrents = $client->getTorrents();
-
-    if (empty($torrents)) {
-        Log::append('Warning: Не удалось получить данные о раздачах от торрент-клиента "' . $client_info['cm'] . '"');
+    if ($torrents === false) {
+        Log::append('Error: Не удалось получить данные о раздачах от торрент-клиента "' . $torrentClientData['cm'] . '"');
         continue;
     }
-
-    $count_torrents = count($torrents);
-
     // ограничение на количество хэшей за раз
-    $maxNumberHashes = 999;
-    $torrents_hashes = array_chunk(
+    $placeholdersLimit = 999;
+    $torrentsHashes = array_chunk(
         array_keys($torrents),
-        $maxNumberHashes - count($forums_ids)
+        $placeholdersLimit - count($forumsIDs)
     );
-
-    $topics_hashes = array();
-
+    $topicsHashes = array();
     // вытаскиваем из базы хэши раздач только для хранимых подразделов
-    foreach ($torrents_hashes as $torrents_hashes) {
-        $hs = str_repeat('?,', count($torrents_hashes) - 1) . '?';
-        $topics_hashes_query = Db::query_database(
-            'SELECT hs FROM Topics WHERE hs IN (' . $hs . ') AND ss IN (' . $ss . ')',
-            array_merge($torrents_hashes, $forums_ids),
+    foreach ($torrentsHashes as $torrentsHashes) {
+        $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
+        $responseTopicsHashes = Db::query_database(
+            'SELECT hs FROM Topics WHERE hs IN (' . $placeholdersTorrentsHashes . ') AND ss IN (' . $placeholdersForumsIDs . ')',
+            array_merge($torrentsHashes, $forumsIDs),
             true,
             PDO::FETCH_COLUMN
         );
-        $topics_hashes = array_merge($topics_hashes, $topics_hashes_query);
-        unset($topics_hashes_query);
-        unset($hs);
+        $topicsHashes = array_merge($topicsHashes, $responseTopicsHashes);
+        unset($placeholdersTorrentsHashes);
+        unset($responseTopicsHashes);
     }
-    unset($torrents_hashes);
-
-    // подключаемся к api
-    if (!isset($api)) {
-        $api = new Api($cfg['api_address'], $cfg['api_key']);
-        // применяем таймауты
-        $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
-        Log::append('Получение данных о пирах...');
-    }
-
-    // получаем данные о пирах
-    $topics_peer_stats = $api->getPeerStats($topics_hashes, 'hash');
-    unset($topics_hashes);
-
-    if ($topics_peer_stats === false) {
-        continue;
-    }
-
-    foreach ($topics_peer_stats as $hash_info => $topic_data) {
-        // если нет такой раздачи или идёт загрузка раздачи, идём дальше
-        if (empty($torrents[$hash_info])) {
-            continue;
+    unset($torrentsHashes);
+    if (!empty($topicsHashes)) {
+        // подключаемся к api
+        if (!isset($api)) {
+            $api = new Api($cfg['api_address'], $cfg['api_key']);
+            // применяем таймауты
+            $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
+            Log::append('Получение данных о пирах...');
         }
-        // статус раздачи
-        $tor_client_status = $torrents[$hash_info];
-        // учитываем себя
-        $topic_data['seeders'] -= $topic_data['seeders'] ? $tor_client_status : 0;
-        // находим значение личей
-        $leechers = $cfg['topics_control']['leechers'] ? $topic_data['leechers'] : 0;
-        // находим значение пиров
-        $peers = $topic_data['seeders'] + $leechers;
-        // учитываем вновь прибывшего "лишнего" сида
-        if (
-            $topic_data['seeders']
-            && $peers == $cfg['topics_control']['peers']
-            && $tor_client_status == 1
-        ) {
-            $peers++;
-        }
-
-        // стопим только, если есть сиды
-        if (
-            $topic_data['seeders']
-            && (
-                $peers > $cfg['topics_control']['peers']
-                || !$cfg['topics_control']['no_leechers']
-                && !$topic_data['leechers']
-            )
-        ) {
-            if ($tor_client_status == 1) {
-                $control_hashes['stop'][] = $hash_info;
-            }
-        } else {
-            if ($tor_client_status == -1) {
-                $control_hashes['start'][] = $hash_info;
+        // получаем данные о пирах
+        $peerStatistics = $api->getPeerStats($topicsHashes, 'hash');
+        unset($topicsHashes);
+        if ($peerStatistics !== false) {
+            foreach ($peerStatistics as $topicHash => $topicData) {
+                // если нет такой раздачи или идёт загрузка раздачи, идём дальше
+                if (empty($torrents[$topicHash])) {
+                    continue;
+                }
+                // статус раздачи
+                $torrentStatus = $torrents[$topicHash];
+                // учитываем себя
+                $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
+                // находим значение личей
+                $leechers = $cfg['topics_control']['leechers'] ? $topicData['leechers'] : 0;
+                // находим значение пиров
+                $peers = $topicData['seeders'] + $leechers;
+                // учитываем вновь прибывшего "лишнего" сида
+                if (
+                    $topicData['seeders']
+                    && $peers == $cfg['topics_control']['peers']
+                    && $torrentStatus == 1
+                ) {
+                    $peers++;
+                }
+                // стопим только, если есть сиды
+                $peersState = $peers > $cfg['topics_control']['peers']
+                    || !$cfg['topics_control']['no_leechers']
+                    && !$topicData['leechers'];
+                if (
+                    $topicData['seeders']
+                    && $peersState
+                ) {
+                    if ($torrentStatus == 1) {
+                        $controlTopics['stop'][] = $topicHash;
+                    }
+                } else {
+                    if ($torrentStatus == -1) {
+                        $controlTopics['start'][] = $topicHash;
+                    }
+                }
             }
         }
+        unset($peerStatistics);
     }
-    unset($topic_peer_stats);
-
-    if (empty($control_hashes)) {
-        Log::append('Warning: Регулировка раздач не требуется для торрент-клиента "' . $client_info['cm'] . '"');
+    if (empty($controlTopics)) {
+        Log::append('Notice: Регулировка раздач не требуется для торрент-клиента "' . $torrentClientData['cm'] . '"');
         continue;
     }
-
     // запускаем
-    if (!empty($control_hashes['start'])) {
-        $count_start = count($control_hashes['start']);
-        $control_hashes['start'] = array_chunk($control_hashes['start'], 100);
-        foreach ($control_hashes['start'] as $start) {
-            $client->startTorrents($start);
+    if (!empty($controlTopics['start'])) {
+        $totalStartedTopics = count($controlTopics['start']);
+        $controlTopics['start'] = array_chunk($controlTopics['start'], 100);
+        foreach ($controlTopics['start'] as $hashes) {
+            $response = $client->startTorrents($hashes);
+            if ($response === false) {
+                Log::append('Error: Возникли проблемы при отправке запроса на запуск раздач');
+            }
         }
-        Log::append('Запрос на запуск раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_start . ')');
+        Log::append('Запрос на запуск раздач торрент-клиенту "' . $torrentClientData['cm'] . '" отправлен (' . $totalStartedTopics . ')');
     }
-
     // останавливаем
-    if (!empty($control_hashes['stop'])) {
-        $count_stop = count($control_hashes['stop']);
-        $control_hashes['stop'] = array_chunk($control_hashes['stop'], 100);
-        foreach ($control_hashes['stop'] as $stop) {
-            $client->stopTorrents($stop);
+    if (!empty($controlTopics['stop'])) {
+        $totalStoppedTopics = count($controlTopics['stop']);
+        $controlTopics['stop'] = array_chunk($controlTopics['stop'], 100);
+        foreach ($controlTopics['stop'] as $hashes) {
+            $response = $client->stopTorrents($hashes);
+            if ($response === false) {
+                Log::append('Error: Возникли проблемы при отправке запроса на остановку раздач');
+            }
         }
-        Log::append('Запрос на остановку раздач торрент-клиенту "' . $client_info['cm'] . '" отправлен (' . $count_stop . ')');
+        Log::append('Запрос на остановку раздач торрент-клиенту "' . $torrentClientData['cm'] . '" отправлен (' . $totalStoppedTopics . ')');
     }
-
-    unset($control_hashes);
+    unset($controlTopics);
 }
-
 $endtime = microtime(true);
-
 Log::append('Регулировка раздач в торрент-клиентах завершена за ' . convert_seconds($endtime - $starttime));

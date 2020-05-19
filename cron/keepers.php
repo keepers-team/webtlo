@@ -1,19 +1,13 @@
 <?php
 
 try {
-
     // файл лога
-    $filelog = "keepers.log";
-
+    $logFile = "keepers.log";
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../php/common/keepers.php';
-
     // записываем в лог
-    Log::write($filelog);
-
+    Log::write($logFile);
 } catch (Exception $e) {
-
     Log::append($e->getMessage());
-    Log::write($filelog);
-
+    Log::write($logFile);
 }

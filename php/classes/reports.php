@@ -47,6 +47,7 @@ class Reports
         UserDetails::$forum_url = $forum_url;
         UserDetails::get_cookie($login, $paswd, $cap_fields);
         $this->ch = curl_init();
+        Log::append('Используется зеркало для форума: ' . $forum_url);
     }
 
     public function curl_setopts($options)

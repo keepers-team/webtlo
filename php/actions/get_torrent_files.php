@@ -80,14 +80,14 @@ try {
         );
     }
 
+    // скачивание торрент-файлов
+    $download = new TorrentDownload($cfg['forum_address']);
+
     Log::append(
         $replace_passkey
             ? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
             : 'Выполняется скачивание торрент-файлов...'
     );
-
-    // скачивание торрент-файлов
-    $download = new TorrentDownload($cfg['forum_address']);
 
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
