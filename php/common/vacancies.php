@@ -35,7 +35,7 @@ $exclude = explode(',', $vacancies['exclude_forums_ids']);
 $include = explode(',', $vacancies['include_forums_ids']);
 
 // создаём временную таблицу
-Db::query_database("CREATE TEMP TABLE VacanciesKeepers (id INT NOT NULL)");
+Db::query_database("CREATE TEMP TABLE VacanciesKeepers (id INT NOT NULL, posted INT)");
 
 // просканировать все актуальные списки
 if ($vacancies['scan_reports']) {
@@ -51,18 +51,22 @@ if ($vacancies['scan_reports']) {
     foreach ($topics_ids as $topic_id) {
         $keepers = $reports->scanning_viewtopic($topic_id, $vacancies['scan_posted_days']);
         if (!empty($keepers)) {
-            foreach ($keepers as &$keeper) {
-                if (empty($keeper['topics_ids'][1])) {
+            foreach ($keepers as $keeper) {
+                if (empty($keeper['topics_ids'])) {
                     continue;
                 }
-                $keeper['topics_ids'][1] = array_chunk($keeper['topics_ids'][1], 500);
-                foreach ($keeper['topics_ids'][1] as $keeper_topics_ids) {
-                    $select = str_repeat('SELECT ? UNION ALL ', count($keeper_topics_ids) - 1) . 'SELECT ?';
-                    Db::query_database(
-                        "INSERT INTO temp.VacanciesKeepers (id) $select",
-                        $keeper_topics_ids
-                    );
-                    unset($select);
+                $posted = $keeper['posted'];
+                foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
+                    $topicsIDs = array_chunk($keeperTopicsIDs, 499);
+                    foreach ($topicsIDs as $topicsIDs) {
+                        $select = str_repeat('SELECT ?,' . $posted . ' UNION ALL ', count($topicsIDs) - 1) . 'SELECT ?,' . $posted;
+                        Db::query_database(
+                            "INSERT INTO temp.VacanciesKeepers (id,posted) $select",
+                            $topicsIDs
+                        );
+                        unset($select);
+                    }
+                    unset($topicsIDs);
                 }
             }
         }
@@ -93,7 +97,11 @@ $ids = Db::query_database(
     AND ss NOT IN ($in)
     AND $avg <= $avg_seeders_value
     AND strftime('%s','now') - rg >= $reg_time_seconds
-    AND Topics.id NOT IN (SELECT id FROM temp.VacanciesKeepers)",
+    AND Topics.id NOT IN (
+        SELECT temp.VacanciesKeepers.id FROM temp.VacanciesKeepers
+        LEFT JOIN Topics ON Topics.id = temp.VacanciesKeepers.id
+        WHERE rg < posted
+    )",
     $exclude,
     true,
     PDO::FETCH_COLUMN | PDO::FETCH_GROUP

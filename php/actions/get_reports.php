@@ -225,6 +225,7 @@ try {
             if ($keepers !== false) {
                 // разбираем инфу, полученную из списков
                 foreach ($keepers as $index => $keeper) {
+                    $posted = $keeper['posted'];
                     // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
                     if ($keeper['nickname'] == $cfg['tracker_login']) {
                         continue;
@@ -244,7 +245,8 @@ try {
                         foreach ($topics_ids as $topics_ids) {
                             $in = str_repeat('?,', count($topics_ids) - 1) . '?';
                             $values = Db::query_database(
-                                "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
+                                "SELECT COUNT(),SUM(si) FROM Topics
+                                    WHERE id IN ($in) AND ss = $forum_id AND rg < CAST($posted as INTEGER)",
                                 $topics_ids,
                                 true,
                                 PDO::FETCH_NUM

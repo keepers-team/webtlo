@@ -191,6 +191,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     if ($keepers !== false) {
         // разбираем инфу, полученную из списков
         foreach ($keepers as $index => $keeper) {
+            $posted = $keeper['posted'];
             // array( 'post_id', 'nickname', 'posted', 'topics_ids' => array(...) )
             if ($index == 0) {
                 $author_post_id = $keeper['post_id'];
@@ -220,7 +221,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 foreach ($topics_ids as $topics_ids) {
                     $in = str_repeat('?,', count($topics_ids) - 1) . '?';
                     $values = Db::query_database(
-                        "SELECT COUNT(),SUM(si) FROM Topics WHERE id IN ($in) AND ss = $forum_id",
+                        "SELECT COUNT(),SUM(si) FROM Topics
+                            WHERE id IN ($in) AND ss = $forum_id AND rg < CAST($posted as INTEGER)",
                         $topics_ids,
                         true,
                         PDO::FETCH_NUM

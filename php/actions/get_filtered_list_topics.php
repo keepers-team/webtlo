@@ -374,7 +374,9 @@ try {
         // данные о других хранителях
         $keepers = Db::query_database(
             'SELECT id,nick,complete FROM Keepers WHERE id IN (
-                SELECT id FROM Topics WHERE ss IN (' . $ss . ')
+                SELECT Topics.id FROM Topics
+                LEFT JOIN Keepers ON Topics.id = Keepers.id
+                WHERE ss IN (' . $ss . ') AND rg < posted
             )',
             $forums_ids,
             true,
