@@ -366,9 +366,9 @@ try {
 
         // есть/нет хранители
         if (isset($filter['not_keepers'])) {
-            $where[] = 'AND Keepers.id IS NULL';
+            $where[] = 'AND ( rg > posted OR Keepers.id IS NULL )';
         } elseif (isset($filter['is_keepers'])) {
-            $where[] = 'AND Keepers.id IS NOT NULL';
+            $where[] = 'AND Keepers.id IS NOT NULL AND rg < posted';
         }
 
         // данные о других хранителях
