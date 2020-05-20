@@ -75,11 +75,15 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             Log::append('Получение данных о пирах...');
         }
         foreach ($topicsHashes as $forumID => $hashes) {
+            $controlPeersForum = $cfg['subsections'][$forumID]['control_peers'];
+            // пропустим исключённые из регулировки подразделы
+            if ($controlPeersForum == -1) {
+                continue;
+            }
             // получаем данные о пирах
             $peerStatistics = $api->getPeerStats($hashes, 'hash');
             unset($topicsHashhasheses);
             if ($peerStatistics !== false) {
-                $controlPeersForum = $cfg['subsections'][$forumID]['control_peers'];
                 foreach ($peerStatistics as $topicHash => $topicData) {
                     // если нет такой раздачи или идёт загрузка раздачи, идём дальше
                     if (empty($torrents[$topicHash])) {

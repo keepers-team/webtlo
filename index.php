@@ -133,7 +133,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.1</title>
+    <title>web-TLO-2.2.2</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -633,7 +633,7 @@ try {
                                 </label>
                                 <label class="flex">
                                     Останавливать раздачи с количеством пиров более:
-                                    <input id="forum-control-peers" class="myinput forum-props" type="text" size="10" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела в торрент-клиентах. Либо оставьте это поле пустым, чтобы использовать глобальное значение для регулировки раздач" />
+                                    <input id="forum-control-peers" class="myinput forum-props" type="text" size="10" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела в торрент-клиентах. Либо оставьте это поле пустым, чтобы использовать глобальное значение для регулировки раздач. Значение равное -1 вовсе исключит подраздел из регулировки" />
                                 </label>
                             </fieldset>
                         </div>
