@@ -55,6 +55,15 @@ $(document).ready(function () {
 	// получение свойств выбранного подраздела
 	$("#list-forums").on("change", function () {
 		var forumData = $("#list-forums :selected").data();
+		if (forumData.client == '') {
+			forumData.client = 0;
+		}
+		if (forumData.subdirectory == '') {
+			forumData.subdirectory = 0;
+		}
+		if (forumData.hide == '') {
+			forumData.hide = 0;
+		}
 		var torrentClientID = $("#forum-client option[value=" + forumData.client + "]").val();
 		if (typeof torrentClientID === "undefined") {
 			$("#forum-client :first").prop("selected", "selected");
@@ -65,11 +74,16 @@ $(document).ready(function () {
 		if (typeof subdirectory === "undefined") {
 			$("#forum-subdirectory :first").prop("selected", "selected");
 		} else {
-			$("#forum-subdirectory [value=" + forumData.subdirectory + "]").prop("selected", "selected");
+			$("#forum-subdirectory [value=" + subdirectory + "]").prop("selected", "selected");
+		}
+		var hideTopics = $("#forum-hide-topics [value=" + forumData.hide + "]").val();
+		if (typeof hideTopics === "undefined") {
+			$("#forum-hide-topics :first").prop("selected", "selected");
+		} else {
+			$("#forum-hide-topics [value=" + hideTopics + "]").prop("selected", "selected");
 		}
 		$("#forum-label").val(forumData.label);
 		$("#forum-savepath").val(forumData.savepath);
-		$("#forum-hide-topics [value=" + forumData.hide + "]").prop("selected", "selected");
 		$("#forum-control-peers").val(forumData.peers);
 		editableForumID = $(this).val();
 		$("#forum-id").val(editableForumID);
