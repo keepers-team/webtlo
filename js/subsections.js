@@ -70,6 +70,7 @@ $(document).ready(function () {
 		$("#forum-label").val(forumData.label);
 		$("#forum-savepath").val(forumData.savepath);
 		$("#forum-hide-topics [value=" + forumData.hide + "]").prop("selected", "selected");
+		$("#forum-control-peers").val(forumData.peers);
 		editableForumID = $(this).val();
 		$("#forum-id").val(editableForumID);
 	});
@@ -81,12 +82,14 @@ $(document).ready(function () {
 		var forumSavePath = $("#forum-savepath").val();
 		var forumSubdirectory = $("#forum-subdirectory").val();
 		var forumHideTopics = $("#forum-hide-topics :selected").val();
+		var forumControlPeers = $("#forum-control-peers").val();
 		var optionForum = $("#list-forums option[value=" + editableForumID + "]");
 		optionForum.attr("data-client", forumClient).data("client", forumClient);
 		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
 		optionForum.attr("data-savepath", forumSavePath).data("savepath", forumSavePath);
 		optionForum.attr("data-subdirectory", forumSubdirectory).data("subdirectory", forumSubdirectory);
 		optionForum.attr("data-hide", forumHideTopics).data("hide", forumHideTopics);
+		optionForum.attr("data-peers", forumControlPeers).data("peers", forumControlPeers);
 	});
 
 	// добавить подраздел
@@ -153,6 +156,7 @@ function addSubsection(event, ui) {
 		optionForum.attr("data-savepath", "").data("savepath", "");
 		optionForum.attr("data-subdirectory", 0).data("subdirectory", 0);
 		optionForum.attr("data-hide", 0).data("hide", 0);
+		optionForum.attr("data-peers", "").data("peers", "");
 		optionForum.text(forumTitle);
 		$("#main-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
 		$("#reports-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
@@ -181,7 +185,8 @@ function getForums() {
 				"label": forumData.label,
 				"savepath": forumData.savepath,
 				"subdirectory": forumData.subdirectory,
-				"hide": forumData.hide
+				"hide": forumData.hide,
+				"control_peers": forumData.peers
 			};
 		}
 	});

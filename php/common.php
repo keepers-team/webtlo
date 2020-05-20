@@ -65,6 +65,7 @@ function get_settings($filename = "")
             $config['subsections'][$id]['hide_topics'] = $ini->read($id, "hide-topics", 0);
             $config['subsections'][$id]['id'] = $id;
             $config['subsections'][$id]['na'] = isset($titles[$id]) ? $titles[$id] : $ini->read("$id", "title", "$id");
+            $config['subsections'][$id]['control_peers'] = $ini->read($id, 'control-peers', '');
         }
         $config['subsections'] = natsort_field($config['subsections'], 'na');
     }

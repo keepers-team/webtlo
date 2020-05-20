@@ -24,7 +24,7 @@ try {
     // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
     $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s"';
-    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s"';
+    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
 
     // стандартные адреса
     $forumAddressList = array(
@@ -105,7 +105,8 @@ try {
                 $forumData['lb'],
                 $forumData['df'],
                 $forumData['sub_folder'],
-                $forumData['hide_topics']
+                $forumData['hide_topics'],
+                $forumData['control_peers']
             );
             $optionForums .= sprintf(
                 $optionFormat,
@@ -132,7 +133,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.1.10</title>
+    <title>web-TLO-2.2.0</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -629,6 +630,10 @@ try {
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
+                                </label>
+                                <label class="flex">
+                                    Останавливать раздачи с количеством пиров более:
+                                    <input id="forum-control-peers" class="myinput forum-props" type="text" size="10" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела в торрент-клиентах. Либо оставьте это поле пустым, чтобы использовать глобальное значение для регулировки раздач" />
                                 </label>
                             </fieldset>
                         </div>

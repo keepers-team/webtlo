@@ -105,6 +105,9 @@ try {
             if (isset($forumData['hide'])) {
                 $ini->write($forumID, 'hide-topics', $forumData['hide']);
             }
+            if (isset($forumData['control_peers'])) {
+                $ini->write($forumID, 'control-peers', $forumData['control_peers']);
+            }
         }
         $forumsIDs = implode(',', array_keys($forums));
         $ini->write('sections', 'subsections', $forumsIDs);

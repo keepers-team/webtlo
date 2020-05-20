@@ -50,12 +50,18 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
         $responseTopicsHashes = Db::query_database(
-            'SELECT hs FROM Topics WHERE hs IN (' . $placeholdersTorrentsHashes . ') AND ss IN (' . $placeholdersForumsIDs . ')',
+            'SELECT ss,hs FROM Topics WHERE hs IN (' . $placeholdersTorrentsHashes . ') AND ss IN (' . $placeholdersForumsIDs . ')',
             array_merge($torrentsHashes, $forumsIDs),
             true,
-            PDO::FETCH_COLUMN
+            PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
-        $topicsHashes = array_merge($topicsHashes, $responseTopicsHashes);
+        foreach ($responseTopicsHashes as $forumID => $hashes) {
+            if (isset($topicsHashes[$forumID])) {
+                $topicsHashes[$forumID] = array_merge($topicsHashes[$forumID], $hashes);
+            } else {
+                $topicsHashes[$forumID] = $hashes;
+            }
+        }
         unset($placeholdersTorrentsHashes);
         unset($responseTopicsHashes);
     }
@@ -68,50 +74,55 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
             Log::append('Получение данных о пирах...');
         }
-        // получаем данные о пирах
-        $peerStatistics = $api->getPeerStats($topicsHashes, 'hash');
-        unset($topicsHashes);
-        if ($peerStatistics !== false) {
-            foreach ($peerStatistics as $topicHash => $topicData) {
-                // если нет такой раздачи или идёт загрузка раздачи, идём дальше
-                if (empty($torrents[$topicHash])) {
-                    continue;
-                }
-                // статус раздачи
-                $torrentStatus = $torrents[$topicHash];
-                // учитываем себя
-                $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
-                // находим значение личей
-                $leechers = $cfg['topics_control']['leechers'] ? $topicData['leechers'] : 0;
-                // находим значение пиров
-                $peers = $topicData['seeders'] + $leechers;
-                // учитываем вновь прибывшего "лишнего" сида
-                if (
-                    $topicData['seeders']
-                    && $peers == $cfg['topics_control']['peers']
-                    && $torrentStatus == 1
-                ) {
-                    $peers++;
-                }
-                // стопим только, если есть сиды
-                $peersState = $peers > $cfg['topics_control']['peers']
-                    || !$cfg['topics_control']['no_leechers']
-                    && !$topicData['leechers'];
-                if (
-                    $topicData['seeders']
-                    && $peersState
-                ) {
-                    if ($torrentStatus == 1) {
-                        $controlTopics['stop'][] = $topicHash;
+        foreach ($topicsHashes as $forumID => $hashes) {
+            // получаем данные о пирах
+            $peerStatistics = $api->getPeerStats($hashes, 'hash');
+            unset($topicsHashhasheses);
+            if ($peerStatistics !== false) {
+                $controlPeersForum = $cfg['subsections'][$forumID]['control_peers'];
+                foreach ($peerStatistics as $topicHash => $topicData) {
+                    // если нет такой раздачи или идёт загрузка раздачи, идём дальше
+                    if (empty($torrents[$topicHash])) {
+                        continue;
                     }
-                } else {
-                    if ($torrentStatus == -1) {
-                        $controlTopics['start'][] = $topicHash;
+                    // статус раздачи
+                    $torrentStatus = $torrents[$topicHash];
+                    // учитываем себя
+                    $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
+                    // находим значение личей
+                    $leechers = $cfg['topics_control']['leechers'] ? $topicData['leechers'] : 0;
+                    // находим значение пиров
+                    $peers = $topicData['seeders'] + $leechers;
+                    // регулируемое значение пиров
+                    $controlPeers = $controlPeersForum == '' ? $cfg['topics_control']['peers'] : $controlPeersForum;
+                    // учитываем вновь прибывшего "лишнего" сида
+                    if (
+                        $topicData['seeders']
+                        && $peers == $controlPeers
+                        && $torrentStatus == 1
+                    ) {
+                        $peers++;
+                    }
+                    // стопим только, если есть сиды
+                    $peersState = $peers > $controlPeers
+                        || !$cfg['topics_control']['no_leechers']
+                        && !$topicData['leechers'];
+                    if (
+                        $topicData['seeders']
+                        && $peersState
+                    ) {
+                        if ($torrentStatus == 1) {
+                            $controlTopics['stop'][] = $topicHash;
+                        }
+                    } else {
+                        if ($torrentStatus == -1) {
+                            $controlTopics['start'][] = $topicHash;
+                        }
                     }
                 }
             }
+            unset($peerStatistics);
         }
-        unset($peerStatistics);
     }
     if (empty($controlTopics)) {
         Log::append('Notice: Регулировка раздач не требуется для торрент-клиента "' . $torrentClientData['cm'] . '"');
