@@ -173,7 +173,7 @@ class Transmission extends TorrentClient
             ),
         );
         if (!empty($savePath)) {
-            $fields['download-dir'] = $savePath;
+            $fields['arguments']['download-dir'] = $savePath;
         }
         $response = $this->makeRequest($fields);
         if ($response === false) {
