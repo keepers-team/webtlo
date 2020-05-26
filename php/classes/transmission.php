@@ -8,6 +8,8 @@ class Transmission extends TorrentClient
 {
     protected static $base = '%s://%s:%s/transmission/rpc';
 
+    private $rpcVersion;
+
     /**
      * получение идентификатора сессии и запись его в $this->sid
      * @return bool true в случе успеха, false в случае неудачи
@@ -34,16 +36,18 @@ class Transmission extends TorrentClient
         if ($responseHttpCode == 401) {
             Log::append('Error: Не удалось авторизоваться в веб-интерфейсе торрент-клиента');
             Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
-        } elseif ($responseHttpCode == 405) {
-            $fields = array('method' => 'session-get');
-            $response = $this->makeRequest($fields);
-            if ($response !== false) {
-                return true;
-            }
-        } elseif ($responseHttpCode == 409) {
+        } elseif (
+            $responseHttpCode == 405
+            || $responseHttpCode == 409
+        ) {
             preg_match('|.*\r\n(X-Transmission-Session-Id: .*?)(\r\n.*)|', $response, $matches);
             if (!empty($matches)) {
                 $this->sid = $matches[1];
+            }
+            $fields = array('method' => 'session-get');
+            $response = $this->makeRequest($fields);
+            if ($response !== false) {
+                $this->rpcVersion = $response['rpc-version'];
                 return true;
             }
         }
@@ -190,8 +194,19 @@ class Transmission extends TorrentClient
 
     public function setLabel($torrentHashes, $labelName = '')
     {
-        Log::append('Error: Торрент-клиент не поддерживает установку меток');
-        return false;
+        if ($this->rpcVersion < 16) {
+            Log::append('Error: Торрент-клиент не поддерживает установку меток');
+            return false;
+        } else {
+            $fields = array(
+                'method' => 'torrent-set',
+                'arguments' => array(
+                    'labels' => array($labelName),
+                    'ids' => $torrentHashes
+                ),
+            );
+            return $this->makeRequest($fields);
+        }
     }
 
     public function startTorrents($torrentHashes, $forceStart = false)
