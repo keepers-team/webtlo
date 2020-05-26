@@ -26,6 +26,23 @@ $(document).ready(function () {
 			var selectedForumID = $("#main-subsections-button").attr("aria-activedescendant");
 			$("#main-subsections-menu div[role=option]").css({ "font-weight": "normal" });
 			$("#" + selectedForumID).css({ "font-weight": "bold" });
+			$("#main-subsections-menu li div").each(function () {
+				var forumIndication = '';
+				var forumTitle = $.trim($(this).text());
+				var forumData = $("#list-forums option").filter(function () {
+					return $(this).text() === forumTitle;
+				}).data();
+				if (typeof forumData === "undefined") {
+					return;
+				}
+				if (forumData.hide == 1) {
+					forumIndication += '<i class="fa fa-eye-slash" aria-hidden="true"></i> ';
+				}
+				if (forumData.peers == -1) {
+					forumIndication += '<i class="fa fa-bolt" aria-hidden="true"></i> ';
+				}
+				$(this).html(forumIndication + forumTitle);
+			});
 		},
 	}).selectmenu("menuWidget").addClass("menu-overflow");
 
