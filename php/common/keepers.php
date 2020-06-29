@@ -60,7 +60,7 @@ if (isset($cfg['subsections'])) {
             foreach ($keepers as &$keeper) {
                 if (
                     empty($keeper['topics_ids'])
-                    || $keeper['nickname'] == $cfg['tracker_login']
+                    || strcasecmp($cfg['tracker_login'], $keeper['nickname']) === 0
                 ) {
                     continue;
                 }
@@ -106,8 +106,8 @@ if ($count_keepers[0] > 0) {
     Db::query_database("INSERT INTO Keepers SELECT * FROM temp.KeepersNew");
 
     Db::query_database(
-        "DELETE FROM Keepers WHERE id NOT IN (
-            SELECT Keepers.id FROM temp.KeepersNew
+        "DELETE FROM Keepers WHERE id || nick NOT IN (
+            SELECT Keepers.id || Keepers.nick FROM temp.KeepersNew
             LEFT JOIN Keepers ON temp.KeepersNew.id = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
             WHERE Keepers.id IS NOT NULL
         )"

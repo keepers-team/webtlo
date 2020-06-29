@@ -227,7 +227,7 @@ try {
                 foreach ($keepers as $index => $keeper) {
                     $posted = $keeper['posted'];
                     // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
-                    if ($keeper['nickname'] == $cfg['tracker_login']) {
+                    if (strcasecmp($cfg['tracker_login'], $keeper['nickname']) === 0) {
                         continue;
                     }
                     // считаем сообщения других хранителей в подразделе

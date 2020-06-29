@@ -331,7 +331,7 @@ try {
         // 1 - fields, 2 - left join, 3 - where
         $pattern_statement = 'SELECT Topics.id,na,si,rg,pt,dl%s FROM Topics
 			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
-			LEFT JOIN (SELECT * FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
+			LEFT JOIN (SELECT id,nick,MAX(posted) as posted,complete FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
 			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
 			WHERE ss IN (' . $ss . ') AND st IN (' . $st . ') AND (' . $dl . ') AND Blacklist.id IS NULL%s';
 
@@ -373,11 +373,9 @@ try {
 
         // данные о других хранителях
         $keepers = Db::query_database(
-            'SELECT id,nick,complete FROM Keepers WHERE id IN (
-                SELECT Topics.id FROM Topics
+            'SELECT Topics.id,nick,complete FROM Topics
                 LEFT JOIN Keepers ON Topics.id = Keepers.id
-                WHERE ss IN (' . $ss . ') AND rg < posted
-            )',
+                WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL',
             $forums_ids,
             true,
             PDO::FETCH_ASSOC | PDO::FETCH_GROUP

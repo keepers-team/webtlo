@@ -194,18 +194,18 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $posted = $keeper['posted'];
             // array( 'post_id', 'nickname', 'posted', 'topics_ids' => array(...) )
             if ($index == 0) {
-                $author_post_id = $keeper['post_id'];
-                $author_nickname = $keeper['nickname'];
+                $postIDAuthorTopic = $keeper['post_id'];
+                $nicknameAuthorTopic = $keeper['nickname'];
                 continue;
             }
             // запоминаем свои сообщения
-            if ($keeper['nickname'] == $cfg['tracker_login']) {
+            if (strcasecmp($cfg['tracker_login'], $keeper['nickname']) === 0) {
                 $posts_ids[] = $keeper['post_id'];
                 continue;
             }
             // считаем сообщения других хранителей в подразделе
             if (
-                $cfg['tracker_login'] == $author_nickname
+                strcasecmp($cfg['tracker_login'], $nicknameAuthorTopic) === 0
                 && !isset($stored[$keeper['nickname']])
             ) {
                 $stored[$keeper['nickname']]['dlqt'] = 0;
@@ -272,7 +272,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     }
 
     // работа с шапкой
-    if ($cfg['tracker_login'] == $author_nickname) {
+    if (strcasecmp($cfg['tracker_login'], $nicknameAuthorTopic) === 0) {
         $tmp['header'] = '[url=viewforum.php?f=' . $forum_id . '][u][color=#006699]' . preg_replace('/.*» ?(.*)$/', '$1', $forum[$forum_id]['na']) . '[/u][/color][/url] ' .
             '| [url=tracker.php?f=' . $forum_id . '&tm=-1&o=10&s=1&oop=1][color=indigo][u]Проверка сидов[/u][/color][/url][br][br]' .
             'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
@@ -280,7 +280,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             'Всего хранимых раздач в подразделе: %%dlqt%% шт. / %%dlsi%%[br]' .
             'Всего скачиваемых раздач в подразделе: %%dlqtsub%% шт. / %%dlsisub%%[br]' .
             'Количество хранителей: %%kpqt%%[hr]' .
-            'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($cfg['tracker_login']) . '&name=1][u][color=#006699]' . $cfg['tracker_login'] . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
+            'Хранитель 1: [url=profile.php?mode=viewprofile&u=' . urlencode($nicknameAuthorTopic) . '&name=1][u][color=#006699]' . $nicknameAuthorTopic . '[/u][/color][/url] [color=gray]~>[/color] ' . $tmp['dlqt'] . ' шт. [color=gray]~>[/color] ' . convert_bytes($tmp['dlsi']) . '[br]';
         // значения хранимого для шапки
         $count_keepers = 1;
         $sumdlqt_keepers = $tmp['dlqt'];
@@ -329,7 +329,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             'editpost',
             $tmp['header'],
             $topic_id,
-            $author_post_id,
+            $postIDAuthorTopic,
             '[Список] ' . $subsection['na']
         );
     }
