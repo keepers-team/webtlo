@@ -30,6 +30,7 @@ $(document).ready(function () {
 		var torrentClientSSL = Number($("#torrent-client-ssl").prop("checked"));
 		if (torrentClientComment == "") {
 			torrentClientComment = editableTorrentClientID;
+			$("#torrent-client-comment").val(editableTorrentClientID);
 		}
 		var optionTorrentClient = $("#list-torrent-clients option[value=" + editableTorrentClientID + "]");
 		optionTorrentClient.attr("data-comment", torrentClientComment).data("comment", torrentClientComment);
@@ -69,6 +70,7 @@ $(document).ready(function () {
 				var tmpTorrentClientID = parseInt($(this).val());
 				torrentClientID = tmpTorrentClientID > torrentClientID ? tmpTorrentClientID : torrentClientID;
 				var torrentClientData = $(this).data();
+				torrentClientData.comment = torrentClientData.comment.toString();
 				var tmpCommentText = torrentClientData.comment.replace(/\d*$/, "");
 				var tmpCommentNumber = torrentClientData.comment.replace(tmpCommentText, "");
 				var tmpCommentLeadingZeros = tmpCommentNumber.replace(/[^0].*/, "");
