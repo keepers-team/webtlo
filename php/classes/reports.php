@@ -74,7 +74,11 @@ class Reports
         $try = 3; // кол-во попыток
         while (true) {
             $data = curl_exec($this->ch);
-            if ($data === false) {
+            $completeData = strpos($data, '</html>');
+            if (
+                $data === false
+                || $completeData === false
+            ) {
                 $http_code = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
                 if (
                     $http_code < 300
@@ -343,7 +347,7 @@ class Reports
             $topic_title = $html->find('a#topic-title')->text();
             unset($html);
             phpQuery::unloadDocuments();
-            $this->blocking_send = preg_match('/#2$/', $topic_title);
+            $this->blocking_send = preg_match('/#3$/', $topic_title);
             if (!$this->blocking_send) {
                 Log::append("Notice: Установите актуальную версию web-TLO для корректной отправки отчётов");
                 throw new Exception("Error: Отправка отчётов для текущей версии web-TLO заблокирована");
