@@ -57,13 +57,14 @@ $(document).ready(function () {
 		if (typeof element === "undefined") {
 			return false;
 		}
-		var size = $("#main-subsections-stored option").size();
-		var selected = $("#main-subsections").prop("selectedIndex");
-		selected = selected - delta;
-		if (selected == size) {
-			selected = 0;
+		var totalNumberSubsectionsOptions = $("#main-subsections-stored option").size();
+		var totalNumberAdditionalOptions = $("#main-subsections optgroup:first option").size();
+		var indexSelectedOption = $("#main-subsections").prop("selectedIndex");
+		var nextIndexNumber = indexSelectedOption - totalNumberAdditionalOptions - delta;
+		if (nextIndexNumber == totalNumberSubsectionsOptions) {
+			nextIndexNumber = 0;
 		}
-		$("#main-subsections-stored :eq(" + selected + ")").prop("selected", "selected");
+		$("#main-subsections-stored :eq(" + nextIndexNumber + ")").prop("selected", "selected");
 		$("#main-subsections").selectmenu("refresh");
 		forumDataShowDelay(getFilteredTopics);
 		return false;

@@ -133,7 +133,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.8</title>
+    <title>web-TLO-2.2.9</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -158,18 +158,18 @@ try {
         <div id="content">
             <div id="main" class="content">
                 <select id="main-subsections">
-                    <optgroup id="main-subsections-stored">
-                        <?php echo $optionForums ?>
-                    </optgroup>
-                    <optgroup label="Прочее">
-                        <option value="-2">Раздачи из "чёрного списка"</option>
+                    <optgroup>
                         <option value="-3">Раздачи из всех хранимых подразделов</option>
                         <option value="-5">Раздачи с высоким приоритетом хранения</option>
+                        <option value="-2">Раздачи из «чёрного списка»</option>
                         <option value="-4">Хранимые дублирующиеся раздачи</option>
                         <option value="0">Хранимые раздачи из других подразделов</option>
                         <!--
                             <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
                         -->
+                    </optgroup>
+                    <optgroup label="Хранимые подразделы" id="main-subsections-stored">
+                        <?php echo $optionForums ?>
                     </optgroup>
                 </select>
                 <div id="topics_data">
@@ -712,11 +712,11 @@ try {
                     <optgroup>
                         <option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
                     </optgroup>
-                    <optgroup id="reports-subsections-stored">
-                        <?php echo $optionForums ?>
-                    </optgroup>
                     <optgroup>
                         <option value="0">Сводный отчёт</option>
+                    </optgroup>
+                    <optgroup label="Хранимые подразделы" id="reports-subsections-stored">
+                        <?php echo $optionForums ?>
                     </optgroup>
                 </select>
                 <hr />
