@@ -289,18 +289,19 @@ class Reports
                         'nickname' => $nickname,
                     );
                     // вытаскиваем дату отправки/редактирования сообщения
-                    $posted = $row->find('.p-link')->text();
-                    $posted_since = $row->find('.posted_since')->text();
-                    if (preg_match('/(\d{2})-(\D{1,})-(\d{2,4}) (\d{1,2}):(\d{1,2})/', $posted_since, $since)) {
-                        $posted = $since[0];
+                    $postedDateMessage = $row->find('.p-link')->text();
+                    $editedDateMessage = $row->find('.posted_since')->text();
+                    $changedMessage = preg_match('/(\d+)-(\D+)-(\d+) (\d+):(\d+)/', $editedDateMessage, $matches);
+                    if ($changedMessage) {
+                        $postedDateMessage = $matches[0];
                     }
-                    $posted = str_replace($this->months_ru, $this->months, $posted);
-                    $topic_date = DateTime::createFromFormat('d-M-y H:i', $posted);
-                    if (!$topic_date) {
-                        throw new Exception("Error: Неправильный формат даты отправки сообщения - " . $posted);
+                    $postedDateMessage = str_replace($this->months_ru, $this->months, $postedDateMessage);
+                    $postedDateTime = DateTime::createFromFormat('d-M-y H:i', $postedDateMessage);
+                    if (!$postedDateTime) {
+                        throw new Exception("Error: Неправильный формат даты отправки сообщения - " . $postedDateMessage);
                     }
-                    $keepers[$index]['posted'] = $topic_date->format('U');
-                    $days_diff = Date::now()->diff($topic_date)->format('%a');
+                    $keepers[$index]['posted'] = $postedDateTime->format('U');
+                    $days_diff = Date::now()->diff($postedDateTime)->format('%a');
                     // пропускаем сообщение, если оно старше $posted_days дней
                     if (
                         $posted_days != -1

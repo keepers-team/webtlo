@@ -304,7 +304,7 @@ if (
     );
     $countTopicsTotalUpdate = $countTopicsUpdate[0] + $countTopicsRenew[0];
     Log::append("Обработано хранимых подразделов: " . count($forums_update_time) . " шт.");
-    Log::append("Обработано хранимых раздач: " . $countTopicsTotalUpdate . " шт.");
+    Log::append("Обработано раздач в хранимых подразделах: " . $countTopicsTotalUpdate . " шт.");
     // Log::append("Запись в базу данных сведений о раздачах...");
 }
 
