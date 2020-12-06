@@ -456,7 +456,7 @@ li.menu.ui-tabs-active {
 }
 
 #list-torrent-clients li {
-	padding: 5px 10px;
+	padding: 2px 5px;
 	cursor: pointer;
 	border: 0;
 }

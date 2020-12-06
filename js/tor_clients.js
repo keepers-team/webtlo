@@ -7,7 +7,22 @@ $(document).ready(function () {
 	$("#list-torrent-clients").selectable();
 
 	// получить свойства торрент-клиентов
+	var torrentClientTouchTime = 0;
 	$("#list-torrent-clients").bind("selectablestop", function () {
+		if (torrentClientTouchTime == 0) {
+			torrentClientTouchTime = new Date().getTime();
+		} else {
+			var touchTimeDiff = new Date().getTime() - torrentClientTouchTime;
+			if (touchTimeDiff < 200) {
+				// выбрать все торрент-клиенты
+				$("li", this).addClass("ui-selected ui-editable");
+				$(".torrent-client-props").prop("disabled", true);
+				torrentClientTouchTime = 0;
+				return;
+			} else {
+				torrentClientTouchTime = new Date().getTime();
+			}
+		}
 		var selectedItems = $(".ui-selected", this).size();
 		var editedItems = $(".ui-editable", this).size();
 		var torrentClientProps = $(".torrent-client-props");
@@ -40,12 +55,6 @@ $(document).ready(function () {
 			$("#torrent-client-password").val(torrentClientData.password);
 			$("#torrent-client-ssl").prop("checked", torrentClientData.ssl);
 		}
-	});
-
-	// выбрать все торрент-клиенты
-	$("#list-torrent-clients").on("dblclick", function () {
-		$("li", this).addClass("ui-selected ui-editable");
-		$(".torrent-client-props").prop("disabled", true);
 	});
 
 	// изменение свойств торрент-клиента
@@ -211,11 +220,14 @@ $(document).ready(function () {
 				complete: function () {
 					numberTorrentClients--
 					if (numberTorrentClients === 0) {
-						var numberErrors = $("#list-torrent-clients i.text-danger").size();
-						if (numberErrors > 0) {
-							$("#torrent-client-response").html('<i class="fa fa-circle text-danger"></i> некоторые торрент-клиенты сейчас недоступны');
-						} else {
-							$("#torrent-client-response").html('<i class="fa fa-circle text-success"></i> все торрент-клиенты сейчас доступны');
+						var numberCheckedTorrentClients = $("#list-torrent-clients i").size();
+						if (numberCheckedTorrentClients > 1) {
+							var numberErrors = $("#list-torrent-clients i.text-danger").size();
+							if (numberErrors > 0) {
+								$("#torrent-client-response").html('<i class="fa fa-circle text-danger"></i> некоторые торрент-клиенты сейчас недоступны');
+							} else {
+								$("#torrent-client-response").html('<i class="fa fa-circle text-success"></i> все торрент-клиенты сейчас доступны');
+							}
 						}
 						$(button).prop("disabled", false);
 						$(button).children("i").hide();
