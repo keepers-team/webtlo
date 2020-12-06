@@ -19,8 +19,8 @@ try {
     );
 
     $status = $client->isOnline()
-        ? '<i class="fa fa-circle text-success"></i>"' . $torrentClient['comment'] . '" сейчас доступен'
-        : '<i class="fa fa-circle text-danger"></i>"' . $torrentClient['comment'] . '" сейчас недоступен';
+        ? '<i class="fa fa-circle text-success"></i>'
+        : '<i class="fa fa-circle text-danger"></i>';
 
     echo json_encode(
         array(

@@ -405,12 +405,6 @@ li.menu.ui-tabs-active {
 	margin-top: 10px;
 }
 
-#connect-torrent-client img {
-	height: 17px;
-	margin: 0 5px;
-	vertical-align: middle;
-}
-
 #checking {
 	display: none;
 }
@@ -441,19 +435,34 @@ li.menu.ui-tabs-active {
 }
 
 #list-torrent-clients {
-	width: 400px;
-	padding: 0 3px;
-	margin: 10px 15px 0 0;
+	display: block;
+	width: 300px;
+	height: 250px;
+	list-style-type: none;
+	margin: 10px 10px 0 0;
+	padding: 0;
+	color: #555555;
+	border: 1px solid #d3d3d3;
+	flex: 1;
+	overflow-y: auto;
 }
 
-#list-torrent-clients optgroup {
-	font-weight: normal;
-	color: #808080;
+#list-torrent-clients .ui-selecting {
+	background: #e6e6e6;
 }
 
-#list-torrent-clients option {
-	color: #000;
-	margin: 0 0 0 -18.5px;
+#list-torrent-clients .ui-selected {
+	background: #e6e6e6;
+}
+
+#list-torrent-clients li {
+	padding: 5px 10px;
+	cursor: pointer;
+	border: 0;
+}
+
+#list-torrent-clients li i {
+	margin: 0 5px;
 }
 
 #add-forum {

@@ -57,10 +57,21 @@ function makeDelay(ms) {
 	}
 }
 
+function functionDelay(callback, ms) {
+	var timer = 0;
+	return function () {
+		var context = this, args = arguments;
+		clearTimeout(timer);
+		timer = setTimeout(function () {
+			callback.apply(context, args);
+		}, ms);
+	};
+}
+
 // сортировка в select
-function doSortSelect(selectID) {
+function doSortSelect(selectID, sortElement) {
 	$("#" + selectID).toggle();
-	var sortedVals = $.makeArray($("#" + selectID + " option")).sort(function (a, b) {
+	var sortedVals = $.makeArray($("#" + selectID + " " + sortElement)).sort(function (a, b) {
 		if ($(a).val() == 0) {
 			return -1;
 		}
@@ -71,9 +82,9 @@ function doSortSelect(selectID) {
 	$("#" + selectID).empty().html(sortedVals).toggle();
 }
 
-function doSortSelectByValue(selectID) {
+function doSortSelectByValue(selectID, sortElement) {
 	$("#" + selectID).toggle();
-	var sortedVals = $.makeArray($("#" + selectID + " option")).sort(function (a, b) {
+	var sortedVals = $.makeArray($("#" + selectID + " " + sortElement)).sort(function (a, b) {
 		if ($(a).val() == 0) {
 			return -1;
 		}

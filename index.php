@@ -23,6 +23,7 @@ try {
 
     // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
+    $itemFormat = '<li class="ui-widget-content" value="%s" %s>%s</li>';
     $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s"';
     $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
 
@@ -86,7 +87,7 @@ try {
                 $torrentClientData['cm']
             );
             $optionTorrentClientsDataset .= sprintf(
-                $optionFormat,
+                $itemFormat,
                 $torrentClientID,
                 $datasetTorrentClient,
                 $torrentClientData['cm']
@@ -133,7 +134,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.9</title>
+    <title>web-TLO-2.2.10</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -524,7 +525,7 @@ try {
                         </div>
                         <h2>Настройки торрент-клиентов</h2>
                         <div>
-                            <p>
+                            <div>
                                 <button type="button" id="add-torrent-client" title="Добавить новый торрент-клиент в список">
                                     Добавить
                                 </button>
@@ -535,15 +536,13 @@ try {
                                     <i id="checking" class="fa fa-spinner fa-spin"></i> Проверить
                                 </button>
                                 <span id="torrent-client-response"></span>
-                            </p>
-                            <div class="block-settings">
-                                <select id="list-torrent-clients" size=12>
-                                    <optgroup label="список торрент-клиентов">
-                                        <?php echo $optionTorrentClientsDataset ?>
-                                    </optgroup>
-                                </select>
                             </div>
-                            <div class="block-settings" id="torrent-client-props">
+                            <div class="block-settings">
+                                <ol id="list-torrent-clients" title="Список сканируемых торрент-клиентов">
+                                    <?php echo $optionTorrentClientsDataset ?>
+                                </ol>
+                            </div>
+                            <div id="torrent-client-props" class="block-settings">
                                 <div>
                                     <label>
                                         Название:
