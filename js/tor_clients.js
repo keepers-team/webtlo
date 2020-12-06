@@ -6,27 +6,28 @@ $(document).ready(function () {
 	// список торрент-клиентов
 	$("#list-torrent-clients").selectable();
 
-	// получить свойства торрент-клиентов
+	// выбрать все торрент-клиенты
 	var torrentClientTouchTime = 0;
-	$("#list-torrent-clients").bind("selectablestop", function () {
+	$("#list-torrent-clients").bind("selectablestart", functionDelay(function () {
 		if (torrentClientTouchTime == 0) {
 			torrentClientTouchTime = new Date().getTime();
 		} else {
 			var touchTimeDiff = new Date().getTime() - torrentClientTouchTime;
 			if (touchTimeDiff < 200) {
-				// выбрать все торрент-клиенты
 				$("li", this).addClass("ui-selected ui-editable");
 				$(".torrent-client-props").prop("disabled", true);
 				torrentClientTouchTime = 0;
-				return;
 			} else {
 				torrentClientTouchTime = new Date().getTime();
 			}
 		}
+	}, 100));
+
+	// получить свойства торрент-клиентов
+	$("#list-torrent-clients").bind("selectablestop", function () {
 		var selectedItems = $(".ui-selected", this).size();
 		var editedItems = $(".ui-editable", this).size();
 		var torrentClientProps = $(".torrent-client-props");
-		// получение свойств торрент-клиента
 		if (selectedItems == 0) {
 			if (editedItems == 1) {
 				var editableItems = $("#list-torrent-clients li.ui-editable");
