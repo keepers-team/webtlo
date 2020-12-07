@@ -212,41 +212,28 @@ $(document).ready(function () {
 
 	// выделение/снятие выделения интервала раздач
 	$("#topics").on("click", ".topic", function (event) {
-		if (!$("#topics .topic").hasClass("first-topic")) {
-			$(this).addClass("first-topic");
-			getCountSizeSelectedTopics();
-			return true;
+		var $checkboxes = $("#topics .topic");
+		if (!$checkboxes.hasClass("last-checked")) {
+			$(this).addClass("last-checked");
+			return;
 		}
 		if (event.shiftKey) {
-			var data = this.dataset;
-			var tag = parseInt(data.tag); // 2 - 20 = -18; 10 - 2 = 8;
-			var data_first = document.querySelector("#topics .first-topic").dataset;
-			var tag_first = parseInt(data_first.tag);
-			var direction = tag_first - tag < 0 ? "down" : "up";
-			$("#topics").closest("form").find(".topic[type=checkbox]").each(function () {
-				var data_this = this.dataset;
-				var tag_this = parseInt(data_this.tag);
-				if (direction == "down") {
-					if (
-						tag_this >= tag_first
-						&& tag_this <= tag
-					) {
-						$(this).prop("checked", !event.ctrlKey);
-					}
-				}
-				if (direction == "up") {
-					if (
-						tag_this <= tag_first
-						&& tag_this >= tag
-					) {
-						$(this).prop("checked", !event.ctrlKey);
-					}
-				}
-			});
+			var $lastChecked = $("#topics .last-checked");
+			var startIndex = $checkboxes.index(this);
+			var endIndex = $checkboxes.index($lastChecked);
+			$checkboxes.slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1).prop("checked", $lastChecked[0].checked);
 		}
-		$("#topics .first-topic").removeClass("first-topic");
-		$(this).addClass("first-topic");
+		$checkboxes.removeClass("last-checked");
+		$(this).addClass("last-checked");
 		getCountSizeSelectedTopics();
+	});
+
+	// снять выделение всех раздач по Esc
+	$("#topics").on("keyup", function (event) {
+		if (event.which == 27) {
+			$("#topics .topic").prop("checked", false).removeClass("last-checked");
+			getCountSizeSelectedTopics();
+		}
 	});
 
 	// скрыть/показать фильтр

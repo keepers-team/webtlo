@@ -38,18 +38,19 @@ try {
     // -4 - дублирующиеся раздачи
     // -5 - высокоприоритетные раздачи
 
-    // topic_data => tag,id,na,si,convert(si)rg,se,ds
+    // topic_data => id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = array(
-        'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%2$s" data-size="%4$s" data-tag="%1$s">',
-        'ds' => ' <i class="fa %9$s %8$s"></i>',
-        'rg' => ' | <span>%6$s | </span> ',
-        'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
-        'si' => ' (%5$s)',
-        'se' => ' - <span class="text-danger">%7$s</span>',
+        'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%1$s" data-size="%3$s">',
+        'ds' => ' <i class="fa %8$s %7$s"></i>',
+        'rg' => ' | <span>%5$s | </span> ',
+        'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%1$s" target="_blank">%2$s</a>',
+        'si' => ' (%4$s)',
+        'se' => ' - <span class="text-danger">%6$s</span>',
     );
 
     $output = '';
+    $preparedOutput = array();
     $filtered_topics_count = 0;
     $filtered_topics_size = 0;
 
@@ -60,6 +61,12 @@ try {
             array(),
             true
         );
+        $forumsTitles = Db::query_database(
+            "SELECT id,na FROM Forums WHERE id IN (SELECT DISTINCT(ss) FROM TopicsUntracked)",
+            array(),
+            true,
+            PDO::FETCH_KEY_PAIR
+        );
         // сортировка раздач
         $topics = natsort_field(
             $topics,
@@ -69,6 +76,7 @@ try {
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
+            $forumID = $topic_data['ss'];
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
             foreach ($pattern_topic_data as $field => $pattern) {
@@ -76,11 +84,13 @@ try {
                     $data .= $pattern;
                 }
             }
-            $output .= sprintf(
+            if (!isset($preparedOutput[$forumID])) {
+                $preparedOutput[$forumID] = '<div class="subsection-title">' . $forumsTitles[$forumID] . '</div>';
+            }
+            $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
                 sprintf(
                     $data,
-                    $filtered_topics_count,
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
@@ -88,15 +98,18 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     $topic_data['se']
                 ),
-                '<span class="bold">#' . $topic_data['ss'] . '</span>'
+                ''
             );
         }
+        unset($topics);
+        natcasesort($preparedOutput);
+        $output = implode('', $preparedOutput);
     } elseif ($forum_id == -2) {
         // находим значение за последний день
         $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
         // чёрный список
         $topics = Db::query_database(
-            'SELECT Topics.id,na,si,rg,' . $se . ',comment FROM Topics
+            'SELECT Topics.id,ss,na,si,rg,' . $se . ',comment FROM Topics
 			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
 			WHERE Blacklist.id IS NOT NULL',
             array(),
@@ -111,6 +124,7 @@ try {
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
+            $forumID = $topic_data['ss'];
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
             foreach ($pattern_topic_data as $field => $pattern) {
@@ -118,11 +132,13 @@ try {
                     $data .= $pattern;
                 }
             }
-            $output .= sprintf(
+            if (!isset($preparedOutput[$forumID])) {
+                $preparedOutput[$forumID] = '<div class="subsection-title">' . $cfg['subsections'][$forumID]['na'] . '</div>';
+            }
+            $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
                 sprintf(
                     $data,
-                    $filtered_topics_count,
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
@@ -133,6 +149,9 @@ try {
                 '<span class="bold">' . $topic_data['comment'] . '</span>'
             );
         }
+        unset($topics);
+        natcasesort($preparedOutput);
+        $output = implode('', $preparedOutput);
     } elseif ($forum_id == -4) {
         // дублирующиеся раздачи
         $statementFields = array();
@@ -230,7 +249,6 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $outputLine,
-                    $filtered_topics_count,
                     $topicData['id'],
                     $topicData['na'],
                     $topicData['si'],
@@ -516,7 +534,6 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $data,
-                    $filtered_topics_count,
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],

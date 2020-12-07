@@ -303,6 +303,11 @@ li.menu.ui-tabs-active {
 	height: calc(100% - 92px);
 }
 
+#topics .subsection-title {
+	font-weight: bold;
+	margin: 10px 0;
+}
+
 .seeders, .errors {
 	color: #ff0000;
 }

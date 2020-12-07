@@ -69,7 +69,7 @@ function functionDelay(callback, ms) {
 }
 
 // сортировка в select
-function doSortSelect(selectID, sortElement) {
+function doSortSelect(selectID, sortElement = "option") {
 	$("#" + selectID).toggle();
 	var sortedVals = $.makeArray($("#" + selectID + " " + sortElement)).sort(function (a, b) {
 		if ($(a).val() == 0) {
@@ -82,7 +82,7 @@ function doSortSelect(selectID, sortElement) {
 	$("#" + selectID).empty().html(sortedVals).toggle();
 }
 
-function doSortSelectByValue(selectID, sortElement) {
+function doSortSelectByValue(selectID, sortElement = "option") {
 	$("#" + selectID).toggle();
 	var sortedVals = $.makeArray($("#" + selectID + " " + sortElement)).sort(function (a, b) {
 		if ($(a).val() == 0) {
