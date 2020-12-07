@@ -98,7 +98,7 @@ function doSortSelectByValue(selectID, sortElement) {
 // сохранение настроек
 function setSettings() {
 	var forums = getForums();
-	var tor_clients = getTorClients();
+	var tor_clients = getListTorrentClients();
 	var $data = $("#config").serialize();
 	$.ajax({
 		context: this,

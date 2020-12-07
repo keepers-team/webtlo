@@ -104,7 +104,7 @@ $(document).ready(function () {
 			showResultTopics("Выберите раздачи");
 			return false;
 		}
-		var tor_clients = getTorClients();
+		var tor_clients = getListTorrentClients();
 		if ($.isEmptyObject(tor_clients)) {
 			showResultTopics("В настройках не найдены торрент-клиенты");
 			return false;

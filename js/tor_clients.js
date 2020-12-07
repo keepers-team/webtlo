@@ -188,8 +188,8 @@ $(document).ready(function () {
 	});
 
 	// обновление списка торрент-клиентов настройках подразделов
-	$("#add-torrent-client, #remove-torrent-client").on("click", listClientsRefresh);
-	$("#torrent-client-props").on("input", listClientsRefresh);
+	$("#add-torrent-client, #remove-torrent-client").on("click", refreshListTorrentClients);
+	$("#torrent-client-props").on("input", functionDelay(refreshListTorrentClients, 400));
 
 	// проверка доступности торрент-клиентов
 	$("#connect-torrent-client").on("click", function () {
@@ -209,7 +209,6 @@ $(document).ready(function () {
 					$(button).prop("disabled", true);
 					$(this).append('<i class="fa fa-spinner fa-spin"></i>');
 					$(this).addClass("ui-connection");
-					// torrent-client-response
 				},
 				success: function (response) {
 					response = $.parseJSON(response);
@@ -248,7 +247,7 @@ $(document).ready(function () {
 });
 
 // обновление списка торрент-клиентов
-function listClientsRefresh() {
+function refreshListTorrentClients() {
 	$("#forum-client option").each(function () {
 		if ($(this).val() != 0) {
 			$(this).remove();
@@ -267,7 +266,7 @@ function listClientsRefresh() {
 }
 
 // получение списка торрент-клиентов
-function getTorClients() {
+function getListTorrentClients() {
 	var torrentClients = {};
 	$("#list-torrent-clients li").each(function () {
 		var torrentClientID = $(this).val();
