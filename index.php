@@ -134,7 +134,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.11</title>
+    <title>web-TLO-2.2.12</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -284,38 +284,38 @@ try {
                             <div class="filter_block ui-widget" title="Статус раздач на трекере">
                                 <fieldset>
                                     <label>
-                                        <input type="checkbox" name="filter_tracker_status[]" value="0" />
+                                        <input type="checkbox" name="filter_tracker_status[]" value="0" class="default" checked />
                                         не проверено
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="filter_tracker_status[]" value="2" checked class="default" />
+                                        <input type="checkbox" name="filter_tracker_status[]" value="2" class="default" checked />
                                         проверено
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="filter_tracker_status[]" value="3" />
+                                        <input type="checkbox" name="filter_tracker_status[]" value="3" class="default" checked />
                                         недооформлено
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="filter_tracker_status[]" value="8" checked class="default" />
+                                        <input type="checkbox" name="filter_tracker_status[]" value="8" class="default" checked />
                                         сомнительно
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="filter_tracker_status[]" value="10" />
+                                        <input type="checkbox" name="filter_tracker_status[]" value="10" class="default" checked />
                                         временная
                                     </label>
                                 </fieldset>
                                 <hr />
                                 <fieldset title="Приоритет раздач на трекере">
                                     <label>
-                                        <input type="checkbox" name="keeping_priority[]" value="0" />
+                                        <input type="checkbox" name="keeping_priority[]" value="0" class="default" checked />
                                         низкий
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="keeping_priority[]" value="1" checked class="default" />
+                                        <input type="checkbox" name="keeping_priority[]" value="1" class="default" checked />
                                         обычный
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="keeping_priority[]" value="2" checked class="default" />
+                                        <input type="checkbox" name="keeping_priority[]" value="2" class="default" checked />
                                         высокий
                                     </label>
                                 </fieldset>
@@ -338,7 +338,7 @@ try {
                                         <input type="search" name="filter_phrase" size="20" />
                                     </label>
                                     <label title="Искать совпадение в названии раздачи">
-                                        <input type="radio" name="filter_by_phrase" value="1" checked class="default" />
+                                        <input type="radio" name="filter_by_phrase" value="1" class="default" checked />
                                         в названии раздачи
                                     </label>
                                     <label title="Искать совпадение в имени хранителя">
@@ -354,7 +354,7 @@ try {
                                         "зелёные"
                                     </label>
                                     <label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
-                                        <input type="checkbox" class="keepers" name="not_keepers" />
+                                        <input type="checkbox" name="not_keepers" class="default keepers" checked />
                                         нет хранителей
                                     </label>
                                     <label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">

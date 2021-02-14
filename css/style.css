@@ -308,6 +308,10 @@ li.menu.ui-tabs-active {
 	margin: 10px 0;
 }
 
+#topics .topic_data label:last-child {
+	padding-bottom: 10px;
+}
+
 .seeders, .errors {
 	color: #ff0000;
 }
