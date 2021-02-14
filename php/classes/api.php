@@ -205,6 +205,7 @@ class Api
                             'seeders',
                             'leechers',
                             'seeder_last_seen',
+                            'keepers',
                         ),
                         $topicData
                     );
