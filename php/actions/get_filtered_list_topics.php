@@ -400,7 +400,7 @@ try {
         $keepers = Db::query_database(
             'SELECT Topics.id,nick,complete,posted,seeding FROM Topics
                 LEFT JOIN Keepers ON Topics.id = Keepers.id
-                WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL',
+                WHERE ss IN (' . $ss . ') AND Keepers.id IS NOT NULL',
             $forums_ids,
             true,
             PDO::FETCH_ASSOC | PDO::FETCH_GROUP

@@ -221,7 +221,7 @@ if (isset($cfg['subsections'])) {
                 $topicsKeepersNames = $api->getUserName($topicsKeepers);
                 foreach ($topicsKeepersFromForum as $topic => $topicKeepers) {
                     foreach ($topicKeepers as $topicKeeper) {
-                        if (strcasecmp($cfg['tracker_login'], $topicsKeepersNames[$topicKeeper]) != 0) {
+                        if (strcasecmp($cfg['tracker_login'], $topicsKeepersNames[$topicKeeper]) !== 0) {
                             $dbTopicsKeepers[] = array(
                                 "id"        => $topic,
                                 "nick"      => $topicsKeepersNames[$topicKeeper],
@@ -320,6 +320,10 @@ $countKeepersSeeders = Db::query_database(
 
 if ($countKeepersSeeders[0] > 0) {
     Log::append("Запись в базу данных списка сидов-хранителей...");
+
+    Db::query_database(
+        "DELETE FROM Keepers WHERE posted IS NULL"
+    );
 
     Db::query_database(
         "INSERT INTO Keepers 
