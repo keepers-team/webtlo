@@ -134,7 +134,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.12</title>
+    <title>web-TLO-2.2.13</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -360,6 +360,17 @@ try {
                                     <label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
                                         <input type="checkbox" class="keepers" name="is_keepers" />
                                         есть хранители
+                                    </label>
+                                </fieldset>
+                                <hr />
+                                <fieldset>
+                                    <label title="Отображать только те раздачи, которые никто не сидирует из числа других хранителей">
+                                        <input type="checkbox" class="default keepers_seeders" name="not_keepers_seeders" />
+                                        нет сидов-хранителей
+                                    </label>
+                                    <label title="Отображать только те раздачи, которые кто-то сидирует из числа других хранителей">
+                                        <input type="checkbox" class="keepers_seeders" name="is_keepers_seeders" />
+                                        есть сиды-храинтели
                                     </label>
                                 </fieldset>
                                 <hr />

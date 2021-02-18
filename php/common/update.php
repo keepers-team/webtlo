@@ -32,6 +32,11 @@ Db::query_database(
     SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 
+Db::query_database(
+    "CREATE TEMP TABLE KeepersSeeders AS
+    SELECT id,nick,complete,seeding FROM Keepers WHERE 0 = 1"
+);
+
 // подключаемся к api
 if (!isset($api)) {
     $api = new Api($cfg['api_address'], $cfg['api_key']);
@@ -111,14 +116,16 @@ if (isset($cfg['subsections'])) {
             );
             unset($topics_ids);
 
+            $topicsKeepersFromForum = array();
+            $dbTopicsKeepers = array();
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority )
+            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers )
             foreach ($topics_result as $topic_id => $topic_data) {
                 if (empty($topic_data)) {
                     continue;
                 }
 
-                if (count($topic_data) < 5) {
+                if (count($topic_data) < 6) {
                     throw new Exception("Error: Недостаточно элементов в ответе");
                 }
 
@@ -169,6 +176,9 @@ if (isset($cfg['subsections'])) {
                         'ds' => $days_update,
                         'pt' => $topic_data[4],
                     );
+                    if (!empty($topic_data[5])) {
+                        $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                    }
                     unset($previous_data);
                     continue;
                 }
@@ -195,7 +205,45 @@ if (isset($cfg['subsections'])) {
                     'ds' => $days_update,
                     'pt' => $topic_data[4],
                 );
+                if (!empty($topic_data[5])) {
+                    $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                }
             }
+            if (!empty($topicsKeepersFromForum)) {
+                $topicsKeepers = array();
+                foreach ($topicsKeepersFromForum as $keepers) {
+                    foreach ($keepers as $keeper) {
+                        if (!in_array($keeper, $topicsKeepers)) {
+                            $topicsKeepers[] = $keeper;
+                        }
+                    }
+                }
+                $topicsKeepersNames = $api->getUserName($topicsKeepers);
+                foreach ($topicsKeepersFromForum as $topic => $topicKeepers) {
+                    foreach ($topicKeepers as $topicKeeper) {
+                        if (strcasecmp($cfg['tracker_login'], $topicsKeepersNames[$topicKeeper]) != 0) {
+                            $dbTopicsKeepers[] = array(
+                                "id"        => $topic,
+                                "nick"      => $topicsKeepersNames[$topicKeeper],
+                                "complete"  => 1,
+                                "seeding"   => 1,
+                            );
+                        }
+                    }
+                }
+                unset($topicsKeepersFromForum);
+
+                // обновление данных в базе о сидах-хранителях.
+
+                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 500, true);
+                foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
+                    $select = Db::combine_set($dbTopicsKeepersChunk);
+                    Db::query_database("INSERT INTO temp.KeepersSeeders (id, nick, complete, seeding) $select");
+                    unset($select);
+                }
+                unset($dbTopicsKeepersChunks);
+            }
+
             unset($topics_data_previous);
 
             // вставка данных в базу о новых раздачах
@@ -262,6 +310,26 @@ $countTopicsRenew = Db::query_database(
     true,
     PDO::FETCH_COLUMN
 );
+
+$countKeepersSeeders = Db::query_database(
+    "SELECT COUNT() FROM temp.KeepersSeeders",
+    array(),
+    true,
+    PDO::FETCH_COLUMN
+);
+
+if ($countKeepersSeeders[0] > 0) {
+    Log::append("Запись в базу данных списка сидов-хранителей...");
+
+    Db::query_database(
+        "INSERT INTO Keepers 
+            SELECT t.id, t.nick, k.posted, t.complete, t.seeding FROM temp.KeepersSeeders AS t
+            LEFT JOIN Keepers AS k ON k.id = t.id AND k.nick = t.nick
+            UNION ALL
+            SELECT k.id, k.nick, k.posted, k.complete, t.seeding FROM Keepers AS k
+            LEFT JOIN temp.KeepersSeeders AS t ON k.id = t.id AND k.nick = t.nick"
+    );
+}
 
 if (
     $countTopicsUpdate[0] > 0

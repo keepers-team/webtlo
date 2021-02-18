@@ -297,6 +297,20 @@ $(document).ready(function () {
 		}
 	});
 
+	// есть/нет сиды-хранители
+	$(".topics_filter .keepers_seeders").on("change", function () {
+		if ($(this).prop("checked")) {
+			switch ($(this).attr('name')) {
+				case 'not_keepers_seeders':
+					$("input[name=is_keepers_seeders]").prop("checked", false);
+					break;
+				case 'is_keepers_seeders':
+					$("input[name=not_keepers_seeders]").prop("checked", false);
+					break;
+			}
+		}
+	});
+
 	// ник хранителя в поиск при двойном клике
 	$("#topics").on("dblclick", ".keeper", function (e) {
 		$("input[name=filter_phrase]").val($(this).text());

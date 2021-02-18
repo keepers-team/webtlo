@@ -24,7 +24,7 @@ class Api
     /**
      * @var int
      */
-    private $limitNumberTopicsInRequest;
+    private $limitInRequest;
 
     /**
      * default constructor
@@ -44,7 +44,7 @@ class Api
         curl_setopt_array($this->ch, Proxy::$proxy['api']);
         Log::append('Используется зеркало для API: ' . $addressApi);
         $this->formatURL = $addressApi . '/v1/%s?api_key=' . $userKeyApi . '%s';
-        $this->getLimitNumberTopics();
+        $this->getLimit();
     }
 
     /**
@@ -121,10 +121,10 @@ class Api
     /**
      * ограничение на количество запрашиваемых данных
      */
-    private function getLimitNumberTopics()
+    private function getLimit()
     {
         $response = $this->makeRequest('get_limit');
-        $this->limitNumberTopicsInRequest = $response === false ? 100 : (int)$response['result']['limit'];
+        $this->limitInRequest = $response === false ? 100 : (int)$response['result']['limit'];
     }
 
     /**
@@ -188,7 +188,7 @@ class Api
             return false;
         }
         $topicsData = array();
-        $topicsValues = array_chunk($topicsValues, $this->limitNumberTopicsInRequest);
+        $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
         foreach ($topicsValues as $topicsValues) {
             $params = array(
                 'by=' . $searchBy,
@@ -226,7 +226,7 @@ class Api
             return false;
         }
         $topicsData = array();
-        $topicsHashes = array_chunk($topicsHashes, $this->limitNumberTopicsInRequest);
+        $topicsHashes = array_chunk($topicsHashes, $this->limitInRequest);
         foreach ($topicsHashes as $topicsHashes) {
             $params = array(
                 'by=hash',
@@ -256,7 +256,7 @@ class Api
             return false;
         }
         $topicsData = array();
-        $topicsIDs = array_chunk($topicsIDs, $this->limitNumberTopicsInRequest);
+        $topicsIDs = array_chunk($topicsIDs, $this->limitInRequest);
         foreach ($topicsIDs as $topicsIDs) {
             $params = array(
                 'by=topic_id',
@@ -291,6 +291,33 @@ class Api
     public function getTopicsHighPriority()
     {
         return $this->makeRequest('static/pvc/high_priority_topics.json.gz');
+    }
+
+    /**
+     * @param array $userIDs
+     * @return array|false
+     */
+    public function getUserName($userIDs)
+    {
+        if (empty($userIDs)) {
+            return false;
+        }
+        $userData = array();
+        $userIDs = array_chunk($userIDs, $this->limitInRequest);
+        foreach ($userIDs as $userIDChunk) {
+            $params = array(
+                'by=user_id',
+                'val=' . implode(',', $userIDChunk)
+            );
+            $response = $this->makeRequest('get_user_name', $params);
+            if ($response === false) {
+                continue;
+            }
+            foreach ($response['result'] as $userID => $userName) {
+                $userData[$userID] = $userName;
+            }
+        }
+        return $userData;
     }
 
     /**

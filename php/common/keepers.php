@@ -43,9 +43,9 @@ $numberForumsScanned = 0;
 if (isset($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-        $topic_id = $reports->search_topic_id($subsection['na']);
+        $topicID = $reports->search_topic_id($subsection['na']);
 
-        if (empty($topic_id)) {
+        if (empty($topicID)) {
             Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
             continue;
         } else {
@@ -54,7 +54,7 @@ if (isset($cfg['subsections'])) {
 
         // Log::append("Сканирование подраздела № $forum_id...");
 
-        $keepers = $reports->scanning_viewtopic($topic_id);
+        $keepers = $reports->scanning_viewtopic($topicID);
 
         if (!empty($keepers)) {
             foreach ($keepers as &$keeper) {
@@ -68,20 +68,21 @@ if (isset($cfg['subsections'])) {
                     $topics_ids = array_chunk($keeperTopicsIDs, 249);
                     foreach ($topics_ids as $topics_ids) {
                         $select = str_repeat(
-                            'SELECT ?,?,?,? UNION ALL ',
-                            count($topics_ids) - 1
-                        ) . 'SELECT ?,?,?,?';
-                        foreach ($topics_ids as $topic_id) {
-                            $keepers_topics_ids[] = $topic_id;
-                            $keepers_topics_ids[] = $keeper['nickname'];
-                            $keepers_topics_ids[] = $keeper['posted'];
-                            $keepers_topics_ids[] = $index;
+                                'SELECT ?,?,?,?,? UNION ALL ',
+                                count($topics_ids) - 1
+                            ) . 'SELECT ?,?,?,?,?';
+                        foreach ($topics_ids as $topicID) {
+                            $keepersTopicsIDs[] = $topicID;
+                            $keepersTopicsIDs[] = $keeper['nickname'];
+                            $keepersTopicsIDs[] = $keeper['posted'];
+                            $keepersTopicsIDs[] = $index;
+                            $keepersTopicsIDs[] = null;
                         }
                         Db::query_database(
-                            "INSERT INTO temp.KeepersNew (id,nick,posted,complete) $select",
-                            $keepers_topics_ids
+                            "INSERT INTO temp.KeepersNew (id,nick,posted,complete,seeding) $select",
+                            $keepersTopicsIDs
                         );
-                        unset($keepers_topics_ids);
+                        unset($keepersTopicsIDs);
                         unset($select);
                     }
                 }
@@ -110,7 +111,7 @@ if ($count_keepers[0] > 0) {
             SELECT Keepers.id || Keepers.nick FROM temp.KeepersNew
             LEFT JOIN Keepers ON temp.KeepersNew.id = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
             WHERE Keepers.id IS NOT NULL
-        )"
+        ) AND posted IS NOT NULL"
     );
 }
 

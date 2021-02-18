@@ -2,10 +2,10 @@
 
 try {
     // дёргаем скрипт
-    include_once dirname(__FILE__) . '/../common/update.php';
+    include_once dirname(__FILE__) . '/../common/keepers.php';
 
     // дёргаем скрипт
-    include_once dirname(__FILE__) . '/../common/keepers.php';
+    include_once dirname(__FILE__) . '/../common/update.php';
 
     echo json_encode(array(
         'log' => Log::get(),
