@@ -362,7 +362,6 @@ try {
                                         есть хранители
                                     </label>
                                 </fieldset>
-                                <hr />
                                 <fieldset>
                                     <label title="Отображать только те раздачи, которые никто не сидирует из числа других хранителей">
                                         <input type="checkbox" class="default keepers_seeders" name="not_keepers_seeders" />
@@ -370,7 +369,7 @@ try {
                                     </label>
                                     <label title="Отображать только те раздачи, которые кто-то сидирует из числа других хранителей">
                                         <input type="checkbox" class="keepers_seeders" name="is_keepers_seeders" />
-                                        есть сиды-храинтели
+                                        есть сиды-хранители
                                     </label>
                                 </fieldset>
                                 <hr />
