@@ -65,7 +65,7 @@ if (isset($cfg['subsections'])) {
                     continue;
                 }
                 foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
-                    $topics_ids = array_chunk($keeperTopicsIDs, 249);
+                    $topics_ids = array_chunk($keeperTopicsIDs, 199);
                     foreach ($topics_ids as $topics_ids) {
                         $select = str_repeat(
                                 'SELECT ?,?,?,?,? UNION ALL ',
