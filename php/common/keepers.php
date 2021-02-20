@@ -117,7 +117,7 @@ if ($count_keepers[0] > 0) {
             SELECT t.id, t.nick, t.posted, t.complete, k.seeding FROM temp.KeepersNew AS t
             LEFT JOIN Keepers AS k ON k.id = t.id AND k.nick = t.nick
             UNION ALL
-            SELECT k.id, k.nick, t.posted, t.complete, k.seeding FROM Keepers AS k
+            SELECT k.id, k.nick, t.posted, k.complete, k.seeding FROM Keepers AS k
             LEFT JOIN temp.KeepersNew AS t ON k.id = t.id AND k.nick = t.nick"
     );
 }
