@@ -65,13 +65,13 @@ if (isset($cfg['subsections'])) {
                     continue;
                 }
                 foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
-                    $topics_ids = array_chunk($keeperTopicsIDs, 199);
-                    foreach ($topics_ids as $topics_ids) {
+                    $topicsIDsChunks = array_chunk($keeperTopicsIDs, 199);
+                    foreach ($topicsIDsChunks as $topicsIDs) {
                         $select = str_repeat(
                                 'SELECT ?,?,?,?,? UNION ALL ',
-                                count($topics_ids) - 1
+                                count($topicsIDs) - 1
                             ) . 'SELECT ?,?,?,?,?';
-                        foreach ($topics_ids as $topicID) {
+                        foreach ($topicsIDs as $topicID) {
                             $keepersTopicsIDs[] = $topicID;
                             $keepersTopicsIDs[] = $keeper['nickname'];
                             $keepersTopicsIDs[] = $keeper['posted'];
@@ -104,14 +104,21 @@ if ($count_keepers[0] > 0) {
     Log::append("Просканировано подразделов: " . $numberForumsScanned . " шт.");
     Log::append("Запись в базу данных списка раздач других хранителей...");
 
-    Db::query_database("INSERT INTO Keepers SELECT * FROM temp.KeepersNew");
-
     Db::query_database(
         "DELETE FROM Keepers WHERE id || nick NOT IN (
             SELECT Keepers.id || Keepers.nick FROM temp.KeepersNew
             LEFT JOIN Keepers ON temp.KeepersNew.id = Keepers.id AND temp.KeepersNew.nick = Keepers.nick
             WHERE Keepers.id IS NOT NULL
         ) AND posted IS NOT NULL"
+    );
+
+    Db::query_database(
+        "INSERT INTO Keepers 
+            SELECT t.id, t.nick, t.posted, t.complete, k.seeding FROM temp.KeepersNew AS t
+            LEFT JOIN Keepers AS k ON k.id = t.id AND k.nick = t.nick
+            UNION ALL
+            SELECT k.id, k.nick, t.posted, t.complete, k.seeding FROM Keepers AS k
+            LEFT JOIN temp.KeepersNew AS t ON k.id = t.id AND k.nick = t.nick"
     );
 }
 
