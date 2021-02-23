@@ -180,6 +180,89 @@ function getReport() {
 	});
 }
 
+// проверить наличие новой версии
+function checkNewVersion() {
+	var current_version = $("title").text().split("-")[2];
+	var new_version_last_checked = Cookies.get("new-version-last-checked");
+	if (
+		new_version_last_checked !== undefined
+		&& ($.now() - new_version_last_checked) <= 60000
+	) {
+		if (versionCompare(current_version, Cookies.get("new-version-number")) < 0) {
+			showNewVersion(
+				Cookies.get("new-version-number"),
+				Cookies.get("new-version-link"),
+				Cookies.get("new-version-whats-new")
+			);
+		}
+		return;
+	}
+	$.ajax({
+		type: "POST",
+		url: "php/actions/check_new_version.php",
+		success: function (response) {
+			$("#log").append(response.log);
+			response = $.parseJSON(response);
+			Cookies.set("new-version-number", response.newVersionNumber);
+			Cookies.set("new-version-link", response.newVersionLink);
+			Cookies.set("new-version-whats-new", response.whatsNew);
+			Cookies.set("new-version-last-checked", $.now());
+			if (versionCompare(current_version, response.newVersionNumber) < 0) {
+				showNewVersion(response.newVersionNumber, response.newVersionLink, response.whatsNew)
+			}
+		},
+	});
+}
+
+function showNewVersion(newVersionNumber, newVersionLink, whatsNew) {
+	$("#new_version_description")
+		.attr("title", whatsNew)
+		.text("Доступна новая версия: ")
+		.append('<a id="new_version_link" href="' + newVersionLink + '">' + newVersionNumber + "</a>");
+	$("#new_version_available").show();
+}
+
+// http://stackoverflow.com/a/6832721/50079
+function versionCompare(v1, v2, options) {
+	var lexicographical = options && options.lexicographical,
+		zeroExtend = options && options.zeroExtend,
+		v1parts = v1.split('.'),
+		v2parts = v2.split('.');
+	function isValidPart(x) {
+		return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
+	}
+	if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+		return NaN;
+	}
+	if (zeroExtend) {
+		while (v1parts.length < v2parts.length) v1parts.push("0");
+		while (v2parts.length < v1parts.length) v2parts.push("0");
+	}
+	if (!lexicographical) {
+		v1parts = v1parts.map(Number);
+		v2parts = v2parts.map(Number);
+	}
+	for (var i = 0; i < v1parts.length; ++i) {
+		if (v2parts.length == i) {
+			return 1;
+		}
+
+		if (v1parts[i] == v2parts[i]) {
+			continue;
+		}
+		else if (v1parts[i] > v2parts[i]) {
+			return 1;
+		}
+		else {
+			return -1;
+		}
+	}
+	if (v1parts.length != v2parts.length) {
+		return -1;
+	}
+	return 0;
+}
+
 // https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
 (function ($) {
 	$.fn.serializeAllArray = function () {

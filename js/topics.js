@@ -328,6 +328,8 @@ $(document).ready(function () {
 	// отобразим раздачи на главной
 	getFilteredTopics();
 
+	// проверим наличие новой версии
+	checkNewVersion();
 });
 
 

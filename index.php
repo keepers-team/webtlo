@@ -135,7 +135,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.13</title>
+    <title>web-TLO-2.2.14</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -157,6 +157,9 @@ try {
             <li class="menu"><a href="#journal" class="menu">Журнал</a></li>
             <li class="menu"><a href="#manual" class="menu">О программе</a></li>
         </ul>
+        <div id="new_version_available">
+            <p id="new_version_description"></p>
+        </div>
         <div id="content">
             <div id="main" class="content">
                 <select id="main-subsections">

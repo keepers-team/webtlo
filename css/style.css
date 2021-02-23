@@ -632,3 +632,12 @@ li.menu.ui-tabs-active {
 	padding: 20px;
 	line-height: 1.5;
 }
+
+#new_version_available {
+	display: none;
+	position: absolute;
+	right: 25px;
+	top: 5px;
+	font-size: 75%;
+	padding: 5px;
+}
