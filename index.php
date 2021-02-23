@@ -156,6 +156,9 @@ try {
             <li class="menu"><a href="#journal" class="menu">Журнал</a></li>
             <li class="menu"><a href="#manual" class="menu">О программе</a></li>
         </ul>
+        <div id="new_version_available">
+            <p id="new_version_description" title=""></p>
+        </div>
         <div id="content">
             <div id="main" class="content">
                 <select id="main-subsections">
@@ -380,7 +383,7 @@ try {
                                         <input type="text" id="filter_rule" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
                                     </label>
                                 </fieldset>
-                                <fieldset class="filter_rule_interval" style="display: none">
+                                <fieldset class="filter_rule_interval">
                                     <label class="filter_rule_value" title="Начальное количество сидов">
                                         от
                                         <input type="text" id="filter_rule_from" name="filter_rule_interval[from]" size="1" value="0" />

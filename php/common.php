@@ -342,3 +342,28 @@ function natsort_field(array $input, $field, $direct = 1)
     });
     return $input;
 }
+
+/**
+ * получение информации о последнем релизе с GitHub
+ * @return array|bool
+ */
+function getInfoFromGitHub()
+{
+    $ch = curl_init();
+    curl_setopt_array($ch, array(
+        CURLOPT_URL => 'https://api.github.com/repos/berkut-174/webtlo/releases/latest',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 40,
+        CURLOPT_TIMEOUT => 40,
+        CURLOPT_USERAGENT => "web-TLO"
+    ));
+    $response = curl_exec($ch);
+    if ($response === false) {
+        Log::append('CURL ошибка: ' . curl_error($ch));
+        Log::append('Невозможно связаться с api.github.com');
+        return false;
+    }
+    $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return $responseHttpCode == 200 ? json_decode($response, true) : false;
+}

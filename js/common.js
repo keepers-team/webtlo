@@ -180,6 +180,37 @@ function getReport() {
 	});
 }
 
+function checkNewVersion() {
+	var new_version_last_checked = Cookies.get('new-version-last-checked');
+	if (($.now() - new_version_last_checked) > 60000 || new_version_last_checked === undefined) {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/check_new_version.php",
+			data: {
+				current_version: $("title").text().split('-')[2]
+			},
+			success: function (response) {
+				$("#log").append(response.log);
+				response = $.parseJSON(response);
+				Cookies.set('new-version-number', response.newVersionNumber);
+				Cookies.set('new-version-available', response.newVersionAvailable);
+				Cookies.set('new-version-link', response.newVersionLink);
+				Cookies.set('new-version-whats-new', response.whatsNew);
+				Cookies.set('new-version-last-checked', $.now());
+			},
+		});
+	}
+	setTimeout(function () {
+		if (Cookies.get('new-version-available') === 'true') {
+			$("#new_version_description")
+				.attr("title", Cookies.get('new-version-whats-new'))
+				.text("Доступна новая версия: ")
+				.append('<a id="new_version_link" href="' + Cookies.get('new-version-link') + '">' + Cookies.get('new-version-number') + '</a>');
+			$("#new_version_available").show();
+		}
+	}, 1000);
+}
+
 // https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
 (function ($) {
 	$.fn.serializeAllArray = function () {

@@ -238,6 +238,10 @@ li.menu.ui-tabs-active {
 	display: block;
 }
 
+.filter_rule_interval {
+	display: none;
+}
+
 .filter_rule_value {
 	margin: 6px 0 0 6px;
 }
@@ -631,4 +635,11 @@ li.menu.ui-tabs-active {
 	margin: 0;
 	padding: 20px;
 	line-height: 1.5;
+}
+
+#new_version_available {
+	display: none;
+	position: absolute;
+	right: 25px;
+	top: 5px;
 }

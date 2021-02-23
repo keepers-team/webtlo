@@ -339,6 +339,7 @@ $(document).ready(function () {
 		getFilteredTopics();
 	}
 
+	checkNewVersion();
 });
 
 
