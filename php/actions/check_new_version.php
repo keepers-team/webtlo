@@ -4,7 +4,7 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
     $infoFromGitHub = getInfoFromGitHub();
     if ($infoFromGitHub != false || !is_null($infoFromGitHub)) {
-        if (version_compare($_POST['current_version'], $infoFromGitHub['name']) > 0) {
+        if (version_compare($_POST['current_version'], $infoFromGitHub['name']) < 0) {
             $newVersionNumber = $infoFromGitHub['name'];
             $newVersionAvailable = true;
             $newVersionLink = $infoFromGitHub['zipball_url'];
