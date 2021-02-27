@@ -229,6 +229,9 @@ try {
                         <button id="control_torrents" name="control_torrents" type="button" title="Выполнить регулировку раздач в торрент-клиентах">
                             <i class="fa fa-adjust" aria-hidden="true"></i> Регулировка раздач
                         </button>
+                        <button id="apply_filter" type="button" title="Применить фильтр">
+                            <i class="fa fa-check" aria-hidden="true"></i>
+                        </button>
                         <div id="indication">
                             <i id="loading" class="fa fa-spinner fa-pulse"></i>
                             <div style="display:none;" id="process"></div>
@@ -388,6 +391,14 @@ try {
                                     <label class="filter_rule_value" title="Конечное количество сидов">
                                         до
                                         <input type="text" id="filter_rule_to" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+                                    </label>
+                                </fieldset>
+                            </div>
+                            <div class="filter_block ui-widget" title="Автоприменение фильтра">
+                                <fieldset>
+                                    <label>
+                                        <input type="checkbox" id="auto_apply_filter_enable" name="auto_apply_filter_enable" class="default" checked />
+                                        Авто<br>фильтр
                                     </label>
                                 </fieldset>
                             </div>

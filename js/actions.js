@@ -61,6 +61,11 @@ $(document).ready(function () {
 		});
 	});
 
+	// применение фильтра
+	$("#apply_filter").on("click", function () {
+		getFilteredTopics();
+	});
+
 	// сохранение настроек
 	$("#savecfg").on("click", setSettings);
 
