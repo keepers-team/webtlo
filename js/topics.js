@@ -263,37 +263,25 @@ $(document).ready(function () {
 		$(".filter_rule_one").toggle(500);
 	});
 
-	// события при выборе свойств фильтра
-	$("#topics_filter").find("input[type=text], input[type=search]").on("spin input", function () {
-		filter_delay(getFilteredTopics);
-	});
-
-	$("#topics_filter input[type=radio], #topics_filter input[type=checkbox], #filter_date_release").on("change", function () {
-		if (!filter_hold) {
-			filter_delay(getFilteredTopics);
-		}
-	});
-
-	$("#topics_filter").find("input[type=radio], input[type=checkbox]").on("click", function (e) {
-		filter_hold = e.ctrlKey;
-	}).on("keyup", function (e) {
-		if (e.keyCode == 17) {
-			filter_hold = false;
-			filter_delay(getFilteredTopics);
-		}
-	});
-
 	// есть/нет хранители
 	$(".topics_filter .keepers").on("change", function () {
 		if ($(this).prop("checked")) {
-			switch ($(this).attr('name')) {
-				case 'not_keepers':
+			switch ($(this).attr("name")) {
+				case "not_keepers":
 					$("input[name=is_keepers]").prop("checked", false);
 					break;
-				case 'is_keepers':
+				case "is_keepers":
 					$("input[name=not_keepers]").prop("checked", false);
 					break;
 			}
+		}
+	});
+
+	$("#topics_filter").on("change input spinstop", function () {
+		// запоминаем параметры фильтра в куки
+		Cookies.set("filter-options", $("#topics_filter").serializeAllArray());
+		if ($("#enable_auto_apply_filter").prop("checked")) {
+			filter_delay(getFilteredTopics);
 		}
 	});
 
@@ -319,7 +307,7 @@ $(document).ready(function () {
 		$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
 		$.each(filter_options, function (i, option) {
 			// пропускаем дату регистрации до
-			if (option.name == 'filter_date_release') {
+			if (option.name == "filter_date_release") {
 				return true;
 			}
 			$("#topics_filter input[name='" + option.name + "']").each(function () {
@@ -328,16 +316,17 @@ $(document).ready(function () {
 					|| $(this).attr("type") == "radio"
 				) {
 					if ($(this).val() == option.value) {
-						$(this).prop("checked", true).change();
+						$(this).prop("checked", true);
 					}
 				} else if (this.name == option.name) {
 					$(this).val(option.value);
 				}
 			});
 		});
-	} else {
-		getFilteredTopics();
 	}
+
+	// отобразим раздачи на главной
+	getFilteredTopics();
 
 });
 
@@ -393,8 +382,6 @@ function getFilteredTopics() {
 			$(".tor_remove").button("disable");
 		}
 	}
-	// запоминаем параметры фильтра в куки
-	Cookies.set("filter-options", $("#topics_filter").serializeAllArray());
 	// сериализим параметры фильтра
 	var $filter = $("#topics_filter").serialize();
 	$("#process").text("Получение данных о раздачах...");

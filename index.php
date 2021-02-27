@@ -18,6 +18,7 @@ try {
     $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
     $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
+    $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
 
     // вставка option в select
 
@@ -134,7 +135,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.2.12</title>
+    <title>web-TLO-2.2.13</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -176,10 +177,13 @@ try {
                 <div id="topics_data">
                     <div id="topics_control">
                         <div id="toolbar-filter-topics">
-                            <button type="button" id="filter_show" title="Скрыть или показать настройки фильтра">
+                            <button type="button" id="filter_show" title="Скрыть или показать параметры фильтра">
                                 <i class="fa fa-filter" aria-hidden="true"></i>
                             </button>
-                            <button type="button" id="filter_reset" title="Сбросить настройки фильтра на значения по умолчанию">
+                            <button id="apply_filter" type="button" title="Применить параметры фильтра">
+                                <i class="fa fa-check" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" id="filter_reset" title="Сбросить параметры фильтра на значения по умолчанию">
                                 <i class="fa fa-undo" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -654,10 +658,14 @@ try {
                                 дн.
                             </label>
                             <label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
-                                <input id="avg_seeders" name="avg_seeders" type="checkbox" size="24" <?php echo $avg_seeders ?> />
+                                <input id="avg_seeders" name="avg_seeders" type="checkbox" <?php echo $avg_seeders ?> />
                                 находить среднее значение количества сидов за
                                 <input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="text" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>" />
                                 дн.
+                            </label>
+                            <label class="label" title="При изменении параметров фильтра, автоматически обновлять список раздач на главной">
+                                <input id="enable_auto_apply_filter" name="enable_auto_apply_filter" type="checkbox" <?php echo $enable_auto_apply_filter ?> />
+                                применять параметры фильтра автоматически
                             </label>
                             <h3>Регулировка раздач<sup>1</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
