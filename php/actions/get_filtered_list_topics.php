@@ -492,7 +492,11 @@ try {
 
                         $stateKeeperColor = 'success';
                     } else {
-                        $stateKeeperIcon = 'arrow-down';
+                        if($e['seeding'] == 1){
+                            $stateKeeperIcon = 'upload';
+                        } else {
+                            $stateKeeperIcon = 'arrow-down';
+                        }
                         $stateKeeperColor = 'danger';
                     }
                     return sprintf(
