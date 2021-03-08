@@ -238,7 +238,7 @@ try {
                         </button>
                         <div id="indication">
                             <i id="loading" class="fa fa-spinner fa-pulse"></i>
-                            <div style="display:none;" id="process"></div>
+                            <div id="process"></div>
                         </div>
                     </div>
                     <form method="post" id="topics_filter">
@@ -387,7 +387,7 @@ try {
                                         <input type="text" id="filter_rule" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
                                     </label>
                                 </fieldset>
-                                <fieldset class="filter_rule_interval" style="display: none">
+                                <fieldset class="filter_rule_interval">
                                     <label class="filter_rule_value" title="Начальное количество сидов">
                                         от
                                         <input type="text" id="filter_rule_from" name="filter_rule_interval[from]" size="1" value="0" />

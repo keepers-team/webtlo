@@ -323,6 +323,10 @@ $(document).ready(function () {
 				}
 			});
 		});
+		// FIXME !!!
+		if ($("#topics_filter [name=filter_interval]").prop("checked")) {
+			$(".filter_rule_interval, .filter_rule_one").toggle(500);
+		}
 	}
 
 	// отобразим раздачи на главной

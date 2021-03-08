@@ -238,6 +238,10 @@ li.menu.ui-tabs-active {
 	display: block;
 }
 
+.filter_rule_interval {
+	display: none;
+}
+
 .filter_rule_value {
 	margin: 6px 0 0 6px;
 }
