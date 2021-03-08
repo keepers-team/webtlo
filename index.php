@@ -307,7 +307,7 @@ try {
                                 <hr />
                                 <fieldset title="Приоритет раздач на трекере">
                                     <label>
-                                        <input type="checkbox" name="keeping_priority[]" value="0" class="default" checked />
+                                        <input type="checkbox" name="keeping_priority[]" value="0" />
                                         низкий
                                     </label>
                                     <label>

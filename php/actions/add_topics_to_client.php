@@ -172,7 +172,7 @@ try {
         }
         unset($downloadedTorrentFiles);
         if (empty($addedTorrentFiles)) {
-            Log::append('Нет удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
+            Log::append('Не удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
             continue;
         }
         $numberAddedTorrentFiles = count($addedTorrentFiles);
