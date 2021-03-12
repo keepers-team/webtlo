@@ -103,7 +103,7 @@ class Reports
         }
         $title = html_entity_decode($title);
         $search = preg_replace('/.*» ?(.*)$/', '$1', $title);
-        if (mb_strlen($search, 'UTF-8') < 3) {
+        if (mb_strlen($search, 'UTF-8') < 2) {
             return false;
         }
         $title = explode(' » ', $title);
