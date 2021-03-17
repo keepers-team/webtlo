@@ -96,7 +96,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     );
 
     if (empty($topics)) {
-        Log::append("Error: Не получены данные о хранимых раздачах для подраздела № $forum_id");
+        Log::append("Notice: Не получены данные о хранимых раздачах для подраздела № $forum_id");
         continue;
     }
 
@@ -203,11 +203,12 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 $posts_ids[] = $keeper['post_id'];
                 continue;
             }
+            // если хранитель не является автором шапки
+            if (strcasecmp($cfg['tracker_login'], $nicknameAuthorTopic) !== 0) {
+                continue;
+            }
             // считаем сообщения других хранителей в подразделе
-            if (
-                strcasecmp($cfg['tracker_login'], $nicknameAuthorTopic) === 0
-                && !isset($stored[$keeper['nickname']])
-            ) {
+            if (!isset($stored[$keeper['nickname']])) {
                 $stored[$keeper['nickname']]['dlqt'] = 0;
                 $stored[$keeper['nickname']]['dlsi'] = 0;
                 $stored[$keeper['nickname']]['dlqtsub'] = 0;
@@ -288,22 +289,20 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $sumdlqtsub_keepers = $tmp['dlqtsub'];
         $sumdlsisub_keepers = $tmp['dlsisub'];
         // учитываем хранимое другими
-        if (isset($stored)) {
-            foreach ($stored as $nickname => $values) {
-                $count_keepers++;
-                $tmp['header'] .= sprintf(
-                    $pattern_header,
-                    $count_keepers,
-                    urlencode($nickname),
-                    $nickname,
-                    $values['dlqt'],
-                    convert_bytes($values['dlsi'])
-                );
-                $sumdlqt_keepers += $values['dlqt'];
-                $sumdlsi_keepers += $values['dlsi'];
-                $sumdlqtsub_keepers += $values['dlqtsub'];
-                $sumdlsisub_keepers += $values['dlsisub'];
-            }
+        foreach ($stored as $nickname => $values) {
+            $count_keepers++;
+            $tmp['header'] .= sprintf(
+                $pattern_header,
+                $count_keepers,
+                urlencode($nickname),
+                $nickname,
+                $values['dlqt'],
+                convert_bytes($values['dlsi'])
+            );
+            $sumdlqt_keepers += $values['dlqt'];
+            $sumdlsi_keepers += $values['dlsi'];
+            $sumdlqtsub_keepers += $values['dlqtsub'];
+            $sumdlsisub_keepers += $values['dlsisub'];
         }
         // вставляем общее хранимое в шапку
         $tmp['header'] = str_replace(
