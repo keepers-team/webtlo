@@ -287,7 +287,16 @@ $(document).ready(function () {
 
 	// ник хранителя в поиск при двойном клике
 	$("#topics").on("dblclick", ".keeper", function (e) {
-		$("input[name=filter_phrase]").val($(this).text());
+		var searchLine = "";
+		var searchBox = $("input[name=filter_phrase]");
+		if (e.ctrlKey) {
+			searchLine = searchBox.val() + "," + $(this).text();
+			searchBox.val(searchLine);
+		} else {
+			searchLine = $(this).text();
+			searchBox.val(searchLine);
+		}
+		selectBlockText(this);
 		$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
 		$('#filter_by_keeper').prop("checked", true);
 		$('input[name=is_keepers][type="checkbox"]').prop("checked", true).change();

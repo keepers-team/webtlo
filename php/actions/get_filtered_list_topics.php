@@ -425,11 +425,12 @@ try {
 
         // фильтрация по фразе е=ё
         if (!empty($filter['filter_phrase'])) {
-            $filter['filter_phrase'] = preg_replace(
+            $filterByTopicName = preg_replace(
                 '/[её]/ui',
                 '(е|ё)',
                 quotemeta($filter['filter_phrase'])
             );
+            $filterByKeeper = explode(',', $filter['filter_phrase']);
         }
 
         // выводим раздачи
@@ -493,11 +494,25 @@ try {
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
                 if (empty($filter['filter_by_phrase'])) {
-                    if (!mb_eregi($filter['filter_phrase'], $keepers_list)) {
-                        continue;
+                    if (isset($keepers[$topic_data['id']])) {
+                        $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
+                        unset($matchKeepers);
+                        foreach ($filterByKeeper as $filterKeeper) {
+                            if (empty($filterKeeper)) {
+                                continue;
+                            }
+                            if (mb_substr($filterKeeper, 0, 1) === '!') {
+                                $matchKeepers[] = !in_array(mb_substr($filterKeeper, 1), $topicKeepers);
+                            } else {
+                                $matchKeepers[] = in_array($filterKeeper, $topicKeepers);
+                            }
+                        }
+                        if (in_array(0, $matchKeepers)) {
+                            continue;
+                        }
                     }
                 } else {
-                    if (!mb_eregi($filter['filter_phrase'], $topic_data['na'])) {
+                    if (!mb_eregi($filterByTopicName, $topic_data['na'])) {
                         continue;
                     }
                 }

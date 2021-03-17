@@ -150,34 +150,38 @@ function getReport() {
 			});
 			// выделение тела сообщения двойным кликом
 			$("#reports-content .ui-accordion-content").dblclick(function () {
-				var e = this;
-				if (window.getSelection) {
-					var s = window.getSelection();
-					if (s.setBaseAndExtent) {
-						s.setBaseAndExtent(e, 0, e, e.childNodes.length);
-					} else {
-						var r = document.createRange();
-						r.selectNodeContents(e);
-						s.removeAllRanges();
-						s.addRange(r);
-					}
-				} else if (document.getSelection) {
-					var s = document.getSelection();
-					var r = document.createRange();
-					r.selectNodeContents(e);
-					s.removeAllRanges();
-					s.addRange(r);
-				} else if (document.selection) {
-					var r = document.body.createTextRange();
-					r.moveToElementText(e);
-					r.select();
-				}
+				selectBlockText(this)
 			});
 		},
 		complete: function () {
 			$("#reports-subsections").selectmenu("enable");
 		},
 	});
+}
+
+// выделить тело объекта
+function selectBlockText(e) {
+	if (window.getSelection) {
+		var s = window.getSelection();
+		if (s.setBaseAndExtent) {
+			s.setBaseAndExtent(e, 0, e, e.childNodes.length);
+		} else {
+			var r = document.createRange();
+			r.selectNodeContents(e);
+			s.removeAllRanges();
+			s.addRange(r);
+		}
+	} else if (document.getSelection) {
+		var s = document.getSelection();
+		var r = document.createRange();
+		r.selectNodeContents(e);
+		s.removeAllRanges();
+		s.addRange(r);
+	} else if (document.selection) {
+		var r = document.body.createTextRange();
+		r.moveToElementText(e);
+		r.select();
+	}
 }
 
 // проверить наличие новой версии
