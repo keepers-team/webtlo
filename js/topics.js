@@ -213,17 +213,15 @@ $(document).ready(function () {
 	// выделение/снятие выделения интервала раздач
 	$("#topics").on("click", ".topic", function (event) {
 		var $checkboxes = $("#topics .topic");
-		if (!$checkboxes.hasClass("last-checked")) {
-			$(this).addClass("last-checked");
-			return;
+		if ($checkboxes.hasClass("last-checked")) {
+			if (event.shiftKey) {
+				var $lastChecked = $("#topics .last-checked");
+				var startIndex = $checkboxes.index(this);
+				var endIndex = $checkboxes.index($lastChecked);
+				$checkboxes.slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1).prop("checked", $lastChecked[0].checked);
+			}
+			$checkboxes.removeClass("last-checked");
 		}
-		if (event.shiftKey) {
-			var $lastChecked = $("#topics .last-checked");
-			var startIndex = $checkboxes.index(this);
-			var endIndex = $checkboxes.index($lastChecked);
-			$checkboxes.slice(Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1).prop("checked", $lastChecked[0].checked);
-		}
-		$checkboxes.removeClass("last-checked");
 		$(this).addClass("last-checked");
 		getCountSizeSelectedTopics();
 	});
