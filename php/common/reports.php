@@ -107,10 +107,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topics_count = count($topics);
 
     // очищаем данные в цикле
-    unset($posts_ids);
-    unset($keepers);
-    unset($stored);
-    unset($tmp);
+    $posts_ids = array();
+    $stored = array();
+    $tmp = array();
 
     // формируем списки
     foreach ($topics as $topic) {
