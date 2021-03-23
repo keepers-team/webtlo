@@ -315,6 +315,7 @@ $(document).ready(function () {
 		$.each(filter_options, function (i, option) {
 			// пропускаем дату регистрации до
 			if (option.name == "filter_date_release") {
+				$("#filter_date_release").datepicker("setDate", option.value);
 				return true;
 			}
 			$("#topics_filter input[name='" + option.name + "']").each(function () {
