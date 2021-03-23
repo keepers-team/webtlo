@@ -297,7 +297,7 @@ $(document).ready(function () {
 		selectBlockText(this);
 		$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
 		$('#filter_by_keeper').prop("checked", true);
-		$('input[name=is_keepers][type="checkbox"]').prop("checked", true).change();
+		$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
 	});
 
 	// очистка topics_result при изменениях на странице
