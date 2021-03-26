@@ -10,21 +10,26 @@ try {
         throw new Exception("Не выбраны хранимые подразделы");
     }
 
-    foreach ($cfg['subsections'] as $forum_id => $subsection) {
-        $request = "SELECT
-                f.id AS id,
-                f.na AS na,
-                COUNT(CASE WHEN seeds.se = 0 THEN 1 ELSE NULL END) AS Count0,
-                SUM(CASE WHEN seeds.se = 0 THEN seeds.si ELSE 0 END) AS Size0,
-                COUNT(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN 1 ELSE NULL END) AS Count5,
-                SUM(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN seeds.si ELSE 0 END) AS Size5,
-                COUNT(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN 1 ELSE NULL END) AS Count10,
-                SUM(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN seeds.si ELSE 0 END) AS Size10,
-                COUNT(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN 1 ELSE NULL END) AS Count15,
-                SUM(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN seeds.si ELSE 0 END) AS Size15,
-                f.qt AS qt,
-                f.si AS si
-            FROM (
+    $statistics = array();
+    $forumsIDsChunks = array_chunk(array_keys($cfg['subsections']), 499);
+
+    foreach ($forumsIDsChunks as $forumsIDs) {
+        $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
+        $sql = "SELECT
+            f.id AS id,
+            f.na AS na,
+            COUNT(CASE WHEN seeds.se = 0 THEN 1 ELSE NULL END) AS Count0,
+            SUM(CASE WHEN seeds.se = 0 THEN seeds.si ELSE 0 END) AS Size0,
+            COUNT(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN 1 ELSE NULL END) AS Count5,
+            SUM(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN seeds.si ELSE 0 END) AS Size5,
+            COUNT(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN 1 ELSE NULL END) AS Count10,
+            SUM(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN seeds.si ELSE 0 END) AS Size10,
+            COUNT(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN 1 ELSE NULL END) AS Count15,
+            SUM(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN seeds.si ELSE 0 END) AS Size15,
+            f.qt AS qt,
+            f.si AS si
+            FROM Forums f
+            LEFT JOIN (
                 SELECT
                     t.id,
                     t.si,
@@ -36,17 +41,25 @@ try {
                     IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0))) AS se
                 FROM Topics t
                 LEFT JOIN Seeders s ON t.id = s.id
-                WHERE ss = :ss
-                AND strftime('%s', 'now') - rg >= 2592000
-            ) AS seeds
-            INNER JOIN Forums f ON seeds.ss = f.id";
+                LEFT JOIN Clients c ON t.hs = c.hs
+                LEFT JOIN (SELECT id,MAX(posted) as posted FROM Keepers GROUP BY id) k ON t.id = k.id
+                WHERE t.ss IN (" . $placeholdersForumsIDs . ")
+                    AND t.pt IN(1,2)
+                    AND strftime('%s', 'now') - t.rg >= 2592000
+                    AND c.hs IS NULL
+                    AND (k.id IS NULL OR strftime('%s', 'now') - k.posted >= 2592000)
+            ) AS seeds ON seeds.ss = f.id
+            WHERE f.id IN (" . $placeholdersForumsIDs . ")
+            GROUP BY f.id
+            ORDER BY f.na";
+
         $data = Db::query_database(
-            $request,
-            array('ss' => $forum_id),
+            $sql,
+            array_merge($forumsIDs, $forumsIDs),
             true
         );
 
-        $statistics[$forum_id] = $data[0];
+        $statistics = array_merge($statistics, $data);
     }
 
     // 10
