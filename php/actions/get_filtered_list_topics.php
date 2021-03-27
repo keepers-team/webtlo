@@ -394,9 +394,9 @@ try {
 
         // есть/нет хранители
         if (isset($filter['not_keepers'])) {
-            $where[] = 'AND Keepers.posted IS NULL';
+            $where[] = 'AND Keepers.posted IS NULL AND (posted IS NULL OR rg > posted)';
         } elseif (isset($filter['is_keepers'])) {
-            $where[] = 'AND Keepers.posted IS NOT NULL';
+            $where[] = 'AND Keepers.posted IS NOT NULL AND (posted IS NULL OR rg < posted)';
         }
 
         // есть/нет сиды-хранители
@@ -414,7 +414,7 @@ try {
                 'SELECT k.id,k.nick,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding FROM (
                     SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
                     LEFT JOIN Keepers ON Topics.id = Keepers.id
-                    WHERE ss IN (' . $ss . ') AND Keepers.id IS NOT NULL
+                    WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL
                     UNION ALL
                     SELECT topic_id,nick,1 as complete,NULL as posted,1 as seeding FROM Topics
                     LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
