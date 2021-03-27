@@ -319,39 +319,49 @@ try {
 
         // хранимые подразделы
         if ($forum_id > 0) {
-            $forums_ids = array($forum_id);
+            $forumsIDs = array($forum_id);
         } elseif ($forum_id == -5) {
-            $forums_ids = Db::query_database(
+            $forumsIDs = Db::query_database(
                 'SELECT DISTINCT(ss) FROM Topics WHERE pt = 2',
                 array(),
                 true,
                 PDO::FETCH_COLUMN
             );
-            if (empty($forums_ids)) {
-                $forums_ids = array(0);
+            if (empty($forumsIDs)) {
+                $forumsIDs = array(0);
             }
         } else {
             if (isset($cfg['subsections'])) {
                 foreach ($cfg['subsections'] as $forum_id => $subsection) {
                     if (!$subsection['hide_topics']) {
-                        $forums_ids[] = $forum_id;
+                        $forumsIDs[] = $forum_id;
                     }
                 }
             } else {
-                $forums_ids = array(0);
+                $forumsIDs = array(0);
             }
         }
 
-        $ss = str_repeat('?,', count($forums_ids) - 1) . '?';
+        $ss = str_repeat('?,', count($forumsIDs) - 1) . '?';
         $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
         $dl = 'dl IS NOT -2 AND abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
         $pattern_statement = 'SELECT Topics.id,na,si,rg,pt,dl%s FROM Topics
-			LEFT JOIN Clients ON Topics.hs = Clients.hs%s
-			LEFT JOIN (SELECT id,nick,MAX(posted) as posted,complete FROM Keepers GROUP BY id) Keepers ON Topics.id = Keepers.id
-			LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
-			WHERE ss IN (' . $ss . ') AND st IN (' . $st . ') AND (' . $dl . ') AND Blacklist.id IS NULL%s';
+            LEFT JOIN Clients ON Topics.hs = Clients.hs%s
+            LEFT JOIN (
+                SELECT id,nick,MAX(posted) as posted,complete,MAX(seeding) as seeding FROM (
+                    SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
+                    LEFT JOIN Keepers ON Topics.id = Keepers.id
+                    WHERE Keepers.id IS NOT NULL
+                    UNION ALL
+                    SELECT topic_id,nick,1,NULL,1 FROM Topics
+                    LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
+                    WHERE KeepersSeeders.topic_id IS NOT NULL
+                ) GROUP BY id
+            ) Keepers ON Topics.id = Keepers.id
+            LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
+            WHERE ss IN (' . $ss . ') AND st IN (' . $st . ') AND (' . $dl . ') AND Blacklist.id IS NULL%s';
 
         $fields = array();
         $where = array();
@@ -384,21 +394,38 @@ try {
 
         // есть/нет хранители
         if (isset($filter['not_keepers'])) {
-            $where[] = 'AND ( rg > posted OR Keepers.id IS NULL )';
+            $where[] = 'AND Keepers.posted IS NULL AND (posted IS NULL OR rg > posted)';
         } elseif (isset($filter['is_keepers'])) {
-            $where[] = 'AND Keepers.id IS NOT NULL AND rg < posted';
+            $where[] = 'AND Keepers.posted IS NOT NULL AND (posted IS NULL OR rg < posted)';
+        }
+
+        // есть/нет сиды-хранители
+        if (isset($filter['not_keepers_seeders'])) {
+            $where[] = 'AND seeding IS NULL';
+        } elseif (isset($filter['is_keepers_seeders'])) {
+            $where[] = 'AND seeding = 1';
         }
 
         // данные о других хранителях
-        $keepers = Db::query_database(
-            'SELECT Topics.id,nick,complete FROM Topics
-                LEFT JOIN Keepers ON Topics.id = Keepers.id
-                WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL',
-            $forums_ids,
-            true,
-            PDO::FETCH_ASSOC | PDO::FETCH_GROUP
-        );
-
+        $forumsIDsChunks = array_chunk($forumsIDs, 499);
+        $keepers = array();
+        foreach ($forumsIDsChunks as $forumsIDsChunk) {
+            $keepers += Db::query_database(
+                'SELECT k.id,k.nick,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding FROM (
+                    SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
+                    LEFT JOIN Keepers ON Topics.id = Keepers.id
+                    WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL
+                    UNION ALL
+                    SELECT topic_id,nick,1 as complete,NULL as posted,1 as seeding FROM Topics
+                    LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
+                    WHERE ss IN (' . $ss . ') AND KeepersSeeders.topic_id IS NOT NULL
+                ) as k
+                GROUP BY id, nick',
+                array_merge($forumsIDsChunk, $forumsIDsChunk),
+                true,
+                PDO::FETCH_ASSOC | PDO::FETCH_GROUP
+            );
+        }
         $statement = sprintf(
             $pattern_statement,
             ',' . implode(',', $fields),
@@ -410,7 +437,7 @@ try {
         $topics = Db::query_database(
             $statement,
             array_merge(
-                $forums_ids,
+                $forumsIDs,
                 $filter['filter_tracker_status']
             ),
             true
@@ -473,18 +500,22 @@ try {
             // список хранителей на раздаче
             $keepers_list = '';
             if (isset($keepers[$topic_data['id']])) {
-                $formatKeeperList = '<i class="fa fa-arrow-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
+                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
                 $keepers_list = array_map(function ($e) use ($formatKeeperList) {
                     if ($e['complete'] == 1) {
-                        $stateKeeperArrow = 'up';
+                        if ($e['posted'] === null) {
+                            $stateKeeperIcon = 'arrow-circle-up';
+                        } else {
+                            $stateKeeperIcon = $e['seeding'] == 1 ? 'upload' : 'arrow-up';
+                        }
                         $stateKeeperColor = 'success';
                     } else {
-                        $stateKeeperArrow = 'down';
+                        $stateKeeperIcon = 'arrow-down';
                         $stateKeeperColor = 'danger';
                     }
                     return sprintf(
                         $formatKeeperList,
-                        $stateKeeperArrow,
+                        $stateKeeperIcon,
                         $stateKeeperColor,
                         $e['nick']
                     );

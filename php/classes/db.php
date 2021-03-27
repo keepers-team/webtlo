@@ -627,6 +627,25 @@ class Db
             );
             $statements[] = 'PRAGMA user_version = 6';
         }
+        // user_version = 7
+        if ($version[0]['user_version'] < 7) {
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
+                '    topic_id INTEGER NOT NULL,',
+                '    nick VARCHAR NOT NULL,',
+                '    PRIMARY KEY (topic_id, nick)',
+                ')'
+            );
+            $statements[] = array(
+                'CREATE TRIGGER IF NOT EXISTS keepers_seeders_exists',
+                'BEFORE INSERT ON KeepersSeeders',
+                'WHEN EXISTS (SELECT topic_id FROM KeepersSeeders WHERE topic_id = NEW.topic_id AND nick = NEW.nick)',
+                'BEGIN',
+                '    SELECT RAISE(IGNORE);',
+                'END;'
+            );
+            $statements[] = 'PRAGMA user_version = 7';
+        }
         // формируем структуру БД
         foreach ($statements as &$statement) {
             if (is_array($statement)) {

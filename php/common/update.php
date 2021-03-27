@@ -32,6 +32,11 @@ Db::query_database(
     SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 
+Db::query_database(
+    "CREATE TEMP TABLE KeepersSeedersNew AS
+    SELECT topic_id,nick FROM KeepersSeeders WHERE 0 = 1"
+);
+
 // подключаемся к api
 if (!isset($api)) {
     $api = new Api($cfg['api_address'], $cfg['api_key']);
@@ -47,6 +52,9 @@ $current_update_time = new DateTime();
 $previousUpdateTime = new DateTime();
 
 if (isset($cfg['subsections'])) {
+    // получим список всех хранителей
+    $keepersUserData = $api->getKeepersUserData();
+    // обновим каждый хранимый подраздел
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
         // получаем дату предыдущего обновления
         $update_time = Db::query_database(
@@ -111,14 +119,16 @@ if (isset($cfg['subsections'])) {
             );
             unset($topics_ids);
 
+            $topicsKeepersFromForum = array();
+            $dbTopicsKeepers = array();
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority )
+            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers )
             foreach ($topics_result as $topic_id => $topic_data) {
                 if (empty($topic_data)) {
                     continue;
                 }
 
-                if (count($topic_data) < 5) {
+                if (count($topic_data) < 6) {
                     throw new Exception("Error: Недостаточно элементов в ответе");
                 }
 
@@ -169,6 +179,9 @@ if (isset($cfg['subsections'])) {
                         'ds' => $days_update,
                         'pt' => $topic_data[4],
                     );
+                    if (!empty($topic_data[5])) {
+                        $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                    }
                     unset($previous_data);
                     continue;
                 }
@@ -195,7 +208,38 @@ if (isset($cfg['subsections'])) {
                     'ds' => $days_update,
                     'pt' => $topic_data[4],
                 );
+                if (!empty($topic_data[5])) {
+                    $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                }
             }
+            if (!empty($topicsKeepersFromForum)) {
+                foreach ($topicsKeepersFromForum as $keeperTopicID => $keepersIDs) {
+                    foreach ($keepersIDs as $keeperID) {
+                        if (
+                            strcasecmp($cfg['user_id'], $keeperID) !== 0
+                            && isset($keepersUserData['result'][$keeperID])
+                        ) {
+                            $dbTopicsKeepers[] = $keeperTopicID;
+                            $dbTopicsKeepers[] = $keepersUserData['result'][$keeperID][0];
+                        }
+                    }
+                }
+                unset($topicsKeepersFromForum);
+                // обновление данных в базе о сидах-хранителях
+                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 998);
+                foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
+                    $select = str_repeat(
+                        'SELECT ?,? UNION ALL ',
+                        (count($dbTopicsKeepersChunk) / 2) - 1
+                    ) . 'SELECT ?,?';
+                    Db::query_database(
+                        "INSERT INTO temp.KeepersSeedersNew (topic_id, nick) $select",
+                        $dbTopicsKeepersChunk
+                    );
+                }
+                unset($dbTopicsKeepersChunks);
+            }
+
             unset($topics_data_previous);
 
             // вставка данных в базу о новых раздачах
@@ -262,6 +306,25 @@ $countTopicsRenew = Db::query_database(
     true,
     PDO::FETCH_COLUMN
 );
+
+$countKeepersSeeders = Db::query_database(
+    "SELECT COUNT() FROM temp.KeepersSeedersNew",
+    array(),
+    true,
+    PDO::FETCH_COLUMN
+);
+
+if ($countKeepersSeeders[0] > 0) {
+    Log::append("Запись в базу данных списка сидов-хранителей...");
+    Db::query_database("INSERT INTO KeepersSeeders SELECT * FROM temp.KeepersSeedersNew");
+    Db::query_database(
+        "DELETE FROM KeepersSeeders WHERE topic_id || nick NOT IN (
+            SELECT KeepersSeeders.topic_id || KeepersSeeders.nick FROM temp.KeepersSeedersNew
+            LEFT JOIN KeepersSeeders ON temp.KeepersSeedersNew.topic_id = KeepersSeeders.topic_id AND temp.KeepersSeedersNew.nick = KeepersSeeders.nick
+            WHERE KeepersSeeders.topic_id IS NOT NULL
+        )"
+    );
+}
 
 if (
     $countTopicsUpdate[0] > 0

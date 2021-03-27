@@ -283,6 +283,20 @@ $(document).ready(function () {
 		}
 	});
 
+	// есть/нет сиды-хранители
+	$(".topics_filter .keepers_seeders").on("change", function () {
+		if ($(this).prop("checked")) {
+			switch ($(this).attr('name')) {
+				case 'not_keepers_seeders':
+					$("input[name=is_keepers_seeders]").prop("checked", false);
+					break;
+				case 'is_keepers_seeders':
+					$("input[name=not_keepers_seeders]").prop("checked", false);
+					break;
+			}
+		}
+	});
+
 	// ник хранителя в поиск при двойном клике
 	$("#topics").on("dblclick", ".keeper", function (e) {
 		var searchLine = "";
@@ -297,6 +311,7 @@ $(document).ready(function () {
 		selectBlockText(this);
 		$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
 		$('#filter_by_keeper').prop("checked", true);
+		$('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
 		$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
 	});
 
