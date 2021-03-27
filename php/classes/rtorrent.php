@@ -205,7 +205,7 @@ class Rtorrent extends TorrentClient
                     array(
                         array(
                             'methodName' => 'd.custom5.set',
-                            'params' => array($torrentHash, 1),
+                            'params' => array($torrentHash, '1'),
                         ),
                         array(
                             'methodName' => 'd.delete_tied',
