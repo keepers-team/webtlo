@@ -334,12 +334,10 @@ function natsort_field(array $input, $field, $direct = 1)
         if (is_string($a[$field])) {
             $a[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($a[$field], 'UTF-8'));
         }
-
         if (is_string($b[$field])) {
             $b[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($b[$field], 'UTF-8'));
         }
-
-        return ($a[$field] != $b[$field] ? $a[$field] < $b[$field] ? -1 : 1 : 0) * $direct;
+        return (strnatcasecmp($a[$field], $b[$field])) * $direct;
     });
     return $input;
 }
