@@ -32,6 +32,11 @@ Db::query_database(
     SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
 );
 
+Db::query_database(
+    "CREATE TEMP TABLE KeepersSeedersRenew AS
+    SELECT topic_id,nick FROM KeepersSeeders WHERE 0 = 1"
+);
+
 // подключаемся к api
 if (!isset($api)) {
     $api = new Api($cfg['api_address'], $cfg['api_key']);
@@ -111,14 +116,16 @@ if (isset($cfg['subsections'])) {
             );
             unset($topics_ids);
 
+            $topicsKeepersFromForum = array();
+            $dbTopicsKeepers = array();
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority )
+            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers )
             foreach ($topics_result as $topic_id => $topic_data) {
                 if (empty($topic_data)) {
                     continue;
                 }
 
-                if (count($topic_data) < 5) {
+                if (count($topic_data) < 6) {
                     throw new Exception("Error: Недостаточно элементов в ответе");
                 }
 
@@ -169,6 +176,9 @@ if (isset($cfg['subsections'])) {
                         'ds' => $days_update,
                         'pt' => $topic_data[4],
                     );
+                    if (!empty($topic_data[5])) {
+                        $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                    }
                     unset($previous_data);
                     continue;
                 }
@@ -195,7 +205,45 @@ if (isset($cfg['subsections'])) {
                     'ds' => $days_update,
                     'pt' => $topic_data[4],
                 );
+                if (!empty($topic_data[5])) {
+                    $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                }
             }
+            if (!empty($topicsKeepersFromForum)) {
+                $topicsKeepers = array();
+                foreach ($topicsKeepersFromForum as $keepers) {
+                    foreach ($keepers as $keeper) {
+                        if (!in_array($keeper, $topicsKeepers)) {
+                            $topicsKeepers[] = $keeper;
+                        }
+                    }
+                }
+                $topicsKeepersNames = $api->getUserName($topicsKeepers);
+                foreach ($topicsKeepersFromForum as $topic => $topicKeepers) {
+                    foreach ($topicKeepers as $topicKeeper) {
+                        if (strcasecmp($cfg['tracker_login'], $topicsKeepersNames[$topicKeeper]) !== 0) {
+                            $dbTopicsKeepers[] = $topic;
+                            $dbTopicsKeepers[] = $topicsKeepersNames[$topicKeeper];
+                        }
+                    }
+                }
+                unset($topicsKeepersFromForum);
+
+                // обновление данных в базе о сидах-хранителях.
+                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 998);
+                foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
+                    $select = str_repeat(
+                            'SELECT ?,? UNION ALL ',
+                            (count($dbTopicsKeepersChunk) / 2) - 1
+                        ) . 'SELECT ?,?';
+                    Db::query_database(
+                        "INSERT INTO temp.KeepersSeedersRenew (topic_id, nick) $select",
+                        $dbTopicsKeepersChunk
+                    );
+                }
+                unset($dbTopicsKeepersChunks);
+            }
+
             unset($topics_data_previous);
 
             // вставка данных в базу о новых раздачах
@@ -262,6 +310,27 @@ $countTopicsRenew = Db::query_database(
     true,
     PDO::FETCH_COLUMN
 );
+
+$countKeepersSeeders = Db::query_database(
+    "SELECT COUNT() FROM temp.KeepersSeedersRenew",
+    array(),
+    true,
+    PDO::FETCH_COLUMN
+);
+
+if ($countKeepersSeeders[0] > 0) {
+    Log::append("Запись в базу данных списка сидов-хранителей...");
+
+    Db::query_database(
+        "DELETE FROM KeepersSeeders;
+        VACUUM"
+    );
+
+    Db::query_database(
+        "INSERT INTO KeepersSeeders (topic_id,nick)
+        SELECT * FROM temp.KeepersSeedersRenew"
+    );
+}
 
 if (
     $countTopicsUpdate[0] > 0

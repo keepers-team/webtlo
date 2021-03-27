@@ -627,6 +627,17 @@ class Db
             );
             $statements[] = 'PRAGMA user_version = 6';
         }
+        // user_version = 7
+        if ($version[0]['user_version'] < 7) {
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
+                '    topic_id INTEGER NOT NULL,',
+                '    nick VARCHAR NOT NULL,',
+                '    PRIMARY KEY (topic_id, nick)',
+                ')'
+            );
+            $statements[] = 'PRAGMA user_version = 7';
+        }
         // формируем структуру БД
         foreach ($statements as &$statement) {
             if (is_array($statement)) {
