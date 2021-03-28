@@ -331,12 +331,14 @@ function array_column_common(array $input, $columnKey, $indexKey = null)
 function natsort_field(array $input, $field, $direct = 1)
 {
     uasort($input, function ($a, $b) use ($field, $direct) {
-        if (is_string($a[$field])) {
-            $a[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($a[$field], 'UTF-8'));
+        if (
+            is_numeric($a[$field])
+            && is_numeric($b[$field])
+        ) {
+            return ($a[$field] != $b[$field] ? $a[$field] < $b[$field] ? -1 : 1 : 0) * $direct;
         }
-        if (is_string($b[$field])) {
-            $b[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($b[$field], 'UTF-8'));
-        }
+        $a[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($a[$field], 'UTF-8'));
+        $b[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($b[$field], 'UTF-8'));
         return (strnatcasecmp($a[$field], $b[$field])) * $direct;
     });
     return $input;
