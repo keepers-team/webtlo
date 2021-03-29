@@ -136,6 +136,13 @@ function get_settings($filename = "")
         'include_forums_ids' => $ini->read('vacancies', 'include_forums_ids', ''),
     );
 
+    // отчёты
+    $config['reports'] = array(
+        'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
+        'exclude_forums_ids' => $ini->read('reports', 'exclude', ''),
+        'send_summary_report' => $ini->read('reports', 'common', 1)
+    );
+
     // таймауты
     $config['curl_setopt'] = array(
         'api' => array(

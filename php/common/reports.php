@@ -37,8 +37,7 @@ if (empty($update_time[0])) {
 }
 
 // исключаемые подразделы
-$exclude_forums = TIniFileEx::read('reports', 'exclude', '');
-$exclude_forums = explode(',', $exclude_forums);
+$excludeForumsIDs = explode(',', $cfg['reports']['exclude_forums_ids']);
 
 // const & pattern
 $message_length_max = 119000;
@@ -69,7 +68,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // Log::append("Отправка отчётов для подраздела № $forum_id...");
 
     // исключаем подразделы
-    if (in_array($forum_id, $exclude_forums)) {
+    if (in_array($forum_id, $excludeForumsIDs)) {
         continue;
     }
 
@@ -175,17 +174,20 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $tmp['msg'][0];
 
     // ищем тему со списками
-    $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
+    $topicID = $reports->search_topic_id($forum[$forum_id]['na']);
 
-    if (empty($topic_id)) {
+    if (empty($topicID)) {
         Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
         continue;
     }
 
+    // сохраним все редактирумые темы
+    $editedTopicsIDs[] = $topicID;
+
     // Log::append("Сканирование списков...");
 
     // сканируем имеющиеся списки
-    $keepers = $reports->scanning_viewtopic($topic_id);
+    $keepers = $reports->scanning_viewtopic($topicID);
 
     if ($keepers !== false) {
         // разбираем инфу, полученную из списков
@@ -252,7 +254,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $posts_ids[] = $reports->send_message(
                 'reply',
                 $message,
-                $topic_id
+                $topicID
             );
             usleep(1500);
         }
@@ -266,7 +268,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $reports->send_message(
             'editpost',
             $message,
-            $topic_id,
+            $topicID,
             $post_id
         );
     }
@@ -326,7 +328,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $reports->send_message(
             'editpost',
             $tmp['header'],
-            $topic_id,
+            $topicID,
             $postIDAuthorTopic,
             '[Список] ' . $subsection['na']
         );
@@ -337,7 +339,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $sumdlsi += $tmp['dlsi'];
     $common_forums[$forum_id] = sprintf(
         $pattern_common,
-        $topic_id,
+        $topicID,
         $forum[$forum_id]['na'],
         $tmp['dlqt'],
         convert_bytes($tmp['dlsi'])
@@ -347,9 +349,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 Log::append("Обработано подразделов: " . count($common_forums) . " шт.");
 
 // работаем со сводным отчётом
-$common_exclude = TIniFileEx::read('reports', 'common', 1);
-
-if ($common_exclude) {
+if ($cfg['reports']['send_summary_report']) {
     // формируем сводный отчёт
     $common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]' .
         'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.[br]' .
@@ -366,6 +366,33 @@ if ($common_exclude) {
         4275633,
         $post_id
     );
+}
+
+// отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме
+if (
+    $cfg['reports']['auto_clear_messages']
+    && !empty($editedTopicsIDs)
+) {
+    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(array('uid' => $cfg['user_id']));
+    $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
+    if (!empty($uneditedTopicsIDs)) {
+        foreach ($uneditedTopicsIDs as $topicID) {
+            $messages = $reports->scanning_viewtopic($topicID);
+            if ($messages === false) {
+                continue;
+            }
+            foreach ($messages as $index => $message) {
+                // пропускаем шапку
+                if ($index == 0) {
+                    continue;
+                }
+                // только свои сообщения
+                if (strcasecmp($cfg['tracker_login'], $message['nickname']) === 0) {
+                    $reports->send_message('editpost', ':!: не актуально', $topicID, $message['post_id']);
+                }
+            }
+        }
+    }
 }
 
 $endtime = microtime(true);
