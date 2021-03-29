@@ -209,7 +209,7 @@ try {
                     $stateAverageSeeders = 'text-success';
                 }
             }
-            $statement = 'SELECT cl,dl FROM Clients WHERE hs = ? ORDER BY cl';
+            $statement = 'SELECT cl,dl FROM Clients WHERE hs = ? ORDER BY LOWER(cl)';
             $listTorrentClientsIDs = Db::query_database(
                 $statement,
                 array($topicData['hs']),

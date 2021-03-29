@@ -51,7 +51,7 @@ try {
             ) AS seeds ON seeds.ss = f.id
             WHERE f.id IN (" . $placeholdersForumsIDs . ")
             GROUP BY f.id
-            ORDER BY f.na";
+            ORDER BY LOWER(f.na)";
 
         $data = Db::query_database(
             $sql,

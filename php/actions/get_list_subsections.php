@@ -28,7 +28,7 @@ try {
         $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
         $data = Db::query_database(
             "SELECT id AS value, na AS label FROM Forums
-            WHERE id LIKE :term OR na LIKE :term ORDER BY na",
+            WHERE id LIKE :term OR na LIKE :term ORDER BY LOWER(na)",
             array('term' => $pattern),
             true
         );
