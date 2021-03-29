@@ -101,44 +101,43 @@ if (!empty($cfg['clients'])) {
         if (!empty($untrackedTopicsIDs)) {
             $untrackedTopics = $api->getTorrentTopicData($untrackedTopicsIDs);
             unset($untrackedTopicsIDs);
-            if (empty($untrackedTopics)) {
-                throw new Exception('Error: Не удалось получить данные о раздачах');
-            }
-            foreach ($untrackedTopics as $topicID => $topicData) {
-                if (empty($topicData)) {
-                    continue;
+            if (!empty($untrackedTopics)) {
+                foreach ($untrackedTopics as $topicID => $topicData) {
+                    if (empty($topicData)) {
+                        continue;
+                    }
+                    $insertedUntrackedTopics[] = array(
+                        'id' => $topicID,
+                        'ss' => $topicData['forum_id'],
+                        'na' => $topicData['topic_title'],
+                        'hs' => $topicData['info_hash'],
+                        'se' => $topicData['seeders'],
+                        'si' => $topicData['size'],
+                        'st' => $topicData['tor_status'],
+                        'rg' => $topicData['reg_time'],
+                    );
                 }
-                $insertedUntrackedTopics[] = array(
-                    'id' => $topicID,
-                    'ss' => $topicData['forum_id'],
-                    'na' => $topicData['topic_title'],
-                    'hs' => $topicData['info_hash'],
-                    'se' => $topicData['seeders'],
-                    'si' => $topicData['size'],
-                    'st' => $topicData['tor_status'],
-                    'rg' => $topicData['reg_time'],
-                );
-            }
-            unset($untrackedTopics);
-            $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
-            foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
-                $select = Db::combine_set($insertedUntrackedTopics);
+                unset($untrackedTopics);
+                $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
+                foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
+                    $select = Db::combine_set($insertedUntrackedTopics);
+                    unset($insertedUntrackedTopics);
+                    Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
+                    unset($select);
+                }
                 unset($insertedUntrackedTopics);
-                Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
-                unset($select);
-            }
-            unset($insertedUntrackedTopics);
-            $numberUntracked = Db::query_database(
-                'SELECT COUNT() FROM temp.TopicsUntrackedNew',
-                array(),
-                true,
-                PDO::FETCH_COLUMN
-            );
-            if ($numberUntracked[0] > 0) {
-                Db::query_database(
-                    'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
-                    SELECT * FROM temp.TopicsUntrackedNew'
+                $numberUntrackedTopics = Db::query_database(
+                    'SELECT COUNT() FROM temp.TopicsUntrackedNew',
+                    array(),
+                    true,
+                    PDO::FETCH_COLUMN
                 );
+                if ($numberUntrackedTopics[0] > 0) {
+                    Db::query_database(
+                        'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
+                    SELECT * FROM temp.TopicsUntrackedNew'
+                    );
+                }
             }
         }
     }
