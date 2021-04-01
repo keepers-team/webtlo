@@ -197,16 +197,16 @@ class Transmission extends TorrentClient
         if ($this->rpcVersion < 16) {
             Log::append('Error: Торрент-клиент не поддерживает установку меток');
             return false;
-        } else {
-            $fields = array(
-                'method' => 'torrent-set',
-                'arguments' => array(
-                    'labels' => array($labelName),
-                    'ids' => $torrentHashes
-                ),
-            );
-            return $this->makeRequest($fields);
         }
+        $labelName = str_replace(',', '', $labelName);
+        $fields = array(
+            'method' => 'torrent-set',
+            'arguments' => array(
+                'labels' => array($labelName),
+                'ids' => $torrentHashes
+            ),
+        );
+        return $this->makeRequest($fields);
     }
 
     public function startTorrents($torrentHashes, $forceStart = false)
