@@ -8,14 +8,14 @@ AddDefaultCharset UTF-8
 	php_value max_execution_time 0
 	php_value max_input_time 0
 	php_value max_input_vars 100000
-	php_value memory_limit 512M
+	php_value memory_limit 2G
 </IfModule>
 
 <IfModule mod_php7.c>
 	php_value max_execution_time 0
 	php_value max_input_time 0
 	php_value max_input_vars 100000
-	php_value memory_limit 512M
+	php_value memory_limit 2G
 </IfModule>
 
 <IfModule mod_headers.c>
