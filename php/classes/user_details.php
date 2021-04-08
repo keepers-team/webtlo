@@ -31,6 +31,7 @@ class UserDetails
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_POSTFIELDS => http_build_query($fields),
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20,
         ));
