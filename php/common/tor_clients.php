@@ -83,7 +83,7 @@ if (!empty($cfg['clients'])) {
     $untrackedTorrentHashes = Db::query_database(
         'SELECT temp.ClientsNew.hs FROM temp.ClientsNew
         LEFT JOIN Topics ON Topics.hs = temp.ClientsNew.hs
-        WHERE Topics.id IS NULL OR ss NOT IN (' . $placeholders . ') AND temp.ClientsNew.dl IN (1,-1)',
+        WHERE Topics.id IS NULL OR ss NOT IN (' . $placeholders . ')',
         $forumsIDs,
         true,
         PDO::FETCH_COLUMN
@@ -96,48 +96,44 @@ if (!empty($cfg['clients'])) {
             // применяем таймауты
             $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
         }
-        $untrackedTopicsIDs = $api->getTopicID($untrackedTorrentHashes);
+        $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
         unset($untrackedTorrentHashes);
-        if (!empty($untrackedTopicsIDs)) {
-            $untrackedTopics = $api->getTorrentTopicData($untrackedTopicsIDs);
-            unset($untrackedTopicsIDs);
-            if (!empty($untrackedTopics)) {
-                foreach ($untrackedTopics as $topicID => $topicData) {
-                    if (empty($topicData)) {
-                        continue;
-                    }
-                    $insertedUntrackedTopics[] = array(
-                        'id' => $topicID,
-                        'ss' => $topicData['forum_id'],
-                        'na' => $topicData['topic_title'],
-                        'hs' => $topicData['info_hash'],
-                        'se' => $topicData['seeders'],
-                        'si' => $topicData['size'],
-                        'st' => $topicData['tor_status'],
-                        'rg' => $topicData['reg_time'],
-                    );
+        if (!empty($untrackedTopics)) {
+            foreach ($untrackedTopics as $topicID => $topicData) {
+                if (empty($topicData)) {
+                    continue;
                 }
-                unset($untrackedTopics);
-                $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
-                foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
-                    $select = Db::combine_set($insertedUntrackedTopics);
-                    unset($insertedUntrackedTopics);
-                    Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
-                    unset($select);
-                }
-                unset($insertedUntrackedTopics);
-                $numberUntrackedTopics = Db::query_database(
-                    'SELECT COUNT() FROM temp.TopicsUntrackedNew',
-                    array(),
-                    true,
-                    PDO::FETCH_COLUMN
+                $insertedUntrackedTopics[] = array(
+                    'id' => $topicID,
+                    'ss' => $topicData['forum_id'],
+                    'na' => $topicData['topic_title'],
+                    'hs' => $topicData['info_hash'],
+                    'se' => $topicData['seeders'],
+                    'si' => $topicData['size'],
+                    'st' => $topicData['tor_status'],
+                    'rg' => $topicData['reg_time'],
                 );
-                if ($numberUntrackedTopics[0] > 0) {
-                    Db::query_database(
-                        'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
+            }
+            unset($untrackedTopics);
+            $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
+            foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
+                $select = Db::combine_set($insertedUntrackedTopics);
+                unset($insertedUntrackedTopics);
+                Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
+                unset($select);
+            }
+            unset($insertedUntrackedTopics);
+            $numberUntrackedTopics = Db::query_database(
+                'SELECT COUNT() FROM temp.TopicsUntrackedNew',
+                array(),
+                true,
+                PDO::FETCH_COLUMN
+            );
+            if ($numberUntrackedTopics[0] > 0) {
+                Db::query_database(
+                    'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
                     SELECT * FROM temp.TopicsUntrackedNew'
-                    );
-                }
+                );
             }
         }
     }

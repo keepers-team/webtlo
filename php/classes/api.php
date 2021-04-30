@@ -247,20 +247,20 @@ class Api
 
     /**
      * данные о раздаче по ID темы
-     * @param array $topicsIDs
+     * @param array $topicsValues
      * @return bool|array
      */
-    public function getTorrentTopicData($topicsIDs)
+    public function getTorrentTopicData($topicsValues, $searchBy = 'topic_id')
     {
-        if (empty($topicsIDs)) {
+        if (empty($topicsValues)) {
             return false;
         }
         $topicsData = array();
-        $topicsIDs = array_chunk($topicsIDs, $this->limitInRequest);
-        foreach ($topicsIDs as $topicsIDs) {
+        $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
+        foreach ($topicsValues as $topicsValues) {
             $params = array(
-                'by=topic_id',
-                'val=' . implode(',', $topicsIDs)
+                'by=' . $searchBy,
+                'val=' . implode(',', $topicsValues)
             );
             $response = $this->makeRequest('get_tor_topic_data', $params);
             if ($response === false) {
