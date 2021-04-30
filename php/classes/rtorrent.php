@@ -31,21 +31,18 @@ class Rtorrent extends TorrentClient
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
         );
-        $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($this->ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request,
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
         ));
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
         while (true) {
-            $response = curl_exec($ch);
-            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            if (curl_errno($ch)) {
+            $response = curl_exec($this->ch);
+            $responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+            if (curl_errno($this->ch)) {
                 if (
                     $responseHttpCode < 300
                     && $connectionNumberTry <= $maxNumberTry
@@ -54,10 +51,9 @@ class Rtorrent extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($ch));
+                Log::append('CURL ошибка: ' . curl_error($this->ch));
                 return false;
             }
-            curl_close($ch);
             $response = xmlrpc_decode(str_replace('i8>', 'i4>', $response));
             if (is_array($response)) {
                 foreach ($response as $keyName => $responseData) {

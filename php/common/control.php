@@ -33,6 +33,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     if ($client->isOnline() === false) {
         continue;
     }
+    // применяем таймауты
+    $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
     // получение данных от торрент-клиента
     $torrents = $client->getTorrents();
     if ($torrents === false) {

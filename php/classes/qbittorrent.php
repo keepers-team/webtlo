@@ -66,21 +66,18 @@ class Qbittorrent extends TorrentClient
     private function makeRequest($url, $fields = '', $options = array())
     {
         $this->responseHttpCode = null;
-        $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($this->ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
             CURLOPT_POSTFIELDS => $fields,
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
         ));
-        curl_setopt_array($ch, $options);
+        curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
         while (true) {
-            $response = curl_exec($ch);
-            $this->responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $response = curl_exec($this->ch);
+            $this->responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
             if ($response === false) {
                 if (
                     $this->responseHttpCode < 300
@@ -90,10 +87,9 @@ class Qbittorrent extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($ch));
+                Log::append('CURL ошибка: ' . curl_error($this->ch));
                 return false;
             }
-            curl_close($ch);
             return $this->responseHttpCode == 200 ? json_decode($response, true) : false;
         }
     }

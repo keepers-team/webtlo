@@ -34,6 +34,9 @@ if (!empty($cfg['clients'])) {
         // количество раздач
         $numberTorrents = 0;
         if ($client->isOnline()) {
+            // применяем таймауты
+            $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
+            // получаем список торрентов
             $torrents = $client->getTorrents();
             if ($torrents === false) {
                 Log::append('Error: Не удалось получить данные о раздачах от торрент-клиента "' . $torrentClientData['cm'] . '"');

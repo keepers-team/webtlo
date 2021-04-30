@@ -64,23 +64,20 @@ class Transmission extends TorrentClient
      */
     private function makeRequest($fields, $options = array())
     {
-        $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($this->ch, array(
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HTTPHEADER => array($this->sid),
             CURLOPT_POSTFIELDS => json_encode($fields),
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
         ));
-        curl_setopt_array($ch, $options);
+        curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $responseNumberTry = 1;
         $connectionNumberTry = 1;
         while (true) {
-            $response = curl_exec($ch);
-            $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $response = curl_exec($this->ch);
+            $responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
             if ($response === false) {
                 if (
                     $responseHttpCode < 300
@@ -90,7 +87,7 @@ class Transmission extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($ch));
+                Log::append('CURL ошибка: ' . curl_error($this->ch));
                 return false;
             }
             if (
@@ -100,13 +97,12 @@ class Transmission extends TorrentClient
                 $responseNumberTry++;
                 preg_match('|<code>(.*)</code>|', $response, $matches);
                 if (!empty($matches)) {
-                    curl_setopt_array($ch, array(CURLOPT_HTTPHEADER => array($matches[1])));
+                    curl_setopt_array($this->ch, array(CURLOPT_HTTPHEADER => array($matches[1])));
                     $this->sid = $matches[1];
                     continue;
                 }
             }
             $response = json_decode($response, true);
-            curl_close($ch);
             if ($response['result'] != 'success') {
                 if (
                     empty($response['result'])

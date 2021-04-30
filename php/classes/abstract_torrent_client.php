@@ -43,6 +43,11 @@ abstract class TorrentClient
     protected $sid;
 
     /**
+     * @var resource
+     */
+    protected $ch;
+
+    /**
      * default constructor
      * @param bool|int $ssl
      * @param string $host
@@ -57,6 +62,7 @@ abstract class TorrentClient
         $this->port = $port;
         $this->login = $login;
         $this->password = $password;
+        $this->ch = curl_init();
     }
 
     /**
@@ -66,6 +72,16 @@ abstract class TorrentClient
     public function isOnline()
     {
         return $this->getSID();
+    }
+
+    /**
+     * установка пользовательских параметров для cURL
+     * в функции makeRequest()
+     * @param array $options
+     */
+    public function setUserConnectionOptions($options)
+    {
+        curl_setopt_array($this->ch, $options);
     }
 
     /**
@@ -120,4 +136,12 @@ abstract class TorrentClient
      * @return bool|mixed
      */
     abstract public function recheckTorrents($torrentHashes);
+
+    /**
+     * default destructor
+     */
+    public function __destruct()
+    {
+        curl_close($this->ch);
+    }
 }

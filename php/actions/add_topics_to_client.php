@@ -145,6 +145,8 @@ try {
             Log::append('Error: торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен');
             continue;
         }
+        // применяем таймауты
+        $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
         // убираем последний слэш в пути каталога для данных
         if (preg_match('/(\/|\\\\)$/', $forumData['df'])) {
             $forumData['df'] = substr($forumData['df'], 0, -1);

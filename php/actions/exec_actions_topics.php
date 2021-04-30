@@ -28,6 +28,8 @@ try {
         $result = 'В настройках не найдены торрент-клиенты';
         throw new Exception();
     }
+    // получение настроек
+    $cfg = get_settings();
     $torrentClients = $_POST['tor_clients'];
     Log::append('Начато выполнение действия "' . $actionType . '" для выбранных раздач...');
     Log::append('Получение хэшей раздач с привязкой к торрент-клиенту...');
@@ -92,6 +94,8 @@ try {
             Log::append('Error: торрент-клиент "' . $torrentClient['comment'] . '" в данный момент недоступен');
             continue;
         }
+        // применяем таймауты
+        $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
         switch ($actionType) {
             case 'set_label':
                 $response = $client->setLabel($torrentHashes, $labelName);

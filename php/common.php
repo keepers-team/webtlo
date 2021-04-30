@@ -153,6 +153,10 @@ function get_settings($filename = "")
             CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'forum_timeout', 40),
             CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 40),
         ),
+        'torrent_client' => array(
+            CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'torrent_client_timeout', 40),
+            CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'torrent_client_connecttimeout', 40),
+        )
     );
 
     // версия конфига
