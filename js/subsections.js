@@ -178,9 +178,9 @@ function addSubsection(event, ui) {
 	var forumTitle = ui.item.label;
 	var forumLabel = forumTitle.replace(/.* » /, "");
 	var forumID = ui.item.value;
+	var mainSelectedForumID = $("#main-subsections").val();
+	var reportsSelectedForumID = $("#reports-subsections").val();
 	if ($("#list-forums option[value=" + forumID + "]").length == 0) {
-		var mainSelectedForumID = $("#main-subsections").val();
-		var reportsSelectedForumID = $("#reports-subsections").val();
 		$("#list-forums").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
 		var optionForum = $("#list-forums option[value=" + forumID + "]");
 		optionForum.attr("data-client", 0).data("client", 0);
@@ -195,13 +195,13 @@ function addSubsection(event, ui) {
 		$(".forum-props, #list-forums").prop("disabled", false);
 		$("#forum-id").prop("disabled", true);
 	}
-	$("#list-forums option[value=" + forumID + "]").prop("selected", "selected").change();
-	ui.item.value = "";
 	doSortSelect("list-forums");
 	doSortSelect("main-subsections-stored");
 	doSortSelect("reports-subsections-stored");
 	$("#main-subsections").val(mainSelectedForumID).selectmenu("refresh");
 	$("#reports-subsections").val(reportsSelectedForumID).selectmenu("refresh");
+	$("#list-forums option[value=" + forumID + "]").prop("selected", "selected").change();
+	ui.item.value = "";
 }
 
 function getForums() {
