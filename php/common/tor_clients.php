@@ -83,16 +83,41 @@ if (!empty($cfg['clients'])) {
         $forumsIDs = array();
         $placeholders = '';
     }
-    $untrackedTorrentHashes = Db::query_database(
-        'SELECT temp.ClientsNew.hs FROM temp.ClientsNew
-        LEFT JOIN Topics ON Topics.hs = temp.ClientsNew.hs
+    $untrackedTorrentHashesWithClients = Db::query_database(
+        'SELECT t.cl, t.hs FROM temp.ClientsNew AS t
+        LEFT JOIN Topics ON Topics.hs = t.hs
         WHERE Topics.id IS NULL OR ss NOT IN (' . $placeholders . ')',
         $forumsIDs,
         true,
-        PDO::FETCH_COLUMN
+        PDO::FETCH_ASSOC
     );
-    if (!empty($untrackedTorrentHashes)) {
-        Log::append('Найдено сторонних раздач: ' . count($untrackedTorrentHashes) . ' шт.');
+    if (!empty($untrackedTorrentHashesWithClients)) {
+        Log::append('Найдено сторонних раздач: ' . count($untrackedTorrentHashesWithClients) . ' шт.');
+        foreach ($untrackedTorrentHashesWithClients as $key => $value) {
+            $untrackedTorrentHashesByClient[$value['cl']][] = $value['hs'];
+            $untrackedTorrentHashes[] = $value['hs'];
+        }
+
+        foreach ($untrackedTorrentHashesByClient as $clientID => $hashes) {
+            $client = new $cfg['clients'][$clientID]['cl'](
+                $cfg['clients'][$clientID]['ssl'],
+                $cfg['clients'][$clientID]['ht'],
+                $cfg['clients'][$clientID]['pt'],
+                $cfg['clients'][$clientID]['lg'],
+                $cfg['clients'][$clientID]['pw']
+            );
+            if ($client->isOnline()) {
+                $untrackedTorrents = $client->getTorrentsNames($hashes);
+            } else {
+                continue;
+            }
+            Log::append('Найдено сторонних раздач в клиенте "' . $cfg['clients'][$clientID]['cl'] . '": ' . count($hashes) . ' шт.');
+            Log::append('Перечень найденных раздач:');
+            foreach ($untrackedTorrents as $torrentHash => $torrentName) {
+                Log::append('[' . $torrentHash . '] - ' . $torrentName);
+            }
+        }
+
         // подключаемся к api
         if (!isset($api)) {
             $api = new Api($cfg['api_address'], $cfg['api_key']);

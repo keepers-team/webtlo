@@ -121,6 +121,12 @@ class Utorrent extends TorrentClient
         return $torrents;
     }
 
+    public function getTorrentsNames($torrentHashes)
+    {
+        //TODO необходимо реализовать
+        return array_fill_keys($torrentHashes, 'n/a');
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         $this->setSetting('dir_active_download_flag', true);

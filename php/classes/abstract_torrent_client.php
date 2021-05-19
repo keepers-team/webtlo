@@ -92,6 +92,13 @@ abstract class TorrentClient
     abstract public function getTorrents();
 
     /**
+     * получение списка раздач с именами от торрент-клиента
+     * @param $torrentHashes
+     * @return array array[torrentHash] => torrentName
+     */
+    abstract public function getTorrentsNames($torrentHashes);
+
+    /**
      * добавить торрент
      * @param string $torrentFilePath полный локальный путь до .torrent файла включая его имя
      * @param string $savePath полный путь до каталога куда сохранять загружаемые данные

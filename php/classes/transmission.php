@@ -158,6 +158,30 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
+    public function getTorrentsNames($torrentHashes)
+    {
+        $fields = array(
+            'method' => 'torrent-get',
+            'arguments' => array(
+                'ids'    => $torrentHashes,
+                'fields' => array(
+                    'hashString',
+                    'name',
+                ),
+            ),
+        );
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
+            $torrentHash = strtoupper($torrent['hashString']);
+            $torrents[$torrentHash] = $torrent['name'];
+        }
+        return $torrents;
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         $torrentFile = file_get_contents($torrentFilePath);
