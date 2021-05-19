@@ -119,8 +119,24 @@ class Qbittorrent extends TorrentClient
 
     public function getTorrentsNames($torrentHashes)
     {
-        //TODO необходимо реализовать
-        return array_fill_keys($torrentHashes, 'n/a');
+        $fields = http_build_query(
+            array(
+                'hashes' => implode('|', array_map('strtolower', $torrentHashes))
+            ),
+            '',
+            '&',
+            PHP_QUERY_RFC3986
+        );
+        $response = $this->makeRequest('api/v2/torrents/info', $fields);
+        if ($response === false) {
+            return array_fill_keys($torrentHashes, 'n/a');
+        }
+        $torrents = array();
+        foreach ($response as $torrent) {
+            $torrentHash = strtoupper($torrent['hash']);
+            $torrents[$torrentHash] = $torrent['name'];
+        }
+        return $torrents;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
