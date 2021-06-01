@@ -117,7 +117,7 @@ class Qbittorrent extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsNames($torrentHashes)
+    public function getTorrentsInfo($torrentHashes)
     {
         $fields = http_build_query(
             array(
@@ -134,7 +134,10 @@ class Qbittorrent extends TorrentClient
         $torrents = array();
         foreach ($response as $torrent) {
             $torrentHash = strtoupper($torrent['hash']);
-            $torrents[$torrentHash] = $torrent['name'];
+            $torrents[$torrentHash] = array(
+                'name' => $torrent['name'],
+                'size' => $torrent['size'],
+            );
         }
         return $torrents;
     }

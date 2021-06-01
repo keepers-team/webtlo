@@ -57,7 +57,7 @@ try {
     if ($forum_id == 0) {
         // сторонние раздачи
         $topics = Db::query_database(
-            'SELECT id,na,si,rg,ss,se FROM TopicsUntracked',
+            'SELECT id,na,si,rg,ss,se,st,hs FROM TopicsUntracked',
             array(),
             true
         );
@@ -84,22 +84,39 @@ try {
                     $data .= $pattern;
                 }
             }
-            if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] = '<div class="subsection-title">' . $forumsTitles[$forumID] . '</div>';
+            if ($forumID == "-1") {
+                if (!isset($preparedOutput[$forumID])) {
+                    $preparedOutput[$forumID] = '<div class="subsection-title">Раздачи, отсутствующие на трекере:</div>';
+                }
+                $preparedOutput[$forumID] .= sprintf(
+                    $pattern_topic_block,
+                    sprintf(
+                        '<p>[%1$s] - [%2$s] - %3$s (%4$s)</p>',
+                        $cfg['clients'][$topic_data['st']]['cl'],
+                        $topic_data["hs"],
+                        $topic_data['na'],
+                        convert_bytes($topic_data['si'])
+                    ),
+                    ''
+                );
+            } else {
+                if (!isset($preparedOutput[$forumID])) {
+                    $preparedOutput[$forumID] = '<div class="subsection-title">' . $forumsTitles[$forumID] . '</div>';
+                }
+                $preparedOutput[$forumID] .= sprintf(
+                    $pattern_topic_block,
+                    sprintf(
+                        $data,
+                        $topic_data['id'],
+                        $topic_data['na'],
+                        $topic_data['si'],
+                        convert_bytes($topic_data['si']),
+                        date('d.m.Y', $topic_data['rg']),
+                        $topic_data['se']
+                    ),
+                    ''
+                );
             }
-            $preparedOutput[$forumID] .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $data,
-                    $topic_data['id'],
-                    $topic_data['na'],
-                    $topic_data['si'],
-                    convert_bytes($topic_data['si']),
-                    date('d.m.Y', $topic_data['rg']),
-                    $topic_data['se']
-                ),
-                ''
-            );
         }
         unset($topics);
         natcasesort($preparedOutput);

@@ -158,7 +158,7 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsNames($torrentHashes)
+    public function getTorrentsInfo($torrentHashes)
     {
         $fields = array(
             'method' => 'torrent-get',
@@ -167,6 +167,7 @@ class Transmission extends TorrentClient
                 'fields' => array(
                     'hashString',
                     'name',
+                    'totalSize',
                 ),
             ),
         );
@@ -177,7 +178,10 @@ class Transmission extends TorrentClient
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
             $torrentHash = strtoupper($torrent['hashString']);
-            $torrents[$torrentHash] = $torrent['name'];
+            $torrents[$torrentHash] =  array(
+                'name' => $torrent['name'],
+                'size' => $torrent['totalSize'],
+            );
         }
         return $torrents;
     }

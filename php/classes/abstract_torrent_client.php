@@ -96,7 +96,7 @@ abstract class TorrentClient
      * @param $torrentHashes
      * @return array array[torrentHash] => torrentName
      */
-    abstract public function getTorrentsNames($torrentHashes);
+    abstract public function getTorrentsInfo($torrentHashes);
 
     /**
      * добавить торрент

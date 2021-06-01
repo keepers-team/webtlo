@@ -161,7 +161,7 @@ class Deluge extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsNames($torrentHashes)
+    public function getTorrentsInfo($torrentHashes)
     {
         //TODO необходимо реализовать
         return array_fill_keys($torrentHashes, 'n/a');

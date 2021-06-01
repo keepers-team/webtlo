@@ -107,14 +107,13 @@ if (!empty($cfg['clients'])) {
                 $cfg['clients'][$clientID]['pw']
             );
             if ($client->isOnline()) {
-                $untrackedTorrents = $client->getTorrentsNames($hashes);
+                $untrackedTorrents = $client->getTorrentsInfo($hashes);
             } else {
                 continue;
             }
             Log::append('Найдено сторонних раздач в клиенте "' . $cfg['clients'][$clientID]['cl'] . '": ' . count($hashes) . ' шт.');
-            Log::append('Перечень найденных раздач:');
-            foreach ($untrackedTorrents as $torrentHash => $torrentName) {
-                Log::append('[' . $torrentHash . '] - ' . $torrentName);
+            foreach ($untrackedTorrents as $torrentHash => $torrentInfo) {
+                $untrackedTorrents[$torrentHash]['client_id'] = $clientID;
             }
         }
 
@@ -126,21 +125,39 @@ if (!empty($cfg['clients'])) {
         }
         $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
         unset($untrackedTorrentHashes);
-        if (!empty($untrackedTopics)) {
-            foreach ($untrackedTopics as $topicID => $topicData) {
-                if (empty($topicData)) {
-                    continue;
+        if (!empty($untrackedTopics) || !empty($untrackedTorrents)) {
+            if (!empty($untrackedTopics)) {
+                foreach ($untrackedTopics as $topicID => $topicData) {
+                    if (empty($topicData)) {
+                        continue;
+                    }
+                    $insertedUntrackedTopics[] = array(
+                        'id' => $topicID,
+                        'ss' => $topicData['forum_id'],
+                        'na' => $topicData['topic_title'],
+                        'hs' => $topicData['info_hash'],
+                        'se' => $topicData['seeders'],
+                        'si' => $topicData['size'],
+                        'st' => $topicData['tor_status'],
+                        'rg' => $topicData['reg_time'],
+                    );
                 }
-                $insertedUntrackedTopics[] = array(
-                    'id' => $topicID,
-                    'ss' => $topicData['forum_id'],
-                    'na' => $topicData['topic_title'],
-                    'hs' => $topicData['info_hash'],
-                    'se' => $topicData['seeders'],
-                    'si' => $topicData['size'],
-                    'st' => $topicData['tor_status'],
-                    'rg' => $topicData['reg_time'],
-                );
+            }
+            if (!empty($untrackedTorrents)) {
+                $id = -1;
+                foreach ($untrackedTorrents as $torrentHash => $torrentInfo) {
+                    $insertedUntrackedTopics[] = array(
+                        'id' => $id,
+                        'ss' => -1,
+                        'na' => $torrentInfo['name'],
+                        'hs' => $torrentHash,
+                        'se' => null,
+                        'si' => $torrentInfo['size'],
+                        'st' => $torrentInfo['client_id'],
+                        'rg' => null,
+                    );
+                    $id--;
+                }
             }
             unset($untrackedTopics);
             $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
