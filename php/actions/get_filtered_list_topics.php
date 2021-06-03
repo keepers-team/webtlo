@@ -57,7 +57,7 @@ try {
     if ($forum_id == 0) {
         // сторонние раздачи
         $topics = Db::query_database(
-            'SELECT id,na,si,rg,ss,se,st,hs FROM TopicsUntracked',
+            'SELECT id,na,si,rg,ss,se FROM TopicsUntracked',
             array(),
             true
         );
@@ -77,29 +77,14 @@ try {
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
             $forumID = $topic_data['ss'];
-            $filtered_topics_count++;
-            $filtered_topics_size += $topic_data['si'];
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (isset($topic_data[$field])) {
-                    $data .= $pattern;
+            if ($forumID != "-1") {
+                $filtered_topics_count++;
+                $filtered_topics_size += $topic_data['si'];
+                foreach ($pattern_topic_data as $field => $pattern) {
+                    if (isset($topic_data[$field])) {
+                        $data .= $pattern;
+                    }
                 }
-            }
-            if ($forumID == "-1") {
-                if (!isset($preparedOutput[$forumID])) {
-                    $preparedOutput[$forumID] = '<div class="subsection-title">Раздачи, отсутствующие на трекере:</div>';
-                }
-                $preparedOutput[$forumID] .= sprintf(
-                    $pattern_topic_block,
-                    sprintf(
-                        '<p>[%1$s] - [%2$s] - %3$s (%4$s)</p>',
-                        $cfg['clients'][$topic_data['st']]['cl'],
-                        $topic_data["hs"],
-                        $topic_data['na'],
-                        convert_bytes($topic_data['si'])
-                    ),
-                    ''
-                );
-            } else {
                 if (!isset($preparedOutput[$forumID])) {
                     $preparedOutput[$forumID] = '<div class="subsection-title">' . $forumsTitles[$forumID] . '</div>';
                 }
@@ -113,6 +98,47 @@ try {
                         convert_bytes($topic_data['si']),
                         date('d.m.Y', $topic_data['rg']),
                         $topic_data['se']
+                    ),
+                    ''
+                );
+            }
+        }
+        unset($topics);
+        natcasesort($preparedOutput);
+        $output = implode('', $preparedOutput);
+    } elseif ($forum_id == -1) {
+        // сторонние раздачи
+        $topics = Db::query_database(
+            'SELECT id,na,si,ss,st,hs FROM TopicsUntracked',
+            array(),
+            true
+        );
+        // сортировка раздач
+        $topics = natsort_field(
+            $topics,
+            $filter['filter_sort'],
+            $filter['filter_sort_direction']
+        );
+        // выводим раздачи
+        foreach ($topics as $topic_id => $topic_data) {
+            $data = '';
+            $forumID = $topic_data['ss'];
+            if ($forumID == "-1") {
+                $filtered_topics_count++;
+                $filtered_topics_size += $topic_data['si'];
+                foreach ($pattern_topic_data as $field => $pattern) {
+                    if (isset($topic_data[$field])) {
+                        $data .= $pattern;
+                    }
+                }
+                $preparedOutput[$forumID] .= sprintf(
+                    $pattern_topic_block,
+                    sprintf(
+                        '<p>[%1$s] - [%2$s] - %3$s (%4$s)</p>',
+                        $cfg['clients'][$topic_data['st']]['cl'],
+                        $topic_data["hs"],
+                        $topic_data['na'],
+                        convert_bytes($topic_data['si'])
                     ),
                     ''
                 );

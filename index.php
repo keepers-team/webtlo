@@ -169,9 +169,7 @@ try {
                         <option value="-2">Раздачи из «чёрного списка»</option>
                         <option value="-4">Хранимые дублирующиеся раздачи</option>
                         <option value="0">Хранимые раздачи из других подразделов</option>
-                        <!--
-                            <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
-                        -->
+                        <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="main-subsections-stored">
                         <?php echo $optionForums ?>
