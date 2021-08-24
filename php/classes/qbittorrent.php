@@ -8,7 +8,7 @@ class Qbittorrent extends TorrentClient
 {
     protected static $base = '%s://%s:%s/%s';
 
-    private $categories;
+    private $tags;
     private $responseHttpCode;
 
     /**
@@ -140,50 +140,49 @@ class Qbittorrent extends TorrentClient
 
     public function setLabel($torrentHashes, $labelName = '')
     {
-        if ($this->categories === null) {
-            $this->categories = $this->makeRequest('api/v2/torrents/categories');
-            if ($this->categories === false) {
+        if ($this->tags === null) {
+            $this->tags = $this->makeRequest('api/v2/torrents/tags');
+            if ($this->tags === false) {
                 return false;
             }
         }
         if (
-            is_array($this->categories)
-            && !array_key_exists($labelName, $this->categories)
+            is_array($this->tags)
+            && !array_key_exists($labelName, $this->tags)
         ) {
-            $this->createCategory($labelName);
-            $this->categories[$labelName] = array();
+            $this->createTag($labelName);
+            $this->tags[$labelName] = array();
         }
         $fields = http_build_query(
             array(
                 'hashes' => implode('|', array_map('strtolower', $torrentHashes)),
-                'category' => $labelName
+                'tag' => $labelName
             ),
             '',
             '&',
             PHP_QUERY_RFC3986
         );
-        $response = $this->makeRequest('api/v2/torrents/setCategory', $fields);
+        $response = $this->makeRequest('api/v2/torrents/addTags', $fields);
         if (
             $response === false
             && $this->responseHttpCode == 409
         ) {
-            Log::append('Error: Category name does not exist');
+            Log::append('Error: Tag does not exist');
         }
         return $response;
     }
 
-    public function createCategory($categoryName, $savePath = '')
+    public function createTag($tagName, $savePath = '')
     {
         $fields = array(
-            'category' => $categoryName,
-            'savePath' => $savePath
+            'tags' => $tagName,
         );
-        $response = $this->makeRequest('api/v2/torrents/createCategory', $fields);
+        $response = $this->makeRequest('api/v2/torrents/createTags', $fields);
         if ($response === false) {
             if ($this->responseHttpCode == 400) {
-                Log::append('Error: Category name is empty');
+                Log::append('Error: Tag name is empty');
             } elseif ($this->responseHttpCode == 409) {
-                Log::append('Error: Category name is invalid');
+                Log::append('Error: Tag name is invalid');
             }
         }
         return $response;
