@@ -156,7 +156,7 @@ class Qbittorrent extends TorrentClient
         $fields = http_build_query(
             array(
                 'hashes' => implode('|', array_map('strtolower', $torrentHashes)),
-                'tag' => $labelName
+                'tags' => $labelName
             ),
             '',
             '&',
