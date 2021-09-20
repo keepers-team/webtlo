@@ -143,7 +143,7 @@ try {
     <script src="jquery/external/js.cookie.js"></script>
     <link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
     <link rel="stylesheet" href="jquery/jquery-ui.css" />
-    <link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
+    <link rel="stylesheet" href="css/light-style.css" /> <!-- таблица стилей webtlo -->
     <link rel="stylesheet" href="css/font-awesome.min.css">
 </head>
 
@@ -724,6 +724,10 @@ try {
                         </div>
                     </div>
                 </form>
+                <label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
+                    <input id="dark-style-switch" type="checkbox" size="24" />
+                    Тёмная тема
+                </label>
             </div>
             <div id="reports" class="content">
                 <select id="reports-subsections">

@@ -290,3 +290,24 @@ function versionCompare(v1, v2, options) {
 		return data;
 	}
 })(jQuery);
+
+if (Cookies.get("selected-theme") == "dark") {
+	$("#dark-style-switch").prop("checked", true);
+	$('head').append('<link id="theme-link" rel="stylesheet" href="css/dark-style.css" />');
+}
+
+$("#dark-style-switch").on('click', function () {
+	if ($(this).is(':checked')) {
+		$('head').append('<link id="theme-link" rel="stylesheet" href="css/dark-style.css" />');
+		Cookies.set(
+			'selected-theme',
+			'dark'
+		);
+	} else {
+		$('#theme-link').remove();
+		Cookies.set(
+			'selected-theme',
+			'light'
+		);
+	}
+});
