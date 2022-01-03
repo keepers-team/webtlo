@@ -724,7 +724,7 @@ try {
                         </div>
                     </div>
                 </form>
-                <label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
+                <label title="Выключатель тёмной темы.">
                     <input id="dark-style-switch" type="checkbox" size="24" />
                     Тёмная тема
                 </label>
