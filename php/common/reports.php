@@ -243,6 +243,11 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         }
     }
 
+    // если у пользователя раньше не было сообщений
+    if (empty($posts_ids)) {
+        $posts_ids = array();
+    }
+
     // Log::append("Найдено своих сообщений: " . count($posts_ids));
 
     // вставка доп. сообщений
