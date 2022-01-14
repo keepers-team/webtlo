@@ -149,10 +149,10 @@ if (!empty($cfg['clients'])) {
                     $insertedUntrackedTopics[] = array(
                         'id' => $id,
                         'ss' => -1,
-                        'na' => $torrentInfo['name'],
+                        'na' => $untrackedTorrentsFromClient[$torrentHash]['name'],
                         'hs' => $torrentHash,
                         'se' => null,
-                        'si' => $torrentInfo['size'],
+                        'si' => $untrackedTorrentsFromClient[$torrentHash]['size'],
                         'st' => $torrentInfo['client_id'],
                         'rg' => null,
                     );
