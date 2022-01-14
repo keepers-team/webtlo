@@ -107,12 +107,12 @@ if (!empty($cfg['clients'])) {
                 $cfg['clients'][$clientID]['pw']
             );
             if ($client->isOnline()) {
-                $untrackedTorrents = $client->getTorrentsInfo($hashes);
+                $untrackedTorrentsFromClient = $client->getTorrentsInfo($hashes);
             } else {
                 continue;
             }
             Log::append('Найдено сторонних раздач в клиенте "' . $cfg['clients'][$clientID]['cl'] . '": ' . count($hashes) . ' шт.');
-            foreach ($untrackedTorrents as $torrentHash => $torrentInfo) {
+            foreach ($untrackedTorrentsFromClient as $torrentHash => $torrentInfo) {
                 $untrackedTorrents[$torrentHash]['client_id'] = $clientID;
             }
         }

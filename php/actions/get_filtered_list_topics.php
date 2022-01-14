@@ -107,6 +107,7 @@ try {
         natcasesort($preparedOutput);
         $output = implode('', $preparedOutput);
     } elseif ($forum_id == -1) {
+        $preparedOutput["-1"] = "";
         // сторонние раздачи
         $topics = Db::query_database(
             'SELECT id,na,si,ss,st,hs FROM TopicsUntracked',

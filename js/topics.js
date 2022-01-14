@@ -409,6 +409,18 @@ function getFilteredTopics() {
 			$("#filter_avg_seeders_period").spinner("enable");
 			$(".tor_remove").button("disable");
 		}
+		if (forum_id == -1) {
+			if ($("input[name=filter_sort]").eq(2).prop("checked") || $("input[name=filter_sort]").eq(3).prop("checked")) {
+				$("input[name=filter_sort][value=se]").prop("checked", false);
+				$("input[name=filter_sort][value=rg]").prop("checked", false);
+				$("input[name=filter_sort][value=na]").prop("checked", true);
+			}
+			$("input[name=filter_sort][value=se]").attr('disabled','disabled');
+			$("input[name=filter_sort][value=rg]").attr('disabled','disabled');
+		} else {
+			$("input[name=filter_sort][value=se]").removeAttr('disabled');
+			$("input[name=filter_sort][value=rg]").removeAttr('disabled');
+		}
 	}
 	// сериализим параметры фильтра
 	var $filter = $("#topics_filter").serialize();
