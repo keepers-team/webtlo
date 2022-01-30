@@ -158,7 +158,7 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsInfo($torrentHashes)
+    public function getSpecifiedTorrentsInfo($torrentHashes)
     {
         $fields = array(
             'method' => 'torrent-get',
@@ -181,6 +181,41 @@ class Transmission extends TorrentClient
             $torrents[$torrentHash] =  array(
                 'name' => $torrent['name'],
                 'size' => $torrent['totalSize'],
+            );
+        }
+        return $torrents;
+    }
+
+    public function getAllTorrents()
+    {
+        $fields = array(
+            'method' => 'torrent-get',
+            'arguments' => array(
+                'fields' => array(
+                    'comment',
+                    'errorString',
+                    'hashString',
+                    'percentDone',
+                    'status'
+                )
+            )
+        );
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
+            $torrentHash = strtoupper($torrent['hashString']);
+            $torrentState = $torrent['status'] == 0 ? 0 : 1;
+            $torrentDone = $torrent['percentDone'] == 1 ? 1 : 0;
+            $torrentError = $torrent['errorString'];
+            $torrentComment = $torrent['comment'];
+            $torrents[$torrentHash] = array(
+                $torrentState,
+                $torrentDone,
+                $torrentError,
+                $torrentComment
             );
         }
         return $torrents;

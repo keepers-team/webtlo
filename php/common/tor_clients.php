@@ -107,7 +107,7 @@ if (!empty($cfg['clients'])) {
                 $cfg['clients'][$clientID]['pw']
             );
             if ($client->isOnline()) {
-                $untrackedTorrentsFromClient = $client->getTorrentsInfo($hashes);
+                $untrackedTorrentsFromClient = $client->getSpecifiedTorrentsInfo($hashes);
             } else {
                 continue;
             }

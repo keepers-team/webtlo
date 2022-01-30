@@ -117,7 +117,7 @@ class Qbittorrent extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsInfo($torrentHashes)
+    public function getSpecifiedTorrentsInfo($torrentHashes)
     {
         $fields = http_build_query(
             array(

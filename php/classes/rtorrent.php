@@ -102,7 +102,7 @@ class Rtorrent extends TorrentClient
         return $torrents;
     }
 
-    public function getTorrentsInfo($torrentHashes)
+    public function getSpecifiedTorrentsInfo($torrentHashes)
     {
         //TODO необходимо реализовать
         return array_fill_keys($torrentHashes, 'n/a');
