@@ -135,7 +135,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.3.1</title>
+    <title>web-TLO-2.3.2</title>
     <script src="jquery/jquery.js"></script>
     <script src="jquery/jquery-ui.js"></script>
     <script src="jquery/external/datepicker-ru.js"></script>
@@ -798,7 +798,7 @@ try {
                 <p>web-TLO</p>
                 <p>Простое веб-приложение для управления торрентами</p>
                 <p><a href="https://github.com/berkut-174/webtlo/wiki" target="_blank">https://github.com/berkut-174/webtlo/wiki</a></p>
-                <p>Copyright © 2016-2020 Alexander Shemetov</p>
+                <p>Copyright © 2016-2022 Alexander Shemetov</p>
             </div>
         </div>
     </div>
