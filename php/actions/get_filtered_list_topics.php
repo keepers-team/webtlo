@@ -136,7 +136,7 @@ try {
                     $pattern_topic_block,
                     sprintf(
                         '<p>[%1$s] - [%2$s] - %3$s (%4$s)</p>',
-                        $cfg['clients'][$topic_data['st']]['cl'],
+                        $cfg['clients'][$topic_data['st']]['cm'],
                         $topic_data["hs"],
                         $topic_data['na'],
                         convert_bytes($topic_data['si'])
