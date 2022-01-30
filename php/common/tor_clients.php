@@ -113,7 +113,7 @@ if (!empty($cfg['clients'])) {
             }
             Log::append('Найдено сторонних раздач в клиенте "' . $cfg['clients'][$clientID]['cl'] . '": ' . count($hashes) . ' шт.');
             foreach ($untrackedTorrentsFromClient as $torrentHash => $torrentInfo) {
-                $untrackedTorrents[$torrentHash]['client_id'] = $clientID;
+                $untrackedTorrents[$clientID][$torrentHash] = $torrentInfo;
             }
         }
 
@@ -145,18 +145,20 @@ if (!empty($cfg['clients'])) {
             }
             if (!empty($untrackedTorrents)) {
                 $id = -1;
-                foreach ($untrackedTorrents as $torrentHash => $torrentInfo) {
-                    $insertedUntrackedTopics[] = array(
-                        'id' => $id,
-                        'ss' => -1,
-                        'na' => $untrackedTorrentsFromClient[$torrentHash]['name'],
-                        'hs' => $torrentHash,
-                        'se' => null,
-                        'si' => $untrackedTorrentsFromClient[$torrentHash]['size'],
-                        'st' => $torrentInfo['client_id'],
-                        'rg' => null,
-                    );
-                    $id--;
+                foreach ($untrackedTorrents as $clientName => $clientTorrents) {
+                    foreach ($clientTorrents as $torrentHash => $torrentInfo) {
+                        $insertedUntrackedTopics[] = array(
+                            'id' => $id,
+                            'ss' => -1,
+                            'na' => $torrentInfo['name'],
+                            'hs' => $torrentHash,
+                            'se' => null,
+                            'si' => $torrentInfo['size'],
+                            'st' => $clientName,
+                            'rg' => null,
+                        );
+                        $id--;
+                    }
                 }
             }
             unset($untrackedTopics);
