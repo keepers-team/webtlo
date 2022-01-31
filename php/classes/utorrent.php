@@ -121,6 +121,11 @@ class Utorrent extends TorrentClient
         return $torrents;
     }
 
+    public function getAllTorrents()
+    {
+        return array();
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         $this->setSetting('dir_active_download_flag', true);

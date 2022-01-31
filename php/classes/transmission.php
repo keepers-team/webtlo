@@ -167,8 +167,10 @@ class Transmission extends TorrentClient
                     'comment',
                     'errorString',
                     'hashString',
+                    'name',
                     'percentDone',
-                    'status'
+                    'status',
+                    'totalSize'
                 )
             )
         );
@@ -180,14 +182,13 @@ class Transmission extends TorrentClient
         foreach ($response['torrents'] as $torrent) {
             $torrentHash = strtoupper($torrent['hashString']);
             $torrentState = $torrent['status'] == 0 ? 0 : 1;
-            $torrentDone = $torrent['percentDone'] == 1 ? 1 : 0;
-            $torrentError = $torrent['errorString'];
-            $torrentComment = $torrent['comment'];
             $torrents[$torrentHash] = array(
-                $torrentState,
-                $torrentDone,
-                $torrentError,
-                $torrentComment
+                'comment' => $torrent['comment'],
+                'done' => $torrent['percentDone'],
+                'error' => $torrent['errorString'],
+                'name' => $torrent['name'],
+                'size' => $torrent['totalSize'],
+                'state' => $torrentState
             );
         }
         return $torrents;

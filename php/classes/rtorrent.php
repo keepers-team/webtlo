@@ -102,6 +102,11 @@ class Rtorrent extends TorrentClient
         return $torrents;
     }
 
+    public function getAllTorrents()
+    {
+        return array();
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         $makeDirectory = array('', 'mkdir', '-p', '--', $savePath);

@@ -33,11 +33,11 @@ try {
             foreach ($torrents as $torrentHash => $torrentData) {
                 if (
                     // NB! Может использоваться свой домен в рамках проекта «Мой Рутрекер»
-                    preg_match('/rutracker/', $torrentData[3])
-                    && $torrentData[1] == 1
+                    preg_match('/rutracker/', $torrentData['comment'])
+                    && $torrentData['done'] == 1
                     && in_array($torrentHash, $unknownHashes)
                 ) {
-                    $topicID = preg_replace('/.*?([0-9]*)$/', '$1', $torrentData[3]);
+                    $topicID = preg_replace('/.*?([0-9]*)$/', '$1', $torrentData['comment']);
                     $topicsIDs[] = $topicID;
                 }
             }

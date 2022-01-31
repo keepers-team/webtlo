@@ -165,6 +165,11 @@ class Ktorrent extends TorrentClient
         return $torrents;
     }
 
+    public function getAllTorrents()
+    {
+        return array();
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         /**

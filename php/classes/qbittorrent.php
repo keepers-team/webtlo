@@ -117,6 +117,52 @@ class Qbittorrent extends TorrentClient
         return $torrents;
     }
 
+    public function getAllTorrents()
+    {
+        $response = $this->makeRequest('api/v2/torrents/info');
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response as $torrent) {
+            $torrentHash = strtoupper($torrent['hash']);
+            $torrentState = $torrent['state'] == 'pausedUP' ? 0 : 1;
+            $torrents[$torrentHash] = array(
+                'comment' => '',
+                'done' => $torrent['progress'],
+                'error' => '',
+                'name' => $torrent['name'],
+                'size' => $torrent['total_size'],
+                'state' => $torrentState
+            );
+        }
+        $torrentHashes = array_keys($torrents);
+        $response = $this->getProperties($torrentHashes);
+        if ($response === false) {
+            return false;
+        }
+        foreach ($response as $torrentHash => $torrent) {
+            $torrents[$torrentHash]['comment'] = $torrent['comment'];
+        }
+        return $torrents;
+    }
+
+    public function getProperties($torrentHashes)
+    {
+        $torrents = array();
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest(
+                'api/v2/torrents/properties',
+                array('hash' => strtolower($torrentHash))
+            );
+            if ($response === false) {
+                return false;
+            }
+            $torrents[$torrentHash] = $response;
+        }
+        return $torrents;
+    }
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
