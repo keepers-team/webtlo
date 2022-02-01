@@ -103,6 +103,10 @@ class Transmission extends TorrentClient
                 }
             }
             $response = json_decode($response, true);
+            if ($response === null) {
+                Log::append('Error: ' . json_last_error_msg());
+                return false;
+            }
             if ($response['result'] != 'success') {
                 if (
                     empty($response['result'])
@@ -143,7 +147,7 @@ class Transmission extends TorrentClient
         }
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
-            if (empty($torrent['error'])) {
+            if ($torrent['error'] == 0) {
                 if ($torrent['percentDone'] == 1) {
                     $torrentStatus = $torrent['status'] == 0 ? -1 : 1;
                 } else {
@@ -165,6 +169,7 @@ class Transmission extends TorrentClient
             'arguments' => array(
                 'fields' => array(
                     'comment',
+                    'error',
                     'errorString',
                     'hashString',
                     'name',
@@ -181,14 +186,17 @@ class Transmission extends TorrentClient
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
             $torrentHash = strtoupper($torrent['hashString']);
-            $torrentState = $torrent['status'] == 0 ? 0 : 1;
+            $torrentPaused = $torrent['status'] == 0 ? 1 : 0;
+            $torrentError = $torrent['error'] != 0 ? 1 : 0;
+            $torrentTrackerError = $torrent['error'] == 2 ? $torrent['errorString'] : '';
             $torrents[$torrentHash] = array(
                 'comment' => $torrent['comment'],
                 'done' => $torrent['percentDone'],
-                'error' => $torrent['errorString'],
+                'error' => $torrentError,
                 'name' => $torrent['name'],
-                'size' => $torrent['totalSize'],
-                'state' => $torrentState
+                'paused' => $torrentPaused,
+                'total_size' => $torrent['totalSize'],
+                'tracker_error' => $torrentTrackerError
             );
         }
         return $torrents;

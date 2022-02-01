@@ -85,6 +85,10 @@ class Utorrent extends TorrentClient
                 return false;
             }
             $response = json_decode($response, true);
+            if ($response === null) {
+                Log::append('Error: ' . json_last_error_msg());
+                return false;
+            }
             if (isset($response['error'])) {
                 Log::append('Error: ' . $response['error']);
                 return false;
@@ -102,7 +106,16 @@ class Utorrent extends TorrentClient
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
             $torrentState = decbin($torrent[1]);
-            // 0 - Started, 2 - Paused, 3 - Error, 4 - Checked, 7 - Loaded, 100% Downloads
+            /*
+                0 - loaded
+                1 - queued
+                2 - paused
+                3 - error
+                4 - checked
+                5 - start after check
+                6 - checking
+                7 - started
+            */
             if (!$torrentState[3]) {
                 if (
                     $torrentState[0]
@@ -123,7 +136,26 @@ class Utorrent extends TorrentClient
 
     public function getAllTorrents()
     {
-        return array();
+        $response = $this->makeRequest('?list=1');
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
+            $torrentState = decbin($torrent[1]);
+            $torrentHash = strtoupper($torrent[0]);
+            $torrentPaused = $torrentState[2] || !$torrentState[7] ? 1 : 0;
+            $torrents[$torrentHash] = array(
+                'comment' => '',
+                'done' => $torrent[4] / 1000,
+                'error' => $torrentState[3],
+                'name' => $torrent[2],
+                'paused' => $torrentPaused,
+                'total_size' => $torrent[3],
+                'tracker_error' => ''
+            );
+        }
+        return $torrents;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')

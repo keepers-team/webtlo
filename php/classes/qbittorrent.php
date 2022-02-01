@@ -126,23 +126,54 @@ class Qbittorrent extends TorrentClient
         $torrents = array();
         foreach ($response as $torrent) {
             $torrentHash = strtoupper($torrent['hash']);
-            $torrentState = $torrent['state'] == 'pausedUP' ? 0 : 1;
+            $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
+            $torrentError = $torrent['state'] == 'error' ? 1 : 0;
             $torrents[$torrentHash] = array(
                 'comment' => '',
                 'done' => $torrent['progress'],
-                'error' => '',
+                'error' => $torrentError,
                 'name' => $torrent['name'],
-                'size' => $torrent['total_size'],
-                'state' => $torrentState
+                'paused' => $torrentPaused,
+                'total_size' => $torrent['total_size'],
+                'tracker_error' => ''
             );
         }
         $torrentHashes = array_keys($torrents);
+        $response = $this->getTrackers($torrentHashes);
+        if ($response === false) {
+            return false;
+        }
+        foreach ($response as $torrentHash => $tracker) {
+            if ($tracker['status'] == 4) {
+                $torrents[$torrentHash]['tracker_error'] = $tracker['msg'];
+            }
+        }
         $response = $this->getProperties($torrentHashes);
         if ($response === false) {
             return false;
         }
         foreach ($response as $torrentHash => $torrent) {
             $torrents[$torrentHash]['comment'] = $torrent['comment'];
+        }
+        return $torrents;
+    }
+
+    public function getTrackers($torrentHashes)
+    {
+        $torrents = array();
+        foreach ($torrentHashes as $torrentHash) {
+            $trackers = $this->makeRequest(
+                'api/v2/torrents/trackers',
+                array('hash' => strtolower($torrentHash))
+            );
+            if ($trackers === false) {
+                return false;
+            }
+            foreach ($trackers as $tracker) {
+                if (preg_match('/rutracker/', $tracker['url'])) {
+                    $torrents[$torrentHash] = $tracker;
+                }
+            }
         }
         return $torrents;
     }
