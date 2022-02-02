@@ -151,7 +151,7 @@ class Deluge extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $hashString => $torrent) {
-            preg_match('/.*: Error: (.*)/', $torrent['tracker_status'], $matches);
+            preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             if (
                 $torrent['message' == 'OK']
                 && !isset($matches[1])
@@ -197,7 +197,7 @@ class Deluge extends TorrentClient
             $torrentHash = strtoupper($torrentHash);
             $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
             $torrentError = 'message' != 'OK' ? 1 : 0;
-            preg_match('/.*: Error: (.*)/', $torrent['tracker_status'], $matches);
+            preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
             $torrents[$torrentHash] = array(
                 'comment' => $torrent['comment'],
