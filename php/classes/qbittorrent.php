@@ -10,6 +10,7 @@ class Qbittorrent extends TorrentClient
 
     private $categories;
     private $responseHttpCode;
+    private $errorStates = array('error', 'missingFiles', 'unknown');
 
     /**
      * получение идентификатора сессии и запись его в $this->sid
@@ -102,7 +103,7 @@ class Qbittorrent extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $torrent) {
-            if ($torrent['state'] != 'error') {
+            if (!in_array($torrent['state'], $this->errorStates)) {
                 if ($torrent['progress'] == 1) {
                     $torrentStatus = $torrent['state'] == 'pausedUP' ? -1 : 1;
                 } else {
@@ -127,7 +128,7 @@ class Qbittorrent extends TorrentClient
         foreach ($response as $torrent) {
             $torrentHash = strtoupper($torrent['hash']);
             $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
-            $torrentError = $torrent['state'] == 'error' ? 1 : 0;
+            $torrentError = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
             $torrents[$torrentHash] = array(
                 'comment' => '',
                 'done' => $torrent['progress'],
@@ -143,9 +144,12 @@ class Qbittorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        foreach ($response as $torrentHash => $tracker) {
-            if ($tracker['status'] == 4) {
-                $torrents[$torrentHash]['tracker_error'] = $tracker['msg'];
+        foreach ($response as $torrentHash => $trackers) {
+            foreach ($trackers as $tracker) {
+                if ($tracker['status'] == 4) {
+                    $torrents[$torrentHash]['tracker_error'] = $tracker['msg'];
+                    break;
+                }
             }
         }
         $response = $this->getProperties($torrentHashes);
@@ -170,8 +174,8 @@ class Qbittorrent extends TorrentClient
                 return false;
             }
             foreach ($trackers as $tracker) {
-                if (preg_match('/rutracker/', $tracker['url'])) {
-                    $torrents[$torrentHash] = $tracker;
+                if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
+                    $torrents[$torrentHash][] = $tracker;
                 }
             }
         }
