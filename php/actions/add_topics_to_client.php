@@ -62,11 +62,8 @@ try {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
         throw new Exception();
     }
-    // каталог для сохранения торрент-файлов
-    $directoryTorrentFiles = 'data/tfiles';
     // полный путь до каталога для сохранения торрент-файлов
-    $localPath = dirname(__FILE__) . '/../../' . $directoryTorrentFiles;
-    $localPath = normalizePath($localPath);
+    $localPath = getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
     // очищаем каталог от старых торрент-файлов
     rmdir_recursive($localPath);
     // создаём каталог для торрент-файлов
