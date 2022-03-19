@@ -6,6 +6,7 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
     include_once dirname(__FILE__) . '/../classes/download.php';
+    include_once dirname(__FILE__) . '/../common/storage.php';
     // список ID раздач
     if (empty($_POST['topics_ids'])) {
         $result = 'Выберите раздачи';
