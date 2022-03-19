@@ -101,7 +101,7 @@ try {
         // данные текущего торрент-клиента
         $torrentClient = $cfg['clients'][$torrentClientID];
         // шаблон для сохранения
-        $formatPathTorrentFile = $localPath . '/[webtlo].t%s.torrent';
+        $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].t%s.torrent';
         if (PHP_OS == 'WINNT') {
             $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
         }
