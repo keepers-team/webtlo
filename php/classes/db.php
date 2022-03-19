@@ -1,9 +1,11 @@
 <?php
+include_once dirname(__FILE__) . "/../common/storage.php";
 
 class Db
 {
 
     public static $db;
+    private static string $databaseFilename = 'webtlo.db';
 
     public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -44,13 +46,21 @@ class Db
     public static function create()
     {
         // файл базы данных
-        $databaseFilename = dirname(__FILE__) . '/../../data/webtlo.db';
-        $databaseFilename = normalizePath($databaseFilename);
-        $databaseDirname = dirname($databaseFilename);
-        if (!mkdir_recursive($databaseDirname)) {
-            throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+
+        $databaseDirname = getStorageDir();
+        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
+
+        if (!file_exists($databaseDirname)) {
+            if (!mkdir_recursive($databaseDirname)) {
+                throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+            }
         }
-        self::$db = new PDO('sqlite:' . $databaseFilename);
+        try {
+            self::$db = new PDO('sqlite:' . $databasePath);
+        } catch (PDOException $e) {
+            throw new Exception(sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e));
+        }
+
         // список подразделов
         $statements[] = array(
             'CREATE TABLE IF NOT EXISTS Forums (',
