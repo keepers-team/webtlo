@@ -1,8 +1,5 @@
 version: "3.9"
 
-volumes:
-  data:
-
 services:
   app:
     build: .
