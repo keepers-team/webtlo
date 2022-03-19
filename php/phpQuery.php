@@ -23,7 +23,6 @@ require_once(dirname(__FILE__).'/phpQuery/DOMDocumentWrapper.php');
 require_once(dirname(__FILE__).'/phpQuery/phpQueryEvents.php');
 require_once(dirname(__FILE__).'/phpQuery/Callback.php');
 require_once(dirname(__FILE__).'/phpQuery/phpQueryObject.php');
-require_once(dirname(__FILE__).'/phpQuery/compat/mbstring.php');
 /**
  * Static namespace for phpQuery functions.
  *
@@ -32,8 +31,8 @@ require_once(dirname(__FILE__).'/phpQuery/compat/mbstring.php');
  */
 abstract class phpQuery {
 	/**
-	 * XXX: Workaround for mbstring problems 
-	 * 
+	 * XXX: Workaround for mbstring problems
+	 *
 	 * @var bool
 	 */
 	public static $mbstringSupport = true;
