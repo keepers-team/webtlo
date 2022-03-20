@@ -136,7 +136,12 @@ class Deluge extends TorrentClient
             'method' => 'core.get_torrents_status',
             'params' => array(
                 (object) array(),
-                array('paused', 'message', 'progress'),
+                array(
+                    'message',
+                    'paused',
+                    'progress',
+                    'tracker_status'
+                ),
             ),
             'id' => 9,
         );
@@ -146,7 +151,11 @@ class Deluge extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $hashString => $torrent) {
-            if ($torrent['message'] == 'OK') {
+            preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
+            if (
+                $torrent['message' == 'OK']
+                && !isset($matches[1])
+            ) {
                 if ($torrent['progress'] == 100) {
                     $torrentStatus = $torrent['paused'] ? -1 : 1;
                 } else {
@@ -157,6 +166,48 @@ class Deluge extends TorrentClient
             }
             $torrentHash = strtoupper($hashString);
             $torrents[$torrentHash] = $torrentStatus;
+        }
+        return $torrents;
+    }
+
+    public function getAllTorrents()
+    {
+        $fields = array(
+            'method' => 'core.get_torrents_status',
+            'params' => array(
+                (object) array(),
+                array(
+                    'comment',
+                    'message',
+                    'name',
+                    'paused',
+                    'progress',
+                    'total_size',
+                    'tracker_status'
+                ),
+            ),
+            'id' => 9,
+        );
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response as $torrentHash => $torrent) {
+            $torrentHash = strtoupper($torrentHash);
+            $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
+            $torrentError = 'message' != 'OK' ? 1 : 0;
+            preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
+            $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
+            $torrents[$torrentHash] = array(
+                'comment' => $torrent['comment'],
+                'done' => $torrent['progress'] / 100,
+                'error' => $torrentError,
+                'name' => $torrent['name'],
+                'paused' => $torrentPaused,
+                'total_size' => $torrent['total_size'],
+                'tracker_error' => $torrentTrackerError
+            );
         }
         return $torrents;
     }

@@ -10,6 +10,7 @@ class Qbittorrent extends TorrentClient
 
     private $tags;
     private $responseHttpCode;
+    private $errorStates = array('error', 'missingFiles', 'unknown');
 
     /**
      * получение идентификатора сессии и запись его в $this->sid
@@ -102,7 +103,7 @@ class Qbittorrent extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $torrent) {
-            if ($torrent['state'] != 'error') {
+            if (!in_array($torrent['state'], $this->errorStates)) {
                 if ($torrent['progress'] == 1) {
                     $torrentStatus = $torrent['state'] == 'pausedUP' ? -1 : 1;
                 } else {
@@ -113,6 +114,86 @@ class Qbittorrent extends TorrentClient
             }
             $torrentHash = strtoupper($torrent['hash']);
             $torrents[$torrentHash] = $torrentStatus;
+        }
+        return $torrents;
+    }
+
+    public function getAllTorrents()
+    {
+        $response = $this->makeRequest('api/v2/torrents/info');
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response as $torrent) {
+            $torrentHash = strtoupper($torrent['hash']);
+            $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
+            $torrentError = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
+            $torrents[$torrentHash] = array(
+                'comment' => '',
+                'done' => $torrent['progress'],
+                'error' => $torrentError,
+                'name' => $torrent['name'],
+                'paused' => $torrentPaused,
+                'total_size' => $torrent['total_size'],
+                'tracker_error' => ''
+            );
+        }
+        $torrentHashes = array_keys($torrents);
+        $response = $this->getTrackers($torrentHashes);
+        if ($response === false) {
+            return false;
+        }
+        foreach ($response as $torrentHash => $trackers) {
+            foreach ($trackers as $tracker) {
+                if ($tracker['status'] == 4) {
+                    $torrents[$torrentHash]['tracker_error'] = $tracker['msg'];
+                    break;
+                }
+            }
+        }
+        $response = $this->getProperties($torrentHashes);
+        if ($response === false) {
+            return false;
+        }
+        foreach ($response as $torrentHash => $torrent) {
+            $torrents[$torrentHash]['comment'] = $torrent['comment'];
+        }
+        return $torrents;
+    }
+
+    public function getTrackers($torrentHashes)
+    {
+        $torrents = array();
+        foreach ($torrentHashes as $torrentHash) {
+            $trackers = $this->makeRequest(
+                'api/v2/torrents/trackers',
+                array('hash' => strtolower($torrentHash))
+            );
+            if ($trackers === false) {
+                return false;
+            }
+            foreach ($trackers as $tracker) {
+                if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
+                    $torrents[$torrentHash][] = $tracker;
+                }
+            }
+        }
+        return $torrents;
+    }
+
+    public function getProperties($torrentHashes)
+    {
+        $torrents = array();
+        foreach ($torrentHashes as $torrentHash) {
+            $response = $this->makeRequest(
+                'api/v2/torrents/properties',
+                array('hash' => strtolower($torrentHash))
+            );
+            if ($response === false) {
+                return false;
+            }
+            $torrents[$torrentHash] = $response;
         }
         return $torrents;
     }

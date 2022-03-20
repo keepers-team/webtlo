@@ -3,7 +3,6 @@
 /**
  * Class Rtorrent
  * Supported by rTorrent 0.9.7 and later
- * Added by: advers222@ya.ru
  */
 class Rtorrent extends TorrentClient
 {
@@ -98,6 +97,48 @@ class Rtorrent extends TorrentClient
                 $torrentStatus = -2;
             }
             $torrents[$torrent[0]] = $torrentStatus;
+        }
+        return $torrents;
+    }
+
+    public function getAllTorrents()
+    {
+        $response = $this->makeRequest(
+            'd.multicall2',
+            array(
+                '',
+                'main',
+                'd.complete=',
+                'd.custom2=',
+                'd.hash=',
+                'd.message=',
+                'd.name=',
+                'd.size_bytes=',
+                'd.state='
+            )
+        );
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response as $torrent) {
+            $torrentHash = strtoupper($torrent[2]);
+            $torrentComment = str_replace('VRS24mrker', '', rawurldecode($torrent[1]));
+            $torrentError = !empty($torrent[3]) ? 1 : 0;
+            $torrentTrackerError = '';
+            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)\]/', $torrent[3], $matches);
+            if (!empty($matches)) {
+                $torrentTrackerError = empty($matches[2]) ? $matches[1] : $matches[2];
+            }
+            $torrents[$torrentHash] = array(
+                'comment' => $torrentComment,
+                'done' => $torrent[0],
+                'error' => $torrentError,
+                'name' => $torrent[4],
+                'paused' => (int) !$torrent[6],
+                'total_size' => $torrent[5],
+                'tracker_error' => $torrentTrackerError
+            );
         }
         return $torrents;
     }

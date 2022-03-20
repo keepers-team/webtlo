@@ -157,6 +157,62 @@ class Reports
         return false;
     }
 
+    // поиск сведений о раздаче в архиве
+    public function getTopicDataFromArchive($topicID)
+    {
+        if (!is_numeric($topicID)) {
+            return false;
+        }
+        $data = $this->make_request($this->forum_url . '/forum/viewtopic.php?t=' . $topicID);
+        $html = phpQuery::newDocumentHTML($data, 'UTF-8');
+        unset($data);
+        // раздача в мусорке, не найдена
+        $topicStatus = $html->find('div.mrg_16')->text();
+        if (!empty($topicStatus)) {
+            unset($html);
+            return false;
+        }
+        // раздача зарегистрирована
+        $topicStatus = $html->find('a.dl-topic')->attr('href');
+        if (!empty($topicStatus)) {
+            unset($html);
+            return false;
+        }
+        // поглощено, повтор, закрыто
+        $topicStatus = $html->find('span#tor-status-resp b:first')->text();
+        if (!empty($topicStatus)) {
+            unset($html);
+            return false;
+        }
+        $currentForum = $html->find('td.t-breadcrumb-top:first > a')->text();
+        $currentForum = str_replace(PHP_EOL, ' » ', rtrim($currentForum, PHP_EOL));
+        $lastStatus = $html->find('fieldset.attach')->find('i.normal b')->text();
+        $totalPages = $html->find('a.pg:last')->prev()->text();
+        if ($totalPages > 1) {
+            $lastPage = ($totalPages - 1) * 30;
+            $data = $this->make_request($this->forum_url . '/forum/viewtopic.php?t=' . $topicID . '&start=' . $lastPage);
+            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
+            unset($data);
+        }
+        $originalForum = '';
+        $whoTransferred = '-';
+        $avatarLastMessage = $html->find('table#topic_main > tbody:last')->find('p.avatar > img')->attr('src');
+        if (preg_match('/17561.gif$/i', $avatarLastMessage)) {
+            $originalForum = $html->find('table#topic_main > tbody:last')->find('a.postLink:first')->text();
+            $lastLink = $html->find('table#topic_main > tbody:last')->find('a.postLink:last')->attr('href');
+            if (preg_match('/^profile.php\?mode=viewprofile&u=[0-9]+$/', $lastLink)) {
+                $whoTransferred = $html->find('table#topic_main > tbody:last')->find('a.postLink:last')->text();
+            }
+        }
+        unset($html);
+        return array(
+            'current_forum' => $currentForum,
+            'original_forum' => $originalForum,
+            'last_status' => $lastStatus,
+            'who_transferred' => $whoTransferred
+        );
+    }
+
     // поиск ID тем по заданным параметрам
     public function searchTopicsIDs($params, $forumID = 1584)
     {

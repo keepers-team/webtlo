@@ -103,6 +103,10 @@ class Transmission extends TorrentClient
                 }
             }
             $response = json_decode($response, true);
+            if ($response === null) {
+                Log::append('Error: ' . json_last_error_msg());
+                return false;
+            }
             if ($response['result'] != 'success') {
                 if (
                     empty($response['result'])
@@ -143,7 +147,7 @@ class Transmission extends TorrentClient
         }
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
-            if (empty($torrent['error'])) {
+            if ($torrent['error'] == 0) {
                 if ($torrent['percentDone'] == 1) {
                     $torrentStatus = $torrent['status'] == 0 ? -1 : 1;
                 } else {
@@ -154,6 +158,46 @@ class Transmission extends TorrentClient
             }
             $torrentHash = strtoupper($torrent['hashString']);
             $torrents[$torrentHash] = $torrentStatus;
+        }
+        return $torrents;
+    }
+
+    public function getAllTorrents()
+    {
+        $fields = array(
+            'method' => 'torrent-get',
+            'arguments' => array(
+                'fields' => array(
+                    'comment',
+                    'error',
+                    'errorString',
+                    'hashString',
+                    'name',
+                    'percentDone',
+                    'status',
+                    'totalSize'
+                )
+            )
+        );
+        $response = $this->makeRequest($fields);
+        if ($response === false) {
+            return false;
+        }
+        $torrents = array();
+        foreach ($response['torrents'] as $torrent) {
+            $torrentHash = strtoupper($torrent['hashString']);
+            $torrentPaused = $torrent['status'] == 0 ? 1 : 0;
+            $torrentError = $torrent['error'] != 0 ? 1 : 0;
+            $torrentTrackerError = $torrent['error'] == 2 ? $torrent['errorString'] : '';
+            $torrents[$torrentHash] = array(
+                'comment' => $torrent['comment'],
+                'done' => $torrent['percentDone'],
+                'error' => $torrentError,
+                'name' => $torrent['name'],
+                'paused' => $torrentPaused,
+                'total_size' => $torrent['totalSize'],
+                'tracker_error' => $torrentTrackerError
+            );
         }
         return $torrents;
     }
