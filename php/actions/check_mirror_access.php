@@ -68,6 +68,7 @@ curl_setopt_array($ch, array(
     CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_TIMEOUT => 5,
     CURLOPT_URL => $address,
+    CURLOPT_ENCODING => 'gzip',
 ));
 
 curl_setopt_array($ch, Proxy::$proxy[$url_type]);

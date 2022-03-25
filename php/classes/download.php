@@ -26,6 +26,7 @@ class TorrentDownload
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+            CURLOPT_ENCODING => 'gzip',
         ));
         curl_setopt_array($this->ch, Proxy::$proxy['forum']);
         Log::append('Используется зеркало для форума: ' . $forumURL);
