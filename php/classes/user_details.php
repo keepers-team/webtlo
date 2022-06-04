@@ -23,6 +23,12 @@ class UserDetails
     public static function make_request($url, $fields = array(), $options = array())
     {
         $ch = curl_init();
+
+        $optHeaderSet = false;
+        if (!empty($options[CURLOPT_HEADER])) {
+            $optHeaderSet = true;
+        }
+
         curl_setopt_array($ch, $options);
         curl_setopt_array($ch, array(
             CURLOPT_URL => $url,
@@ -34,10 +40,15 @@ class UserDetails
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20,
+            CURLOPT_HEADER => 1,
         ));
+
         curl_setopt_array($ch, Proxy::$proxy['forum']);
+
         $try_number = 1; // номер попытки
         $try = 3; // кол-во попыток
+        $data = null;
+
         while (true) {
             $data = curl_exec($ch);
             if ($data === false) {
@@ -53,8 +64,26 @@ class UserDetails
                 }
                 throw new Exception("CURL ошибка: " . curl_error($ch) . " [$http_code]");
             }
-            return $data;
+            break;
         }
+
+        $headerLen = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headerStrings = substr($data, 0, $headerLen);
+
+        $headers = self::convertHeaderStringsToKv($headerStrings);
+        $body = substr($data, $headerLen);
+        if (isset($headers['content-encoding']) && $headers['content-encoding'] === 'gzip') {
+            $body = gzdecode($body);
+        }
+
+        $data = $body;
+        if ($optHeaderSet) {
+            $data = $headerStrings . $body;
+        }
+
+        curl_close($ch);
+
+        return $data;
     }
 
     public static function get_cookie($login, $passwd, $cap_fields = array())
@@ -121,6 +150,7 @@ class UserDetails
             array('mode' => 'viewprofile'),
             array(CURLOPT_COOKIE => self::$cookie)
         );
+
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         $rows = $html->find('table.user_details');
         unset($html);
@@ -154,5 +184,18 @@ class UserDetails
         }
 
         self::$form_token = $form_token[1];
+    }
+
+    private static function convertHeaderStringsToKv(string $headerStrings): array
+    {
+        $headers = [];
+        foreach (explode("\n", trim($headerStrings)) as $headerString) {
+            $kv = explode(':', $headerString, 2);
+            if (count($kv) == 2) {
+                $headers[strtolower($kv[0])] = trim($kv[1]);
+            }
+        }
+
+        return $headers;
     }
 }
