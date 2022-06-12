@@ -36,7 +36,7 @@ class Rtorrent extends TorrentClient
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request
         ));
-        if (!empty($this->user)&&!empty($this->password){
+        if (!empty($this->user) && !empty($this->password){
             curl_setopt_array($this->ch, CURLOPT_USERPWD, $this->login . ':' . $this->password);
         }
         $maxNumberTry = 3;
