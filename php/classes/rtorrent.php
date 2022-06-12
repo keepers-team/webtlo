@@ -6,7 +6,7 @@
  */
 class Rtorrent extends TorrentClient
 {
-    protected static $base = '%s://%s:%s/RPC2';
+    protected static $base = '%s://%s/RPC2';
 
     /**
      * получение имени сеанса
@@ -30,8 +30,11 @@ class Rtorrent extends TorrentClient
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
         );
+        if (!empty($this->port)) {
+            $this->host .= ':' . $this->port;
+        }
         curl_setopt_array($this->ch, array(
-            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request
