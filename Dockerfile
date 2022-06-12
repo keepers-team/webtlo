@@ -21,5 +21,5 @@ RUN apt-get update && apt-get install -y cron && which cron && \
 # Чтобы отказаться от старта cron и php + apache2, задайте иной ENTRYPOINT в момент запуска контейнера
 
 # Для запуска cron необходимо иметь /crontab файл, добавим его с помощью docker compose, а стандартный положим из репозитория в /etc/crontab.
-RUN mv /var/www/example-crontab /etc/crontab
+RUN mv /var/www/html/example-crontab /etc/crontab
 ENTRYPOINT ["/cron-php-apache-entrypoint.sh"]
