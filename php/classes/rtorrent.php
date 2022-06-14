@@ -37,8 +37,6 @@ class Rtorrent extends TorrentClient
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
-			CURLOPT_SSL_VERIFYHOST => 0,
-			CURLOPT_SSL_VERIFYPEER => 0,
             CURLOPT_POSTFIELDS => $request
         ));
         if (!empty($this->login) && !empty($this->password)) {
