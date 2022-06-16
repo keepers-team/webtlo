@@ -30,7 +30,7 @@ class Rtorrent extends TorrentClient
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
         );
-        if (!empty($this->port)) {
+        if (!empty($this->port) && !(strrpos($this->host, $this->port))) {
             $this->host .= ':' . $this->port;
         }
         curl_setopt_array($this->ch, array(
