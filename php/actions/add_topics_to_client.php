@@ -6,6 +6,7 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
     include_once dirname(__FILE__) . '/../classes/download.php';
+    include_once dirname(__FILE__) . '/../common/storage.php';
     // список ID раздач
     if (empty($_POST['topics_ids'])) {
         $result = 'Выберите раздачи';
@@ -61,11 +62,8 @@ try {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
         throw new Exception();
     }
-    // каталог для сохранения торрент-файлов
-    $directoryTorrentFiles = 'data/tfiles';
     // полный путь до каталога для сохранения торрент-файлов
-    $localPath = dirname(__FILE__) . '/../../' . $directoryTorrentFiles;
-    $localPath = normalizePath($localPath);
+    $localPath = getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
     // очищаем каталог от старых торрент-файлов
     rmdir_recursive($localPath);
     // создаём каталог для торрент-файлов
@@ -103,7 +101,7 @@ try {
         // данные текущего торрент-клиента
         $torrentClient = $cfg['clients'][$torrentClientID];
         // шаблон для сохранения
-        $formatPathTorrentFile = $localPath . '/[webtlo].t%s.torrent';
+        $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].t%s.torrent';
         if (PHP_OS == 'WINNT') {
             $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
         }

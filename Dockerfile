@@ -1,7 +1,8 @@
 FROM php:7.4-apache
 
 COPY . /var/www/html/
-VOLUME /var/www/html/data
+<<<<<<< HEAD
+
 
 # Контейнер ниже предоставляет скрипт установки расширений
 FROM mlocati/php-extension-installer/latest
@@ -23,3 +24,5 @@ RUN apt-get update && apt-get install -y cron && which cron && \
 # Для запуска cron необходимо иметь /crontab файл, добавим его с помощью docker compose, а стандартный положим из репозитория в /etc/crontab.
 RUN mv /var/www/html/example-crontab /etc/crontab
 ENTRYPOINT ["/cron-php-apache-entrypoint.sh"]
+=======
+>>>>>>> docker-base/master
