@@ -3,7 +3,7 @@ FROM php:7.4-apache
 COPY . /var/www/html/
 
 # Контейнер ниже предоставляет скрипт установки расширений
-FROM mlocati/php-extension-installer/latest
+FROM mlocati/php-extension-installer:latest
 RUN /usr/bin/install-php-extensions xmlrpc
 
 # Используется Debian, устанавливаем cron и убираем лишние файлы
