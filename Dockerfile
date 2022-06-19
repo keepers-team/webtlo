@@ -2,9 +2,12 @@ FROM php:7.4-apache
 
 COPY . /var/www/html/
 
-# Контейнер ниже предоставляет скрипт установки расширений
-FROM mlocati/php-extension-installer:latest
-RUN /usr/bin/install-php-extensions xmlrpc
+# Скачиваем и запускаем скрипт установки расширений
+RUN curl -sSLf \
+        -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions && \
+    chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions xmlrpc
 
 # Используется Debian, устанавливаем cron и убираем лишние файлы
 RUN apt-get update && apt-get install -y cron && which cron && \
