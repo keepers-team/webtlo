@@ -5,7 +5,7 @@
  *
  * @param string $path path to be normalized
  */
-function normalizePath(string $path): string
+function normalizePath(string $path)
 {
     return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function ($left, $right) {
         if ($left === null) {
@@ -25,7 +25,7 @@ function normalizePath(string $path): string
 /**
  * @return string Storage directory for application
  */
-function getStorageDir(): string
+function getStorageDir()
 {
     $directory = getenv('WEBTLO_DIR');
     if ($directory === false) {
