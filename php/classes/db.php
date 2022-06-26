@@ -5,7 +5,7 @@ class Db
 {
 
     public static $db;
-    private static string $databaseFilename = 'webtlo.db';
+    private static $databaseFilename = 'webtlo.db';
 
     public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -47,12 +47,12 @@ class Db
     {
         // файл базы данных
 
-        $databaseDirname = getStorageDir();
-        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
+        $dataDirname = getStorageDir();
+        $databasePath = $dataDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
 
-        if (!file_exists($databaseDirname)) {
-            if (!mkdir_recursive($databaseDirname)) {
-                throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+        if (!file_exists($dataDirname)) {
+            if (!mkdir_recursive($dataDirname)) {
+                throw new Exception('Не удалось создать каталог ' . $dataDirname);
             }
         }
         try {
