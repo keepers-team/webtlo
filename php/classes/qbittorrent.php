@@ -135,6 +135,7 @@ class Qbittorrent extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
+                'time_added' => '',
                 'total_size' => $torrent['total_size'],
                 'tracker_error' => ''
             );
@@ -158,6 +159,7 @@ class Qbittorrent extends TorrentClient
         }
         foreach ($response as $torrentHash => $torrent) {
             $torrents[$torrentHash]['comment'] = $torrent['comment'];
+            $torrents[$torrentHash]['time_added'] = $torrent['addition_date'];
         }
         return $torrents;
     }

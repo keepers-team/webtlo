@@ -114,7 +114,8 @@ class Rtorrent extends TorrentClient
                 'd.message=',
                 'd.name=',
                 'd.size_bytes=',
-                'd.state='
+                'd.state=',
+                'd.timestamp.started='
             )
         );
         if ($response === false) {
@@ -136,6 +137,7 @@ class Rtorrent extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent[4],
                 'paused' => (int) !$torrent[6],
+                'time_added' => $torrent[7],
                 'total_size' => $torrent[5],
                 'tracker_error' => $torrentTrackerError
             );
