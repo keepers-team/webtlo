@@ -524,25 +524,26 @@ try {
             }
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
-                if (empty($filter['filter_by_phrase'])) {
-                    if (isset($keepers[$topic_data['id']])) {
-                        $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
-                        unset($matchKeepers);
-                        foreach ($filterByKeeper as $filterKeeper) {
-                            if (empty($filterKeeper)) {
-                                continue;
-                            }
-                            if (mb_substr($filterKeeper, 0, 1) === '!') {
-                                $matchKeepers[] = !in_array(mb_substr($filterKeeper, 1), $topicKeepers);
-                            } else {
-                                $matchKeepers[] = in_array($filterKeeper, $topicKeepers);
-                            }
-                        }
-                        if (in_array(0, $matchKeepers)) {
+                if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
+                    if (empty($keepers[$topic_data['id']])) {
+                        continue;
+                    }
+                    $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
+                    unset($matchKeepers);
+                    foreach ($filterByKeeper as $filterKeeper) {
+                        if (empty($filterKeeper)) {
                             continue;
                         }
+                        if (mb_substr($filterKeeper, 0, 1) === '!') {
+                            $matchKeepers[] = !in_array(mb_substr($filterKeeper, 1), $topicKeepers);
+                        } else {
+                            $matchKeepers[] = in_array($filterKeeper, $topicKeepers);
+                        }
                     }
-                } else {
+                    if (in_array(0, $matchKeepers)) {
+                        continue;
+                    }
+                } elseif ($filter['filter_by_phrase'] == 1) { // в названии раздачи
                     if (!mb_eregi($filterByTopicName, $topic_data['na'])) {
                         continue;
                     }
