@@ -70,7 +70,7 @@ $(document).ready(function () {
 	$("#savecfg").on("click", setSettings);
 
 	// произвольные адреса для форума и api
-	$("#forum_url, #api_url").on("change", function () {
+	$("#forum_url, #api_url").on("selectmenucreate selectmenuchange", function (event, ui) {
 		var value = $(this).val();
 		var name = $(this).attr("name");
 		if (value == 'custom') {
@@ -78,11 +78,11 @@ $(document).ready(function () {
 		} else {
 			$("#" + name + "_custom").attr("type", "hidden");
 		}
-	}).change();
+	});
 
 	// проверка доступности форума и API
 	$("#check_mirrors_access").on("click", function () {
-		$(this).attr("disabled", true);
+		$(this).addClass("ui-state-disabled").prop("disabled", true);
 		var check_list = ['forum', 'api'];
 		var check_count = check_list.length;
 		var result_list = ['text-danger', 'text-success'];
@@ -92,18 +92,18 @@ $(document).ready(function () {
 			var url = $(element).val();
 			var url_custom = $(element + "_custom").val();
 			var ssl = $("#" + value + "_ssl").val();
-			$(element).prop("disabled", true);
-			$(element + "_custom").prop("disabled", true);
-			$("#" + value + "_ssl").prop("disabled", true);
+			$(element).addClass("ui-state-disabled").prop("disabled", true);
+			$(element + "_custom").addClass("ui-state-disabled").prop("disabled", true);
+			$("#" + value + "_ssl").addClass("ui-state-disabled").prop("disabled", true);
 			if (typeof url === "undefined" || $.isEmptyObject(url)) {
 				check_count--;
 				if (check_count == 0) {
-					$("#check_mirrors_access").attr("disabled", false);
+					$("#check_mirrors_access").removeClass("ui-state-disabled").prop("disabled", false);
 				}
 				$(element + "_params i").removeAttr("class");
-				$(element).prop("disabled", false);
-				$(element + "_custom").prop("disabled", false);
-				$("#" + value + "_ssl").prop("disabled", false);
+				$(element).removeClass("ui-state-disabled").prop("disabled", false);
+				$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
+				$("#" + value + "_ssl").removeClass("ui-state-disabled").prop("disabled", false);
 				return true;
 			}
 			$.ajax({
@@ -118,9 +118,9 @@ $(document).ready(function () {
 				},
 				success: function (response) {
 					$(element + "_params i").removeAttr("class");
-					$(element).prop("disabled", false);
-					$(element + "_custom").prop("disabled", false);
-					$("#" + value + "_ssl").prop("disabled", false);
+					$(element).removeClass("ui-state-disabled").prop("disabled", false);
+					$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
+					$("#" + value + "_ssl").removeClass("ui-state-disabled").prop("disabled", false);
 					var result = result_list[response];
 					if (typeof result !== "undefined") {
 						$(element + "_params i").addClass("fa fa-circle " + result);
@@ -133,7 +133,7 @@ $(document).ready(function () {
 				complete: function () {
 					check_count--;
 					if (check_count == 0) {
-						$("#check_mirrors_access").attr("disabled", false);
+						$("#check_mirrors_access").removeClass("ui-state-disabled").prop("disabled", false);
 					}
 				}
 			});
@@ -156,7 +156,7 @@ $(document).ready(function () {
 		) {
 			return false;
 		}
-		$(this).attr("disabled", true);
+		$(this).addClass("ui-state-disabled").prop("disabled", true);
 		var cap_code = $("#cap_code").val();
 		var cap_fields = $("#cap_fields").val();
 		var $data = $("#config").serialize();
@@ -223,7 +223,7 @@ $(document).ready(function () {
 				$("#forum_auth_result").addClass("fa fa-spinner fa-spin");
 			},
 			complete: function () {
-				$(this).attr("disabled", false);
+				$(this).removeClass("ui-state-disabled").prop("disabled", false);
 			}
 		});
 	});
@@ -233,7 +233,7 @@ $(document).ready(function () {
 	});
 
 	$("#forum_auth_params, #api_auth_params").on("keypress", function () {
-		var disabled = $("#forum_auth").attr("disabled");
+		var disabled = $("#forum_auth").prop("disabled");
 		if (typeof disabled !== "undefined") {
 			return false;
 		}
@@ -272,7 +272,7 @@ $(document).ready(function () {
 			type: "POST",
 			url: "php/actions/get_statistics.php",
 			beforeSend: function () {
-				$(this).prop("disabled", true);
+				$(this).addClass("ui-state-disabled").prop("disabled", true);
 			},
 			success: function (response) {
 				response = $.parseJSON(response);
@@ -280,7 +280,7 @@ $(document).ready(function () {
 				$("#table_statistics tfoot").html(response.tfoot);
 			},
 			complete: function () {
-				$(this).prop("disabled", false);
+				$(this).removeClass("ui-state-disabled").prop("disabled", false);
 			}
 		});
 	});

@@ -71,7 +71,7 @@ $(document).ready(function () {
 	});
 
 	// получение свойств выбранного подраздела
-	$("#list-forums").on("change", function () {
+	$("#list-forums").on("change selectmenuchange", function () {
 		var forumData = $("#list-forums :selected").data();
 		if (forumData.client == '') {
 			forumData.client = 0;
@@ -86,7 +86,7 @@ $(document).ready(function () {
 		if (typeof torrentClientID === "undefined") {
 			$("#forum-client :first").prop("selected", "selected");
 		} else {
-			$("#forum-client [value=" + torrentClientID + "]").prop("selected", "selected");
+			$("#forum-client").val(torrentClientID);
 		}
 		var subdirectory = $("#forum-subdirectory option[value=" + forumData.subdirectory + "]").val();
 		if (typeof subdirectory === "undefined") {
@@ -105,6 +105,9 @@ $(document).ready(function () {
 		$("#forum-control-peers").val(forumData.peers);
 		editableForumID = $(this).val();
 		$("#forum-id").val(editableForumID);
+		$("#forum-client").selectmenu().selectmenu("refresh");
+		$("#forum-subdirectory").selectmenu().selectmenu("refresh");
+		$("#forum-hide-topics").selectmenu().selectmenu("refresh");
 	});
 
 	// изменение свойств подраздела
@@ -145,7 +148,7 @@ $(document).ready(function () {
 		$("#reports-subsections-stored [value=" + forumID + "]").remove();
 		var optionTotal = $("select[id=list-forums] option").size();
 		if (optionTotal == 0) {
-			$(".forum-props, #list-forums").val("").prop("disabled", true);
+			$(".forum-props, #list-forums").val("").addClass("ui-state-disabled").prop("disabled", true);
 			$("#forum-client :first").prop("selected", "selected");
 		} else {
 			if (optionTotal != optionIndex) {
@@ -155,6 +158,7 @@ $(document).ready(function () {
 		}
 		$("#main-subsections").selectmenu("refresh");
 		$("#reports-subsections").selectmenu("refresh");
+		$("#list-forums").selectmenu("refresh");
 		getFilteredTopics();
 	});
 
@@ -162,7 +166,7 @@ $(document).ready(function () {
 	if ($("select[id=list-forums] option").size() > 0) {
 		$("#list-forums :first").prop("selected", "selected").change();
 	} else {
-		$(".forum-props").prop("disabled", true);
+		$(".forum-props").addClass("ui-state-disabled").prop("disabled", true);
 	}
 
 });
@@ -192,15 +196,15 @@ function addSubsection(event, ui) {
 		optionForum.text(forumTitle);
 		$("#main-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
 		$("#reports-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
-		$(".forum-props, #list-forums").prop("disabled", false);
-		$("#forum-id").prop("disabled", true);
+		$(".forum-props, #list-forums").removeClass("ui-state-disabled").prop("disabled", false);
+		$("#forum-id").addClass("ui-state-disabled").prop("disabled", true);
 	}
 	doSortSelect("list-forums");
 	doSortSelect("main-subsections-stored");
 	doSortSelect("reports-subsections-stored");
 	$("#main-subsections").val(mainSelectedForumID).selectmenu("refresh");
 	$("#reports-subsections").val(reportsSelectedForumID).selectmenu("refresh");
-	$("#list-forums option[value=" + forumID + "]").prop("selected", "selected").change();
+	$("#list-forums").val(forumID).selectmenu("refresh").change();
 	ui.item.value = "";
 }
 

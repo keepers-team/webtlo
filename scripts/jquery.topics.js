@@ -374,7 +374,7 @@ function getFilteredTopics() {
 		|| forum_id == -3
 		|| forum_id == -5
 	) {
-		$(".topics_filter input").prop("disabled", false);
+		$(".topics_filter input").removeClass("ui-state-disabled").prop("disabled", false);
 		$("#toolbar-new-torrents").buttonset("enable");
 		$("#toolbar-control-topics").buttonset("enable");
 		$("#filter_avg_seeders_period").spinner("enable");
@@ -384,10 +384,10 @@ function getFilteredTopics() {
 		$("#filter_date_release").datepicker("enable");
 		if (forum_id == -5) {
 			$("#tor_add").button("disable");
-			$(".topics_filter input[name^='keeping_priority']").prop("disabled", true);
+			$(".topics_filter input[name^='keeping_priority']").addClass("ui-state-disabled").prop("disabled", true);
 		} else {
 			$("#tor_add").button("enable");
-			$(".topics_filter input[name^='keeping_priority']").prop("disabled", false);
+			$(".topics_filter input[name^='keeping_priority']").removeClass("ui-state-disabled").prop("disabled", false);
 		}
 	} else {
 		if (forum_id == -2) {
@@ -397,8 +397,8 @@ function getFilteredTopics() {
 			$("#toolbar-control-topics").buttonset("enable");
 			$("#tor_blacklist").button("disable");
 		}
-		$(".topics_filter input").prop("disabled", true);
-		$(".topics_filter input.sort").prop("disabled", false);
+		$(".topics_filter input").addClass("ui-state-disabled").prop("disabled", true);
+		$(".topics_filter input.sort").removeClass("ui-state-disabled").prop("disabled", false);
 		$("#toolbar-new-torrents").buttonset("disable");
 		$("#filter_avg_seeders_period").spinner("disable");
 		$("#filter_rule").spinner("disable");
