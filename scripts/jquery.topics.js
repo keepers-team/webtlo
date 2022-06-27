@@ -311,8 +311,15 @@ $(document).ready(function () {
 		selectBlockText(this);
 		$('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
 		$('#filter_by_keeper').prop("checked", true);
-		$('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
-		$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
+		var isKeepers = $('input[name=is_keepers][type="checkbox"]').prop("checked");
+		var isKeepersSeeders = $('input[name=is_keepers_seeders][type="checkbox"]').prop("checked");
+		if (
+			!isKeepers
+			&& !isKeepersSeeders
+		) {
+			$('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
+			$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
+		}
 	});
 
 	// очистка topics_result при изменениях на странице
