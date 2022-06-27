@@ -7,7 +7,7 @@
 class Api
 {
     /**
-     * @var resource
+     * @var CurlHandle
      */
     private $ch;
 
