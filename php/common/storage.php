@@ -5,10 +5,13 @@
  *
  * @param string $path path to be normalized
  */
-function normalizePath(string $path)
+function normalizePath($path)
 {
+	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+		$path = str_replace('/', '\\', $path);// Replace backslashes with forwardslashes
+	}
     return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function ($left, $right) {
-        if ($left === null) {
+		if ($left === null && !strtoupper(substr(PHP_OS, 0, 3)) === 'WIN' && strpos($right, "://")) {
             $left = DIRECTORY_SEPARATOR;
         }
         if ($right === "" || $right === ".") {
@@ -18,7 +21,7 @@ function normalizePath(string $path)
             return dirname($left);
         }
         $pattern = sprintf("/\%s+/", DIRECTORY_SEPARATOR);
-        return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . DIRECTORY_SEPARATOR . $right);
+		return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . (!is_null($left) ? DIRECTORY_SEPARATOR : null) . $right);
     });
 }
 
