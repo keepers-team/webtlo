@@ -44,7 +44,7 @@ $(document).ready(function () {
 				$(this).html(forumIndication + forumTitle);
 			});
 		},
-	}).selectmenu("menuWidget").addClass("menu-overflow");
+	});
 
 	// прокрутка подразделов на главной
 	$("#main-subsections-button").on("mousewheel", function (event, delta) {
@@ -131,9 +131,21 @@ $(document).ready(function () {
 	$("#add-forum").autocomplete({
 		source: "php/actions/get_list_subsections.php",
 		delay: 1000,
-		select: addSubsection
-	}).on("focusout", function () {
-		$(this).val("");
+		minLength: 3,
+		select: addSubsection,
+		search: function (event, ui) {
+			var color = $(".ui-widget-content").css("color");
+			$(".spinner").css("border-color", color + " " + color + " transparent transparent");
+			$(this).closest("div").find("div").show();
+		},
+		response: function (event, ui) {
+			$(this).closest("div").find("div").hide();
+			if ((ui.content.length) === 0) {
+				$(this).addClass("ui-state-error");
+			}
+		},
+	}).on("input", function(){
+		$(this).removeClass("ui-state-error");
 	});
 
 	// удалить подраздел

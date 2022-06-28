@@ -95,9 +95,11 @@ try {
         if (preg_match('/DVD|HD/', $e['na'])) {
             $size = pow(1024, 4);
             if ($e['Size5'] + $e['Size0'] < $size) {
-                $state = $e['Size5'] + $e['Size0'] >= $size * 3 / 4 ? 'warning' : 'ok';
+                if ($e['Size5'] + $e['Size0'] >= $size * 3 / 4) {
+                    $state = 'ui-state-highlight';
+                }
             } else {
-                $state = 'critical';
+                $state = 'ui-state-error';
             }
         } else {
             $size = pow(1024, 4) / 2;
@@ -109,12 +111,10 @@ try {
                     $e['Count5'] + $e['Count0'] >= 500
                     || $e['Size5'] + $e['Size0'] >= $size / 2
                 ) {
-                    $state = 'warning';
-                } else {
-                    $state = 'ok';
+                    $state = 'ui-state-highlight';
                 }
             } else {
-                $state = 'critical';
+                $state = 'ui-state-error';
             }
         }
         // байты

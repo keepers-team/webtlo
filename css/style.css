@@ -49,12 +49,6 @@ h3 {
 	font-weight: bold;
 }
 
-hr {
-	clear: both;
-	margin-left: 0;
-	margin-right: 0;
-}
-
 input[type="text"], input[type="password"] {
 	padding: 3px;
 }
@@ -110,6 +104,13 @@ li.menu.ui-tabs-active {
 	border: 0;
 }
 
+.ui-menu, .ui-autocomplete {
+	height: auto;
+	max-height: 400px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
 .ui-menu-item {
 	font-size: small;
 }
@@ -138,13 +139,6 @@ li.menu.ui-tabs-active {
 .ui-datepicker-trigger {
 	border: none;
 	background: none;
-}
-
-/* selectmenu context menu height */
-
-.menu-overflow {
-	height: auto;
-	max-height: 400px;
 }
 
 /* menu */
@@ -360,7 +354,6 @@ li.menu.ui-tabs-active {
 }
 
 #config {
-	border-top: 1px solid #aaa;
 	border-radius: 4px;
 	margin: 0;
 	padding: 0;
@@ -469,8 +462,7 @@ li.menu.ui-tabs-active {
 }
 
 #add-forum {
-	display: block;
-	width: 100%;
+	width: calc(100% - 25px);
 	margin: 0 0 20px 0;
 }
 
@@ -629,4 +621,40 @@ li.menu.ui-tabs-active {
 	top: 5px;
 	font-size: 75%;
 	padding: 5px;
+}
+
+/* spinner for input */
+
+.input-container {
+	position: relative;
+}
+
+.spinner-container {
+	display: none;
+	position: absolute;
+	right: 20px;
+	top: calc(50% - 17px);
+}
+
+.spinner {
+	position: relative;
+	display: inline-block;
+	height: 15px;
+	width: 15px;
+	border-width: 2.5px;
+	border-color: #000 #000 transparent transparent;
+	border-style: solid;
+	border-radius: 50%;
+	box-sizing: border-box;
+	animation: spin .6s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
 }

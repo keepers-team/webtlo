@@ -11,7 +11,7 @@ $(document).ready(function () {
     setUITheme();
 
     $("select").selectmenu();
-    $("#list-forums").selectmenu("option", "width", "auto").selectmenu("menuWidget").addClass("menu-overflow");
+    $("#list-forums").selectmenu("option", "width", "auto");
     $("input").addClass("ui-widget-content");
 
     // переключатель тем оформления
@@ -109,9 +109,7 @@ $(document).ready(function () {
                 "font-weight": "bold"
             });
         },
-    })
-        .selectmenu("menuWidget")
-        .addClass("menu-overflow");
+    });
 
     // прокрутка подразделов в отчётах
     $("#reports-subsections-button").on("mousewheel", function (event, delta) {

@@ -601,7 +601,12 @@ try {
                         </div>
                         <h2>Настройки сканируемых подразделов</h2>
                         <div>
-                            <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
+                            <div class="input-container">
+                                <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
+                                <div class="spinner-container">
+                                    <i class="spinner"></i>
+                                </div>
+                            </div>
                             <input id="remove-forum" type="button" value="Удалить" title="Удалить выбранный подраздел" />
                             <div>
                                 <label>
@@ -770,7 +775,6 @@ try {
                         <?php echo $optionForums ?>
                     </optgroup>
                 </select>
-                <hr />
                 <div id="reports-content"></div>
             </div>
             <div id="statistics" class="content">
