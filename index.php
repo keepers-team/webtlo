@@ -131,18 +131,17 @@ try {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html class="ui-widget-content">
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.3.2</title>
-    <script src="jquery/jquery.js"></script>
-    <script src="jquery/jquery-ui.js"></script>
-    <script src="jquery/external/datepicker-ru.js"></script>
-    <script src="jquery/external/jquery.mousewheel.js"></script>
-    <script src="jquery/external/js.cookie.js"></script>
+    <title>web-TLO-2.4.1</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/i18n/jquery-ui-i18n.min.js"></script>
+    <script src="scripts/jquery.mousewheel.min.js"></script>
+    <script src="scripts/js.cookie.min.js"></script>
     <link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
-    <link rel="stylesheet" href="jquery/jquery-ui.css" />
     <link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
     <link rel="stylesheet" href="css/font-awesome.min.css">
 </head>
@@ -604,33 +603,35 @@ try {
                         <div>
                             <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
                             <input id="remove-forum" type="button" value="Удалить" title="Удалить выбранный подраздел" />
-                            <label class="flex">
-                                Подраздел:
-                                <select name="list-forums" id="list-forums">
-                                    <?php echo $optionForumsDataset ?>
-                                </select>
-                            </label>
-                            <fieldset id="forum-props">
-                                <label class="flex">
-                                    Индекс:
-                                    <input disabled id="forum-id" class="myinput forum-props" type="text" title="Индекс подраздела" />
+                            <div>
+                                <label>
+                                    Подраздел:
+                                    <select name="list-forums" id="list-forums">
+                                        <?php echo $optionForumsDataset ?>
+                                    </select>
                                 </label>
-                                <label class="flex">
+                            </div>
+                            <fieldset id="forum-props">
+                                <label>
+                                    Индекс:
+                                    <input disabled id="forum-id" class="myinput forum-props ui-state-disabled" type="text" title="Индекс подраздела" />
+                                </label>
+                                <label>
                                     Торрент-клиент:
                                     <select id="forum-client" class="myinput forum-props" title="Добавлять раздачи текущего подраздела в торрент-клиент">
                                         <option value=0>не выбран</option>
                                         <?php echo $optionTorrentClients ?>
                                     </select>
                                 </label>
-                                <label class="flex">
+                                <label>
                                     Метка:
                                     <input id="forum-label" class="myinput forum-props" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)" />
                                 </label>
-                                <label class="flex">
+                                <label>
                                     Каталог для данных:
                                     <input id="forum-savepath" class="myinput forum-props" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
                                 </label>
-                                <label class="flex">
+                                <label>
                                     Создавать подкаталог для добавляемой раздачи:
                                     <select id="forum-subdirectory" class="myinput forum-props" title="Создавать подкаталог для данных добавляемой раздачи">
                                         <option value="0">нет</option>
@@ -638,14 +639,14 @@ try {
                                         <!-- <option value="2">Запрашивать</option> -->
                                     </select>
                                 </label>
-                                <label class="flex">
+                                <label>
                                     Скрывать раздачи в общем списке:
                                     <select id="forum-hide-topics" class="myinput forum-props" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
                                 </label>
-                                <label class="flex">
+                                <label>
                                     Останавливать раздачи с количеством пиров более:
                                     <input id="forum-control-peers" class="myinput forum-props" type="text" size="10" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела в торрент-клиентах. Либо оставьте это поле пустым, чтобы использовать глобальное значение для регулировки раздач. Значение равное -1 вовсе исключит подраздел из регулировки" />
                                 </label>
@@ -722,6 +723,38 @@ try {
                                 скачать торрент-файлы для обычного пользователя
                             </label>
                         </div>
+                        <h2>Настройки интерфейса</h2>
+                        <div>
+                            <label>
+                                Цветовая схема:
+                                <select id="theme-selector" class="myinput">
+                                    <option value="black-tie">Black Tie</option>
+                                    <option value="blitzer">Blitzer</option>
+                                    <option value="cupertino">Cupertino</option>
+                                    <option value="dark-hive">Dark Hive</option>
+                                    <option value="dot-luv">Dot Luv</option>
+                                    <option value="eggplant">Eggplant</option>
+                                    <option value="excite-bike">Excite Bike</option>
+                                    <option value="flick">Flick</option>
+                                    <option value="hot-sneaks">Hot Sneaks</option>
+                                    <option value="humanity">Humanity</option>
+                                    <option value="le-frog">Le Frog</option>
+                                    <option value="mint-choc">Mint Choc</option>
+                                    <option value="overcast">Overcast</option>
+                                    <option value="pepper-grinder">Pepper Grinder</option>
+                                    <option value="redmond">Redmond</option>
+                                    <option value="smoothness">Smoothness</option>
+                                    <option value="south-street">South Street</option>
+                                    <option value="start">Start</option>
+                                    <option value="sunny">Sunny</option>
+                                    <option value="swanky-purse">Swanky Purse</option>
+                                    <option value="trontastic">Trontastic</option>
+                                    <option value="ui-darkness">UI Darkness</option>
+                                    <option value="ui-lightness">UI Lightness</option>
+                                    <option value="vader">Vader</option>
+                                </select>
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -748,7 +781,7 @@ try {
                 </div>
                 <div id="data_statistics">
                     <table id="table_statistics">
-                        <thead>
+                        <thead class="ui-widget-header">
                             <tr>
                                 <th colspan="2">Подраздел</th>
                                 <th colspan="10">Количество и вес раздач</th>
@@ -757,7 +790,10 @@ try {
                                 <th>ID</th>
                                 <th width="40%">Название</th>
                                 <th colspan="2">сc == 0</th>
-                                <th colspan="2">0.0 < cc <=0.5</th> <th colspan="2">0.5 < сc <=1.0</th> <th colspan="2">1.0 < сc <=1.5</th> <th colspan="2">Всего в подразделе</th>
+                                <th colspan="2">0.0 < cc <=0.5</th>
+                                <th colspan="2">0.5 < сc <=1.0</th>
+                                <th colspan="2">1.0 < сc <=1.5</th>
+                                <th colspan="2">Всего в подразделе</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -765,7 +801,7 @@ try {
                                 <td colspan="12">&mdash;</td>
                             </tr>
                         </tbody>
-                        <tfoot></tfoot>
+                        <tfoot class="ui-widget-header"></tfoot>
                     </table>
                 </div>
             </div>
@@ -804,12 +840,12 @@ try {
     </div>
     <div id="dialog" title="Сообщение"></div>
     <!-- скрипты webtlo -->
-    <script type="text/javascript" src="js/common.js"></script>
-    <script type="text/javascript" src="js/tor_clients.js"></script>
-    <script type="text/javascript" src="js/subsections.js"></script>
-    <script type="text/javascript" src="js/actions.js"></script>
-    <script type="text/javascript" src="js/widgets.js"></script>
-    <script type="text/javascript" src="js/topics.js"></script>
+    <script type="text/javascript" src="scripts/jquery.common.js"></script>
+    <script type="text/javascript" src="scripts/jquery.tor_clients.js"></script>
+    <script type="text/javascript" src="scripts/jquery.subsections.js"></script>
+    <script type="text/javascript" src="scripts/jquery.actions.js"></script>
+    <script type="text/javascript" src="scripts/jquery.widgets.js"></script>
+    <script type="text/javascript" src="scripts/jquery.topics.js"></script>
 </body>
 
 </html>

@@ -112,7 +112,8 @@ class Qbittorrent extends TorrentClient
             } else {
                 $torrentStatus = -2;
             }
-            $torrentHash = strtoupper($torrent['hash']);
+            $torrentHash = isset($torrent['infohash_v1']) ? $torrent['infohash_v1'] : $torrent['hash'];
+            $torrentHash = strtoupper($torrentHash);
             $torrents[$torrentHash] = $torrentStatus;
         }
         return $torrents;
@@ -126,7 +127,8 @@ class Qbittorrent extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $torrent) {
-            $torrentHash = strtoupper($torrent['hash']);
+            $torrentHash = isset($torrent['infohash_v1']) ? $torrent['infohash_v1'] : $torrent['hash'];
+            $torrentHash = strtoupper($torrentHash);
             $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
             $torrentError = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
             $torrents[$torrentHash] = array(
@@ -135,6 +137,7 @@ class Qbittorrent extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
+                'time_added' => '',
                 'total_size' => $torrent['total_size'],
                 'tracker_error' => ''
             );
@@ -158,6 +161,7 @@ class Qbittorrent extends TorrentClient
         }
         foreach ($response as $torrentHash => $torrent) {
             $torrents[$torrentHash]['comment'] = $torrent['comment'];
+            $torrents[$torrentHash]['time_added'] = $torrent['addition_date'];
         }
         return $torrents;
     }

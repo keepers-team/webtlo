@@ -27,19 +27,19 @@ var lock_actions = 0;
 
 function block_actions() {
 	if (lock_actions == 0) {
-		$("#topics_control button").prop("disabled", true);
+		$("#topics_control button").addClass("ui-state-disabled").prop("disabled", true);
 		$("#main-subsections").selectmenu("disable");
 		$("#loading, #process").show();
 		lock_actions = 1;
 	} else {
-		$("#topics_control button").prop("disabled", false);
+		$("#topics_control button").removeClass("ui-state-disabled").prop("disabled", false);
 		if (
 			$("#main-subsections").val() < 1
 			|| !$("input[name=filter_status]").eq(1).prop("checked")
 		) {
-			$(".tor_add").prop("disabled", true);
+			$(".tor_add").addClass("ui-state-disabled").prop("disabled", true);
 		} else {
-			$(".tor_stop, .tor_remove, .tor_label, .tor_start").prop("disabled", true);
+			$(".tor_stop, .tor_remove, .tor_label, .tor_start").addClass("ui-state-disabled").prop("disabled", true);
 		}
 		$("#main-subsections").selectmenu("enable");
 		$("#loading, #process").hide();
@@ -110,13 +110,13 @@ function setSettings() {
 			tor_clients: tor_clients
 		},
 		beforeSend: function () {
-			$(this).prop("disabled", true);
+			$(this).addClass("ui-state-disabled").prop("disabled", true);
 		},
 		success: function (response) {
 			$("#log").append(response);
 		},
 		complete: function () {
-			$(this).prop("disabled", false);
+			$(this).removeClass("ui-state-disabled").prop("disabled", false);
 		},
 	});
 }
@@ -216,6 +216,15 @@ function checkNewVersion() {
 			}
 		},
 	});
+}
+
+function setUITheme(){
+	var jqueryUIURL = "https://ajax.googleapis.com/ajax/libs/jqueryui/" + jqueryUIVersion + "/themes/" + currentUITheme + "/jquery-ui.css";
+    var jqueryUIStyle = $("<link/>")
+        .attr("type", "text/css")
+        .attr("rel", "stylesheet")
+        .attr("href", jqueryUIURL);
+    jqueryUIStyle.appendTo("head");
 }
 
 function showNewVersion(newVersionNumber, newVersionLink, whatsNew) {
