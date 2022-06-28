@@ -55,8 +55,8 @@ hr {
 	margin-right: 0;
 }
 
-input[type="text"] {
-	padding: 0 3px;
+input[type="text"], input[type="password"] {
+	padding: 3px;
 }
 
 sup, sub {
@@ -76,13 +76,16 @@ sub {
 
 /* fix widgets ui */
 
+html.ui-widget-content {
+	border: 0;
+}
+
 ul.menu.ui-tabs-nav {
-	background: #fff;
+	background: none;
 	border: 0;
 }
 
 ul.menu.ui-tabs-nav li {
-	border-bottom-width: .055em;
 	margin: 0 .277em -.055em 0;
 	border-radius: 0;
 }
@@ -99,8 +102,12 @@ li.menu.ui-tabs-active {
 	border: 1px solid #aaa;
 }
 
-.ui-spinner-input {
-	padding: 0;
+.ui-spinner {
+	min-height: 25px;
+}
+
+.ui-spinner input {
+	border: 0;
 }
 
 .ui-menu-item {
@@ -116,10 +123,7 @@ li.menu.ui-tabs-active {
 }
 
 .ui-button:disabled {
-	background: #fafafa;
 	cursor: default;
-	color: #d3d3d3;
-	border: 1px solid #d3d3d3;
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {
@@ -236,6 +240,10 @@ li.menu.ui-tabs-active {
 
 .topics_filter label {
 	display: block;
+}
+
+.topics_filter label * {
+	vertical-align: middle;
 }
 
 .filter_rule_interval {
@@ -374,21 +382,11 @@ li.menu.ui-tabs-active {
 
 .block-settings {
 	display: inline-block;
-	vertical-align: top;
-}
-
-.block-settings span {
-	display: inline-block;
-	margin: 10px 15px 0 0;
+	vertical-align: middle;
 }
 
 #settings label {
 	margin: 0 50px 0 0;
-}
-
-#settings .flex {
-	display: flex;
-	margin: 0 0 10px 0;
 }
 
 .label {
@@ -460,14 +458,6 @@ li.menu.ui-tabs-active {
 	overflow-y: auto;
 }
 
-#list-torrent-clients .ui-selecting {
-	background: #e6e6e6;
-}
-
-#list-torrent-clients .ui-selected {
-	background: #e6e6e6;
-}
-
 #list-torrent-clients li {
 	padding: 2px 5px;
 	cursor: pointer;
@@ -489,8 +479,8 @@ li.menu.ui-tabs-active {
 }
 
 #list-forums {
-	width: 100%;
 	margin-left: 10px;
+	height: 200px;
 }
 
 .forum-props {
@@ -500,7 +490,7 @@ li.menu.ui-tabs-active {
 
 #forum-props label {
 	display: block;
-	margin: 0;
+	margin: 5px 0;
 }
 
 .footnote {
@@ -565,16 +555,11 @@ li.menu.ui-tabs-active {
 #table_statistics {
 	text-align: center;
 	font-size: small;
-	color: #444;
 	width: 100%;
 }
 
 #table_statistics * {
 	border: 1px solid #aaa;
-}
-
-#table_statistics thead, #table_statistics tfoot {
-	background: #f6f6f6;
 }
 
 #table_statistics th, #table_statistics td {

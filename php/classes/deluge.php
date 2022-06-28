@@ -182,6 +182,7 @@ class Deluge extends TorrentClient
                     'name',
                     'paused',
                     'progress',
+                    'time_added',
                     'total_size',
                     'tracker_status'
                 ),
@@ -205,6 +206,7 @@ class Deluge extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
+                'time_added' => $torrent['time_added'],
                 'total_size' => $torrent['total_size'],
                 'tracker_error' => $torrentTrackerError
             );

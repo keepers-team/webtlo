@@ -14,8 +14,8 @@ $(document).ready(function () {
 		} else {
 			var touchTimeDiff = new Date().getTime() - torrentClientTouchTime;
 			if (touchTimeDiff < 200) {
-				$("li", this).addClass("ui-selected ui-editable");
-				$(".torrent-client-props").prop("disabled", true);
+				$("li", this).addClass("ui-selected ui-editable ui-state-focus");
+				$(".torrent-client-props").addClass("ui-state-disabled").prop("disabled", true);
 				torrentClientTouchTime = 0;
 			} else {
 				torrentClientTouchTime = new Date().getTime();
@@ -33,23 +33,24 @@ $(document).ready(function () {
 				var editableItems = $("#list-torrent-clients li.ui-editable");
 				var torrentClientData = editableItems.data();
 				editableItems.addClass("ui-selected");
-				torrentClientProps.prop("disabled", false);
+				torrentClientProps.removeClass("ui-state-disabled").prop("disabled", false);
 			} else if (editedItems > 1) {
 				$("li.ui-editable", this).addClass("ui-selected");
 			}
 		} else if (selectedItems > 0) {
 			var torrentClientData = $(".ui-selected", this).data();
-			$("li", this).removeClass("ui-editable");
-			$("li.ui-selected", this).addClass("ui-editable");
+			$("li", this).removeClass("ui-editable ui-state-focus");
+			$("li.ui-selected", this).addClass("ui-editable ui-state-focus");
 			if (selectedItems == 1) {
-				torrentClientProps.prop("disabled", false);
+				torrentClientProps.removeClass("ui-state-disabled").prop("disabled", false);
 			} else {
-				torrentClientProps.prop("disabled", true);
+				torrentClientProps.addClass("ui-state-disabled").prop("disabled", true);
 			}
 		}
 		if (typeof torrentClientData !== "undefined") {
 			$("#torrent-client-comment").val(torrentClientData.comment);
-			$("#torrent-client-type [value=" + torrentClientData.type + "]").prop("selected", "selected");
+			$("#torrent-client-type").val(torrentClientData.type);
+			$("#torrent-client-type").selectmenu().selectmenu("refresh");
 			$("#torrent-client-hostname").val(torrentClientData.hostname);
 			$("#torrent-client-port").val(torrentClientData.port);
 			$("#torrent-client-login").val(torrentClientData.login);
@@ -59,7 +60,7 @@ $(document).ready(function () {
 	});
 
 	// изменение свойств торрент-клиента
-	$("#torrent-client-props").on("input", functionDelay(function () {
+	$("#torrent-client-props").on("input selectmenuchange", functionDelay(function () {
 		var torrentClientComment = $("#torrent-client-comment").val();
 		var torrentClientType = $("#torrent-client-type").val();
 		var torrentClientHostname = $("#torrent-client-hostname").val();
@@ -95,7 +96,8 @@ $(document).ready(function () {
 
 	// добавить торрент-клиент в список
 	$("#add-torrent-client").on("click", function () {
-		$(".torrent-client-props").prop("disabled", false);
+		$(".torrent-client-props").removeClass("ui-state-disabled").prop("disabled", false);
+		$("#torrent-client-type").selectmenu("enable");
 		var torrentClientComment = $("#torrent-client-comment").val();
 		var torrentClientType = $("#torrent-client-type").val();
 		var torrentClientHostname = $("#torrent-client-hostname").val();
@@ -140,7 +142,7 @@ $(document).ready(function () {
 				torrentClientComment = newComment.replace(/\|/g, "");
 			}
 		}
-		$("#list-torrent-clients li").removeClass("ui-selected ui-editable");
+		$("#list-torrent-clients li").removeClass("ui-selected ui-editable ui-state-focus");
 		$("#list-torrent-clients").append("<li value=\"" + torrentClientID + "\">" + torrentClientComment + "</li>");
 		var optionTorrentClient = $("#list-torrent-clients li[value=" + torrentClientID + "]");
 		optionTorrentClient.attr("data-comment", torrentClientComment).data("comment", torrentClientComment);
@@ -150,7 +152,7 @@ $(document).ready(function () {
 		optionTorrentClient.attr("data-login", torrentClientLogin).data("login", torrentClientLogin);
 		optionTorrentClient.attr("data-password", torrentClientPassword).data("password", torrentClientPassword);
 		optionTorrentClient.attr("data-ssl", torrentClientSSL).data("ssl", torrentClientSSL);
-		optionTorrentClient.addClass("ui-widget-content ui-selected");
+		optionTorrentClient.addClass("ui-widget-content ui-selected ui-state-focus");
 		$("#list-torrent-clients").trigger("selectablestop");
 		doSortSelect("list-torrent-clients", "li");
 	});
@@ -169,9 +171,10 @@ $(document).ready(function () {
 		});
 		var totalItems = $("#list-torrent-clients li").size();
 		if (totalItems == 0) {
-			$(".torrent-client-props").val("").prop("disabled", true);
+			$(".torrent-client-props").val("").addClass("ui-state-disabled").prop("disabled", true);
 			$("#torrent-client-ssl").prop("checked", false);
 			$("#torrent-client-response").text("");
+			$("#torrent-client-type").selectmenu("disable");
 		} else {
 			if (itemIndex != totalItems) {
 				itemIndex++;
@@ -185,6 +188,7 @@ $(document).ready(function () {
 				$(this).attr("data-client", 0);
 			}
 		});
+
 	});
 
 	// обновление списка торрент-клиентов настройках подразделов
@@ -206,7 +210,7 @@ $(document).ready(function () {
 				beforeSend: function () {
 					$("#torrent-client-response").text("");
 					$(button).children("i").css("display", "inline-block");
-					$(button).prop("disabled", true);
+					$(button).addClass("ui-state-disabled").prop("disabled", true);
 					$(this).append('<i class="fa fa-spinner fa-spin"></i>');
 					$(this).addClass("ui-connection");
 				},
@@ -229,7 +233,7 @@ $(document).ready(function () {
 								$("#torrent-client-response").html('<i class="fa fa-circle text-success"></i> все торрент-клиенты сейчас доступны');
 							}
 						}
-						$(button).prop("disabled", false);
+						$(button).removeClass("ui-state-disabled").prop("disabled", false);
 						$(button).children("i").hide();
 					}
 				},
@@ -241,7 +245,7 @@ $(document).ready(function () {
 	if ($("#list-torrent-clients li").size() > 0) {
 		$("#list-torrent-clients li:nth-child(1)").addClass("ui-selected").trigger("selectablestop");
 	} else {
-		$(".torrent-client-props").prop("disabled", true);
+		$(".torrent-client-props").addClass("ui-state-disabled").prop("disabled", true);
 	}
 
 });
@@ -263,6 +267,7 @@ function refreshListTorrentClients() {
 	if ($("#list-forums option").size() > 0) {
 		$("#list-forums").change();
 	}
+	$("#forum-client").selectmenu("refresh");
 }
 
 // получение списка торрент-клиентов

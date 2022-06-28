@@ -146,6 +146,9 @@ class Ktorrent extends TorrentClient
     public function getTorrents()
     {
         $response = $this->getTorrentsData();
+        if ($response === false) {
+            return false;
+        }
         $torrents = array();
         if (isset($response['torrent'])) {
             foreach ($response['torrent'] as $torrent) {
@@ -193,7 +196,6 @@ class Ktorrent extends TorrentClient
             . _BR_
             . 'Upload Torrent' . _BR_
             . '------' . $boundary . '--';
-
         $header = array(
             'Content-Type: multipart/form-data; boundary=------' . $boundary . _BR_
                 . 'Content-Length: ' . strlen($content) . _BR_
