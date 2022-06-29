@@ -234,7 +234,7 @@ $(document).ready(function () {
 
 	$("#forum_auth_params, #api_auth_params").on("keypress", function () {
 		var disabled = $("#forum_auth").prop("disabled");
-		if (typeof disabled !== "undefined") {
+		if (disabled !== false) {
 			return false;
 		}
 	});
