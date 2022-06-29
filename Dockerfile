@@ -24,4 +24,4 @@ RUN apt-get update && apt-get install -y cron && which cron && \
 
 # Для запуска cron необходимо иметь /crontab файл, добавим его с помощью docker compose, а стандартный положим из репозитория в /etc/crontab.
 RUN mv /var/www/html/example-crontab /etc/crontab
-ENTRYPOINT ["./cron-php-apache-entrypoint.sh"]
+ENTRYPOINT ["./cron-php-apache2-entrypoint.sh"]
