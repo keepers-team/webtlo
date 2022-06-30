@@ -1,7 +1,27 @@
 $(document).ready(function () {
 
-    // русская локализация datepicker
-    $.datepicker.regional["ru"];
+    // настройки jQuery UI
+    jqueryUIVersion = "1.12.1";
+    defaultUITheme = "smoothness";
+    currentUITheme = Cookies.get('theme');
+    if (currentUITheme === undefined) {
+        currentUITheme = defaultUITheme;
+    }
+    $("#theme-selector [value=" + currentUITheme + "]").prop("selected", true);
+    setUITheme();
+
+    $("select").selectmenu();
+    $("#list-forums").selectmenu("option", "width", "auto");
+    $("input").addClass("ui-widget-content");
+
+    // переключатель тем оформления
+    $("#theme-selector").selectmenu({
+        change: function (event, ui) {
+            Cookies.set('theme', ui.item.value);
+            currentUITheme = ui.item.value;
+            setUITheme();
+        }
+    });
 
     // инициализация главного меню
     $("#menutabs").tabs({
@@ -28,8 +48,9 @@ $(document).ready(function () {
         mouseWheel: true
     });
 
-    /* инициализация кнопок */
+    // инициализация кнопок
     $("button").button();
+    $("input[type=button]").button();
     $("#toolbar-select-topics").buttonset();
     $("#toolbar-control-topics").buttonset();
     $("#toolbar-new-torrents").buttonset();
@@ -44,21 +65,21 @@ $(document).ready(function () {
     });
 
     // дата релиза в фильтре
-    $("#filter_date_release").datepicker({
-        changeMonth: true,
-        changeYear: true,
-        showOn: "both",
-        dateFormat: 'dd.mm.yy',
-        maxDate: "now",
-        buttonText: '<i class="fa fa-calendar" aria-hidden="true"></i>'
-    }).datepicker(
-        "setDate",
-        $("#filter_date_release").val()
-    ).css(
-        "width", 90
-    ).datepicker(
-        "refresh"
-    );
+    $("#filter_date_release").datepicker($.datepicker.regional['ru'])
+        .datepicker({
+            changeMonth: true,
+            changeYear: true,
+            showOn: "both",
+            dateFormat: 'dd.mm.yy',
+            maxDate: "now",
+        }).datepicker(
+            "setDate",
+            $("#filter_date_release").val()
+        ).css(
+            "width", 90
+        ).datepicker(
+            "refresh"
+        );
 
     // регулировка раздач, количество пиров
     $("#peers").spinner({
@@ -88,9 +109,7 @@ $(document).ready(function () {
                 "font-weight": "bold"
             });
         },
-    })
-        .selectmenu("menuWidget")
-        .addClass("menu-overflow");
+    });
 
     // прокрутка подразделов в отчётах
     $("#reports-subsections-button").on("mousewheel", function (event, delta) {

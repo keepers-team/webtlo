@@ -168,6 +168,7 @@ class Transmission extends TorrentClient
             'method' => 'torrent-get',
             'arguments' => array(
                 'fields' => array(
+                    'addedDate',
                     'comment',
                     'error',
                     'errorString',
@@ -195,6 +196,7 @@ class Transmission extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
+                'time_added' => $torrent['addedDate'],
                 'total_size' => $torrent['totalSize'],
                 'tracker_error' => $torrentTrackerError
             );

@@ -5,40 +5,35 @@ include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 class Reports
 {
-
+    /**
+     * @var CurlHandle
+     */
     protected $ch;
+
+    /**
+     * @var string
+     */
     protected $login;
+
+    /**
+     * @var string
+     */
     protected $forum_url;
+
+    /**
+     * @var bool
+     */
     protected $blocking_send;
 
-    private $months = array(
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-    );
-    private $months_ru = array(
-        'Янв',
-        'Фев',
-        'Мар',
-        'Апр',
-        'Май',
-        'Июн',
-        'Июл',
-        'Авг',
-        'Сен',
-        'Окт',
-        'Ноя',
-        'Дек',
-    );
+    /**
+     * @var array
+     */
+    private $months = array('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+
+    /**
+     * @var array
+     */
+    private $months_ru = array('Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек');
 
     public function __construct($forum_url, $login, $paswd, $cap_fields = array())
     {

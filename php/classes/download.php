@@ -4,7 +4,7 @@ class TorrentDownload
 {
 
     /**
-     * @var resource
+     * @var CurlHandle
      */
     private $ch;
 

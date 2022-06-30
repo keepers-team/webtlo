@@ -43,7 +43,7 @@ abstract class TorrentClient
     protected $sid;
 
     /**
-     * @var resource
+     * @var CurlHandle
      */
     protected $ch;
 
@@ -93,7 +93,8 @@ abstract class TorrentClient
 
     /**
      * получение сведений о раздачах от торрент-клиента
-     * @return bool|array array[torrentHash] => (comment, done, error, name, size, state)
+     * @return bool|array
+     * array[torrentHash] => (comment, done, error, name, paused, time_added, total_size, tracker_error)
      */
     abstract public function getAllTorrents();
 

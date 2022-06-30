@@ -151,6 +151,7 @@ class Utorrent extends TorrentClient
                 'error' => $torrentState[3],
                 'name' => $torrent[2],
                 'paused' => $torrentPaused,
+                'time_added' => '',
                 'total_size' => $torrent[3],
                 'tracker_error' => ''
             );
