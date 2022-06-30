@@ -29,8 +29,8 @@ class Log
             echo "Нет или недостаточно прав для доступа к каталогу logs";
         }
 
-        $filelog = "$dir/$filelog";
-        self::move($filelog);
+        $filelog = "$dir" . DIRECTORY_SEPARATOR . "$filelog";
+		self::move($filelog);
         if ($filelog = fopen($filelog, "a")) {
             fwrite($filelog, self::get("\n"));
             fwrite($filelog, " -- DONE --\n");
