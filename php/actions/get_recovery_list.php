@@ -55,8 +55,8 @@ try {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
     foreach ($topicsIDs as $topicID) {
-        $data = $reports->getTopicDataFromArchive($topicID);
-        if ($data === false) {
+        $data = $reports->getDataUnregisteredTopic($topicID);
+        if (!is_array($data)) {
             continue;
         }
         if (in_array($data['last_status'], $skippedStatuses)) {

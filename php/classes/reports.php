@@ -153,11 +153,11 @@ class Reports
     }
 
     /**
-     * поиск сведений о раздаче в архиве
+     * получение сведений о разрегистрированной раздаче
      * @param int $topicID
      * @return bool|string|array
      */
-    public function getTopicDataFromArchive($topicID)
+    public function getDataUnregisteredTopic($topicID)
     {
         if (!is_numeric($topicID)) {
             return false;
@@ -169,19 +169,19 @@ class Reports
         $topicStatus = $html->find('div.mrg_16')->text();
         if (!empty($topicStatus)) {
             phpQuery::unloadDocuments();
-            return false;
+            return $topicStatus;
         }
         // раздача зарегистрирована
         $topicStatus = $html->find('a.dl-topic')->attr('href');
         if (!empty($topicStatus)) {
             phpQuery::unloadDocuments();
-            return false;
+            return 'Раздача обновлена';
         }
         // поглощено, повтор, закрыто, не оформлена и т.п.
         $topicStatus = $html->find('span#tor-status-resp b:first')->text();
         if (!empty($topicStatus)) {
             phpQuery::unloadDocuments();
-            return false;
+            return $topicStatus;
         }
         $currentForum = $html->find('td.t-breadcrumb-top:first > a')->text();
         $currentForum = str_replace(PHP_EOL, ' » ', rtrim($currentForum, PHP_EOL));
