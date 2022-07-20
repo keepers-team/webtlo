@@ -152,7 +152,11 @@ class Reports
         return false;
     }
 
-    // поиск сведений о раздаче в архиве
+    /**
+     * поиск сведений о раздаче в архиве
+     * @param int $topicID
+     * @return bool|string|array
+     */
     public function getTopicDataFromArchive($topicID)
     {
         if (!is_numeric($topicID)) {
@@ -164,19 +168,19 @@ class Reports
         // раздача в мусорке, не найдена
         $topicStatus = $html->find('div.mrg_16')->text();
         if (!empty($topicStatus)) {
-            unset($html);
+            phpQuery::unloadDocuments();
             return false;
         }
         // раздача зарегистрирована
         $topicStatus = $html->find('a.dl-topic')->attr('href');
         if (!empty($topicStatus)) {
-            unset($html);
+            phpQuery::unloadDocuments();
             return false;
         }
-        // поглощено, повтор, закрыто
+        // поглощено, повтор, закрыто, не оформлена и т.п.
         $topicStatus = $html->find('span#tor-status-resp b:first')->text();
         if (!empty($topicStatus)) {
-            unset($html);
+            phpQuery::unloadDocuments();
             return false;
         }
         $currentForum = $html->find('td.t-breadcrumb-top:first > a')->text();
@@ -200,6 +204,7 @@ class Reports
             }
         }
         unset($html);
+        phpQuery::unloadDocuments();
         return array(
             'current_forum' => $currentForum,
             'original_forum' => $originalForum,
