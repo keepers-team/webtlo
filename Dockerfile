@@ -1,4 +1,6 @@
 FROM php:7.4-apache
+WORKDIR /var/www/html
 
-COPY . /var/www/html/
-VOLUME /var/www/html/data
+COPY . .
+RUN mkdir -m777 data && chown www-data: data
+VOLUME data
