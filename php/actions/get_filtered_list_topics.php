@@ -525,8 +525,8 @@ try {
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
                 if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
-                    if (empty($keepers[$topic_data['id']])) {
-                        continue;
+                    if (!isset($keepers[$topic_data['id']])) {
+                        $keepers[$topic_data['id']] = array();
                     }
                     $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
                     unset($matchKeepers);
