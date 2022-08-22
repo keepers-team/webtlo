@@ -197,7 +197,7 @@ class Deluge extends TorrentClient
         foreach ($response as $torrentHash => $torrent) {
             $torrentHash = strtoupper($torrentHash);
             $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
-            $torrentError = 'message' != 'OK' ? 1 : 0;
+            $torrentError = $torrent['message'] != 'OK' ? 1 : 0;
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
             $torrents[$torrentHash] = array(
