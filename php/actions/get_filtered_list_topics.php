@@ -62,7 +62,11 @@ try {
             true
         );
         $forumsTitles = Db::query_database(
-            "SELECT id,na FROM Forums WHERE id IN (SELECT DISTINCT(ss) FROM TopicsUntracked)",
+            "SELECT
+                id,
+                na
+            FROM Forums
+            WHERE id IN (SELECT DISTINCT ss FROM TopicsUntracked)",
             array(),
             true,
             PDO::FETCH_KEY_PAIR
@@ -179,8 +183,16 @@ try {
         } else {
             $statementFields[] = 'se';
         }
-        $statementSQL = 'SELECT Topics.id,hs,na,si,rg%s FROM Topics %s
-            WHERE Topics.hs IN (SELECT hs FROM Clients GROUP BY hs HAVING count(*) > 1)';
+        $statementSQL =
+            'SELECT
+                Topics.id,
+                hs,
+                na,
+                si,
+                rg
+                %s
+            FROM Topics %s
+            WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(*) > 1)';
         $statement = sprintf(
             $statementSQL,
             ',' . implode(',', $statementFields),
@@ -209,7 +221,15 @@ try {
                     $stateAverageSeeders = 'text-success';
                 }
             }
-            $statement = 'SELECT cl,dl FROM Clients WHERE hs = ? ORDER BY LOWER(cl)';
+            $statement =
+                'SELECT
+                    client_id,
+                    done,
+                    paused,
+                    error
+                FROM Torrents
+                WHERE info_hash = ?
+                ORDER BY client_id';
             $listTorrentClientsIDs = Db::query_database(
                 $statement,
                 array($topicData['hs']),
@@ -218,21 +238,22 @@ try {
             // сортировка торрент-клиентов
             $sortOrderTorrentClients = array_flip(array_keys($cfg['clients']));
             usort($listTorrentClientsIDs, function ($a, $b) use ($sortOrderTorrentClients) {
-                return $sortOrderTorrentClients[$a['cl']] - $sortOrderTorrentClients[$b['cl']];
+                return $sortOrderTorrentClients[$a['client_id']] - $sortOrderTorrentClients[$b['client_id']];
             });
             $formatTorrentClientList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="bold text-%2$s">%3$s</i>';
             $listTorrentClientsNames = array_map(function ($e) use ($cfg, $formatTorrentClientList) {
-                if (isset($cfg['clients'][$e['cl']])) {
-                    if ($e['dl'] == '1') {
+                if (isset($cfg['clients'][$e['client_id']])) {
+                    if ($e['done'] == 1) {
                         $stateTorrentClientStatus = 'arrow-up';
                         $stateTorrentClientColor = 'success';
-                    } elseif ($e['dl'] == '0') {
+                    } else {
                         $stateTorrentClientStatus = 'arrow-down';
                         $stateTorrentClientColor = 'danger';
-                    } elseif ($e['dl'] == '-1') {
+                    }
+                    if ($e['paused'] == 1) {
                         $stateTorrentClientStatus = 'pause';
-                        $stateTorrentClientColor = 'success';
-                    } else {
+                    }
+                    if ($e['error'] == 1) {
                         $stateTorrentClientStatus = 'times';
                         $stateTorrentClientColor = 'danger';
                     }
@@ -240,7 +261,7 @@ try {
                         $formatTorrentClientList,
                         $stateTorrentClientStatus,
                         $stateTorrentClientColor,
-                        $cfg['clients'][$e['cl']]['cm']
+                        $cfg['clients'][$e['client_id']]['cm']
                     );
                 }
             }, $listTorrentClientsIDs);
@@ -322,7 +343,7 @@ try {
             $forumsIDs = array($forum_id);
         } elseif ($forum_id == -5) {
             $forumsIDs = Db::query_database(
-                'SELECT DISTINCT(ss) FROM Topics WHERE pt = 2',
+                'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
                 array(),
                 true,
                 PDO::FETCH_COLUMN
@@ -344,24 +365,58 @@ try {
 
         $ss = str_repeat('?,', count($forumsIDs) - 1) . '?';
         $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
-        $dl = 'dl IS NOT -2 AND abs(dl) IS ' . implode(' OR abs(dl) IS ', $filter['filter_client_status']);
+        $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
-        $pattern_statement = 'SELECT Topics.id,na,si,rg,pt,dl%s FROM Topics
-            LEFT JOIN Clients ON Topics.hs = Clients.hs%s
+        $pattern_statement =
+            'SELECT
+                Topics.id,
+                Topics.na,
+                Topics.si,
+                Topics.rg,
+                Topics.pt,
+                Torrents.done,
+                Torrents.paused,
+                Torrents.error
+                %s
+            FROM Topics
+            LEFT JOIN Torrents ON Topics.hs = Torrents.info_hash
+            %s
             LEFT JOIN (
-                SELECT id,nick,MAX(posted) as posted,complete,MAX(seeding) as seeding FROM (
-                    SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
+                SELECT
+                    id,
+                    nick,
+                    MAX(posted) as posted,
+                    complete,
+                    MAX(seeding) as seeding
+                FROM (
+                    SELECT
+                        Topics.id,
+                        Keepers.nick,
+                        complete,posted,
+                        NULL as seeding
+                    FROM Topics
                     LEFT JOIN Keepers ON Topics.id = Keepers.id
                     WHERE Keepers.id IS NOT NULL
                     UNION ALL
-                    SELECT topic_id,nick,1,NULL,1 FROM Topics
+                    SELECT
+                        topic_id,
+                        nick,
+                        1,
+                        NULL,
+                        1
+                    FROM Topics
                     LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
                     WHERE KeepersSeeders.topic_id IS NOT NULL
                 ) GROUP BY id
             ) Keepers ON Topics.id = Keepers.id
-            LEFT JOIN (SELECT * FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
-            WHERE ss IN (' . $ss . ') AND st IN (' . $st . ') AND (' . $dl . ') AND Blacklist.id IS NULL%s';
+            LEFT JOIN (SELECT id FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
+            WHERE
+                ss IN (' . $ss . ')
+                AND st IN (' . $st . ')
+                AND (' . $torrentDone . ')
+                AND Blacklist.id IS NULL
+                %s';
 
         $fields = array();
         $where = array();
@@ -557,15 +612,19 @@ try {
                     $data .= $pattern;
                 }
             }
-            // тип пульки: раздаю, качаю, на паузе
-            if ($topic_data['dl'] == '1') {
+            // тип пульки: раздаю, качаю, на паузе, ошибка
+            if ($topic_data['done'] == 1) {
                 $stateTorrentClient = 'fa-arrow-up';
-            } elseif ($topic_data['dl'] == '0') {
-                $stateTorrentClient = 'fa-arrow-down';
-            } elseif ($topic_data['dl'] == '-1') {
-                $stateTorrentClient = 'fa-pause';
-            } else {
+            } elseif ($topic_data['done'] == null) {
                 $stateTorrentClient = 'fa-circle';
+            } else {
+                $stateTorrentClient = 'fa-arrow-down';
+            }
+            if ($topic_data['paused'] == 1) {
+                $stateTorrentClient = 'fa-pause';
+            }
+            if ($topic_data['error'] == 1) {
+                $stateTorrentClient = 'fa-times';
             }
             // цвет пульки
             $bullet = '';

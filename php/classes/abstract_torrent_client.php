@@ -85,13 +85,6 @@ abstract class TorrentClient
     }
 
     /**
-     * получение списка раздач от торрент-клиента
-     * @return bool|array array[torrentHash] => torrentStatus
-     * torrentStatus: 0 (скачивается), 1 (сидируется), -1 (сидируется на паузе), -2 (с ошибкой)
-     */
-    abstract public function getTorrents();
-
-    /**
      * получение сведений о раздачах от торрент-клиента
      * @return bool|array
      * array[torrentHash] => (comment, done, error, name, paused, time_added, total_size, tracker_error)

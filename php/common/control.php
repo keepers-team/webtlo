@@ -36,7 +36,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     // применяем таймауты
     $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
     // получение данных от торрент-клиента
-    $torrents = $client->getTorrents();
+    $torrents = $client->getAllTorrents();
     if ($torrents === false) {
         Log::append('Error: Не удалось получить данные о раздачах от торрент-клиента "' . $torrentClientData['cm'] . '"');
         continue;
@@ -52,7 +52,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
         $responseTopicsHashes = Db::query_database(
-            'SELECT ss,hs FROM Topics WHERE hs IN (' . $placeholdersTorrentsHashes . ') AND ss IN (' . $placeholdersForumsIDs . ')',
+            'SELECT
+                ss,
+                hs
+            FROM Topics
+            WHERE
+                hs IN (' . $placeholdersTorrentsHashes . ')
+                AND ss IN (' . $placeholdersForumsIDs . ')',
             array_merge($torrentsHashes, $forumsIDs),
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
@@ -87,12 +93,18 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             unset($topicsHashhasheses);
             if ($peerStatistics !== false) {
                 foreach ($peerStatistics as $topicHash => $topicData) {
-                    // если нет такой раздачи или идёт загрузка раздачи, идём дальше
-                    if (empty($torrents[$topicHash])) {
+                    if (
+                        // пропускаем отсутствующий торрент
+                        empty($torrents[$topicHash])
+                        // пропускаем торрент с ошибкой
+                        || $torrents[$topicHash]['error'] == 1
+                        // пропускаем торрент на загрузке
+                        || $torrents[$topicHash]['done'] != 1
+                    ) {
                         continue;
                     }
-                    // статус раздачи
-                    $torrentStatus = $torrents[$topicHash];
+                    // статус торрента
+                    $torrentStatus = $torrents[$topicHash]['paused'] == 1 ? -1 : 1;
                     // учитываем себя
                     $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
                     // находим значение личей

@@ -62,9 +62,24 @@ try {
 
         // вытаскиваем из базы хранимое
         $stored = Db::query_database(
-            "SELECT ss,COUNT(),SUM(si) FROM Topics
-			LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-			WHERE dl IN (1,-1) AND ss IN ($in) AND se / qt <= 10 GROUP BY ss",
+            "SELECT
+                Topics.ss,
+                COUNT(),
+                SUM(Topics.si)
+            FROM Topics
+            LEFT JOIN (
+                SELECT info_hash
+                FROM Torrents
+                WHERE
+                    done = 1
+                    AND error = 0
+                GROUP BY info_hash
+            ) Torrents ON Topics.hs = Torrents.info_hash
+            WHERE
+                Torrents.info_hash IS NOT NULL
+                AND Topics.ss IN ($in)
+                AND Topics.se / Topics.qt <= 10
+            GROUP BY ss",
             $forums_ids,
             true,
             PDO::FETCH_NUM | PDO::FETCH_UNIQUE
@@ -125,9 +140,26 @@ try {
 
         // получение данных о раздачах
         $topics = Db::query_database(
-            "SELECT Topics.id,ss,na,si,st,dl FROM Topics
-			LEFT JOIN (SELECT hs,cl,MAX(ABS(dl)) as dl FROM Clients WHERE dl IN (1,-1,0) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-			WHERE ss = ? AND dl IN (1,-1,0) AND se / qt <= 10",
+            "SELECT
+                Topics.id,
+                Topics.ss,
+                Topics.na,
+                Topics.si,
+                Topics.st,
+                Torrents.done
+            FROM Topics
+            LEFT JOIN (
+                SELECT
+                    info_hash,
+                    MAX(done) AS done
+                FROM Torrents
+                WHERE error = 0
+                GROUP BY info_hash
+            ) Torrents ON Topics.hs = Torrents.info_hash
+            WHERE
+                Torrents.info_hash IS NOT NULL
+                AND Topics.ss = ?
+                AND Topics.se / Topics.qt <= 10",
             array($forum_id),
             true
         );
@@ -152,14 +184,14 @@ try {
                 $tmp['dlsisub'] = 0;
                 $tmp['dlqtsub'] = 0;
             }
-            $topicLink = $topic['dl'] == 0 ? $topic['id'] . '#dl' : $topic['id'];
+            $topicLink = $topic['done'] != 1 ? $topic['id'] . '#dl' : $topic['id'];
             $str = sprintf(
                 $pattern_topic,
                 $topicLink,
                 $topic['na'],
                 convert_bytes($topic['si'])
             );
-            if ($topic['dl'] == 0) {
+            if ($topic['done'] != 1) {
                 $tmp['dlqtsub']++;
                 $tmp['dlsisub'] += $topic['si'];
                 $str .= ' :!: ';

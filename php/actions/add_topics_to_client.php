@@ -179,17 +179,17 @@ try {
         }
         $numberAddedTorrentFiles = count($addedTorrentFiles);
         // создаём временную таблицу
-        Db::query_database('DROP TABLE IF EXISTS temp.Hashes');
+        Db::query_database('DROP TABLE IF EXISTS temp.TorrentsHashes');
         Db::query_database(
-            'CREATE TEMP TABLE Hashes AS
-            SELECT hs FROM Clients WHERE 0 = 1'
+            'CREATE TEMP TABLE TorrentsHashes AS
+            SELECT info_hash FROM Torrents WHERE 0 = 1'
         );
         // узнаём хэши раздач
         $addedTorrentFiles = array_chunk($addedTorrentFiles, 999);
         foreach ($addedTorrentFiles as $addedTorrentFiles) {
             $placeholders = str_repeat('?,', count($addedTorrentFiles) - 1) . '?';
             Db::query_database(
-                'INSERT INTO temp.Hashes
+                'INSERT INTO temp.TorrentsHashes
                 SELECT hs FROM Topics WHERE id IN (' . $placeholders . ')',
                 $addedTorrentFiles
             );
@@ -198,14 +198,28 @@ try {
         unset($addedTorrentFiles);
         // помечаем в базе добавленные раздачи
         Db::query_database(
-            'INSERT INTO Clients (hs,cl,dl)
-            SELECT hs,?,? FROM temp.Hashes',
-            array($torrentClientID, 0)
+            'INSERT INTO Torrents (
+                info_hash,
+                client_id,
+                topic_id,
+                name,
+                total_size
+            )
+            SELECT
+                temp.TorrentsHashes.info_hash,
+                ?,
+                Topics.id,
+                Topics.na,
+                Topics.si
+            FROM temp.TorrentsHashes
+            LEFT JOIN Topics ON Topics.hs = temp.TorrentsHashes.info_hash
+            WHERE temp.TorrentsHashes.info_hash IS NOT NULL',
+            array($torrentClientID)
         );
         if (!empty($forumData['lb'])) {
             // вытаскиваем хэши добавленных раздач
             $topicsHashes = Db::query_database(
-                'SELECT hs FROM temp.Hashes',
+                'SELECT info_hash FROM temp.TorrentsHashes',
                 array(),
                 true,
                 PDO::FETCH_COLUMN

@@ -95,30 +95,6 @@ class Qbittorrent extends TorrentClient
         }
     }
 
-    public function getTorrents()
-    {
-        $response = $this->makeRequest('api/v2/torrents/info');
-        if ($response === false) {
-            return false;
-        }
-        $torrents = array();
-        foreach ($response as $torrent) {
-            if (!in_array($torrent['state'], $this->errorStates)) {
-                if ($torrent['progress'] == 1) {
-                    $torrentStatus = $torrent['state'] == 'pausedUP' ? -1 : 1;
-                } else {
-                    $torrentStatus = 0;
-                }
-            } else {
-                $torrentStatus = -2;
-            }
-            $torrentHash = isset($torrent['infohash_v1']) ? $torrent['infohash_v1'] : $torrent['hash'];
-            $torrentHash = strtoupper($torrentHash);
-            $torrents[$torrentHash] = $torrentStatus;
-        }
-        return $torrents;
-    }
-
     public function getAllTorrents()
     {
         $response = $this->makeRequest('api/v2/torrents/info');

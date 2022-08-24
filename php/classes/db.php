@@ -41,6 +41,34 @@ class Db
         return $statement;
     }
 
+    /**
+     * объединение нескольких запросов на получение данных
+     * @param array $source
+     * @return string|bool
+     */
+    public static function unionQuery($source)
+    {
+        if (!is_array($source)) {
+            return false;
+        }
+        $query = '';
+        $values = array();
+        foreach ($source as &$row) {
+            if (!is_array($row)) {
+                return false;
+            }
+            $row = array_map(
+                function ($e) {
+                    return is_numeric($e) ? $e : Db::$db->quote($e);
+                },
+                $row
+            );
+            $values[] = implode(',', $row);
+        }
+        $query = 'SELECT ' . implode(' UNION ALL SELECT ', $values);
+        return $query;
+    }
+
     public static function create()
     {
         // файл базы данных
@@ -645,6 +673,37 @@ class Db
                 'END;'
             );
             $statements[] = 'PRAGMA user_version = 7';
+        }
+        // user_version = 8
+        if ($version[0]['user_version'] < 8) {
+            $statements[] = array('DROP TABLE IF EXISTS Clients');
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS Torrents (',
+                '    info_hash     TEXT    NOT NULL,',
+                '    client_id     INT     NOT NULL,',
+                '    topic_id      INT,',
+                '    name          TEXT,',
+                '    total_size    INT,',
+                '    paused        BOOLEAN DEFAULT (0),',
+                '    done          REAL    DEFAULT (0),',
+                '    time_added    INT     DEFAULT (strftime(\'%s\')),',
+                '    error         BOOLEAN DEFAULT (0),',
+                '    tracker_error TEXT,',
+                '    PRIMARY KEY (',
+                '        info_hash,',
+                '        client_id',
+                '    )',
+                '    ON CONFLICT REPLACE',
+                ')'
+            );
+            $statements[] = array(
+                'CREATE TRIGGER IF NOT EXISTS remove_untracked_topics',
+                'AFTER DELETE ON Torrents FOR EACH ROW',
+                'BEGIN',
+                '    DELETE FROM TopicsUntracked WHERE hs = OLD.info_hash;',
+                'END;'
+            );
+            $statements[] = 'PRAGMA user_version = 8';
         }
         // формируем структуру БД
         foreach ($statements as &$statement) {

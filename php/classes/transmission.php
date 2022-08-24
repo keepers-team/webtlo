@@ -128,40 +128,6 @@ class Transmission extends TorrentClient
         }
     }
 
-    public function getTorrents()
-    {
-        $fields = array(
-            'method' => 'torrent-get',
-            'arguments' => array(
-                'fields' => array(
-                    'hashString',
-                    'status',
-                    'error',
-                    'percentDone',
-                ),
-            ),
-        );
-        $response = $this->makeRequest($fields);
-        if ($response === false) {
-            return false;
-        }
-        $torrents = array();
-        foreach ($response['torrents'] as $torrent) {
-            if ($torrent['error'] == 0) {
-                if ($torrent['percentDone'] == 1) {
-                    $torrentStatus = $torrent['status'] == 0 ? -1 : 1;
-                } else {
-                    $torrentStatus = 0;
-                }
-            } else {
-                $torrentStatus = -2;
-            }
-            $torrentHash = strtoupper($torrent['hashString']);
-            $torrents[$torrentHash] = $torrentStatus;
-        }
-        return $torrents;
-    }
-
     public function getAllTorrents()
     {
         $fields = array(

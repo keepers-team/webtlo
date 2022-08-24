@@ -8,15 +8,18 @@ try {
     $cfg = get_settings();
 
     $unknownHashes = Db::query_database(
-        'SELECT DISTINCT(Clients.hs) FROM Clients
-        LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Clients.hs
-        LEFT JOIN Topics ON Topics.hs = Clients.hs
-        WHERE Topics.hs IS NULL AND TopicsUntracked.hs IS NULL',
+        'SELECT DISTINCT Torrents.info_hash FROM Torrents
+        LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Torrents.info_hash
+        LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
+        WHERE
+            Topics.hs IS NULL
+            AND TopicsUntracked.hs IS NULL',
         array(),
         true,
         PDO::FETCH_COLUMN
     );
 
+    $output = array();
     $topicsIDs = array();
 
     foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {

@@ -130,46 +130,6 @@ class Deluge extends TorrentClient
         }
     }
 
-    public function getTorrents()
-    {
-        $fields = array(
-            'method' => 'core.get_torrents_status',
-            'params' => array(
-                (object) array(),
-                array(
-                    'message',
-                    'paused',
-                    'progress',
-                    'tracker_status'
-                ),
-            ),
-            'id' => 9,
-        );
-        $response = $this->makeRequest($fields);
-        if ($response === false) {
-            return false;
-        }
-        $torrents = array();
-        foreach ($response as $hashString => $torrent) {
-            preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
-            if (
-                $torrent['message' == 'OK']
-                && !isset($matches[1])
-            ) {
-                if ($torrent['progress'] == 100) {
-                    $torrentStatus = $torrent['paused'] ? -1 : 1;
-                } else {
-                    $torrentStatus = 0;
-                }
-            } else {
-                $torrentStatus = -2;
-            }
-            $torrentHash = strtoupper($hashString);
-            $torrents[$torrentHash] = $torrentStatus;
-        }
-        return $torrents;
-    }
-
     public function getAllTorrents()
     {
         $fields = array(

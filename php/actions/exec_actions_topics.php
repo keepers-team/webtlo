@@ -38,8 +38,11 @@ try {
     foreach ($topicsIDs as $topicsIDs) {
         $placeholders = str_repeat('?,', count($topicsIDs) - 1) . '?';
         $torrentHashesClients = Db::query_database(
-            'SELECT cl,hs FROM Clients
-            WHERE hs IN (
+            'SELECT
+                client_id,
+                info_hash
+            FROM Torrents
+            WHERE info_hash IN (
                 SELECT hs FROM (
                     SELECT id,hs FROM Topics
                     UNION
@@ -114,7 +117,7 @@ try {
                     foreach ($torrentHashesRemoving as $torrentHashesRemoving) {
                         $placeholders = str_repeat('?,', count($torrentHashesRemoving)) . '?';
                         Db::query_database(
-                            'DELETE FROM Clients WHERE hs IN (' . $placeholders . ')',
+                            'DELETE FROM Torrents WHERE info_hash IN (' . $placeholders . ')',
                             $torrentHashesRemoving
                         );
                         unset($placeholders);

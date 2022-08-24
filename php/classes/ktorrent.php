@@ -143,8 +143,9 @@ class Ktorrent extends TorrentClient
         return $response;
     }
 
-    public function getTorrents()
+    public function getAllTorrents()
     {
+        return array();
         $response = $this->getTorrentsData();
         if ($response === false) {
             return false;
@@ -166,11 +167,6 @@ class Ktorrent extends TorrentClient
             }
         }
         return $torrents;
-    }
-
-    public function getAllTorrents()
-    {
-        return array();
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
