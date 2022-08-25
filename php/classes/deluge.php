@@ -2,7 +2,7 @@
 
 /**
  * Class Deluge
- * Supported by Deluge 1.3.6 [ plugins WebUi 0.1 and Label 0.2 ] and later
+ * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later
  */
 class Deluge extends TorrentClient
 {
@@ -257,11 +257,6 @@ class Deluge extends TorrentClient
      */
     private function createLabel($labelName)
     {
-        $labelName = str_replace(' ', '_', $labelName);
-        if (!preg_match('|^[aA-zZ0-9\-_]+$|', $labelName)) {
-            Log::append('Error: В названии метки присутствуют недопустимые символы');
-            return false;
-        }
         if ($this->labels === null) {
             $enablePlugin = $this->enablePlugin('Label');
             if ($enablePlugin === false) {
@@ -277,7 +272,7 @@ class Deluge extends TorrentClient
         if ($this->labels === false) {
             return false;
         }
-        if (in_array($labelName, $this->labels)) {
+        if (in_array($labelName, array_map('strtolower', $this->labels))) {
             return true;
         }
         $this->labels[] = $labelName;
@@ -291,6 +286,12 @@ class Deluge extends TorrentClient
 
     public function setLabel($torrentHashes, $labelName = '')
     {
+        $labelName = str_replace(' ', '_', $labelName);
+        if (!preg_match('|^[aA-zZ0-9\-_]+$|', $labelName)) {
+            Log::append('Error: В названии метки присутствуют недопустимые символы');
+            return false;
+        }
+        $labelName = strtolower($labelName);
         $createdLabel = $this->createLabel($labelName);
         if ($createdLabel === false) {
             return false;
