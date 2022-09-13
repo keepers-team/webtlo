@@ -41,6 +41,13 @@ function block_actions() {
 		} else {
 			$(".tor_stop, .tor_remove, .tor_label, .tor_start").addClass("ui-state-disabled").prop("disabled", true);
 		}
+
+		// Показывать кнопку перемещения только когда выбрано только "храню" и выбран подраздел
+		var keep_only = $("input[name^='filter_client_status']:checked:not(:disabled)");
+		if (keep_only.length !== 1 || keep_only.val() != 1 || $("#main-subsections").val() <= 0) {
+			$(".tor_move").addClass("ui-state-disabled").prop("disabled", true);
+		}
+
 		$("#main-subsections").selectmenu("enable");
 		$("#loading, #process").hide();
 		lock_actions = 0;

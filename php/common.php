@@ -306,3 +306,39 @@ function natsort_field(array $input, $field, $direct = 1)
     });
     return $input;
 }
+
+/**
+ * Получение ид раздачи из комментария.
+ *
+ * @param      array  $torrent  Данные раздачи от торрент-клиента
+ * 
+ * @return     int    Ид раздачи
+ */
+function get_torrent_topic_id($torrent)
+{
+    return preg_replace('/.*?([0-9]*)$/', '$1', $torrent['comment']);
+}
+
+/**
+ * Создание полного пути места хранения файлов раздачи
+ *
+ * @param      array  $forumData  Параметры подраздела раздачи
+ * @param      int    $topicID    Ид раздачи
+ *
+ * @return     string  Новый путь хранения файлов
+ */
+function prepareSubsectionPath($forumData, $topicID)
+{
+    // убираем последний слэш в пути каталога для данных
+    if (preg_match('/(\/|\\\\)$/', $forumData['df'])) {
+        $forumData['df'] = substr($forumData['df'], 0, -1);
+    }
+    // определяем направление слэша в пути каталога для данных
+    $delimiter = strpos($forumData['df'], '/') === false ? '\\' : '/';
+
+    $loc = [$forumData['df']];
+    if ($forumData['sub_folder']) {
+        $loc[] = $topicID;
+    }
+    return implode($delimiter, $loc);
+}

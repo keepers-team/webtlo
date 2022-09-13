@@ -68,6 +68,71 @@ $(document).ready(function () {
 		});
 	});
 
+	// перемещение раздач
+	$("#tor_move").on("click", function () {
+		var forum_id = $("#main-subsections").val();
+		if (forum_id <= 0) {
+			showResultTopics("Выберите хранимый подраздел...");
+			return false;
+		}
+		var topics_ids = $("#topics").serialize();
+		if ($.isEmptyObject(topics_ids)) {
+			showResultTopics("Выберите раздачи");
+			return false;
+		}
+
+		var forumData = $("#list-forums option[value=" + forum_id + "]").data();
+		var text = 'Выбранные раздачи будут перемещены по пути, который указан в настройках подраздела ' +
+			"<br />=> " + forumData.savepath +
+			(forumData.subdirectory ? ' (с учётом создания подпапки)' : ' (без создания подпапки)') + '.' +
+			'Процесс можеть занять много времени...' +
+			"<br /><br />Продолжить?";
+
+		$("#dialog").dialog(
+			{
+				buttons: [
+					{
+						text: "Да, переместить",
+						click: function () {
+							$("#process").text("Отправка команды на перемещение раздач...");
+							$(this).dialog("close");
+							$.ajax({
+								type: "POST",
+								url: "php/actions/move_torrents.php",
+								data: {
+									forum_id: forum_id,
+									topics_ids: topics_ids
+								},
+								beforeSend: function () {
+									block_actions();
+								},
+								complete: function () {
+									block_actions();
+								},
+								success: function (response) {
+									response = $.parseJSON(response);
+									$("#log").append(response.log);
+									showResultTopics(response.result);
+								}
+							});
+						}
+					},
+					{
+						text: "Нет",
+						click: function () {
+							$(this).dialog("close");
+						}
+					}
+				],
+				modal: true,
+				resizable: false,
+				// position: [ 'center', 200 ]
+			}
+		).html(text);
+		$("#dialog").dialog("open");
+		return true;
+	});
+
 	// добавление раздач в торрент-клиент
 	$("#tor_add").on("click", function () {
 		var topics_ids = $("#topics").serialize();

@@ -95,9 +95,9 @@ class Qbittorrent extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents( $params = false )
     {
-        $response = $this->makeRequest('api/v2/torrents/info');
+        $response = $this->makeRequest('api/v2/torrents/info', $params);
         if ($response === false) {
             return false;
         }
@@ -113,8 +113,11 @@ class Qbittorrent extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
+                'topic_id' => '',
                 'time_added' => $torrent['added_on'],
                 'total_size' => $torrent['total_size'],
+                'category' => $torrent['category'],
+                'location' => $torrent['save_path'],
                 'tracker_error' => ''
             );
             if (empty($torrent['tracker'])) {
@@ -136,8 +139,9 @@ class Qbittorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        foreach ($response as $torrentHash => $torrentData) {
-            $torrents[$torrentHash]['comment'] = $torrentData['comment'];
+        foreach ($response as $torrentHash => $torrent) {
+            $torrents[$torrentHash]['comment'] = $torrent['comment'];
+            $torrents[$torrentHash]['topic_id'] = get_torrent_topic_id($torrent);
         }
         return $torrents;
     }
@@ -151,7 +155,9 @@ class Qbittorrent extends TorrentClient
                 array('hash' => strtolower($torrentHash))
             );
             if ($trackers === false) {
-                return false;
+                Log::append($torrentHash);
+                // return false;
+                continue;
             }
             foreach ($trackers as $tracker) {
                 if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
@@ -171,7 +177,9 @@ class Qbittorrent extends TorrentClient
                 array('hash' => strtolower($torrentHash))
             );
             if ($response === false) {
-                return false;
+                Log::append($torrentHash);
+                // return false;
+                continue;
             }
             $torrents[$torrentHash] = $response;
         }
@@ -260,6 +268,20 @@ class Qbittorrent extends TorrentClient
     {
         $fields = array('hashes' => implode('|', array_map('strtolower', $torrentHashes)));
         return $this->makeRequest('api/v2/torrents/pause', $fields);
+    }
+
+    public function moveTorrent( $torrentHash, $location )
+    {
+        $data = ['hashes' => strtolower($torrentHash), 'location' => $location];
+        $fields = http_build_query($data, '', '&', PHP_QUERY_RFC3986);
+        return $this->makeRequest('api/v2/torrents/setLocation', $fields );
+    }
+
+    public function renameTorrent( $torrentHash, $name )
+    {
+        $data = ['hash' => strtolower($torrentHash), 'name' => $name];
+        $fields = http_build_query($data, '', '&', PHP_QUERY_RFC3986);
+        return $this->makeRequest('api/v2/torrents/rename', $fields );
     }
 
     public function removeTorrents($torrentHashes, $deleteFiles = false)

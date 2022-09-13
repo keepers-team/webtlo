@@ -225,6 +225,9 @@ try {
                             <button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
                                 <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
+                            <button type="button" id="tor_move" class="tor_move" title="Выполнить перемещение выделенных раздач в торрент-клиентах">
+                                <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                            </button>
                         </div>
                         <button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
                             <i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
