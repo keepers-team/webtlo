@@ -220,6 +220,36 @@ function addSubsection(event, ui) {
 	ui.item.value = "";
 }
 
+// Добавление раздела в хранимые, по нажатию на ид форума
+function addUnsavedSubsection(forum_id) {
+	$("#dialog").dialog(
+		{
+			buttons: [
+				{
+					text: "Да, добавить",
+					click: function () {
+						// Открываем вкладку настроек, настройки хранимых подразделов и вставляем ид раздела
+						$("#menutabs").tabs("option", "active", 1);
+						$("div.sub_settings").accordion("option", "active" , 3);
+						$("#add-forum").val(forum_id).autocomplete("search", forum_id);
+						$(this).dialog("close");
+					},
+				},
+				{
+					text: "Нет",
+					click: function() {
+						$(this).dialog("close");
+					}
+				}
+			],
+			modal: true,
+			resizable: false,
+			// position: [ 'center', 200 ]
+		}
+	).text("Добавить подраздел в хранимые?");
+	$("#dialog").dialog("open");
+}
+
 function getForums() {
 	var forums = {};
 	$("#list-forums option").each(function () {
