@@ -1,0 +1,17 @@
+version: "2.4"
+
+services:
+  webtlo:
+    image: webtlo
+    # build: ./
+    container_name: webtlo
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+    volumes:
+      # - .:/var/www/html/
+      - ./webtlo-config:/var/www/html/data
+    ports:
+      - 9080:80
+    restart: unless-stopped

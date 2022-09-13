@@ -1,2 +1,10 @@
 Dockerfile
+docker-compose.*
 .git
+.gitignore
+.dockerignore
+.htaccess
+LICENSE
+README.md
+data/
+webtlo-config/
