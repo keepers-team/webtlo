@@ -1,4 +1,12 @@
+/.vscode
+/.idea
+/.Trash*
 /data
-.idea
+/test*
 *.db
 *.sqlite
+*.sql
+*.torrent
+*.ini
+*.log
+*.jpg
