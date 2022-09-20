@@ -583,7 +583,7 @@ try {
                     if (!isset($keepers[$topic_data['id']])) {
                         $keepers[$topic_data['id']] = array();
                     }
-                    $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
+                    $topicKeepers = array_column($keepers[$topic_data['id']], 'nick');
                     unset($matchKeepers);
                     foreach ($filterByKeeper as $filterKeeper) {
                         if (empty($filterKeeper)) {

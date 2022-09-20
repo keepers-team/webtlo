@@ -169,7 +169,7 @@ function get_settings($filename = "")
             && !empty($config['clients'])
         ) {
             $tor_clients_ids = array_keys($config['clients']);
-            $tor_clients_comments = array_column_common($config['clients'], "cm");
+            $tor_clients_comments = array_column($config['clients'], "cm");
             $tor_clients = array_combine($tor_clients_comments, $tor_clients_ids);
             foreach ($subsections as $forum_id) {
                 $forum_client = $ini->read($forum_id, "client", "0");
@@ -289,31 +289,6 @@ function mkdir_recursive($path)
         return ($return && is_writable($winprev_path) && !file_exists($winpath)) ? mkdir($winpath) : false;
     }
     return ($return && is_writable($prev_path) && !file_exists($path)) ? mkdir($path) : false;
-}
-
-function array_column_common(array $input, $columnKey, $indexKey = null)
-{
-    $array = array();
-    foreach ($input as $value) {
-        if (!isset($value[$columnKey])) {
-            trigger_error("Key \"$columnKey\" does not exist in array");
-            return false;
-        }
-        if (is_null($indexKey)) {
-            $array[] = $value[$columnKey];
-        } else {
-            if (!isset($value[$indexKey])) {
-                trigger_error("Key \"$indexKey\" does not exist in array");
-                return false;
-            }
-            if (!is_scalar($value[$indexKey])) {
-                trigger_error("Key \"$indexKey\" does not contain scalar value");
-                return false;
-            }
-            $array[$value[$indexKey]] = $value[$columnKey];
-        }
-    }
-    return $array;
 }
 
 function natsort_field(array $input, $field, $direct = 1)

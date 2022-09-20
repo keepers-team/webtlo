@@ -225,7 +225,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -246,7 +246,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -267,7 +267,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
