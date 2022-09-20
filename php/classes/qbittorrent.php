@@ -113,31 +113,31 @@ class Qbittorrent extends TorrentClient
                 'error' => $torrentError,
                 'name' => $torrent['name'],
                 'paused' => $torrentPaused,
-                'time_added' => '',
+                'time_added' => $torrent['added_on'],
                 'total_size' => $torrent['total_size'],
                 'tracker_error' => ''
             );
-        }
-        $torrentHashes = array_keys($torrents);
-        $response = $this->getTrackers($torrentHashes);
-        if ($response === false) {
-            return false;
-        }
-        foreach ($response as $torrentHash => $trackers) {
-            foreach ($trackers as $tracker) {
-                if ($tracker['status'] == 4) {
-                    $torrents[$torrentHash]['tracker_error'] = $tracker['msg'];
-                    break;
+            if (empty($torrent['tracker'])) {
+                $torrentTrackers = $this->getTrackers(array($torrentHash));
+                if ($torrentTrackers === false) {
+                    continue;
+                }
+                foreach ($torrentTrackers[$torrentHash] as $torrentTracker) {
+                    if ($torrentTracker['status'] == 4) {
+                        $torrents[$torrentHash]['tracker_error'] = $torrentTracker['msg'];
+                        break;
+                    }
                 }
             }
         }
+        // получение ссылки на раздачу
+        $torrentHashes = array_keys($torrents);
         $response = $this->getProperties($torrentHashes);
         if ($response === false) {
             return false;
         }
-        foreach ($response as $torrentHash => $torrent) {
-            $torrents[$torrentHash]['comment'] = $torrent['comment'];
-            $torrents[$torrentHash]['time_added'] = $torrent['addition_date'];
+        foreach ($response as $torrentHash => $torrentData) {
+            $torrents[$torrentHash]['comment'] = $torrentData['comment'];
         }
         return $torrents;
     }
