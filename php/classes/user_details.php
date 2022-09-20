@@ -89,6 +89,7 @@ class UserDetails
                         if (!empty($captcha)) {
                             $captcha = pq($captcha);
                             $captcha_img = $captcha->find('img')->attr('src');
+                            $captcha_img = str_replace('https', 'http', $captcha_img);
                             $captcha_img = file_get_contents($captcha_img);
                             file_put_contents(
                                 dirname(__FILE__) . '/../../data/captcha.jpg',
