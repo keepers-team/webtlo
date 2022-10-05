@@ -419,6 +419,10 @@ class Reports
                     ) {
                         continue;
                     }
+                    // Skip topics links from user StatsBot
+                    if ($nickname == 'StatsBot') {
+                        continue;
+                    }
                     // получаем id раздач хранимых другими хранителями
                     $topics = $row->find('a.postLink');
                     if (!empty($topics)) {
