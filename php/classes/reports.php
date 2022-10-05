@@ -392,8 +392,12 @@ class Reports
                     if (empty($post_id)) {
                         continue;
                     }
-                    $index++;
                     $nickname = $row->find('p.nick > a')->text();
+                    // Skip bot messages
+                    if ($nickname == 'StatsBot') {
+                        continue;
+                    }
+                    $index++;
                     $keepers[$index] = array(
                         'post_id' => $post_id,
                         'nickname' => $nickname,
