@@ -9,7 +9,7 @@ function normalizePath(string $path): string
 {
     return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function ($left, $right) {
         if ($left === null) {
-            $left = DIRECTORY_SEPARATOR;
+            return $right;
         }
         if ($right === "" || $right === ".") {
             return $left;
@@ -29,7 +29,7 @@ function getStorageDir(): string
 {
     $directory = getenv('WEBTLO_DIR');
     if ($directory === false) {
-        return normalizePath(dirname(__FILE__) . "/../../data");
+        return normalizePath(dirname(__FILE__) . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 2) . 'data');
     } else {
         return $directory;
     }
