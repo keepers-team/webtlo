@@ -262,6 +262,10 @@ try {
                     if (strcasecmp($cfg['tracker_login'], $keeper['nickname']) === 0) {
                         continue;
                     }
+                    // Skip post from user StatsBot
+                    if ($keeper['nickname'] == 'StatsBot') {
+                        continue;
+                    }
                     // считаем сообщения других хранителей в подразделе
                     if (!isset($stored[$keeper['nickname']])) {
                         $stored[$keeper['nickname']]['dlqt'] = 0;
