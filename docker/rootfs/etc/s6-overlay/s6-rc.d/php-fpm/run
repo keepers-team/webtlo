@@ -1,0 +1,2 @@
+#!/command/execlineb -P
+php-fpm81 --nodaemonize

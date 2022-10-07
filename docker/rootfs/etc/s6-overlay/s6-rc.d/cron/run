@@ -1,0 +1,10 @@
+#!/command/with-contenv bash
+if test "0$WEBTLO_CRON" -ne 0 ; then
+  s6-echo "Enabled cron"
+  exec crond -f
+else
+  s6-echo "Running with disabled cron"
+  exec sleep infinity
+fi
+
+

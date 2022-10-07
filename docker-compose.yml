@@ -1,12 +1,13 @@
 version: "3.9"
 
+volumes:
+  data:
+
 services:
   app:
-    build: .
+    image: berkut174/webtlo
     restart: on-failure
-    environment:
-      WEBTLO_DIR: /data
     ports:
       - "8080:80"
     volumes:
-      - ./data:/data
+      - data:/data
