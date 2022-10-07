@@ -12,7 +12,7 @@ ENV S6_KILL_GRACETIME 1000
 # packages & configure
 RUN apk add --update --no-cache \
     # base tools
-    bash ca-certificates curl openssl nano \
+    bash ca-certificates curl openssl nano sqlite \
     # web server
     nginx \
     # php interpreter
