@@ -45,7 +45,6 @@ COPY scripts scripts
 COPY php php
 COPY favicon.ico .
 COPY index.php .
-COPY test.php .
 
 HEALTHCHECK CMD curl -f http://localhost || exit 1
 SHELL ["/bin/bash", "-c"]
