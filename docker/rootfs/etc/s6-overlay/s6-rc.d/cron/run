@@ -6,5 +6,3 @@ else
   s6-echo "Running with disabled cron"
   exec sleep infinity
 fi
-
-
