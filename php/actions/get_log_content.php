@@ -1,6 +1,6 @@
 <?php
 
-// include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../common/storage.php';
 
 if (isset($_POST['log_file'])) {
     $log_file = $_POST['log_file'];
