@@ -34,3 +34,12 @@ function getStorageDir(): string
         return $directory;
     }
 }
+
+
+/**
+ * @return string The log directory for the application
+ */
+function getLogDir(): string
+{
+    return getStorageDir() . DIRECTORY_SEPARATOR . "logs";
+}

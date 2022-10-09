@@ -10,7 +10,7 @@ if (empty($log_file)) {
     return;
 }
 
-$log_file = dirname(__FILE__) . "/../../data/logs/$log_file.log";
+$log_file = getLogDir() . DIRECTORY_SEPARATOR . $log_file . ".log";
 
 if (file_exists($log_file)) {
     if ($data = file($log_file)) {

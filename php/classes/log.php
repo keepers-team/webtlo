@@ -22,7 +22,7 @@ class Log
 
     public static function write($filelog)
     {
-        $dir = getStorageDir() . DIRECTORY_SEPARATOR . "logs";
+        $dir = getLogDir();
         $result = is_writable($dir) || mkdir($dir);
         if (!$result) {
             echo "Нет или недостаточно прав для доступа к каталогу logs";
@@ -48,5 +48,4 @@ class Log
             }
         }
     }
-
 }
