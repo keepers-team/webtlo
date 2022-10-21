@@ -1,5 +1,5 @@
 #!/command/with-contenv bash
-if test "0$WEBTLO_CRON" -ne 0 ; then
+if [ "${WEBTLO_CRON:=false}" = "true" ]; then
   s6-echo "Enabled cron"
   exec crond -f
 else
