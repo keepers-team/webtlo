@@ -16,7 +16,7 @@ RUN apk add --update --no-cache \
     # web server
     nginx \
     # php interpreter
-    php81 php81-fpm php81-curl php81-sqlite3 php81-pdo_sqlite php81-xml php81-mbstring \
+    php81 php81-fpm php81-curl php81-sqlite3 php81-pdo_sqlite php81-xml php81-mbstring php81-dom \
     && rm -rf /var/cache/apk/*
 
 # install s6 overlays
