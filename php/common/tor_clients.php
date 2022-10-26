@@ -35,15 +35,7 @@ Db::query_database(
 );
 
 if (empty($cfg['clients'])) {
-    Db::query_database(
-        'DELETE FROM Torrents WHERE info_hash || client_id NOT IN (
-            SELECT Torrents.info_hash || Torrents.client_id FROM temp.TorrentsNew
-            LEFT JOIN Torrents ON temp.TorrentsNew.info_hash = Torrents.info_hash AND temp.TorrentsNew.client_id = Torrents.client_id
-            WHERE Torrents.info_hash IS NOT NULL
-        ) OR client_id NOT IN (
-            SELECT DISTINCT client_id FROM temp.TorrentsNew
-        )'
-    );
+    Db::query_database('DELETE FROM Torrents');
     return;
 }
 
@@ -128,6 +120,16 @@ $numberTorrentClients = Db::query_database(
 if ($numberTorrentClients[0] > 0) {
     Db::query_database(
         'INSERT INTO Torrents (' . $torrentsColumns . ') SELECT * FROM temp.TorrentsNew'
+    );
+    Db::query_database(
+        'DELETE FROM Torrents WHERE info_hash || client_id NOT IN (
+            SELECT Torrents.info_hash || Torrents.client_id
+            FROM temp.TorrentsNew
+            LEFT JOIN Torrents ON temp.TorrentsNew.info_hash = Torrents.info_hash AND temp.TorrentsNew.client_id = Torrents.client_id
+            WHERE Torrents.info_hash IS NOT NULL
+        ) OR client_id NOT IN (
+            SELECT DISTINCT client_id FROM temp.TorrentsNew
+        )'
     );
 }
 
