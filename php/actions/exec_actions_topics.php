@@ -123,8 +123,8 @@ try {
                         unset($placeholders);
                     }
                     unset($torrentHashesRemoving);
-                    break;
                 }
+                break;
         }
         if ($response === false) {
             Log::append('Error: Возникли проблемы при отправке запроса "' . $actionType . '" для торрент-клиента "' . $torrentClient['comment'] . '"');
