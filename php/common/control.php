@@ -82,6 +82,9 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             if ($controlPeersForum == -1) {
                 continue;
             }
+            // регулируемое значение пиров
+            $controlPeers = $controlPeersForum == '' ? $cfg['topics_control']['peers'] : $controlPeersForum;
+
             // получаем данные о пирах
             $peerStatistics = $api->getPeerStats($hashes, 'hash');
             unset($topicsHashhasheses);
@@ -91,7 +94,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                     if (empty($torrents[$topicHash])) {
                         continue;
                     }
-                    // статус раздачи
+                    // статус раздачи [1 (сидируется), -1 (сидируется на паузе)]
                     $torrentStatus = $torrents[$topicHash];
                     // учитываем себя
                     $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
@@ -99,8 +102,6 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                     $leechers = $cfg['topics_control']['leechers'] ? $topicData['leechers'] : 0;
                     // находим значение пиров
                     $peers = $topicData['seeders'] + $leechers;
-                    // регулируемое значение пиров
-                    $controlPeers = $controlPeersForum == '' ? $cfg['topics_control']['peers'] : $controlPeersForum;
                     // учитываем вновь прибывшего "лишнего" сида
                     if (
                         $topicData['seeders']
@@ -110,9 +111,11 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                         $peers++;
                     }
                     // стопим только, если есть сиды
+                    // Признак "вырубаем раздачу"
                     $peersState = $peers > $controlPeers
                         || !$cfg['topics_control']['no_leechers']
                         && !$topicData['leechers'];
+
                     if (
                         $topicData['seeders']
                         && $peersState
