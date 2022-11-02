@@ -29,8 +29,8 @@ class Qbittorrent extends TorrentClient
                 )
             ),
             CURLOPT_HEADER => true,
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
+            CURLOPT_CONNECTTIMEOUT => 600,
+            CURLOPT_TIMEOUT => 600
         ));
         $response = curl_exec($ch);
         if ($response === false) {
