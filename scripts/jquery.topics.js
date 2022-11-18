@@ -5,8 +5,8 @@ $(document).ready(function () {
 
 	// скачивание т.-файлов выделенных топиков
 	$(".tor_download").on("click", function () {
-		var topics_ids = $("#topics").serialize();
-		if ($.isEmptyObject(topics_ids)) {
+		var topic_hashes = $("#topics").serialize();
+		if ($.isEmptyObject(topic_hashes)) {
 			showResultTopics("Выберите раздачи");
 			return false;
 		}
@@ -20,7 +20,7 @@ $(document).ready(function () {
 			url: "php/actions/get_torrent_files.php",
 			data: {
 				cfg: config,
-				topics_ids: topics_ids,
+				topic_hashes: topic_hashes,
 				forum_id: forum_id,
 				replace_passkey: replace_passkey
 			},
@@ -40,8 +40,8 @@ $(document).ready(function () {
 
 	// "чёрный" список раздач
 	$("#tor_blacklist").on("click", function () {
-		var topics_ids = $("#topics").serialize();
-		if ($.isEmptyObject(topics_ids)) {
+		var topic_hashes = $("#topics").serialize();
+		if ($.isEmptyObject(topic_hashes)) {
 			showResultTopics("Выберите раздачи");
 			return false;
 		}
@@ -50,9 +50,9 @@ $(document).ready(function () {
 		$("#process").text('Редактирование "чёрного списка" раздач...');
 		$.ajax({
 			type: "POST",
-			url: "php/actions/blacklist.php",
+			url: "php/actions/exclude_topics.php",
 			data: {
-				topics_ids: topics_ids,
+				topic_hashes: topic_hashes,
 				value: value
 			},
 			beforeSend: function () {
@@ -70,8 +70,8 @@ $(document).ready(function () {
 
 	// добавление раздач в торрент-клиент
 	$("#tor_add").on("click", function () {
-		var topics_ids = $("#topics").serialize();
-		if ($.isEmptyObject(topics_ids)) {
+		var topic_hashes = $("#topics").serialize();
+		if ($.isEmptyObject(topic_hashes)) {
 			showResultTopics("Выберите раздачи");
 			return false;
 		}
@@ -80,7 +80,7 @@ $(document).ready(function () {
 			type: "POST",
 			url: "php/actions/add_topics_to_client.php",
 			data: {
-				topics_ids: topics_ids
+				topic_hashes: topic_hashes
 			},
 			beforeSend: function () {
 				block_actions();
@@ -99,8 +99,8 @@ $(document).ready(function () {
 
 	// управление раздачами (старт, стоп и т.п.)
 	$(".torrent_action").on("click", function (e) {
-		var topics_ids = $("#topics").serialize();
-		if ($.isEmptyObject(topics_ids)) {
+		var topic_hashes = $("#topics").serialize();
+		if ($.isEmptyObject(topic_hashes)) {
 			showResultTopics("Выберите раздачи");
 			return false;
 		}
@@ -127,7 +127,7 @@ $(document).ready(function () {
 							click: function () {
 								remove_data = true;
 								execActionTopics(
-									topics_ids,
+									topic_hashes,
 									tor_clients,
 									action,
 									label,
@@ -140,7 +140,7 @@ $(document).ready(function () {
 							text: "Нет",
 							click: function () {
 								execActionTopics(
-									topics_ids,
+									topic_hashes,
 									tor_clients,
 									action,
 									label,
@@ -175,7 +175,7 @@ $(document).ready(function () {
 							click: function () {
 								label = $("#any_label").val();
 								execActionTopics(
-									topics_ids,
+									topic_hashes,
 									tor_clients,
 									action,
 									label,
@@ -194,7 +194,7 @@ $(document).ready(function () {
 			return true;
 		}
 		execActionTopics(
-			topics_ids,
+			topic_hashes,
 			tor_clients,
 			action,
 			label,
@@ -470,7 +470,7 @@ function getCountSizeSelectedTopics() {
 }
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
-function execActionTopics(topics_ids, tor_clients, action, label, force_start, remove_data) {
+function execActionTopics(topic_hashes, tor_clients, action, label, force_start, remove_data) {
 	$("#dialog").dialog("close");
 	$("#process").text("Управление раздачами...");
 	$.ajax({
@@ -478,7 +478,7 @@ function execActionTopics(topics_ids, tor_clients, action, label, force_start, r
 		context: this,
 		url: "php/actions/exec_actions_topics.php",
 		data: {
-			topics_ids: topics_ids,
+			topic_hashes: topic_hashes,
 			tor_clients: tor_clients,
 			action: action,
 			remove_data: remove_data,

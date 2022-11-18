@@ -41,12 +41,12 @@ try {
     // topic_data => id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = array(
-        'id' => '<input type="checkbox" name="topics_ids[]" class="topic" value="%1$s" data-size="%3$s">',
-        'ds' => ' <i class="fa %8$s %7$s"></i>',
-        'rg' => ' | <span>%5$s | </span> ',
-        'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%1$s" target="_blank">%2$s</a>',
-        'si' => ' (%4$s)',
-        'se' => ' - <span class="text-danger">%6$s</span>',
+        'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
+        'ds' => ' <i class="fa %9$s %8$s"></i>',
+        'rg' => ' | <span>%6$s | </span> ',
+        'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
+        'si' => ' (%5$s)',
+        'se' => ' - <span class="text-danger">%7$s</span>',
     );
 
     $output = '';
@@ -108,14 +108,88 @@ try {
         unset($topics);
         natcasesort($preparedOutput);
         $output = implode('', $preparedOutput);
+    } elseif ($forum_id == -1) {
+        // незарегистрированные раздачи
+        $topics = Db::query_database(
+            'SELECT
+                Torrents.topic_id,
+                CASE WHEN TopicsUnregistered.name IS "" OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
+                TopicsUnregistered.status,
+                Torrents.info_hash,
+                Torrents.client_id,
+                Torrents.total_size,
+                Torrents.time_added,
+                Torrents.paused,
+                Torrents.done
+            FROM TopicsUnregistered
+            LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
+            WHERE TopicsUnregistered.info_hash IS NOT NULL
+            ORDER BY TopicsUnregistered.name',
+            array(),
+            true
+        );
+        // формирование строки вывода
+        foreach ($topics as $topic) {
+            $topicBlock = '';
+            $filtered_topics_count++;
+            $filtered_topics_size += $topic['total_size'];
+            $topicStatus = $topic['status'];
+            $torrentClientID = $topic['client_id'];
+            foreach ($pattern_topic_data as $field => $pattern) {
+                if (in_array($field, array('id', 'rg', 'ds', 'na', 'si'))) {
+                    $topicBlock .= $pattern;
+                }
+            }
+            if ($topic['done'] == 1) {
+                $stateTorrentClient = 'fa-arrow-up';
+            } elseif ($topic['done'] == null) {
+                $stateTorrentClient = 'fa-circle';
+            } else {
+                $stateTorrentClient = 'fa-arrow-down';
+            }
+            if ($topic['paused'] == 1) {
+                $stateTorrentClient = 'fa-pause';
+            }
+            if (!isset($preparedOutput[$topicStatus])) {
+                $preparedOutput[$topicStatus] = '<div class="subsection-title">' . $topicStatus . '</div>';
+            }
+            $preparedOutput[$topicStatus] .= sprintf(
+                $pattern_topic_block,
+                sprintf(
+                    $topicBlock,
+                    $topic['info_hash'],
+                    $topic['topic_id'],
+                    $topic['name'],
+                    $topic['total_size'],
+                    convert_bytes($topic['total_size']),
+                    date('d.m.Y', $topic['time_added']),
+                    '',
+                    'text-success',
+                    $stateTorrentClient
+                ),
+                '<span class="bold">' . $cfg['clients'][$torrentClientID]['cm'] . '</span>'
+            );
+        }
+        unset($topics);
+        natcasesort($preparedOutput);
+        $output = implode('', $preparedOutput);
     } elseif ($forum_id == -2) {
         // находим значение за последний день
         $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
         // чёрный список
         $topics = Db::query_database(
-            'SELECT Topics.id,ss,na,si,rg,' . $se . ',comment FROM Topics
-			LEFT JOIN Blacklist ON Topics.id = Blacklist.id
-			WHERE Blacklist.id IS NOT NULL',
+            'SELECT
+                Topics.id,
+                Topics.hs,
+                Topics.ss,
+                Topicsc.na,
+                Topics.si,
+                Topics.rg,'
+                . $se . ',
+                TopicsExcluded.comment
+            FROM Topics
+            LEFT JOIN TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
+            WHERE TopicsExcluded.info_hash IS NOT NULL',
             array(),
             true
         );
@@ -143,6 +217,7 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $data,
+                    $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
@@ -186,10 +261,10 @@ try {
         $statementSQL =
             'SELECT
                 Topics.id,
-                hs,
-                na,
-                si,
-                rg
+                Topics.hs,
+                Topics.na,
+                Topics.si,
+                Topics.rg
                 %s
             FROM Topics %s
             WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(*) > 1)';
@@ -270,6 +345,7 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $outputLine,
+                    $topicData['hs'],
                     $topicData['id'],
                     $topicData['na'],
                     $topicData['si'],
@@ -371,6 +447,7 @@ try {
         $pattern_statement =
             'SELECT
                 Topics.id,
+                Topics.hs,
                 Topics.na,
                 Topics.si,
                 Topics.rg,
@@ -410,12 +487,12 @@ try {
                     WHERE KeepersSeeders.topic_id IS NOT NULL
                 ) GROUP BY id
             ) Keepers ON Topics.id = Keepers.id
-            LEFT JOIN (SELECT id FROM Blacklist GROUP BY id) Blacklist ON Topics.id = Blacklist.id
+            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
             WHERE
                 ss IN (' . $ss . ')
                 AND st IN (' . $st . ')
                 AND (' . $torrentDone . ')
-                AND Blacklist.id IS NULL
+                AND TopicsExcluded.info_hash IS NULL
                 %s';
 
         $fields = array();
@@ -640,6 +717,7 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $data,
+                    $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],

@@ -8,11 +8,11 @@ try {
     include_once dirname(__FILE__) . '/../classes/download.php';
     include_once dirname(__FILE__) . '/../common/storage.php';
     // список ID раздач
-    if (empty($_POST['topics_ids'])) {
+    if (empty($_POST['topic_hashes'])) {
         $result = 'Выберите раздачи';
         throw new Exception();
     }
-    parse_str($_POST['topics_ids'], $topicsIDs);
+    parse_str($_POST['topic_hashes'], $topicHashes);
     // получение настроек
     $cfg = get_settings();
     if (empty($cfg['subsections'])) {
@@ -33,32 +33,32 @@ try {
     }
     Log::append('Запущен процесс добавления раздач в торрент-клиенты...');
     // получение ID раздач с привязкой к подразделу
-    $topicsIDsForums = array();
-    $topicsIDs = array_chunk($topicsIDs['topics_ids'], 999);
-    foreach ($topicsIDs as $topicsIDs) {
-        $placeholders = str_repeat('?,', count($topicsIDs) - 1) . '?';
-        $response = Db::query_database(
-            'SELECT ss,id FROM Topics WHERE id IN (' . $placeholders . ')',
-            $topicsIDs,
+    $topicHashesByForums = array();
+    $topicHashes = array_chunk($topicHashes['topic_hashes'], 999);
+    foreach ($topicHashes as $topicHashes) {
+        $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
+        $data = Db::query_database(
+            'SELECT ss, hs FROM Topics WHERE hs IN (' . $placeholders . ')',
+            $topicHashes,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         unset($placeholders);
-        foreach ($response as $forumID => $topicsIDsForum) {
-            if (isset($topicsIDsForums[$forumID])) {
-                $topicsIDsForums[$forumID] = array_merge(
-                    $topicsIDsForums[$forumID],
-                    $topicsIDsForum
+        foreach ($data as $forumID => $forumTopicHashes) {
+            if (isset($topicHashesByForums[$forumID])) {
+                $topicHashesByForums[$forumID] = array_merge(
+                    $topicHashesByForums[$forumID],
+                    $forumTopicHashes
                 );
             } else {
-                $topicsIDsForums[$forumID] = $topicsIDsForum;
+                $topicHashesByForums[$forumID] = $forumTopicHashes;
             }
         }
-        unset($topicsIDsForum);
-        unset($response);
+        unset($forumTopicHashes);
+        unset($data);
     }
-    unset($topicsIDs);
-    if (empty($topicsIDsForums)) {
+    unset($topicHashes);
+    if (empty($topicHashesByForums)) {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
         throw new Exception();
     }
@@ -77,8 +77,8 @@ try {
     $download = new TorrentDownload($cfg['forum_address']);
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
-    foreach ($topicsIDsForums as $forumID => $topicsIDs) {
-        if (empty($topicsIDs)) {
+    foreach ($topicHashesByForums as $forumID => $topicHashes) {
+        if (empty($topicHashes)) {
             continue;
         }
         if (!isset($cfg['subsections'][$forumID])) {
@@ -101,26 +101,26 @@ try {
         // данные текущего торрент-клиента
         $torrentClient = $cfg['clients'][$torrentClientID];
         // шаблон для сохранения
-        $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].t%s.torrent';
+        $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent';
         if (PHP_OS == 'WINNT') {
             $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
         }
-        foreach ($topicsIDs as $topicID) {
-            $torrentFile = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicID, $cfg['retracker']);
+        foreach ($topicHashes as $topicHash) {
+            $torrentFile = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicHash, $cfg['retracker']);
             if ($torrentFile === false) {
-                Log::append('Error: Не удалось скачать торрент-файл (' . $topicID . ')');
+                Log::append('Error: Не удалось скачать торрент-файл (' . $topicHash . ')');
                 continue;
             }
             // сохранить в каталог
             $response = file_put_contents(
-                sprintf($formatPathTorrentFile, $topicID),
+                sprintf($formatPathTorrentFile, $topicHash),
                 $torrentFile
             );
             if ($response === false) {
-                Log::append('Error: Произошла ошибка при сохранении торрент-файла (' . $topicID . ')');
+                Log::append('Error: Произошла ошибка при сохранении торрент-файла (' . $topicHash . ')');
                 continue;
             }
-            $downloadedTorrentFiles[] = $topicID;
+            $downloadedTorrentFiles[] = $topicHash;
         }
         if (empty($downloadedTorrentFiles)) {
             Log::append('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $torrentClient['cm'] . '"');
@@ -152,20 +152,20 @@ try {
         // определяем направление слэша в пути каталога для данных
         $delimiter = strpos($forumData['df'], '/') === false ? '\\' : '/';
         // добавление раздач
-        foreach ($downloadedTorrentFiles as $topicID) {
+        foreach ($downloadedTorrentFiles as $topicHash) {
             $savePath = '';
             if (!empty($forumData['df'])) {
                 $savePath = $forumData['df'];
                 // подкаталог для данных
                 if ($forumData['sub_folder']) {
-                    $savePath .= $delimiter . $topicID;
+                    $savePath .= $delimiter . $topicHash;
                 }
             }
             // путь до торрент-файла на сервере
-            $torrentFilePath = sprintf($formatPathTorrentFile, $topicID);
+            $torrentFilePath = sprintf($formatPathTorrentFile, $topicHash);
             $response = $client->addTorrent($torrentFilePath, $savePath);
             if ($response !== false) {
-                $addedTorrentFiles[] = $topicID;
+                $addedTorrentFiles[] = $topicHash;
             }
             // ждём полсекунды
             usleep(500000);
@@ -176,61 +176,41 @@ try {
             continue;
         }
         $numberAddedTorrentFiles = count($addedTorrentFiles);
-        // создаём временную таблицу
-        Db::query_database('DROP TABLE IF EXISTS temp.TorrentsHashes');
-        Db::query_database(
-            'CREATE TEMP TABLE TorrentsHashes AS
-            SELECT info_hash FROM Torrents WHERE 0 = 1'
-        );
-        // узнаём хэши раздач
-        $addedTorrentFiles = array_chunk($addedTorrentFiles, 999);
+        // устанавливаем метку
+        if (!empty($forumData['lb'])) {
+            // ждём добавления раздач, чтобы проставить метку
+            sleep(round(count($addedTorrentFiles) / 3) + 1); // < 3 дольше ожидание
+            // устанавливаем метку
+            $response = $client->setLabel($addedTorrentFiles, $forumData['lb']);
+            if ($response === false) {
+                Log::append('Error: Возникли проблемы при отправке запроса на установку метки');
+            }
+        }
+        // помечаем в базе добавленные раздачи
+        $addedTorrentFiles = array_chunk($addedTorrentFiles, 998);
         foreach ($addedTorrentFiles as $addedTorrentFiles) {
             $placeholders = str_repeat('?,', count($addedTorrentFiles) - 1) . '?';
             Db::query_database(
-                'INSERT INTO temp.TorrentsHashes
-                SELECT hs FROM Topics WHERE id IN (' . $placeholders . ')',
-                $addedTorrentFiles
+                'INSERT INTO Torrents (
+                    info_hash,
+                    client_id,
+                    topic_id,
+                    name,
+                    total_size
+                )
+                SELECT
+                    Topics.hs,
+                    ?,
+                    Topics.id,
+                    Topics.na,
+                    Topics.si
+                FROM Topics
+                WHERE hs IN (' . $placeholders . ')',
+                array(array_unshift($addedTorrentFiles, $torrentClientID))
             );
             unset($placeholders);
         }
         unset($addedTorrentFiles);
-        // помечаем в базе добавленные раздачи
-        Db::query_database(
-            'INSERT INTO Torrents (
-                info_hash,
-                client_id,
-                topic_id,
-                name,
-                total_size
-            )
-            SELECT
-                temp.TorrentsHashes.info_hash,
-                ?,
-                Topics.id,
-                Topics.na,
-                Topics.si
-            FROM temp.TorrentsHashes
-            LEFT JOIN Topics ON Topics.hs = temp.TorrentsHashes.info_hash
-            WHERE temp.TorrentsHashes.info_hash IS NOT NULL',
-            array($torrentClientID)
-        );
-        if (!empty($forumData['lb'])) {
-            // вытаскиваем хэши добавленных раздач
-            $topicsHashes = Db::query_database(
-                'SELECT info_hash FROM temp.TorrentsHashes',
-                array(),
-                true,
-                PDO::FETCH_COLUMN
-            );
-            // ждём добавления раздач, чтобы проставить метку
-            sleep(round(count($topicsHashes) / 3) + 1); // < 3 дольше ожидание
-            // устанавливаем метку
-            $response = $client->setLabel($topicsHashes, $forumData['lb']);
-            if ($response === false) {
-                Log::append('Error: Возникли проблемы при отправке запроса на установку метки');
-            }
-            unset($topicsHashes);
-        }
         Log::append('Добавлено раздач в торрент-клиент "' . $torrentClient['cm'] . '": ' . $numberAddedTorrentFiles . ' шт.');
         if (!in_array($torrentClientID, $usedTorrentClientsIDs)) {
             $usedTorrentClientsIDs[] = $torrentClientID;

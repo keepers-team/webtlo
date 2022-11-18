@@ -3,6 +3,7 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
+include_once dirname(__FILE__) . '/../classes/reports.php';
 
 // получение настроек
 if (!isset($cfg)) {
@@ -30,8 +31,21 @@ Db::query_database(
 );
 
 Db::query_database(
-    'CREATE TEMP TABLE TopicsUntrackedNew AS
-        SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1'
+    'CREATE TEMP TABLE TopicsUntrackedNew AS SELECT id,ss,na,hs,se,si,st,rg FROM TopicsUntracked WHERE 0 = 1'
+);
+
+Db::query_database(
+    'CREATE TEMP TABLE TopicsUnregisteredNew AS
+        SELECT
+            info_hash,
+            name,
+            status,
+            priority,
+            transferred_from,
+            transferred_to,
+            transferred_by_whom
+        FROM TopicsUnregistered
+        WHERE 0 = 1'
 );
 
 if (empty($cfg['clients'])) {
@@ -206,5 +220,82 @@ Db::query_database(
     'DELETE FROM TopicsUntracked
     WHERE id NOT IN (
         SELECT id FROM temp.TopicsUntrackedNew
+    )'
+);
+
+$topicsUnregistered = Db::query_database(
+    'SELECT
+        Torrents.info_hash,
+        Torrents.topic_id
+    FROM Torrents
+    LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
+    LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Torrents.info_hash
+    WHERE
+        Topics.hs IS NULL
+        AND TopicsUntracked.hs IS NULL
+        AND Torrents.topic_id IS NOT ""
+        AND Torrents.done = 1
+    ORDER BY Torrents.name',
+    array(),
+    true,
+    PDO::FETCH_KEY_PAIR
+);
+
+if (!empty($topicsUnregistered)) {
+    if (!isset($reports)) {
+        $reports = new Reports($cfg['forum_address'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+        $reports->curl_setopts($cfg['curl_setopt']['forum']);
+    }
+    $insertedUnregisteredTopics = array();
+    foreach ($topicsUnregistered as $infoHash => $topicID) {
+        $topicData = $reports->getDataUnregisteredTopic($topicID);
+        if ($topicData === false) {
+            continue;
+        }
+        $insertedUnregisteredTopics[] = array(
+            $infoHash,
+            $topicData['name'],
+            $topicData['status'],
+            $topicData['priority'],
+            $topicData['transferred_from'],
+            $topicData['transferred_to'],
+            $topicData['transferred_by_whom']
+        );
+    }
+    unset($topicsUnregistered);
+    $insertedUnregisteredTopics = array_chunk($insertedUnregisteredTopics, 500);
+    foreach ($insertedUnregisteredTopics as $insertedUnregisteredTopics) {
+        $select = Db::unionQuery($insertedUnregisteredTopics);
+        unset($insertedUnregisteredTopics);
+        Db::query_database('INSERT INTO temp.TopicsUnregisteredNew ' . $select);
+        unset($select);
+    }
+    unset($insertedUnregisteredTopics);
+    $numberUnregisteredTopics = Db::query_database(
+        'SELECT COUNT() FROM temp.TopicsUnregisteredNew',
+        array(),
+        true,
+        PDO::FETCH_COLUMN
+    );
+    if ($numberUnregisteredTopics[0] > 0) {
+        Db::query_database(
+            'INSERT INTO TopicsUnregistered (
+                info_hash,
+                name,
+                status,
+                priority,
+                transferred_from,
+                transferred_to,
+                transferred_by_whom
+            )
+            SELECT * FROM temp.TopicsUnregisteredNew'
+        );
+    }
+}
+
+Db::query_database(
+    'DELETE FROM TopicsUnregistered
+    WHERE info_hash NOT IN (
+        SELECT info_hash FROM temp.TopicsUnregisteredNew
     )'
 );

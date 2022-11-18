@@ -155,7 +155,7 @@ class Reports
     /**
      * получение сведений о разрегистрированной раздаче
      * @param int $topicID
-     * @return bool|string|array
+     * @return bool|array
      */
     public function getDataUnregisteredTopic($topicID)
     {
@@ -165,27 +165,29 @@ class Reports
         $data = $this->make_request($this->forum_url . '/forum/viewtopic.php?t=' . $topicID);
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         unset($data);
+        // ссылка для скачивания
+        $downloadLink = $html->find('a.dl-link')->attr('href');
         // раздача в мусорке, не найдена
-        $topicStatus = $html->find('div.mrg_16')->text();
-        if (!empty($topicStatus)) {
-            phpQuery::unloadDocuments();
-            return $topicStatus;
+        $topicStatuses[] = $html->find('div.mrg_16')->text();
+        // повтор, закрыто, не оформлена и т.п.
+        $topicStatuses[] = $html->find('span#tor-status-resp b:first')->text();
+        // поглощено и прочие открытые статусы
+        $topicStatuses[] = $html->find('div.attach_link i.normal b:first')->text();
+        // имя
+        $topicName = $html->find('h1.maintitle a')->text();
+        // приоритет
+        $topicPriority = $html->find('div.attach_link b:last')->text();
+        // статус
+        $topicStatus = implode('', array_diff($topicStatuses, array('')));
+        if (!empty($downloadLink)) {
+            $topicStatus = 'обновлено';
         }
-        // раздача зарегистрирована
-        $topicStatus = $html->find('a.dl-topic')->attr('href');
-        if (!empty($topicStatus)) {
-            phpQuery::unloadDocuments();
-            return 'Раздача обновлена';
+        if (empty($topicPriority)) {
+            $topicPriority = $html->find('table.attach b:first')->text();
         }
-        // поглощено, повтор, закрыто, не оформлена и т.п.
-        $topicStatus = $html->find('span#tor-status-resp b:first')->text();
-        if (!empty($topicStatus)) {
-            phpQuery::unloadDocuments();
-            return $topicStatus;
-        }
-        $currentForum = $html->find('td.t-breadcrumb-top:first > a')->text();
-        $currentForum = str_replace(PHP_EOL, ' » ', rtrim($currentForum, PHP_EOL));
-        $lastStatus = $html->find('fieldset.attach')->find('i.normal b')->text();
+        // данные о переносе раздачи
+        $transferredTo = $html->find('td.t-breadcrumb-top:first > a')->text();
+        $transferredTo = str_replace(PHP_EOL, ' » ', rtrim($transferredTo, PHP_EOL));
         $totalPages = $html->find('a.pg:last')->prev()->text();
         if ($totalPages > 1) {
             $lastPage = ($totalPages - 1) * 30;
@@ -193,23 +195,33 @@ class Reports
             $html = phpQuery::newDocumentHTML($data, 'UTF-8');
             unset($data);
         }
-        $originalForum = '';
-        $whoTransferred = '-';
+        // сканирование последнего сообщения в теме
+        $transferredFrom = '';
+        $transferredByWhom = '';
         $avatarLastMessage = $html->find('table#topic_main > tbody:last')->find('p.avatar > img')->attr('src');
         if (preg_match('/17561.gif$/i', $avatarLastMessage)) {
-            $originalForum = $html->find('table#topic_main > tbody:last')->find('a.postLink:first')->text();
+            $transferredFrom = $html->find('table#topic_main > tbody:last')->find('a.postLink:first')->text();
             $lastLink = $html->find('table#topic_main > tbody:last')->find('a.postLink:last')->attr('href');
             if (preg_match('/^profile.php\?mode=viewprofile&u=[0-9]+$/', $lastLink)) {
-                $whoTransferred = $html->find('table#topic_main > tbody:last')->find('a.postLink:last')->text();
+                $transferredByWhom = $html->find('table#topic_main > tbody:last')->find('a.postLink:last')->text();
             }
+        }
+        if (
+            mb_strpos($transferredTo, 'Архив') === false
+            && empty($transferredFrom)
+            && empty($transferredByWhom)
+        ) {
+            $transferredFrom = preg_replace('/.*» /', '', $transferredTo);
         }
         unset($html);
         phpQuery::unloadDocuments();
         return array(
-            'current_forum' => $currentForum,
-            'original_forum' => $originalForum,
-            'last_status' => $lastStatus,
-            'who_transferred' => $whoTransferred
+            'name' => $topicName,
+            'status' => mb_strtolower($topicStatus),
+            'priority' => $topicPriority,
+            'transferred_from' => $transferredFrom,
+            'transferred_to' => $transferredTo,
+            'transferred_by_whom' => $transferredByWhom
         );
     }
 
