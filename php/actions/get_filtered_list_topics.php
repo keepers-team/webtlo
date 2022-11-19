@@ -57,7 +57,7 @@ try {
     if ($forum_id == 0) {
         // сторонние раздачи
         $topics = Db::query_database(
-            'SELECT id,na,si,rg,ss,se FROM TopicsUntracked',
+            'SELECT id,hs,na,si,rg,ss,se FROM TopicsUntracked',
             array(),
             true
         );
@@ -95,6 +95,7 @@ try {
                 $pattern_topic_block,
                 sprintf(
                     $data,
+                    $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
