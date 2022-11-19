@@ -182,7 +182,7 @@ try {
                 Topics.id,
                 Topics.hs,
                 Topics.ss,
-                Topicsc.na,
+                Topics.na,
                 Topics.si,
                 Topics.rg,'
                 . $se . ',
