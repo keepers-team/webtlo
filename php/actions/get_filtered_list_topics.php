@@ -57,7 +57,18 @@ try {
     if ($forum_id == 0) {
         // сторонние раздачи
         $topics = Db::query_database(
-            'SELECT id,hs,na,si,rg,ss,se FROM TopicsUntracked',
+            'SELECT
+                TopicsUntracked.id,
+                TopicsUntracked.hs,
+                TopicsUntracked.na,
+                TopicsUntracked.si,
+                TopicsUntracked.rg,
+                TopicsUntracked.ss,
+                TopicsUntracked.se,
+                Torrents.client_id
+            FROM TopicsUntracked
+            LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
+            WHERE TopicsUntracked.hs IS NOT NULL',
             array(),
             true
         );
@@ -83,6 +94,7 @@ try {
             $forumID = $topic_data['ss'];
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
+            $torrentClientID = $topic_data['client_id'];
             foreach ($pattern_topic_data as $field => $pattern) {
                 if (isset($topic_data[$field])) {
                     $data .= $pattern;
@@ -103,7 +115,7 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     $topic_data['se']
                 ),
-                ''
+                '<span class="bold">' . $cfg['clients'][$torrentClientID]['cm'] . '</span>'
             );
         }
         unset($topics);
