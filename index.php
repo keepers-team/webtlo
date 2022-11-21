@@ -279,6 +279,10 @@ try {
                                         по объёму
                                     </label>
                                     <label>
+                                        <input type="radio" name="filter_sort" value="id" class="sort" />
+                                        по номеру темы
+                                    </label>
+                                    <label>
                                         <input type="radio" name="filter_sort" value="se" checked class="default sort" />
                                         по количеству сидов
                                     </label>
