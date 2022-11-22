@@ -642,8 +642,8 @@ try {
                                     Создавать подкаталог для добавляемой раздачи:
                                     <select id="forum-subdirectory" class="myinput forum-props" title="Создавать подкаталог для данных добавляемой раздачи">
                                         <option value="0">нет</option>
-                                        <option value="1">ID раздачи</option>
-                                        <!-- <option value="2">Запрашивать</option> -->
+                                        <option value="1">номер темы</option>
+                                        <option value="2">хэш раздачи</option>
                                     </select>
                                 </label>
                                 <label>

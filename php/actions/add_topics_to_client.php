@@ -152,23 +152,43 @@ try {
         // определяем направление слэша в пути каталога для данных
         $delimiter = strpos($forumData['df'], '/') === false ? '\\' : '/';
         // добавление раздач
-        foreach ($downloadedTorrentFiles as $topicHash) {
-            $savePath = '';
-            if (!empty($forumData['df'])) {
-                $savePath = $forumData['df'];
-                // подкаталог для данных
-                if ($forumData['sub_folder']) {
-                    $savePath .= $delimiter . $topicHash;
+        $downloadedTorrentFiles = array_chunk($downloadedTorrentFiles, 999);
+        foreach ($downloadedTorrentFiles as $downloadedTorrentFiles) {
+            // получаем идентификаторы раздач
+            $placeholders = str_repeat('?,', count($downloadedTorrentFiles) - 1) . '?';
+            $topicIDsByHash = Db::query_database(
+                'SELECT hs, id FROM Topics WHERE hs IN (' . $placeholders . ')',
+                array($downloadedTorrentFiles),
+                true,
+                PDO::FETCH_KEY_PAIR
+            );
+            unset($placeholders);
+            foreach ($downloadedTorrentFiles as $topicHash) {
+                $savePath = '';
+                if (!empty($forumData['df'])) {
+                    $savePath = $forumData['df'];
+                    // подкаталог для данных
+                    if ($forumData['sub_folder']) {
+                        if ($forumData['sub_folder'] == 1) {
+                            $subdirectory = $topicIDsByHash[$topicHash];
+                        } elseif ($forumData['sub_folder'] == 2) {
+                            $subdirectory = $topicHash;
+                        } else {
+                            $subdirectory = '';
+                        }
+                        $savePath .= $delimiter . $subdirectory;
+                    }
                 }
+                // путь до торрент-файла на сервере
+                $torrentFilePath = sprintf($formatPathTorrentFile, $topicHash);
+                $response = $client->addTorrent($torrentFilePath, $savePath);
+                if ($response !== false) {
+                    $addedTorrentFiles[] = $topicHash;
+                }
+                // ждём полсекунды
+                usleep(500000);
             }
-            // путь до торрент-файла на сервере
-            $torrentFilePath = sprintf($formatPathTorrentFile, $topicHash);
-            $response = $client->addTorrent($torrentFilePath, $savePath);
-            if ($response !== false) {
-                $addedTorrentFiles[] = $topicHash;
-            }
-            // ждём полсекунды
-            usleep(500000);
+            unset($topicIDsByHash);
         }
         unset($downloadedTorrentFiles);
         if (empty($addedTorrentFiles)) {
