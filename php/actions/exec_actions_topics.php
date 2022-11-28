@@ -20,7 +20,7 @@ try {
         $result = 'Попытка выполнить неизвестное действие';
         throw new Exception();
     }
-    if (empty($_POST['topics_ids'])) {
+    if (empty($_POST['topic_hashes'])) {
         $result = 'Выберите раздачи';
         throw new Exception();
     }
@@ -33,52 +33,49 @@ try {
     $torrentClients = $_POST['tor_clients'];
     Log::append('Начато выполнение действия "' . $actionType . '" для выбранных раздач...');
     Log::append('Получение хэшей раздач с привязкой к торрент-клиенту...');
-    parse_str($_POST['topics_ids'], $topicsIDs);
-    $topicsIDs = array_chunk($topicsIDs['topics_ids'], 499);
-    foreach ($topicsIDs as $topicsIDs) {
-        $placeholders = str_repeat('?,', count($topicsIDs) - 1) . '?';
-        $torrentHashesClients = Db::query_database(
-            'SELECT cl,hs FROM Clients
-            WHERE hs IN (
-                SELECT hs FROM (
-                    SELECT id,hs FROM Topics
-                    UNION
-                    SELECT id,hs FROM TopicsUntracked
-                ) WHERE id IN (' . $placeholders . ')
-            )',
-            $topicsIDs,
+    parse_str($_POST['topic_hashes'], $topicHashes);
+    $topicHashes = array_chunk($topicHashes['topic_hashes'], 499);
+    foreach ($topicHashes as $topicHashes) {
+        $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
+        $data = Db::query_database(
+            'SELECT
+                client_id,
+                info_hash
+            FROM Torrents
+            WHERE info_hash IN (' . $placeholders . ')',
+            $topicHashes,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
-        foreach ($torrentHashesClients as $torrentClientID => $torrentHashesClient) {
-            if (isset($torrentHashes[$torrentClientID])) {
-                $torrentHashes[$torrentClientID] = array_merge(
-                    $torrentHashes[$torrentClientID],
-                    $torrentHashesClient
+        unset($placeholders);
+        foreach ($data as $clientID => $clientTorrentHashes) {
+            if (isset($torrentHashesByClient[$clientID])) {
+                $torrentHashesByClient[$clientID] = array_merge(
+                    $torrentHashesByClient[$clientID],
+                    $clientTorrentHashes
                 );
             } else {
-                $torrentHashes[$torrentClientID] = $torrentHashesClient;
+                $torrentHashesByClient[$clientID] = $clientTorrentHashes;
             }
         }
-        unset($torrentHashesClients);
-        unset($placeholders);
+        unset($data);
     }
-    unset($topicsIDs);
-    if (empty($torrentHashes)) {
+    unset($topicHashes);
+    if (empty($torrentHashesByClient)) {
         $result = 'Не получены данные о выбранных раздачах';
         throw new Exception();
     }
-    Log::append('Количество затрагиваемых торрент-клиентов: ' . count($torrentHashes));
-    foreach ($torrentHashes as $torrentClientID => $torrentHashes) {
+    Log::append('Количество затрагиваемых торрент-клиентов: ' . count($torrentHashesByClient));
+    foreach ($torrentHashesByClient as $clientID => $torrentHashes) {
         if (empty($torrentHashes)) {
             continue;
         }
-        if (empty($torrentClients[$torrentClientID])) {
-            Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $torrentClientID . '"');
+        if (empty($torrentClients[$clientID])) {
+            Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $clientID . '"');
             continue;
         }
         // данные текущего торрент-клиента
-        $torrentClient = $torrentClients[$torrentClientID];
+        $torrentClient = $torrentClients[$clientID];
         /**
          * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
          */
@@ -114,14 +111,14 @@ try {
                     foreach ($torrentHashesRemoving as $torrentHashesRemoving) {
                         $placeholders = str_repeat('?,', count($torrentHashesRemoving)) . '?';
                         Db::query_database(
-                            'DELETE FROM Clients WHERE hs IN (' . $placeholders . ')',
+                            'DELETE FROM Torrents WHERE info_hash IN (' . $placeholders . ')',
                             $torrentHashesRemoving
                         );
                         unset($placeholders);
                     }
                     unset($torrentHashesRemoving);
-                    break;
                 }
+                break;
         }
         if ($response === false) {
             Log::append('Error: Возникли проблемы при отправке запроса "' . $actionType . '" для торрент-клиента "' . $torrentClient['comment'] . '"');

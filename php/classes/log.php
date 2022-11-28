@@ -1,4 +1,5 @@
 <?php
+include_once dirname(__FILE__) . "/../common/storage.php";
 
 class Log
 {
@@ -21,7 +22,7 @@ class Log
 
     public static function write($filelog)
     {
-        $dir = dirname(__FILE__) . "/../../data/logs";
+        $dir = getLogDir();
         $result = is_writable($dir) || mkdir($dir);
         if (!$result) {
             echo "Нет или недостаточно прав для доступа к каталогу logs";
@@ -46,10 +47,5 @@ class Log
                 echo "Не удалось переименовать файл лога.";
             }
         }
-    }
-
-    public static function clean()
-    {
-        self::$log = array();
     }
 }

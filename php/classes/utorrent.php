@@ -97,7 +97,7 @@ class Utorrent extends TorrentClient
         }
     }
 
-    public function getTorrents()
+    public function getAllTorrents()
     {
         $response = $this->makeRequest('?list=1');
         if ($response === false) {
@@ -105,7 +105,6 @@ class Utorrent extends TorrentClient
         }
         $torrents = array();
         foreach ($response['torrents'] as $torrent) {
-            $torrentState = decbin($torrent[1]);
             /*
                 0 - loaded
                 1 - queued
@@ -116,32 +115,6 @@ class Utorrent extends TorrentClient
                 6 - checking
                 7 - started
             */
-            if (!$torrentState[3]) {
-                if (
-                    $torrentState[0]
-                    && $torrentState[4]
-                    && $torrent[4] == 1000
-                ) {
-                    $torrentStatus = !$torrentState[2] && $torrentState[7] ? 1 : -1;
-                } else {
-                    $torrentStatus = 0;
-                }
-            } else {
-                $torrentStatus = -2;
-            }
-            $torrents[$torrent[0]] = $torrentStatus;
-        }
-        return $torrents;
-    }
-
-    public function getAllTorrents()
-    {
-        $response = $this->makeRequest('?list=1');
-        if ($response === false) {
-            return false;
-        }
-        $torrents = array();
-        foreach ($response['torrents'] as $torrent) {
             $torrentState = decbin($torrent[1]);
             $torrentHash = strtoupper($torrent[0]);
             $torrentPaused = $torrentState[2] || !$torrentState[7] ? 1 : 0;

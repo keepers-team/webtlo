@@ -135,7 +135,7 @@ try {
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-2.4.1</title>
+    <title>web-TLO-2.9.9-alpha1</title>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/i18n/jquery-ui-i18n.min.js"></script>
@@ -168,9 +168,7 @@ try {
                         <option value="-2">Раздачи из «чёрного списка»</option>
                         <option value="-4">Хранимые дублирующиеся раздачи</option>
                         <option value="0">Хранимые раздачи из других подразделов</option>
-                        <!--
-                            <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
-                        -->
+                        <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="main-subsections-stored">
                         <?php echo $optionForums ?>
@@ -276,6 +274,10 @@ try {
                                     <label>
                                         <input type="radio" name="filter_sort" value="si" class="sort" />
                                         по объёму
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="filter_sort" value="id" class="sort" />
+                                        по номеру темы
                                     </label>
                                     <label>
                                         <input type="radio" name="filter_sort" value="se" checked class="default sort" />

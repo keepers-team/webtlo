@@ -45,16 +45,16 @@ class TorrentDownload
      * скачивание торрент-файла
      * @param string $userKeyApi
      * @param string $userID
-     * @param string $topicID
+     * @param string $infoHash
      * @param int|bool $addRetracker
      * @return bool|resource
      */
-    public function getTorrentFile($userKeyApi, $userID, $topicID, $addRetrackerURL = 0)
+    public function getTorrentFile($userKeyApi, $userID, $infoHash, $addRetrackerURL = 0)
     {
         $params = array(
             'keeper_user_id' => $userID,
             'keeper_api_key' => $userKeyApi,
-            't' => $topicID,
+            'h' => $infoHash,
             'add_retracker_url' => $addRetrackerURL,
         );
         curl_setopt_array($this->ch, array(
@@ -77,7 +77,7 @@ class TorrentDownload
                 $connectionNumberTry > $maxNumberTry
                 || $responseNumberTry > $maxNumberTry
             ) {
-                Log::append('Не удалось скачать торрент-файл для ' . $topicID);
+                Log::append('Не удалось скачать торрент-файл для ' . $infoHash);
                 return false;
             }
             // выполняем запрос
@@ -85,7 +85,7 @@ class TorrentDownload
             // повторные попытки
             if ($response === false) {
                 $responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
-                Log::append('CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $topicID . ') [' . $responseHttpCode . ']');
+                Log::append('CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $infoHash . ') [' . $responseHttpCode . ']');
                 if (
                     $responseHttpCode < 300
                     && $responseNumberTry <= $maxNumberTry
@@ -102,14 +102,14 @@ class TorrentDownload
             if (!empty($accessError)) {
                 preg_match('|<title>(.*)</title>|si', mb_convert_encoding($response, 'UTF-8', 'Windows-1251'), $errorText);
                 $errorText = empty($errorText) ? $accessError[1] : $errorText[1];
-                Log::append('Error: ' . $errorText . ' (' . $topicID . ')');
+                Log::append('Error: ' . $errorText . ' (' . $infoHash . ')');
                 return false;
             }
             // проверка "ошибка 503" и т.д.
             preg_match('|<title>(.*)</title>|si', mb_convert_encoding($response, 'UTF-8', 'Windows-1251'), $connectionError);
             if (!empty($connectionError)) {
-                Log::append('Error: ' . $connectionError[1] . ' (' . $topicID . ')');
-                Log::append('Повторная попытка ' . $connectionNumberTry . '/' . $maxNumberTry . ' скачать торрент-файл (' . $topicID . ')');
+                Log::append('Error: ' . $connectionError[1] . ' (' . $infoHash . ')');
+                Log::append('Повторная попытка ' . $connectionNumberTry . '/' . $maxNumberTry . ' скачать торрент-файл (' . $infoHash . ')');
                 sleep(40);
                 $connectionNumberTry++;
                 continue;

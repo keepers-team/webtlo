@@ -10,7 +10,7 @@ try {
     $result = "";
 
     // список выбранных раздач
-    if (empty($_POST['topics_ids'])) {
+    if (empty($_POST['topic_hashes'])) {
         $result = "Выберите раздачи";
         throw new Exception();
     }
@@ -38,7 +38,7 @@ try {
     }
 
     // парсим список выбранных раздач
-    parse_str($_POST['topics_ids'], $topics_ids);
+    parse_str($_POST['topic_hashes'], $topicHashes);
 
     // выбор каталога
     $torrent_files_path = empty($replace_passkey) ? $cfg['save_dir'] : $cfg['dir_torrents'];
@@ -71,7 +71,7 @@ try {
     }
 
     // шаблон для сохранения
-    $torrent_files_path_pattern = "$torrent_files_path/[webtlo].t%s.torrent";
+    $torrent_files_path_pattern = "$torrent_files_path/[webtlo].h%s.torrent";
     if (PHP_OS == 'WINNT') {
         $torrent_files_path_pattern = mb_convert_encoding(
             $torrent_files_path_pattern,
@@ -92,8 +92,8 @@ try {
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
 
-    foreach ($topics_ids['topics_ids'] as $topic_id) {
-        $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topic_id, $cfg['retracker']);
+    foreach ($topicHashes['topic_hashes'] as $topicHash) {
+        $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicHash, $cfg['retracker']);
         if ($data === false) {
             continue;
         }
@@ -101,7 +101,7 @@ try {
         if ($replace_passkey) {
             $torrent = new Torrent();
             if ($torrent->load($data) == false) {
-                Log::append("Error: $torrent->error ($topic_id).");
+                Log::append("Error: $torrent->error ($topicHash).");
                 break;
             }
             $trackers = $torrent->getTrackers();
@@ -119,17 +119,17 @@ try {
         $file_put_contents = file_put_contents(
             sprintf(
                 $torrent_files_path_pattern,
-                $topic_id
+                $topicHash
             ),
             $data
         );
         if ($file_put_contents === false) {
-            Log::append("Произошла ошибка при сохранении торрент-файла ($topic_id)");
+            Log::append("Произошла ошибка при сохранении торрент-файла ($topicHash)");
             continue;
         }
-        $torrent_files_downloaded[] = $topic_id;
+        $torrent_files_downloaded[] = $topicHash;
     }
-    unset($topics_ids);
+    unset($topicHashes);
 
     $torrent_files_downloaded = count($torrent_files_downloaded);
 

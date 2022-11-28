@@ -143,8 +143,9 @@ class Ktorrent extends TorrentClient
         return $response;
     }
 
-    public function getTorrents()
+    public function getAllTorrents()
     {
+        return array();
         $response = $this->getTorrentsData();
         if ($response === false) {
             return false;
@@ -166,11 +167,6 @@ class Ktorrent extends TorrentClient
             }
         }
         return $torrents;
-    }
-
-    public function getAllTorrents()
-    {
-        return array();
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
@@ -229,7 +225,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -250,7 +246,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -271,7 +267,7 @@ class Ktorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array_flip(array_column_common($response['torrent'], 'info_hash'));
+        $torrents = array_flip(array_column($response['torrent'], 'info_hash'));
         unset($response);
         $result = null;
         foreach ($torrentHashes as $torrentHash) {

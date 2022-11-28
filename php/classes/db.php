@@ -1,9 +1,11 @@
 <?php
+include_once dirname(__FILE__) . "/../common/storage.php";
 
 class Db
 {
 
     public static $db;
+    private static string $databaseFilename = 'webtlo.db';
 
     public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -41,16 +43,52 @@ class Db
         return $statement;
     }
 
+    /**
+     * объединение нескольких запросов на получение данных
+     * @param array $source
+     * @return string|bool
+     */
+    public static function unionQuery($source)
+    {
+        if (!is_array($source)) {
+            return false;
+        }
+        $query = '';
+        $values = array();
+        foreach ($source as &$row) {
+            if (!is_array($row)) {
+                return false;
+            }
+            $row = array_map(
+                function ($e) {
+                    return is_numeric($e) ? $e : Db::$db->quote($e);
+                },
+                $row
+            );
+            $values[] = implode(',', $row);
+        }
+        $query = 'SELECT ' . implode(' UNION ALL SELECT ', $values);
+        return $query;
+    }
+
     public static function create()
     {
         // файл базы данных
-        $databaseFilename = dirname(__FILE__) . '/../../data/webtlo.db';
-        $databaseFilename = normalizePath($databaseFilename);
-        $databaseDirname = dirname($databaseFilename);
-        if (!mkdir_recursive($databaseDirname)) {
-            throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+
+        $databaseDirname = getStorageDir();
+        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
+
+        if (!file_exists($databaseDirname)) {
+            if (!mkdir_recursive($databaseDirname)) {
+                throw new Exception('Не удалось создать каталог ' . $databaseDirname);
+            }
         }
-        self::$db = new PDO('sqlite:' . $databaseFilename);
+        try {
+            self::$db = new PDO('sqlite:' . $databasePath);
+        } catch (PDOException $e) {
+            throw new Exception(sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e));
+        }
+
         // список подразделов
         $statements[] = array(
             'CREATE TABLE IF NOT EXISTS Forums (',
@@ -645,6 +683,81 @@ class Db
                 'END;'
             );
             $statements[] = 'PRAGMA user_version = 7';
+        }
+        // user_version = 8
+        if ($version[0]['user_version'] < 8) {
+            $statements[] = array('DROP TABLE IF EXISTS Clients');
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS Torrents (',
+                '    info_hash     TEXT    NOT NULL,',
+                '    client_id     INT     NOT NULL,',
+                '    topic_id      INT,',
+                '    name          TEXT,',
+                '    total_size    INT,',
+                '    paused        BOOLEAN DEFAULT (0),',
+                '    done          REAL    DEFAULT (0),',
+                '    time_added    INT     DEFAULT (strftime(\'%s\')),',
+                '    error         BOOLEAN DEFAULT (0),',
+                '    tracker_error TEXT,',
+                '    PRIMARY KEY (',
+                '        info_hash,',
+                '        client_id',
+                '    )',
+                '    ON CONFLICT REPLACE',
+                ')'
+            );
+            $statements[] = array(
+                'CREATE TRIGGER IF NOT EXISTS remove_untracked_topics',
+                'AFTER DELETE ON Torrents FOR EACH ROW',
+                'BEGIN',
+                '    DELETE FROM TopicsUntracked WHERE hs = OLD.info_hash;',
+                'END;'
+            );
+            $statements[] = 'PRAGMA user_version = 8';
+        }
+        // user_version = 9
+        if ($version[0]['user_version'] < 9) {
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS TopicsUnregistered (',
+                '    info_hash           TEXT PRIMARY KEY ON CONFLICT REPLACE NOT NULL,',
+                '    name                TEXT,',
+                '    status              TEXT NOT NULL,',
+                '    priority            TEXT,',
+                '    transferred_from    TEXT,',
+                '    transferred_to      TEXT,',
+                '    transferred_by_whom TEXT',
+                ');'
+            );
+            $statements[] = array(
+                'CREATE TRIGGER IF NOT EXISTS remove_unregistered_topics',
+                'AFTER DELETE ON Torrents FOR EACH ROW',
+                'BEGIN',
+                '    DELETE FROM TopicsUnregistered WHERE info_hash = OLD.info_hash;',
+                'END;'
+            );
+            $statements[] = array(
+                'CREATE TABLE IF NOT EXISTS TopicsExcluded (',
+                '    info_hash  TEXT PRIMARY KEY ON CONFLICT REPLACE NOT NULL,',
+                '    time_added INT  DEFAULT (strftime(\'%s\')),',
+                '    comment    TEXT',
+                ')'
+            );
+            $statements[] = array(
+                'INSERT INTO TopicsExcluded (info_hash, comment)',
+                'SELECT Topics.hs, Blacklist.comment FROM Blacklist',
+                'LEFT JOIN Topics ON Topics.id = Blacklist.id',
+                'WHERE Blacklist.id IS NOT NULL'
+            );
+            $statements[] = array('DROP TABLE IF EXISTS Blacklist');
+            $statements[] = array('DROP TRIGGER IF EXISTS topics_delete');
+            $statements[] = array(
+                'CREATE TRIGGER IF NOT EXISTS topics_delete',
+                'AFTER DELETE ON Topics FOR EACH ROW',
+                'BEGIN',
+                '    DELETE FROM Seeders WHERE id = OLD.id;',
+                'END;'
+            );
+            $statements[] = 'PRAGMA user_version = 9';
         }
         // формируем структуру БД
         foreach ($statements as &$statement) {

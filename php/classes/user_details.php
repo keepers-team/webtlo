@@ -89,12 +89,17 @@ class UserDetails
                         unset($html);
                         if (!empty($captcha)) {
                             $captcha = pq($captcha);
-                            $captcha_img = $captcha->find('img')->attr('src');
-                            $captcha_img = file_get_contents($captcha_img);
-                            file_put_contents(
-                                dirname(__FILE__) . '/../../data/captcha.jpg',
-                                $captcha_img
-                            );
+                            $sourcePath = $captcha->find('img')->attr('src');
+                            $sourcePath = str_replace('https', 'http', $sourcePath);
+                            $sourceData = file_get_contents($sourcePath);
+                            if ($sourceData === false) {
+                                throw new Exception('Error: Не удалось получить изображение капчи');
+                            }
+                            $targetPath = getStorageDir() . DIRECTORY_SEPARATOR . 'captcha.jpg';
+                            $targetData = file_put_contents($targetPath, $sourceData);
+                            if ($targetData === false) {
+                                throw new Exception('Error: Не удалось сохранить изображение капчи');
+                            }
                             foreach ($captcha->find('input') as $input) {
                                 $input = pq($input);
                                 self::$captcha[] = $input->attr('name');

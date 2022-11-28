@@ -41,12 +41,12 @@ try {
                     IFNULL(s.q10, 0)+IFNULL(s.q11, 0)+IFNULL(s.q12, 0)+IFNULL(s.q13, 0))) AS se
                 FROM Topics t
                 LEFT JOIN Seeders s ON t.id = s.id
-                LEFT JOIN Clients c ON t.hs = c.hs
+                LEFT JOIN Torrents ON t.hs = Torrents.info_hash
                 LEFT JOIN (SELECT id,MAX(posted) as posted FROM Keepers GROUP BY id) k ON t.id = k.id
                 WHERE t.ss IN (" . $placeholdersForumsIDs . ")
                     AND t.pt IN(1,2)
                     AND strftime('%s', 'now') - t.rg >= 2592000
-                    AND c.hs IS NULL
+                    AND Torrents.info_hash IS NULL
                     AND (k.id IS NULL OR strftime('%s', 'now') - k.posted >= 2592000)
             ) AS seeds ON seeds.ss = f.id
             WHERE f.id IN (" . $placeholdersForumsIDs . ")

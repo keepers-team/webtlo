@@ -76,31 +76,6 @@ class Rtorrent extends TorrentClient
         }
     }
 
-    public function getTorrents()
-    {
-        $response = $this->makeRequest(
-            'd.multicall2',
-            array('', 'main', 'd.hash=', 'd.state=', 'd.complete=', 'd.message=')
-        );
-        if ($response === false) {
-            return false;
-        }
-        $torrents = array();
-        foreach ($response as $torrent) {
-            if (empty($torrent[3])) {
-                if ($torrent[2]) {
-                    $torrentStatus = $torrent[1] ? 1 : -1;
-                } else {
-                    $torrentStatus = 0;
-                }
-            } else {
-                $torrentStatus = -2;
-            }
-            $torrents[$torrent[0]] = $torrentStatus;
-        }
-        return $torrents;
-    }
-
     public function getAllTorrents()
     {
         $response = $this->makeRequest(
