@@ -164,6 +164,7 @@ class Utorrent extends TorrentClient
         $this->setSetting('dir_active_download_flag', true);
         if (!empty($savePath)) {
             $this->setSetting('dir_active_download', urlencode($savePath));
+            usleep(500000);
         }
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
             $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
