@@ -158,7 +158,7 @@ try {
             $placeholders = str_repeat('?,', count($downloadedTorrentFiles) - 1) . '?';
             $topicIDsByHash = Db::query_database(
                 'SELECT hs, id FROM Topics WHERE hs IN (' . $placeholders . ')',
-                array($downloadedTorrentFiles),
+                $downloadedTorrentFiles,
                 true,
                 PDO::FETCH_KEY_PAIR
             );
