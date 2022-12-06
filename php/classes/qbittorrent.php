@@ -103,6 +103,7 @@ class Qbittorrent extends TorrentClient
         }
         $torrents = array();
         foreach ($response as $torrent) {
+            $clientHash = $torrent['hash'];
             $torrentHash = isset($torrent['infohash_v1']) ? $torrent['infohash_v1'] : $torrent['hash'];
             $torrentHash = strtoupper($torrentHash);
             $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
@@ -115,67 +116,61 @@ class Qbittorrent extends TorrentClient
                 'paused' => $torrentPaused,
                 'time_added' => $torrent['added_on'],
                 'total_size' => $torrent['total_size'],
+                'client_hash' => $clientHash,
                 'tracker_error' => ''
             );
+
+            // получение ошибок трекера
             if (empty($torrent['tracker'])) {
-                $torrentTrackers = $this->getTrackers(array($torrentHash));
-                if ($torrentTrackers === false) {
-                    continue;
-                }
-                foreach ($torrentTrackers[$torrentHash] as $torrentTracker) {
-                    if ($torrentTracker['status'] == 4) {
-                        $torrents[$torrentHash]['tracker_error'] = $torrentTracker['msg'];
-                        break;
+                $torrentTrackers = $this->getTrackers($clientHash);
+                if ($torrentTrackers !== false) {
+                    foreach ($torrentTrackers as $torrentTracker) {
+                        if ($torrentTracker['status'] == 4) {
+                            $torrents[$torrentHash]['tracker_error'] = $torrentTracker['msg'];
+                            break;
+                        }
                     }
                 }
             }
+
+            // получение ссылки на раздачу
+            $properties = $this->getProperties($clientHash);
+            if ($properties !== false) {
+                $torrents[$torrentHash]['comment'] = $properties['comment'];
+            }
         }
-        // получение ссылки на раздачу
-        $torrentHashes = array_keys($torrents);
-        $response = $this->getProperties($torrentHashes);
-        if ($response === false) {
+
+        return $torrents;
+    }
+
+    public function getTrackers($torrentHash)
+    {
+        $torrent_trackers = array();
+        $trackers = $this->makeRequest(
+            'api/v2/torrents/trackers',
+            array('hash' => strtolower($torrentHash))
+        );
+        if ($trackers === false) {
             return false;
         }
-        foreach ($response as $torrentHash => $torrentData) {
-            $torrents[$torrentHash]['comment'] = $torrentData['comment'];
+        foreach ($trackers as $tracker) {
+            if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
+                $torrent_trackers[] = $tracker;
+            }
         }
-        return $torrents;
+        return $torrent_trackers;
     }
 
-    public function getTrackers($torrentHashes)
+    public function getProperties($torrentHash)
     {
-        $torrents = array();
-        foreach ($torrentHashes as $torrentHash) {
-            $trackers = $this->makeRequest(
-                'api/v2/torrents/trackers',
-                array('hash' => strtolower($torrentHash))
-            );
-            if ($trackers === false) {
-                return false;
-            }
-            foreach ($trackers as $tracker) {
-                if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
-                    $torrents[$torrentHash][] = $tracker;
-                }
-            }
+        $properties = $this->makeRequest(
+            'api/v2/torrents/properties',
+            array('hash' => strtolower($torrentHash))
+        );
+        if ($properties === false) {
+            return false;
         }
-        return $torrents;
-    }
-
-    public function getProperties($torrentHashes)
-    {
-        $torrents = array();
-        foreach ($torrentHashes as $torrentHash) {
-            $response = $this->makeRequest(
-                'api/v2/torrents/properties',
-                array('hash' => strtolower($torrentHash))
-            );
-            if ($response === false) {
-                return false;
-            }
-            $torrents[$torrentHash] = $response;
-        }
-        return $torrents;
+        return $properties;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
