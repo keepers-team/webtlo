@@ -20,7 +20,7 @@ $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     /**
-     * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+     * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
      * */
     $client = new $torrentClientData['cl'](
         $torrentClientData['ssl'],

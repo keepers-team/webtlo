@@ -77,7 +77,7 @@ try {
         // данные текущего торрент-клиента
         $torrentClient = $torrentClients[$clientID];
         /**
-         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
          */
         $client = new $torrentClient['type'](
             $torrentClient['ssl'],
