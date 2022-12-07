@@ -58,7 +58,7 @@ Log::append('Количество торрент-клиентов: ' . count($cf
 
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     /**
-     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
+     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
      */
     $client = new $torrentClientData['cl'](
         $torrentClientData['ssl'],

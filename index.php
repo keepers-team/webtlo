@@ -582,6 +582,7 @@ try {
                                             <option value="vuze" title="Web Remote plugin">Vuze</option>
                                             <option value="deluge" title="WebUi plugin">Deluge</option>
                                             <option value="qbittorrent">qBittorrent</option>
+                                            <option value="flood">Flood</option>
                                             <option value="ktorrent">KTorrent</option>
                                             <option value="rtorrent">rTorrent</option>
                                         </select>
@@ -642,7 +643,7 @@ try {
                                 </label>
                                 <label>
                                     Метка:
-                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent и uTorrent)" />
+                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent, Flood и uTorrent)" />
                                 </label>
                                 <label>
                                     Каталог для данных:
