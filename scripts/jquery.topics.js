@@ -251,6 +251,7 @@ $(document).ready(function () {
 		$("#filter_rule_from").val(0);
 		$("#filter_avg_seeders_period").val($("#avg_seeders_period").val());
 		$(".filter_rule_interval").hide();
+		$(".keepers_filter_rule_fieldset").hide();
 		$(".filter_rule_one").show();
 		$("#topics_filter .default").prop("checked", true).change();
 	});
@@ -259,6 +260,15 @@ $(document).ready(function () {
 	$("input[name=filter_interval]").on("change", function () {
 		$(".filter_rule_interval").toggle(500);
 		$(".filter_rule_one").toggle(500);
+	});
+
+	// вкл/выкл интервал хранителей
+	$("input[name=is_keepers]").on("change", function () {
+		if ($(this).prop("checked")) {
+			$(".keepers_filter_rule_fieldset").show(500);
+		} else {
+			$(".keepers_filter_rule_fieldset").hide(500);
+		}
 	});
 
 	// есть/нет хранители
@@ -356,6 +366,9 @@ $(document).ready(function () {
 		if ($("#topics_filter [name=filter_interval]").prop("checked")) {
 			$(".filter_rule_interval, .filter_rule_one").toggle(500);
 		}
+		if ($("input[name=is_keepers]").prop("checked")) {
+			$(".keepers_filter_rule_fieldset").show();
+		}
 	}
 
 	// отобразим раздачи на главной
@@ -387,7 +400,9 @@ function getFilteredTopics() {
 		$("#filter_avg_seeders_period").spinner("enable");
 		$("#filter_rule").spinner("enable");
 		$("#filter_rule_from").spinner("enable");
+		$("#keepers_filter_rule_from").spinner("enable");
 		$("#filter_rule_to").spinner("enable");
+		$("#keepers_filter_rule_to").spinner("enable");
 		$("#filter_date_release").datepicker("enable");
 		if (forum_id == -5) {
 			$("#tor_add").button("disable");
@@ -410,7 +425,9 @@ function getFilteredTopics() {
 		$("#filter_avg_seeders_period").spinner("disable");
 		$("#filter_rule").spinner("disable");
 		$("#filter_rule_from").spinner("disable");
+		$("#keepers_filter_rule_from").spinner("disable");
 		$("#filter_rule_to").spinner("disable");
+		$("#keepers_filter_rule_to").spinner("disable");
 		$("#filter_date_release").datepicker("disable");
 		if (forum_id == -4) {
 			$("#filter_avg_seeders_period").spinner("enable");
