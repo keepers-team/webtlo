@@ -244,6 +244,10 @@ li.menu.ui-tabs-active {
 	display: none;
 }
 
+.keepers_filter_rule_fieldset {
+	display: none;
+}
+
 .filter_rule_value {
 	margin: 6px 0 0 6px;
 }

@@ -366,6 +366,16 @@ try {
                                         <input type="checkbox" class="keepers" name="is_keepers" />
                                         есть хранители
                                     </label>
+                                    <fieldset class="keepers_filter_rule_fieldset" title="Количество хранителей на раздаче">
+                                        <label class="keepers_filter_rule_value" title="Начальное количество хранителей">
+                                            хранители от
+                                            <input type="text" id="keepers_filter_rule_from" name="keepers_filter_rule_interval[from]" size="1" value="1" />
+                                        </label>
+                                        <label class="keepers_filter_rule_value" title="Конечное количество хранителей">
+                                            хранители до
+                                            <input type="text" id="keepers_filter_rule_to" name="keepers_filter_rule_interval[to]" size="1" value="10" />
+                                        </label>
+                                    </fieldset>
                                     <label title="Отображать только те раздачи, которые никто не сидирует из числа других хранителей">
                                         <input type="checkbox" class="keepers_seeders" name="not_keepers_seeders" />
                                         нет сидов-хранителей

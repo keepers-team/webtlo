@@ -295,30 +295,33 @@ try {
             throw new Exception('Не выбраны статусы раздач для торрент-клиента');
         }
 
-        // некорретный ввод значения сидов
-        if (isset($filter['filter_interval'])) {
-            if (
-                !is_numeric($filter['filter_rule_interval']['from'])
-                || !is_numeric($filter['filter_rule_interval']['to'])
-            ) {
-                throw new Exception('В фильтре введено некорректное значение сидов');
-            }
-            if (
-                $filter['filter_rule_interval']['from'] < 0
-                || $filter['filter_rule_interval']['to'] < 0
-            ) {
-                throw new Exception('Значение сидов в фильтре должно быть больше 0');
-            }
-            if ($filter['filter_rule_interval']['from'] > $filter['filter_rule_interval']['to']) {
-                throw new Exception('Начальное значение сидов в фильтре должно быть меньше или равно конечному значению');
-            }
-        } else {
-            if (!is_numeric($filter['filter_rule'])) {
-                throw new Exception('В фильтре введено некорректное значение сидов');
-            }
+        // некорретный ввод значения сидов или количества хранителей
+        $filters_hints = array(
+            "filter_rule_interval" => "сидов",
+            "keepers_filter_rule_interval" => "количества хранителей",
+        );
+        foreach($filters_hints as $filter_name => $hint) {
+            if (isset($filter['filter_interval']) || $filter_name == "keepers_filter_rule_interval") {
+                if (
+                    !is_numeric($filter[$filter_name]['from'])
+                    || !is_numeric($filter[$filter_name]['to'])
+                ) {
+                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
+                }
+                if ($filter[$filter_name]['from'] < 0 || $filter[$filter_name]['to'] < 0) {
+                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
+                }
+                if ($filter[$filter_name]['from'] > $filter[$filter_name]['to']) {
+                    throw new Exception('Начальное значение ' . $hint . ' в фильтре должно быть меньше или равно конечному значению');
+                }
+            } else {
+                if (!is_numeric($filter['filter_rule'])) {
+                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
+                }
 
-            if ($filter['filter_rule'] < 0) {
-                throw new Exception('Значение сидов в фильтре должно быть больше 0');
+                if ($filter['filter_rule'] < 0) {
+                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
+                }
             }
         }
 
@@ -559,6 +562,16 @@ try {
                         continue;
                     }
                 }
+            }
+
+            if (
+                isset($filter['is_keepers'])
+                && (
+                    $filter['keepers_filter_rule_interval']['from'] > count($keepers[$topic_data['id']])
+                    || $filter['keepers_filter_rule_interval']['to'] < count($keepers[$topic_data['id']])
+                )
+            ) {
+                continue;
             }
             $data = '';
             $filtered_topics_count++;
