@@ -64,6 +64,13 @@ $(document).ready(function () {
         mouseWheel: true
     });
 
+    // фильтрация раздач, количество хранителей
+    $("#keepers_filter_rule_from,#keepers_filter_rule_to").spinner({
+        min: 1,
+        step: 1,
+        mouseWheel: true
+    });
+
     // дата релиза в фильтре
     $("#filter_date_release").datepicker($.datepicker.regional['ru'])
         .datepicker({
