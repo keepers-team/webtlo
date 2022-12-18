@@ -320,6 +320,7 @@ $(document).ready(function () {
 			$('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
 			$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
 		}
+		$("#topics_filter").trigger("change");
 	});
 
 	// очистка topics_result при изменениях на странице
