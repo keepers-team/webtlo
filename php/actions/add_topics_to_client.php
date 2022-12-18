@@ -226,7 +226,7 @@ try {
                     Topics.si
                 FROM Topics
                 WHERE hs IN (' . $placeholders . ')',
-                array(array_unshift($addedTorrentFiles, $torrentClientID))
+                array_merge(array($torrentClientID), $addedTorrentFiles)
             );
             unset($placeholders);
         }
