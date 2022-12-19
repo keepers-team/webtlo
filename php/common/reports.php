@@ -50,6 +50,8 @@ $spoiler_length = mb_strlen($pattern_spoiler, 'UTF-8');
 // общий объём и количество хранимого в сводный
 $sumdlqt = 0;
 $sumdlsi = 0;
+$sumdlqt10plus = 0;
+$sumdlsi10plus = 0;
 
 // список подразделов в сводный
 $common_forums = [];
@@ -93,6 +95,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             Topics.na,
             Topics.si,
             Topics.st,
+            Topics.se * 1.0 / Topics.qt AS average,
             Torrents.done
         FROM Topics
         LEFT JOIN (
@@ -105,8 +108,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         ) Torrents ON Topics.hs = Torrents.info_hash
         WHERE
             Torrents.info_hash IS NOT NULL
-            AND Topics.ss = ?
-            AND Topics.se / Topics.qt <= 10',
+            AND Topics.ss = ?',
         [$forum_id],
         true
     );
@@ -136,6 +138,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $tmp['dlqt'] = 0;
             $tmp['dlsisub'] = 0;
             $tmp['dlqtsub'] = 0;
+            $tmp['dlsi10plus'] = 0;
+            $tmp['dlqt10plus'] = 0;
         }
         $topicLink = $topic['done'] != 1 ? $topic['id'] . '#dl' : $topic['id'];
         $str = sprintf(
@@ -148,6 +152,10 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             $tmp['dlqtsub']++;
             $tmp['dlsisub'] += $topic['si'];
             $str .= ' :!: ';
+        } elseif ($topic['average'] > 10) {
+            $tmp['dlqt10plus']++;
+            $tmp['dlsi10plus'] += $topic['si'];
+            $str .= ' :idea: ';
         } else {
             $tmp['dlsi'] += $topic['si'];
         }
@@ -183,10 +191,13 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // вычитаем раздачи на загрузке
     $tmp['dlqt'] -= $tmp['dlqtsub'];
+    // вычитаем популярные раздачи
+    $tmp['dlqt'] -= $tmp['dlqt10plus'];
 
     // дописываем в начало первого сообщения
     $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
-        'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '[br]' .
+        'Всего хранимых раздач в подразделе с &#8804;10 сидов: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '[br]' .
+        'Всего хранимых раздач в подразделе с >10 сидов: ' . $tmp['dlqt10plus'] . ' шт. / ' . convert_bytes($tmp['dlsi10plus']) . '[br]' .
         'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) . '[br]' .
         $webtlo->version_line .
         $tmp['msg'][0];
@@ -355,6 +366,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // добавляем информацию в сводный отчёт
     $sumdlqt += $tmp['dlqt'];
     $sumdlsi += $tmp['dlsi'];
+    $sumdlqt10plus += $tmp['dlqt10plus'];
+    $sumdlsi10plus += $tmp['dlsi10plus'];
     $common_forums[$forum_id] = sprintf(
         $pattern_common,
         $topicID,
@@ -370,9 +383,11 @@ Log::append("Обработано подразделов: " . count($common_foru
 if ($cfg['reports']['send_summary_report']) {
     // формируем сводный отчёт
     $common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]' .
-        'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.[br]' .
-        'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '[br]' .
-        $webtlo->version_line_url . '[hr]' .
+        'Общее количество хранимых раздач с &#8804;10 сидов: [b]' . $sumdlqt . '[/b] шт.[br]' .
+        'Общий вес хранимых раздач с &#8804;10 сидов: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '[br]' .
+        'Общее количество хранимых раздач c >10 сидов: [b]' . $sumdlqt10plus . '[/b] шт.[br]' .
+        'Общий вес хранимых раздач c >10 сидов: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi10plus)) . '[br]' .
+    $webtlo->version_line_url . '[hr]' .
         implode('[br]', $common_forums);
     // ищем сообщение со сводным
     $post_id = $reports->search_post_id(4275633, true);

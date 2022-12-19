@@ -54,6 +54,8 @@ try {
         // сводный отчёт
         $sumdlqt = 0;
         $sumdlsi = 0;
+        $sumdlqt10plus = 0;
+        $sumdlsi10plus = 0;
         $pattern_common = '[url=viewtopic.php?t=%s][u]%s[/u][/url] — %s шт. (%s)';
 
         // идентификаторы хранимых подразделов
@@ -64,8 +66,22 @@ try {
         $stored = Db::query_database(
             "SELECT
                 Topics.ss,
-                COUNT(),
-                SUM(Topics.si)
+                SUM(CASE
+                    WHEN Topics.se * 1.0 / Topics.qt <= 10 THEN 1
+                    ELSE 0 END
+                ) AS count_le_10_seeds,
+                SUM(CASE
+                    WHEN Topics.se * 1.0 / Topics.qt <= 10 THEN Topics.si
+                    ELSE 0 END
+                ) AS size_le_10_seeds,
+                SUM(CASE
+                    WHEN Topics.se * 1.0 / Topics.qt > 10 THEN 1
+                    ELSE 0 END
+                ) AS count_gt_10_seeds,
+                SUM(CASE
+                    WHEN Topics.se * 1.0 / Topics.qt > 10 THEN Topics.si
+                    ELSE 0 END
+                ) AS size_gt_10_seeds
             FROM Topics
             LEFT JOIN (
                 SELECT info_hash
@@ -78,11 +94,10 @@ try {
             WHERE
                 Torrents.info_hash IS NOT NULL
                 AND Topics.ss IN ($in)
-                AND Topics.se / Topics.qt <= 10
             GROUP BY ss",
             $forums_ids,
             true,
-            PDO::FETCH_NUM | PDO::FETCH_UNIQUE
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
 
         if (empty($stored)) {
@@ -102,19 +117,23 @@ try {
                 $pattern_common,
                 $topic_id,
                 $subsection['na'],
-                $stored[$forum_id][0],
-                convert_bytes($stored[$forum_id][1])
+                $stored[$forum_id]['count_le_10_seeds'],
+                convert_bytes($stored[$forum_id]['size_le_10_seeds'])
             );
             // находим общее хранимое
-            $sumdlqt += $stored[$forum_id][0];
-            $sumdlsi += $stored[$forum_id][1];
+            $sumdlqt += $stored[$forum_id]['count_le_10_seeds'];
+            $sumdlsi += $stored[$forum_id]['size_le_10_seeds'];
+            $sumdlqt10plus += $stored[$forum_id]['count_gt_10_seeds'];
+            $sumdlsi10plus += $stored[$forum_id]['size_gt_10_seeds'];
         }
         unset($stored);
 
         // формируем сводный отчёт
         $output = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b]<br />[br]<br />' .
-            'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.<br />' .
-            'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '<br />' .
+            'Общее количество хранимых раздач с &#8804;10 сидов: [b]' . $sumdlqt . '[/b] шт.<br />' .
+            'Общий вес хранимых раздач с &#8804;10 сидов: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '<br />' .
+            'Общее количество хранимых раздач с >10 сидов: [b]' . $sumdlqt10plus . '[/b] шт.<br />' .
+            'Общий вес хранимых раздач с >10 сидов: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi10plus)) . '<br />' .
             $webtlo->version_line_url . '<br />' .
             '[hr]<br />' .
             implode('<br />', $common_forums);
@@ -148,6 +167,7 @@ try {
                 Topics.na,
                 Topics.si,
                 Topics.st,
+                Topics.se * 1.0 / Topics.qt AS average,
                 Torrents.done
             FROM Topics
             LEFT JOIN (
@@ -160,8 +180,7 @@ try {
             ) Torrents ON Topics.hs = Torrents.info_hash
             WHERE
                 Torrents.info_hash IS NOT NULL
-                AND Topics.ss = ?
-                AND Topics.se / Topics.qt <= 10",
+                AND Topics.ss = ?",
             [$forum_id],
             true
         );
@@ -185,6 +204,8 @@ try {
                 $tmp['dlqt'] = 0;
                 $tmp['dlsisub'] = 0;
                 $tmp['dlqtsub'] = 0;
+                $tmp['dlsi10plus'] = 0;
+                $tmp['dlqt10plus'] = 0;
             }
             $topicLink = $topic['done'] != 1 ? $topic['id'] . '#dl' : $topic['id'];
             $str = sprintf(
@@ -197,6 +218,10 @@ try {
                 $tmp['dlqtsub']++;
                 $tmp['dlsisub'] += $topic['si'];
                 $str .= ' :!: ';
+            } elseif ($topic['average'] > 10) {
+                $tmp['dlqt10plus']++;
+                $tmp['dlsi10plus'] += $topic['si'];
+                $str .= ' :idea: ';
             } else {
                 $tmp['dlsi'] += $topic['si'];
             }
@@ -232,10 +257,13 @@ try {
 
         // вычитаем раздачи на загрузке
         $tmp['dlqt'] -= $tmp['dlqtsub'];
+        // вычитаем популярные раздачи
+        $tmp['dlqt'] -= $tmp['dlqt10plus'];
 
         // дописываем в начало первого сообщения
         $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color]<br />' .
-            'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '<br />' .
+            'Всего хранимых раздач в подразделе с &#8804;10 сидов: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '<br />' .
+            'Всего хранимых раздач в подразделе с >10 сидов: ' . $tmp['dlqt10plus'] . ' шт. / ' . convert_bytes($tmp['dlsi10plus']) . '<br />' .
             'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) . '<br />' .
             $webtlo->version_line . '<br />' .
             $tmp['msg'][0];
