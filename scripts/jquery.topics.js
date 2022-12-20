@@ -249,6 +249,8 @@ $(document).ready(function () {
 		$("#filter_date_release").datepicker("setDate", "-" + $("#rule_date_release").val());
 		$("#filter_rule, #filter_rule_to").val($("#rule_topics").val());
 		$("#filter_rule_from").val(0);
+		$("#keepers_filter_rule_from").val(1);
+		$("#keepers_filter_rule_to").val(10);
 		$("#filter_avg_seeders_period").val($("#avg_seeders_period").val());
 		$(".filter_rule_interval").hide();
 		$(".keepers_filter_rule_fieldset").hide();
@@ -276,7 +278,7 @@ $(document).ready(function () {
 		if ($(this).prop("checked")) {
 			switch ($(this).attr("name")) {
 				case "not_keepers":
-					$("input[name=is_keepers]").prop("checked", false);
+					$("input[name=is_keepers]").prop("checked", false).trigger("change");
 					break;
 				case "is_keepers":
 					$("input[name=not_keepers]").prop("checked", false);
