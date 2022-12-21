@@ -221,7 +221,7 @@ function addSubsection(event, ui) {
 }
 
 // Добавление раздела в хранимые, по нажатию на ид форума
-function addUnsavedSubsection(forum_id) {
+function addUnsavedSubsection(forum_id, forum_title) {
 	$("#dialog").dialog(
 		{
 			buttons: [
@@ -243,10 +243,9 @@ function addUnsavedSubsection(forum_id) {
 				}
 			],
 			modal: true,
-			resizable: false,
-			// position: [ 'center', 200 ]
+			resizable: false
 		}
-	).text("Добавить подраздел в хранимые?");
+	).text("Добавить в хранимые подраздел '" + forum_title + "'?");
 	$("#dialog").dialog("open");
 }
 

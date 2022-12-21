@@ -91,8 +91,8 @@ try {
 
         $pattern_topic_head =
             '<div class="subsection-title">'.
-            '<a href="#" onclick="addUnsavedSubsection(%s);" '.
-            'title="Нажмите, чтобы добавить подраздел в хранимые">(%s)</a> %s'.
+            '<a href="#" onclick="addUnsavedSubsection(%1$s, \'%2$s\');" '.
+            'title="Нажмите, чтобы добавить подраздел в хранимые">(%1$s)</a> %2$s'.
             '</div>';
 
         // выводим раздачи
@@ -110,7 +110,6 @@ try {
             if (!isset($preparedOutput[$forumID])) {
                 $preparedOutput[$forumID] = sprintf(
                     $pattern_topic_head,
-                    $forumID,
                     $forumID,
                     $forumsTitles[$forumID]
                 );
