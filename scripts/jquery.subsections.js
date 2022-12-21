@@ -143,9 +143,15 @@ $(document).ready(function () {
 			if ((ui.content.length) === 0) {
 				$(this).addClass("ui-state-error");
 			}
+			if ((ui.content.length) === 1) {
+				$(this).data('ui-autocomplete')._trigger('select', 'autocompleteselect', { item: ui.content[0] });
+				$("#list-forums-button").addClass("ui-state-highlight");
+				$(this).val("").autocomplete("close");
+			}
 		},
 	}).on("input", function(){
 		$(this).removeClass("ui-state-error");
+		$("#list-forums-button").removeClass("ui-state-highlight");
 	});
 
 	// удалить подраздел
