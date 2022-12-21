@@ -1,0 +1,7 @@
+{
+  "version": "2.9.9-alpha3",
+  "github": "https://github.com/keepers-team/webtlo",
+  "wiki": "https://github.com/keepers-team/webtlo/wiki",
+  "release": "https://github.com/keepers-team/webtlo/releases/latest",
+  "release_api": "https://api.github.com/repos/keepers-team/webtlo/releases/latest"
+}

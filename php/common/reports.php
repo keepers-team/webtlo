@@ -188,7 +188,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $tmp['msg'][0] = 'Актуально на: [color=darkblue]' . date('d.m.Y', $update_time[0]) . '[/color][br]' .
         'Всего хранимых раздач в подразделе: ' . $tmp['dlqt'] . ' шт. / ' . convert_bytes($tmp['dlsi']) . '[br]' .
         'Всего скачиваемых раздач в подразделе: ' . $tmp['dlqtsub'] . ' шт. / ' . convert_bytes($tmp['dlsisub']) . '[br]' .
-        'Версия TLO: [b]Web-TLO-' . $webtlo_version . '[/b]' .
+        'Версия TLO: [b]Web-TLO-' . $webtlo->version . '[/b]' .
         $tmp['msg'][0];
 
     // ищем тему со списками
@@ -372,7 +372,7 @@ if ($cfg['reports']['send_summary_report']) {
     $common = 'Актуально на: [b]' . date('d.m.Y', $update_time[0]) . '[/b][br][br]' .
         'Общее количество хранимых раздач: [b]' . $sumdlqt . '[/b] шт.[br]' .
         'Общий вес хранимых раздач: [b]' . preg_replace('/ (?!.* )/', '[/b] ', convert_bytes($sumdlsi)) . '[br]' .
-        'Версия TLO: [b]Web-TLO-' . $webtlo_version . '[/b][hr]' .
+        'Версия TLO: [b]Web-TLO-[url='. $webtlo->version_url . ']' . $webtlo->version . '[/url][/b][hr]' .
         implode('[br]', $common_forums);
     // ищем сообщение со сводным
     $post_id = $reports->search_post_id(4275633, true);

@@ -44,7 +44,7 @@ COPY fonts fonts
 COPY scripts scripts
 COPY php php
 COPY favicon.ico .
-COPY version.txt .
+COPY version.json .
 COPY index.php .
 
 HEALTHCHECK CMD curl -f http://localhost || exit 1
