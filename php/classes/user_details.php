@@ -34,6 +34,7 @@ class UserDetails
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20,
+            CURLOPT_ENCODING => 'gzip',
         ));
         curl_setopt_array($ch, Proxy::$proxy['forum']);
         $try_number = 1; // номер попытки

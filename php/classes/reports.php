@@ -63,6 +63,7 @@ class Reports
             CURLOPT_POSTFIELDS => http_build_query($fields),
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+            CURLOPT_ENCODING => 'gzip',
         ));
         curl_setopt_array($this->ch, Proxy::$proxy['forum']);
         curl_setopt_array($this->ch, $options);
