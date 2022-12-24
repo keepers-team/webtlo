@@ -7,8 +7,7 @@ include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 
 // версия Web-TLO
-$webtlo = json_decode(file_get_contents(dirname(__FILE__) . '/../version.json'));
-$webtlo->version_url = $webtlo->github . '/releases/tag/' . $webtlo->version;
+$webtlo = get_webtlo_version();
 
 // подключаемся к базе
 Db::create();
@@ -25,6 +24,23 @@ Db::query_database(
     "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
     array($avgSeedersPeriodOutdatedSeconds)
 );
+
+function get_webtlo_version()
+{
+    $webtlo = json_decode(file_get_contents(dirname(__FILE__) . '/../version.json'));
+    if (!isset($webtlo)) { 
+      return (object)[];
+    }
+
+    $webtlo->version_url = $webtlo->report = $webtlo->report_url = "";
+    if (isset($webtlo->version)) {
+        $webtlo->version_url = $webtlo->github . '/releases/tag/' . $webtlo->version;
+
+        $webtlo->report     = 'Версия TLO: [b]Web-TLO-' . $webtlo->version . '[/b]';
+        $webtlo->report_url = 'Версия TLO: [b]Web-TLO-[url='. $webtlo->version_url . ']' . $webtlo->version . '[/url][/b]';
+    }
+    return $webtlo;
+}
 
 function get_settings($filename = "")
 {
