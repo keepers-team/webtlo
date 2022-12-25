@@ -710,7 +710,7 @@ try {
                                 <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
-                            <p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/Automation-scripts" ?>">этой</a> странице за подробностями.</p>
+                            <p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице за подробностями.</p>
                         </div>
                         <h2>Настройки загрузки торрент-файлов</h2>
                         <div>
@@ -850,7 +850,7 @@ try {
             <div id="manual" class="content">
                 <p>web-TLO <a href="<?php echo $webtlo->version_url ?>" target="_blank"><?php echo $webtlo->version ?></a></p>
                 <p>Простое веб-приложение для управления торрентами</p>
-                <p><a href="<?php echo $webtlo->wiki ?>" target="_blank"><?php echo $webtlo->wiki ?></a></p>
+                <p><a href="<?php echo $webtlo->wiki ?>" target="_blank">web-TLO wiki</a></p>
                 <p>Copyright © 2016-2022 Alexander Shemetov</p>
             </div>
         </div>
