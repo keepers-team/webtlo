@@ -71,7 +71,7 @@ $(document).ready(function () {
 
 	// Проверяем, что настройки были изменены
 	$("form#config :input").on("change selectmenuchange spinchange", function () {
-		$("#savecfg").addClass("ui-state-error");
+		savecfg.dataset["unsaved"] = 1;
 	});
 
 	// произвольные адреса для форума и api

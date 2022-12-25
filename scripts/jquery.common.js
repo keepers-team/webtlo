@@ -97,7 +97,7 @@ function doSortSelectByValue(selectID, sortElement = "option") {
 
 // сохранение настроек
 function setSettings() {
-	$("#savecfg").removeClass("ui-state-error");
+	savecfg.dataset["unsaved"] = 0;
 	var forums = getForums();
 	var tor_clients = getListTorrentClients();
 	var $data = $("#config").serialize();
@@ -123,30 +123,32 @@ function setSettings() {
 }
 
 function checkSaveSettings() {
-	if ($("#savecfg").hasClass("ui-state-error")){
-		$("#dialog").dialog(
-			{
-				buttons: [
-					{
-						text: "Ну и ладно",
-						click: function () {
-							$(this).dialog("close");
-						}
-					},
-					{
-						text: "Сохранить",
-						click: function() {
-							setSettings();
-							$(this).dialog("close");
-						}
-					}
-				],
-				modal: true,
-				resizable: false
-			}
-		).text("Похоже, что вы не сохранили настройки");
-		$("#dialog").dialog("open");
+	let unsaved = !!+savecfg.dataset["unsaved"];
+	if (!unsaved) {
+		return;
 	}
+	$("#dialog").dialog(
+		{
+			buttons: [
+				{
+					text: "Ну и ладно",
+					click: function () {
+						$(this).dialog("close");
+					}
+				},
+				{
+					text: "Сохранить",
+					click: function() {
+						setSettings();
+						$(this).dialog("close");
+					}
+				}
+			],
+			modal: true,
+			resizable: false
+		}
+	).text("Похоже, что вы не сохранили настройки");
+	$("#dialog").dialog("open");
 }
 
 // получение отчётов
