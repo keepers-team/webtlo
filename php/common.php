@@ -27,19 +27,30 @@ Db::query_database(
 
 function get_webtlo_version()
 {
-    $webtlo = json_decode(file_get_contents(dirname(__FILE__) . '/../version.json'));
-    if (!isset($webtlo)) { 
-      return (object)[];
+    $webtlo_version_defaults = array(
+        'version' => '',
+        'github' => '',
+        'wiki' => '',
+        'release' => '',
+        'release_api' => '',
+        'version_url' => '',
+        'version_line' => 'Версия TLO: [b]Web-TLO-unknown[/b]',
+        'version_line_url' => "Версия TLO: [b]Web-TLO-[url='#']unknown[/url][/b]"
+    );
+    $version_json_path = dirname(__FILE__) . '/../version.json';
+    if (!file_exists($version_json_path)) {
+        error_log('`version.json` not found! Make sure you copied all files from the repo.');
+        return (object) $webtlo_version_defaults;
     }
+    $version_json = json_decode(file_get_contents($version_json_path), true);
+    $result = (object) array_merge($webtlo_version_defaults, $version_json);
 
-    $webtlo->version_url = $webtlo->report = $webtlo->report_url = "";
-    if (isset($webtlo->version)) {
-        $webtlo->version_url = $webtlo->github . '/releases/tag/' . $webtlo->version;
-
-        $webtlo->report     = 'Версия TLO: [b]Web-TLO-' . $webtlo->version . '[/b]';
-        $webtlo->report_url = 'Версия TLO: [b]Web-TLO-[url='. $webtlo->version_url . ']' . $webtlo->version . '[/url][/b]';
+    if (!empty($result->version)) {
+        $result->version_url = $result->github . '/releases/tag/' . $result->version;
+        $result->version_line     = 'Версия TLO: [b]Web-TLO-' . $result->version . '[/b]';
+        $result->version_line_url = 'Версия TLO: [b]Web-TLO-[url='. $result->version_url . ']' . $result->version . '[/url][/b]';
     }
-    return $webtlo;
+    return $result;
 }
 
 function get_settings($filename = "")
