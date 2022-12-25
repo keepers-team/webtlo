@@ -69,6 +69,11 @@ $(document).ready(function () {
 	// сохранение настроек
 	$("#savecfg").on("click", setSettings);
 
+	// Проверяем, что настройки были изменены
+	$("form#config :input").on("change selectmenuchange spinchange", function () {
+		$("#savecfg").addClass("ui-state-error");
+	});
+
 	// произвольные адреса для форума и api
 	$("#forum_url, #api_url").on("selectmenucreate selectmenuchange", function (event, ui) {
 		var value = $(this).val();

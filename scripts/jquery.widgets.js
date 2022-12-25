@@ -31,6 +31,12 @@ $(document).ready(function () {
                 ui.newTab.index()
             );
         },
+        beforeActivate: function(event, ui) {
+            // Ловим переход с вкладки "настройки"
+            if (ui.oldTab.index() === 1) {
+                checkSaveSettings();
+            }
+        },
         active: Cookies.get('selected-tab'),
     }).addClass("ui-tabs-vertical ui-helper-clearfix").removeClass("ui-widget-content");
     $("#menutabs li.menu").removeClass("ui-corner-top").addClass("ui-corner-left");
