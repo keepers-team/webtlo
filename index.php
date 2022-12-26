@@ -17,6 +17,7 @@ try {
     $avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
     $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
     $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
+    $unadded_subsections = $cfg['topics_control']['unadded_subsections'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
     $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
 
@@ -701,6 +702,10 @@ try {
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:
                                 <input id="peers" name="peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
+                            </label>
+                            <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
+                                <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
+                                регулировать раздачи не из хранимых подразделов
                             </label>
                             <label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
                                 <input name="leechers" type="checkbox" <?php echo $leechers ?> />

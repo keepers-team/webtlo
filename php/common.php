@@ -111,6 +111,7 @@ function get_settings($filename = "")
 
     // регулировка раздач
     $config['topics_control']['peers'] = $ini->read('topics_control', 'peers', 10);
+    $config['topics_control']['unadded_subsections'] = $ini->read('topics_control', 'unadded_subsections', 0);
     $config['topics_control']['leechers'] = $ini->read('topics_control', 'leechers', 0);
     $config['topics_control']['no_leechers'] = $ini->read('topics_control', 'no_leechers', 1);
 
