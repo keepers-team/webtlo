@@ -26,7 +26,7 @@ try {
     // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
     $itemFormat = '<li class="ui-widget-content" value="%s" %s>%s</li>';
-    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s"';
+    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s" data-peers="%s"';
     $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
 
     // стандартные адреса
@@ -80,7 +80,8 @@ try {
                 $torrentClientData['pt'],
                 $torrentClientData['lg'],
                 $torrentClientData['pw'],
-                $torrentClientData['ssl']
+                $torrentClientData['ssl'],
+                $torrentClientData['control_peers']
             );
             $optionTorrentClients .= sprintf(
                 $optionFormat,
@@ -611,6 +612,12 @@ try {
                                         <input name="torrent-client-password" id="torrent-client-password" class="torrent-client-props" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
                                     </label>
                                 </div>
+                                <div>
+                                    <label>
+                                        Останавливать раздачи с количеством пиров более:
+                                        <input name="torrent-client-peers" id="torrent-client-peers" class="torrent-client-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                         <h2>Настройки сканируемых подразделов</h2>
@@ -667,7 +674,7 @@ try {
                                 </label>
                                 <label>
                                     Останавливать раздачи с количеством пиров более:
-                                    <input id="forum-control-peers" class="myinput forum-props" type="text" size="10" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела в торрент-клиентах. Либо оставьте это поле пустым, чтобы использовать глобальное значение для регулировки раздач. Значение равное -1 вовсе исключит подраздел из регулировки" />
+                                    <input id="forum-control-peers" class="myinput forum-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
                                 </label>
                             </fieldset>
                         </div>
@@ -701,7 +708,7 @@ try {
                             <h3>Регулировка раздач<sup>1</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:
-                                <input id="peers" name="peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
+                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
                             </label>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
                                 <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
