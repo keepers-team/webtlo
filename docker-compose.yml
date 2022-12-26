@@ -5,7 +5,7 @@ volumes:
 
 services:
   app:
-    image: berkut174/webtlo
+    image: berkut174/webtlo:master
     restart: on-failure
     ports:
       - "8080:80"
