@@ -47,6 +47,9 @@ try {
                 $ini->write($torrentClientSection, 'password', trim($torrentClientData['password']));
             }
             $ini->write($torrentClientSection, 'ssl', $torrentClientData['ssl']);
+            if (isset($torrentClientData['control_peers'])) {
+                $ini->write($torrentClientSection, 'control_peers', trim($torrentClientData['control_peers']));
+            }
         }
     }
     $ini->write('other', 'qt', $torrentClientNumber); // кол-во торрент-клиентов

@@ -89,8 +89,9 @@ $(document).ready(function () {
         );
 
     // регулировка раздач, количество пиров
-    $("#peers").spinner({
-        min: 1,
+    $(".spinner-peers").spinner({
+        min: -1,
+        max: 100,
         mouseWheel: true
     });
 
