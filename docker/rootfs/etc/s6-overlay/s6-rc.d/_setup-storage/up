@@ -1,0 +1,2 @@
+#!/command/execlineb
+foreground { bash -e /root/_setup-storage.sh }

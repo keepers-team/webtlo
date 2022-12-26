@@ -31,7 +31,7 @@ RUN \
 COPY docker/rootfs /
 
 # set application-specific environment
-ENV WEBTLO_DIR "/data"
+ENV WEBTLO_DIR "/data/storage"
 ENV WEBTLO_CRON "true"
 EXPOSE 80
 VOLUME /data
