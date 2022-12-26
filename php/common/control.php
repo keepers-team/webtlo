@@ -48,6 +48,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         $placeholdersLimit - count($forumsIDs)
     );
     $topicsHashes = array();
+    $unaddedHashes = array_keys($torrents);
     // вытаскиваем из базы хэши раздач только для хранимых подразделов
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
@@ -64,6 +65,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         foreach ($responseTopicsHashes as $forumID => $hashes) {
+            $unaddedHashes = array_diff($unaddedHashes, $hashes);
             if (isset($topicsHashes[$forumID])) {
                 $topicsHashes[$forumID] = array_merge($topicsHashes[$forumID], $hashes);
             } else {
@@ -73,7 +75,11 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         unset($placeholdersTorrentsHashes);
         unset($responseTopicsHashes);
     }
-    unset($torrentsHashes);
+    if (count($unaddedHashes)) {
+        $topicsHashes["unadded"] = $unaddedHashes;
+    }
+    unset($torrentsHashes,$unaddedHashes);
+
     if (!empty($topicsHashes)) {
         // подключаемся к api
         if (!isset($api)) {
@@ -84,6 +90,9 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         }
         foreach ($topicsHashes as $forumID => $hashes) {
             $controlPeersForum = $cfg['subsections'][$forumID]['control_peers'];
+            if (!$cfg['topics_control']['unadded_subsections'] && !isset($cfg['subsections'][$forumID])) {
+                continue;
+            }
             // пропустим исключённые из регулировки подразделы
             if ($controlPeersForum == -1) {
                 continue;
