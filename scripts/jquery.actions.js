@@ -67,11 +67,16 @@ $(document).ready(function () {
 	});
 
 	// сохранение настроек
-	$("#savecfg").on("click", setSettings);
+	$("#savecfg").on("click", setSettings)
+		.on("change", function () {
+			let unsaved = !!+this.dataset["unsaved"];
+			$(this).toggleClass("ui-state-highlight", unsaved);
+		});
 
 	// Проверяем, что настройки были изменены
 	$("form#config :input").on("change selectmenuchange spinstop", function () {
 		savecfg.dataset["unsaved"] = 1;
+		$("#savecfg").change();
 	});
 
 	// произвольные адреса для форума и api

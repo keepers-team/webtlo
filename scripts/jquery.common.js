@@ -98,6 +98,7 @@ function doSortSelectByValue(selectID, sortElement = "option") {
 // сохранение настроек
 function setSettings() {
 	savecfg.dataset["unsaved"] = 0;
+    $("#savecfg").change();
 	var forums = getForums();
 	var tor_clients = getListTorrentClients();
 	var $data = $("#config").serialize();
