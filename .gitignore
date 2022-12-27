@@ -10,3 +10,5 @@
 *.ini
 *.log
 *.jpg
+
+/vendor/
