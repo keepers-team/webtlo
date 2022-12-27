@@ -60,7 +60,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         array_keys($torrents),
         $placeholdersLimit - count($forumsIDs)
     );
-    $topicsHashes = array();
+    $topicsHashes = [];
     $unaddedHashes = array_keys($torrents);
     // вытаскиваем из базы хэши раздач только для хранимых подразделов
     foreach ($torrentsHashes as $torrentsHashes) {
@@ -230,11 +230,11 @@ function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
         }
     }
     // Задан лимит только для клиента
-    else if ($clientControlPeers > 0) {
+    elseif ($clientControlPeers > 0) {
         $controlPeers = $clientControlPeers;
     }
     // Задан лимит только для раздела
-    else if ($subControlPeers > 0) {
+    elseif ($subControlPeers > 0) {
         $controlPeers = $subControlPeers;
     }
 

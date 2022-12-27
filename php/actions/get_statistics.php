@@ -10,7 +10,7 @@ try {
         throw new Exception("Не выбраны хранимые подразделы");
     }
 
-    $statistics = array();
+    $statistics = [];
     $forumsIDsChunks = array_chunk(array_keys($cfg['subsections']), 499);
 
     foreach ($forumsIDsChunks as $forumsIDs) {
@@ -63,10 +63,10 @@ try {
     }
 
     // 10
-    $tfoot = array(
-        array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-        array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-    );
+    $tfoot = [
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
 
     $tbody = implode("", array_map(function ($e) use (&$tfoot) {
         // всего
@@ -143,13 +143,13 @@ try {
         return $e;
     }, $tfoot)) . "</tr>";
 
-    echo json_encode(array(
+    echo json_encode([
         'tbody' => $tbody,
         'tfoot' => $tfoot,
-    ));
+    ]);
 } catch (Exception $e) {
-    echo json_encode(array(
+    echo json_encode([
         'tbody' => '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>',
         'tfoot' => '',
-    ));
+    ]);
 }

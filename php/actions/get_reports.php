@@ -35,7 +35,7 @@ try {
     // update_time[0] время последнего обновления сведений
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = 7777",
-        array(),
+        [],
         true,
         PDO::FETCH_COLUMN
     );
@@ -131,7 +131,7 @@ try {
         // получение данных о подразделе
         $forum = Db::query_database(
             "SELECT * FROM Forums WHERE id = ?",
-            array($forum_id),
+            [$forum_id],
             true,
             PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
@@ -162,7 +162,7 @@ try {
                 Torrents.info_hash IS NOT NULL
                 AND Topics.ss = ?
                 AND Topics.se / Topics.qt <= 10",
-            array($forum_id),
+            [$forum_id],
             true
         );
 
@@ -344,20 +344,20 @@ try {
 
         // вставляем общее хранимое в шапку
         $tmp['header'] = str_replace(
-            array(
+            [
                 '%%dlqt%%',
                 '%%dlsi%%',
                 '%%dlqtsub%%',
                 '%%dlsisub%%',
                 '%%kpqt%%',
-            ),
-            array(
+            ],
+            [
                 $sumdlqt_keepers,
                 convert_bytes($sumdlsi_keepers),
                 $sumdlqtsub_keepers,
                 convert_bytes($sumdlsisub_keepers),
                 $count_keepers,
-            ),
+            ],
             $tmp['header']
         ) . '<br />';
 
@@ -366,14 +366,14 @@ try {
         unset($tmp);
     }
 
-    echo json_encode(array(
+    echo json_encode([
         'report' => $output,
         'log' => Log::get()
-    ));
+    ]);
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    echo json_encode(array(
+    echo json_encode([
         'log' => Log::get(),
         'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />"
-    ));
+    ]);
 }

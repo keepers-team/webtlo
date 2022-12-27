@@ -16,7 +16,7 @@ include_once dirname(__FILE__) . '/high_priority_topics.php';
 // получаем список подразделов
 $forums_ids = Db::query_database(
     "SELECT id FROM Forums WHERE qt > 0 AND si > 0",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
@@ -52,7 +52,7 @@ if (!isset($api)) {
 }
 
 // все открытые раздачи
-$tor_status = array(0, 2, 3, 8, 10);
+$tor_status = [0, 2, 3, 8, 10];
 
 // время текущего и предыдущего обновления
 $current_update_time = new DateTime();
@@ -76,7 +76,7 @@ foreach ($forums_ids as $forum_id) {
     // получаем дату предыдущего обновления
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = ?",
-        array($forum_id),
+        [$forum_id],
         true,
         PDO::FETCH_COLUMN
     );
@@ -185,7 +185,7 @@ foreach ($forums_ids as $forum_id) {
                 empty($previous_data)
                 || $isTopicDataDelete
             ) {
-                $db_topics_renew[$topic_id] = array(
+                $db_topics_renew[$topic_id] = [
                     'id' => $topic_id,
                     'ss' => $forum_id,
                     'se' => $sum_seeders,
@@ -195,7 +195,7 @@ foreach ($forums_ids as $forum_id) {
                     'qt' => $sum_updates,
                     'ds' => $days_update,
                     'pt' => $topic_data[4],
-                );
+                ];
                 unset($previous_data);
                 continue;
             }
@@ -213,7 +213,7 @@ foreach ($forums_ids as $forum_id) {
             }
             unset($previous_data);
 
-            $db_topics_update[$topic_id] = array(
+            $db_topics_update[$topic_id] = [
                 'id' => $topic_id,
                 'ss' => $forum_id,
                 'se' => $sum_seeders,
@@ -221,7 +221,7 @@ foreach ($forums_ids as $forum_id) {
                 'qt' => $sum_updates,
                 'ds' => $days_update,
                 'pt' => $topic_data[4],
-            );
+            ];
         }
         unset($topics_data_previous);
 
@@ -262,13 +262,13 @@ if (isset($topics_delete)) {
 
 $count_update = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsUpdate",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
 $count_renew = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsRenew",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );

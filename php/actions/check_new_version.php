@@ -4,13 +4,13 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
 
     $ch = curl_init();
-    curl_setopt_array($ch, array(
+    curl_setopt_array($ch, [
         CURLOPT_URL => $webtlo->release_api,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 40,
         CURLOPT_TIMEOUT => 40,
         CURLOPT_USERAGENT => 'web-TLO'
-    ));
+    ]);
     $response = curl_exec($ch);
     if ($response === false) {
         Log::append('CURL ошибка: ' . curl_error($ch));
@@ -26,21 +26,21 @@ try {
     }
 
     echo json_encode(
-        array(
+        [
             'log' => '',
             'newVersionNumber' => $infoFromGitHub['name'],
             'newVersionLink' => $infoFromGitHub['zipball_url'],
             'whatsNew' => $infoFromGitHub['body'],
-        )
+        ]
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'newVersionNumber' => '',
             'newVersionLink' => '',
             'whatsNew' => '',
-        )
+        ]
     );
 }

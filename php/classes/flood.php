@@ -7,10 +7,10 @@
 class Flood extends TorrentClient
 {
     protected static $base = '%s://%s:%s/%s';
-    
+
     private $responseHttpCode;
-    private $errorStates = array('/.*Couldn\'t connect.*/', '/.*error.*/', '/.*Timeout.*/', '/.*missing.*/', '/.*unknown.*/');
-    
+    private $errorStates = ['/.*Couldn\'t connect.*/', '/.*error.*/', '/.*Timeout.*/', '/.*missing.*/', '/.*unknown.*/'];
+
     /**
      * получение идентификатора сессии и запись его в $this->sid
      * @return bool true в случе успеха, false в случае неудачи
@@ -18,20 +18,20 @@ class Flood extends TorrentClient
     protected function getSID()
     {
         $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
         CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'api/auth/authenticate'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
-                array(
+                [
                     'username' => $this->login,
                     'password' => $this->password,
-                )
+                ]
             ),
             CURLOPT_HEADER => true,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20,
-            CURLOPT_HTTPHEADER => array('Content-Type' => 'application/json', 'Accept' => 'application/json')
-        ));
+            CURLOPT_HTTPHEADER => ['Content-Type' => 'application/json', 'Accept' => 'application/json']
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -56,7 +56,7 @@ class Flood extends TorrentClient
         }
         return false;
     }
-    
+
     /**
      * выполнение запроса
      * @param $fields
@@ -66,18 +66,18 @@ class Flood extends TorrentClient
      *
      * @return bool|mixed|string
      */
-    private function makeRequest($url, $fields = '', $options = array())
+    private function makeRequest($url, $fields = '', $options = [])
     {
         $this->responseHttpCode = null;
         curl_reset($this->ch);
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
             CURLOPT_CUSTOMREQUEST => $fields == '' ? 'GET' : 'POST',
-            CURLOPT_POSTFIELDS => $fields == '' ? '': json_encode($fields, JSON_UNESCAPED_SLASHES)
-        ));
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8', 'Accept: application/json'));
+            CURLOPT_POSTFIELDS => $fields == '' ? '' : json_encode($fields, JSON_UNESCAPED_SLASHES)
+        ]);
+        curl_setopt($this->ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json; charset=utf-8', 'Accept: application/json']);
         curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
@@ -99,7 +99,7 @@ class Flood extends TorrentClient
             return $this->responseHttpCode == 200 ? json_decode($response, true) : false;
         }
     }
-    
+
     public function getAllTorrents()
     {
         $response = $this->makeRequest('api/torrents');
@@ -107,20 +107,20 @@ class Flood extends TorrentClient
             return false;
         }
         $response = $response['torrents'];
-        $torrents = array();
+        $torrents = [];
         foreach ($response as $torrent) {
             $torrentHash = $torrent['hash'];
             $torrentPaused = in_array('stopped', $torrent['status']) ? 1 : 0;
             $torrentError = 0;
             $torrentErrorMessage = '';
-            foreach($this->errorStates as $pattern) {
-                if(preg_match($pattern, $torrent['message'])) {
+            foreach ($this->errorStates as $pattern) {
+                if (preg_match($pattern, $torrent['message'])) {
                     $torrentError = 1;
                     $torrentErrorMessage = $torrent['message'];
                     break;
                 }
             }
-            $torrents[$torrentHash] = array(
+            $torrents[$torrentHash] = [
                 'comment' => $torrent['comment'],
                 'done' => $torrent['percentComplete']/100,
                 'error' => $torrentError,
@@ -129,18 +129,18 @@ class Flood extends TorrentClient
                 'time_added' => $torrent['dateAdded'],
                 'total_size' => $torrent['sizeBytes'],
                 'tracker_error' => $torrentErrorMessage
-            );
+            ];
         }
         return $torrents;
     }
-    
+
     public function addTorrent($torrentFilePath, $savePath = '')
     {
-        $fields = array(
-            'files' => array(base64_encode(file_get_contents($torrentFilePath))),
+        $fields = [
+            'files' => [base64_encode(file_get_contents($torrentFilePath))],
             'destination' => '', # $savePath,
             'start' => true
-            );
+            ];
         $response = $this->makeRequest('api/torrents/add-files', $fields);
         if (
             $response === false
@@ -162,43 +162,42 @@ class Flood extends TorrentClient
         }
         return $response;
     }
-    
+
     public function setLabel($torrentHashes, $labelName = '')
-    {    
+    {
         $labelName = str_replace([',', '/', '\\'], '', $labelName);
-        $fields = array(
+        $fields = [
             'hashes' => $torrentHashes,
-            'tags' => array($labelName) 
-        );
-        return $this->makeRequest('api/torrents/tags', $fields, array(CURLOPT_CUSTOMREQUEST => 'PATCH'));
-        
+            'tags' => [$labelName]
+        ];
+        return $this->makeRequest('api/torrents/tags', $fields, [CURLOPT_CUSTOMREQUEST => 'PATCH']);
     }
-    
+
     public function startTorrents($torrentHashes, $forceStart = false)
     {
-        $fields = array('hashes' => $torrentHashes);
+        $fields = ['hashes' => $torrentHashes];
         return $this->makeRequest('api/torrents/start', $fields);
     }
 
     public function stopTorrents($torrentHashes)
     {
-        $fields = array('hashes' => $torrentHashes);
+        $fields = ['hashes' => $torrentHashes];
         return $this->makeRequest('api/torrents/stop', $fields);
     }
 
     public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
         $deleteFiles = $deleteFiles ? 'true' : 'false';
-        $fields = array(
+        $fields = [
             'hashes' => $torrentHashes,
             'deleteData' => $deleteFiles
-        );
+        ];
         return $this->makeRequest('api/torrents/delete', $fields);
     }
 
     public function recheckTorrents($torrentHashes)
     {
-        $fields = array('hashes' => $torrentHashes);
+        $fields = ['hashes' => $torrentHashes];
         return $this->makeRequest('api/torrents/check-hash', $fields);
     }
 }

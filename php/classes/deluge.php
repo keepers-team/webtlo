@@ -17,21 +17,21 @@ class Deluge extends TorrentClient
     protected function getSID()
     {
         $ch = curl_init();
-        $fields = array(
+        $fields = [
             'method' => 'auth.login',
-            'params' => array($this->password),
+            'params' => [$this->password],
             'id' => 7
-        );
-        curl_setopt_array($ch, array(
+        ];
+        curl_setopt_array($ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_POSTFIELDS => json_encode($fields),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_HEADER => true,
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20
-        ));
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -43,36 +43,36 @@ class Deluge extends TorrentClient
         if (!empty($matches)) {
             $this->sid = $matches[1];
             $webUIIsConnected = $this->makeRequest(
-                array(
+                [
                     'method' => 'web.connected',
-                    'params' => array(),
+                    'params' => [],
                     'id' => 7,
-                )
+                ]
             );
             if (!$webUIIsConnected) {
                 $firstHost = $this->makeRequest(
-                    array(
+                    [
                         'method' => 'web.get_hosts',
-                        'params' => array(),
+                        'params' => [],
                         'id' => 7,
-                    )
+                    ]
                 );
                 $firstHostStatus = $this->makeRequest(
-                    array(
+                    [
                         'method' => 'web.get_host_status',
-                        'params' => array($firstHost[0][0]),
+                        'params' => [$firstHost[0][0]],
                         'id' => 7,
-                    )
+                    ]
                 );
                 if (in_array('Offline', $firstHostStatus)) {
                     return false;
                 } elseif (in_array('Online', $firstHostStatus)) {
                     $response = $this->makeRequest(
-                        array(
+                        [
                             'method' => 'web.connect',
-                            'params' => array($firstHost[0][0]),
+                            'params' => [$firstHost[0][0]],
                             'id' => 7,
-                        )
+                        ]
                     );
                     return $response === false ? false : true;
                 }
@@ -92,16 +92,16 @@ class Deluge extends TorrentClient
      * @param array $options
      * @return bool|mixed|string
      */
-    private function makeRequest($fields, $options = array())
+    private function makeRequest($fields, $options = [])
     {
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_POSTFIELDS => json_encode($fields),
-            CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
-        ));
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+        ]);
         curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
@@ -132,11 +132,11 @@ class Deluge extends TorrentClient
 
     public function getAllTorrents()
     {
-        $fields = array(
+        $fields = [
             'method' => 'core.get_torrents_status',
-            'params' => array(
-                (object) array(),
-                array(
+            'params' => [
+                (object) [],
+                [
                     'comment',
                     'message',
                     'name',
@@ -145,22 +145,22 @@ class Deluge extends TorrentClient
                     'time_added',
                     'total_size',
                     'tracker_status'
-                ),
-            ),
+                ],
+            ],
             'id' => 9,
-        );
+        ];
         $response = $this->makeRequest($fields);
         if ($response === false) {
             return false;
         }
-        $torrents = array();
+        $torrents = [];
         foreach ($response as $torrentHash => $torrent) {
             $torrentHash = strtoupper($torrentHash);
             $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
             $torrentError = $torrent['message'] != 'OK' ? 1 : 0;
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
-            $torrents[$torrentHash] = array(
+            $torrents[$torrentHash] = [
                 'comment' => $torrent['comment'],
                 'done' => $torrent['progress'] / 100,
                 'error' => $torrentError,
@@ -169,7 +169,7 @@ class Deluge extends TorrentClient
                 'time_added' => $torrent['time_added'],
                 'total_size' => $torrent['total_size'],
                 'tracker_error' => $torrentTrackerError
-            );
+            ];
         }
         return $torrents;
     }
@@ -181,16 +181,16 @@ class Deluge extends TorrentClient
             Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
             return false;
         }
-        $torrentOptions = empty($savePath) ? array() : array('download_location' => $savePath);
-        $fields = array(
+        $torrentOptions = empty($savePath) ? [] : ['download_location' => $savePath];
+        $fields = [
             'method' => 'core.add_torrent_file',
-            'params' => array(
+            'params' => [
                 basename($torrentFilePath),
                 base64_encode($torrentFile),
                 $torrentOptions,
-            ),
+            ],
             'id' => 1,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 
@@ -201,11 +201,11 @@ class Deluge extends TorrentClient
      */
     public function enablePlugin($pluginName)
     {
-        $fields = array(
+        $fields = [
             'method' => 'core.enable_plugin',
-            'params' => array($pluginName),
+            'params' => [$pluginName],
             'id' => 2,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 
@@ -222,11 +222,11 @@ class Deluge extends TorrentClient
             if ($enablePlugin === false) {
                 return false;
             }
-            $fields = array(
+            $fields = [
                 'method' => 'label.get_labels',
-                'params' => array(),
+                'params' => [],
                 'id' => 3,
-            );
+            ];
             $this->labels = $this->makeRequest($fields);
         }
         if ($this->labels === false) {
@@ -236,11 +236,11 @@ class Deluge extends TorrentClient
             return true;
         }
         $this->labels[] = $labelName;
-        $fields = array(
+        $fields = [
             'method' => 'label.add',
-            'params' => array($labelName),
+            'params' => [$labelName],
             'id' => 3,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 
@@ -258,14 +258,14 @@ class Deluge extends TorrentClient
         }
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
-            $fields = array(
+            $fields = [
                 'method' => 'label.set_torrent',
-                'params' => array(
+                'params' => [
                     strtolower($torrentHash),
                     $labelName,
-                ),
+                ],
                 'id' => 3,
-            );
+            ];
             $response = $this->makeRequest($fields);
             if ($response === false) {
                 $result = false;
@@ -276,25 +276,25 @@ class Deluge extends TorrentClient
 
     public function startTorrents($torrentHashes, $forceStart = false)
     {
-        $fields = array(
+        $fields = [
             'method' => 'core.resume_torrent',
-            'params' => array(
+            'params' => [
                 array_map('strtolower', $torrentHashes)
-            ),
+            ],
             'id' => 4,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 
     public function stopTorrents($torrentHashes)
     {
-        $fields = array(
+        $fields = [
             'method' => 'core.pause_torrent',
-            'params' => array(
+            'params' => [
                 array_map('strtolower', $torrentHashes)
-            ),
+            ],
             'id' => 8,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 
@@ -302,14 +302,14 @@ class Deluge extends TorrentClient
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
-            $fields = array(
+            $fields = [
                 'method' => 'core.remove_torrent',
-                'params' => array(
+                'params' => [
                     strtolower($torrentHash),
                     $deleteFiles,
-                ),
+                ],
                 'id' => 6,
-            );
+            ];
             $response = $this->makeRequest($fields);
             if ($response === false) {
                 $result = false;
@@ -320,13 +320,13 @@ class Deluge extends TorrentClient
 
     public function recheckTorrents($torrentHashes)
     {
-        $fields = array(
+        $fields = [
             'method' => 'core.force_recheck',
-            'params' => array(
+            'params' => [
                 array_map('strtolower', $torrentHashes)
-            ),
+            ],
             'id' => 5,
-        );
+        ];
         return $this->makeRequest($fields);
     }
 }

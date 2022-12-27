@@ -10,7 +10,7 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
-$torrentsFields = array(
+$torrentsFields = [
     'info_hash',
     'topic_id',
     'client_id',
@@ -21,7 +21,7 @@ $torrentsFields = array(
     'time_added',
     'total_size',
     'tracker_error'
-);
+];
 
 $torrentsColumns = implode(',', $torrentsFields);
 
@@ -81,7 +81,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         continue;
     }
     Log::append($torrentClientData['cm'] . ' (' . $torrentClientData['cl'] . ') получено раздач: ' . count($torrents) . '  шт.');
-    $insertedTorrents = array();
+    $insertedTorrents = [];
     foreach ($torrents as $torrentHash => $torrentData) {
         $topicID = '';
         // поисковый домен
@@ -100,7 +100,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         }
         $insertedTorrents[] = array_combine(
             $torrentsFields,
-            array(
+            [
                 $torrentHash,
                 $topicID,
                 $torrentClientID,
@@ -111,7 +111,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 $torrentData['time_added'],
                 $torrentData['total_size'],
                 $torrentData['tracker_error']
-            )
+            ]
         );
     }
     unset($torrents);
@@ -126,7 +126,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 
 $numberTorrentClients = Db::query_database(
     'SELECT COUNT() FROM temp.TorrentsNew',
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
@@ -151,7 +151,7 @@ if (isset($cfg['subsections'])) {
     $forumsIDs = array_keys($cfg['subsections']);
     $placeholders = str_repeat('?,', count($forumsIDs) - 1) . '?';
 } else {
-    $forumsIDs = array();
+    $forumsIDs = [];
     $placeholders = '';
 }
 
@@ -181,7 +181,7 @@ if (!empty($untrackedTorrentHashes)) {
             if (empty($topicData)) {
                 continue;
             }
-            $insertedUntrackedTopics[] = array(
+            $insertedUntrackedTopics[] = [
                 'id' => $topicID,
                 'ss' => $topicData['forum_id'],
                 'na' => $topicData['topic_title'],
@@ -190,7 +190,7 @@ if (!empty($untrackedTorrentHashes)) {
                 'si' => $topicData['size'],
                 'st' => $topicData['tor_status'],
                 'rg' => $topicData['reg_time'],
-            );
+            ];
         }
         unset($untrackedTopics);
         $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
@@ -203,7 +203,7 @@ if (!empty($untrackedTorrentHashes)) {
         unset($insertedUntrackedTopics);
         $numberUntrackedTopics = Db::query_database(
             'SELECT COUNT() FROM temp.TopicsUntrackedNew',
-            array(),
+            [],
             true,
             PDO::FETCH_COLUMN
         );
@@ -236,7 +236,7 @@ $topicsUnregistered = Db::query_database(
         AND Torrents.topic_id IS NOT ""
         AND Torrents.done = 1
     ORDER BY Torrents.name',
-    array(),
+    [],
     true,
     PDO::FETCH_KEY_PAIR
 );
@@ -246,13 +246,13 @@ if (!empty($topicsUnregistered)) {
         $reports = new Reports($cfg['forum_address'], $cfg['tracker_login'], $cfg['tracker_paswd']);
         $reports->curl_setopts($cfg['curl_setopt']['forum']);
     }
-    $insertedUnregisteredTopics = array();
+    $insertedUnregisteredTopics = [];
     foreach ($topicsUnregistered as $infoHash => $topicID) {
         $topicData = $reports->getDataUnregisteredTopic($topicID);
         if ($topicData === false) {
             continue;
         }
-        $insertedUnregisteredTopics[] = array(
+        $insertedUnregisteredTopics[] = [
             $infoHash,
             $topicData['name'],
             $topicData['status'],
@@ -260,7 +260,7 @@ if (!empty($topicsUnregistered)) {
             $topicData['transferred_from'],
             $topicData['transferred_to'],
             $topicData['transferred_by_whom']
-        );
+        ];
     }
     unset($topicsUnregistered);
     $insertedUnregisteredTopics = array_chunk($insertedUnregisteredTopics, 500);
@@ -273,7 +273,7 @@ if (!empty($topicsUnregistered)) {
     unset($insertedUnregisteredTopics);
     $numberUnregisteredTopics = Db::query_database(
         'SELECT COUNT() FROM temp.TopicsUnregisteredNew',
-        array(),
+        [],
         true,
         PDO::FETCH_COLUMN
     );

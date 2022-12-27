@@ -18,14 +18,14 @@ class Utorrent extends TorrentClient
     protected function getSID()
     {
         $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'token.html'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20
-        ));
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -56,16 +56,16 @@ class Utorrent extends TorrentClient
      * @param array $options
      * @return bool|mixed|string
      */
-    private function makeRequest($url, $fields = '', $options = array())
+    private function makeRequest($url, $fields = '', $options = [])
     {
         $url = preg_replace('|^\?|', '?token=' . $this->token . '&', $url);
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_COOKIE => 'GUID=' . $this->guid,
             CURLOPT_POSTFIELDS => $fields,
-        ));
+        ]);
         curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
@@ -103,7 +103,7 @@ class Utorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
-        $torrents = array();
+        $torrents = [];
         foreach ($response['torrents'] as $torrent) {
             /*
                 0 - loaded
@@ -118,7 +118,7 @@ class Utorrent extends TorrentClient
             $torrentState = decbin($torrent[1]);
             $torrentHash = strtoupper($torrent[0]);
             $torrentPaused = $torrentState[2] || !$torrentState[7] ? 1 : 0;
-            $torrents[$torrentHash] = array(
+            $torrents[$torrentHash] = [
                 'comment' => '',
                 'done' => $torrent[4] / 1000,
                 'error' => $torrentState[3],
@@ -127,7 +127,7 @@ class Utorrent extends TorrentClient
                 'time_added' => '',
                 'total_size' => $torrent[3],
                 'tracker_error' => ''
-            );
+            ];
         }
         return $torrents;
     }
@@ -144,7 +144,7 @@ class Utorrent extends TorrentClient
         } else {
             $torrentFile = '@' . $torrentFilePath;
         }
-        return $this->makeRequest('?action=add-file', array('torrent_file' => $torrentFile));
+        return $this->makeRequest('?action=add-file', ['torrent_file' => $torrentFile]);
     }
 
     /**
@@ -178,7 +178,7 @@ class Utorrent extends TorrentClient
      */
     private function implodeParams($glue, $params)
     {
-        $params = is_array($params) ? $params : array($params);
+        $params = is_array($params) ? $params : [$params];
         return $glue . implode($glue, $params);
     }
 

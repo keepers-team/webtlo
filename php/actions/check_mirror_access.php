@@ -56,7 +56,7 @@ Proxy::options(
 
 $ch = curl_init();
 
-curl_setopt_array($ch, array(
+curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_SSL_VERIFYHOST => 2,
@@ -68,7 +68,7 @@ curl_setopt_array($ch, array(
     CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_TIMEOUT => 5,
     CURLOPT_URL => $address,
-));
+]);
 
 curl_setopt_array($ch, Proxy::$proxy[$url_type]);
 

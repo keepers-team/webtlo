@@ -8,7 +8,6 @@ if (!ini_get('date.timezone')) {
 // текущая дата
 class Date
 {
-
     private static $now;
 
     public static function now()

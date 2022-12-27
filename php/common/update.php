@@ -45,7 +45,7 @@ if (!isset($api)) {
 }
 
 // все открытые раздачи
-$tor_status = array(0, 2, 3, 8, 10);
+$tor_status = [0, 2, 3, 8, 10];
 
 // время текущего и предыдущего обновления
 $current_update_time = new DateTime();
@@ -59,7 +59,7 @@ if (isset($cfg['subsections'])) {
         // получаем дату предыдущего обновления
         $update_time = Db::query_database(
             "SELECT ud FROM UpdateTime WHERE id = ?",
-            array($forum_id),
+            [$forum_id],
             true,
             PDO::FETCH_COLUMN
         );
@@ -119,8 +119,8 @@ if (isset($cfg['subsections'])) {
             );
             unset($topics_ids);
 
-            $topicsKeepersFromForum = array();
-            $dbTopicsKeepers = array();
+            $topicsKeepersFromForum = [];
+            $dbTopicsKeepers = [];
             // разбираем раздачи
             // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers )
             foreach ($topics_result as $topic_id => $topic_data) {
@@ -166,7 +166,7 @@ if (isset($cfg['subsections'])) {
                     || $previous_data['lgth'] == 0
                     || $isTopicDataDelete
                 ) {
-                    $db_topics_renew[$topic_id] = array(
+                    $db_topics_renew[$topic_id] = [
                         'id' => $topic_id,
                         'ss' => $forum_id,
                         'na' => '',
@@ -178,7 +178,7 @@ if (isset($cfg['subsections'])) {
                         'qt' => $sum_updates,
                         'ds' => $days_update,
                         'pt' => $topic_data[4],
-                    );
+                    ];
                     if (!empty($topic_data[5])) {
                         $topicsKeepersFromForum[$topic_id] = $topic_data[5];
                     }
@@ -199,7 +199,7 @@ if (isset($cfg['subsections'])) {
                 }
                 unset($previous_data);
 
-                $db_topics_update[$topic_id] = array(
+                $db_topics_update[$topic_id] = [
                     'id' => $topic_id,
                     'ss' => $forum_id,
                     'se' => $sum_seeders,
@@ -207,7 +207,7 @@ if (isset($cfg['subsections'])) {
                     'qt' => $sum_updates,
                     'ds' => $days_update,
                     'pt' => $topic_data[4],
-                );
+                ];
                 if (!empty($topic_data[5])) {
                     $topicsKeepersFromForum[$topic_id] = $topic_data[5];
                 }
@@ -296,20 +296,20 @@ if (isset($topics_delete)) {
 
 $countTopicsUpdate = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsUpdate",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
 $countTopicsRenew = Db::query_database(
     "SELECT COUNT() FROM temp.TopicsRenew",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
 
 $countKeepersSeeders = Db::query_database(
     "SELECT COUNT() FROM temp.KeepersSeedersNew",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
@@ -363,7 +363,7 @@ if (
     // время окончания обновления
     Db::query_database(
         "INSERT INTO UpdateTime (id,ud) SELECT 7777,?",
-        array(time())
+        [time()]
     );
     $countTopicsTotalUpdate = $countTopicsUpdate[0] + $countTopicsRenew[0];
     Log::append("Обработано хранимых подразделов: " . count($forums_update_time) . " шт.");

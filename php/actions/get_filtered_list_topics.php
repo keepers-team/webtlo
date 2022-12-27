@@ -40,17 +40,17 @@ try {
 
     // topic_data => id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
-    $pattern_topic_data = array(
+    $pattern_topic_data = [
         'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
         'ds' => ' <i class="fa %9$s %8$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
         'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
         'si' => ' (%5$s)',
         'se' => ' - <span class="text-danger">%7$s</span>',
-    );
+    ];
 
     $output = '';
-    $preparedOutput = array();
+    $preparedOutput = [];
     $filtered_topics_count = 0;
     $filtered_topics_size = 0;
 
@@ -69,7 +69,7 @@ try {
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
             WHERE TopicsUntracked.hs IS NOT NULL',
-            array(),
+            [],
             true
         );
         $forumsTitles = Db::query_database(
@@ -78,7 +78,7 @@ try {
                 na
             FROM Forums
             WHERE id IN (SELECT DISTINCT ss FROM TopicsUntracked)",
-            array(),
+            [],
             true,
             PDO::FETCH_KEY_PAIR
         );
@@ -149,7 +149,7 @@ try {
             LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
             WHERE TopicsUnregistered.info_hash IS NOT NULL
             ORDER BY TopicsUnregistered.name',
-            array(),
+            [],
             true
         );
         // формирование строки вывода
@@ -160,7 +160,7 @@ try {
             $topicStatus = $topic['status'];
             $torrentClientID = $topic['client_id'];
             foreach ($pattern_topic_data as $field => $pattern) {
-                if (in_array($field, array('id', 'rg', 'ds', 'na', 'si'))) {
+                if (in_array($field, ['id', 'rg', 'ds', 'na', 'si'])) {
                     $topicBlock .= $pattern;
                 }
             }
@@ -214,7 +214,7 @@ try {
             FROM Topics
             LEFT JOIN TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
             WHERE TopicsExcluded.info_hash IS NOT NULL',
-            array(),
+            [],
             true
         );
         // сортировка раздач
@@ -257,8 +257,8 @@ try {
         $output = implode('', $preparedOutput);
     } elseif ($forum_id == -4) {
         // дублирующиеся раздачи
-        $statementFields = array();
-        $statementLeftJoin = array();
+        $statementFields = [];
+        $statementLeftJoin = [];
         if ($cfg['avg_seeders']) {
             if (!is_numeric($filter['avg_seeders_period'])) {
                 throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
@@ -274,10 +274,10 @@ try {
             $statementTotalUpdates = implode('+', $statementTotal['updates']);
             $statementTotalSeeders = implode('+', $statementTotal['seeders']);
             $statementAverageSeeders = 'CASE WHEN ' . $statementTotalValues . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $statementTotalSeeders . ') / ( qt + ' . $statementTotalUpdates . ') END';
-            $statementFields = array(
+            $statementFields = [
                 $statementTotalValues . ' as ds',
                 $statementAverageSeeders . ' as se'
-            );
+            ];
             $statementLeftJoin[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
         } else {
             $statementFields[] = 'se';
@@ -297,7 +297,7 @@ try {
             ',' . implode(',', $statementFields),
             ' ' . implode(' ', $statementLeftJoin)
         );
-        $topicsData = Db::query_database($statement, array(), true);
+        $topicsData = Db::query_database($statement, [], true);
         $topicsData = natsort_field(
             $topicsData,
             $filter['filter_sort'],
@@ -331,7 +331,7 @@ try {
                 ORDER BY client_id';
             $listTorrentClientsIDs = Db::query_database(
                 $statement,
-                array($topicData['hs']),
+                [$topicData['hs']],
                 true
             );
             // сортировка торрент-клиентов
@@ -395,7 +395,7 @@ try {
 
         if (empty($filter['keeping_priority'])) {
             if ($forum_id == -5) {
-                $filter['keeping_priority'] = array(2);
+                $filter['keeping_priority'] = [2];
             } else {
                 throw new Exception('Не выбраны приоритеты раздач для трекера');
             }
@@ -406,11 +406,11 @@ try {
         }
 
         // некорретный ввод значения сидов или количества хранителей
-        $filters_hints = array(
+        $filters_hints = [
             "filter_rule_interval" => "сидов",
             "keepers_filter_rule_interval" => "количества хранителей",
-        );
-        foreach($filters_hints as $filter_name => $hint) {
+        ];
+        foreach ($filters_hints as $filter_name => $hint) {
             if (isset($filter['filter_interval']) || $filter_name == "keepers_filter_rule_interval") {
                 if (
                     !is_numeric($filter[$filter_name]['from'])
@@ -443,16 +443,16 @@ try {
 
         // хранимые подразделы
         if ($forum_id > 0) {
-            $forumsIDs = array($forum_id);
+            $forumsIDs = [$forum_id];
         } elseif ($forum_id == -5) {
             $forumsIDs = Db::query_database(
                 'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
-                array(),
+                [],
                 true,
                 PDO::FETCH_COLUMN
             );
             if (empty($forumsIDs)) {
-                $forumsIDs = array(0);
+                $forumsIDs = [0];
             }
         } else {
             if (isset($cfg['subsections'])) {
@@ -462,7 +462,7 @@ try {
                     }
                 }
             } else {
-                $forumsIDs = array(0);
+                $forumsIDs = [0];
             }
         }
 
@@ -522,9 +522,9 @@ try {
                 AND TopicsExcluded.info_hash IS NULL
                 %s';
 
-        $fields = array();
-        $where = array();
-        $left_join = array();
+        $fields = [];
+        $where = [];
+        $left_join = [];
 
         if ($cfg['avg_seeders']) {
             // некорректный период средних сидов
@@ -567,7 +567,7 @@ try {
 
         // данные о других хранителях
         $forumsIDsChunks = array_chunk($forumsIDs, 499);
-        $keepers = array();
+        $keepers = [];
         foreach ($forumsIDsChunks as $forumsIDsChunk) {
             $keepers += Db::query_database(
                 'SELECT k.id,k.nick,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding FROM (
@@ -685,7 +685,7 @@ try {
             if (!empty($filter['filter_phrase'])) {
                 if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
                     if (!isset($keepers[$topic_data['id']])) {
-                        $keepers[$topic_data['id']] = array();
+                        $keepers[$topic_data['id']] = [];
                     }
                     $topicKeepers = array_column($keepers[$topic_data['id']], 'nick');
                     unset($matchKeepers);
@@ -769,17 +769,17 @@ try {
         }
     }
 
-    echo json_encode(array(
+    echo json_encode([
         'log' => '',
         'topics' => $output,
         'size' => $filtered_topics_size,
         'count' => $filtered_topics_count,
-    ));
+    ]);
 } catch (Exception $e) {
-    echo json_encode(array(
+    echo json_encode([
         'log' => $e->getMessage(),
         'topics' => null,
         'size' => 0,
         'count' => 0,
-    ));
+    ]);
 }

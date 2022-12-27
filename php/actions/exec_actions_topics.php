@@ -10,12 +10,12 @@ try {
     $removeFiles = isset($_POST['remove_data']) ? $_POST['remove_data'] : '';
     $forceStart = isset($_POST['force_start']) ? $_POST['force_start'] : '';
     // поддерживаемые действия
-    $supportedActions = array(
+    $supportedActions = [
         'set_label',
         'start',
         'stop',
         'remove',
-    );
+    ];
     if (!in_array($actionType, $supportedActions)) {
         $result = 'Попытка выполнить неизвестное действие';
         throw new Exception();
@@ -130,17 +130,17 @@ try {
     $result = 'Действие "' . $actionType . '" выполнено. За подробностями обратитесь к журналу';
     Log::append('Выполнение действия "' . $actionType . '" завершено');
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'result' => $result,
-        )
+        ]
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'result' => $result,
-        )
+        ]
     );
 }

@@ -28,14 +28,14 @@ class Reports
     /**
      * @var array
      */
-    private $months = array('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+    private $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     /**
      * @var array
      */
-    private $months_ru = array('Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек');
+    private $months_ru = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 
-    public function __construct($forum_url, $login, $paswd, $cap_fields = array())
+    public function __construct($forum_url, $login, $paswd, $cap_fields = [])
     {
         $this->login = $login;
         $this->forum_url = $forum_url;
@@ -50,9 +50,9 @@ class Reports
         curl_setopt_array($this->ch, $options);
     }
 
-    private function make_request($url, $fields = array(), $options = array())
+    private function make_request($url, $fields = [], $options = [])
     {
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
@@ -63,7 +63,7 @@ class Reports
             CURLOPT_POSTFIELDS => http_build_query($fields),
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-        ));
+        ]);
         curl_setopt_array($this->ch, Proxy::$proxy['forum']);
         curl_setopt_array($this->ch, $options);
         $try_number = 1; // номер попытки
@@ -109,11 +109,11 @@ class Reports
         while ($page > 0) {
             $data = $this->make_request(
                 $this->forum_url . "/forum/search.php?id=$page_id",
-                array(
+                [
                     'nm' => mb_convert_encoding("$search", 'Windows-1251', 'UTF-8'),
                     'start' => $i,
                     'f' => $forum_id,
-                )
+                ]
             );
             $html = phpQuery::newDocumentHTML($data, 'UTF-8');
             unset($data);
@@ -178,7 +178,7 @@ class Reports
         // приоритет
         $topicPriority = $html->find('div.attach_link b:last')->text();
         // статус
-        $topicStatus = implode('', array_diff($topicStatuses, array('')));
+        $topicStatus = implode('', array_diff($topicStatuses, ['']));
         if (!empty($downloadLink)) {
             $topicStatus = 'обновлено';
         }
@@ -215,14 +215,14 @@ class Reports
         }
         unset($html);
         phpQuery::unloadDocuments();
-        return array(
+        return [
             'name' => $topicName,
             'status' => mb_strtolower($topicStatus),
             'priority' => $topicPriority,
             'transferred_from' => $transferredFrom,
             'transferred_to' => $transferredTo,
             'transferred_by_whom' => $transferredByWhom
-        );
+        ];
     }
 
     // поиск ID тем по заданным параметрам
@@ -231,7 +231,7 @@ class Reports
         if (empty($params)) {
             return false;
         }
-        $topicsIDs = array();
+        $topicsIDs = [];
         $startIndex = 0;
         $currentPage = 1;
         $pageID = '';
@@ -239,10 +239,10 @@ class Reports
             $data = $this->make_request(
                 $this->forum_url . "/forum/search.php?id=$pageID",
                 array_merge(
-                    array(
+                    [
                         'start' => $startIndex,
                         'f' => $forumID
-                    ),
+                    ],
                     $params
                 )
             );
@@ -283,19 +283,19 @@ class Reports
         if (empty($topic_id)) {
             return false;
         }
-        $posts_ids = array();
+        $posts_ids = [];
         $i = 0;
         $page = 1;
         $page_id = "";
         while ($page > 0) {
             $data = $this->make_request(
                 $this->forum_url . "/forum/search.php?id=$page_id",
-                array(
+                [
                     'start' => $i,
                     'uid' => UserDetails::$uid,
                     't' => $topic_id,
                     'dm' => 1,
-                )
+                ]
             );
             $html = phpQuery::newDocumentHTML($data, 'UTF-8');
             unset($data);
@@ -337,7 +337,7 @@ class Reports
         if (empty($forum_id)) {
             return false;
         }
-        $topics_ids = array();
+        $topics_ids = [];
         $i = 0;
         $page = 1;
         while ($page > 0) {
@@ -377,7 +377,7 @@ class Reports
         if (empty($topic_id)) {
             return false;
         }
-        $keepers = array();
+        $keepers = [];
         $i = 0;
         $page = 1;
         $index = -1;
@@ -406,10 +406,10 @@ class Reports
                     }
                     $index++;
                     $nickname = $row->find('p.nick > a')->text();
-                    $keepers[$index] = array(
+                    $keepers[$index] = [
                         'post_id' => $post_id,
                         'nickname' => $nickname,
-                    );
+                    ];
                     // вытаскиваем дату отправки/редактирования сообщения
                     $postedDateMessage = $row->find('.p-link')->text();
                     $editedDateMessage = $row->find('.posted_since')->text();
@@ -489,7 +489,7 @@ class Reports
 
         $data = $this->make_request(
             $this->forum_url . '/forum/posting.php',
-            array(
+            [
                 't' => $topic_id,
                 'mode' => $mode,
                 'p' => $post_id,
@@ -497,7 +497,7 @@ class Reports
                 'submit_mode' => "submit",
                 'form_token' => UserDetails::$form_token,
                 'message' => mb_convert_encoding("$message", 'Windows-1251', 'UTF-8'),
-            )
+            ]
         );
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         unset($data);

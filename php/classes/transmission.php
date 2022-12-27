@@ -17,14 +17,14 @@ class Transmission extends TorrentClient
     protected function getSID()
     {
         $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20
-        ));
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -44,7 +44,7 @@ class Transmission extends TorrentClient
             if (!empty($matches)) {
                 $this->sid = $matches[1];
             }
-            $fields = array('method' => 'session-get');
+            $fields = ['method' => 'session-get'];
             $response = $this->makeRequest($fields);
             if ($response !== false) {
                 $this->rpcVersion = $response['rpc-version'];
@@ -62,15 +62,15 @@ class Transmission extends TorrentClient
      * @param array $options
      * @return bool|mixed|string
      */
-    private function makeRequest($fields, $options = array())
+    private function makeRequest($fields, $options = [])
     {
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
-            CURLOPT_HTTPHEADER => array($this->sid),
+            CURLOPT_HTTPHEADER => [$this->sid],
             CURLOPT_POSTFIELDS => json_encode($fields),
-        ));
+        ]);
         curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $responseNumberTry = 1;
@@ -97,7 +97,7 @@ class Transmission extends TorrentClient
                 $responseNumberTry++;
                 preg_match('|<code>(.*)</code>|', $response, $matches);
                 if (!empty($matches)) {
-                    curl_setopt_array($this->ch, array(CURLOPT_HTTPHEADER => array($matches[1])));
+                    curl_setopt_array($this->ch, [CURLOPT_HTTPHEADER => [$matches[1]]]);
                     $this->sid = $matches[1];
                     continue;
                 }
@@ -130,10 +130,10 @@ class Transmission extends TorrentClient
 
     public function getAllTorrents()
     {
-        $fields = array(
+        $fields = [
             'method' => 'torrent-get',
-            'arguments' => array(
-                'fields' => array(
+            'arguments' => [
+                'fields' => [
                     'addedDate',
                     'comment',
                     'error',
@@ -143,20 +143,20 @@ class Transmission extends TorrentClient
                     'percentDone',
                     'status',
                     'totalSize'
-                )
-            )
-        );
+                ]
+            ]
+        ];
         $response = $this->makeRequest($fields);
         if ($response === false) {
             return false;
         }
-        $torrents = array();
+        $torrents = [];
         foreach ($response['torrents'] as $torrent) {
             $torrentHash = strtoupper($torrent['hashString']);
             $torrentPaused = $torrent['status'] == 0 ? 1 : 0;
             $torrentError = $torrent['error'] != 0 ? 1 : 0;
             $torrentTrackerError = $torrent['error'] == 2 ? $torrent['errorString'] : '';
-            $torrents[$torrentHash] = array(
+            $torrents[$torrentHash] = [
                 'comment' => $torrent['comment'],
                 'done' => $torrent['percentDone'],
                 'error' => $torrentError,
@@ -165,7 +165,7 @@ class Transmission extends TorrentClient
                 'time_added' => $torrent['addedDate'],
                 'total_size' => $torrent['totalSize'],
                 'tracker_error' => $torrentTrackerError
-            );
+            ];
         }
         return $torrents;
     }
@@ -177,13 +177,13 @@ class Transmission extends TorrentClient
             Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
             return false;
         }
-        $fields = array(
+        $fields = [
             'method' => 'torrent-add',
-            'arguments' => array(
+            'arguments' => [
                 'metainfo' => base64_encode($torrentFile),
                 'paused' => false,
-            ),
-        );
+            ],
+        ];
         if (!empty($savePath)) {
             $fields['arguments']['download-dir'] = $savePath;
         }
@@ -207,53 +207,53 @@ class Transmission extends TorrentClient
             return false;
         }
         $labelName = str_replace(',', '', $labelName);
-        $fields = array(
+        $fields = [
             'method' => 'torrent-set',
-            'arguments' => array(
-                'labels' => array($labelName),
+            'arguments' => [
+                'labels' => [$labelName],
                 'ids' => $torrentHashes
-            ),
-        );
+            ],
+        ];
         return $this->makeRequest($fields);
     }
 
     public function startTorrents($torrentHashes, $forceStart = false)
     {
         $method = $forceStart ? 'torrent-start-now' : 'torrent-start';
-        $fields = array(
+        $fields = [
             'method' => $method,
-            'arguments' => array('ids' => $torrentHashes),
-        );
+            'arguments' => ['ids' => $torrentHashes],
+        ];
         return $this->makeRequest($fields);
     }
 
     public function stopTorrents($torrentHashes)
     {
-        $fields = array(
+        $fields = [
             'method' => 'torrent-stop',
-            'arguments' => array('ids' => $torrentHashes),
-        );
+            'arguments' => ['ids' => $torrentHashes],
+        ];
         return $this->makeRequest($fields);
     }
 
     public function recheckTorrents($torrentHashes)
     {
-        $fields = array(
+        $fields = [
             'method' => 'torrent-verify',
-            'arguments' => array('ids' => $torrentHashes),
-        );
+            'arguments' => ['ids' => $torrentHashes],
+        ];
         return $this->makeRequest($fields);
     }
 
     public function removeTorrents($torrentHashes, $deleteFiles = false)
     {
-        $fields = array(
+        $fields = [
             'method' => 'torrent-remove',
-            'arguments' => array(
+            'arguments' => [
                 'ids' => $torrentHashes,
                 'delete-local-data' => $deleteFiles,
-            ),
-        );
+            ],
+        ];
         return $this->makeRequest($fields);
     }
 }

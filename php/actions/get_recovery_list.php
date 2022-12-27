@@ -5,15 +5,15 @@ try {
 
     $cfg = get_settings();
 
-    $output = array();
+    $output = [];
 
-    $allowedStatuses = array(
+    $allowedStatuses = [
         'проверено',
         'не проверено',
         'недооформлено',
         // 'временная',
         'сомнительно'
-    );
+    ];
 
     $in = str_repeat('?,', count($allowedStatuses) - 1) . '?';
 

@@ -22,19 +22,19 @@ class Ktorrent extends TorrentClient
     protected function getChallenge()
     {
         $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'login/challenge.xml'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
-                array(
+                [
                     'username' => $this->login,
                     'password' => $this->password,
-                )
+                ]
             ),
             CURLOPT_HEADER => true,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20
-        ));
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -59,20 +59,20 @@ class Ktorrent extends TorrentClient
     protected function getSID()
     {
         $ch = curl_init();
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, 'login?page=interface.html'),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POSTFIELDS => http_build_query(
-                array(
+                [
                     'username' => $this->login,
                     'challenge' => $this->challenge,
                     'Login' => 'Sign in',
-                )
+                ]
             ),
             CURLOPT_HEADER => true,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20
-        ));
+        ]);
         $response = curl_exec($ch);
         if ($response === false) {
             Log::append('CURL ошибка: ' . curl_error($ch));
@@ -96,13 +96,13 @@ class Ktorrent extends TorrentClient
      * @param array $options
      * @return bool|mixed
      */
-    private function makeRequest($url, $options = array())
+    private function makeRequest($url, $options = [])
     {
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_COOKIE => $this->sid,
-        ));
+        ]);
         curl_setopt_array($this->ch, $options);
         $maxNumberTry = 3;
         $connectionNumberTry = 1;
@@ -138,19 +138,19 @@ class Ktorrent extends TorrentClient
             isset($response['torrent'])
             && !is_array(array_shift($response['torrent']))
         ) {
-            $response['torrent'] = array($response['torrent']);
+            $response['torrent'] = [$response['torrent']];
         }
         return $response;
     }
 
     public function getAllTorrents()
     {
-        return array();
+        return [];
         $response = $this->getTorrentsData();
         if ($response === false) {
             return false;
         }
-        $torrents = array();
+        $torrents = [];
         if (isset($response['torrent'])) {
             foreach ($response['torrent'] as $torrent) {
                 if ($torrent['status'] != 'Ошибка') {
@@ -192,19 +192,19 @@ class Ktorrent extends TorrentClient
             . _BR_
             . 'Upload Torrent' . _BR_
             . '------' . $boundary . '--';
-        $header = array(
+        $header = [
             'Content-Type: multipart/form-data; boundary=------' . $boundary . _BR_
                 . 'Content-Length: ' . strlen($content) . _BR_
                 . 'Cookie: ' . $this->sid
-        );
+        ];
         $context = stream_context_create(
-            array(
-                'http' => array(
+            [
+                'http' => [
                     'method' => 'POST',
                     'header' => $header,
                     'content' => $content
-                )
-            )
+                ]
+            ]
         );
         return file_get_contents(
             sprintf(self::$base, $this->scheme, $this->host, $this->port, 'torrent/load?page=interface.html'),
