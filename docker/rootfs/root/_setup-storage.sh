@@ -1,7 +1,12 @@
 #!/command/with-contenv bash
 
-uid=$(s6-envuidgid -i -u nobody importas UID UID s6-echo '$UID')
-gid=$(s6-envuidgid -i -g nobody importas GID GID s6-echo '$GID')
+user="${WEBTLO_UID:=nobody}"
+group="${WEBTLO_GID:=nobody}"
+account="$user:$group"
+
+uid=$(s6-envuidgid -nB $account importas UID UID s6-echo '$UID')
+gid=$(s6-envuidgid -nB $account importas GID GID s6-echo '$GID')
+
 legacy=("webtlo.db" "config.ini" "logs" "tfiles")
 
 s6-echo "Creating storage directory in $WEBTLO_DIR"
@@ -15,6 +20,7 @@ for name in "${legacy[@]}"; do
     mv "$old" "$new"
   fi
 done
-s6-echo "Fixing permissions inside storage directory"
+s6-echo "Fixing permissions inside storage directory to $account"
 s6-chown -u "$uid" -g "$gid" "$WEBTLO_DIR"
+find "$WEBTLO_DIR" -exec s6-chown -u "$uid" -g "$gid" {} \;
 s6-chmod 02755 "$WEBTLO_DIR"
