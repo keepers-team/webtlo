@@ -61,7 +61,7 @@ $(document).ready(function () {
 	});
 
 	// изменение свойств торрент-клиента
-	$("#torrent-client-props").on("input selectmenuchange spinchange", functionDelay(function () {
+	$("#torrent-client-props").on("input selectmenuchange spinstop", functionDelay(function () {
 		var torrentClientComment = $("#torrent-client-comment").val();
 		var torrentClientType = $("#torrent-client-type").val();
 		var torrentClientHostname = $("#torrent-client-hostname").val();
