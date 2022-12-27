@@ -111,7 +111,7 @@ $(document).ready(function () {
 	});
 
 	// изменение свойств подраздела
-	$("#forum-props").on("focusout", function () {
+	$("#forum-props").on("focusout spinstop", function () {
 		var forumClient = $("#forum-client :selected").val();
 		var forumLabel = $("#forum-label").val();
 		var forumSavePath = $("#forum-savepath").val();
