@@ -34,13 +34,13 @@ class Api
     public function __construct($addressApi, $userKeyApi = '')
     {
         $this->ch = curl_init();
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-        ));
+        ]);
         curl_setopt_array($this->ch, Proxy::$proxy['api']);
         Log::append('Используется зеркало для API: ' . $addressApi);
         $this->formatURL = $addressApi . '/v1/%s?api_key=' . $userKeyApi . '%s';
@@ -114,7 +114,7 @@ class Api
      */
     private function implodeParams($glue, $params)
     {
-        $params = is_array($params) ? $params : array($params);
+        $params = is_array($params) ? $params : [$params];
         return $glue . implode($glue, $params);
     }
 
@@ -187,13 +187,13 @@ class Api
         if (empty($topicsValues)) {
             return false;
         }
-        $topicsData = array();
+        $topicsData = [];
         $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
         foreach ($topicsValues as $topicsValues) {
-            $params = array(
+            $params = [
                 'by=' . $searchBy,
                 'val=' . implode(',', $topicsValues)
-            );
+            ];
             $response = $this->makeRequest('get_peer_stats', $params);
             if ($response === false) {
                 continue;
@@ -201,12 +201,12 @@ class Api
             foreach ($response['result'] as $topicID => $topicData) {
                 if (!empty($topicData)) {
                     $topicsData[$topicID] = array_combine(
-                        array(
+                        [
                             'seeders',
                             'leechers',
                             'seeder_last_seen',
                             'keepers',
-                        ),
+                        ],
                         $topicData
                     );
                 }
@@ -225,13 +225,13 @@ class Api
         if (empty($topicsHashes)) {
             return false;
         }
-        $topicsData = array();
+        $topicsData = [];
         $topicsHashes = array_chunk($topicsHashes, $this->limitInRequest);
         foreach ($topicsHashes as $topicsHashes) {
-            $params = array(
+            $params = [
                 'by=hash',
                 'val=' . implode(',', $topicsHashes)
-            );
+            ];
             $response = $this->makeRequest('get_topic_id', $params);
             if ($response === false) {
                 continue;
@@ -255,13 +255,13 @@ class Api
         if (empty($topicsValues)) {
             return false;
         }
-        $topicsData = array();
+        $topicsData = [];
         $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
         foreach ($topicsValues as $topicsValues) {
-            $params = array(
+            $params = [
                 'by=' . $searchBy,
                 'val=' . implode(',', $topicsValues)
-            );
+            ];
             $response = $this->makeRequest('get_tor_topic_data', $params);
             if ($response === false) {
                 continue;
@@ -311,13 +311,13 @@ class Api
         if (empty($userIDs)) {
             return false;
         }
-        $userData = array();
+        $userData = [];
         $userIDs = array_chunk($userIDs, $this->limitInRequest);
         foreach ($userIDs as $userIDChunk) {
-            $params = array(
+            $params = [
                 'by=user_id',
                 'val=' . implode(',', $userIDChunk)
-            );
+            ];
             $response = $this->makeRequest('get_user_name', $params);
             if ($response === false) {
                 continue;

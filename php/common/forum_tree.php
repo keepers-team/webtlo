@@ -18,7 +18,7 @@ if (!isset($api)) {
 // обновление дерева подразделов
 $forum_tree_update = Db::query_database(
     "SELECT strftime('%s', 'now') - ud FROM UpdateTime WHERE id = ?",
-    array(8888),
+    [8888],
     true,
     PDO::FETCH_COLUMN
 );
@@ -40,19 +40,19 @@ if (
         foreach ($forum_tree['result']['tree'][$cat_id] as $forum_id => $subforum) {
             // разделы
             $forum_title = $cat_title . ' » ' . $forum_tree['result']['f'][$forum_id];
-            $forums[$forum_id] = array(
+            $forums[$forum_id] = [
                 'na' => $forum_title,
                 'qt' => 0,
                 'si' => 0,
-            );
+            ];
             // подразделы
             foreach ($subforum as $subforum_id) {
                 $subforum_title = $cat_title . ' » ' . $forum_tree['result']['f'][$forum_id] . ' » ' . $forum_tree['result']['f'][$subforum_id];
-                $forums[$subforum_id] = array(
+                $forums[$subforum_id] = [
                     'na' => $subforum_title,
                     'qt' => 0,
                     'si' => 0,
-                );
+                ];
             }
         }
     }
@@ -75,7 +75,7 @@ if (
             $forums[$forum_id] = array_merge(
                 $forums[$forum_id],
                 array_combine(
-                    array('qt', 'si'),
+                    ['qt', 'si'],
                     $values
                 )
             );
@@ -111,7 +111,7 @@ if (
     // время обновления дерева подразделов
     Db::query_database(
         "INSERT INTO UpdateTime (id,ud) SELECT 8888,?",
-        array($forum_tree_update_current)
+        [$forum_tree_update_current]
     );
 
     unset($forum_tree_update_current);

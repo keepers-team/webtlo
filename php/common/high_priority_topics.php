@@ -23,14 +23,14 @@ if (!isset($api)) {
     $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
 }
 // все открытые раздачи
-$torrentStatus = array(0, 2, 3, 8, 10);
+$torrentStatus = [0, 2, 3, 8, 10];
 // время текущего и предыдущего обновления
 $currentUpdateTime = new DateTime();
 $previousUpdateTime = new DateTime();
 // получаем дату предыдущего обновления
 $updateTime = Db::query_database(
     "SELECT ud FROM UpdateTime WHERE id = ?",
-    array(9999),
+    [9999],
     true,
     PDO::FETCH_COLUMN
 );
@@ -110,7 +110,7 @@ if ($timeDiff < 3600) {
                     || $previousTopicData['lgth'] == 0
                     || $isTopicDataDelete
                 ) {
-                    $insertTopicsRenew[$topicID] = array(
+                    $insertTopicsRenew[$topicID] = [
                         'id' => $topicID,
                         'ss' => $topicData[4],
                         'na' => '',
@@ -122,7 +122,7 @@ if ($timeDiff < 3600) {
                         'qt' => $sumUpdates,
                         'ds' => $numberDaysUpdate,
                         'pt' => 2,
-                    );
+                    ];
                     unset($previousTopicData);
                     continue;
                 }
@@ -138,7 +138,7 @@ if ($timeDiff < 3600) {
                     }
                 }
                 unset($previousTopicData);
-                $insertTopicsUpdate[$topicID] = array(
+                $insertTopicsUpdate[$topicID] = [
                     'id' => $topicID,
                     'ss' => $topicData[4],
                     'se' => $sumSeeders,
@@ -146,7 +146,7 @@ if ($timeDiff < 3600) {
                     'qt' => $sumUpdates,
                     'ds' => $numberDaysUpdate,
                     'pt' => 2,
-                );
+                ];
             }
             unset($previousTopicsData);
             // вставка данных в базу о новых раздачах
@@ -198,13 +198,13 @@ if ($timeDiff < 3600) {
         }
         $countTopicsUpdate = Db::query_database(
             "SELECT COUNT() FROM temp.HighTopicsUpdate",
-            array(),
+            [],
             true,
             PDO::FETCH_COLUMN
         );
         $countTopicsRenew = Db::query_database(
             "SELECT COUNT() FROM temp.HighTopicsRenew",
-            array(),
+            [],
             true,
             PDO::FETCH_COLUMN
         );
@@ -232,7 +232,7 @@ if ($timeDiff < 3600) {
             // время окончания обновления
             Db::query_database(
                 "INSERT INTO UpdateTime (id,ud) SELECT 9999,?",
-                array($topicsHighPriorityUpdateTime)
+                [$topicsHighPriorityUpdateTime]
             );
             $countTopicsTotalUpdate = $countTopicsUpdate[0] + $countTopicsRenew[0];
             Log::append("Обработано высокоприоритетных раздач: " . $countTopicsTotalUpdate . " шт.");

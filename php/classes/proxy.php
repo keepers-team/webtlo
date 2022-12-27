@@ -3,17 +3,16 @@
 // установка параметров прокси
 class Proxy
 {
-
-    public static $proxy = array(
-        'forum' => array(),
-        'api' => array(),
-    );
+    public static $proxy = [
+        'forum' => [],
+        'api' => [],
+    ];
 
     protected static $auth;
     protected static $type;
     protected static $address;
 
-    private static $types = array('http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7);
+    private static $types = ['http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7];
 
     public static function options($activate_forum, $activate_api, $type, $address = "", $auth = "")
     {
@@ -36,16 +35,16 @@ class Proxy
 
     private static function set_proxy($activate_forum, $activate_api)
     {
-        $param = array(
+        $param = [
             CURLOPT_PROXYTYPE => self::$type,
             CURLOPT_PROXY => self::$address,
             CURLOPT_PROXYUSERPWD => self::$auth,
-        );
-        $param_forum = $activate_forum ? $param : array();
-        $param_api = $activate_api ? $param : array();
-        return array(
+        ];
+        $param_forum = $activate_forum ? $param : [];
+        $param_api = $activate_api ? $param : [];
+        return [
             'forum' => $param_forum,
             'api' => $param_api,
-        );
+        ];
     }
 }

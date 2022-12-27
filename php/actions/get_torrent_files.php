@@ -51,7 +51,7 @@ try {
     // дополнительный слэш в конце каталога
     if (
         !empty($torrent_files_path)
-        && !in_array(substr($torrent_files_path, -1), array('\\', '/'))
+        && !in_array(substr($torrent_files_path, -1), ['\\', '/'])
     ) {
         $torrent_files_path .= strpos($torrent_files_path, '/') === false ? '\\' : '/';
     }
@@ -137,14 +137,14 @@ try {
 
     $result = "Сохранено в каталоге \"$torrent_files_path\": $torrent_files_downloaded шт. за " . convert_seconds($endtime - $starttime);
 
-    echo json_encode(array(
+    echo json_encode([
         'log' => Log::get(),
         'result' => $result,
-    ));
+    ]);
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    echo json_encode(array(
+    echo json_encode([
         'log' => Log::get(),
         'result' => $result,
-    ));
+    ]);
 }

@@ -25,20 +25,20 @@ class Rtorrent extends TorrentClient
      */
     public function makeRequest($command, $params = '')
     {
-        $request = xmlrpc_encode_request($command, $params, array('escaping' => 'markup', 'encoding' => 'UTF-8'));
-        $header = array(
+        $request = xmlrpc_encode_request($command, $params, ['escaping' => 'markup', 'encoding' => 'UTF-8']);
+        $header = [
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
-        );
+        ];
         if (!empty($this->port) && !(strrpos($this->host, $this->port))) {
             $this->host .= ':' . $this->port;
         }
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request
-        ));
+        ]);
         if (!empty($this->login) && !empty($this->password)) {
             curl_setopt($this->ch, CURLOPT_USERPWD, $this->login . ':' . $this->password);
         }
@@ -86,7 +86,7 @@ class Rtorrent extends TorrentClient
     {
         $response = $this->makeRequest(
             'd.multicall2',
-            array(
+            [
                 '',
                 'main',
                 'd.complete=',
@@ -97,12 +97,12 @@ class Rtorrent extends TorrentClient
                 'd.size_bytes=',
                 'd.state=',
                 'd.timestamp.started='
-            )
+            ]
         );
         if ($response === false) {
             return false;
         }
-        $torrents = array();
+        $torrents = [];
         foreach ($response as $torrent) {
             $torrentHash = strtoupper($torrent[2]);
             $torrentComment = str_replace('VRS24mrker', '', rawurldecode($torrent[1]));
@@ -112,7 +112,7 @@ class Rtorrent extends TorrentClient
             if (!empty($matches)) {
                 $torrentTrackerError = empty($matches[2]) ? $matches[1] : $matches[2];
             }
-            $torrents[$torrentHash] = array(
+            $torrents[$torrentHash] = [
                 'comment' => $torrentComment,
                 'done' => $torrent[0],
                 'error' => $torrentError,
@@ -121,17 +121,17 @@ class Rtorrent extends TorrentClient
                 'time_added' => $torrent[7],
                 'total_size' => $torrent[5],
                 'tracker_error' => $torrentTrackerError
-            );
+            ];
         }
         return $torrents;
     }
 
     public function addTorrent($torrentFilePath, $savePath = '')
     {
-        $makeDirectory = array('', 'mkdir', '-p', '--', $savePath);
+        $makeDirectory = ['', 'mkdir', '-p', '--', $savePath];
         if (empty($savePath)) {
             $savePath = '$directory.default=';
-            $makeDirectory = array('', 'true');
+            $makeDirectory = ['', 'true'];
         }
         $torrentFile = file_get_contents($torrentFilePath, false, stream_context_create());
         if ($torrentFile === false) {
@@ -147,24 +147,24 @@ class Rtorrent extends TorrentClient
         xmlrpc_set_type($torrentFile, 'base64');
         return $this->makeRequest(
             'system.multicall',
-            array(
-                array(
-                    array(
+            [
+                [
+                    [
                         'methodName' => 'execute2',
                         'params' => $makeDirectory
-                    ),
-                    array(
+                    ],
+                    [
                         'methodName' => 'load.raw_start',
-                        'params' => array(
+                        'params' => [
                             '',
                             $torrentFile,
                             'd.delete_tied=',
                             'd.directory.set=' . addcslashes($savePath, ' '),
                             'd.custom2.set=' . $torrentComment
-                        )
-                    )
-                )
-            )
+                        ]
+                    ]
+                ]
+            ]
         );
     }
 
@@ -176,7 +176,7 @@ class Rtorrent extends TorrentClient
         $result = null;
         $labelName = rawurlencode($labelName);
         foreach ($torrentHashes as $torrentHash) {
-            $response = $this->makeRequest('d.custom1.set', array($torrentHash, $labelName));
+            $response = $this->makeRequest('d.custom1.set', [$torrentHash, $labelName]);
             if ($response === false) {
                 $result = false;
             }
@@ -212,35 +212,35 @@ class Rtorrent extends TorrentClient
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
-            $executeDeleteFiles = array('', 'true');
+            $executeDeleteFiles = ['', 'true'];
             if ($deleteFiles) {
                 $dataPath = $this->makeRequest('d.data_path', $torrentHash);
                 if (!empty($dataPath)) {
-                    $executeDeleteFiles = array('', 'rm', '-rf', '--', $dataPath);
+                    $executeDeleteFiles = ['', 'rm', '-rf', '--', $dataPath];
                 }
             }
             $response = $this->makeRequest(
                 'system.multicall',
-                array(
-                    array(
-                        array(
+                [
+                    [
+                        [
                             'methodName' => 'd.custom5.set',
-                            'params' => array($torrentHash, '1'),
-                        ),
-                        array(
+                            'params' => [$torrentHash, '1'],
+                        ],
+                        [
                             'methodName' => 'd.delete_tied',
-                            'params' => array($torrentHash),
-                        ),
-                        array(
+                            'params' => [$torrentHash],
+                        ],
+                        [
                             'methodName' => 'd.erase',
-                            'params' => array($torrentHash)
-                        ),
-                        array(
+                            'params' => [$torrentHash]
+                        ],
+                        [
                             'methodName' => 'execute2',
                             'params' => $executeDeleteFiles
-                        )
-                    )
-                )
+                        ]
+                    ]
+                ]
             );
             if ($response === false) {
                 $result = false;

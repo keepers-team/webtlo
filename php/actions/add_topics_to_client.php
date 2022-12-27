@@ -33,7 +33,7 @@ try {
     }
     Log::append('Запущен процесс добавления раздач в торрент-клиенты...');
     // получение ID раздач с привязкой к подразделу
-    $topicHashesByForums = array();
+    $topicHashesByForums = [];
     $topicHashes = array_chunk($topicHashes['topic_hashes'], 999);
     foreach ($topicHashes as $topicHashes) {
         $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
@@ -72,7 +72,7 @@ try {
         throw new Exception();
     }
     $totalTorrentFilesAdded = 0;
-    $usedTorrentClientsIDs = array();
+    $usedTorrentClientsIDs = [];
     // скачивание торрент-файлов
     $download = new TorrentDownload($cfg['forum_address']);
     // применяем таймауты
@@ -226,7 +226,7 @@ try {
                     Topics.si
                 FROM Topics
                 WHERE hs IN (' . $placeholders . ')',
-                array_merge(array($torrentClientID), $addedTorrentFiles)
+                array_merge([$torrentClientID], $addedTorrentFiles)
             );
             unset($placeholders);
         }
@@ -246,17 +246,17 @@ try {
     Log::append('Процесс добавления раздач в торрент-клиенты завершён за ' . convert_seconds($endtime - $starttime));
     // выводим на экран
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'result' => $result,
-        )
+        ]
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'result' => $result,
-        )
+        ]
     );
 }

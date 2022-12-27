@@ -27,7 +27,7 @@ if (empty($cfg['tracker_paswd'])) {
 // update_time[0] время последнего обновления сведений
 $update_time = Db::query_database(
     "SELECT ud FROM UpdateTime WHERE id = 7777",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );
@@ -52,7 +52,7 @@ $sumdlqt = 0;
 $sumdlsi = 0;
 
 // список подразделов в сводный
-$common_forums = array();
+$common_forums = [];
 
 // подключаемся к форуму
 $reports = new Reports(
@@ -75,7 +75,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     // получение данных о подразделе
     $forum = Db::query_database(
         "SELECT * FROM Forums WHERE id = ?",
-        array($forum_id),
+        [$forum_id],
         true,
         PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
     );
@@ -107,7 +107,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
             Torrents.info_hash IS NOT NULL
             AND Topics.ss = ?
             AND Topics.se / Topics.qt <= 10',
-        array($forum_id),
+        [$forum_id],
         true
     );
 
@@ -123,9 +123,9 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topics_count = count($topics);
 
     // очищаем данные в цикле
-    $posts_ids = array();
-    $stored = array();
-    $tmp = array();
+    $posts_ids = [];
+    $stored = [];
+    $tmp = [];
 
     // формируем списки
     foreach ($topics as $topic) {
@@ -325,20 +325,20 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         }
         // вставляем общее хранимое в шапку
         $tmp['header'] = str_replace(
-            array(
+            [
                 '%%dlqt%%',
                 '%%dlsi%%',
                 '%%dlqtsub%%',
                 '%%dlsisub%%',
                 '%%kpqt%%',
-            ),
-            array(
+            ],
+            [
                 $sumdlqt_keepers,
                 convert_bytes($sumdlsi_keepers),
                 $sumdlqtsub_keepers,
                 convert_bytes($sumdlsisub_keepers),
                 $count_keepers,
-            ),
+            ],
             $tmp['header']
         );
         // Log::append('Отправка шапки...');
@@ -392,7 +392,7 @@ if (
     $cfg['reports']['auto_clear_messages']
     && !empty($editedTopicsIDs)
 ) {
-    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(array('uid' => $cfg['user_id']));
+    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $cfg['user_id']]);
     $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
     if (!empty($uneditedTopicsIDs)) {
         foreach ($uneditedTopicsIDs as $topicID) {

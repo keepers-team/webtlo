@@ -8,11 +8,11 @@ try {
         return false;
     }
 
-    $pattern = is_array($_GET['term']) ? $_GET['term'] : array($_GET['term']);
+    $pattern = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
 
     $q = Db::query_database(
         "SELECT COUNT() FROM Forums",
-        array(),
+        [],
         true,
         PDO::FETCH_COLUMN
     );
@@ -22,7 +22,7 @@ try {
         include_once dirname(__FILE__) . '/../common/forum_tree.php';
     }
 
-    $forums = array();
+    $forums = [];
 
     foreach ($pattern as $pattern) {
         if (!is_numeric($pattern)) {
@@ -31,7 +31,7 @@ try {
         $data = Db::query_database(
             "SELECT id AS value, na AS label FROM Forums
             WHERE id LIKE :term OR na LIKE :term ORDER BY LOWER(na)",
-            array('term' => $pattern),
+            ['term' => $pattern],
             true
         );
         $forums = array_merge_recursive($forums, $data);
@@ -39,8 +39,8 @@ try {
 
     echo json_encode($forums);
 } catch (Exception $e) {
-    echo json_encode(array(array(
+    echo json_encode([[
         'label' => $e->getMessage(),
         'value' => -1,
-    )));
+    ]]);
 }

@@ -18,16 +18,16 @@ $avgSeedersPeriodOutdatedSeconds = $avgSeedersPeriodOutdated * 86400;
 Db::query_database(
     "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(:ud as INTEGER)) AND pt <> 2
     OR strftime('%s', 'now') - (SELECT ud FROM UpdateTime WHERE id = 9999) > CAST(:ud as INTEGER) AND pt = 2",
-    array(':ud' => $avgSeedersPeriodOutdatedSeconds)
+    [':ud' => $avgSeedersPeriodOutdatedSeconds]
 );
 Db::query_database(
     "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
-    array($avgSeedersPeriodOutdatedSeconds)
+    [$avgSeedersPeriodOutdatedSeconds]
 );
 
 function get_webtlo_version()
 {
-    $webtlo_version_defaults = array(
+    $webtlo_version_defaults = [
         'version' => '',
         'github' => '',
         'wiki' => '',
@@ -36,7 +36,7 @@ function get_webtlo_version()
         'version_url' => '',
         'version_line' => 'Версия TLO: [b]Web-TLO-unknown[/b]',
         'version_line_url' => "Версия TLO: [b]Web-TLO-[url='#']unknown[/url][/b]"
-    );
+    ];
     $version_json_path = dirname(__FILE__) . '/../version.json';
     if (!file_exists($version_json_path)) {
         error_log('`version.json` not found! Make sure you copied all files from the repo.');
@@ -55,7 +55,7 @@ function get_webtlo_version()
 
 function get_settings($filename = "")
 {
-    $config = array();
+    $config = [];
 
     $ini = new TIniFileEx($filename);
 
@@ -157,7 +157,7 @@ function get_settings($filename = "")
     $config['tor_for_user'] = $ini->read('curators', 'tor_for_user', 0);
 
     // вакансии
-    $config['vacancies'] = array(
+    $config['vacancies'] = [
         'scan_reports' => $ini->read('vacancies', 'scan_reports', 0),
         'scan_posted_days' => $ini->read('vacancies', 'scan_posted_days', 30),
         'send_topic_id' => $ini->read('vacancies', 'send_topic_id', ''),
@@ -167,30 +167,30 @@ function get_settings($filename = "")
         'reg_time_seconds' => $ini->read('vacancies', 'reg_time_seconds', 2592000),
         'exclude_forums_ids' => $ini->read('vacancies', 'exclude_forums_ids', ''),
         'include_forums_ids' => $ini->read('vacancies', 'include_forums_ids', ''),
-    );
+    ];
 
     // отчёты
-    $config['reports'] = array(
+    $config['reports'] = [
         'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
         'exclude_forums_ids' => $ini->read('reports', 'exclude', ''),
         'send_summary_report' => $ini->read('reports', 'common', 1)
-    );
+    ];
 
     // таймауты
-    $config['curl_setopt'] = array(
-        'api' => array(
+    $config['curl_setopt'] = [
+        'api' => [
             CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'api_timeout', 40),
             CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'api_connecttimeout', 40),
-        ),
-        'forum' => array(
+        ],
+        'forum' => [
             CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'forum_timeout', 40),
             CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 40),
-        ),
-        'torrent_client' => array(
+        ],
+        'torrent_client' => [
             CURLOPT_TIMEOUT => $ini->read('curl_setopt', 'torrent_client_timeout', 40),
             CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'torrent_client_connecttimeout', 40),
-        )
-    );
+        ]
+    ];
 
     // версия конфига
     $user_version = $ini->read('other', 'user_version', 0);
@@ -242,7 +242,7 @@ function get_settings($filename = "")
 
 function convert_bytes($size)
 {
-    $filesizename = array(" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
+    $filesizename = [" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
     $i = $size >= pow(1024, 4) ? 3 : floor(log($size, 1024));
     return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0 B';
 }

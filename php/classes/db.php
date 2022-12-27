@@ -1,13 +1,13 @@
 <?php
+
 include_once dirname(__FILE__) . "/../common/storage.php";
 
 class Db
 {
-
     public static $db;
     private static string $databaseFilename = 'webtlo.db';
 
-    public static function query_database($sql, $param = array(), $fetch = false, $pdo = PDO::FETCH_ASSOC)
+    public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
         self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
         $sth = self::$db->prepare($sql);
@@ -23,8 +23,8 @@ class Db
     public static function lexa_ci_utf8_like($mask, $value)
     {
         $mask = str_replace(
-            array("%", "_"),
-            array(".*?", "."),
+            ["%", "_"],
+            [".*?", "."],
             preg_quote($mask, "/")
         );
         $mask = "/^$mask$/ui";
@@ -54,7 +54,7 @@ class Db
             return false;
         }
         $query = '';
-        $values = array();
+        $values = [];
         foreach ($source as &$row) {
             if (!is_array($row)) {
                 return false;
@@ -90,14 +90,14 @@ class Db
         }
 
         // список подразделов
-        $statements[] = array(
+        $statements[] = [
             'CREATE TABLE IF NOT EXISTS Forums (',
             '    id INT NOT NULL PRIMARY KEY,',
             '    na VARCHAR NOT NULL',
             ')'
-        );
+        ];
         // список раздач
-        $statements[] = array(
+        $statements[] = [
             'CREATE TABLE IF NOT EXISTS Topics (',
             '    id INT NOT NULL PRIMARY KEY,',
             '    ss INT NOT NULL,',
@@ -109,9 +109,9 @@ class Db
             '    rg INT NOT NULL,',
             '    dl INT NOT NULL DEFAULT 0',
             ')'
-        );
+        ];
         // средние сиды
-        $statements[] = array(
+        $statements[] = [
             'CREATE TABLE IF NOT EXISTS Seeders (',
             '    id INT NOT NULL PRIMARY KEY,',
             '    d0 INT,',
@@ -175,17 +175,17 @@ class Db
             '    q28 INT,',
             '    q29 INT',
             ')'
-        );
+        ];
         // список хранимого другими
-        $statements[] = array(
+        $statements[] = [
             'CREATE TABLE IF NOT EXISTS Keepers (',
             '    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',
             '    topic_id INTEGER NOT NULL,',
             '    nick VARCHAR NOT NULL',
             ')'
-        );
+        ];
         // совместимость со старыми версиями базы данных
-        $version = self::query_database('PRAGMA user_version', array(), true);
+        $version = self::query_database('PRAGMA user_version', [], true);
         // user_version = 1
         if ($version[0]['user_version'] < 1) {
             $statements[] = 'ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1';
@@ -199,7 +199,7 @@ class Db
             $statements[] = 'ALTER TABLE Forums ADD COLUMN qt INT';
             $statements[] = 'ALTER TABLE Forums ADD COLUMN si INT';
             $statements[] = 'ALTER TABLE Topics RENAME TO TopicsTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Topics (',
                 '    id INT PRIMARY KEY NOT NULL,',
                 '    ss INT,',
@@ -214,27 +214,27 @@ class Db
                 '    ds INT,',
                 '    cl VARCHAR',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,dl,qt,ds,cl)',
                 'SELECT id,ss,na,hs,se,si,st,rg,dl,rt,ds,cl FROM TopicsTemp'
-            );
+            ];
             $statements[] = 'DROP TABLE TopicsTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS delete_seeders',
                 'AFTER DELETE ON Topics FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM Seeders WHERE id = OLD.id;',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS insert_seeders',
                 'AFTER INSERT ON Topics',
                 'BEGIN',
                 '    INSERT INTO Seeders (id) VALUES (NEW.id);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS topic_exists',
                 'BEFORE INSERT ON Topics',
                 'WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)',
@@ -254,8 +254,8 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS transfer_seeders',
                 'AFTER UPDATE ON Topics WHEN NEW.ds <> OLD.ds',
                 'BEGIN',
@@ -322,41 +322,41 @@ class Db
                 '        q29 = q28',
                 '    WHERE id = NEW.id;',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 2';
         }
         // // user_version = 3
         if ($version[0]['user_version'] < 3) {
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Blacklist (',
                 '    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,',
                 '    topic_id INTEGER NOT NULL',
                 ')'
-            );
+            ];
             $statements[] = 'DROP TRIGGER delete_seeders';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS delete_topics',
                 'AFTER DELETE ON Topics FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM Seeders WHERE id = OLD.id;',
                 '    DELETE FROM Blacklist WHERE topic_id = OLD.id;',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 3';
         }
         // user_version = 4
         if ($version[0]['user_version'] < 4) {
             // меняем структуру таблицы Keepers
             $statements[] = 'ALTER TABLE Keepers RENAME TO KeepersTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Keepers (',
                 '    id INTEGER NOT NULL,',
                 '    nick VARCHAR NOT NULL,',
                 '    posted INTEGER,',
                 '    PRIMARY KEY (id, nick)',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS keepers_exists',
                 'BEFORE INSERT ON Keepers',
                 'WHEN EXISTS (SELECT id FROM Keepers WHERE id = NEW.id AND nick = NEW.nick)',
@@ -366,18 +366,18 @@ class Db
                 '    WHERE id = NEW.id AND nick = NEW.nick;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'INSERT INTO Keepers (id,nick) SELECT topic_id,nick FROM KeepersTemp';
             $statements[] = 'DROP TABLE KeepersTemp';
             // время обновления сведений
             $statements[] = 'DROP TABLE IF EXISTS Other';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS UpdateTime (',
                 '    id INTEGER PRIMARY KEY NOT NULL,',
                 '    ud INTEGER',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS updatetime_exists',
                 'BEFORE INSERT ON UpdateTime',
                 'WHEN EXISTS (SELECT id FROM UpdateTime WHERE id = NEW.id)',
@@ -387,24 +387,24 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS updatetime_delete',
                 'AFTER DELETE ON Forums FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM UpdateTime WHERE id = OLD.id;',
                 'END;',
-            );
+            ];
             // данные от торрент-клиентов
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Clients (',
                 '    hs VARCHAR NOT NULL,',
                 '    cl INTEGER NOT NULL,',
                 '    dl INTEGER,',
                 '    PRIMARY KEY (hs,cl)',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS clients_exists',
                 'BEFORE INSERT ON Clients',
                 'WHEN EXISTS (SELECT hs FROM Clients WHERE hs = NEW.hs AND cl = NEW.cl)',
@@ -414,17 +414,17 @@ class Db
                 '    WHERE hs = NEW.hs AND cl = NEW.cl;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS untracked_delete',
                 'AFTER DELETE ON Clients FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM TopicsUntracked WHERE hs = OLD.hs;',
                 'END;'
-            );
+            ];
             $statements[] = 'INSERT INTO Clients (hs,cl,dl) SELECT hs,cl,dl FROM Topics';
             // переносим хранимые неотслеживаемые раздачи
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS TopicsUntracked (',
                 '    id INT PRIMARY KEY NOT NULL,',
                 '    ss INT,',
@@ -435,8 +435,8 @@ class Db
                 '    st INT,',
                 '    rg INT',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS untracked_exists',
                 'BEFORE INSERT ON TopicsUntracked',
                 'WHEN EXISTS (SELECT id FROM TopicsUntracked WHERE id = NEW.id)',
@@ -452,22 +452,22 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)',
                 'SELECT id,ss,na,hs,se,si,st,rg FROM Topics',
                 'WHERE dl = -2'
-            );
+            ];
             $statements[] = 'DELETE FROM Topics WHERE dl = -2';
             // меняем структуру таблицы Blacklist
             $statements[] = 'ALTER TABLE Blacklist RENAME TO BlacklistTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Blacklist (',
                 '    id INTEGER PRIMARY KEY NOT NULL,',
                 '    comment VARCHAR',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS blacklist_exists',
                 'BEFORE INSERT ON Blacklist',
                 'WHEN EXISTS (SELECT id FROM Blacklist WHERE id = NEW.id)',
@@ -477,13 +477,13 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'INSERT INTO Blacklist (id) SELECT topic_id FROM BlacklistTemp';
             $statements[] = 'DROP TABLE BlacklistTemp';
             // меняем структуру таблицы Topics
             $statements[] = 'DROP TRIGGER IF EXISTS delete_topics';
             $statements[] = 'ALTER TABLE Topics RENAME TO TopicsTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Topics (',
                 '    id INT PRIMARY KEY NOT NULL,',
                 '    ss INT,',
@@ -496,13 +496,13 @@ class Db
                 '    qt INT,',
                 '    ds INT',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds)',
                 'SELECT id,ss,na,hs,se,si,st,rg,qt,ds FROM TopicsTemp'
-            );
+            ];
             $statements[] = 'DROP TABLE TopicsTemp';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS topic_exists',
                 'BEFORE INSERT ON Topics',
                 'WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)',
@@ -520,15 +520,15 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS seeders_insert',
                 'AFTER INSERT ON Topics',
                 'BEGIN',
                 '    INSERT INTO Seeders (id) VALUES (NEW.id);',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS seeders_transfer',
                 'AFTER UPDATE ON Topics WHEN NEW.ds <> OLD.ds',
                 'BEGIN',
@@ -595,18 +595,18 @@ class Db
                 '        q29 = q28',
                 '    WHERE id = NEW.id;',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS topics_delete',
                 'AFTER DELETE ON Topics FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM Seeders WHERE id = OLD.id;',
                 '    DELETE FROM Blacklist WHERE id = OLD.id;',
                 'END;'
-            );
+            ];
             // триггер для обновления данных о подразделах
             $statements[] = 'DROP TRIGGER IF EXISTS Forums_update';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS forums_exists',
                 'BEFORE INSERT ON Forums',
                 'WHEN EXISTS (SELECT id FROM Forums WHERE id = NEW.id)',
@@ -618,14 +618,14 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 4';
         }
         // user_version = 5
         if ($version[0]['user_version'] < 5) {
             $statements[] = 'ALTER TABLE Topics ADD COLUMN pt INT DEFAULT 1';
             $statements[] = 'DROP TRIGGER IF EXISTS topic_exists';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS topic_exists',
                 'BEFORE INSERT ON Topics',
                 'WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)',
@@ -644,14 +644,14 @@ class Db
                 '    WHERE id = NEW.id;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 5';
         }
         // user_version = 6
         if ($version[0]['user_version'] < 6) {
             $statements[] = 'DROP TRIGGER IF EXISTS keepers_exists';
             $statements[] = 'ALTER TABLE Keepers ADD COLUMN complete INT DEFAULT 1';
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS keepers_exists',
                 'BEFORE INSERT ON Keepers',
                 'WHEN EXISTS (SELECT id FROM Keepers WHERE id = NEW.id AND nick = NEW.nick)',
@@ -662,32 +662,32 @@ class Db
                 '    WHERE id = NEW.id AND nick = NEW.nick;',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 6';
         }
         // user_version = 7
         if ($version[0]['user_version'] < 7) {
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
                 '    topic_id INTEGER NOT NULL,',
                 '    nick VARCHAR NOT NULL,',
                 '    PRIMARY KEY (topic_id, nick)',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS keepers_seeders_exists',
                 'BEFORE INSERT ON KeepersSeeders',
                 'WHEN EXISTS (SELECT topic_id FROM KeepersSeeders WHERE topic_id = NEW.topic_id AND nick = NEW.nick)',
                 'BEGIN',
                 '    SELECT RAISE(IGNORE);',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 7';
         }
         // user_version = 8
         if ($version[0]['user_version'] < 8) {
-            $statements[] = array('DROP TABLE IF EXISTS Clients');
-            $statements[] = array(
+            $statements[] = ['DROP TABLE IF EXISTS Clients'];
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS Torrents (',
                 '    info_hash     TEXT    NOT NULL,',
                 '    client_id     INT     NOT NULL,',
@@ -705,19 +705,19 @@ class Db
                 '    )',
                 '    ON CONFLICT REPLACE',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS remove_untracked_topics',
                 'AFTER DELETE ON Torrents FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM TopicsUntracked WHERE hs = OLD.info_hash;',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 8';
         }
         // user_version = 9
         if ($version[0]['user_version'] < 9) {
-            $statements[] = array(
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS TopicsUnregistered (',
                 '    info_hash           TEXT PRIMARY KEY ON CONFLICT REPLACE NOT NULL,',
                 '    name                TEXT,',
@@ -727,36 +727,36 @@ class Db
                 '    transferred_to      TEXT,',
                 '    transferred_by_whom TEXT',
                 ');'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS remove_unregistered_topics',
                 'AFTER DELETE ON Torrents FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM TopicsUnregistered WHERE info_hash = OLD.info_hash;',
                 'END;'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'CREATE TABLE IF NOT EXISTS TopicsExcluded (',
                 '    info_hash  TEXT PRIMARY KEY ON CONFLICT REPLACE NOT NULL,',
                 '    time_added INT  DEFAULT (strftime(\'%s\')),',
                 '    comment    TEXT',
                 ')'
-            );
-            $statements[] = array(
+            ];
+            $statements[] = [
                 'INSERT INTO TopicsExcluded (info_hash, comment)',
                 'SELECT Topics.hs, Blacklist.comment FROM Blacklist',
                 'LEFT JOIN Topics ON Topics.id = Blacklist.id',
                 'WHERE Blacklist.id IS NOT NULL'
-            );
-            $statements[] = array('DROP TABLE IF EXISTS Blacklist');
-            $statements[] = array('DROP TRIGGER IF EXISTS topics_delete');
-            $statements[] = array(
+            ];
+            $statements[] = ['DROP TABLE IF EXISTS Blacklist'];
+            $statements[] = ['DROP TRIGGER IF EXISTS topics_delete'];
+            $statements[] = [
                 'CREATE TRIGGER IF NOT EXISTS topics_delete',
                 'AFTER DELETE ON Topics FOR EACH ROW',
                 'BEGIN',
                 '    DELETE FROM Seeders WHERE id = OLD.id;',
                 'END;'
-            );
+            ];
             $statements[] = 'PRAGMA user_version = 9';
         }
         // формируем структуру БД

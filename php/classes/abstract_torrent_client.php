@@ -6,7 +6,6 @@
  */
 abstract class TorrentClient
 {
-
     /**
      * @var string
      */

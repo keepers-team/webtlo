@@ -2,7 +2,6 @@
 
 class TorrentDownload
 {
-
     /**
      * @var CurlHandle
      */
@@ -20,13 +19,13 @@ class TorrentDownload
     public function __construct($forumURL)
     {
         $this->ch = curl_init();
-        curl_setopt_array($this->ch, array(
+        curl_setopt_array($this->ch, [
             CURLOPT_URL => $forumURL . '/forum/dl.php',
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
-        ));
+        ]);
         curl_setopt_array($this->ch, Proxy::$proxy['forum']);
         Log::append('Используется зеркало для форума: ' . $forumURL);
     }
@@ -50,15 +49,15 @@ class TorrentDownload
      */
     public function getTorrentFile($userKeyApi, $userID, $infoHash, $addRetrackerURL = 0)
     {
-        $params = array(
+        $params = [
             'keeper_user_id' => $userID,
             'keeper_api_key' => $userKeyApi,
             'h' => $infoHash,
             'add_retracker_url' => $addRetrackerURL,
-        );
-        curl_setopt_array($this->ch, array(
+        ];
+        curl_setopt_array($this->ch, [
             CURLOPT_POSTFIELDS => http_build_query($params),
-        ));
+        ]);
         // таймаут запросов
         $maxNumberRequest = 3;
         if ($this->numberRequest == $maxNumberRequest) {

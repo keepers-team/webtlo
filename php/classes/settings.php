@@ -10,7 +10,6 @@ if (!defined('_BR_')) {
 
 class TIniFileEx
 {
-
     protected static $rcfg;
     protected static $wcfg;
 
@@ -29,7 +28,7 @@ class TIniFileEx
         if (empty(self::$filename)) {
             self::$filename = getStorageDir() . DIRECTORY_SEPARATOR . "config.ini";
         }
-        self::$rcfg = is_readable(self::$filename) ? parse_ini_file(self::$filename, true) : array();
+        self::$rcfg = is_readable(self::$filename) ? parse_ini_file(self::$filename, true) : [];
     }
 
     public static function read($section, $key, $def = "")

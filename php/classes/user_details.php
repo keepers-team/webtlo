@@ -4,7 +4,6 @@ include_once dirname(__FILE__) . '/../phpQuery.php';
 
 class UserDetails
 {
-
     public static $bt;
     public static $api;
     public static $uid;
@@ -13,18 +12,18 @@ class UserDetails
     public static $forum_url;
     public static $form_token;
 
-    public static function get_details($forum_url, $login, $passwd, $cap_fields = array())
+    public static function get_details($forum_url, $login, $passwd, $cap_fields = [])
     {
         self::$forum_url = $forum_url;
         self::get_cookie($login, $passwd, $cap_fields);
         self::get_keys();
     }
 
-    public static function make_request($url, $fields = array(), $options = array())
+    public static function make_request($url, $fields = [], $options = [])
     {
         $ch = curl_init();
         curl_setopt_array($ch, $options);
-        curl_setopt_array($ch, array(
+        curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -34,7 +33,7 @@ class UserDetails
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CONNECTTIMEOUT => 20,
             CURLOPT_TIMEOUT => 20,
-        ));
+        ]);
         curl_setopt_array($ch, Proxy::$proxy['forum']);
         $try_number = 1; // номер попытки
         $try = 3; // кол-во попыток
@@ -57,20 +56,20 @@ class UserDetails
         }
     }
 
-    public static function get_cookie($login, $passwd, $cap_fields = array())
+    public static function get_cookie($login, $passwd, $cap_fields = [])
     {
         $passwd = mb_convert_encoding($passwd, 'Windows-1251', 'UTF-8');
         $login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
-        $fields = array(
+        $fields = [
             'login_username' => "$login",
             'login_password' => "$passwd",
             'login' => 'Вход',
-        );
+        ];
         $fields += $cap_fields;
         $data = self::make_request(
             self::$forum_url . '/forum/login.php',
             $fields,
-            array(CURLOPT_HEADER => 1)
+            [CURLOPT_HEADER => 1]
         );
         preg_match("|.*bb_session=[^-]*-([0-9]*)|", $data, $uid);
         preg_match("|.*(bb_session=[^;]*);.*|", $data, $cookie);
@@ -123,8 +122,8 @@ class UserDetails
         $keys = '';
         $data = self::make_request(
             self::$forum_url . '/forum/profile.php?u=' . self::$uid,
-            array('mode' => 'viewprofile'),
-            array(CURLOPT_COOKIE => self::$cookie)
+            ['mode' => 'viewprofile'],
+            [CURLOPT_COOKIE => self::$cookie]
         );
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         $rows = $html->find('table.user_details');
@@ -149,8 +148,8 @@ class UserDetails
     {
         $data = self::make_request(
             self::$forum_url . '/forum/profile.php?u=' . self::$uid,
-            array('mode' => 'viewprofile'),
-            array(CURLOPT_COOKIE => self::$cookie)
+            ['mode' => 'viewprofile'],
+            [CURLOPT_COOKIE => self::$cookie]
         );
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         preg_match("|.*form_token[^']*'([^,]*)',.*|si", $html->find('script:first'), $form_token);

@@ -1,9 +1,9 @@
 <?php
+
 include_once dirname(__FILE__) . "/../common/storage.php";
 
 class Log
 {
-
     private static $log;
 
     public static function append($message = "")

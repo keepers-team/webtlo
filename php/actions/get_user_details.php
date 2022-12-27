@@ -22,12 +22,12 @@ try {
     ) {
         $cap_code = $_POST['cap_code'];
         $cap_fields = explode(',', $_POST['cap_fields']);
-        $cap_fields = array(
+        $cap_fields = [
             $cap_fields[0] => $cap_fields[1],
             $cap_fields[2] => $cap_code,
-        );
+        ];
     } else {
-        $cap_fields = array();
+        $cap_fields = [];
     }
 
     // параметры прокси
@@ -59,23 +59,23 @@ try {
     );
 
     echo json_encode(
-        array(
+        [
             'bt_key' => UserDetails::$bt,
             'api_key' => UserDetails::$api,
             'user_id' => UserDetails::$uid,
             'captcha' => '',
             'log' => Log::get(),
-        )
+        ]
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
     echo json_encode(
-        array(
+        [
             'bt_key' => '',
             'api_key' => '',
             'user_id' => '',
             'captcha' => UserDetails::$captcha,
             'log' => Log::get(),
-        )
+        ]
     );
 }

@@ -94,7 +94,7 @@ if (isset($cfg['subsections'])) {
 // записываем изменения в локальную базу
 $count_keepers = Db::query_database(
     "SELECT COUNT() FROM temp.KeepersNew",
-    array(),
+    [],
     true,
     PDO::FETCH_COLUMN
 );

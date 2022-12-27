@@ -23,18 +23,18 @@ try {
         : '<i class="fa fa-circle text-danger"></i>';
 
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'status' => $status,
-        )
+        ]
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
     $status = 'Не удалось проверить доступность торрент-клиента "' . $torrentClient['comment'] . '"';
     echo json_encode(
-        array(
+        [
             'log' => Log::get(),
             'status' => $status,
-        )
+        ]
     );
 }

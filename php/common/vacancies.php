@@ -110,14 +110,14 @@ $ids = Db::query_database(
 // добавляем "включения"
 foreach ($include as $forum_id) {
     if (!empty($forum_id)) {
-        $ids[$forum_id] = array();
+        $ids[$forum_id] = [];
     }
 }
 
 // получаем список всех подразделов
 $forums = Db::query_database(
     "SELECT id,na,qt,si FROM Forums WHERE qt > 0",
-    array(),
+    [],
     true,
     PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
 );
