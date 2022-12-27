@@ -17,4 +17,4 @@ for name in "${legacy[@]}"; do
 done
 s6-echo "Fixing permissions inside storage directory"
 s6-chown -u "$uid" -g "$gid" "$WEBTLO_DIR"
-s6-chmod 02750 "$WEBTLO_DIR"
+s6-chmod 02755 "$WEBTLO_DIR"
