@@ -7,6 +7,9 @@ services:
   app:
     image: berkut174/webtlo:master
     container_name: webtlo
+#    environment:
+#      WEBTLO_UID: 1000
+#      WEBTLO_GID: nobody
     restart: on-failure
     ports:
       - "8080:80"
