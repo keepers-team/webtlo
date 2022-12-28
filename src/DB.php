@@ -1,18 +1,22 @@
 <?php
 
-include_once dirname(__FILE__) . "/../common/storage.php";
+namespace KeepersTeam\Webtlo;
 
-class Db
+use Exception;
+use PDO;
+use PDOException;
+
+class DB
 {
-    public static $db;
     private static string $databaseFilename = 'webtlo.db';
+    private PDO $db;
 
-    public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
+    public function query_database(string $sql, array $param = [], bool $fetch = false, int $pdo = PDO::FETCH_ASSOC): bool|array
     {
-        self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
-        $sth = self::$db->prepare($sql);
-        if (self::$db->errorCode() != '0000') {
-            $error = self::$db->errorInfo();
+        $this->db->sqliteCreateFunction('like', 'self::lexa_ci_utf8_like', 2);
+        $sth = $this->db->prepare($sql);
+        if ($this->db->errorCode() != '0000') {
+            $error = $this->db->errorInfo();
             throw new Exception('SQL ошибка: ' . $error[2]);
         }
         $sth->execute($param);
@@ -35,25 +39,36 @@ class Db
     {
         foreach ($set as $id => &$value) {
             $value = array_map(function ($e) {
-                return is_numeric($e) ? $e : Db::$db->quote($e);
+                return is_numeric($e) ? $e : $this->db->quote($e);
             }, $value);
             $value = (empty($value['id']) ? "$id," : "") . implode(',', $value);
         }
-        $statement = 'SELECT ' . implode(' UNION ALL SELECT ', $set);
-        return $statement;
+        return 'SELECT ' . implode(' UNION ALL SELECT ', $set);
+    }
+
+    public function cleanup_seeds(int $avgSeedersPeriodOutdated = 7)
+    {
+        // данные о сидах устарели
+        $avgSeedersPeriodOutdatedSeconds = $avgSeedersPeriodOutdated * 86400;
+        $this->query_database(
+            "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(:ud as INTEGER)) AND pt <> 2
+    OR strftime('%s', 'now') - (SELECT ud FROM UpdateTime WHERE id = 9999) > CAST(:ud as INTEGER) AND pt = 2",
+            [':ud' => $avgSeedersPeriodOutdatedSeconds]
+        );
+        $this->query_database(
+            "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
+            [$avgSeedersPeriodOutdatedSeconds]
+        );
     }
 
     /**
      * объединение нескольких запросов на получение данных
-     * @param array $source
-     * @return string|bool
      */
-    public static function unionQuery($source)
+    public static function unionQuery(array $source): bool|string
     {
         if (!is_array($source)) {
             return false;
         }
-        $query = '';
         $values = [];
         foreach ($source as &$row) {
             if (!is_array($row)) {
@@ -61,34 +76,34 @@ class Db
             }
             $row = array_map(
                 function ($e) {
-                    return is_numeric($e) ? $e : Db::$db->quote($e);
+                    return is_numeric($e) ? $e : $this->db->quote($e);
                 },
                 $row
             );
             $values[] = implode(',', $row);
         }
-        $query = 'SELECT ' . implode(' UNION ALL SELECT ', $values);
-        return $query;
+        return 'SELECT ' . implode(' UNION ALL SELECT ', $values);
     }
 
-    public static function create()
+    public function __construct(string $databaseDirname)
     {
-        // файл базы данных
-
-        $databaseDirname = getStorageDir();
-        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
+        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . DB::$databaseFilename;
 
         if (!file_exists($databaseDirname)) {
-            if (!mkdir_recursive($databaseDirname)) {
+            if (!Utils::mkdir_recursive($databaseDirname)) {
                 throw new Exception('Не удалось создать каталог ' . $databaseDirname);
             }
         }
         try {
-            self::$db = new PDO('sqlite:' . $databasePath);
+            $this->db = new PDO('sqlite:' . $databasePath);
         } catch (PDOException $e) {
             throw new Exception(sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e));
         }
+        $this->migrate();
+    }
 
+    private function migrate()
+    {
         // список подразделов
         $statements[] = [
             'CREATE TABLE IF NOT EXISTS Forums (',
@@ -185,7 +200,7 @@ class Db
             ')'
         ];
         // совместимость со старыми версиями базы данных
-        $version = self::query_database('PRAGMA user_version', [], true);
+        $version = $this->query_database('PRAGMA user_version', [], true);
         // user_version = 1
         if ($version[0]['user_version'] < 1) {
             $statements[] = 'ALTER TABLE Topics ADD COLUMN rt INT DEFAULT 1';
@@ -764,7 +779,7 @@ class Db
             if (is_array($statement)) {
                 $statement = implode(PHP_EOL, $statement);
             }
-            self::query_database($statement);
+            $this->query_database($statement);
         }
     }
 }
