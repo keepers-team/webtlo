@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ae7585a27608d7f7e9033a8cd91da23",
+    "content-hash": "283fd135a29d65a5371d75da31e7eadb",
     "packages": [
         {
             "name": "gotzmann/comet",
@@ -681,6 +681,48 @@
                 }
             ],
             "time": "2022-11-03T14:55:06+00:00"
+        },
+        {
+            "name": "uma/dic",
+            "version": "v3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/1ma/DIC.git",
+                "reference": "f21501e8bf060de172cc96764dd7326e2982a681"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/1ma/DIC/zipball/f21501e8bf060de172cc96764dd7326e2982a681",
+                "reference": "f21501e8bf060de172cc96764dd7326e2982a681",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3.0 || ^7.4.0 || ^8.0.0 || ^8.1.0",
+                "psr/container": "^2.0"
+            },
+            "provide": {
+                "psr/container-implementation": "^1.0"
+            },
+            "require-dev": {
+                "phpmetrics/phpmetrics": "^2.7",
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "UMA\\DIC\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A minimalistic PSR-11 container",
+            "support": {
+                "issues": "https://github.com/1ma/DIC/issues",
+                "source": "https://github.com/1ma/DIC/tree/v3.0.1"
+            },
+            "time": "2022-01-15T20:30:48+00:00"
         },
         {
             "name": "workerman/workerman",

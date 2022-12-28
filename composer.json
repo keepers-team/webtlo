@@ -12,12 +12,13 @@
         }
     },
     "repositories": [
-      {
-        "type": "vcs",
-        "url": "https://github.com/Wedrix/comet"
-      }
+        {
+            "type": "vcs",
+            "url": "https://github.com/Wedrix/comet"
+        }
     ],
     "require": {
-        "gotzmann/comet": "dev-master#7bb200f664e59caf2c99eeaa4f5da2c38d212ebf"
+        "gotzmann/comet": "dev-master#7bb200f664e59caf2c99eeaa4f5da2c38d212ebf",
+        "uma/dic": "^3.0"
     }
 }
