@@ -9,6 +9,11 @@ $app = new Comet\Comet([
     'workers' => 4,
 ]);
 
+
+$app->addRoutingMiddleware();
+
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+
 $app->get('/', [LegacyRouter::class, 'home']);
 
 $app->serveStatic('static', ['css', 'js', 'ico', 'otf', 'woff', 'woff2', 'svg', 'eot']);
