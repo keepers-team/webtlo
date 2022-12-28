@@ -38,14 +38,4 @@ final class Storage
             return $directory;
         }
     }
-
-
-    /**
-     * @return string The log directory for the application
-     * @deprecated Will be replaced with Monolog
-     */
-    public static function getLogDir(): string
-    {
-        return self::getStorageDir() . DIRECTORY_SEPARATOR . "logs";
-    }
 }
