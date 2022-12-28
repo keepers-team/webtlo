@@ -53,4 +53,13 @@ class LegacyRouter
         $response->getBody()->write($output);
         return $response;
     }
+
+    public function checkNewVersion(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        require_once self::$legacyActionsPath . 'check_new_version.php';
+        $result = _checkNewVersion($this->container->get('webtlo_version')->release_api, $this->logger);
+
+        $response->with($result)->withHeader('Content-Type', 'application/json');
+        return $response;
+    }
 }

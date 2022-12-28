@@ -86,6 +86,7 @@ final class ApplicationFactory
         $app->get('/', [Routes\LegacyRouter::class, 'home']);
 
         $app->group('/api/v0', function (RouteCollectorProxy $group) {
+            $group->get('/check_new_version', [Routes\LegacyRouter::class, 'checkNewVersion'])->setName('checkNewVersion');
         });
         $app->serveStatic('static', ['css', 'js', 'ico', 'otf', 'woff', 'woff2', 'svg', 'eot']);
     }

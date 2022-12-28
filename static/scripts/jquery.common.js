@@ -248,11 +248,12 @@ function checkNewVersion() {
 		return;
 	}
 	$.ajax({
-		type: "POST",
-		url: "php/actions/check_new_version.php",
-		success: function (response) {
-			$("#log").append(response.log);
-			response = $.parseJSON(response);
+		type: "GET",
+		url: "/api/v0/check_new_version",
+		success: function ({success, response}) {
+			if (!success) {
+				return handleError(response);
+			}
 			Cookies.set("new-version-number", response.newVersionNumber);
 			Cookies.set("new-version-link", response.newVersionLink);
 			Cookies.set("new-version-whats-new", response.whatsNew);
