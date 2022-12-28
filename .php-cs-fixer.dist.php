@@ -3,7 +3,7 @@
 $finder = PhpCsFixer\Finder::create()
     ->exclude('phpQuery')
     ->notPath(['phpQuery.php', 'bencode.php', 'torrenteditor.php'])
-    ->in('php');
+    ->in('src/legacy/php');
 
 $config = new PhpCsFixer\Config();
 return $config->setRules([
