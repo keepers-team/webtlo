@@ -11,4 +11,6 @@ $app = new Comet\Comet([
 
 $app->get('/', [LegacyRouter::class, 'home']);
 
+$app->serveStatic('static', ['css', 'js', 'ico', 'otf', 'woff', 'woff2', 'svg', 'eot']);
+
 $app->run();
