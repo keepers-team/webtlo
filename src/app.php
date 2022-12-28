@@ -54,7 +54,7 @@ $app->addRoutingMiddleware();
 
 $app->addErrorMiddleware(true, true, true, $logger);
 
-$app->get('/', [LegacyRouter::class, 'home']);
+$app->get('/', [Routes\LegacyRouter::class, 'home']);
 
 $app->serveStatic('static', ['css', 'js', 'ico', 'otf', 'woff', 'woff2', 'svg', 'eot']);
 
