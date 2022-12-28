@@ -1,14 +1,8 @@
 <?php
 
-Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
 try {
-    include_once dirname(__FILE__) . '/php/common.php';
-
-    // получение настроек
-    $cfg = get_settings();
-
     // чекбоксы
     $savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
@@ -30,18 +24,18 @@ try {
     $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
 
     // стандартные адреса
-    $forumAddressList = array(
+    $forumAddressList = [
         'rutracker.org',
         'rutracker.net',
         'rutracker.nl',
         'custom'
-    );
+    ];
 
-    $apiAddressList = array(
+    $apiAddressList = [
         'api.t-ru.org',
         'api.rutracker.net',
         'custom'
-    );
+    ];
 
     // адреса форума
     $optionForumAddress = '';
@@ -522,11 +516,11 @@ try {
                                     <label>
                                         Тип прокси-сервера:
                                         <select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
-                                            <option value="http" <?php echo ($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
-                                            <option value="socks4" <?php echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
-                                            <option value="socks4a" <?php echo ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?>>SOCKS4A</option>
-                                            <option value="socks5" <?php echo ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?>>SOCKS5</option>
-                                            <option value="socks5h" <?php echo ($cfg['proxy_type'] == 'socks5h' ? "selected" : "") ?>>SOCKS5H</option>
+                                            <option value="http" <?php echo($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
+                                            <option value="socks4" <?php echo($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
+                                            <option value="socks4a" <?php echo($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?>>SOCKS4A</option>
+                                            <option value="socks5" <?php echo($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?>>SOCKS5</option>
+                                            <option value="socks5h" <?php echo($cfg['proxy_type'] == 'socks5h' ? "selected" : "") ?>>SOCKS5H</option>
                                         </select>
                                     </label>
                                 </div>
