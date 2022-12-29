@@ -1,20 +1,21 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Clients;
+
 /**
  * Class Transmission
  * Supported by Transmission 2.80 and later
  */
 class Transmission extends TorrentClient
 {
-    protected static $base = '%s://%s:%s/transmission/rpc';
+    protected static string $base = '%s://%s:%s/transmission/rpc';
 
-    private $rpcVersion;
+    private int $rpcVersion;
 
     /**
-     * получение идентификатора сессии и запись его в $this->sid
-     * @return bool true в случе успеха, false в случае неудачи
+     * @inheritdoc
      */
-    protected function getSID()
+    protected function getSID(): bool
     {
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -27,15 +28,13 @@ class Transmission extends TorrentClient
         ]);
         $response = curl_exec($ch);
         if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
+            $this->logger->error("Failed to make request", ['error' => curl_error($this->ch)]);
             return false;
         }
         $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         if ($responseHttpCode == 401) {
-            Log::append('Error: Не удалось авторизоваться в веб-интерфейсе торрент-клиента');
-            Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
+            $this->logger->error('Failed to authenticate', ['response' => $response]);
         } elseif (
             $responseHttpCode == 405
             || $responseHttpCode == 409
@@ -51,19 +50,19 @@ class Transmission extends TorrentClient
                 return true;
             }
         }
-        Log::append('Error: Не удалось подключиться к веб-интерфейсу торрент-клиента');
+        $this->logger->error('Failed to authenticate', ['response' => $response]);
         return false;
     }
 
     /**
      * выполнение запроса
      *
-     * @param $fields
-     * @param array $options
-     * @return bool|mixed|string
+     * @param array $fields
+     * @return array|false
      */
-    private function makeRequest($fields, $options = [])
+    private function makeRequest(array $fields): array|false
     {
+        $options = [];
         curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
@@ -87,7 +86,7 @@ class Transmission extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($this->ch));
+                $this->logger->error("Failed to make request", ['error' => curl_error($this->ch)]);
                 return false;
             }
             if (
@@ -104,7 +103,7 @@ class Transmission extends TorrentClient
             }
             $response = json_decode($response, true);
             if ($response === null) {
-                Log::append('Error: ' . json_last_error_msg());
+                $this->logger->error("Failed to decode response", ['error' => json_last_error_msg()]);
                 return false;
             }
             if ($response['result'] != 'success') {
@@ -112,15 +111,15 @@ class Transmission extends TorrentClient
                     empty($response['result'])
                     && $responseNumberTry <= $maxNumberTry
                 ) {
-                    Log::append('Повторная попытка ' . $responseNumberTry . '/' . $maxNumberTry . ' выполнить запрос');
+                    $this->logger->info("Retrying request", ['retry' => $responseNumberTry]);
                     $responseNumberTry++;
-                    sleep(10);
+                    sleep(1);
                     continue;
                 }
                 if (empty($response['result'])) {
-                    Log::append('Error: Неизвестная ошибка (' . $responseHttpCode . ')');
+                    $this->logger->error("Empty result", ['response' => $response]);
                 } else {
-                    Log::append('Error: ' . $response['result']);
+                    $this->logger->error("Malformed response", ['response' => $response]);
                 }
                 return false;
             }
@@ -128,7 +127,10 @@ class Transmission extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    /**
+     * @inheritdoc
+     */
+    public function getAllTorrents(): array|false
     {
         $fields = [
             'method' => 'torrent-get',
@@ -170,11 +172,14 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    /**
+     * @inheritdoc
+     */
+    public function addTorrent(string $torrentFilePath, string $savePath = ''): bool
     {
         $torrentFile = file_get_contents($torrentFilePath);
         if ($torrentFile === false) {
-            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
+            $this->logger->error("Failed to upload file", ['filename' => basename($torrentFilePath)]);
             return false;
         }
         $fields = [
@@ -191,19 +196,20 @@ class Transmission extends TorrentClient
         if ($response === false) {
             return false;
         }
-        if (!empty($response['torrent-added'])) {
-            $torrentHash = $response['torrent-added']['hashString'];
-        } elseif (!empty($response['torrent-duplicate'])) {
+        if (!empty($response['torrent-duplicate'])) {
             $torrentHash = $response['torrent-duplicate']['hashString'];
-            Log::append('Notice: Эта раздача уже раздаётся в торрент-клиенте (' . $torrentHash . ')');
+            $this->logger->notice("This torrent already added", ['hash' => $torrentHash]);
         }
-        return $torrentHash;
+        return true;
     }
 
-    public function setLabel($torrentHashes, $labelName = '')
+    /**
+     * @inheritdoc
+     */
+    public function setLabel(array $torrentHashes, string $labelName = ''): bool
     {
         if ($this->rpcVersion < 16) {
-            Log::append('Error: Торрент-клиент не поддерживает установку меток');
+            $this->logger->warning("Labels are not supported in rpc version of this client", ['rpc_version' => $this->rpcVersion]);
             return false;
         }
         $labelName = str_replace(',', '', $labelName);
@@ -217,7 +223,10 @@ class Transmission extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function startTorrents($torrentHashes, $forceStart = false)
+    /**
+     * @inheritdoc
+     */
+    public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $method = $forceStart ? 'torrent-start-now' : 'torrent-start';
         $fields = [
@@ -227,7 +236,10 @@ class Transmission extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function stopTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function stopTorrents(array $torrentHashes): bool
     {
         $fields = [
             'method' => 'torrent-stop',
@@ -236,7 +248,10 @@ class Transmission extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function recheckTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function recheckTorrents(array $torrentHashes): bool
     {
         $fields = [
             'method' => 'torrent-verify',
@@ -245,7 +260,10 @@ class Transmission extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function removeTorrents($torrentHashes, $deleteFiles = false)
+    /**
+     * @inheritdoc
+     */
+    public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $fields = [
             'method' => 'torrent-remove',
