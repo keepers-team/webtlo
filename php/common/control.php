@@ -20,7 +20,7 @@ $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
-    $clientControlPeers = (int)$torrentClientData['control_peers'];
+    $clientControlPeers = $torrentClientData['control_peers'];
     if ($clientControlPeers == -1) {
         Log::append('Для клиента '. $torrentClientData['cm'] .' отключена регулировка');
         continue;
@@ -94,6 +94,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         count($topicsHashes, COUNT_RECURSIVE),
         count($unaddedHashes)
     ));
+
+    asort($topicsHashes);
     if (count($unaddedHashes)) {
         $topicsHashes["unadded"] = $unaddedHashes;
     }
@@ -113,11 +115,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 continue;
             }
             // пропустим исключённые из регулировки подразделы
-            $subControlPeers = isset($cfg['subsections'][$forumID]) ? (int)$cfg['subsections'][$forumID]['control_peers'] : 0;
+            $subControlPeers = isset($cfg['subsections'][$forumID]) ? $cfg['subsections'][$forumID]['control_peers'] : "";
             if ($subControlPeers == -1) {
                 Log::append('Для раздела '. $forumID .' отключена регулировка');
                 continue;
             }
+            // регулируемое значение пиров
+            $controlPeers = get_control_peers($cfg['topics_control']['peers'], $clientControlPeers, $subControlPeers);
 
             $startforum = microtime(true);
             // получаем данные о пирах
@@ -125,9 +129,6 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             unset($topicsHashhasheses);
             if ($peerStatistics !== false) {
                 foreach ($peerStatistics as $topicHash => $topicData) {
-                    // регулируемое значение пиров
-                    $controlPeers = get_control_peers($cfg['topics_control']['peers'], $clientControlPeers, $subControlPeers);
-
                     if (
                         // пропускаем отсутствующий торрент
                         empty($torrents[$topicHash])
@@ -222,7 +223,7 @@ Log::append('Регулировка раздач в торрент-клиент�
 function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
 {
     // Задан лимит для клиента и для раздела
-    if ($clientControlPeers > 0 && $subControlPeers > 0) {
+    if ($clientControlPeers > -1 && $subControlPeers > -1) {
         // Если лимит на клиент меньше лимита на раздел, то используем клиент
         $controlPeers = $subControlPeers;
         if ($clientControlPeers < $subControlPeers) {
@@ -230,13 +231,13 @@ function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
         }
     }
     // Задан лимит только для клиента
-    elseif ($clientControlPeers > 0) {
+    elseif ($clientControlPeers > -1) {
         $controlPeers = $clientControlPeers;
     }
     // Задан лимит только для раздела
-    elseif ($subControlPeers > 0) {
+    elseif ($subControlPeers > -1) {
         $controlPeers = $subControlPeers;
     }
 
-    return $controlPeers;
+    return (int)$controlPeers;
 }
