@@ -83,11 +83,18 @@ try {
     // скачивание торрент-файлов
     $download = new TorrentDownload($cfg['forum_address']);
 
-    Log::append(
-        $replace_passkey
-            ? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
-            : 'Выполняется скачивание торрент-файлов...'
+    $log_string = sprintf(
+        "Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ",
+        count($topicHashes['topic_hashes']),
+        $cfg['tor_for_user'] ? 'пользовательские' : 'хранительские'
     );
+    if ($replace_passkey) {
+        $log_string .=
+            !empty($cfg['user_passkey'])
+                ? 'Замена Passkey: ' .$cfg['user_passkey']
+                : 'Passkey пуст.';
+    }
+    Log::append($log_string);
 
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
