@@ -70,7 +70,7 @@ $(document).ready(function () {
 	$("#savecfg").on("click", setSettings);
 
 	// Проверяем, что настройки были изменены
-	$("form#config :input").on("change selectmenuchange spinchange", function () {
+	$("form#config :input").on("change selectmenuchange spinstop", function () {
 		savecfg.dataset["unsaved"] = 1;
 	});
 
