@@ -106,9 +106,16 @@ try {
             }
             $trackers = $torrent->getTrackers();
             foreach ($trackers as &$tracker) {
-                $tracker = preg_replace('/(?<==)\w+$/', $cfg['user_passkey'], $tracker);
+                // Если задан пустой заменный ключ, то пихаем дефолтный 'ann?magnet'
+                if (empty($cfg['user_passkey'])) {
+                    $tracker = preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
+                } else {
+                    $tracker = preg_replace('/(?<==)\w+$/', $cfg['user_passkey'], $tracker);
+                }
+
+                // Для обычных пользователей заменяем адрес трекера и тип ключа.
                 if ($cfg['tor_for_user']) {
-                    $tracker = preg_replace('/\w+(?==)/', 'pk', $tracker);
+                    $tracker = preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
                 }
             }
             unset($tracker);
