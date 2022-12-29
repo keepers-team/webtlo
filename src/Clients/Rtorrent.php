@@ -1,31 +1,39 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Clients;
+
+use Exception;
+
 /**
  * Class Rtorrent
  * Supported by rTorrent 0.9.7 and later
  */
 class Rtorrent extends TorrentClient
 {
-    protected static $base = '%s://%s/RPC2';
+    protected static string $base = '%s://%s/RPC2';
 
     /**
-     * получение имени сеанса
-     * @return bool true в случе успеха, false в случае неудачи
+     * @inheritdoc
      */
-    protected function getSID()
+    protected function getSID(): bool
     {
-        return $this->makeRequest('session.name') ? true : false;
+        return (bool)$this->makeRequest('session.name');
     }
 
     /**
      * выполнение запроса
-     * @param $command
-     * @param $params
-     * @return bool|mixed
+     * @param string $command
+     * @param string|array $params
+     * @return array|false
      */
-    public function makeRequest($command, $params = '')
+    public function makeRequest(string $command, string|array $params = ''): array|false
     {
-        $request = xmlrpc_encode_request($command, $params, ['escaping' => 'markup', 'encoding' => 'UTF-8']);
+        try {
+            $request = xmlrpc_encode_request($command, $params, ['escaping' => 'markup', 'encoding' => 'UTF-8']);
+        } catch (Exception $e) {
+            $this->logger->error("Failed to encode request", ['command' => $command, 'params' => $params, 'error' => $e]);
+            return false;
+        }
         $header = [
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
@@ -56,7 +64,7 @@ class Rtorrent extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($this->ch));
+                $this->logger->error("Failed to make request", ['error' => curl_error($this->ch)]);
                 return false;
             }
             $response = xmlrpc_decode(str_replace('i8>', 'i4>', $response));
@@ -74,7 +82,7 @@ class Rtorrent extends TorrentClient
                 }
             }
             if (isset($faultString)) {
-                Log::append('Error: ' . $faultString);
+                $this->logger->error("Failed to decode response", ['response' => $faultString]);
                 return false;
             }
             // return 0 on success
@@ -82,7 +90,10 @@ class Rtorrent extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    /**
+     * @inheritdoc
+     */
+    public function getAllTorrents(): array|false
     {
         $response = $this->makeRequest(
             'd.multicall2',
@@ -108,7 +119,7 @@ class Rtorrent extends TorrentClient
             $torrentComment = str_replace('VRS24mrker', '', rawurldecode($torrent[1]));
             $torrentError = !empty($torrent[3]) ? 1 : 0;
             $torrentTrackerError = '';
-            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)\]/', $torrent[3], $matches);
+            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)]/', $torrent[3], $matches);
             if (!empty($matches)) {
                 $torrentTrackerError = empty($matches[2]) ? $matches[1] : $matches[2];
             }
@@ -117,7 +128,7 @@ class Rtorrent extends TorrentClient
                 'done' => $torrent[0],
                 'error' => $torrentError,
                 'name' => $torrent[4],
-                'paused' => (int) !$torrent[6],
+                'paused' => (int)!$torrent[6],
                 'time_added' => $torrent[7],
                 'total_size' => $torrent[5],
                 'tracker_error' => $torrentTrackerError
@@ -126,7 +137,10 @@ class Rtorrent extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    /**
+     * @inheritdoc
+     */
+    public function addTorrent(string $torrentFilePath, string $savePath = ''): bool
     {
         $makeDirectory = ['', 'mkdir', '-p', '--', $savePath];
         if (empty($savePath)) {
@@ -135,10 +149,10 @@ class Rtorrent extends TorrentClient
         }
         $torrentFile = file_get_contents($torrentFilePath, false, stream_context_create());
         if ($torrentFile === false) {
-            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
+            $this->logger->error("Failed to upload file", ['filename' => basename($torrentFilePath)]);
             return false;
         }
-        preg_match('|publisher-url[0-9]*:(https?\:\/\/[^\?]*\?t=[0-9]*)|', $torrentFile, $matches);
+        preg_match('|publisher-url[0-9]*:(https?://[^?]*\?t=[0-9]*)|', $torrentFile, $matches);
         if (isset($matches[1])) {
             $torrentComment = 'VRS24mrker' . rawurlencode($matches[1]);
         } else {
@@ -168,7 +182,10 @@ class Rtorrent extends TorrentClient
         );
     }
 
-    public function setLabel($torrentHashes, $labelName = '')
+    /**
+     * @inheritdoc
+     */
+    public function setLabel(array $torrentHashes, string $labelName = ''): bool
     {
         if (empty($labelName)) {
             return false;
@@ -184,7 +201,10 @@ class Rtorrent extends TorrentClient
         return $result;
     }
 
-    public function startTorrents($torrentHashes, $forceStart = false)
+    /**
+     * @inheritdoc
+     */
+    public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -196,7 +216,10 @@ class Rtorrent extends TorrentClient
         return $result;
     }
 
-    public function stopTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function stopTorrents(array $torrentHashes): bool
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -208,7 +231,10 @@ class Rtorrent extends TorrentClient
         return $result;
     }
 
-    public function removeTorrents($torrentHashes, $deleteFiles = false)
+    /**
+     * @inheritdoc
+     */
+    public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -249,7 +275,10 @@ class Rtorrent extends TorrentClient
         return $result;
     }
 
-    public function recheckTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function recheckTorrents(array $torrentHashes): bool
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {

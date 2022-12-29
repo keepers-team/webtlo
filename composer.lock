@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "666fdd1c106eb7a17f76aa815e669c8d",
+    "content-hash": "c1e757af6c26c8f7e4af2072976f5582",
     "packages": [
         {
             "name": "gotzmann/comet",
@@ -213,6 +213,123 @@
                 "source": "https://github.com/nikic/FastRoute/tree/master"
             },
             "time": "2018-02-13T20:26:39+00:00"
+        },
+        {
+            "name": "phpxmlrpc/phpxmlrpc",
+            "version": "4.9.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/gggeek/phpxmlrpc.git",
+                "reference": "1658b0c236e490c485e3b1233964223ceece52fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/gggeek/phpxmlrpc/zipball/1658b0c236e490c485e3b1233964223ceece52fe",
+                "reference": "1658b0c236e490c485e3b1233964223ceece52fe",
+                "shasum": ""
+            },
+            "require": {
+                "ext-xml": "*",
+                "php": "^5.3.0 || ^7.0 || ^8.0"
+            },
+            "conflict": {
+                "phpxmlrpc/extras": "<= 0.6.3"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "ext-dom": "*",
+                "ext-mbstring": "*",
+                "phpunit/phpunit": "^4.8 || ^5.0 || ^8.5.14",
+                "phpunit/phpunit-selenium": "*",
+                "yoast/phpunit-polyfills": "*"
+            },
+            "suggest": {
+                "ext-curl": "Needed for HTTPS and HTTP 1.1 support, NTLM Auth etc...",
+                "ext-mbstring": "Needed to allow reception of requests/responses in character sets other than ASCII,LATIN-1,UTF-8",
+                "ext-zlib": "Needed for sending compressed requests and receiving compressed responses, if cURL is not available",
+                "phpxmlrpc/extras": "Adds more featured Server classes and other useful bits",
+                "phpxmlrpc/jsonrpc": "Adds support for the JSON-RPC protocol"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpXmlRpc\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "A php library for building xmlrpc clients and servers",
+            "homepage": "https://gggeek.github.io/phpxmlrpc/",
+            "keywords": [
+                "webservices",
+                "xml-rpc",
+                "xmlrpc"
+            ],
+            "support": {
+                "issues": "https://github.com/gggeek/phpxmlrpc/issues",
+                "source": "https://github.com/gggeek/phpxmlrpc/tree/4.9.3"
+            },
+            "time": "2022-12-20T16:24:51+00:00"
+        },
+        {
+            "name": "phpxmlrpc/polyfill-xmlrpc",
+            "version": "1.0.0-rc1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/gggeek/polyfill-xmlrpc.git",
+                "reference": "05cada8f3c50b7d1a38d6283c4b46b3ff2096e42"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/gggeek/polyfill-xmlrpc/zipball/05cada8f3c50b7d1a38d6283c4b46b3ff2096e42",
+                "reference": "05cada8f3c50b7d1a38d6283c4b46b3ff2096e42",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.3.0 || ^7.0 || ^8.0",
+                "phpxmlrpc/phpxmlrpc": "^4.5.2"
+            },
+            "provide": {
+                "ext-xmlrpc": "*"
+            },
+            "require-dev": {
+                "ext-curl": "*",
+                "phpunit/phpunit": "^5.0 || ^8.5.12",
+                "phpunit/phpunit-selenium": "*",
+                "yoast/phpunit-polyfills": "*"
+            },
+            "suggest": {
+                "ext-iconv": "Required when using anything other than utf-8 as target encoding for the decoded xml",
+                "ext-xmlrpc": "Recommended for running the test suite. We can not declare it in require-dev because it is missing in php 8"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "PhpXmlRpc\\Polyfill\\XmlRpc\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "A pure-php reimplementation of the API exposed by the native XML-RPC extension",
+            "keywords": [
+                "extension",
+                "php",
+                "polyfill",
+                "webservices",
+                "xmlrpc"
+            ],
+            "support": {
+                "issues": "https://github.com/gggeek/polyfill-xmlrpc/issues",
+                "source": "https://github.com/gggeek/polyfill-xmlrpc/tree/1.0.0-rc1"
+            },
+            "time": "2022-01-30T15:28:08+00:00"
         },
         {
             "name": "psr/container",
@@ -2785,6 +2902,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "phpxmlrpc/polyfill-xmlrpc": 5,
         "gotzmann/comet": 20
     },
     "prefer-stable": false,
