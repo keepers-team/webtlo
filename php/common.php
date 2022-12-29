@@ -7,8 +7,7 @@ include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 
 // версия Web-TLO
-$webtlo = json_decode(file_get_contents(dirname(__FILE__) . '/../version.json'));
-$webtlo->version_url = $webtlo->github . '/releases/tag/' . $webtlo->version;
+$webtlo = get_webtlo_version();
 
 // подключаемся к базе
 Db::create();
@@ -25,6 +24,34 @@ Db::query_database(
     "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
     array($avgSeedersPeriodOutdatedSeconds)
 );
+
+function get_webtlo_version()
+{
+    $webtlo_version_defaults = array(
+        'version' => '',
+        'github' => '',
+        'wiki' => '',
+        'release' => '',
+        'release_api' => '',
+        'version_url' => '',
+        'version_line' => 'Версия TLO: [b]Web-TLO-unknown[/b]',
+        'version_line_url' => "Версия TLO: [b]Web-TLO-[url='#']unknown[/url][/b]"
+    );
+    $version_json_path = dirname(__FILE__) . '/../version.json';
+    if (!file_exists($version_json_path)) {
+        error_log('`version.json` not found! Make sure you copied all files from the repo.');
+        return (object) $webtlo_version_defaults;
+    }
+    $version_json = json_decode(file_get_contents($version_json_path), true);
+    $result = (object) array_merge($webtlo_version_defaults, $version_json);
+
+    if (!empty($result->version)) {
+        $result->version_url = $result->github . '/releases/tag/' . $result->version;
+        $result->version_line     = 'Версия TLO: [b]Web-TLO-' . $result->version . '[/b]';
+        $result->version_line_url = 'Версия TLO: [b]Web-TLO-[url='. $result->version_url . ']' . $result->version . '[/url][/b]';
+    }
+    return $result;
+}
 
 function get_settings($filename = "")
 {
