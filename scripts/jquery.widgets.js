@@ -100,6 +100,12 @@ $(document).ready(function () {
         max: 100,
         mouseWheel: true
     });
+    // регулировка раздач, количество хранителей
+    $(".spinner-keepers").spinner({
+        min: 0,
+        max: 10,
+        mouseWheel: true
+    });
 
     // инициализация "аккордиона" для вкладки настройки
     $("div.sub_settings").each(function () {

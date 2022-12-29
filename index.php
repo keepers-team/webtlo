@@ -706,6 +706,11 @@ try {
                                 Останавливать раздачи с количеством пиров более:
                                 <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
                             </label>
+                            <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
+                                Не учитывать до
+                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?php echo $cfg['topics_control']['keepers'] ?>" />
+                                сидирующих хранителей, при подсчете текущих сидов
+                            </label>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
                                 <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
                                 регулировать раздачи не из хранимых подразделов

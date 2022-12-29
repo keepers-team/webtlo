@@ -61,6 +61,7 @@ try {
     ) {
         $ini->write('topics_control', 'peers', $cfg['peers']);
     }
+    $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
     $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
     $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
     $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);

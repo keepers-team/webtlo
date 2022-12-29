@@ -133,8 +133,15 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                     $topicData['seeders'] -= $topicData['seeders'] ? $torrentStatus : 0;
                     // находим значение личей
                     $leechers = $cfg['topics_control']['leechers'] ? $topicData['leechers'] : 0;
+                    // количество сидов-хранителей раздачи, которых нужно вычесть из счётчика
+                    $keepers = 0;
+                    if ($cfg['topics_control']['keepers'] > 0) {
+                        // хранители раздачи, исключая себя
+                        $keepers = count(array_diff($topicData['keepers'], [$cfg['user_id']]));
+                        $keepers = min($keepers, (int)$cfg['topics_control']['keepers']);
+                    }
                     // находим значение пиров
-                    $peers = $topicData['seeders'] + $leechers;
+                    $peers = $topicData['seeders'] + $leechers - $keepers;
                     // учитываем вновь прибывшего "лишнего" сида
                     if (
                         $topicData['seeders']
