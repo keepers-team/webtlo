@@ -1,21 +1,24 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Clients;
+
+use CURLFile;
+
 /**
  * Class Utorrent
  * Supported by uTorrent 1.8.2 and later
  */
 class Utorrent extends TorrentClient
 {
-    protected static $base = '%s://%s:%s/gui/%s';
+    protected static string $base = '%s://%s:%s/gui/%s';
 
-    protected $guid;
-    protected $token;
+    private string $guid;
+    private string $token;
 
     /**
-     * получение токена
-     * @return bool
+     * @inheritdoc
      */
-    protected function getSID()
+    protected function getSID(): bool
     {
         $ch = curl_init();
         curl_setopt_array($ch, [
@@ -28,8 +31,7 @@ class Utorrent extends TorrentClient
         ]);
         $response = curl_exec($ch);
         if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
+            $this->logger->error("Failed to obtain session identifier", ['error' => curl_error($ch)]);
             return false;
         }
         $responseInfo = curl_getinfo($ch);
@@ -39,25 +41,24 @@ class Utorrent extends TorrentClient
         if (!empty($headersMatches)) {
             $this->guid = $headersMatches[1];
         }
-        preg_match('|<div id=\'token\'.+>(.*)<\/div>|', $response, $responseMatches);
+        preg_match('|<div id=\'token\'.+>(.*)</div>|', $response, $responseMatches);
         if (!empty($responseMatches)) {
             $this->token = $responseMatches[1];
             return true;
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента.');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
+        $this->logger->error('Failed to authenticate', ['response' => $response]);
         return false;
     }
 
     /**
      * выполнение запроса к торрент-клиенту
-     * @param $request
-     * @param bool $decode
-     * @param array $options
-     * @return bool|mixed|string
+     * @param string $url
+     * @param array|string $fields
+     * @return array|false
      */
-    private function makeRequest($url, $fields = '', $options = [])
+    private function makeRequest(string $url, array|string $fields = ''): array|false
     {
+        $options = [];
         $url = preg_replace('|^\?|', '?token=' . $this->token . '&', $url);
         curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port, $url),
@@ -81,23 +82,26 @@ class Utorrent extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($this->ch));
+                $this->logger->error("Failed to make request", ['error' => curl_error($this->ch)]);
                 return false;
             }
             $response = json_decode($response, true);
             if ($response === null) {
-                Log::append('Error: ' . json_last_error_msg());
+                $this->logger->error("Failed to decode response", ['error' => json_last_error_msg()]);
                 return false;
             }
             if (isset($response['error'])) {
-                Log::append('Error: ' . $response['error']);
+                $this->logger->error("Malformed response", ['response' => $response]);
                 return false;
             }
             return $response;
         }
     }
 
-    public function getAllTorrents()
+    /**
+     * @inheritdoc
+     */
+    public function getAllTorrents(): array|false
     {
         $response = $this->makeRequest('?list=1');
         if ($response === false) {
@@ -132,18 +136,17 @@ class Utorrent extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    /**
+     * @inheritdoc
+     */
+    public function addTorrent(string $torrentFilePath, string $savePath = ''): bool
     {
         $this->setSetting('dir_active_download_flag', true);
         if (!empty($savePath)) {
             $this->setSetting('dir_active_download', urlencode($savePath));
-            usleep(500000);
+            sleep(1);
         }
-        if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
-            $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
-        } else {
-            $torrentFile = '@' . $torrentFilePath;
-        }
+        $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
         return $this->makeRequest('?action=add-file', ['torrent_file' => $torrentFile]);
     }
 
@@ -153,7 +156,7 @@ class Utorrent extends TorrentClient
      * @param $property
      * @param $value
      */
-    public function setProperties($hashes, $property, $value)
+    private function setProperties(array $hashes, string $property, string $value): array|false
     {
         $request = preg_replace('|^(.*)$|', 'hash=$0&s=' . $property . '&v=' . urlencode($value), $hashes);
         $request = implode('&', $request);
@@ -162,48 +165,64 @@ class Utorrent extends TorrentClient
 
     /**
      * изменение настроек
-     * @param $setting
-     * @param $value
+     * @param string $setting
+     * @param string $value
+     * @return array|false
      */
-    public function setSetting($setting, $value)
+    private function setSetting(string $setting, string $value): array|false
     {
         return $this->makeRequest('?action=setsetting&s=' . $setting . '&v=' . $value);
     }
 
     /**
      * "склеивание" параметров в строку
-     * @param $glue
-     * @param $params
+     * @param string $glue
+     * @param array|string $params
      * @return string
      */
-    private function implodeParams($glue, $params)
+    private function implodeParams(string $glue, array|string $params): string
     {
         $params = is_array($params) ? $params : [$params];
         return $glue . implode($glue, $params);
     }
 
-    public function setLabel($torrentHashes, $labelName = '')
+    /**
+     * @inheritdoc
+     */
+    public function setLabel(array $torrentHashes, string $labelName = ''): bool
     {
         return $this->setProperties($torrentHashes, 'label', $labelName);
     }
 
-    public function startTorrents($torrentHashes, $forceStart = false)
+    /**
+     * @inheritdoc
+     */
+    public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $action = $forceStart ? 'forcestart' : 'start';
         return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function recheckTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function recheckTorrents(array $torrentHashes): bool
     {
         return $this->makeRequest('?action=recheck' . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function stopTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function stopTorrents(array $torrentHashes): bool
     {
         return $this->makeRequest('?action=stop' . $this->implodeParams('&hash=', $torrentHashes));
     }
 
-    public function removeTorrents($torrentHashes, $deleteFiles = false)
+    /**
+     * @inheritdoc
+     */
+    public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $action = $deleteFiles ? 'removedata' : 'remove';
         return $this->makeRequest('?action=' . $action . $this->implodeParams('&hash=', $torrentHashes));
