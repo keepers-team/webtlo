@@ -90,11 +90,9 @@ class DB
     public static function create(Logger $logger, string $databaseDirname): DB|false
     {
         $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . DB::$databaseFilename;
-        if (!file_exists($databaseDirname)) {
-            if (!Utils::mkdir_recursive($databaseDirname)) {
-                $logger->emergency('Failed to create directory for database', ['dir' => $databaseDirname]);
-                return false;
-            }
+        if (file_exists($databasePath) && !is_writable($databasePath)) {
+            $logger->emergency("Database exists, but isn't writable", ['path' => $databasePath]);
+            return false;
         }
         try {
             $db = new PDO('sqlite:' . $databasePath);

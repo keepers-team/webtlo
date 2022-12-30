@@ -33,29 +33,6 @@ final class Utils
         return $result;
     }
 
-    public static function mkdir_recursive($path): bool
-    {
-        $return = false;
-        if (PHP_OS == 'WINNT') {
-            $winpath = mb_convert_encoding($path, 'Windows-1251', 'UTF-8');
-            if (is_writable($winpath) && is_dir($winpath)) {
-                return true;
-            }
-        }
-        if (is_writable($path) && is_dir($path)) {
-            return true;
-        }
-        $prev_path = dirname($path);
-        if ($path != $prev_path) {
-            $return = self::mkdir_recursive($prev_path);
-        }
-        if (PHP_OS == 'WINNT') {
-            $winprev_path = mb_convert_encoding($prev_path, 'Windows-1251', 'UTF-8');
-            return $return && is_writable($winprev_path) && !file_exists($winpath) && mkdir($winpath);
-        }
-        return $return && is_writable($prev_path) && !file_exists($path) && mkdir($path);
-    }
-
 
     public static function rmdir_recursive($path): bool
     {
