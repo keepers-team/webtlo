@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  php-cs-fixer:
+    name: Check code style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download php-cs-fixer
+        shell: bash
+        run: |
+          curl --fail -L https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v3.13.1/php-cs-fixer.phar -o php-cs-fixer
+          chmod a+x php-cs-fixer
+      - name: Run PHP CS Fixer
+        id: php-cs-fixer
+        shell: bash
+        run: |
+          ./php-cs-fixer fix --verbose --allow-risky=yes --dry-run --format=txt > ./result.txt
+          echo "::set-output name=result::$(cat ./result.txt)"
