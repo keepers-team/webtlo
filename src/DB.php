@@ -35,7 +35,7 @@ class DB
         return preg_match($mask, $value);
     }
 
-    public static function combine_set($set)
+    public function combine_set($set)
     {
         foreach ($set as $id => &$value) {
             $value = array_map(function ($e) {
@@ -64,11 +64,8 @@ class DB
     /**
      * объединение нескольких запросов на получение данных
      */
-    public static function unionQuery(array $source): bool|string
+    public function unionQuery(array $source): bool|string
     {
-        if (!is_array($source)) {
-            return false;
-        }
         $values = [];
         foreach ($source as &$row) {
             if (!is_array($row)) {
