@@ -110,4 +110,26 @@ final class Utils
         }
         return $ret;
     }
+
+    /**
+     * Get normalized path, like realpath() for non-existing path or file
+     *
+     * @param string $path path to be normalized
+     */
+    public static function normalizePath(string $path): string
+    {
+        return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function ($left, $right) {
+            if ($left === null) {
+                return $right;
+            }
+            if ($right === "" || $right === ".") {
+                return $left;
+            }
+            if ($right === "..") {
+                return dirname($left);
+            }
+            $pattern = sprintf("/\%s+/", DIRECTORY_SEPARATOR);
+            return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . DIRECTORY_SEPARATOR . $right);
+        });
+    }
 }

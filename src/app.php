@@ -11,15 +11,45 @@ use Monolog\Logger;
 use UMA\DIC\Container;
 use Comet\Comet;
 
-$webtlo_version = Utils::getVersion();
-$storage_dir = Storage::getStorageDir();
-$ini = new TIniFileEx($storage_dir);
-
-function configureLogger(string $name): Logger
+/**
+ * @return string Storage directory for application
+ */
+function configureStorage(): string
 {
-    $logsDirectory = Storage::getStorageDir() . DIRECTORY_SEPARATOR . "logs";
-    $logName = $logsDirectory . DIRECTORY_SEPARATOR . 'application.log';
-    Utils::mkdir_recursive($logsDirectory);
+    $directory = getenv('WEBTLO_DIR');
+    if ($directory === false) {
+        $directory = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . 'data';
+    }
+    $storage = Utils::normalizePath($directory);
+    if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
+        $error = "Can't create %s for storage";
+        die(sprintf($error, $storage));
+    }
+
+    if (file_exists($storage) && (!is_writable($storage) || !is_readable($storage))) {
+        $error = "Directory %s isn't writable and/or readable, exiting…";
+        die(sprintf($error, $storage));
+    }
+
+    return $storage;
+}
+
+/**
+ * Logger factory
+ *
+ * @param string $storage Storage for file-baked loggers
+ * @param string $name Logger name
+ * @return Logger
+ */
+function configureLogger(string $storage, string $name): Logger
+{
+    $logsDirectory = $storage . DIRECTORY_SEPARATOR . "logs";
+    $logName = $logsDirectory . DIRECTORY_SEPARATOR . $name . '.log';
+
+    if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
+        $error = "Can't create %s for logs";
+        die(sprintf($error, $logsDirectory));
+    }
 
     $dateFormat = "Y-m-d\TH:i:s";
     $output = "[%datetime%] %channel% %level_name%: %message% %context%\n";
@@ -31,19 +61,38 @@ function configureLogger(string $name): Logger
     return $logger;
 }
 
-function configureDatabase(): DB
+/**
+ * Configure database
+ *
+ * @param string $storage Storage for database
+ * @return DB
+ */
+function configureDatabase(string $storage): DB
 {
-    $logger = configureLogger('database');
-    $db = DB::create($logger, Storage::getStorageDir());
+    $logger = configureLogger($storage, 'database');
+    $db = DB::create($logger, $storage);
     if ($db === false) {
-        $logger->emergency('Unable to proceed with uninitialized database, exiting…');
-        exit(1);
+        die('Unable to proceed with uninitialized database, exiting…');
     }
     return $db;
 }
 
-$db = configureDatabase();
-$logger = configureLogger('webtlo');
+/**
+ * Configure application settings
+ *
+ * @param string $storage Storage for config
+ * @return TIniFileEx Half-baked settings handler
+ */
+function configureSettings(string $storage): TIniFileEx
+{
+    return new TIniFileEx($storage);
+}
+
+$webtlo_version = Utils::getVersion();
+$storage = configureStorage();
+$logger = configureLogger($storage, 'application');
+$db = configureDatabase($storage);
+$ini = configureSettings($storage);
 
 $container = new Container([
     'webtlo_version' => $webtlo_version,
