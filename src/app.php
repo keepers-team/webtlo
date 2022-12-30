@@ -13,7 +13,6 @@ use Comet\Comet;
 
 $webtlo_version = Utils::getVersion();
 $storage_dir = Storage::getStorageDir();
-$db = new DB($storage_dir);
 $ini = new TIniFileEx($storage_dir);
 
 function configureLogger(string $name): Logger
@@ -32,6 +31,18 @@ function configureLogger(string $name): Logger
     return $logger;
 }
 
+function configureDatabase(): DB
+{
+    $logger = configureLogger('database');
+    $db = DB::create($logger, Storage::getStorageDir());
+    if ($db === false) {
+        $logger->emergency('Unable to proceed with uninitialized database, exiting…');
+        exit(1);
+    }
+    return $db;
+}
+
+$db = configureDatabase();
 $logger = configureLogger('webtlo');
 
 $container = new Container([
