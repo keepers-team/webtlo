@@ -28,6 +28,7 @@
         "phpxmlrpc/polyfill-xmlrpc": "1.0.0-rc1",
         "gotzmann/comet": "dev-master#7bb200f664e59caf2c99eeaa4f5da2c38d212ebf",
         "monolog/monolog": "^3.2",
+        "splitbrain/php-cli": "^1.2",
         "uma/dic": "^3.0"
     }
 }
