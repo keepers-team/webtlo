@@ -20,10 +20,10 @@ class CLI extends PSR3CLIv3
       \_/\_/ \___||____/  |_|  |____| \___/ 
     ";
 
-    private function wrapDefaults(string $value): string
+    private function wrapDefaults(string $value, string $color): string
     {
         if ($this->colors->isEnabled()) {
-            return $this->colors->wrap($value, Colors::C_CYAN);
+            return $this->colors->wrap($value, $color);
         } else {
             return $value;
         }
@@ -52,21 +52,21 @@ class CLI extends PSR3CLIv3
         $options->registerCommand('start', 'Start webTLO application');
         $this->options->registerOption(
             'host',
-            'Host (interface) to bind on. Default is ' . $this->wrapDefaults(self::$HOST),
+            "Host (interface) to bind on. Default is {$this->wrapDefaults(self::$HOST, Colors::C_CYAN)}",
             'h',
             'address',
             'start'
         );
         $this->options->registerOption(
             'port',
-            'Port to bind on. Default is ' . $this->wrapDefaults(self::$PORT),
+            "Port to bind on. Default is {$this->wrapDefaults(self::$PORT, Colors::C_CYAN)}",
             'p',
             'port',
             'start'
         );
         $this->options->registerOption(
             'workers',
-            'How many workers to spawn. Default is ' . $this->wrapDefaults(self::$WORKERS),
+            "How many workers to spawn. Default is {$this->wrapDefaults(self::$WORKERS, Colors::C_CYAN)}",
             'w',
             'workers',
             'start'
