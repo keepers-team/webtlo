@@ -3,7 +3,7 @@
 namespace KeepersTeam\Webtlo;
 
 use Exception;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use PDO;
 use PDOException;
 
@@ -83,11 +83,11 @@ class DB
         return 'SELECT ' . implode(' UNION ALL SELECT ', $values);
     }
 
-    private function __construct(private readonly Logger $logger, private readonly PDO $db)
+    private function __construct(private readonly LoggerInterface $logger, private readonly PDO $db)
     {
     }
 
-    public static function create(Logger $logger, string $databaseDirname): DB|false
+    public static function create(LoggerInterface $logger, string $databaseDirname): DB|false
     {
         $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . DB::$databaseFilename;
         if (file_exists($databasePath) && !is_writable($databasePath)) {
@@ -110,7 +110,7 @@ class DB
         }
     }
 
-    public static function migrate(Logger $logger, string $databaseDirname): bool
+    public static function migrate(LoggerInterface $logger, string $databaseDirname): bool
     {
         // FIXME: Add proper migration
         return false;

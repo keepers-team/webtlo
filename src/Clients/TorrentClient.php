@@ -3,7 +3,7 @@
 namespace KeepersTeam\Webtlo\Clients;
 
 use CurlHandle;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class TorrentClient
@@ -19,12 +19,12 @@ abstract class TorrentClient
     protected string $password;
     protected string $sid;
     protected CurlHandle $ch;
-    protected Logger $logger;
+    protected LoggerInterface $logger;
 
     /**
      * default constructor
      */
-    public function __construct(Logger $logger, bool $ssl, string $host, int $port, string $login = '', string $password = '')
+    public function __construct(LoggerInterface $logger, bool $ssl, string $host, int $port, string $login = '', string $password = '')
     {
         $this->scheme = $ssl ? 'https' : 'http';
         $this->host = $host;
