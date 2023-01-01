@@ -45,24 +45,27 @@ final class ApplicationFactory
      *
      * @param string $storage Storage for file-baked loggers
      * @param string $name Logger name
+     * @param bool $useFileLogging Whether to log event to files
      * @return LoggerInterface
      */
-    private function configureLogger(string $storage, string $name): LoggerInterface
+    private function configureLogger(string $storage, string $name, bool $useFileLogging): LoggerInterface
     {
-        $logsDirectory = $storage . DIRECTORY_SEPARATOR . "logs";
-        $logName = $logsDirectory . DIRECTORY_SEPARATOR . $name . '.log';
-
-        if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
-            $this->logger->emergency("Can't create logs storage", [$logsDirectory]);
-            exit(1);
-        }
-
+        $daysRetention = 30;
         $dateFormat = "Y-m-d\TH:i:s";
         $output = "[%datetime%] %channel% %level_name%: %message% %context%\n";
         $formatter = new LineFormatter($output, $dateFormat, false, true);
-
         $logger = new Logger($name);
-        $logger->pushHandler((new RotatingFileHandler($logName, 30))->setFormatter($formatter));
+
+        if ($useFileLogging) {
+            $logsDirectory = $storage . DIRECTORY_SEPARATOR . "logs";
+            $logName = $logsDirectory . DIRECTORY_SEPARATOR . $name . '.log';
+
+            if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
+                $this->logger->emergency("Can't create logs storage", [$logsDirectory]);
+                exit(1);
+            }
+            $logger->pushHandler((new RotatingFileHandler($logName, $daysRetention))->setFormatter($formatter));
+        }
         $logger->pushHandler((new StreamHandler('php://stdout'))->setFormatter($formatter));
         return $logger;
     }
@@ -73,9 +76,8 @@ final class ApplicationFactory
      * @param string $storage Storage for database
      * @return DB
      */
-    private function configureDatabase(string $storage): DB
+    private function configureDatabase(string $storage, LoggerInterface $logger): DB
     {
-        $logger = self::configureLogger($storage, 'database');
         $db = DB::create($logger, $storage);
         if ($db === false) {
             $this->logger->emergency("Unable to proceed with uninitialized database, exiting…");
@@ -130,21 +132,23 @@ final class ApplicationFactory
      * @param int $port Port to bind on
      * @param int $workers How many workers to spawn
      * @param bool $debug Run application in debug mode
+     * @param bool $useFileLogging Whether to log event to files
      * @return Comet Application
      */
-    public function create(string $host, int $port, int $workers, bool $debug): Comet
+    public function create(string $host, int $port, int $workers, bool $debug, bool $useFileLogging): Comet
     {
         $webtlo_version = Utils::getVersion();
         $storage = self::configureStorage();
-        $logger = self::configureLogger($storage, 'application');
-        $db = self::configureDatabase($storage);
+        $appLogger = self::configureLogger($storage, 'application', $useFileLogging);
+        $dbLogger = self::configureLogger($storage, 'database', $useFileLogging);
+        $db = self::configureDatabase($storage, $dbLogger);
         $ini = self::configureSettings($storage);
 
         $container = new Container([
             'webtlo_version' => $webtlo_version,
             'db' => $db,
             'ini' => $ini,
-            'logger' => $logger
+            'logger' => $appLogger
         ]);
 
         $app = new Comet([
@@ -152,11 +156,11 @@ final class ApplicationFactory
             'port' => $port,
             'workers' => $workers,
             'debug' => $debug,
-            'logger' => $logger,
+            'logger' => $appLogger,
             'container' => $container,
         ]);
 
-        $this->configureMiddleware($app, $logger);
+        $this->configureMiddleware($app, $appLogger);
         $this->configureRoutes($app);
         return $app;
     }

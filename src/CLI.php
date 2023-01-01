@@ -41,7 +41,7 @@ class CLI extends PSR3CLIv3
         $options->setCommandHelp("Use one of this commands");
         $options->useCompactHelp();
 
-        $options->registerOption('filelog', 'Whether to log event to files.', 'f');
+        $options->registerOption('no-filelog', 'Do not log events to files.');
         $this->options->registerOption(
             'debug',
             'Run application in debug mode.',
@@ -88,12 +88,14 @@ class CLI extends PSR3CLIv3
         switch ($options->getCmd()) {
             case 'start':
                 $factory = new ApplicationFactory($this);
+                $useFileLogging = !$options->getOpt('no-filelog');
                 $this->success('Starting webTLO…');
                 $app = $factory->create(
                     (string)$options->getOpt('host', self::$HOST),
                     (int)$options->getOpt('port', self::$PORT),
                     (int)$options->getOpt('workers', self::$WORKERS),
                     $options->getOpt('debug', self::$DEBUG),
+                    $useFileLogging,
                 );
                 $app->run();
                 exit;
