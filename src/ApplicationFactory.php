@@ -18,29 +18,6 @@ final class ApplicationFactory
     }
 
     /**
-     * @return string Storage directory for application
-     */
-    private function configureStorage(): string
-    {
-        $directory = getenv('WEBTLO_DIR');
-        if ($directory === false) {
-            $directory = __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . 'data';
-        }
-        $storage = Utils::normalizePath($directory);
-        if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
-            $this->logger->emergency("Can't create application storage", [$storage]);
-            exit(1);
-        }
-
-        if (file_exists($storage) && (!is_writable($storage) || !is_readable($storage))) {
-            $this->logger->emergency("Storage directory isn't writable and/or readable, exiting…", [$storage]);
-            exit(1);
-        }
-
-        return $storage;
-    }
-
-    /**
      * Logger factory
      *
      * @param string $storage Storage for file-baked loggers
@@ -61,7 +38,7 @@ final class ApplicationFactory
             $logName = $logsDirectory . DIRECTORY_SEPARATOR . $name . '.log';
 
             if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
-                $this->logger->emergency("Can't create logs storage", [$logsDirectory]);
+                $this->logger->emergency(sprintf("Can't create logs storage at %s", $logsDirectory));
                 exit(1);
             }
             $logger->pushHandler((new RotatingFileHandler($logName, $daysRetention))->setFormatter($formatter));
@@ -133,12 +110,12 @@ final class ApplicationFactory
      * @param int $workers How many workers to spawn
      * @param bool $debug Run application in debug mode
      * @param bool $useFileLogging Whether to log event to files
+     * @param string $storage Storage directory for application
      * @return Comet Application
      */
-    public function create(string $host, int $port, int $workers, bool $debug, bool $useFileLogging): Comet
+    public function create(string $host, int $port, int $workers, bool $debug, bool $useFileLogging, string $storage): Comet
     {
         $webtlo_version = Utils::getVersion();
-        $storage = self::configureStorage();
         $appLogger = self::configureLogger($storage, 'application', $useFileLogging);
         $dbLogger = self::configureLogger($storage, 'database', $useFileLogging);
         $db = self::configureDatabase($storage, $dbLogger);
