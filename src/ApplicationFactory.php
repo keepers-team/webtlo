@@ -23,9 +23,10 @@ final class ApplicationFactory
      * @param string $storage Storage for file-baked loggers
      * @param string $name Logger name
      * @param bool $useFileLogging Whether to log event to files
+     * @param string $logLevel Logging level
      * @return LoggerInterface
      */
-    private function configureLogger(string $storage, string $name, bool $useFileLogging): LoggerInterface
+    private function configureLogger(string $storage, string $name, bool $useFileLogging, string $logLevel): LoggerInterface
     {
         $daysRetention = 30;
         $dateFormat = "Y-m-d\TH:i:s";
@@ -41,9 +42,9 @@ final class ApplicationFactory
                 $this->logger->emergency(sprintf("Can't create logs storage at %s", $logsDirectory));
                 exit(1);
             }
-            $logger->pushHandler((new RotatingFileHandler($logName, $daysRetention))->setFormatter($formatter));
+            $logger->pushHandler((new RotatingFileHandler($logName, $daysRetention, $logLevel))->setFormatter($formatter));
         }
-        $logger->pushHandler((new StreamHandler('php://stdout'))->setFormatter($formatter));
+        $logger->pushHandler((new StreamHandler('php://stdout', $logLevel))->setFormatter($formatter));
         return $logger;
     }
 
@@ -108,16 +109,16 @@ final class ApplicationFactory
      * @param string $host Host (interface) to bind on
      * @param int $port Port to bind on
      * @param int $workers How many workers to spawn
-     * @param bool $debug Run application in debug mode
+     * @param string $logLevel Logging level
      * @param bool $useFileLogging Whether to log event to files
      * @param string $storage Storage directory for application
      * @return Comet Application
      */
-    public function create(string $host, int $port, int $workers, bool $debug, bool $useFileLogging, string $storage): Comet
+    public function create(string $host, int $port, int $workers, bool $useFileLogging, string $logLevel, string $storage): Comet
     {
         $webtlo_version = Utils::getVersion();
-        $appLogger = self::configureLogger($storage, 'application', $useFileLogging);
-        $dbLogger = self::configureLogger($storage, 'database', $useFileLogging);
+        $appLogger = self::configureLogger($storage, 'application', $useFileLogging, $logLevel);
+        $dbLogger = self::configureLogger($storage, 'database', $useFileLogging, $logLevel);
         $db = self::configureDatabase($storage, $dbLogger);
         $ini = self::configureSettings($storage);
 
@@ -132,7 +133,6 @@ final class ApplicationFactory
             'host' => $host,
             'port' => $port,
             'workers' => $workers,
-            'debug' => $debug,
             'logger' => $appLogger,
             'container' => $container,
         ]);

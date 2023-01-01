@@ -12,7 +12,6 @@ class CLI extends PSR3CLIv3
     private static string $HOST = '0.0.0.0';
     private static int $PORT = 8080;
     private static int $WORKERS = 4;
-    private static bool $DEBUG = false;
     private static string $DIR = 'data';
     private static string $LOGO = "
                    _     _____  _      ___  
@@ -42,45 +41,39 @@ class CLI extends PSR3CLIv3
         $options->setCommandHelp("Use one of this commands");
         $options->useCompactHelp();
 
-        $options->registerOption('no-filelog', 'Do not log events to files.');
-        $this->options->registerOption(
-            'debug',
-            'Run application in debug mode.',
-            'd',
+        $options->registerOption(
+            'no-filelog',
+            'Do not log events to files. Useful to run inside containers and/or with external logs aggregation.',
+            'n'
+        );
+        $options->registerOption(
+            'storage',
+            "Storage directory for webTLO. Default is {$this->wrapDefaults(self::$DIR, Colors::C_CYAN)} (relative to {$this->wrapDefaults($this->options->getBin(), Colors::C_BROWN)})",
+            's',
+            'storage',
         );
 
         // For webserver
         $options->registerCommand('start', 'Start webTLO application');
-        $this->options->registerOption(
+        $options->registerOption(
             'host',
             "Host (interface) to bind on. Default is {$this->wrapDefaults(self::$HOST, Colors::C_CYAN)}",
             'h',
             'address',
             'start'
         );
-        $this->options->registerOption(
+        $options->registerOption(
             'port',
             "Port to bind on. Default is {$this->wrapDefaults(self::$PORT, Colors::C_CYAN)}",
             'p',
             'port',
             'start'
         );
-        $this->options->registerOption(
+        $options->registerOption(
             'workers',
             "How many workers to spawn. Default is {$this->wrapDefaults(self::$WORKERS, Colors::C_CYAN)}",
             'w',
             'workers',
-            'start'
-        );
-        $this->options->registerOption(
-            'storage',
-            (
-                "Work in specified storage directory for database, logs, configuration and vice versa.\n" .
-                "If not set, value from {$this->wrapDefaults('WEBTLO_DIR', Colors::C_CYAN)} environment variable is used.\n" .
-                "As default fallback used {$this->wrapDefaults(self::$DIR, Colors::C_CYAN)} (relative to {$this->wrapDefaults($this->options->getBin(), Colors::C_BROWN)})"
-            ),
-            'd',
-            'storage',
             'start'
         );
 
@@ -94,7 +87,7 @@ class CLI extends PSR3CLIv3
      */
     private function getStorage(Options $options): string
     {
-        $directory = $options->getOpt('storage') ?: getenv('WEBTLO_DIR') ?: self::$DIR;
+        $directory = $options->getOpt('storage', self::$DIR);
         $storage = Utils::normalizePath($directory);
         if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
             $this->emergency(sprintf("Can't create application storage at %s", $storage));
@@ -109,6 +102,50 @@ class CLI extends PSR3CLIv3
         return $storage;
     }
 
+    private function getHost(Options $options): string
+    {
+        $host = $options->getOpt('host', self::$HOST);
+        if (!filter_var($host, FILTER_VALIDATE_IP)) {
+            $this->emergency(sprintf("%s doesn't looks like valid IP, exiting…", $host));
+            exit(1);
+        }
+        return $host;
+    }
+
+    private function getPort(Options $options): int
+    {
+        $rawPort = $options->getOpt('port', self::$PORT);
+        if (!filter_var($rawPort, FILTER_SANITIZE_NUMBER_INT)) {
+            $this->emergency(sprintf("%s doesn't looks like a port number, exiting…", $rawPort));
+            exit(1);
+        }
+        $port = (int)$rawPort;
+        $minPort = 0;
+        $maxPort = 2 << 15;
+        if ($minPort >= $port || $port >= $maxPort) {
+            $this->emergency(sprintf("Got port %d, but it should be between %d and %d, exiting…", $port, $minPort, $maxPort));
+            exit(1);
+        }
+        return $port;
+    }
+
+    private function getWorkers(Options $options): int
+    {
+        $rawWorkers = $options->getOpt('workers', self::$WORKERS);
+        if (!filter_var($rawWorkers, FILTER_SANITIZE_NUMBER_INT)) {
+            $this->emergency(sprintf("%s doesn't looks like a correct workers count, exiting…", $rawWorkers));
+            exit(1);
+        }
+        $workers = (int)$rawWorkers;
+        $minWorkers = 0;
+        $maxWorkers = 2 << 4;
+        if ($minWorkers >= $workers || $workers > $maxWorkers) {
+            $this->emergency(sprintf("It's unreasonable to set %d workers — it should be between %d and %d; exiting…", $workers, $minWorkers, $maxWorkers));
+            exit(1);
+        }
+        return $workers;
+    }
+
     /**
      * Main program
      *
@@ -118,20 +155,17 @@ class CLI extends PSR3CLIv3
     protected function main(Options $options): never
     {
         $storage = $this->getStorage($options);
+        $logLevel = $this->options->getOpt('loglevel', $this->logdefault);
 
         switch ($options->getCmd()) {
             case 'start':
-                $factory = new ApplicationFactory($this);
+                $host = $this->getHost($options);
+                $port = $this->getPort($options);
+                $workers = $this->getWorkers($options);
                 $useFileLogging = !$options->getOpt('no-filelog');
+
+                $app = (new ApplicationFactory($this))->create($host, $port, $workers, $useFileLogging, $logLevel, $storage);
                 $this->success('Starting webTLO…');
-                $app = $factory->create(
-                    (string)$options->getOpt('host', self::$HOST),
-                    (int)$options->getOpt('port', self::$PORT),
-                    (int)$options->getOpt('workers', self::$WORKERS),
-                    $options->getOpt('debug', self::$DEBUG),
-                    $useFileLogging,
-                    $storage
-                );
                 $app->run();
                 exit;
             case 'migrate':
