@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class LegacyRouter
 {
     private ContainerInterface $container;
+    /* @phpstan-ignore-next-line */
     private LoggerInterface $logger;
     private DB $db;
 
@@ -22,6 +23,7 @@ class LegacyRouter
         . DIRECTORY_SEPARATOR . 'index.php'
     );
 
+    /* @phpstan-ignore-next-line */
     private static string $legacyActionsPath = (
         __DIR__
         . DIRECTORY_SEPARATOR . '..'

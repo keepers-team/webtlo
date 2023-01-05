@@ -8,3 +8,4 @@ parameters:
   ignoreErrors:
     - '#Call to an undefined method Comet\\Comet::[a-zA-Z0-9\\_]+\(\)#'
     - '#Call to an undefined method Psr\\Http\\Message\\ResponseInterface::with\(\)#'
+  reportUnmatchedIgnoredErrors: false
