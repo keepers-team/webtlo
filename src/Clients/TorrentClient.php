@@ -1,60 +1,30 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Clients;
+
+use CurlHandle;
+use Monolog\Logger;
+
 /**
  * Class TorrentClient
  * Базовый класс для всех торрент-клиентов
  */
 abstract class TorrentClient
 {
-    /**
-     * @var string
-     */
-    protected static $base;
-
-    /**
-     * @var string
-     */
-    protected $scheme;
-
-    /**
-     * @var string
-     */
-    protected $host;
-
-    /**
-     * @var string
-     */
-    protected $port;
-
-    /**
-     * @var string
-     */
-    protected $login;
-
-    /**
-     * @var string
-     */
-    protected $password;
-
-    /**
-     * @var string Session ID, полученный от торрент-клиента
-     */
-    protected $sid;
-
-    /**
-     * @var CurlHandle
-     */
-    protected $ch;
+    protected static string $base;
+    protected string $scheme;
+    protected string $host;
+    protected int $port;
+    protected string $login;
+    protected string $password;
+    protected string $sid;
+    protected CurlHandle $ch;
+    protected Logger $logger;
 
     /**
      * default constructor
-     * @param bool|int $ssl
-     * @param string $host
-     * @param string $port
-     * @param string $login
-     * @param string $password
      */
-    public function __construct($ssl, $host, $port, $login = '', $password = '')
+    public function __construct(Logger $logger, bool $ssl, string $host, int $port, string $login = '', string $password = '')
     {
         $this->scheme = $ssl ? 'https' : 'http';
         $this->host = $host;
@@ -62,79 +32,77 @@ abstract class TorrentClient
         $this->login = $login;
         $this->password = $password;
         $this->ch = curl_init();
+        $this->logger = $logger;
     }
 
     /**
      * проверка доступен торрент-клиент или нет
-     * @return bool
      */
-    public function isOnline()
+    public function isOnline(): bool
     {
         return $this->getSID();
     }
 
     /**
+     * получение идентификатора сессии и запись его в $this->sid
+     * @return bool true в случе успеха, false в случае неудачи
+     */
+    abstract protected function getSID(): bool;
+
+    /**
      * установка пользовательских параметров для cURL
      * в функции makeRequest()
-     * @param array $options
      */
-    public function setUserConnectionOptions($options)
+    public function setUserConnectionOptions(array $options): void
     {
         curl_setopt_array($this->ch, $options);
     }
 
     /**
      * получение сведений о раздачах от торрент-клиента
-     * @return bool|array
      * array[torrentHash] => (comment, done, error, name, paused, time_added, total_size, tracker_error)
      */
-    abstract public function getAllTorrents();
+    abstract public function getAllTorrents(): array|false;
 
     /**
      * добавить торрент
      * @param string $torrentFilePath полный локальный путь до .torrent файла включая его имя
      * @param string $savePath полный путь до каталога куда сохранять загружаемые данные
-     * @return bool|mixed
      */
-    abstract public function addTorrent($torrentFilePath, $savePath = '');
+    abstract public function addTorrent(string $torrentFilePath, string $savePath = ''): bool;
 
     /**
      * установка метки у раздач перечисленных в $torrentHashes
      * @param array $torrentHashes хэши раздач
      * @param string $labelName имя метки
-     * @return bool|mixed
      */
-    abstract public function setLabel($torrentHashes, $labelName = '');
+    abstract public function setLabel(array $torrentHashes, string $labelName = ''): bool;
 
     /**
      * запуск раздач перечисленных в $torrentHashes
      * @param array $torrentHashes хэши раздач
      * @param bool $forceStart принудительный запуск
-     * @return bool|mixed
      */
-    abstract public function startTorrents($torrentHashes, $forceStart = false);
+    abstract public function startTorrents(array $torrentHashes, bool $forceStart = false): bool;
 
     /**
      * остановка раздач перечисленных в $torrentHashes
      * @param array $torrentHashes хэши раздач
-     * @return bool|mixed
      */
-    abstract public function stopTorrents($torrentHashes);
+    abstract public function stopTorrents(array $torrentHashes): bool;
 
     /**
      * удаление раздач перечисленных в $torrentHashes
      * @param array $torrentHashes хэши раздач
      * @param bool $deleteFiles удалить раздачу вместе с данными
-     * @return bool|mixed
      */
-    abstract public function removeTorrents($torrentHashes, $deleteFiles = false);
+    abstract public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool;
 
     /**
      * перепроверить локальные данные раздач (unused)
      * @param array $torrentHashes
-     * @return bool|mixed
      */
-    abstract public function recheckTorrents($torrentHashes);
+    abstract public function recheckTorrents(array $torrentHashes): bool;
 
     /**
      * default destructor
