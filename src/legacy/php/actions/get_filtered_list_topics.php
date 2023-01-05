@@ -1,34 +1,41 @@
 <?php
 
-try {
-    include_once dirname(__FILE__) . '/../common.php';
+use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Utils;
+use Psr\Log\LoggerInterface;
 
-    if (isset($_POST['forum_id'])) {
-        $forum_id = $_POST['forum_id'];
+function _getFilteredListTopics(object $json, array $cfg, DB $db, LoggerInterface $logger): array
+{
+    if (isset($json->forum_id)) {
+        $forum_id = $json->forum_id;
+    } else {
+        $error = "No subforum identifier in request";
+        $logger->error($error, ['json' => $json]);
+        return ['success' => false, 'response' => $error];
     }
 
-    if (
-        !isset($forum_id)
-        || !is_numeric($forum_id)
-    ) {
-        throw new Exception('Некорректный идентификатор подраздела: ' . $forum_id);
+    if (!is_numeric($forum_id)) {
+        $error = "Malformed subforum identifier";
+        $logger->error($error, ['forum_id' => $forum_id]);
+        return ['success' => false, 'response' => $error];
     }
-
-    // получаем настройки
-    $cfg = get_settings();
 
     // кодировка для regexp
     mb_regex_encoding('UTF-8');
 
     // парсим параметры фильтра
-    parse_str($_POST['filter'], $filter);
+    parse_str($json->filter, $filter);
 
     if (!isset($filter['filter_sort'])) {
-        throw new Exception('Не выбрано поле для сортировки');
+        $error = "There is no field to sort";
+        $logger->error($error, ['forum_id' => $forum_id]);
+        return ['success' => false, 'response' => $error];
     }
 
     if (!isset($filter['filter_sort_direction'])) {
-        throw new Exception('Не выбрано направление сортировки');
+        $error = "There is no direction to sort";
+        $logger->error($error, ['forum_id' => $forum_id]);
+        return ['success' => false, 'response' => $error];
     }
 
     // 0 - из других подразделов
@@ -56,7 +63,7 @@ try {
 
     if ($forum_id == 0) {
         // сторонние раздачи
-        $topics = Db::query_database(
+        $topics = $db->query_database(
             'SELECT
                 TopicsUntracked.id,
                 TopicsUntracked.hs,
@@ -72,7 +79,7 @@ try {
             [],
             true
         );
-        $forumsTitles = Db::query_database(
+        $forumsTitles = $db->query_database(
             "SELECT
                 id,
                 na
@@ -83,7 +90,7 @@ try {
             PDO::FETCH_KEY_PAIR
         );
         // сортировка раздач
-        $topics = natsort_field(
+        $topics = Utils::natsort_field(
             $topics,
             $filter['filter_sort'],
             $filter['filter_sort_direction']
@@ -122,7 +129,7 @@ try {
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
-                    convert_bytes($topic_data['si']),
+                    Utils::convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     $topic_data['se']
                 ),
@@ -134,7 +141,7 @@ try {
         $output = implode('', $preparedOutput);
     } elseif ($forum_id == -1) {
         // незарегистрированные раздачи
-        $topics = Db::query_database(
+        $topics = $db->query_database(
             'SELECT
                 Torrents.topic_id,
                 CASE WHEN TopicsUnregistered.name IS "" OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
@@ -185,7 +192,7 @@ try {
                     $topic['topic_id'],
                     $topic['name'],
                     $topic['total_size'],
-                    convert_bytes($topic['total_size']),
+                    Utils::convert_bytes($topic['total_size']),
                     date('d.m.Y', $topic['time_added']),
                     '',
                     'text-success',
@@ -201,7 +208,7 @@ try {
         // находим значение за последний день
         $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
         // чёрный список
-        $topics = Db::query_database(
+        $topics = $db->query_database(
             'SELECT
                 Topics.id,
                 Topics.hs,
@@ -218,7 +225,7 @@ try {
             true
         );
         // сортировка раздач
-        $topics = natsort_field(
+        $topics = Utils::natsort_field(
             $topics,
             $filter['filter_sort'],
             $filter['filter_sort_direction']
@@ -245,7 +252,7 @@ try {
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
-                    convert_bytes($topic_data['si']),
+                    Utils::convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'])
                 ),
@@ -261,10 +268,12 @@ try {
         $statementLeftJoin = [];
         if ($cfg['avg_seeders']) {
             if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+                $error = "Incorrect value for period to compute mean seeders";
+                $logger->error($error, ['avg_seeders_period' => $filter['avg_seeders_period']]);
+                return ['success' => false, 'response' => $error];
             }
             $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
+            $filter['avg_seeders_period'] = min($filter['avg_seeders_period'], 30);
             for ($dayNumber = 0; $dayNumber < $filter['avg_seeders_period']; $dayNumber++) {
                 $statementTotal['seeders'][] = 'CASE WHEN d' . $dayNumber . ' IS "" OR d' . $dayNumber . ' IS NULL THEN 0 ELSE d' . $dayNumber . ' END';
                 $statementTotal['updates'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE q' . $dayNumber . ' END';
@@ -297,8 +306,8 @@ try {
             ',' . implode(',', $statementFields),
             ' ' . implode(' ', $statementLeftJoin)
         );
-        $topicsData = Db::query_database($statement, [], true);
-        $topicsData = natsort_field(
+        $topicsData = $db->query_database($statement, [], true);
+        $topicsData = Utils::natsort_field(
             $topicsData,
             $filter['filter_sort'],
             $filter['filter_sort_direction']
@@ -329,7 +338,7 @@ try {
                 FROM Torrents
                 WHERE info_hash = ?
                 ORDER BY client_id';
-            $listTorrentClientsIDs = Db::query_database(
+            $listTorrentClientsIDs = $db->query_database(
                 $statement,
                 [$topicData['hs']],
                 true
@@ -373,7 +382,7 @@ try {
                     $topicData['id'],
                     $topicData['na'],
                     $topicData['si'],
-                    convert_bytes($topicData['si']),
+                    Utils::convert_bytes($topicData['si']),
                     date('d.m.Y', $topicData['rg']),
                     round($topicData['se']),
                     $stateAverageSeeders,
@@ -390,47 +399,63 @@ try {
         // все хранимые раздачи
         // не выбраны статусы раздач
         if (empty($filter['filter_tracker_status'])) {
-            throw new Exception('Не выбраны статусы раздач для трекера');
+            $error = "No statuses to filter";
+            $logger->error($error, []);
+            return ['success' => false, 'response' => $error];
         }
 
         if (empty($filter['keeping_priority'])) {
             if ($forum_id == -5) {
                 $filter['keeping_priority'] = [2];
             } else {
-                throw new Exception('Не выбраны приоритеты раздач для трекера');
+                $error = "No priorities to filter";
+                $logger->error($error, []);
+                return ['success' => false, 'response' => $error];
             }
         }
 
         if (empty($filter['filter_client_status'])) {
-            throw new Exception('Не выбраны статусы раздач для торрент-клиента');
+            $error = "No statuses to filter in torrent-client";
+            $logger->error($error, []);
+            return ['success' => false, 'response' => $error];
         }
 
         // некорретный ввод значения сидов или количества хранителей
         $filters_hints = [
-            "filter_rule_interval" => "сидов",
-            "keepers_filter_rule_interval" => "количества хранителей",
+            "filter_rule_interval",
+            "keepers_filter_rule_interval",
         ];
-        foreach ($filters_hints as $filter_name => $hint) {
+        foreach ($filters_hints as $filter_name) {
             if (isset($filter['filter_interval']) || $filter_name == "keepers_filter_rule_interval") {
                 if (
                     !is_numeric($filter[$filter_name]['from'])
                     || !is_numeric($filter[$filter_name]['to'])
                 ) {
-                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
+                    $error = "Malformed value for filter";
+                    $logger->error($error, ['name' => $filter_name, 'value' => $filter[$filter_name]]);
+                    return ['success' => false, 'response' => $error];
                 }
                 if ($filter[$filter_name]['from'] < 0 || $filter[$filter_name]['to'] < 0) {
-                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
+                    $error = "Value should be > 0";
+                    $logger->error($error, ['name' => $filter_name, 'value' => $filter[$filter_name]]);
+                    return ['success' => false, 'response' => $error];
                 }
                 if ($filter[$filter_name]['from'] > $filter[$filter_name]['to']) {
-                    throw new Exception('Начальное значение ' . $hint . ' в фильтре должно быть меньше или равно конечному значению');
+                    $error = "Starting value for filter should be greater or equal to ending one";
+                    $logger->error($error, ['name' => $filter_name, 'value' => $filter[$filter_name]]);
+                    return ['success' => false, 'response' => $error];
                 }
             } else {
                 if (!is_numeric($filter['filter_rule'])) {
-                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
+                    $error = "Malformed value for filter";
+                    $logger->error($error, ['name' => 'filter_rule', 'value' => $filter['filter_rule']]);
+                    return ['success' => false, 'response' => $error];
                 }
 
                 if ($filter['filter_rule'] < 0) {
-                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
+                    $error = "Value should be > 0";
+                    $logger->error($error, ['name' => 'filter_rule', 'value' => $filter['filter_rule']]);
+                    return ['success' => false, 'response' => $error];
                 }
             }
         }
@@ -438,14 +463,16 @@ try {
         // некорректная дата
         $date_release = DateTime::createFromFormat('d.m.Y', $filter['filter_date_release']);
         if (!$date_release) {
-            throw new Exception('В фильтре введена некорректная дата создания релиза');
+            $error = "Malformed date for release";
+            $logger->error($error, ['date_release' => $filter['filter_date_release']]);
+            return ['success' => false, 'response' => $error];
         }
 
         // хранимые подразделы
         if ($forum_id > 0) {
             $forumsIDs = [$forum_id];
         } elseif ($forum_id == -5) {
-            $forumsIDs = Db::query_database(
+            $forumsIDs = $db->query_database(
                 'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
                 [],
                 true,
@@ -529,11 +556,13 @@ try {
         if ($cfg['avg_seeders']) {
             // некорректный период средних сидов
             if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+                $error = "Incorrect value for period to compute mean seeders";
+                $logger->error($error, ['avg_seeders_period' => $filter['avg_seeders_period']]);
+                return ['success' => false, 'response' => $error];
             }
             // жёсткое ограничение на 30 дней для средних сидов
             $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
+            $filter['avg_seeders_period'] = min($filter['avg_seeders_period'], 30);
             for ($i = 0; $i < $filter['avg_seeders_period']; $i++) {
                 $avg['sum_se'][] = 'CASE WHEN d' . $i . ' IS "" OR d' . $i . ' IS NULL THEN 0 ELSE d' . $i . ' END';
                 $avg['sum_qt'][] = 'CASE WHEN q' . $i . ' IS "" OR q' . $i . ' IS NULL THEN 0 ELSE q' . $i . ' END';
@@ -569,7 +598,7 @@ try {
         $forumsIDsChunks = array_chunk($forumsIDs, 499);
         $keepers = [];
         foreach ($forumsIDsChunks as $forumsIDsChunk) {
-            $keepers += Db::query_database(
+            $keepers += $db->query_database(
                 'SELECT k.id,k.nick,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding FROM (
                     SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
                     LEFT JOIN Keepers ON Topics.id = Keepers.id
@@ -593,7 +622,7 @@ try {
         );
 
         // из базы
-        $topics = Db::query_database(
+        $topics = $db->query_database(
             $statement,
             array_merge(
                 $forumsIDs,
@@ -603,7 +632,7 @@ try {
         );
 
         // сортировка раздач
-        $topics = natsort_field(
+        $topics = Utils::natsort_field(
             $topics,
             $filter['filter_sort'],
             $filter['filter_sort_direction']
@@ -758,7 +787,7 @@ try {
                     $topic_data['id'],
                     $topic_data['na'],
                     $topic_data['si'],
-                    convert_bytes($topic_data['si']),
+                    Utils::convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
                     $bullet,
@@ -769,17 +798,13 @@ try {
         }
     }
 
-    echo json_encode([
-        'log' => '',
-        'topics' => $output,
-        'size' => $filtered_topics_size,
-        'count' => $filtered_topics_count,
-    ]);
-} catch (Exception $e) {
-    echo json_encode([
-        'log' => $e->getMessage(),
-        'topics' => null,
-        'size' => 0,
-        'count' => 0,
-    ]);
+    return
+        [
+            'success' => true,
+            'response' => [
+                'topics' => $output,
+                'size' => $filtered_topics_size,
+                'count' => $filtered_topics_count,
+            ]
+        ];
 }

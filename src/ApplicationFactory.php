@@ -87,6 +87,7 @@ final class ApplicationFactory
 
         $app->group('/api/v0', function (RouteCollectorProxy $group) {
             $group->get('/check_new_version', [Routes\LegacyRouter::class, 'checkNewVersion'])->setName('checkNewVersion');
+            $group->post('/get_filtered_list_topics', [Routes\LegacyRouter::class, 'getFilteredListTopics'])->setName('getFilteredListTopics');
         });
         $app->serveStatic('static', ['css', 'js', 'ico', 'otf', 'woff', 'woff2', 'svg', 'eot']);
     }

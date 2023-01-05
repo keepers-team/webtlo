@@ -442,21 +442,23 @@ function getFilteredTopics() {
 	$("#process").text("Получение данных о раздачах...");
 	$.ajax({
 		type: "POST",
-		url: "php/actions/get_filtered_list_topics.php",
-		data: {
+		url: "/api/v0/get_filtered_list_topics",
+		data: JSON.stringify({
 			forum_id: forum_id,
 			filter: $filter,
-		},
+		}),
 		beforeSend: function () {
 			block_actions();
 		},
 		complete: function () {
 			block_actions();
 		},
-		success: function (response) {
-			response = $.parseJSON(response);
-			if (response.log.length) {
-				showResultTopics(response.log);
+		error: function (xhr, textStatus, err) {
+			return handleError(textStatus);
+		},
+		success: function ({success, response}) {
+			if (!success) {
+				return handleError(response);
 			}
 			if (response.topics != null) {
 				$("#topics").html(response.topics);

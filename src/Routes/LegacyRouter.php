@@ -54,6 +54,25 @@ class LegacyRouter
         return $response;
     }
 
+    public function getFilteredListTopics(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    {
+        require_once self::$legacyActionsPath . 'get_filtered_list_topics.php';
+
+        $body = (string)$request->getBody();
+        $json = json_decode($body);
+        if (!$json) {
+            $error = 'Failed to deserialize body';
+            $this->logger->error($error, ['body' => $body]);
+            return $response->withBody($error)->withStatus(500);
+        }
+
+        $cfg = Settings::populate($this->container->get('ini'), $this->db);
+        $result = _getFilteredListTopics($json, $cfg, $this->db, $this->logger);
+
+        $response->with($result)->withHeader('Content-Type', 'application/json');
+        return $response;
+    }
+
     public function checkNewVersion(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         require_once self::$legacyActionsPath . 'check_new_version.php';
