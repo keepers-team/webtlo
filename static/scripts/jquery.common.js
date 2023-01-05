@@ -1,5 +1,21 @@
 
 /* вспомогательные функции */
+/**
+ * Simple error handler
+ *
+ * @param {string} message Error text
+ */
+const handleError = (message) => {
+	const container = document.getElementById("topics_result");
+	while (container.firstChild) {
+		container.removeChild(container.firstChild);
+	}
+	const errorContainer = document.createElement("span");
+	errorContainer.style.background = "hsl(0, 85%, 78%)";
+	errorContainer.style.padding = "0.3em";
+	errorContainer.textContent = message;
+	container.appendChild(errorContainer);
+}
 
 /* текущее время */
 function nowTime() {
