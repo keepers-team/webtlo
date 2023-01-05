@@ -91,7 +91,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     Log::append(sprintf(
         "Поиск раздач в БД завершён за %s. Найдено раздач из хранимых подразделов %d шт, из прочих %d шт.",
         convert_seconds(microtime(true) - $endclient),
-        count($topicsHashes, COUNT_RECURSIVE),
+        count($topicsHashes, COUNT_RECURSIVE) - count($topicsHashes),
         count($unaddedHashes)
     ));
 
