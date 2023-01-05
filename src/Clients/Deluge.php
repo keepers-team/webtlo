@@ -1,20 +1,21 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Clients;
+
 /**
  * Class Deluge
  * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later
  */
 class Deluge extends TorrentClient
 {
-    protected static $base = '%s://%s:%s/json';
+    protected static string $base = '%s://%s:%s/json';
 
-    private $labels;
+    private array|false $labels = false;
 
     /**
-     * получение идентификатора сессии и запись его в $this->sid
-     * @return bool true в случе успеха, false в случае неудачи
+     * @inheritdoc
      */
-    protected function getSID()
+    protected function getSID(): bool
     {
         $ch = curl_init();
         $fields = [
@@ -34,8 +35,7 @@ class Deluge extends TorrentClient
         ]);
         $response = curl_exec($ch);
         if ($response === false) {
-            Log::append('CURL ошибка: ' . curl_error($ch));
-            Log::append('Проверьте в настройках правильность введённого IP-адреса и порта для доступа к торрент-клиенту');
+            $this->logger->error("Failed to obtain session identifier", ['error' => curl_error($ch)]);
             return false;
         }
         curl_close($ch);
@@ -74,26 +74,24 @@ class Deluge extends TorrentClient
                             'id' => 7,
                         ]
                     );
-                    return $response === false ? false : true;
+                    return !($response === false);
                 }
             }
             return true;
         }
-        Log::append('Не удалось подключиться к веб-интерфейсу торрент-клиента');
-        Log::append('Проверьте в настройках правильность введённого логина и пароля для доступа к торрент-клиенту');
+        $this->logger->error("Failed to authenticate", ['response' => $response]);
         return false;
     }
 
     /**
      * выполнение запроса
      *
-     * @param $fields
-     * @param bool $decode
-     * @param array $options
-     * @return bool|mixed|string
+     * @param array $fields
+     * @return array|false
      */
-    private function makeRequest($fields, $options = [])
+    private function makeRequest(array $fields): array|false
     {
+        $options = [];
         curl_setopt_array($this->ch, [
             CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
@@ -117,25 +115,28 @@ class Deluge extends TorrentClient
                     sleep(1);
                     continue;
                 }
-                Log::append('CURL ошибка: ' . curl_error($this->ch));
+                $this->logger->error("Failed to make request", ['error' => curl_error($this->ch)]);
                 return false;
             }
             $response = json_decode($response, true);
             if ($response['error'] === null) {
                 return $response['result'];
             } else {
-                Log::append('Error: ' . $response['error']['message'] . ' (' . $response['error']['code'] . ')');
+                $this->logger->error("Client returns error", ['code' => $response['error']['code'], 'message' => $response['error']['message']]);
                 return false;
             }
         }
     }
 
-    public function getAllTorrents()
+    /**
+     * @inheritdoc
+     */
+    public function getAllTorrents(): array|false
     {
         $fields = [
             'method' => 'core.get_torrents_status',
             'params' => [
-                (object) [],
+                (object)[],
                 [
                     'comment',
                     'message',
@@ -159,7 +160,7 @@ class Deluge extends TorrentClient
             $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
             $torrentError = $torrent['message'] != 'OK' ? 1 : 0;
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
-            $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
+            $torrentTrackerError = $matches[1] ?? '';
             $torrents[$torrentHash] = [
                 'comment' => $torrent['comment'],
                 'done' => $torrent['progress'] / 100,
@@ -174,11 +175,14 @@ class Deluge extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    /**
+     * @inheritdoc
+     */
+    public function addTorrent(string $torrentFilePath, string $savePath = ''): bool
     {
         $torrentFile = file_get_contents($torrentFilePath);
         if ($torrentFile === false) {
-            Log::append('Error: не удалось загрузить файл ' . basename($torrentFilePath));
+            $this->logger->error("Failed to upload file", ['filename' => basename($torrentFilePath)]);
             return false;
         }
         $torrentOptions = empty($savePath) ? [] : ['download_location' => $savePath];
@@ -197,9 +201,10 @@ class Deluge extends TorrentClient
     /**
      * включение плагинов
      *
-     * @param string $name
+     * @param string $pluginName
+     * @return bool|array
      */
-    public function enablePlugin($pluginName)
+    public function enablePlugin(string $pluginName): bool|array
     {
         $fields = [
             'method' => 'core.enable_plugin',
@@ -212,12 +217,12 @@ class Deluge extends TorrentClient
     /**
      * добавить метку
      *
-     * @param string $label
-     * @return bool
+     * @param string $labelName
+     * @return bool|array
      */
-    private function createLabel($labelName)
+    private function createLabel(string $labelName): bool|array
     {
-        if ($this->labels === null) {
+        if ($this->labels === false) {
             $enablePlugin = $this->enablePlugin('Label');
             if ($enablePlugin === false) {
                 return false;
@@ -244,11 +249,14 @@ class Deluge extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function setLabel($torrentHashes, $labelName = '')
+    /**
+     * @inheritdoc
+     */
+    public function setLabel(array $torrentHashes, string $labelName = ''): bool
     {
         $labelName = str_replace(' ', '_', $labelName);
-        if (!preg_match('|^[aA-zZ0-9\-_]+$|', $labelName)) {
-            Log::append('Error: В названии метки присутствуют недопустимые символы');
+        if (!preg_match('|^[A-z0-9\-]+$|', $labelName)) {
+            $this->logger->error("Found forbidden symbols in label", ['label_name' => $labelName]);
             return false;
         }
         $labelName = strtolower($labelName);
@@ -274,7 +282,10 @@ class Deluge extends TorrentClient
         return $result;
     }
 
-    public function startTorrents($torrentHashes, $forceStart = false)
+    /**
+     * @inheritdoc
+     */
+    public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $fields = [
             'method' => 'core.resume_torrent',
@@ -286,7 +297,10 @@ class Deluge extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function stopTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function stopTorrents(array $torrentHashes): bool
     {
         $fields = [
             'method' => 'core.pause_torrent',
@@ -298,7 +312,10 @@ class Deluge extends TorrentClient
         return $this->makeRequest($fields);
     }
 
-    public function removeTorrents($torrentHashes, $deleteFiles = false)
+    /**
+     * @inheritdoc
+     */
+    public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $result = null;
         foreach ($torrentHashes as $torrentHash) {
@@ -318,7 +335,10 @@ class Deluge extends TorrentClient
         return $result;
     }
 
-    public function recheckTorrents($torrentHashes)
+    /**
+     * @inheritdoc
+     */
+    public function recheckTorrents(array $torrentHashes): bool
     {
         $fields = [
             'method' => 'core.force_recheck',
