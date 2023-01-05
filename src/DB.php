@@ -105,7 +105,7 @@ class DB
         if ($instance->isProperlyMigrated()) {
             return $instance;
         } else {
-            $logger->emergency('Database is not migrated. Run "php manage.php migrate" before starting app');
+            $logger->emergency('Database is not migrated. Run "php webtlo.php migrate" before starting app');
             return false;
         }
     }
