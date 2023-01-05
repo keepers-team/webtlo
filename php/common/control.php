@@ -18,7 +18,14 @@ if (empty($cfg['subsections'])) {
 }
 $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
+
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
+    $clientControlPeers = $torrentClientData['control_peers'];
+    if ($clientControlPeers == -1) {
+        Log::append('Для клиента '. $torrentClientData['cm'] .' отключена регулировка');
+        continue;
+    }
+
     /**
      * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent $client
      * */
@@ -33,21 +40,28 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     if ($client->isOnline() === false) {
         continue;
     }
+
+    Log::append('Получаем раздачи торрент-клиента "' . $torrentClientData['cm'] . '"');
     // применяем таймауты
     $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
+    $startclient = microtime(true);
     // получение данных от торрент-клиента
     $torrents = $client->getTorrents();
     if ($torrents === false) {
         Log::append('Error: Не удалось получить данные о раздачах от торрент-клиента "' . $torrentClientData['cm'] . '"');
         continue;
     }
+    $endclient = microtime(true);
+    Log::append('Получение раздач ('. count($torrents) .'шт) завершено за ' . convert_seconds($endclient - $startclient));
+
     // ограничение на количество хэшей за раз
     $placeholdersLimit = 999;
     $torrentsHashes = array_chunk(
         array_keys($torrents),
         $placeholdersLimit - count($forumsIDs)
     );
-    $topicsHashes = array();
+    $topicsHashes = [];
+    $unaddedHashes = array_keys($torrents);
     // вытаскиваем из базы хэши раздач только для хранимых подразделов
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
@@ -58,6 +72,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         foreach ($responseTopicsHashes as $forumID => $hashes) {
+            $unaddedHashes = array_diff($unaddedHashes, $hashes);
             if (isset($topicsHashes[$forumID])) {
                 $topicsHashes[$forumID] = array_merge($topicsHashes[$forumID], $hashes);
             } else {
@@ -67,7 +82,19 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         unset($placeholdersTorrentsHashes);
         unset($responseTopicsHashes);
     }
-    unset($torrentsHashes);
+    Log::append(sprintf(
+        "Поиск раздач в БД завершён за %s. Найдено раздач из хранимых подразделов %d шт, из прочих %d шт.",
+        convert_seconds(microtime(true) - $endclient),
+        count($topicsHashes, COUNT_RECURSIVE) - count($topicsHashes),
+        count($unaddedHashes)
+    ));
+
+    asort($topicsHashes);
+    if (count($unaddedHashes)) {
+        $topicsHashes["unadded"] = $unaddedHashes;
+    }
+    unset($torrentsHashes,$unaddedHashes,$endclient,$startclient);
+
     if (!empty($topicsHashes)) {
         // подключаемся к api
         if (!isset($api)) {
@@ -77,14 +104,20 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             Log::append('Получение данных о пирах...');
         }
         foreach ($topicsHashes as $forumID => $hashes) {
-            $controlPeersForum = $cfg['subsections'][$forumID]['control_peers'];
+            // пропустим не хранимые подразделы, если их регулировка отключена
+            if (!$cfg['topics_control']['unadded_subsections'] && !isset($cfg['subsections'][$forumID])) {
+                continue;
+            }
             // пропустим исключённые из регулировки подразделы
-            if ($controlPeersForum == -1) {
+            $subControlPeers = isset($cfg['subsections'][$forumID]) ? $cfg['subsections'][$forumID]['control_peers'] : "";
+            if ($subControlPeers == -1) {
+                Log::append('Для раздела '. $forumID .' отключена регулировка');
                 continue;
             }
             // регулируемое значение пиров
-            $controlPeers = $controlPeersForum == '' ? $cfg['topics_control']['peers'] : $controlPeersForum;
+            $controlPeers = get_control_peers($cfg['topics_control']['peers'], $clientControlPeers, $subControlPeers);
 
+            $startforum = microtime(true);
             // получаем данные о пирах
             $peerStatistics = $api->getPeerStats($hashes, 'hash');
             unset($topicsHashhasheses);
@@ -130,7 +163,16 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                     }
                 }
             }
-            unset($peerStatistics);
+
+            $endforum = microtime(true);
+            Log::append(sprintf(
+                "Обработка раздач раздела %s (%d шт) завершена за %s, лимит сидов %d",
+                $forumID,
+                count($hashes),
+                convert_seconds($endforum - $startforum),
+                $controlPeers
+            ));
+            unset($peerStatistics,$startforum,$endforum);
         }
     }
     if (empty($controlTopics)) {
@@ -165,3 +207,27 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 }
 $endtime = microtime(true);
 Log::append('Регулировка раздач в торрент-клиентах завершена за ' . convert_seconds($endtime - $starttime));
+
+
+// Определяем лимит для регулировки раздач
+function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
+{
+    // Задан лимит для клиента и для раздела
+    if ($clientControlPeers !== "" && $subControlPeers !== "") {
+        // Если лимит на клиент меньше лимита на раздел, то используем клиент
+        $controlPeers = $subControlPeers;
+        if ($clientControlPeers < $subControlPeers) {
+            $controlPeers = $clientControlPeers;
+        }
+    }
+    // Задан лимит только для клиента
+    elseif ($clientControlPeers !== "") {
+        $controlPeers = $clientControlPeers;
+    }
+    // Задан лимит только для раздела
+    elseif ($subControlPeers !== "") {
+        $controlPeers = $subControlPeers;
+    }
+
+    return (int)$controlPeers;
+}

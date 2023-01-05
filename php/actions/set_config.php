@@ -47,6 +47,9 @@ try {
                 $ini->write($torrentClientSection, 'password', trim($torrentClientData['password']));
             }
             $ini->write($torrentClientSection, 'ssl', $torrentClientData['ssl']);
+            if (isset($torrentClientData['control_peers'])) {
+                $ini->write($torrentClientSection, 'control_peers', trim($torrentClientData['control_peers']));
+            }
         }
     }
     $ini->write('other', 'qt', $torrentClientNumber); // кол-во торрент-клиентов
@@ -60,6 +63,7 @@ try {
     }
     $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
     $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
+    $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
 
     // прокси
     $ini->write('proxy', 'activate_forum', isset($cfg['proxy_activate_forum']) ? 1 : 0);

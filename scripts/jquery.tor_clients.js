@@ -56,6 +56,7 @@ $(document).ready(function () {
 			$("#torrent-client-login").val(torrentClientData.login);
 			$("#torrent-client-password").val(torrentClientData.password);
 			$("#torrent-client-ssl").prop("checked", torrentClientData.ssl);
+			$("#torrent-client-peers").val(torrentClientData.peers);
 		}
 	});
 
@@ -68,6 +69,7 @@ $(document).ready(function () {
 		var torrentClientLogin = $("#torrent-client-login").val();
 		var torrentClientPassword = $("#torrent-client-password").val();
 		var torrentClientSSL = Number($("#torrent-client-ssl").prop("checked"));
+		var torrentControlPeers = $("#torrent-client-peers").val();
 		if (torrentClientComment == "") {
 			var torrentClientID = $("#list-torrent-clients li.ui-editable").val();
 			torrentClientComment = torrentClientID;
@@ -89,6 +91,7 @@ $(document).ready(function () {
 		optionTorrentClient.attr("data-login", torrentClientLogin).data("login", torrentClientLogin);
 		optionTorrentClient.attr("data-password", torrentClientPassword).data("password", torrentClientPassword);
 		optionTorrentClient.attr("data-ssl", torrentClientSSL).data("ssl", torrentClientSSL);
+		optionTorrentClient.attr("data-peers", torrentControlPeers).data("peers", torrentControlPeers);
 		optionTorrentClient.html(torrentClientTitle);
 		doSortSelect("list-torrent-clients", "li");
 		$("#torrent-client-response").text("");
@@ -105,6 +108,7 @@ $(document).ready(function () {
 		var torrentClientLogin = $("#torrent-client-login").val();
 		var torrentClientPassword = $("#torrent-client-password").val();
 		var torrentClientSSL = Number($("#torrent-client-ssl").prop("checked"));
+		var torrentControlPeers = $("#torrent-client-peers").val();
 		if ($.isEmptyObject(torrentClientComment)) {
 			torrentClientComment = "client1";
 		}
@@ -152,6 +156,7 @@ $(document).ready(function () {
 		optionTorrentClient.attr("data-login", torrentClientLogin).data("login", torrentClientLogin);
 		optionTorrentClient.attr("data-password", torrentClientPassword).data("password", torrentClientPassword);
 		optionTorrentClient.attr("data-ssl", torrentClientSSL).data("ssl", torrentClientSSL);
+		optionTorrentClient.attr("data-peers", torrentControlPeers).data("peers", torrentControlPeers);
 		optionTorrentClient.addClass("ui-widget-content ui-selected ui-state-focus");
 		$("#list-torrent-clients").trigger("selectablestop");
 		doSortSelect("list-torrent-clients", "li");
@@ -284,7 +289,8 @@ function getListTorrentClients() {
 				"port": torrentClientData.port,
 				"login": torrentClientData.login,
 				"password": torrentClientData.password,
-				"ssl": torrentClientData.ssl
+				"ssl": torrentClientData.ssl,
+				"control_peers": torrentClientData.peers
 			};
 		}
 	});
