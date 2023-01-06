@@ -52,7 +52,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
 			response = $.parseJSON(response);
 			$("#log").append(response.log);
 
-			// скачивание т.-файлов выделенных топиков
+			// скачивание т.-файлов
 			var topic_hashes = $.param(response.report.map( s => ({name:"topic_hashes[]", value:s}) ));
 			if ($.isEmptyObject(topic_hashes)) {
 				showResultTopics("Не удалось получить список раздач для загрузки");
