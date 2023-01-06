@@ -145,7 +145,6 @@ class Ktorrent extends TorrentClient
 
     public function getAllTorrents()
     {
-        return [];
         $response = $this->getTorrentsData();
         if ($response === false) {
             return false;
