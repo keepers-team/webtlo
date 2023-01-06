@@ -46,7 +46,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
 		url: "php/actions/get_reports.php",
 		data: {
 			forum_id: forum_id,
-			return_only_topic_ids: true
+			return_only_topic_hashes: true
 		},
 		success: function (response) {
 			response = $.parseJSON(response);

@@ -2,6 +2,7 @@
 
 try {
     include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../classes/api.php';
     include_once dirname(__FILE__) . '/../classes/reports.php';
 
     // идентификатор подраздела
@@ -50,7 +51,7 @@ try {
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
-    if (!empty($_POST['return_only_topic_ids'])) {
+    if (!empty($_POST['return_only_topic_hashes'])) {
         // получение данных о подразделе
         $forum = Db::query_database(
             "SELECT * FROM Forums WHERE id = ?",
@@ -67,6 +68,14 @@ try {
         $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
 
         // Log::append("Сканирование списков...");
+
+        // подключаемся к api
+        if (!isset($api)) {
+            $api = new Api($cfg['api_address'], $cfg['api_key']);
+            // применяем таймауты
+            $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
+            Log::append('Получение данных о пирах...');
+        }
 
         if (empty($topic_id)) {
             Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
@@ -85,7 +94,8 @@ try {
                         continue;
                     }
                     foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
-                        $output = array_merge($output, $keeperTopicsIDs);;
+                        $keeperTopicsHashes = $api->getTorHash($keeperTopicsIDs);
+                        $output = array_merge($output, $keeperTopicsHashes);
                     }
                 }
                 unset($keepers);

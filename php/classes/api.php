@@ -246,6 +246,36 @@ class Api
     }
 
     /**
+     * HASH торрента по ID темы
+     * @param array $topicsIDs
+     * @return bool|array
+     */
+    public function getTorHash($topicsIDs)
+    {
+        if (empty($topicsIDs)) {
+            return false;
+        }
+        $topicsData = [];
+        $topicsHashesChunked = array_chunk($topicsIDs, $this->limitInRequest);
+        foreach ($topicsHashesChunked as $topicsIDs) {
+            $params = [
+                'by=topic_id',
+                'val=' . implode(',', $topicsIDs)
+            ];
+            $response = $this->makeRequest('get_tor_hash', $params);
+            if ($response === false) {
+                continue;
+            }
+            foreach ($response['result'] as $topicID => $topicHash) {
+                if (!empty($topicHash)) {
+                    $topicsData[$topicID] = $topicHash;
+                }
+            }
+        }
+        return $topicsData;
+    }
+
+    /**
      * данные о раздаче по ID темы
      * @param array $topicsValues
      * @return bool|array
