@@ -31,7 +31,15 @@ if ($url == 'custom') {
     $url = $url_custom;
 }
 
-$schema = isset($_POST['ssl']) ? 'https' : 'http';
+if (!isset($_POST['ssl'])) {
+	$schema = 'http';
+} else {
+	if ($_POST['ssl'] === "true") {
+		$schema = 'https';
+	} else {
+		$schema = 'http';
+	}
+}
 $address = $schema . '://' . basename($url);
 
 // парсим настройки

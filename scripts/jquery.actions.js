@@ -101,7 +101,7 @@ $(document).ready(function () {
 			var element = "#" + value + "_url";
 			var url = $(element).val();
 			var url_custom = $(element + "_custom").val();
-			var ssl = $("#" + value + "_ssl").val();
+			var ssl = $("#" + value + "_ssl").is(":checked");
 			$(element).addClass("ui-state-disabled").prop("disabled", true);
 			$(element + "_custom").addClass("ui-state-disabled").prop("disabled", true);
 			$("#" + value + "_ssl").addClass("ui-state-disabled").prop("disabled", true);
