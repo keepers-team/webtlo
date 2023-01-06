@@ -120,7 +120,7 @@ li.menu.ui-tabs-active {
 }
 
 .ui-button {
-	padding: .4em .6em;
+	padding: .4em .6em !important;
 }
 
 .ui-button:disabled {
@@ -266,6 +266,10 @@ li.menu.ui-tabs-active {
 
 .date_container * {
 	vertical-align: middle;
+}
+
+.ui-button-icon-only.tor_download-splitbutton-select {
+	width: 1em !important;
 }
 
 /* topics result */

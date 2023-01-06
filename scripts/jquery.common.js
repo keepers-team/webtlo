@@ -28,7 +28,7 @@ var lock_actions = 0;
 function block_actions() {
 	if (lock_actions == 0) {
 		$("#topics_control button").addClass("ui-state-disabled").prop("disabled", true);
-		$("#main-subsections").selectmenu("disable");
+		$("#main-subsections, #tor_download_options").selectmenu("disable");
 		$("#loading, #process").show();
 		lock_actions = 1;
 	} else {
@@ -41,7 +41,7 @@ function block_actions() {
 		} else {
 			$(".tor_stop, .tor_remove, .tor_label, .tor_start").addClass("ui-state-disabled").prop("disabled", true);
 		}
-		$("#main-subsections").selectmenu("enable");
+		$("#main-subsections, #tor_download_options").selectmenu("enable");
 		$("#loading, #process").hide();
 		lock_actions = 0;
 	}
@@ -162,7 +162,8 @@ function getReport() {
 		type: "POST",
 		url: "php/actions/get_reports.php",
 		data: {
-			forum_id: forum_id
+			forum_id: forum_id,
+			return_only_topic_ids: false
 		},
 		beforeSend: function () {
 			$("#reports-subsections").selectmenu("disable");

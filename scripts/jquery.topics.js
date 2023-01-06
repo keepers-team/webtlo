@@ -1,41 +1,93 @@
 
 /* работа с топиками */
 
+// скачивание т.-файлов выделенных топиков
+function downloadTorrents(replace_passkey) {
+	var topic_hashes = $("#topics").serialize();
+	if ($.isEmptyObject(topic_hashes)) {
+		showResultTopics("Выберите раздачи");
+		return false;
+	}
+	var forum_id = $("#main-subsections").val();
+	var config = $("#config").serialize();
+	$("#process").text("Скачивание торрент-файлов...");
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_torrent_files.php",
+		data: {
+			cfg: config,
+			topic_hashes: topic_hashes,
+			forum_id: forum_id,
+			replace_passkey: replace_passkey
+		},
+		beforeSend: function () {
+			block_actions();
+		},
+		complete: function () {
+			block_actions();
+		},
+		success: function (response) {
+			response = $.parseJSON(response);
+			$("#log").append(response.log);
+			showResultTopics(response.result);
+		},
+	});
+}
+
+// скачивание т.-файлов хранимых раздач по спискам с форума
+function downloadTorrentsByKeepersList(replace_passkey) {
+	var forum_id = $("#main-subsections").val();
+	var config = $("#config").serialize();
+	if ($.isEmptyObject(forum_id)) {
+		return false;
+	}
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_reports.php",
+		data: {
+			forum_id: forum_id,
+			return_only_topic_ids: true
+		},
+		success: function (response) {
+			response = $.parseJSON(response);
+			$("#log").append(response.log);
+
+			// скачивание т.-файлов выделенных топиков
+			var topic_hashes = $.param(response.report.map( s => ({name:"topic_hashes[]", value:s}) ));
+			if ($.isEmptyObject(topic_hashes)) {
+				showResultTopics("Не удалось получить список раздач для загрузки");
+				return false;
+			}
+			$("#process").text("Скачивание торрент-файлов...");
+			$.ajax({
+				type: "POST",
+				url: "php/actions/get_torrent_files.php",
+				data: {
+					cfg: config,
+					topic_hashes: topic_hashes,
+					forum_id: forum_id,
+					replace_passkey: replace_passkey
+				},
+				beforeSend: function () {
+					block_actions();
+				},
+				complete: function () {
+					block_actions();
+				},
+				success: function (response) {
+					response = $.parseJSON(response);
+					$("#log").append(response.log);
+					showResultTopics(response.result);
+				},
+			});
+		},
+	});
+}
+
 $(document).ready(function () {
 
-	// скачивание т.-файлов выделенных топиков
 	$(".tor_download").on("click", function () {
-		var topic_hashes = $("#topics").serialize();
-		if ($.isEmptyObject(topic_hashes)) {
-			showResultTopics("Выберите раздачи");
-			return false;
-		}
-		var forum_id = $("#main-subsections").val();
-		var replace_passkey = $(this).val();
-		var config = $("#config").serialize();
-		$("#process").text("Скачивание торрент-файлов...");
-		$.ajax({
-			type: "POST",
-			context: this,
-			url: "php/actions/get_torrent_files.php",
-			data: {
-				cfg: config,
-				topic_hashes: topic_hashes,
-				forum_id: forum_id,
-				replace_passkey: replace_passkey
-			},
-			beforeSend: function () {
-				block_actions();
-			},
-			complete: function () {
-				block_actions();
-			},
-			success: function (response) {
-				response = $.parseJSON(response);
-				$("#log").append(response.log);
-				showResultTopics(response.result);
-			},
-		});
+		downloadTorrents($(this).val());
 	});
 
 	// "чёрный" список раздач
@@ -398,7 +450,6 @@ function getFilteredTopics() {
 		|| forum_id == -5
 	) {
 		$(".topics_filter input").removeClass("ui-state-disabled").prop("disabled", false);
-		$("#toolbar-new-torrents").buttonset("enable");
 		$("#toolbar-control-topics").buttonset("enable");
 		$("#filter_avg_seeders_period").spinner("enable");
 		$("#filter_rule").spinner("enable");
@@ -414,6 +465,13 @@ function getFilteredTopics() {
 			$("#tor_add").button("enable");
 			$(".topics_filter input[name^='keeping_priority']").removeClass("ui-state-disabled").prop("disabled", false);
 		}
+		if (forum_id == -3 || forum_id == -5) {
+			$(".tor_download_by_keepers_list").attr("disabled", true);
+			$("#tor_download_options").selectmenu("refresh");
+		} else {
+			$(".tor_download_by_keepers_list").attr("disabled", false);
+			$("#tor_download_options").selectmenu("refresh");
+		}
 	} else {
 		if (forum_id == -2) {
 			$("#toolbar-control-topics").buttonset("disable");
@@ -424,7 +482,6 @@ function getFilteredTopics() {
 		}
 		$(".topics_filter input").addClass("ui-state-disabled").prop("disabled", true);
 		$(".topics_filter input.sort").removeClass("ui-state-disabled").prop("disabled", false);
-		$("#toolbar-new-torrents").buttonset("disable");
 		$("#filter_avg_seeders_period").spinner("disable");
 		$("#filter_rule").spinner("disable");
 		$("#filter_rule_from").spinner("disable");
@@ -436,6 +493,8 @@ function getFilteredTopics() {
 			$("#filter_avg_seeders_period").spinner("enable");
 			$(".tor_remove").button("disable");
 		}
+		$(".tor_download_by_keepers_list").attr("disabled", true);
+		$("#tor_download_options").selectmenu("refresh");
 	}
 	// сериализим параметры фильтра
 	var $filter = $("#topics_filter").serialize();
