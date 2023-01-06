@@ -50,7 +50,48 @@ try {
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
-    if ($forum_id === 0) {
+    if (!empty($_POST['return_only_topic_ids'])) {
+        // получение данных о подразделе
+        $forum = Db::query_database(
+            "SELECT * FROM Forums WHERE id = ?",
+            array($forum_id),
+            true,
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+        );
+
+        if (empty($forum)) {
+            throw new Exception("Error: Не получены данные о хранимом подразделе № $forum_id");
+        }
+
+        // ищем тему со списками
+        $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
+
+        // Log::append("Сканирование списков...");
+
+        if (empty($topic_id)) {
+            Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
+        } else {
+            $output = array();
+            // сканируем имеющиеся списки
+            $keepers = $reports->scanning_viewtopic($topic_id);
+            if ($keepers !== false) {
+                // разбираем инфу, полученную из списков
+                foreach ($keepers as $index => $keeper) {
+                    // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
+                    if (strcasecmp($cfg['tracker_login'], $keeper['nickname']) != 0) {
+                        continue;
+                    }
+                    if (empty($keeper['topics_ids'])) {
+                        continue;
+                    }
+                    foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
+                        $output = array_merge($output, $keeperTopicsIDs);;
+                    }
+                }
+                unset($keepers);
+            }
+        }
+    } elseif ($forum_id === 0) {
         // сводный отчёт
         $sumdlqt = 0;
         $sumdlsi = 0;

@@ -197,17 +197,18 @@ try {
                                 <i class="fa fa-square-o" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div id="toolbar-new-torrents">
-                            <button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
-                                <i class="fa fa-plus" aria-hidden="true"></i>
-                            </button>
+                        <button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
+                            <i class="fa fa-plus" aria-hidden="true"></i>
+                        </button>
+                        <div class="tor_download_dropdown">
                             <button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
                                 <i class="fa fa-download" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">
-                                <i class="fa fa-download download-replace" aria-hidden="true"></i>
-                                <i class="fa fa-asterisk download-replace-super" aria-hidden="true"></i>
-                            </button>
+                            <select id="tor_download_options">
+                                <option class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">с заменой Passkey</option>
+                                <option class="tor_download_by_keepers_list" value="0" title="Скачать *.torrent-файлы хранимых раздач (по спсикам с форума) текущего подраздела в каталог">по спсикам с форума</option>
+                                <option class="tor_download_by_keepers_list" value="1" title="Скачать *.torrent-файлы хранимых раздач (по спсикам с форума) текущего подраздела в каталог с заменой Passkey">по спсикам с форума и с заменой Passkey</option>
+                            </select>
                         </div>
                         <div id="toolbar-control-topics">
                             <button type="button" id="tor_blacklist" value="1" title="Включить выделенные раздачи в чёрный список или наоборот исключить">
