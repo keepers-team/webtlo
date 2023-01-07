@@ -60,7 +60,6 @@ if (isset($cfg['subsections'])) {
             foreach ($keepers as &$keeper) {
                 if (
                     empty($keeper['topics_ids'])
-                    || strcasecmp($cfg['tracker_login'], $keeper['nickname']) === 0
                 ) {
                     continue;
                 }
