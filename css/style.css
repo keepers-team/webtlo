@@ -332,6 +332,10 @@ li.menu.ui-tabs-active {
 
 /* color icons status */
 
+.text-self {
+	color: #a7288a ;
+}
+
 .text-success {
 	color: #28a745;
 }
