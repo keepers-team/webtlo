@@ -109,6 +109,7 @@ function get_settings($filename = "")
     $config['avg_seeders_period'] = $ini->read('sections', 'avg_seeders_period', 14);
     $config['avg_seeders_period_outdated'] = $ini->read('sections', 'avg_seeders_period_outdated', 7);
     $config['enable_auto_apply_filter'] = $ini->read('sections', 'enable_auto_apply_filter', 1);
+    $config['exclude_self_keep'] = $ini->read('sections', 'exclude_self_keep', 1);
 
     // регулировка раздач
     $config['topics_control']['peers'] = $ini->read('topics_control', 'peers', 10);
