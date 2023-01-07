@@ -20,6 +20,7 @@ try {
     $unadded_subsections = $cfg['topics_control']['unadded_subsections'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
     $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
+    $exclude_self_keep = $cfg['exclude_self_keep'] == 1 ? "checked" : "";
 
     // вставка option в select
 
@@ -705,6 +706,10 @@ try {
                             <label class="label" title="При изменении параметров фильтра, автоматически обновлять список раздач на главной">
                                 <input id="enable_auto_apply_filter" name="enable_auto_apply_filter" type="checkbox" <?php echo $enable_auto_apply_filter ?> />
                                 применять параметры фильтра автоматически
+                            </label>
+                            <label>
+                                <input name="exclude_self_keep" type="checkbox" size="24" <?php echo $exclude_self_keep ?> />
+                                исключить себя из списка хранителей раздачи
                             </label>
                             <h3>Регулировка раздач<sup>1</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">

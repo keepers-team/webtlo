@@ -192,6 +192,7 @@ try {
     }
     $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
     $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
+    $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
 
     // обновление файла с настройками
     $ini->updateFile();
