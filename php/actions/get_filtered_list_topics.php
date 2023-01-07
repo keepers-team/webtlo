@@ -657,10 +657,20 @@ try {
                 continue;
             }
             // список хранителей на раздаче
-            $keepers_list = '';
+            $topic_keepers = [];
             if (isset($keepers[$topic_data['id']])) {
+                $topic_keepers = $keepers[$topic_data['id']];
+            }
+            // исключим себя из списка, если выбрана опция
+            if ($cfg['exclude_self_keep']) {
+                $topic_keepers =  array_filter($topic_keepers, function($e) use ($cfg) {
+                    return strcasecmp($cfg['tracker_login'], $e['nick']) !== 0;
+                });
+            }
+            $keepers_list = '';
+            if (count($topic_keepers)) {
                 $formatKeeperList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
-                $keepers_list = array_map(function ($e) use ($formatKeeperList) {
+                $keepers_list = array_map(function ($e) use ($formatKeeperList, $cfg) {
                     if ($e['complete'] == 1) {
                         if ($e['posted'] === null) {
                             $stateKeeperIcon = 'arrow-circle-up';
@@ -672,22 +682,22 @@ try {
                         $stateKeeperIcon = 'arrow-down';
                         $stateKeeperColor = 'danger';
                     }
+                    if (strcasecmp($cfg['tracker_login'], $e['nick']) === 0) {
+                        $stateKeeperColor = 'self';
+                    }
                     return sprintf(
                         $formatKeeperList,
                         $stateKeeperIcon,
                         $stateKeeperColor,
                         $e['nick']
                     );
-                }, $keepers[$topic_data['id']]);
+                }, $topic_keepers);
                 $keepers_list = '| ' . implode(', ', $keepers_list);
             }
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
                 if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
-                    if (!isset($keepers[$topic_data['id']])) {
-                        $keepers[$topic_data['id']] = [];
-                    }
-                    $topicKeepers = array_column($keepers[$topic_data['id']], 'nick');
+                    $topicKeepers = array_column($topic_keepers, 'nick');
                     unset($matchKeepers);
                     foreach ($filterByKeeper as $filterKeeper) {
                         if (empty($filterKeeper)) {
@@ -712,8 +722,8 @@ try {
             if (
                 isset($filter['is_keepers'])
                 && (
-                    $filter['keepers_filter_rule_interval']['from'] > count($keepers[$topic_data['id']])
-                    || $filter['keepers_filter_rule_interval']['to'] < count($keepers[$topic_data['id']])
+                    $filter['keepers_filter_rule_interval']['from'] > count($topic_keepers)
+                    || $filter['keepers_filter_rule_interval']['to'] < count($topic_keepers)
                 )
             ) {
                 continue;
