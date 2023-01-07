@@ -456,9 +456,9 @@ try {
             }
         } else {
             if (isset($cfg['subsections'])) {
-                foreach ($cfg['subsections'] as $forum_id => $subsection) {
+                foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
                     if (!$subsection['hide_topics']) {
-                        $forumsIDs[] = $forum_id;
+                        $forumsIDs[] = $sub_forum_id;
                     }
                 }
             } else {
