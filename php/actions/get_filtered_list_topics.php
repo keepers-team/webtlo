@@ -634,6 +634,10 @@ try {
 
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
+            // фильтрация по клиенту
+            if ($filter['filter_client_id'] > 0 && $filter['filter_client_id'] != $topic_data['cl']) {
+                continue;
+            }
             // фильтрация по приоритету
             if (!in_array($topic_data['pt'], $filter['keeping_priority'])) {
                 continue;
@@ -820,7 +824,7 @@ function get_client_name( int|null $clientID, array $cfg): string
 {
     if (!$clientID || !isset($cfg['clients'][$clientID])) return '';
     return sprintf(
-        '<i class="bold text-success">%s</i>',
+        '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']
     );
 }

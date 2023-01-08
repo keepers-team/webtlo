@@ -257,7 +257,8 @@ $(document).ready(function () {
 
 // обновление списка торрент-клиентов
 function refreshListTorrentClients() {
-	$("#forum-client option").each(function () {
+	var clientSelectors = $("#forum-client, #filter_client_id");
+	clientSelectors.find("option").each(function () {
 		if ($(this).val() != 0) {
 			$(this).remove();
 		}
@@ -266,13 +267,13 @@ function refreshListTorrentClients() {
 		var torrentClientID = $(this).val();
 		var torrentClientData = this.dataset;
 		if (torrentClientID != 0) {
-			$("#forum-client").append("<option value=\"" + torrentClientID + "\">" + torrentClientData.comment + "</option>");
+			clientSelectors.append(`<option value="${torrentClientID}">${torrentClientData.comment}</option>`);
 		}
 	});
 	if ($("#list-forums option").size() > 0) {
 		$("#list-forums").change();
 	}
-	$("#forum-client").selectmenu("refresh");
+	clientSelectors.selectmenu("refresh");
 }
 
 // получение списка торрент-клиентов
