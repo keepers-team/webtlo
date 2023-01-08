@@ -579,8 +579,9 @@ try {
                     LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
                     WHERE ss IN (' . $ss . ') AND KeepersSeeders.topic_id IS NOT NULL
                 ) as k
-                GROUP BY id, nick',
-                array_merge($forumsIDsChunk, $forumsIDsChunk),
+                GROUP BY id, nick
+                ORDER BY (CASE WHEN k.nick == ? THEN 1 ELSE 0 END) DESC',
+                array_merge($forumsIDsChunk, $forumsIDsChunk, [$cfg['tracker_login']]),
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_GROUP
             );
