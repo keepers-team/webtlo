@@ -98,6 +98,12 @@ try {
             );
         }
     }
+    $optionFilterClients = sprintf(
+        $optionFormat,
+        0,
+        '',
+        'любой'
+    ) . $optionTorrentClients;
 
     // хранимые подразделы
     $optionForums = '';
@@ -342,6 +348,15 @@ try {
                                     <label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
                                         Дата регистрации до:
                                         <input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
+                                    </label>
+                                </fieldset>
+                                <hr />
+                                <fieldset title="Клиент, в котором хранится раздача">
+                                    <label>
+                                        Клиент:
+                                        <select name="filter_client_id" id="filter_client_id" class="myinput">
+                                            <?php echo $optionFilterClients ?>
+                                        </select>
                                     </label>
                                 </fieldset>
                                 <hr />

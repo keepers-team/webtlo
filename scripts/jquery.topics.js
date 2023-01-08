@@ -307,6 +307,8 @@ $(document).ready(function () {
 		$(".filter_rule_interval").hide();
 		$(".keepers_filter_rule_fieldset").hide();
 		$(".filter_rule_one").show();
+		$("#filter_client_id").val(0).selectmenu("refresh");
+
 		$("#topics_filter .default").prop("checked", true).change();
 	});
 
@@ -339,7 +341,7 @@ $(document).ready(function () {
 		}
 	});
 
-	$("#topics_filter").on("change input spinstop", function () {
+	$("#topics_filter").on("change input selectmenuchange spinstop", function () {
 		// запоминаем параметры фильтра в куки
 		Cookies.set("filter-options", $("#topics_filter").serializeAllArray());
 		if ($("#enable_auto_apply_filter").prop("checked")) {
@@ -384,6 +386,15 @@ $(document).ready(function () {
 			$('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
 			$('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
 		}
+		$("#topics_filter").trigger("change");
+	});
+
+	// клиент в поиск при двойном клике
+	$("#topics").on("dblclick", ".client", function (e) {
+		var torrentClientName = $(this).text();
+		var torrentClientID = $(`#list-torrent-clients li:contains('${torrentClientName}')`).val();
+		$("#filter_client_id").val(torrentClientID).selectmenu("refresh");
+
 		$("#topics_filter").trigger("change");
 	});
 
@@ -473,6 +484,7 @@ function getFilteredTopics() {
 			$(".tor_download_by_keepers_list").attr("disabled", false);
 			$("#tor_download_options").selectmenu("refresh");
 		}
+		$("#filter_client_id").selectmenu("enable");
 	} else {
 		if (forum_id == -2) {
 			$("#toolbar-control-topics").buttonset("disable");
@@ -496,6 +508,7 @@ function getFilteredTopics() {
 		}
 		$(".tor_download_by_keepers_list").attr("disabled", true);
 		$("#tor_download_options").selectmenu("refresh");
+		$("#filter_client_id").val(0).selectmenu("refresh").selectmenu("disable");
 	}
 	// сериализим параметры фильтра
 	var $filter = $("#topics_filter").serialize();
