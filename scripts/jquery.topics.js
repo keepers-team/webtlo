@@ -448,6 +448,7 @@ function getFilteredTopics() {
 		forum_id > 0
 		|| forum_id == -3
 		|| forum_id == -5
+		|| forum_id == -6
 	) {
 		$(".topics_filter input").removeClass("ui-state-disabled").prop("disabled", false);
 		$("#toolbar-control-topics").buttonset("enable");

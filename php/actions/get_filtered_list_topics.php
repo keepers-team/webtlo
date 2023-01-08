@@ -37,6 +37,7 @@ try {
     // -3 - все хранимые
     // -4 - дублирующиеся раздачи
     // -5 - высокоприоритетные раздачи
+    // -6 - раздачи своим по спискам
 
     // topic_data => id,na,si,convert(si)rg,se,ds
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
@@ -383,9 +384,10 @@ try {
             );
         }
     } elseif (
-        $forum_id == -3
-        || $forum_id > 0
-        || $forum_id == -5
+        $forum_id > 0       // заданный раздел
+        || $forum_id == -3  // все хранимые подразделы
+        || $forum_id == -5  // высокий приоритет
+        || $forum_id == -6  // все хранимые подразделы по спискам
     ) {
         // все хранимые раздачи
         // не выбраны статусы раздач
@@ -441,6 +443,9 @@ try {
             throw new Exception('В фильтре введена некорректная дата создания релиза');
         }
 
+        // Исключить себя из списка хранителей.
+        $exclude_self_keep = $cfg['exclude_self_keep'];
+
         // хранимые подразделы
         if ($forum_id > 0) {
             $forumsIDs = [$forum_id];
@@ -455,6 +460,7 @@ try {
                 $forumsIDs = [0];
             }
         } else {
+            // -3 || -6
             if (isset($cfg['subsections'])) {
                 foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
                     if (!$subsection['hide_topics']) {
@@ -662,8 +668,16 @@ try {
             if (isset($keepers[$topic_data['id']])) {
                 $topic_keepers = $keepers[$topic_data['id']];
             }
-            // исключим себя из списка, если выбрана опция
-            if ($cfg['exclude_self_keep']) {
+            // фильтрация раздач по своим спискам
+            if ($forum_id == -6) {
+                $exclude_self_keep = 0;
+                $topicKeepers = array_column($topic_keepers, 'nick');
+                if (!count($topicKeepers) || !in_array($cfg['tracker_login'], $topicKeepers)) {
+                    continue;
+                }
+            }
+            // исключим себя из списка хранителей раздачи
+            if ($exclude_self_keep) {
                 $topic_keepers =  array_filter($topic_keepers, function($e) use ($cfg) {
                     return strcasecmp($cfg['tracker_login'], $e['nick']) !== 0;
                 });
