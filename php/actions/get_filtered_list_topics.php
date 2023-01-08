@@ -39,12 +39,13 @@ try {
     // -5 - высокоприоритетные раздачи
     // -6 - раздачи своим по спискам
 
-    // topic_data => id,na,si,convert(si)rg,se,ds
+    // topic_data => id,na,si,convert(si)rg,se,ds,cl
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = [
         'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
         'ds' => ' <i class="fa %9$s %8$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
+        'cl' => ' <span>%10$s | </span> ',
         'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
         'si' => ' (%5$s)',
         'se' => ' - <span class="text-danger">%7$s</span>',
@@ -66,7 +67,7 @@ try {
                 TopicsUntracked.rg,
                 TopicsUntracked.ss,
                 TopicsUntracked.se,
-                Torrents.client_id
+                Torrents.client_id as cl
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
             WHERE TopicsUntracked.hs IS NOT NULL',
@@ -102,7 +103,6 @@ try {
             $forumID = $topic_data['ss'];
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
-            $torrentClientID = $topic_data['client_id'];
             foreach ($pattern_topic_data as $field => $pattern) {
                 if (isset($topic_data[$field])) {
                     $data .= $pattern;
@@ -125,9 +125,12 @@ try {
                     $topic_data['si'],
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
-                    $topic_data['se']
+                    $topic_data['se'],
+                    '',
+                    '',
+                    get_client_name($topic_data['cl'], $cfg)
                 ),
-                '<span class="bold">' . $cfg['clients'][$torrentClientID]['cm'] . '</span>'
+                ''
             );
         }
         unset($topics);
@@ -155,16 +158,17 @@ try {
         );
         // формирование строки вывода
         foreach ($topics as $topic) {
-            $topicBlock = '';
             $filtered_topics_count++;
             $filtered_topics_size += $topic['total_size'];
             $topicStatus = $topic['status'];
-            $torrentClientID = $topic['client_id'];
+
+            $topicBlock = '';
             foreach ($pattern_topic_data as $field => $pattern) {
-                if (in_array($field, ['id', 'rg', 'ds', 'na', 'si'])) {
+                if (in_array($field, ['id', 'rg', 'ds', 'cl', 'na', 'si'])) {
                     $topicBlock .= $pattern;
                 }
             }
+            $stateTorrentClient = '';
             if ($topic['done'] == 1) {
                 $stateTorrentClient = 'fa-arrow-up';
             } elseif ($topic['done'] == null) {
@@ -190,9 +194,10 @@ try {
                     date('d.m.Y', $topic['time_added']),
                     '',
                     'text-success',
-                    $stateTorrentClient
+                    $stateTorrentClient,
+                    get_client_name($topic['client_id'], $cfg)
                 ),
-                '<span class="bold">' . $cfg['clients'][$torrentClientID]['cm'] . '</span>'
+                ''
             );
         }
         unset($topics);
@@ -487,7 +492,8 @@ try {
                 Topics.pt,
                 Torrents.done,
                 Torrents.paused,
-                Torrents.error
+                Torrents.error,
+                Torrents.client_id as cl
                 %s
             FROM Topics
             LEFT JOIN Torrents ON Topics.hs = Torrents.info_hash
@@ -787,7 +793,8 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
                     $bullet,
-                    $stateTorrentClient
+                    $stateTorrentClient,
+                    get_client_name($topic_data['cl'], $cfg)
                 ),
                 $keepers_list
             );
@@ -807,4 +814,13 @@ try {
         'size' => 0,
         'count' => 0,
     ]);
+}
+
+function get_client_name( int|null $clientID, array $cfg): string
+{
+    if (!$clientID || !isset($cfg['clients'][$clientID])) return '';
+    return sprintf(
+        '<i class="bold text-success">%s</i>',
+        $cfg['clients'][$clientID]['cm']
+    );
 }
