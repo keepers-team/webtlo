@@ -373,6 +373,10 @@ try {
                                         <input type="radio" name="filter_by_phrase" id="filter_by_keeper" value="0" />
                                         в имени хранителя
                                     </label>
+                                    <label title="Искать совпадение в номере темы (полное совпадение или шаблон вида '1234*')">
+                                        <input type="radio" name="filter_by_phrase" value="2" />
+                                        в номере темы
+                                    </label>
                                 </fieldset>
                             </div>
                             <div class="filter_block filter_rule ui-widget" title="">
