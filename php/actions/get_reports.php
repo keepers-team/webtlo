@@ -67,7 +67,7 @@ try {
         // ищем тему со списками
         $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
 
-        // Log::append("Сканирование списков...");
+        Log::append("Сканирование списков...");
 
         // подключаемся к api
         if (!isset($api)) {
