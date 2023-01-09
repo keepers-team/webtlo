@@ -30,7 +30,7 @@ try {
         }
         $data = Db::query_database(
             "SELECT id AS value, na AS label FROM Forums
-            WHERE id LIKE :term OR na LIKE :term ORDER BY LOWER(na)",
+            WHERE si > 0 AND (id LIKE :term OR na LIKE :term) ORDER BY LOWER(na)",
             ['term' => $pattern],
             true
         );
