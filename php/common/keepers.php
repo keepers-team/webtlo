@@ -5,7 +5,7 @@ $starttime = microtime(true);
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-Log::append("Начато обновление списка раздач других хранителей...");
+Log::append("Начато обновление списков раздач хранителей...");
 
 // получение настроек
 if (!isset($cfg)) {
@@ -46,7 +46,7 @@ if (isset($cfg['subsections'])) {
         $topic_id = $reports->search_topic_id($subsection['na']);
 
         if (empty($topic_id)) {
-            Log::append("Error: Не удалось найти тему со списком для подраздела № $forum_id");
+            Log::append("Error: Не удалось найти тему со списками для подраздела № $forum_id");
             continue;
         } else {
             $numberForumsScanned++;
@@ -99,8 +99,12 @@ $count_keepers = Db::query_database(
 );
 
 if ($count_keepers[0] > 0) {
-    Log::append("Просканировано подразделов: " . $numberForumsScanned . " шт.");
-    Log::append("Запись в базу данных списка раздач других хранителей...");
+    Log::append(sprintf(
+        "Просканировано подразделов: %d шт, хранимых раздач %d шт.",
+        $numberForumsScanned,
+        $count_keepers[0]
+    ));
+    Log::append("Запись в базу данных списков раздач хранителей...");
 
     Db::query_database("INSERT INTO Keepers SELECT * FROM temp.KeepersNew");
 
@@ -115,4 +119,4 @@ if ($count_keepers[0] > 0) {
 
 $endtime = microtime(true);
 
-Log::append("Обновление списка раздач других хранителей завершено за " . convert_seconds($endtime - $starttime));
+Log::append("Обновление списков раздач хранителей завершено за " . convert_seconds($endtime - $starttime));
