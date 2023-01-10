@@ -477,14 +477,11 @@ function getFilteredTopics() {
 			$("#tor_add").button("enable");
 			$(".topics_filter input[name^='keeping_priority']").removeClass("ui-state-disabled").prop("disabled", false);
 		}
-		if (forum_id == -3 || forum_id == -5) {
-			$(".tor_download_by_keepers_list").attr("disabled", true);
-			$("#tor_download_options").selectmenu("refresh");
-		} else {
-			$(".tor_download_by_keepers_list").attr("disabled", false);
-			$("#tor_download_options").selectmenu("refresh");
-		}
 		$("#filter_client_id").selectmenu("enable");
+
+		// заблокировать кнопки загрузки по спискам, если не выбран подраздел
+		$(".tor_download_by_keepers_list").prop("disabled", forum_id < 0);
+		$("#tor_download_options").selectmenu("refresh");
 	} else {
 		if (forum_id == -2) {
 			$("#toolbar-control-topics").buttonset("disable");
@@ -506,7 +503,7 @@ function getFilteredTopics() {
 			$("#filter_avg_seeders_period").spinner("enable");
 			$(".tor_remove").button("disable");
 		}
-		$(".tor_download_by_keepers_list").attr("disabled", true);
+		$(".tor_download_by_keepers_list").prop("disabled", true);
 		$("#tor_download_options").selectmenu("refresh");
 		$("#filter_client_id").val(0).selectmenu("refresh").selectmenu("disable");
 	}
