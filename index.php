@@ -208,8 +208,8 @@ try {
                             </button>
                             <select id="tor_download_options">
                                 <option class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">с заменой Passkey</option>
-                                <option class="tor_download_by_keepers_list" value="0" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог">по спсикам с форума</option>
-                                <option class="tor_download_by_keepers_list" value="1" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог с заменой Passkey">по спсикам с форума и с заменой Passkey</option>
+                                <option class="tor_download_by_keepers_list" value="0" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог">по спискам с форума</option>
+                                <option class="tor_download_by_keepers_list" value="1" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог с заменой Passkey">по спискам с форума и с заменой Passkey</option>
                             </select>
                         </div>
                         <div id="toolbar-control-topics">

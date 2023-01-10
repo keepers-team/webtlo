@@ -120,11 +120,16 @@ li.menu.ui-tabs-active {
 }
 
 .ui-button {
-	padding: .4em .6em !important;
+	padding: .4em 1em;
 }
 
 .ui-button:disabled {
 	cursor: default;
+}
+
+.ui-button.ui-button-icon-only.tor_download-splitbutton-select {
+	width: 1em;
+	padding: .4em .1em;
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {
@@ -266,10 +271,6 @@ li.menu.ui-tabs-active {
 
 .date_container * {
 	vertical-align: middle;
-}
-
-.ui-button-icon-only.tor_download-splitbutton-select {
-	width: 1em !important;
 }
 
 /* topics result */
