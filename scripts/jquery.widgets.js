@@ -108,7 +108,7 @@ $(document).ready(function () {
 
     // регулировка раздач, количество пиров
     $(".spinner-peers").spinner({
-        min: -1,
+        min: -2,
         max: 100,
         mouseWheel: true
     });
