@@ -20,7 +20,7 @@ $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
-    $clientControlPeers = $torrentClientData['control_peers'];
+    $clientControlPeers = ($torrentClientData['control_peers'] !== "") ? (int)$torrentClientData['control_peers'] : -2;
     if ($clientControlPeers == -1) {
         Log::append('Для клиента '. $torrentClientData['cm'] .' отключена регулировка');
         continue;
@@ -115,7 +115,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 continue;
             }
             // пропустим исключённые из регулировки подразделы
-            $subControlPeers = isset($cfg['subsections'][$forumID]) ? $cfg['subsections'][$forumID]['control_peers'] : "";
+            $subControlPeers = isset($cfg['subsections'][$forumID]['control_peers']) ? $cfg['subsections'][$forumID]['control_peers'] : -2;
+            $subControlPeers = ($subControlPeers !== "") ? (int)$subControlPeers : -2;
             if ($subControlPeers == -1) {
                 Log::append('Для раздела '. $forumID .' отключена регулировка');
                 continue;
@@ -227,7 +228,7 @@ Log::append('Регулировка раздач в торрент-клиент�
 
 
 // Определяем лимит для регулировки раздач
-function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
+function get_control_peers(int $controlPeers, int $clientControlPeers, int $subControlPeers): int
 {
     // Задан лимит для клиента и для раздела
     if ($clientControlPeers > -1 && $subControlPeers > -1) {
@@ -246,5 +247,5 @@ function get_control_peers($controlPeers, $clientControlPeers, $subControlPeers)
         $controlPeers = $subControlPeers;
     }
 
-    return (int)$controlPeers;
+    return $controlPeers > 0 ? $controlPeers : 0;
 }
