@@ -41,19 +41,25 @@ function downloadTorrentsByKeepersList(replace_passkey) {
 	if ($.isEmptyObject(forum_id)) {
 		return false;
 	}
+	$("#process").text("Получение списка раздач...");
 	$.ajax({
 		type: "POST",
-		url: "php/actions/get_reports.php",
+		url: "php/actions/get_reports_hashes.php",
 		data: {
-			forum_id: forum_id,
-			return_only_topic_hashes: true
+			forum_id: forum_id
+		},
+		beforeSend: function () {
+			block_actions();
+		},
+		complete: function () {
+			block_actions();
 		},
 		success: function (response) {
 			response = $.parseJSON(response);
 			$("#log").append(response.log);
 
 			// скачивание т.-файлов
-			var topic_hashes = $.param(response.report.map( s => ({name:"topic_hashes[]", value:s}) ));
+			var topic_hashes = $.param(response.hashes.map( s => ({name:"topic_hashes[]", value:s}) ));
 			if ($.isEmptyObject(topic_hashes)) {
 				showResultTopics("Не удалось получить список раздач для загрузки");
 				return false;
