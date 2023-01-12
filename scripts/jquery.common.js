@@ -162,8 +162,7 @@ function getReport() {
 		type: "POST",
 		url: "php/actions/get_reports.php",
 		data: {
-			forum_id: forum_id,
-			return_only_topic_ids: false
+			forum_id: forum_id
 		},
 		beforeSend: function () {
 			$("#reports-subsections").selectmenu("disable");
