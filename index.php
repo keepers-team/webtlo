@@ -894,7 +894,7 @@ try {
                 <p>web-TLO <a href="<?php echo $webtlo->version_url ?>" target="_blank"><?php echo $webtlo->version ?></a></p>
                 <p>Простое веб-приложение для управления торрентами</p>
                 <p><a href="<?php echo $webtlo->wiki ?>" target="_blank">web-TLO wiki</a></p>
-                <p>Copyright © 2016-2022 Alexander Shemetov</p>
+                <p>Copyright © 2016-2023 Alexander Shemetov</p>
             </div>
         </div>
     </div>
