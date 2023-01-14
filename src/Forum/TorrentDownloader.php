@@ -8,6 +8,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Header;
 use GuzzleRetry\GuzzleRetryMiddleware;
 use KeepersTeam\Webtlo\Config\Defaults;
+use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -16,12 +17,13 @@ use Psr\Log\LoggerInterface;
 
 class TorrentDownloader
 {
+    use ProxySupport;
+
     private readonly Client $client;
     private static string $torrentMime = 'application/x-bittorrent';
     private static string $url = '/forum/dl.php';
     private readonly array $defaultParams;
 
-    // FIXME add proxy support
     public function __construct(
         private readonly LoggerInterface $logger,
         string $apiKey,
@@ -29,6 +31,7 @@ class TorrentDownloader
         bool $addRetracker,
         string $forumURL = Defaults::forumUrl,
         Timeout $timeout = new Timeout(),
+        ?Proxy $proxy = null
     ) {
         $this->defaultParams = [
             'keeper_user_id' => $userID,
@@ -61,7 +64,9 @@ class TorrentDownloader
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory($retryOptions));
         $baseUrl = sprintf("https://%s%s", $forumURL, self::$url);
+        $proxyConfig = static::getProxyConfig($this->logger, $proxy);
         $this->client = new Client([
+            ...$proxyConfig,
             'base_uri' => $baseUrl,
             'timeout' => $timeout->request,
             'connect_timeout' => $timeout->connection,
