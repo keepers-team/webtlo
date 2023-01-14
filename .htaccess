@@ -4,14 +4,7 @@ AddDefaultCharset UTF-8
 	Require all denied
 </Files>
 
-<IfModule mod_php5.c>
-	php_value max_execution_time 0
-	php_value max_input_time 0
-	php_value max_input_vars 100000
-	php_value memory_limit 2G
-</IfModule>
-
-<IfModule mod_php7.c>
+<IfModule mod_php.c>
 	php_value max_execution_time 0
 	php_value max_input_time 0
 	php_value max_input_vars 100000
