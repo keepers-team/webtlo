@@ -7,6 +7,8 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Header;
 use GuzzleRetry\GuzzleRetryMiddleware;
+use KeepersTeam\Webtlo\Config\Defaults;
+use KeepersTeam\Webtlo\Config\Timeout;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -17,22 +19,21 @@ class TorrentDownloader
     private readonly Client $client;
     private static string $torrentMime = 'application/x-bittorrent';
     private static string $url = '/forum/dl.php';
-    private static string $ua = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0';
     private readonly array $defaultParams;
 
     // FIXME add proxy support
     public function __construct(
-        string $forumURL,
+        private readonly LoggerInterface $logger,
         string $apiKey,
         string $userID,
-        float $timeout,
-        bool $addRetrackerURL,
-        private readonly LoggerInterface $logger
+        bool $addRetracker,
+        string $forumURL = Defaults::forumUrl,
+        Timeout $timeout = new Timeout(),
     ) {
         $this->defaultParams = [
             'keeper_user_id' => $userID,
             'keeper_api_key' => $apiKey,
-            'add_retracker_url' => $addRetrackerURL ? 1 : 0,
+            'add_retracker_url' => $addRetracker ? 1 : 0,
         ];
 
         $retryCallback = function (int $attemptNumber, float $delay, RequestInterface &$request, array &$options, ?ResponseInterface $response) use ($logger): void {
@@ -52,21 +53,23 @@ class TorrentDownloader
         ];
 
         $headers = [
-            'User-Agent' => self::$ua,
+            'User-Agent' => Defaults::userAgent,
             'Accept' => self::$torrentMime,
             'X-WebTLO' => 'experimental'
         ];
 
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory($retryOptions));
+        $baseUrl = sprintf("https://%s%s", $forumURL, self::$url);
         $this->client = new Client([
-            'base_uri' => $forumURL . self::$url,
-            'timeout' => $timeout,
+            'base_uri' => $baseUrl,
+            'timeout' => $timeout->request,
+            'connect_timeout' => $timeout->connection,
             'allow_redirects' => true,
             'headers' => $headers,
             'handler' => $stack
         ]);
-        $logger->info('Created downloader', ['base' => $forumURL]);
+        $logger->info('Created downloader', ['base' => $baseUrl]);
     }
 
     /**
