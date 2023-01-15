@@ -2,8 +2,10 @@
 
 namespace KeepersTeam\Webtlo\Forum;
 
+use DOMDocument;
 use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
@@ -12,8 +14,10 @@ use Psr\Log\LoggerInterface;
 class ForumClient extends WebClient
 {
     private const loginAction = 'вход';
+    private const profileAction = 'viewprofile';
     private const authCookieName = 'bb_session';
     private const loginURL = '/forum/login.php';
+    private const profileURL = '/forum/profile.php';
 
     public function __construct(
         private readonly string $username,
@@ -80,6 +84,55 @@ class ForumClient extends WebClient
             }
             $this->logger->info('Successfully logged in', ['id' => $userId, 'username' => $this->username]);
             return $userId;
+        } else {
+            return null;
+        }
+    }
+
+    private function parseApiCredentials(string $page): ?ApiCredentials
+    {
+        libxml_use_internal_errors(use_errors: true);
+        $result = null;
+        $html = new DOMDocument();
+        $html->loadHtml(source: $page);
+        $dom = simplexml_import_dom($html);
+        $nodes = $dom->xpath(expression: "//table[contains(@class, 'user_details')]/tr[9]/td/b/text()");
+        if (count($nodes) === 3) {
+            $result = new ApiCredentials(
+                userId: (string)$nodes[2],
+                btKey: (string)$nodes[0],
+                apiKey: (string)$nodes[1],
+            );
+        }
+        unset($nodes);
+        unset($dom);
+        unset($html);
+
+        return $result;
+    }
+
+    public function getKeys(int $userId): ?ApiCredentials
+    {
+        $options = [
+            'query' => ['u' => $userId, 'mode' => self::profileAction]
+        ];
+        try {
+            $this->logger->info('Reading profile info', ['id' => $userId]);
+            $response = $this->client->get(self::profileURL, $options);
+        } catch (GuzzleException $e) {
+            $this->logger->error('Failed to fetch profile page', ['id' => $userId, 'error' => $e]);
+            return null;
+        }
+
+        if ($this->isValidMime($response, self::webMime)) {
+            $html = $response->getBody()->getContents();
+            $credentials = $this->parseApiCredentials($html);
+            if (null === $credentials) {
+                $this->logger->error('Unable to extract API credentials from page');
+                return null;
+            }
+            $this->logger->info('Successfully obtained API credentials', ['id' => $userId]);
+            return $credentials;
         } else {
             return null;
         }
