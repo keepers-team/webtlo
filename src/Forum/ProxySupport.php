@@ -11,7 +11,7 @@ trait ProxySupport
     {
         $options = [];
         if (null !== $proxy && $proxy->enabled) {
-            $needsAuth = null !== $proxy->login && null !== $proxy->password;
+            $needsAuth = null !== $proxy->credentials;
             $curlOptions = [CURLOPT_PROXYTYPE => $proxy->type->value];
             $logger->info(
                 'Used proxy',
@@ -23,7 +23,11 @@ trait ProxySupport
                 ]
             );
             if ($needsAuth) {
-                $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf("%s:%s", $proxy->login, $proxy->password);
+                $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf(
+                    "%s:%s",
+                    $proxy->credentials->username,
+                    $proxy->credentials->password
+                );
             }
 
             $options['proxy'] = sprintf("%s:%d", $proxy->hostname, $proxy->port);
