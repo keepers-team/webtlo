@@ -29,8 +29,8 @@ final class Flood extends GenericTorrentClient
                 ]
             ),
             CURLOPT_HEADER => true,
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20,
+            CURLOPT_CONNECTTIMEOUT => $this->timeout->connection,
+            CURLOPT_TIMEOUT => $this->timeout->request,
             CURLOPT_HTTPHEADER => ['Content-Type' => 'application/json', 'Accept' => 'application/json']
         ]);
         $response = curl_exec($ch);

@@ -23,8 +23,8 @@ final class Transmission extends GenericTorrentClient
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_USERPWD => $this->login . ':' . $this->password,
             CURLOPT_HEADER => true,
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
+            CURLOPT_CONNECTTIMEOUT => $this->timeout->connection,
+            CURLOPT_TIMEOUT => $this->timeout->request
         ]);
         $response = curl_exec($ch);
         if ($response === false) {

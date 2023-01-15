@@ -30,8 +30,8 @@ final class Deluge extends GenericTorrentClient
             CURLOPT_ENCODING => 'gzip',
             CURLOPT_HEADER => true,
             CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
-            CURLOPT_CONNECTTIMEOUT => 20,
-            CURLOPT_TIMEOUT => 20
+            CURLOPT_CONNECTTIMEOUT => $this->timeout->connection,
+            CURLOPT_TIMEOUT => $this->timeout->request
         ]);
         $response = curl_exec($ch);
         if ($response === false) {

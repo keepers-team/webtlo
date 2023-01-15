@@ -3,6 +3,7 @@
 namespace KeepersTeam\Webtlo\Clients;
 
 use CurlHandle;
+use KeepersTeam\Webtlo\Config\Timeout;
 use KeepersTeam\Webtlo\Config\V0\TorrentClientConfig;
 use Psr\Log\LoggerInterface;
 
@@ -20,6 +21,7 @@ abstract class GenericTorrentClient
     protected readonly string $password;
     protected string $sid;
     protected CurlHandle $ch;
+    protected readonly Timeout $timeout;
 
     /**
      * default constructor
@@ -38,6 +40,7 @@ abstract class GenericTorrentClient
         }
         $this->login = $login;
         $this->password = $password;
+        $this->timeout = $config->timeout;
         $this->ch = curl_init();
     }
 
