@@ -111,6 +111,28 @@ class ForumClient extends WebClient
         return $result;
     }
 
+    private function parseFormToken(string $page): ?string
+    {
+        libxml_use_internal_errors(use_errors: true);
+        $result = null;
+        $html = new DOMDocument();
+        $html->loadHtml(source: $page);
+        $dom = simplexml_import_dom($html);
+        $nodes = $dom->xpath(expression: "/html/head/script[1]");
+        if (count($nodes) === 1) {
+            $matches = [];
+            preg_match("|.*form_token[^']*'([^,]*)',.*|si", $nodes[0], $matches);
+            if (count($matches) === 2) {
+                $result = $matches[1];
+            }
+        }
+        unset($nodes);
+        unset($dom);
+        unset($html);
+
+        return $result;
+    }
+
     private function getProfilePage(int $userId): ?string
     {
         $options = [
@@ -146,5 +168,21 @@ class ForumClient extends WebClient
         }
         $this->logger->info('Successfully obtained API credentials', ['id' => $userId]);
         return $credentials;
+    }
+
+    public function getFormToken(int $userId): ?string
+    {
+        $html = $this->getProfilePage($userId);
+        if (null === $html) {
+            return null;
+        }
+
+        $formToken = $this->parseFormToken($html);
+        if (null === $formToken) {
+            $this->logger->error('Unable to extract form token from page');
+            return null;
+        }
+        $this->logger->info('Successfully obtained form token', ['id' => $userId]);
+        return $formToken;
     }
 }
