@@ -8,7 +8,7 @@ use CURLFile;
  * Class Utorrent
  * Supported by uTorrent 1.8.2 and later
  */
-class Utorrent extends TorrentClient
+final class Utorrent extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/gui/%s';
 

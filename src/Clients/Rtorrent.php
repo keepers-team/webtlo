@@ -8,7 +8,7 @@ use Exception;
  * Class Rtorrent
  * Supported by rTorrent 0.9.7 and later
  */
-class Rtorrent extends TorrentClient
+final class Rtorrent extends GenericTorrentClient
 {
     protected static string $base = '%s://%s/RPC2';
 

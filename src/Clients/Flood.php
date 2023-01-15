@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Clients;
  * Class Flood
  * Supported by flood by jesec API
  */
-class Flood extends TorrentClient
+final class Flood extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/%s';
 

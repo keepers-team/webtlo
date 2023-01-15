@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Clients;
  * Class Transmission
  * Supported by Transmission 2.80 and later
  */
-class Transmission extends TorrentClient
+final class Transmission extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/transmission/rpc';
 

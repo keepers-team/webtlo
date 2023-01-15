@@ -8,7 +8,7 @@ use CURLFile;
  * Class Qbittorrent
  * Supported by qBittorrent 4.1 and later
  */
-class Qbittorrent extends TorrentClient
+final class Qbittorrent extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/%s';
 

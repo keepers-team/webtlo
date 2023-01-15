@@ -9,7 +9,7 @@ use Psr\Log\LoggerInterface;
  * Class TorrentClient
  * Базовый класс для всех торрент-клиентов
  */
-abstract class TorrentClient
+abstract class GenericTorrentClient
 {
     protected static string $base;
     protected string $scheme;

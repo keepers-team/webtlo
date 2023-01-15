@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Clients;
  * Class Deluge
  * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later
  */
-class Deluge extends TorrentClient
+final class Deluge extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/json';
 

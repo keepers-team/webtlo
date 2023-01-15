@@ -9,7 +9,7 @@ use SimpleXMLElement;
  * Class Ktorrent
  * Supported by KTorrent 4.3.1
  */
-class Ktorrent extends TorrentClient
+final class Ktorrent extends GenericTorrentClient
 {
     protected static string $base = '%s://%s:%s/%s';
 
