@@ -10,7 +10,7 @@ use Exception;
  */
 final class Rtorrent extends GenericTorrentClient
 {
-    protected static string $base = '%s://%s/RPC2';
+    protected static string $base = '%s://%s:%s/RPC2';
 
     /**
      * @inheritdoc
@@ -38,11 +38,8 @@ final class Rtorrent extends GenericTorrentClient
             'Content-type: text/xml',
             'Content-length: ' . strlen($request)
         ];
-        if (!empty($this->port) && !(strrpos($this->host, $this->port))) {
-            $this->host .= ':' . $this->port;
-        }
         curl_setopt_array($this->ch, [
-            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host),
+            CURLOPT_URL => sprintf(self::$base, $this->scheme, $this->host, $this->port),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => $header,
             CURLOPT_POSTFIELDS => $request
