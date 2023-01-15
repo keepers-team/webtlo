@@ -111,7 +111,7 @@ class ForumClient extends WebClient
         return $result;
     }
 
-    public function getKeys(int $userId): ?ApiCredentials
+    private function getProfilePage(int $userId): ?string
     {
         $options = [
             'query' => ['u' => $userId, 'mode' => self::profileAction]
@@ -125,16 +125,26 @@ class ForumClient extends WebClient
         }
 
         if ($this->isValidMime($response, self::webMime)) {
-            $html = $response->getBody()->getContents();
-            $credentials = $this->parseApiCredentials($html);
-            if (null === $credentials) {
-                $this->logger->error('Unable to extract API credentials from page');
-                return null;
-            }
-            $this->logger->info('Successfully obtained API credentials', ['id' => $userId]);
-            return $credentials;
+            return $response->getBody()->getContents();
         } else {
+            $this->logger->error('Broken profile page', ['id' => $userId]);
             return null;
         }
+    }
+
+    public function getKeys(int $userId): ?ApiCredentials
+    {
+        $html = $this->getProfilePage($userId);
+        if (null === $html) {
+            return null;
+        }
+
+        $credentials = $this->parseApiCredentials($html);
+        if (null === $credentials) {
+            $this->logger->error('Unable to extract API credentials from page');
+            return null;
+        }
+        $this->logger->info('Successfully obtained API credentials', ['id' => $userId]);
+        return $credentials;
     }
 }
