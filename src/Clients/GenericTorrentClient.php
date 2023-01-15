@@ -3,6 +3,7 @@
 namespace KeepersTeam\Webtlo\Clients;
 
 use CurlHandle;
+use KeepersTeam\Webtlo\Config\V0\TorrentClientConfig;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -12,27 +13,32 @@ use Psr\Log\LoggerInterface;
 abstract class GenericTorrentClient
 {
     protected static string $base;
-    protected string $scheme;
-    protected string $host;
-    protected int $port;
-    protected string $login;
-    protected string $password;
+    protected readonly string $scheme;
+    protected readonly string $host;
+    protected readonly int $port;
+    protected readonly string $login;
+    protected readonly string $password;
     protected string $sid;
     protected CurlHandle $ch;
-    protected LoggerInterface $logger;
 
     /**
      * default constructor
      */
-    public function __construct(LoggerInterface $logger, bool $ssl, string $host, int $port, string $login = '', string $password = '')
+    public function __construct(protected readonly LoggerInterface $logger, TorrentClientConfig $config)
     {
-        $this->scheme = $ssl ? 'https' : 'http';
-        $this->host = $host;
-        $this->port = $port;
+        $this->scheme = $config->secure ? 'https' : 'http';
+        $this->host = $config->host;
+        $this->port = $config->port;
+        if (null !== $config->credentials) {
+            $login = $config->credentials->username;
+            $password = $config->credentials->password;
+        } else {
+            $login = '';
+            $password = '';
+        }
         $this->login = $login;
         $this->password = $password;
         $this->ch = curl_init();
-        $this->logger = $logger;
     }
 
     /**
