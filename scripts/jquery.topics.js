@@ -300,7 +300,18 @@ $(document).ready(function () {
 	});
 
 	// сбросить настройки фильтра
-	$("#filter_reset").on("click", function () {
+	$("#filter_reset").on("click", function (e) {
+		if (e.ctrlKey) {
+			var filter_options = Cookies.get("filter-backup");
+			if (typeof filter_options !== "undefined") {
+				loadSavedFilterOptions(filter_options);
+
+				$("#topics_filter").change();
+			}
+			return;
+		}
+		Cookies.set("filter-backup", $("#topics_filter").serializeAllArray());
+
 		$("#topics_filter input[type=text]").val("");
 		$("#topics_filter input[type=search]").val("");
 		$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
@@ -414,33 +425,7 @@ $(document).ready(function () {
 		$("#topics_filter").hide();
 	}
 	if (typeof filter_options !== "undefined") {
-		filter_options = $.parseJSON(filter_options);
-		$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
-		$.each(filter_options, function (i, option) {
-			// пропускаем дату регистрации до
-			if (option.name == "filter_date_release") {
-				return true;
-			}
-			$("#topics_filter input[name='" + option.name + "']").each(function () {
-				if (
-					$(this).attr("type") == "checkbox"
-					|| $(this).attr("type") == "radio"
-				) {
-					if ($(this).val() == option.value) {
-						$(this).prop("checked", true);
-					}
-				} else if (this.name == option.name) {
-					$(this).val(option.value);
-				}
-			});
-		});
-		// FIXME !!!
-		if ($("#topics_filter [name=filter_interval]").prop("checked")) {
-			$(".filter_rule_interval, .filter_rule_one").toggle(500);
-		}
-		if ($("input[name=is_keepers]").prop("checked")) {
-			$(".keepers_filter_rule_fieldset").show();
-		}
+		loadSavedFilterOptions(filter_options);
 	}
 
 	// отобразим раздачи на главной
@@ -596,4 +581,39 @@ function execActionTopics(topic_hashes, tor_clients, action, label, force_start,
 			}
 		}
 	});
+}
+
+// распарсить сохранённый набор фильтров на главной
+function loadSavedFilterOptions(filter_options) {
+	filter_options = $.parseJSON(filter_options);
+	$("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
+	$.each(filter_options, function (i, option) {
+		// пропускаем дату регистрации до
+		if (option.name == "filter_date_release") {
+			return true;
+		}
+		if ($(`#topics_filter [name='${option.name}']`).is("select")) {
+			$(`#${option.name}`).val(option.value).selectmenu("refresh");
+			return true;
+		}
+		$(`#topics_filter input[name='${option.name}']`).each(function () {
+			if (
+				$(this).attr("type") == "checkbox"
+				|| $(this).attr("type") == "radio"
+			) {
+				if ($(this).val() == option.value) {
+					$(this).prop("checked", true);
+				}
+			} else if (this.name == option.name) {
+				$(this).val(option.value);
+			}
+		});
+	});
+	// FIXME !!!
+	if ($("#topics_filter [name=filter_interval]").prop("checked")) {
+		$(".filter_rule_interval, .filter_rule_one").toggle(500);
+	}
+	if ($("input[name=is_keepers]").prop("checked")) {
+		$(".keepers_filter_rule_fieldset").show();
+	}
 }
