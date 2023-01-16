@@ -181,6 +181,9 @@ if (!empty($untrackedTorrentHashes)) {
             if (empty($topicData)) {
                 continue;
             }
+            if (in_array($topicData['tor_status'], [7])) {
+                continue;
+            }
             $insertedUntrackedTopics[] = [
                 'id' => $topicID,
                 'ss' => $topicData['forum_id'],
@@ -234,7 +237,6 @@ $topicsUnregistered = Db::query_database(
         Topics.hs IS NULL
         AND TopicsUntracked.hs IS NULL
         AND Torrents.topic_id IS NOT ""
-        AND Torrents.done = 1
     ORDER BY Torrents.name',
     [],
     true,

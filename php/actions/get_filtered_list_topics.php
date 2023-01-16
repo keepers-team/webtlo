@@ -168,10 +168,11 @@ try {
                     $topicBlock .= $pattern;
                 }
             }
+            // тип пульки: раздаю, качаю, на паузе, ошибка
             $stateTorrentClient = '';
             if ($topic['done'] == 1) {
                 $stateTorrentClient = 'fa-arrow-up';
-            } elseif ($topic['done'] == null) {
+            } elseif ($topic['done'] === null) {
                 $stateTorrentClient = 'fa-circle';
             } else {
                 $stateTorrentClient = 'fa-arrow-down';
@@ -774,9 +775,10 @@ try {
                 }
             }
             // тип пульки: раздаю, качаю, на паузе, ошибка
+            $stateTorrentClient = '';
             if ($topic_data['done'] == 1) {
                 $stateTorrentClient = 'fa-arrow-up';
-            } elseif ($topic_data['done'] == null) {
+            } elseif ($topic_data['done'] === null) {
                 $stateTorrentClient = 'fa-circle';
             } else {
                 $stateTorrentClient = 'fa-arrow-down';
