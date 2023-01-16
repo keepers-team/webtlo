@@ -186,7 +186,7 @@ try {
                             <button id="apply_filter" type="button" title="Применить параметры фильтра">
                                 <i class="fa fa-check" aria-hidden="true"></i>
                             </button>
-                            <button type="button" id="filter_reset" title="Сбросить параметры фильтра на значения по умолчанию">
+                            <button type="button" id="filter_reset" title="Click - cбросить параметры фильтра на значения по умолчанию. &#10;Ctrl+Click - восстановить последние сброшенные настройки.">
                                 <i class="fa fa-undo" aria-hidden="true"></i>
                             </button>
                         </div>
