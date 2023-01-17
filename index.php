@@ -727,9 +727,9 @@ try {
                                 <input id="enable_auto_apply_filter" name="enable_auto_apply_filter" type="checkbox" <?php echo $enable_auto_apply_filter ?> />
                                 применять параметры фильтра автоматически
                             </label>
-                            <label>
+                            <label title="Всегда отключено для вкладки 'Хранимые раздачи по спискам'">
                                 <input name="exclude_self_keep" type="checkbox" size="24" <?php echo $exclude_self_keep ?> />
-                                исключить себя из списка хранителей раздачи
+                                не показывать себя, как хранителя, в списке раздач на главной
                             </label>
                             <h3>Регулировка раздач<sup>1</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
