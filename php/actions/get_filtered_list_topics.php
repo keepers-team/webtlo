@@ -43,7 +43,7 @@ try {
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = [
         'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
-        'ds' => ' <i class="fa %9$s %8$s"></i>',
+        'ds' => ' <i class="fa %9$s %8$s" title="%11$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
         'cl' => ' <span>%10$s | </span> ',
         'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
@@ -196,7 +196,8 @@ try {
                     '',
                     'text-success',
                     $stateTorrentClient,
-                    get_client_name($topic['client_id'], $cfg)
+                    get_client_name($topic['client_id'], $cfg),
+                    get_topic_title($stateTorrentClient)
                 ),
                 ''
             );
@@ -384,7 +385,9 @@ try {
                     date('d.m.Y', $topicData['rg']),
                     round($topicData['se']),
                     $stateAverageSeeders,
-                    'fa-circle'
+                    'fa-circle',
+                    '',
+                    ''
                 ),
                 $listTorrentClientsNames
             );
@@ -791,12 +794,12 @@ try {
                 $stateTorrentClient = 'fa-times';
             }
             // цвет пульки
-            $bullet = '';
+            $bullet_color = '';
             if (isset($topic_data['ds'])) {
                 if ($topic_data['ds'] < $filter['avg_seeders_period']) {
-                    $bullet = $topic_data['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
+                    $bullet_color = $topic_data['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
                 } else {
-                    $bullet = 'text-success';
+                    $bullet_color = 'text-success';
                 }
             }
             // выводим строку
@@ -811,9 +814,10 @@ try {
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
-                    $bullet,
+                    $bullet_color,
                     $stateTorrentClient,
-                    get_client_name($topic_data['cl'], $cfg)
+                    get_client_name($topic_data['cl'], $cfg),
+                    get_topic_title($stateTorrentClient, $bullet_color)
                 ),
                 $keepers_list
             );
@@ -850,6 +854,38 @@ function get_client_name(int|null $clientID, array $cfg): string
         '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']
     );
+}
+
+/**
+ * Собрать заголовок для раздачи, в зависимости от её состояния
+ *
+ * @param      string  $bulletState  Статус раздачи
+ * @param      string  $bulletColor  Цвет раздачи (средние сиды)
+ *
+ * @return     string  Заголовок раздачи
+ */
+function get_topic_title(string $bulletState, string $bulletColor = ""): string
+{
+    $topicsBullets = [
+        "fa-arrow-up"   => "Раздаётся",
+        "fa-arrow-down" => "Скачивается",
+        "fa-pause"      => "Приостановлена",
+        "fa-circle"     => "Нет в клиенте",
+        "fa-times"      => "C ошибкой в клиенте"
+    ];
+    $topicsColors = [
+        "text-success" => "полные данные о средних сидах",
+        "text-warning" => "неполные данные о средних сидах",
+        "text-danger"  => "отсутствуют данные о средних сидах"
+    ];
+    $bulletTitle = [];
+    if (isset($topicsBullets[$bulletState])) {
+        $bulletTitle[]= $topicsBullets[$bulletState];
+    }
+    if (isset($topicsColors[$bulletColor])) {
+        $bulletTitle[]= $topicsColors[$bulletColor];
+    }
+    return implode(", ", $bulletTitle);
 }
 
 /**
