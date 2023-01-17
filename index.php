@@ -70,8 +70,16 @@ try {
     // торрент-клиенты
     $optionTorrentClients = '';
     $optionTorrentClientsDataset = '';
+    $excludeClientsIDs = [];
     if (isset($cfg['clients'])) {
         foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
+            if ($torrentClientData['exclude']) {
+                $excludeClientsIDs[] = sprintf(
+                    '%s(%d)',
+                    $torrentClientData['cm'],
+                    $torrentClientID
+                );
+            }
             $datasetTorrentClient = sprintf(
                 $datasetFormatTorrentClient,
                 $torrentClientData['cm'],
@@ -807,6 +815,18 @@ try {
                             <label>
                                 <input name="tor_for_user" type="checkbox" size="24" <?php echo $tor_for_user ?> />
                                 скачать торрент-файлы для обычного пользователя
+                            </label>
+                        </div>
+                        <h2>Настройки отправляемых отчётов</h2>
+                        <div>
+                            <h3>Список исключённых групп, см. настройки торрент-клиентов/подразделов:</h3>
+                            <label class="label">
+                                Исключенные клиенты
+                                <input id="exclude_clients_ids" type="text" size="20" readonly value="<?php echo implode(',', $excludeClientsIDs) ?>" />
+                            </label>
+                            <label class="label">
+                                Исключенные подразделы
+                                <input id="exclude_forums_ids" type="text" size="20" readonly value="<?php echo $cfg['reports']['exclude_forums_ids'] ?>" />
                             </label>
                         </div>
                         <h2>Настройки интерфейса</h2>
