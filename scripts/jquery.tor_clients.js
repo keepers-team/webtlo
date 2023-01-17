@@ -214,7 +214,7 @@ $(document).ready(function () {
 
 	// обновление списка торрент-клиентов настройках подразделов
 	$("#add-torrent-client, #remove-torrent-client").on("click", refreshListTorrentClients);
-	$("#torrent-client-props").on("input", functionDelay(refreshListTorrentClients, 400));
+	$("#torrent-client-props").on("input selectmenuchange", functionDelay(refreshListTorrentClients, 400));
 
 	// проверка доступности торрент-клиентов
 	$("#connect-torrent-client").on("click", function () {
@@ -274,6 +274,7 @@ $(document).ready(function () {
 // обновление списка торрент-клиентов
 function refreshListTorrentClients() {
 	var clientSelectors = $("#forum-client, #filter_client_id");
+	var excludedClients = [];
 	clientSelectors.find("option").each(function () {
 		if ($(this).val() != 0) {
 			$(this).remove();
@@ -284,12 +285,17 @@ function refreshListTorrentClients() {
 		var torrentClientData = this.dataset;
 		if (torrentClientID != 0) {
 			clientSelectors.append(`<option value="${torrentClientID}">${torrentClientData.comment}</option>`);
+
+			if (torrentClientData.exclude-0) {
+				excludedClients.push(`${torrentClientData.comment}(${torrentClientID})`);
+			}
 		}
 	});
 	if ($("#list-forums option").size() > 0) {
 		$("#list-forums").change();
 	}
 	clientSelectors.selectmenu("refresh");
+	$("#exclude_clients_ids").val(excludedClients.join(","));
 }
 
 // получение списка торрент-клиентов

@@ -121,7 +121,7 @@ $(document).ready(function () {
 	});
 
 	// изменение свойств подраздела
-	$("#forum-props").on("focusout spinstop", function () {
+	$("#forum-props").on("focusout selectmenuchange spinstop", function () {
 		var forumClient = $("#forum-client :selected").val();
 		var forumLabel = $("#forum-label").val();
 		var forumSavePath = $("#forum-savepath").val();
@@ -137,6 +137,8 @@ $(document).ready(function () {
 		optionForum.attr("data-hide", forumHideTopics).data("hide", forumHideTopics);
 		optionForum.attr("data-peers", forumControlPeers).data("peers", forumControlPeers);
 		optionForum.attr("data-exclude", forumExclude).data("exclude", forumExclude);
+
+		refreshExcludedSubsections();
 	});
 
 	// добавить подраздел
@@ -288,4 +290,18 @@ function getForums() {
 		}
 	});
 	return forums;
+}
+
+// Обновить список ид исключенных из отчётов разделов
+function refreshExcludedSubsections() {
+	var excludedForums = [];
+	$("#list-forums option").each(function () {
+		var forumID = $(this).val();
+		var forumData = this.dataset;
+
+		if (forumData.exclude-0) {
+			excludedForums.push(forumID);
+		}
+	});
+	$("#exclude_forums_ids").val(excludedForums.join(","));
 }
