@@ -72,6 +72,7 @@ function get_settings($filename = "")
         $config['clients'][$id]['pw'] = $ini->read("torrent-client-$i", "password", "");
         $config['clients'][$id]['ssl'] = $ini->read("torrent-client-$i", "ssl", 0);
         $config['clients'][$id]['control_peers'] = $ini->read("torrent-client-$i", "control_peers", "");
+        $config['clients'][$id]['exclude'] = $ini->read("torrent-client-$i", "exclude", 0);
     }
     if (isset($config['clients']) && is_array($config['clients'])) {
         $config['clients'] = natsort_field($config['clients'], 'cm');
@@ -98,6 +99,7 @@ function get_settings($filename = "")
             $config['subsections'][$id]['id'] = $id;
             $config['subsections'][$id]['na'] = isset($titles[$id]) ? $titles[$id] : $ini->read("$id", "title", "$id");
             $config['subsections'][$id]['control_peers'] = $ini->read($id, 'control-peers', '');
+            $config['subsections'][$id]['exclude'] = $ini->read($id, 'exclude', 0);
         }
         $config['subsections'] = natsort_field($config['subsections'], 'na');
     }
@@ -174,7 +176,8 @@ function get_settings($filename = "")
     // отчёты
     $config['reports'] = [
         'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
-        'exclude_forums_ids' => $ini->read('reports', 'exclude', ''),
+        'exclude_forums_ids' => $ini->read('reports', 'exclude_forums_ids', ''),
+        'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids', ''),
         'send_summary_report' => $ini->read('reports', 'common', 1)
     ];
 
