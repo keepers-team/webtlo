@@ -696,7 +696,7 @@ try {
             }
             $keepers_list = '';
             if (count($topic_keepers)) {
-                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
+                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s" title="%4$s"></i> <i class="keeper bold text-%2$s" title="%4$s">%3$s</i>';
                 $keepers_list = array_map(function ($e) use ($formatKeeperList, $cfg) {
                     if ($e['complete'] == 1) {
                         if ($e['posted'] === null) {
@@ -716,7 +716,8 @@ try {
                         $formatKeeperList,
                         $stateKeeperIcon,
                         $stateKeeperColor,
-                        $e['nick']
+                        $e['nick'],
+                        get_keeper_title($stateKeeperIcon)
                     );
                 }, $topic_keepers);
                 $keepers_list = '| ' . implode(', ', $keepers_list);
@@ -834,11 +835,37 @@ try {
     ]);
 }
 
-function get_client_name( int|null $clientID, array $cfg): string
+/**
+ * Собрать имя клиента
+ *
+ * @param      int|null  $clientID  The client id
+ * @param      array     $cfg       The configuration
+ *
+ * @return     string    The client name.
+ */
+function get_client_name(int|null $clientID, array $cfg): string
 {
     if (!$clientID || !isset($cfg['clients'][$clientID])) return '';
     return sprintf(
         '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']
     );
+}
+
+/**
+ * Собрать заголовок для хранителя в зависимости от его связи с раздачей
+ *
+ * @param      string  $bulletState  Состояние раздачи
+ *
+ * @return     string  Заголовок
+ */
+function get_keeper_title(string $bulletState): string
+{
+    $keeperBullets = [
+        'upload'          => 'Есть в списке и раздаёт',
+        'arrow-up'        => 'Есть в списке, не раздаёт',
+        'arrow-circle-up' => 'Нет в списке и раздаёт',
+        'arrow-down'      => 'Скачивает'
+    ];
+    return isset($keeperBullets[$bulletState]) ? $keeperBullets[$bulletState] : "";
 }
