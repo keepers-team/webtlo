@@ -82,6 +82,9 @@ $(document).ready(function () {
 		if (forumData.hide == '') {
 			forumData.hide = 0;
 		}
+		if (forumData.exclude == '') {
+			forumData.exclude = 0;
+		}
 		var torrentClientID = $("#forum-client option[value=" + forumData.client + "]").val();
 		if (typeof torrentClientID === "undefined") {
 			$("#forum-client :first").prop("selected", "selected");
@@ -100,6 +103,12 @@ $(document).ready(function () {
 		} else {
 			$("#forum-hide-topics [value=" + hideTopics + "]").prop("selected", "selected");
 		}
+		var forumExclude = $("#forum-exclude [value=" + forumData.exclude + "]").val();
+		if (typeof forumExclude === "undefined") {
+			$("#forum-exclude :first").prop("selected", "selected");
+		} else {
+			$("#forum-exclude [value=" + forumExclude + "]").prop("selected", "selected");
+		}
 		$("#forum-label").val(forumData.label);
 		$("#forum-savepath").val(forumData.savepath);
 		$("#forum-control-peers").val(forumData.peers);
@@ -108,6 +117,7 @@ $(document).ready(function () {
 		$("#forum-client").selectmenu().selectmenu("refresh");
 		$("#forum-subdirectory").selectmenu().selectmenu("refresh");
 		$("#forum-hide-topics").selectmenu().selectmenu("refresh");
+		$("#forum-exclude").selectmenu().selectmenu("refresh");
 	});
 
 	// изменение свойств подраздела
@@ -118,6 +128,7 @@ $(document).ready(function () {
 		var forumSubdirectory = $("#forum-subdirectory").val();
 		var forumHideTopics = $("#forum-hide-topics :selected").val();
 		var forumControlPeers = $("#forum-control-peers").val();
+		var forumExclude = $("#forum-exclude :selected").val();
 		var optionForum = $("#list-forums option[value=" + editableForumID + "]");
 		optionForum.attr("data-client", forumClient).data("client", forumClient);
 		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
@@ -125,6 +136,7 @@ $(document).ready(function () {
 		optionForum.attr("data-subdirectory", forumSubdirectory).data("subdirectory", forumSubdirectory);
 		optionForum.attr("data-hide", forumHideTopics).data("hide", forumHideTopics);
 		optionForum.attr("data-peers", forumControlPeers).data("peers", forumControlPeers);
+		optionForum.attr("data-exclude", forumExclude).data("exclude", forumExclude);
 	});
 
 	// добавить подраздел
@@ -211,6 +223,7 @@ function addSubsection(event, ui) {
 		optionForum.attr("data-subdirectory", 1).data("subdirectory", 1);
 		optionForum.attr("data-hide", 0).data("hide", 0);
 		optionForum.attr("data-peers", "").data("peers", "");
+		optionForum.attr("data-exclude", 0).data("exclude", 0);
 		optionForum.text(forumTitle);
 		$("#main-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
 		$("#reports-subsections-stored").append("<option value=\"" + forumID + "\">" + forumTitle + "</option>");
@@ -269,7 +282,8 @@ function getForums() {
 				"savepath": forumData.savepath,
 				"subdirectory": forumData.subdirectory,
 				"hide": forumData.hide,
-				"control_peers": forumData.peers
+				"control_peers": forumData.peers,
+				"exclude": forumData.exclude
 			};
 		}
 	});

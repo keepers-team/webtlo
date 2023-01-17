@@ -48,6 +48,9 @@ $(document).ready(function () {
 			}
 		}
 		if (typeof torrentClientData !== "undefined") {
+			if (torrentClientData.exclude == '') {
+				torrentClientData.exclude = 0;
+			}
 			$("#torrent-client-comment").val(torrentClientData.comment);
 			$("#torrent-client-type").val(torrentClientData.type);
 			$("#torrent-client-type").selectmenu().selectmenu("refresh");
@@ -57,6 +60,14 @@ $(document).ready(function () {
 			$("#torrent-client-password").val(torrentClientData.password);
 			$("#torrent-client-ssl").prop("checked", torrentClientData.ssl);
 			$("#torrent-client-peers").val(torrentClientData.peers);
+			$("#torrent-client-exclude").val(torrentClientData.exclude);
+			var clientExclude = $("#torrent-client-exclude [value=" + torrentClientData.exclude + "]").val();
+			if (typeof clientExclude === "undefined") {
+				$("#torrent-client-exclude :first").prop("selected", "selected");
+			} else {
+				$("#torrent-client-exclude [value=" + clientExclude + "]").prop("selected", "selected");
+			}
+			$("#torrent-client-exclude").selectmenu().selectmenu("refresh");
 		}
 	});
 
@@ -70,6 +81,7 @@ $(document).ready(function () {
 		var torrentClientPassword = $("#torrent-client-password").val();
 		var torrentClientSSL = Number($("#torrent-client-ssl").prop("checked"));
 		var torrentControlPeers = $("#torrent-client-peers").val();
+		var torrentExclude = $("#torrent-client-exclude :selected").val();
 		if (torrentClientComment == "") {
 			var torrentClientID = $("#list-torrent-clients li.ui-editable").val();
 			torrentClientComment = torrentClientID;
@@ -92,6 +104,7 @@ $(document).ready(function () {
 		optionTorrentClient.attr("data-password", torrentClientPassword).data("password", torrentClientPassword);
 		optionTorrentClient.attr("data-ssl", torrentClientSSL).data("ssl", torrentClientSSL);
 		optionTorrentClient.attr("data-peers", torrentControlPeers).data("peers", torrentControlPeers);
+		optionTorrentClient.attr("data-exclude", torrentExclude).data("exclude", torrentExclude);
 		optionTorrentClient.html(torrentClientTitle);
 		doSortSelect("list-torrent-clients", "li");
 		$("#torrent-client-response").text("");
@@ -109,6 +122,7 @@ $(document).ready(function () {
 		var torrentClientPassword = $("#torrent-client-password").val();
 		var torrentClientSSL = Number($("#torrent-client-ssl").prop("checked"));
 		var torrentControlPeers = $("#torrent-client-peers").val();
+		var torrentExclude = $("#torrent-client-exclude").val();
 		if ($.isEmptyObject(torrentClientComment)) {
 			torrentClientComment = "client1";
 		}
@@ -157,6 +171,8 @@ $(document).ready(function () {
 		optionTorrentClient.attr("data-password", torrentClientPassword).data("password", torrentClientPassword);
 		optionTorrentClient.attr("data-ssl", torrentClientSSL).data("ssl", torrentClientSSL);
 		optionTorrentClient.attr("data-peers", torrentControlPeers).data("peers", torrentControlPeers);
+		optionTorrentClient.attr("data-exclude", torrentExclude).data("exclude", torrentExclude);
+
 		optionTorrentClient.addClass("ui-widget-content ui-selected ui-state-focus");
 		$("#list-torrent-clients").trigger("selectablestop");
 		doSortSelect("list-torrent-clients", "li");
@@ -291,7 +307,8 @@ function getListTorrentClients() {
 				"login": torrentClientData.login,
 				"password": torrentClientData.password,
 				"ssl": torrentClientData.ssl,
-				"control_peers": torrentClientData.peers
+				"control_peers": torrentClientData.peers,
+				"exclude": torrentClientData.exclude
 			};
 		}
 	});

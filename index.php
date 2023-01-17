@@ -27,8 +27,8 @@ try {
     // форматы строк
     $optionFormat = '<option value="%s" %s>%s</option>';
     $itemFormat = '<li class="ui-widget-content" value="%s" %s>%s</li>';
-    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s" data-peers="%s"';
-    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
+    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s" data-peers="%s" data-exclude="%s"';
+    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s" data-exclude="%s"';
 
     // стандартные адреса
     $forumAddressList = array(
@@ -81,7 +81,8 @@ try {
                 $torrentClientData['lg'],
                 $torrentClientData['pw'],
                 $torrentClientData['ssl'],
-                $torrentClientData['control_peers']
+                $torrentClientData['control_peers'],
+                $torrentClientData['exclude']
             );
             $optionTorrentClients .= sprintf(
                 $optionFormat,
@@ -116,7 +117,8 @@ try {
                 $forumData['df'],
                 $forumData['sub_folder'],
                 $forumData['hide_topics'],
-                $forumData['control_peers']
+                $forumData['control_peers'],
+                $forumData['exclude']
             );
             $optionForums .= sprintf(
                 $optionFormat,
@@ -642,6 +644,15 @@ try {
                                     </label>
                                 </div>
                                 <div>
+                                    <label title="Позволяет исключить все раздачи данного торрент-клиента из формируемых отчётов">
+                                        Исключить раздачи из отчётов
+                                        <select id="torrent-client-exclude" class="myinput torrent-client-props">
+                                            <option value="0">нет</option>
+                                            <option value="1">да</option>
+                                        </select>
+                                    </label>
+                                </div>
+                                <div>
                                     <label>
                                         Останавливать раздачи с количеством пиров более:
                                         <input name="torrent-client-peers" id="torrent-client-peers" class="torrent-client-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
@@ -697,6 +708,13 @@ try {
                                 <label>
                                     Скрывать раздачи в общем списке:
                                     <select id="forum-hide-topics" class="myinput forum-props" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
+                                        <option value="0">нет</option>
+                                        <option value="1">да</option>
+                                    </select>
+                                </label>
+                                <label title="Позволяет исключить все раздачи данного раздела из формируемых отчётов">
+                                    Исключить раздачи из отчётов
+                                    <select id="forum-exclude" class="myinput forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>

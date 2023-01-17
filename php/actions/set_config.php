@@ -20,6 +20,7 @@ try {
 
     // торрент-клиенты
     $torrentClientNumber = 0;
+    $excludeClientsIDs = [];
     if (
         isset($torrentClients)
         && is_array($torrentClients)
@@ -49,6 +50,12 @@ try {
             $ini->write($torrentClientSection, 'ssl', $torrentClientData['ssl']);
             if (isset($torrentClientData['control_peers'])) {
                 $ini->write($torrentClientSection, 'control_peers', trim($torrentClientData['control_peers']));
+            }
+            if (isset($torrentClientData['exclude'])) {
+                if ($torrentClientData['exclude']) {
+                    $excludeClientsIDs[] = $torrentClientNumber;
+                }
+                $ini->write($torrentClientSection, 'exclude', $torrentClientData['exclude']);
             }
         }
     }
@@ -87,6 +94,7 @@ try {
 
     // подразделы
     $ini->write('sections', 'subsections', '');
+    $excludeForumsIDs = [];
     if (
         isset($forums)
         && is_array($forums)
@@ -112,6 +120,12 @@ try {
             }
             if (isset($forumData['control_peers'])) {
                 $ini->write($forumID, 'control-peers', $forumData['control_peers']);
+            }
+            if (isset($forumData['exclude'])) {
+                if ($forumData['exclude']) {
+                    $excludeForumsIDs[] = $forumID;
+                }
+                $ini->write($forumID, 'exclude', $forumData['exclude']);
             }
         }
         $forumsIDs = implode(',', array_keys($forums));
@@ -193,6 +207,15 @@ try {
     $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
     $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
     $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
+
+    // Исключаемые из отчётов торрент-клиенты
+    $excludeClientsIDs = array_unique($excludeClientsIDs);
+    sort($excludeClientsIDs);
+    $ini->write('reports', 'exclude_clients_ids', implode(',', $excludeClientsIDs));
+    // Исключаемые из отчётов подразделы
+    $excludeForumsIDs = array_unique($excludeForumsIDs);
+    sort($excludeForumsIDs);
+    $ini->write('reports', 'exclude_forums_ids', implode(',', $excludeForumsIDs));
 
     // обновление файла с настройками
     $ini->updateFile();
