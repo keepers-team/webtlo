@@ -525,6 +525,10 @@ function getFilteredTopics() {
 				$("#filtered_topics_size").text(сonvertBytes(response.size));
 			}
 			showCountSizeSelectedTopics();
+			//Отобразим всплывающие подсказки статусов хранителей
+			showStateKeeperIconDescription();
+			//Отобразим всплывающие подсказки статусов раздач в клиентах
+			showStateTorrentClientIconDescription();
 		}
 	});
 }
@@ -616,4 +620,22 @@ function loadSavedFilterOptions(filter_options) {
 	if ($("input[name=is_keepers]").prop("checked")) {
 		$(".keepers_filter_rule_fieldset").show();
 	}
+}
+
+function showStateKeeperIconDescription() {
+	$(".topic_data>i.fa-upload").attr("title", "Хранит и раздаёт");
+	$(".topic_data>i.fa-arrow-up").attr("title", "Хранит, не раздаёт");
+	$(".topic_data>i.fa-arrow-circle-up").attr("title", "Раздаёт сид хранитель");
+	$(".topic_data>i.fa-arrow-down").attr("title", "Скачивается");
+}
+
+function showStateTorrentClientIconDescription() {
+	$(".topic_data>label>i.fa-arrow-up").attr("title", "Сидируется");
+	$(".topic_data>label>i.fa-circle").attr("title", "Отсутствует в клиентах");
+	$(".topic_data>label>i.fa-arrow-down").attr("title", "Скачивается");
+	$(".topic_data>label>i.fa-pause").attr("title", "На паузе");
+	$(".topic_data>label>i.fa-times").attr("title", "С ошибкой в клиенте");
+	$(".topic_data>label>i.text-danger").attr("title", $(".topic_data>label>i.text-danger").attr("title") + ", данных о средних сидах нет даже за половину периода");
+	$(".topic_data>label>i.text-warning").attr("title", $(".topic_data>label>i.text-warning").attr("title") + ", данные о средних сидах есть более чем за половину периода");
+	$(".topic_data>label>i.text-success").attr("title", $(".topic_data>label>i.text-success").attr("title") + ", данные о средних сидах есть за весь период");
 }
