@@ -471,7 +471,10 @@ try {
                 '(е|ё)',
                 quotemeta($filter['filter_phrase'])
             );
-            $filterByKeeper = explode(',', $filter['filter_phrase']);
+
+            // Удалим лишние пробелы из набора
+            $filterValues = explode(',', preg_replace('/\s+/', '', $filter['filter_phrase']));
+            $filterValues = array_filter($filterValues);
         }
 
         // выводим раздачи
@@ -544,7 +547,7 @@ try {
                     }
                     $topicKeepers = array_column_common($keepers[$topic_data['id']], 'nick');
                     unset($matchKeepers);
-                    foreach ($filterByKeeper as $filterKeeper) {
+                    foreach ($filterValues as $filterKeeper) {
                         if (empty($filterKeeper)) {
                             continue;
                         }
@@ -559,6 +562,17 @@ try {
                     }
                 } elseif ($filter['filter_by_phrase'] == 1) { // в названии раздачи
                     if (!mb_eregi($filterByTopicName, $topic_data['na'])) {
+                        continue;
+                    }
+                } elseif ($filter['filter_by_phrase'] == 2) { // в номере/ид раздачи
+                    $matchId = false;
+                    foreach ($filterValues as $filterId) {
+                        $filterId = sprintf("^%s$", str_replace('*', '.*', $filterId));
+                        if (mb_eregi($filterId, $topic_data['id'])) {
+                            $matchId = true;
+                        }
+                    }
+                    if (!$matchId) {
                         continue;
                     }
                 }
