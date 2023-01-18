@@ -630,7 +630,9 @@ try {
                 '(е|ё)',
                 quotemeta($filter['filter_phrase'])
             );
-            $filterValues = explode(',', $filter['filter_phrase']);
+
+            // Удалим лишние пробелы из набора
+            $filterValues = explode(',', preg_replace('/\s+/', '', $filter['filter_phrase']));
             $filterValues = array_filter($filterValues);
         }
 
