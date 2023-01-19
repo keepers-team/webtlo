@@ -4,6 +4,7 @@ namespace KeepersTeam\Webtlo\Console;
 
 use Exception;
 use KeepersTeam\Webtlo\ApplicationFactory;
+use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Utils;
 use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
@@ -55,8 +56,62 @@ class CLI extends PSR3CLIv3
             'storage',
         );
 
-        // For webserver
-        $options->registerCommand('start', 'Start webTLO application');
+        $options->registerCommand('setup', 'Setup application');
+        $options->registerOption(
+            'config-only',
+            'Bootstrap configuration file only, without database',
+            'c',
+            false,
+            'setup'
+        );
+        $options->registerOption(
+            'non-interactive',
+            'Do not ask for username and password',
+            'z',
+            false,
+            'setup'
+        );
+        $options->registerOption(
+            'no-backups',
+            'Do not perform backups at all',
+            'x',
+            false,
+            'setup'
+        );
+
+        $options->registerCommand('migrate', 'Migrate data');
+        $options->registerOption(
+            'config-only',
+            'Migrate configuration file only',
+            'c',
+            false,
+            'migrate'
+        );
+        $options->registerOption(
+            'db-only',
+            'Migrate database only',
+            'd',
+            false,
+            'migrate'
+        );
+        $options->registerOption(
+            'no-backups',
+            'Do not perform backups at all',
+            'x',
+            false,
+            'setup'
+        );
+
+        $options->registerCommand('check', 'Check application state');
+        $options->registerOption(
+            'bin',
+            "Send results to {$this->wrapDefaults(Defaults::binUrl, Colors::C_CYAN)} instead of printing it",
+            'b',
+            false,
+            'check'
+        );
+
+        $options->registerCommand('start', 'Start webTLO');
         $options->registerOption(
             'host',
             "Host (interface) to bind on. Default is {$this->wrapDefaults(self::$HOST, Colors::C_CYAN)}",
@@ -78,10 +133,6 @@ class CLI extends PSR3CLIv3
             'workers',
             'start'
         );
-
-        // For migration
-        $options->registerCommand('migrate', 'Perform database migration');
-        $options->registerOption('backup', 'Whether to make backup before migration', 'b', false, 'migrate');
     }
 
     /***
