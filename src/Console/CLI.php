@@ -12,10 +12,6 @@ use splitbrain\phpcli\PSR3CLIv3;
 
 class CLI extends PSR3CLIv3
 {
-    private static string $HOST = '0.0.0.0';
-    private static int $PORT = 8080;
-    private static int $WORKERS = 4;
-    private static string $DIR = 'data';
     private static string $LOGO = "
                    _     _____  _      ___  
      _ __ __  ___ | |__ |_   _|| |    / _ \ 
@@ -51,7 +47,7 @@ class CLI extends PSR3CLIv3
         );
         $options->registerOption(
             'storage',
-            "Storage directory for webTLO. Default is {$this->wrapDefaults(self::$DIR, Colors::C_CYAN)} (relative to {$this->wrapDefaults($this->options->getBin(), Colors::C_BROWN)})",
+            "Storage directory for webTLO. Default is {$this->wrapDefaults(Defaults::appDir, Colors::C_CYAN)} (relative to {$this->wrapDefaults($this->options->getBin(), Colors::C_BROWN)})",
             's',
             'storage',
         );
@@ -114,21 +110,21 @@ class CLI extends PSR3CLIv3
         $options->registerCommand('start', 'Start webTLO');
         $options->registerOption(
             'host',
-            "Host (interface) to bind on. Default is {$this->wrapDefaults(self::$HOST, Colors::C_CYAN)}",
+            "Host (interface) to bind on. Default is {$this->wrapDefaults(Defaults::appHost, Colors::C_CYAN)}",
             'h',
             'address',
             'start'
         );
         $options->registerOption(
             'port',
-            "Port to bind on. Default is {$this->wrapDefaults(self::$PORT, Colors::C_CYAN)}",
+            "Port to bind on. Default is {$this->wrapDefaults(Defaults::appPort, Colors::C_CYAN)}",
             'p',
             'port',
             'start'
         );
         $options->registerOption(
             'workers',
-            "How many workers to spawn. Default is {$this->wrapDefaults(self::$WORKERS, Colors::C_CYAN)}",
+            "How many workers to spawn. Default is {$this->wrapDefaults(Defaults::appWorkers, Colors::C_CYAN)}",
             'w',
             'workers',
             'start'
@@ -140,7 +136,7 @@ class CLI extends PSR3CLIv3
      */
     private function getStorage(Options $options): string
     {
-        $directory = $options->getOpt('storage', self::$DIR);
+        $directory = $options->getOpt('storage', Defaults::appDir);
         $storage = Utils::normalizePath($directory);
         if (!file_exists($storage) && !mkdir($storage, 0755, true)) {
             $this->emergency(sprintf("Can't create application storage at %s", $storage));
@@ -157,7 +153,7 @@ class CLI extends PSR3CLIv3
 
     private function getHost(Options $options): string
     {
-        $host = $options->getOpt('host', self::$HOST);
+        $host = $options->getOpt('host', Defaults::appHost);
         if (!filter_var($host, FILTER_VALIDATE_IP)) {
             $this->emergency(sprintf("%s doesn't looks like valid IP, exiting…", $host));
             exit(1);
@@ -167,7 +163,7 @@ class CLI extends PSR3CLIv3
 
     private function getPort(Options $options): int
     {
-        $rawPort = $options->getOpt('port', self::$PORT);
+        $rawPort = $options->getOpt('port', Defaults::appPort);
         if (!filter_var($rawPort, FILTER_SANITIZE_NUMBER_INT)) {
             $this->emergency(sprintf("%s doesn't looks like a port number, exiting…", $rawPort));
             exit(1);
@@ -184,7 +180,7 @@ class CLI extends PSR3CLIv3
 
     private function getWorkers(Options $options): int
     {
-        $rawWorkers = $options->getOpt('workers', self::$WORKERS);
+        $rawWorkers = $options->getOpt('workers', Defaults::appWorkers);
         if (!filter_var($rawWorkers, FILTER_SANITIZE_NUMBER_INT)) {
             $this->emergency(sprintf("%s doesn't looks like a correct workers count, exiting…", $rawWorkers));
             exit(1);

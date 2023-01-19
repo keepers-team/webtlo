@@ -4,6 +4,10 @@ namespace KeepersTeam\Webtlo\Config;
 
 final class Defaults
 {
+    final public const appHost = '0.0.0.0';
+    final public const appPort = 8080;
+    final public const appWorkers = 4;
+    final public const appDir = 'data';
     final public const forumUrl = 'rutracker.org';
     final public const apiUrl = 'api.rutracker.cc';
     final public const binUrl = 'bin.keepers.tech';
