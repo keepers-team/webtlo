@@ -10,7 +10,7 @@ use splitbrain\phpcli\Colors;
 use splitbrain\phpcli\Options;
 use splitbrain\phpcli\PSR3CLIv3;
 
-class CLI extends PSR3CLIv3
+final class CLI extends PSR3CLIv3
 {
     private static string $LOGO = "
                    _     _____  _      ___  
