@@ -8,7 +8,6 @@ use KeepersTeam\Webtlo\Config\V0\TorrentClientConfig;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class TorrentClient
  * Базовый класс для всех торрент-клиентов
  */
 abstract class GenericTorrentClient
