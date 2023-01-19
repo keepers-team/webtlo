@@ -101,7 +101,7 @@ final class CLI extends PSR3CLIv3
         $options->registerCommand('check', 'Check application state');
         $options->registerOption(
             'bin',
-            "Send results to {$this->wrapDefaults(Defaults::binUrl, Colors::C_CYAN)} instead of printing it",
+            "Send results to {$this->wrapDefaults(Defaults::binUrl, Colors::C_BROWN)} instead of printing it",
             'b',
             false,
             'check'
