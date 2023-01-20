@@ -1,0 +1,90 @@
+name: Bug Report
+description: Let us know about a problem, unexpected crash or other issue
+title: "Bug:"
+labels: [ "T: Bug", "R: Triage" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        
+        To provide you with fast and high-quality support, please fill in the required fields below.
+        
+        Check out **[our helpdesk](https://webtlo.keepers.tech/troubleshooting/probe/)** for instructions how to get `probe.php` logs
+
+  - type: markdown
+    attributes:
+      value: "### Environment and used software"
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: Which webTLO version do you run?
+      options:
+        - 2.9.x (Nightly)
+        - 2.4.1 (Stable)
+        - <2.4.x (Legacy)
+        - I don't know
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: Runtime
+      description: How do you deploy application
+      options:
+        - «Standalone» distribution for Windows
+        - OpenServer distribution for Windows
+        - Apache/php-fpm
+        - Docker or Kubernetes
+        - I don't know
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      description: If you not sure, check «Other»
+      options:
+        - Windows 10+
+        - Windows 7
+        - Linux (deb-based)
+        - Linux (rpm-based)
+        - "*BSD"
+        - MacOS
+        - Other
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "### Issue details, logs and vice versa"
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: input
+    id: probe
+    attributes:
+      label: probe.php logs
+      description: It would be helpful to provide logs from probe.php
+      placeholder: https://bin.keepers.tech/pasta/snail-ape-jaguar
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs from apache/php-fpm/webTLO
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
