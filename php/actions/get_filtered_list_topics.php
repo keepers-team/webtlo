@@ -478,8 +478,11 @@ try {
             }
         }
 
+        // Шаблоны для подразделов, статусов раздач, приоритета хранения.
         $ss = str_repeat('?,', count($forumsIDs) - 1) . '?';
         $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
+        $pt = str_repeat('?,', count($filter['keeping_priority']) - 1) . '?';
+        // Шаблон для статуса хранения.
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
 
         // 1 - fields, 2 - left join, 3 - where
@@ -531,6 +534,7 @@ try {
             WHERE
                 ss IN (' . $ss . ')
                 AND st IN (' . $st . ')
+                AND pt IN (' . $pt . ')
                 AND (' . $torrentDone . ')
                 AND TopicsExcluded.info_hash IS NULL
                 %s';
@@ -611,7 +615,8 @@ try {
             $statement,
             array_merge(
                 $forumsIDs,
-                $filter['filter_tracker_status']
+                $filter['filter_tracker_status'],
+                $filter['keeping_priority'],
             ),
             true
         );
@@ -640,10 +645,6 @@ try {
         foreach ($topics as $topic_id => $topic_data) {
             // фильтрация по клиенту
             if ($filter['filter_client_id'] > 0 && $filter['filter_client_id'] != $topic_data['cl']) {
-                continue;
-            }
-            // фильтрация по приоритету
-            if (!in_array($topic_data['pt'], $filter['keeping_priority'])) {
                 continue;
             }
             // фильтрация по дате релиза
