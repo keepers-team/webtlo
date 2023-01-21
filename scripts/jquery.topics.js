@@ -523,11 +523,11 @@ function getFilteredTopics() {
 			if (response.topics != null) {
 				$("#topics").html(response.topics);
 				$("#filtered_topics_count").text(response.count);
-				$("#filtered_topics_size").text(сonvertBytes(response.size));
+				$("#filtered_topics_size").text(convertBytes(response.size));
 
 				$("#excluded_topics_count").text(response.ex_count)
 					.parent().toggle(!!response.ex_count);
-				$("#excluded_topics_size").text(сonvertBytes(response.ex_size));
+				$("#excluded_topics_size").text(convertBytes(response.ex_size));
 			}
 			showCountSizeSelectedTopics();
 		}
@@ -537,7 +537,7 @@ function getFilteredTopics() {
 // вывод на экран кол-во, объём выделенных раздач
 function showCountSizeSelectedTopics(count = 0, size = 0.00) {
 	$("#topics_count").text(count);
-	$("#topics_size").text(сonvertBytes(size));
+	$("#topics_size").text(convertBytes(size));
 }
 
 // получение кол-ва, объёма выделенных раздач

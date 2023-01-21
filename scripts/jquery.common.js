@@ -14,7 +14,7 @@ function nowTime() {
 }
 
 /* перевод байт */
-function сonvertBytes(size) {
+function convertBytes(size) {
 	var filesizename = [" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
 	return size ? (size / Math.pow(1024, (i = Math.floor(Math.log(size) / Math.log(1024))))).toFixed(2) + filesizename[i] : "0.00";
 }
