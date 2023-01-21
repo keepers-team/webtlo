@@ -443,7 +443,13 @@ try {
                         </div>
                     </form>
                     <div class="status_info">
-                        <div id="counter">Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>) из <span id="filtered_topics_count" class="bold">0</span> (<span id="filtered_topics_size">0.00</span>)</div>
+                        <div id="counter">
+                            Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>)
+                            из <span id="filtered_topics_count" class="bold">0</span> (<span id="filtered_topics_size">0.00</span>);
+                            <span title="Раздачи выбранного подраздела, добавленные в чёрный список">
+                                В чёрном списке: <span id="excluded_topics_count" class="bold">0</span> (<span id="excluded_topics_size">0.00</span>);
+                            </span>
+                        </div>
                         <div id="topics_result"></div>
                     </div>
                     <form id="topics" method="post"></form>
