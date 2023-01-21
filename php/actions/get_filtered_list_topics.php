@@ -55,6 +55,7 @@ try {
     $preparedOutput = [];
     $filtered_topics_count = 0;
     $filtered_topics_size = 0;
+    $excluded_topics = ["ex_count" => 0, "ex_size" => 0];
 
     if ($forum_id == 0) {
         // сторонние раздачи
@@ -820,6 +821,24 @@ try {
                 $keepers_list
             );
         }
+
+        $excluded = Db::query_database(
+            'SELECT COUNT(1) AS ex_count, IFNULL(SUM(t.si),0) AS ex_size
+            FROM TopicsExcluded ex
+            INNER JOIN Topics t on t.hs = ex.info_hash
+            WHERE t.ss IN (' . $ss . ')
+                AND t.st IN (' . $st . ')
+                AND t.pt IN (' . $pt . ')',
+            array_merge(
+                $forumsIDs,
+                $filter['filter_tracker_status'],
+                $filter['keeping_priority'],
+            ),
+            true
+        );
+        if (count($excluded[0])) {
+            $excluded_topics = $excluded[0];
+        }
     }
 
     echo json_encode([
@@ -827,6 +846,8 @@ try {
         'topics' => $output,
         'size' => $filtered_topics_size,
         'count' => $filtered_topics_count,
+        'ex_count' => $excluded_topics['ex_count'],
+        'ex_size' => $excluded_topics['ex_size'],
     ]);
 } catch (Exception $e) {
     echo json_encode([
@@ -834,6 +855,8 @@ try {
         'topics' => null,
         'size' => 0,
         'count' => 0,
+        'ex_count' => 0,
+        'ex_size' => 0,
     ]);
 }
 

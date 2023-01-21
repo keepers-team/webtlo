@@ -445,6 +445,7 @@ var filter_hold = false;
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
 	var forum_id = $("#main-subsections").val();
+	$("#excluded_topics_size").parent().hide();
 	// блокировка фильтра
 	if (
 		forum_id > 0
@@ -523,6 +524,10 @@ function getFilteredTopics() {
 				$("#topics").html(response.topics);
 				$("#filtered_topics_count").text(response.count);
 				$("#filtered_topics_size").text(сonvertBytes(response.size));
+
+				$("#excluded_topics_count").text(response.ex_count)
+					.parent().toggle(!!response.ex_count);
+				$("#excluded_topics_size").text(сonvertBytes(response.ex_size));
 			}
 			showCountSizeSelectedTopics();
 		}
