@@ -36,8 +36,12 @@ if (empty($update_time[0])) {
     throw new Exception("Error: Отсутствует метка времени последнего обновления сведений");
 }
 
-// исключаемые подразделы
-$excludeForumsIDs = explode(',', $cfg['reports']['exclude_forums_ids']);
+// исключаемые подразделы и торрент-клиенты
+$excludeForumsIDs  = explode(',', $cfg['reports']['exclude_forums_ids']);
+$excludeClientsIDs = explode(',', $cfg['reports']['exclude_clients_ids']);
+if (!empty($cfg['reports']['exclude_clients_ids'])) {
+    Log::append("Notice: Из отчёта исключены торрент клиенты: {$cfg['reports']['exclude_clients_ids']}");
+}
 
 // const & pattern
 $message_length_max = 119000;
@@ -69,6 +73,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // исключаем подразделы
     if (in_array($forum_id, $excludeForumsIDs)) {
+        Log::append("Notice: Из отчёта исключен подраздел № $forum_id");
         continue;
     }
 
@@ -86,6 +91,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     }
 
     // получение данных о раздачах
+    $client_exclude = str_repeat('?,', count($excludeClientsIDs) - 1) . '?';
     $topics = Db::query_database(
         'SELECT
             Topics.id,
@@ -101,13 +107,14 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
                 MAX(done) AS done
             FROM Torrents
             WHERE error = 0
+                AND client_id NOT IN (' . $client_exclude . ')
             GROUP BY info_hash
         ) Torrents ON Topics.hs = Torrents.info_hash
         WHERE
             Torrents.info_hash IS NOT NULL
             AND Topics.ss = ?
             AND Topics.se / Topics.qt <= 10',
-        [$forum_id],
+        array_merge($excludeClientsIDs, [$forum_id]),
         true
     );
 
@@ -121,6 +128,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // количество раздач
     $topics_count = count($topics);
+    Log::append("Найдено хранимых раздач $topics_count шт для подраздела № $forum_id ");
 
     // очищаем данные в цикле
     $posts_ids = [];
