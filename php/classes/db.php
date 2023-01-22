@@ -191,7 +191,10 @@ class Db
 
             // Бекапим БД при изменении версии.
             if (count($statements)) {
-                Backup::database($databasePath, $currentPragma);
+                Backup::database($currentPragma);
+
+                // Оптимизируем БД.
+                $statements[] = 'VACUUM';
             }
         }
 

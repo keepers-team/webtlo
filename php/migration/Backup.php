@@ -22,14 +22,16 @@ class Backup
         self::clearBackups($backupPath, '/config-(.*)\.ini/');
     }
 
-    public static function database(string $path, int $version): void
+    public static function database(int $version): void
     {
         $backupName = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
         $backupPath = self::getPath();
         $backupFile = $backupPath . DIRECTORY_SEPARATOR . $backupName;
 
-        // Бекапим БД.
-        copy($path, $backupFile);
+        // Бекапим БД средствами sqlite со сжатием.
+        if (!file_exists($backupFile)) {
+            Db::query_database('VACUUM INTO ?', [$backupFile]);
+        }
 
         // Удаляем лишние бекапы.
         self::clearBackups($backupPath, '/webtlo-(.*)\.db/');
