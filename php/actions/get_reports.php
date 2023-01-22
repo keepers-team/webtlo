@@ -32,6 +32,13 @@ try {
         throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
     }
 
+    // исключаемые подразделы и торрент-клиенты
+    $excludeForumsIDs  = explode(',', $cfg['reports']['exclude_forums_ids']);
+    $excludeClientsIDs = explode(',', $cfg['reports']['exclude_clients_ids']);
+    if (!empty($cfg['reports']['exclude_clients_ids'])) {
+        Log::append("Notice: Из отчёта исключены торрент клиенты: {$cfg['reports']['exclude_clients_ids']}");
+    }
+
     // update_time[0] время последнего обновления сведений
     $update_time = Db::query_database(
         "SELECT ud FROM UpdateTime WHERE id = 7777",
@@ -61,6 +68,7 @@ try {
         $in = str_repeat('?,', count($forums_ids) - 1) . '?';
 
         // вытаскиваем из базы хранимое
+        $client_exclude = str_repeat('?,', count($excludeClientsIDs) - 1) . '?';
         $stored = Db::query_database(
             "SELECT
                 Topics.ss,
@@ -73,6 +81,7 @@ try {
                 WHERE
                     done = 1
                     AND error = 0
+                    AND client_id NOT IN ($client_exclude)
                 GROUP BY info_hash
             ) Torrents ON Topics.hs = Torrents.info_hash
             WHERE
@@ -80,7 +89,7 @@ try {
                 AND Topics.ss IN ($in)
                 AND Topics.se / Topics.qt <= 10
             GROUP BY ss",
-            $forums_ids,
+            array_merge($excludeClientsIDs, $forums_ids),
             true,
             PDO::FETCH_NUM | PDO::FETCH_UNIQUE
         );
@@ -94,6 +103,12 @@ try {
             if (!isset($stored[$forum_id])) {
                 continue;
             }
+            // исключаем подразделы
+            if (in_array($forum_id, $excludeForumsIDs)) {
+                Log::append("Notice: Из отчёта исключен подраздел № $forum_id");
+                continue;
+            }
+
             // ищем тему со списками
             $topic_id = $reports->search_topic_id($subsection['na']);
             $topic_id = empty($topic_id) ? 'NaN' : $topic_id;
@@ -121,6 +136,11 @@ try {
     } else {
         // хранимые подразделы
 
+        // исключаем подразделы
+        if (in_array($forum_id, $excludeForumsIDs)) {
+            throw new Exception("Notice: Из отчёта исключен подраздел № $forum_id");
+        }
+
         // const & pattern
         $message_length_max = 119000;
         $pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s';
@@ -141,6 +161,7 @@ try {
         }
 
         // получение данных о раздачах
+        $client_exclude = str_repeat('?,', count($excludeClientsIDs) - 1) . '?';
         $topics = Db::query_database(
             "SELECT
                 Topics.id,
@@ -156,13 +177,14 @@ try {
                     MAX(done) AS done
                 FROM Torrents
                 WHERE error = 0
+                    AND client_id NOT IN ($client_exclude)
                 GROUP BY info_hash
             ) Torrents ON Topics.hs = Torrents.info_hash
             WHERE
                 Torrents.info_hash IS NOT NULL
                 AND Topics.ss = ?
                 AND Topics.se / Topics.qt <= 10",
-            [$forum_id],
+            array_merge($excludeClientsIDs, [$forum_id]),
             true
         );
 
@@ -374,6 +396,6 @@ try {
     Log::append($e->getMessage());
     echo json_encode([
         'log' => Log::get(),
-        'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />"
+        'report' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />"
     ]);
 }
