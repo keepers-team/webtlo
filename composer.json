@@ -27,6 +27,8 @@
         "ext-xml": "*",
         "ext-libxml": "*",
         "ext-simplexml": "*",
+        "ext-readline": "*",
+        "cuyz/valinor": "^1.2",
         "phpxmlrpc/polyfill-xmlrpc": "1.0.0-rc1",
         "gotzmann/comet": "dev-master#7bb200f664e59caf2c99eeaa4f5da2c38d212ebf",
         "monolog/monolog": "^3.2",

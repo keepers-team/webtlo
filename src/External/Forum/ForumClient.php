@@ -1,6 +1,6 @@
 <?php
 
-namespace KeepersTeam\Webtlo\Forum;
+namespace KeepersTeam\Webtlo\External\Forum;
 
 use DOMDocument;
 use GuzzleHttp\Cookie\SetCookie;
@@ -9,6 +9,7 @@ use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Log\LoggerInterface;
 
 class ForumClient extends WebClient

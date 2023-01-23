@@ -1,11 +1,12 @@
 <?php
 
-namespace KeepersTeam\Webtlo\Forum;
+namespace KeepersTeam\Webtlo\External\Forum;
 
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 

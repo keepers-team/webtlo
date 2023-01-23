@@ -1,6 +1,6 @@
 <?php
 
-namespace KeepersTeam\Webtlo\Forum;
+namespace KeepersTeam\Webtlo\External;
 
 use KeepersTeam\Webtlo\Config\Proxy;
 use Psr\Log\LoggerInterface;

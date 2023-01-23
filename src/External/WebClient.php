@@ -1,6 +1,6 @@
 <?php
 
-namespace KeepersTeam\Webtlo\Forum;
+namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
@@ -10,6 +10,7 @@ use GuzzleRetry\GuzzleRetryMiddleware;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\ProxySupport;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;

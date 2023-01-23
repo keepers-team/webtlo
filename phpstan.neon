@@ -9,3 +9,5 @@ parameters:
     - '#Call to an undefined method Comet\\Comet::[a-zA-Z0-9\\_]+\(\)#'
     - '#Call to an undefined method Psr\\Http\\Message\\ResponseInterface::with\(\)#'
   reportUnmatchedIgnoredErrors: false
+includes:
+  - vendor/cuyz/valinor/qa/PHPStan/valinor-phpstan-configuration.php
