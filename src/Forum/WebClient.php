@@ -18,6 +18,7 @@ abstract class WebClient
 {
     use ProxySupport;
 
+    protected const jsonMime = 'application/json';
     protected const torrentMime = 'application/x-bittorrent';
     protected const webMime = 'text/html';
 
