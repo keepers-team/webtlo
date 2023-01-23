@@ -34,8 +34,8 @@ abstract class WebClient
 
     public function __construct(
         protected readonly LoggerInterface $logger,
+        string $baseURL,
         ?Proxy $proxy = null,
-        string $forumURL = Defaults::forumUrl,
         Timeout $timeout = new Timeout(),
     ) {
         $retryCallback = function (int $attemptNumber, float $delay, RequestInterface &$request, array &$options, ?ResponseInterface $response) use ($logger): void {
@@ -56,7 +56,7 @@ abstract class WebClient
 
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory($retryOptions));
-        $baseUrl = sprintf("https://%s", $forumURL);
+        $baseUrl = sprintf("https://%s", $baseURL);
         $proxyConfig = static::getProxyConfig($this->logger, $proxy);
         $this->cookieJar = new CookieJar();
         $this->client = new Client([

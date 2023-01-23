@@ -25,8 +25,8 @@ class TorrentDownloader extends WebClient
     ) {
         parent::__construct(
             logger: $logger,
+            baseURL: $forumURL,
             proxy: $proxy,
-            forumURL: $forumURL,
             timeout: $timeout
         );
         $this->defaultParams = [
