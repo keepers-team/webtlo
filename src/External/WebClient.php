@@ -81,22 +81,22 @@ abstract class WebClient
      * @param string $expectedMime Expected MIME
      * @return bool
      */
-    protected function isValidMime(ResponseInterface $response, string $expectedMime): bool
+    protected static function isValidMime(LoggerInterface $logger, ResponseInterface $response, string $expectedMime): bool
     {
         $type = $response->getHeader('content-type');
         if (empty($type)) {
-            $this->logger->warning('No content-type found');
+            $logger->warning('No content-type found');
             return false;
         }
         $parsed = Header::parse($type);
         if (!isset($parsed[0][0])) {
-            $this->logger->warning('Broken content-type header');
+            $logger->warning('Broken content-type header');
             return false;
         }
         $receivedMime = $parsed[0][0];
 
         if ($receivedMime !== $expectedMime) {
-            $this->logger->warning('Unknown mime', ['expected' => $expectedMime, 'received' => $receivedMime]);
+            $logger->warning('Unknown mime', ['expected' => $expectedMime, 'received' => $receivedMime]);
             return false;
         }
         return true;

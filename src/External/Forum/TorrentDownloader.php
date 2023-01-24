@@ -56,7 +56,7 @@ class TorrentDownloader extends WebClient
             return false;
         }
 
-        if ($this->isValidMime($response, self::torrentMime)) {
+        if (self::isValidMime($this->logger, $response, self::torrentMime)) {
             return $response->getBody();
         } else {
             return false;

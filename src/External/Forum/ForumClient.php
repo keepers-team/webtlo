@@ -72,7 +72,7 @@ class ForumClient extends WebClient
             return null;
         }
 
-        if ($this->isValidMime($response, self::webMime)) {
+        if (self::isValidMime($this->logger, $response, self::webMime)) {
             $userCookie = $this->cookieJar->getCookieByName(self::authCookieName);
             if (null === $userCookie) {
                 $this->logger->error('Authentication error', ['username' => $this->username]);
@@ -147,7 +147,7 @@ class ForumClient extends WebClient
             return null;
         }
 
-        if ($this->isValidMime($response, self::webMime)) {
+        if (self::isValidMime($this->logger, $response, self::webMime)) {
             return $response->getBody()->getContents();
         } else {
             $this->logger->error('Broken profile page', ['id' => $userId]);
