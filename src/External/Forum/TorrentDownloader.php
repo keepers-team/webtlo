@@ -6,12 +6,15 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\Validation;
 use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
 class TorrentDownloader extends WebClient
 {
+    use Validation;
+
     private static string $url = '/forum/dl.php';
     private readonly array $defaultParams;
 
@@ -56,7 +59,7 @@ class TorrentDownloader extends WebClient
             return false;
         }
 
-        if (self::isValidMime($this->logger, $response, self::torrentMime)) {
+        if (self::isValidMime($this->logger, $response, self::$torrentMime)) {
             return $response->getBody();
         } else {
             return false;

@@ -19,10 +19,6 @@ abstract class WebClient
 {
     use ProxySupport;
 
-    protected const jsonMime = 'application/json';
-    protected const torrentMime = 'application/x-bittorrent';
-    protected const webMime = 'text/html';
-
     /**
      * @var array<string, string>
      */
@@ -72,33 +68,5 @@ abstract class WebClient
             'cookies' => $this->cookieJar,
         ]);
         $logger->info('Created client', ['base' => $baseUrl]);
-    }
-
-    /**
-     * Check response for correctness
-     *
-     * @param ResponseInterface $response Received response
-     * @param string $expectedMime Expected MIME
-     * @return bool
-     */
-    protected static function isValidMime(LoggerInterface $logger, ResponseInterface $response, string $expectedMime): bool
-    {
-        $type = $response->getHeader('content-type');
-        if (empty($type)) {
-            $logger->warning('No content-type found');
-            return false;
-        }
-        $parsed = Header::parse($type);
-        if (!isset($parsed[0][0])) {
-            $logger->warning('Broken content-type header');
-            return false;
-        }
-        $receivedMime = $parsed[0][0];
-
-        if ($receivedMime !== $expectedMime) {
-            $logger->warning('Unknown mime', ['expected' => $expectedMime, 'received' => $receivedMime]);
-            return false;
-        }
-        return true;
     }
 }

@@ -9,11 +9,14 @@ use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\Validation;
 use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Log\LoggerInterface;
 
 class ForumClient extends WebClient
 {
+    use Validation;
+
     private const loginAction = 'вход';
     private const profileAction = 'viewprofile';
     private const authCookieName = 'bb_session';
@@ -72,7 +75,7 @@ class ForumClient extends WebClient
             return null;
         }
 
-        if (self::isValidMime($this->logger, $response, self::webMime)) {
+        if (self::isValidMime($this->logger, $response, self::$webMime)) {
             $userCookie = $this->cookieJar->getCookieByName(self::authCookieName);
             if (null === $userCookie) {
                 $this->logger->error('Authentication error', ['username' => $this->username]);
@@ -147,7 +150,7 @@ class ForumClient extends WebClient
             return null;
         }
 
-        if (self::isValidMime($this->logger, $response, self::webMime)) {
+        if (self::isValidMime($this->logger, $response, self::$webMime)) {
             return $response->getBody()->getContents();
         } else {
             $this->logger->error('Broken profile page', ['id' => $userId]);
