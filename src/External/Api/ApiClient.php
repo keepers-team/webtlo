@@ -16,7 +16,7 @@ use KeepersTeam\Webtlo\External\Api\V1\TopicsResponse;
 use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Log\LoggerInterface;
 
-class ApiClient extends WebClient
+final class ApiClient extends WebClient
 {
     use Processor;
 

@@ -13,7 +13,7 @@ use KeepersTeam\Webtlo\External\Validation;
 use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Log\LoggerInterface;
 
-class ForumClient extends WebClient
+final class ForumClient extends WebClient
 {
     use Validation;
 

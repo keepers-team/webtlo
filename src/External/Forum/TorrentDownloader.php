@@ -11,7 +11,7 @@ use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
-class TorrentDownloader extends WebClient
+final class TorrentDownloader extends WebClient
 {
     use Validation;
 
