@@ -33,7 +33,7 @@ class ApiClient extends WebClient
     ) {
         parent::__construct(
             logger: $logger,
-            baseURL: sprintf("%s/%s", $apiURL, self::$apiVersion),
+            baseURL: sprintf("%s/%s/", $apiURL, self::$apiVersion),
             proxy: $proxy,
             timeout: $timeout
         );
