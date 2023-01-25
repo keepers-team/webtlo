@@ -39,12 +39,12 @@ trait Processor
         };
     }
 
-    protected static function isLegacyError(array $data): bool
+    private static function isLegacyError(array $data): bool
     {
         return array_key_exists('error', $data) || !array_key_exists('result', $data);
     }
 
-    protected static function parseLegacyTopic(int $topicId, array $payload): TopicData
+    private static function parseLegacyTopic(int $topicId, array $payload): TopicData
     {
         return new TopicData(
             id: $topicId,

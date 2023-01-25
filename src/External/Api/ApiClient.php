@@ -52,8 +52,8 @@ final class ApiClient extends WebClient
         /** @var TopicData[] $knownTopics */
         $knownTopics = [];
         $client = $this->client;
-        $chunkErrorHandler = $this->getChunkErrorHandler($this->logger);
-        $topicProcessor = $this->getTopicDataProcessor($this->logger, $knownTopics, $missingTopics);
+        $chunkErrorHandler = self::getChunkErrorHandler($this->logger);
+        $topicProcessor = self::getTopicDataProcessor($this->logger, $knownTopics, $missingTopics);
         /**
          * @param array[][] $optionsChunks
          * @return Generator
