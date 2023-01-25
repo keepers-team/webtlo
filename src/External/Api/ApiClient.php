@@ -24,7 +24,6 @@ use Psr\Log\LoggerInterface;
 class ApiClient extends WebClient
 {
     private static string $apiVersion = 'v1';
-    private static int $requestLimit = 100;
     private static int $concurrency = 4;
     private readonly array $defaultParams;
 
@@ -44,6 +43,18 @@ class ApiClient extends WebClient
         $this->defaultParams = [
             'api_key' => $apiKey,
         ];
+    }
+
+    private static function getRequestLimit(TopicSearchMode $searchMode): int
+    {
+        return match ($searchMode) {
+            TopicSearchMode::ID => 100,
+            /*
+             * Hashes are longer, so to avoid HTTP 414 in legacy API
+             * we're capping max identifiers per request
+             */
+            TopicSearchMode::HASH => 32
+        };
     }
 
     private static function getChunkErrorHandler(LoggerInterface $logger): callable
@@ -138,9 +149,10 @@ class ApiClient extends WebClient
             }
         };
 
+        $requestLimit = self::getRequestLimit($searchMode);
         $pool = new Pool(
             client: $client,
-            requests: $requests(array_chunk($topics, self::$requestLimit)),
+            requests: $requests(array_chunk($topics, $requestLimit)),
             config: [
                 'concurrency' => self::$concurrency,
                 'options' => ['by' => $searchMode->value, ...$this->defaultParams],
