@@ -9,6 +9,8 @@ use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\PeerData;
+use KeepersTeam\Webtlo\External\Api\V1\PeerResponse;
 use KeepersTeam\Webtlo\External\Api\V1\Processor;
 use KeepersTeam\Webtlo\External\Api\V1\TopicData;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
@@ -84,6 +86,51 @@ final class ApiClient extends WebClient
         try {
             $pool->promise()->wait(unwrap: true);
             return new TopicsResponse(topics: $knownTopics, missingTopics: $missingTopics);
+        } catch (RejectionException $rejectionException) {
+            return $rejectionException->getReason();
+        }
+    }
+
+    public function getPeerStats(array $topics, TopicSearchMode $searchMode): ApiError|PeerResponse
+    {
+        /** @var int[] $missingTopics */
+        $missingTopics = [];
+        /** @var PeerData[] $knownPeers */
+        $knownPeers = [];
+        $client = $this->client;
+        $chunkErrorHandler = self::getChunkErrorHandler($this->logger);
+        $peerProcessor = self::getPeerDataProcessor($this->logger, $knownPeers, $missingTopics);
+
+        /**
+         * @param array[][] $optionsChunks
+         * @return Generator
+         */
+        $requests = function (array $optionsChunks) use (&$client) {
+            foreach ($optionsChunks as $chunk) {
+                yield function (array $options) use (&$client, &$chunk) {
+                    return $client->getAsync(
+                        uri: 'get_peer_stats',
+                        options: ['query' => ['val' => implode(',', $chunk), ...$options]]
+                    );
+                };
+            }
+        };
+
+        $requestLimit = self::getRequestLimit($searchMode);
+        $pool = new Pool(
+            client: $client,
+            requests: $requests(array_chunk($topics, $requestLimit)),
+            config: [
+                'concurrency' => self::$concurrency,
+                'options' => ['by' => $searchMode->value, ...$this->defaultParams],
+                'fulfilled' => $peerProcessor,
+                'rejected' => $chunkErrorHandler,
+            ]
+        );
+
+        try {
+            $pool->promise()->wait(unwrap: true);
+            return new PeerResponse(peers: $knownPeers, missingTopics: $missingTopics);
         } catch (RejectionException $rejectionException) {
             return $rejectionException->getReason();
         }
