@@ -87,6 +87,18 @@ trait Processor
         );
     }
 
+    private static function parseLegacyHighPriorityTopics(string $key, array $value): HighPriorityTopic
+    {
+        return new HighPriorityTopic(
+            id: (int)$key,
+            status: TorrentStatus::from($value[0]),
+            seeders: $value[1],
+            registered: (new DateTimeImmutable())->setTimestamp($value[2]),
+            size: $value[3],
+            forumId: $value[4]
+        );
+    }
+
 
     protected static function getTopicDataProcessor(LoggerInterface $logger, array &$knownTopics, array &$missingTopics): callable
     {
@@ -167,6 +179,35 @@ trait Processor
                         totalSize: $result['total_size_bytes'],
                         topics: array_map(
                             [self::class, 'parseLegacyForumTopics'],
+                            array_keys($result['result']),
+                            array_values($result['result'])
+                        )
+                    );
+                }
+            } else {
+                return ApiError::invalidMime();
+            }
+        };
+    }
+
+    protected static function getHighPriorityTopicProcessor(LoggerInterface $logger): callable
+    {
+        return function (ResponseInterface $response) use (&$logger): HighPriorityTopicsResponse|ApiError {
+            if (self::isValidMime($logger, $response, self::$jsonMime)) {
+                $rawResponse = $response->getBody()->getContents();
+                try {
+                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
+                } catch (JsonException $error) {
+                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
+                    return ApiError::malformedJson();
+                }
+                if (self::isLegacyError($result)) {
+                    return ApiError::fromLegacyError(legacyError: $result['error']);
+                } else {
+                    return new HighPriorityTopicsResponse(
+                        updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
+                        topics: array_map(
+                            [self::class, 'parseLegacyHighPriorityTopics'],
                             array_keys($result['result']),
                             array_values($result['result'])
                         )

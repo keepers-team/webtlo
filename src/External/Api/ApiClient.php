@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopicsResponse;
+use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopicsResponse;
 use KeepersTeam\Webtlo\External\Api\V1\PeerData;
 use KeepersTeam\Webtlo\External\Api\V1\PeerResponse;
 use KeepersTeam\Webtlo\External\Api\V1\Processor;
@@ -145,6 +146,19 @@ final class ApiClient extends WebClient
             $response = $this->client->get(
                 uri: sprintf('static/pvc/f/%d', $forumId)
             );
+        } catch (GuzzleException $error) {
+            $code = $error->getCode();
+            return ApiError::fromHttpCode($code);
+        }
+
+        return $dataProcessor($response);
+    }
+
+    public function getTopicsHighPriority(): HighPriorityTopicsResponse|ApiError
+    {
+        $dataProcessor = self::getHighPriorityTopicProcessor($this->logger);
+        try {
+            $response = $this->client->get(uri: 'static/pvc/high_priority_topics.json.gz');
         } catch (GuzzleException $error) {
             $code = $error->getCode();
             return ApiError::fromHttpCode($code);
