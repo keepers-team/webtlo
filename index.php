@@ -40,7 +40,6 @@ try {
 
     $apiAddressList = array(
         'api.rutracker.cc',
-        'api.rutracker.net',
         'custom'
     );
 
