@@ -15,11 +15,12 @@ final class ApiError
         return new ApiError(code: $code, text: 'Network error');
     }
 
-    public static function fromLegacyError(array $legacyError): ApiError
+    public static function fromLegacyError(?array $legacyError): ApiError
     {
+        $error = $legacyError ?? [];
         return new ApiError(
-            code: $legacyError['code'] ?? -1,
-            text: $legacyError['text'] ?? 'Unknown API error'
+            code: $error['code'] ?? -1,
+            text: $error['text'] ?? 'Unknown API error'
         );
     }
 

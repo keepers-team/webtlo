@@ -72,6 +72,22 @@ trait Processor
         );
     }
 
+    private static function parseLegacyForumTopics(string $key, array $value): ForumTopicsData
+    {
+        return new ForumTopicsData(
+            id: (int)$key,
+            status: TorrentStatus::from($value[0]),
+            seeders: $value[1],
+            registered: (new DateTimeImmutable())->setTimestamp($value[2]),
+            size: $value[3],
+            priority: KeepingPriority::from($value[4]),
+            keepers: $value[5],
+            lastSeeded: (new DateTimeImmutable())->setTimestamp($value[6]),
+            hash: $value[7]
+        );
+    }
+
+
     protected static function getTopicDataProcessor(LoggerInterface $logger, array &$knownTopics, array &$missingTopics): callable
     {
         return function (ResponseInterface $response, int $index, Promise $aggregatePromise) use (&$logger, &$knownTopics, &$missingTopics): void {
@@ -128,6 +144,36 @@ trait Processor
                 }
             } else {
                 $aggregatePromise->reject(ApiError::invalidMime());
+            }
+        };
+    }
+
+    protected static function getForumDataProcessor(LoggerInterface $logger): callable
+    {
+        return function (ResponseInterface $response) use (&$logger): ForumTopicsResponse|ApiError {
+            if (self::isValidMime($logger, $response, self::$jsonMime)) {
+                $rawResponse = $response->getBody()->getContents();
+                try {
+                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
+                } catch (JsonException $error) {
+                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
+                    return ApiError::malformedJson();
+                }
+                if (self::isLegacyError($result)) {
+                    return ApiError::fromLegacyError(legacyError: $result['error']);
+                } else {
+                    return new ForumTopicsResponse(
+                        updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
+                        totalSize: $result['total_size_bytes'],
+                        topics: array_map(
+                            [self::class, 'parseLegacyForumTopics'],
+                            array_keys($result['result']),
+                            array_values($result['result'])
+                        )
+                    );
+                }
+            } else {
+                return ApiError::invalidMime();
             }
         };
     }
