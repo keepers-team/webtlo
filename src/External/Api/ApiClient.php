@@ -14,6 +14,7 @@ use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopicsResponse;
 use KeepersTeam\Webtlo\External\Api\V1\ForumsResponse;
 use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopicsResponse;
+use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\Api\V1\PeerData;
 use KeepersTeam\Webtlo\External\Api\V1\PeerResponse;
 use KeepersTeam\Webtlo\External\Api\V1\Processor;
@@ -188,5 +189,18 @@ final class ApiClient extends WebClient
         }
 
         return $dataProcessor($treeResponse, $sizeResponse);
+    }
+
+    public function getKeepersUserData(): KeepersResponse|ApiError
+    {
+        $dataProcessor = self::getKeepersProcessor($this->logger);
+        try {
+            $response = $this->client->get(uri: 'static/keepers_user_data');
+        } catch (GuzzleException $error) {
+            $code = $error->getCode();
+            return ApiError::fromHttpCode($code);
+        }
+
+        return $dataProcessor($response);
     }
 }

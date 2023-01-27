@@ -245,4 +245,23 @@ trait Processor
             return self::parseLegacyForums($treeResult, $sizeResult);
         };
     }
+
+    protected static function getKeepersProcessor(LoggerInterface $logger): callable
+    {
+        return function (ResponseInterface $response) use (&$logger): KeepersResponse|ApiError {
+            $result = self::decodeResponse($logger, $response);
+            if ($result instanceof ApiError) {
+                return $result;
+            }
+
+            $keepers = $result['result'];
+            return new KeepersResponse(
+                updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
+                keepers: array_combine(
+                    array_keys($keepers),
+                    array_map(fn ($el) => $el[0], $keepers)
+                ),
+            );
+        };
+    }
 }
