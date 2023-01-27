@@ -39,9 +39,24 @@ trait Processor
         };
     }
 
-    private static function isLegacyError(array $data): bool
+    private static function decodeResponse(LoggerInterface &$logger, ResponseInterface $response): ApiError|array
     {
-        return array_key_exists('error', $data) || !array_key_exists('result', $data);
+        if (self::isValidMime($logger, $response, self::$jsonMime)) {
+            $rawResponse = $response->getBody()->getContents();
+            try {
+                $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
+            } catch (JsonException $error) {
+                $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
+                return ApiError::malformedJson();
+            }
+            if (array_key_exists('error', $result) || !array_key_exists('result', $result)) {
+                return ApiError::fromLegacyError(legacyError: $result['error']);
+            } else {
+                return $result;
+            }
+        } else {
+            return ApiError::invalidMime();
+        }
     }
 
     private static function parseLegacyTopic(int $topicId, array $payload): TopicData
@@ -103,29 +118,18 @@ trait Processor
     protected static function getTopicDataProcessor(LoggerInterface $logger, array &$knownTopics, array &$missingTopics): callable
     {
         return function (ResponseInterface $response, int $index, Promise $aggregatePromise) use (&$logger, &$knownTopics, &$missingTopics): void {
-            if (self::isValidMime($logger, $response, self::$jsonMime)) {
-                $rawResponse = $response->getBody()->getContents();
-                try {
-                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
-                } catch (JsonException $error) {
-                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
-                    $aggregatePromise->reject(ApiError::malformedJson());
-                    return;
-                }
-                if (self::isLegacyError($result)) {
-                    $aggregatePromise->reject(ApiError::fromLegacyError(legacyError: $result['error']));
+            $result = self::decodeResponse($logger, $response);
+            if ($result instanceof ApiError) {
+                $aggregatePromise->reject($result);
+                return;
+            }
+            foreach ($result['result'] as $id => $payload) {
+                $topicId = (int)$id;
+                if (null === $payload) {
+                    $missingTopics[] = $topicId;
                 } else {
-                    foreach ($result['result'] as $id => $payload) {
-                        $topicId = (int)$id;
-                        if (null === $payload) {
-                            $missingTopics[] = $topicId;
-                        } else {
-                            $knownTopics[] = self::parseLegacyTopic($topicId, $payload);
-                        }
-                    }
+                    $knownTopics[] = self::parseLegacyTopic($topicId, $payload);
                 }
-            } else {
-                $aggregatePromise->reject(ApiError::invalidMime());
             }
         };
     }
@@ -134,28 +138,18 @@ trait Processor
     protected static function getPeerDataProcessor(LoggerInterface $logger, array &$knownPeers, array &$missingTopics): callable
     {
         return function (ResponseInterface $response, int $index, Promise $aggregatePromise) use (&$logger, &$knownPeers, &$missingTopics): void {
-            if (self::isValidMime($logger, $response, self::$jsonMime)) {
-                $rawResponse = $response->getBody()->getContents();
-                try {
-                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
-                } catch (JsonException $error) {
-                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
-                    $aggregatePromise->reject(ApiError::malformedJson());
-                    return;
-                }
-                if (self::isLegacyError($result)) {
-                    $aggregatePromise->reject(ApiError::fromLegacyError(legacyError: $result['error']));
+            $result = self::decodeResponse($logger, $response);
+            if ($result instanceof ApiError) {
+                $aggregatePromise->reject($result);
+                return;
+            }
+
+            foreach ($result['result'] as $identifier => $payload) {
+                if (null === $payload) {
+                    $missingTopics[] = $identifier;
                 } else {
-                    foreach ($result['result'] as $identifier => $payload) {
-                        if (null === $payload) {
-                            $missingTopics[] = $identifier;
-                        } else {
-                            $knownPeers[] = self::parseLegacyPeer($identifier, $payload);
-                        }
-                    }
+                    $knownPeers[] = self::parseLegacyPeer($identifier, $payload);
                 }
-            } else {
-                $aggregatePromise->reject(ApiError::invalidMime());
             }
         };
     }
@@ -163,59 +157,39 @@ trait Processor
     protected static function getForumDataProcessor(LoggerInterface $logger): callable
     {
         return function (ResponseInterface $response) use (&$logger): ForumTopicsResponse|ApiError {
-            if (self::isValidMime($logger, $response, self::$jsonMime)) {
-                $rawResponse = $response->getBody()->getContents();
-                try {
-                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
-                } catch (JsonException $error) {
-                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
-                    return ApiError::malformedJson();
-                }
-                if (self::isLegacyError($result)) {
-                    return ApiError::fromLegacyError(legacyError: $result['error']);
-                } else {
-                    return new ForumTopicsResponse(
-                        updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
-                        totalSize: $result['total_size_bytes'],
-                        topics: array_map(
-                            [self::class, 'parseLegacyForumTopics'],
-                            array_keys($result['result']),
-                            array_values($result['result'])
-                        )
-                    );
-                }
-            } else {
-                return ApiError::invalidMime();
+            $result = self::decodeResponse($logger, $response);
+            if ($result instanceof ApiError) {
+                return $result;
             }
+
+            return new ForumTopicsResponse(
+                updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
+                totalSize: $result['total_size_bytes'],
+                topics: array_map(
+                    [self::class, 'parseLegacyForumTopics'],
+                    array_keys($result['result']),
+                    array_values($result['result'])
+                )
+            );
         };
     }
 
     protected static function getHighPriorityTopicProcessor(LoggerInterface $logger): callable
     {
         return function (ResponseInterface $response) use (&$logger): HighPriorityTopicsResponse|ApiError {
-            if (self::isValidMime($logger, $response, self::$jsonMime)) {
-                $rawResponse = $response->getBody()->getContents();
-                try {
-                    $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
-                } catch (JsonException $error) {
-                    $logger->error('Unable to decode JSON', ['error' => $error, 'json' => $rawResponse]);
-                    return ApiError::malformedJson();
-                }
-                if (self::isLegacyError($result)) {
-                    return ApiError::fromLegacyError(legacyError: $result['error']);
-                } else {
-                    return new HighPriorityTopicsResponse(
-                        updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
-                        topics: array_map(
-                            [self::class, 'parseLegacyHighPriorityTopics'],
-                            array_keys($result['result']),
-                            array_values($result['result'])
-                        )
-                    );
-                }
-            } else {
-                return ApiError::invalidMime();
+            $result = self::decodeResponse($logger, $response);
+            if ($result instanceof ApiError) {
+                return $result;
             }
+
+            return new HighPriorityTopicsResponse(
+                updateTime: (new DateTimeImmutable())->setTimestamp($result['update_time']),
+                topics: array_map(
+                    [self::class, 'parseLegacyHighPriorityTopics'],
+                    array_keys($result['result']),
+                    array_values($result['result'])
+                )
+            );
         };
     }
 }
