@@ -3,6 +3,8 @@
 namespace KeepersTeam\Webtlo\External\Api;
 
 use Generator;
+use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Promise;
@@ -25,27 +27,31 @@ use KeepersTeam\Webtlo\External\WebClient;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
-final class ApiClient extends WebClient
+final class ApiClient
 {
     use Processor;
+    use WebClient;
 
     private static string $apiVersion = 'v1';
     private static int $concurrency = 4;
     private readonly array $defaultParams;
+    private readonly Client $client;
 
     public function __construct(
         string $apiKey,
-        LoggerInterface $logger,
+        private readonly LoggerInterface $logger,
         ?Proxy $proxy = null,
         string $apiURL = Defaults::apiUrl,
         Timeout $timeout = new Timeout(),
     ) {
-        parent::__construct(
+        $this->client = self::getClient(
             logger: $logger,
             baseURL: sprintf("%s/%s/", $apiURL, self::$apiVersion),
             proxy: $proxy,
-            timeout: $timeout
+            timeout: $timeout,
+            cookieJar: new CookieJar()
         );
+
         $this->defaultParams = [
             'api_key' => $apiKey,
         ];

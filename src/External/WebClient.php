@@ -5,37 +5,52 @@ namespace KeepersTeam\Webtlo\External;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Header;
 use GuzzleRetry\GuzzleRetryMiddleware;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
-use KeepersTeam\Webtlo\External\ProxySupport;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
-abstract class WebClient
+trait WebClient
 {
-    use ProxySupport;
+    private static function getProxyConfig(LoggerInterface $logger, ?Proxy $proxy): array
+    {
+        $options = [];
+        if (null !== $proxy && $proxy->enabled) {
+            $needsAuth = null !== $proxy->credentials;
+            $curlOptions = [CURLOPT_PROXYTYPE => $proxy->type->value];
+            $logger->info(
+                'Used proxy',
+                [
+                    'hostname' => $proxy->hostname,
+                    'port' => $proxy->port,
+                    'type' => $proxy->type->name,
+                    'authenticated' => $needsAuth,
+                ]
+            );
+            if ($needsAuth) {
+                $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf(
+                    "%s:%s",
+                    $proxy->credentials->username,
+                    $proxy->credentials->password
+                );
+            }
 
-    /**
-     * @var array<string, string>
-     */
-    private const clientHeaders = [
-        'User-Agent' => Defaults::userAgent,
-        'X-WebTLO' => 'experimental'
-    ];
+            $options['proxy'] = sprintf("%s:%d", $proxy->hostname, $proxy->port);
+            $options['curl'] = $curlOptions;
+        }
+        return $options;
+    }
 
-    protected readonly Client $client;
-    protected readonly CookieJar $cookieJar;
-
-    public function __construct(
-        protected readonly LoggerInterface $logger,
+    protected static function getClient(
+        LoggerInterface $logger,
         string $baseURL,
-        ?Proxy $proxy = null,
-        Timeout $timeout = new Timeout(),
-    ) {
+        ?Proxy $proxy,
+        Timeout $timeout,
+        CookieJar $cookieJar,
+    ): Client {
         $retryCallback = function (int $attemptNumber, float $delay, RequestInterface &$request, array &$options, ?ResponseInterface $response) use ($logger): void {
             $logger->warning(
                 'Retrying request',
@@ -51,22 +66,26 @@ abstract class WebClient
             'retry_on_timeout' => true,
             'on_retry_callback' => $retryCallback,
         ];
+        $clientHeaders = [
+            'User-Agent' => Defaults::userAgent,
+            'X-WebTLO' => 'experimental'
+        ];
 
         $stack = HandlerStack::create();
         $stack->push(GuzzleRetryMiddleware::factory($retryOptions));
         $baseUrl = sprintf("https://%s", $baseURL);
-        $proxyConfig = static::getProxyConfig($this->logger, $proxy);
-        $this->cookieJar = new CookieJar();
-        $this->client = new Client([
+        $proxyConfig = self::getProxyConfig($logger, $proxy);
+        $client = new Client([
             ...$proxyConfig,
             'base_uri' => $baseUrl,
             'timeout' => $timeout->request,
             'connect_timeout' => $timeout->connection,
             'allow_redirects' => true,
-            'headers' => self::clientHeaders,
+            'headers' => $clientHeaders,
             'handler' => $stack,
-            'cookies' => $this->cookieJar,
+            'cookies' => $cookieJar,
         ]);
         $logger->info('Created client', ['base' => $baseUrl]);
+        return $client;
     }
 }
