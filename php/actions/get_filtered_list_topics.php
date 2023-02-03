@@ -40,7 +40,7 @@ try {
     // -6 - раздачи своим по спискам
 
     // topic_data => id,na,si,convert(si)rg,se,ds,cl
-    $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
+    $pattern_topic_block = '<div class="topic_data %s"><label>%s</label> %s</div>';
     $pattern_topic_data = [
         'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
         'ds' => ' <i class="fa %9$s %8$s"></i>',
@@ -117,6 +117,7 @@ try {
             }
             $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
+                $topic_data['se'] >= 10 ? 'more-than-ten-seeders' : '',
                 sprintf(
                     $data,
                     $topic_data['hs'],
@@ -185,6 +186,7 @@ try {
             }
             $preparedOutput[$topicStatus] .= sprintf(
                 $pattern_topic_block,
+                '',
                 sprintf(
                     $topicBlock,
                     $topic['info_hash'],
@@ -246,6 +248,7 @@ try {
             }
             $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
+                $topic_data['se'] >= 10 ? 'more-than-ten-seeders' : '',
                 sprintf(
                     $data,
                     $topic_data['hs'],
@@ -374,6 +377,7 @@ try {
             $listTorrentClientsNames = '| ' . implode(', ', $listTorrentClientsNames);
             $output .= sprintf(
                 $pattern_topic_block,
+                $topicData['se'] >= 10 ? 'more-than-ten-seeders' : '',
                 sprintf(
                     $outputLine,
                     $topicData['hs'],
@@ -803,6 +807,7 @@ try {
             // выводим строку
             $output .= sprintf(
                 $pattern_topic_block,
+                $topic_data['se'] >= 10 ? 'more-than-ten-seeders' : '',
                 sprintf(
                     $data,
                     $topic_data['hs'],

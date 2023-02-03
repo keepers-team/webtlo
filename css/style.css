@@ -349,6 +349,10 @@ li.menu.ui-tabs-active {
 	color: #dc3545;
 }
 
+.more-than-ten-seeders {
+	opacity: 0.3;
+}
+
 /* settings */
 
 #settings {
