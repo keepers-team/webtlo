@@ -59,6 +59,7 @@ $(document).ready(function () {
     $("input[type=button]").button();
     $("#toolbar-select-topics").buttonset();
     $("#toolbar-control-topics").buttonset();
+    $("#toolbar-cron-topics").buttonset();
     $("#toolbar-filter-topics").buttonset();
     $("#log_tabs").tabs();
     $("#tor_download_options").selectmenu({

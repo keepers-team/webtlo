@@ -110,6 +110,9 @@ try {
             if (isset($forumData['hide'])) {
                 $ini->write($forumID, 'hide-topics', $forumData['hide']);
             }
+            if (isset($forumData['autoAdd'])) {
+                $ini->write($forumID, 'auto-add-topics', $forumData['autoAdd']);
+            }
             if (isset($forumData['control_peers'])) {
                 $ini->write($forumID, 'control-peers', $forumData['control_peers']);
             }

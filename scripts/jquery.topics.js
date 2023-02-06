@@ -261,6 +261,42 @@ $(document).ready(function () {
 		);
 	});
 
+	// сохранение параметров фильтра в файл
+	$("#save_filter_for_cron").on("click", function () {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/save_filter_for_cron.php",
+			data: {
+				"forum-id": $("#main-subsections").val(),
+				"filter-options": JSON.stringify($("#topics_filter").serializeAllArray())
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+
+			}
+		});
+	});
+
+	// чтение параметров фильтра из файла
+	$("#load_filter_for_cron").on("click", function () {
+		$.ajax({
+			type: "POST",
+			url: "php/actions/load_filter_for_cron.php",
+			data: {
+				"forum-id": $("#main-subsections").val(),
+			},
+			success: function (response) {
+				response = $.parseJSON(response);
+				$("#log").append(response.log);
+				if (response.result != null) {
+					loadSavedFilterOptions(response.result);
+					$("#topics_filter").change();
+				}
+			}
+		});
+	});
+
 	// кнопка выделить все / отменить выделение
 	$(".tor_select").on("click", function () {
 		var value = $(this).val();

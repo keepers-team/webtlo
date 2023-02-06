@@ -28,7 +28,7 @@ try {
     $optionFormat = '<option value="%s" %s>%s</option>';
     $itemFormat = '<li class="ui-widget-content" value="%s" %s>%s</li>';
     $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s" data-peers="%s"';
-    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s"';
+    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-auto-add-topics="%s" data-peers="%s"';
 
     // стандартные адреса
     $forumAddressList = array(
@@ -117,6 +117,7 @@ try {
                 $forumData['df'],
                 $forumData['sub_folder'],
                 $forumData['hide_topics'],
+                $forumData['auto_add_topics'],
                 $forumData['control_peers']
             );
             $optionForums .= sprintf(
@@ -233,6 +234,14 @@ try {
                             </button>
                             <button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
                                 <i class="fa fa-times" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div id="toolbar-cron-topics">
+                            <button type="button" id="save_filter_for_cron" title="Сохранить текущие значения фильтра для скрипта автоматического добавлени торрентов">
+                                <i class="fa fa-save" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" id="load_filter_for_cron" title="Загрузить значения фильтра из ранее сохраненного файла настроек для скрипта автоматического добавлени торрентов">
+                                <i class="fa fa-window-restore" aria-hidden="true"></i>
                             </button>
                         </div>
                         <button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
@@ -698,6 +707,13 @@ try {
                                     Останавливать раздачи с количеством пиров более:
                                     <input id="forum-control-peers" class="myinput forum-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
                                 </label>
+                                <label>
+                                    Добавлять раздачи этого раздела в торрент клиент автоматически (cron):
+                                    <select id="forum-auto-add-topics" class="myinput forum-props" title="Добавлять раздачи этого раздела в торрент клиент автоматически (cron)">
+                                        <option value="0">нет</option>
+                                        <option value="1">да</option>
+                                    </select>
+                                </label>
                             </fieldset>
                         </div>
                         <h2>Настройки управления раздачами</h2>
@@ -879,6 +895,7 @@ try {
                         <li class="menu"><a href="#log_reports" class="menu log_file">reports</a></li>
                         <li class="menu"><a href="#log_control" class="menu log_file">control</a></li>
                         <li class="menu"><a href="#log_seeders" class="menu log_file">seeders</a></li>
+                        <li class="menu"><a href="#log_auto_add" class="menu log_file">auto_add</a></li>
                     </ul>
                     <div id="log_content">
                         <div id="log"></div>
@@ -887,6 +904,7 @@ try {
                         <div id="log_reports"></div>
                         <div id="log_control"></div>
                         <div id="log_seeders"></div>
+                        <div id="log_auto_add"></div>
                     </div>
                 </div>
             </div>

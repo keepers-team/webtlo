@@ -82,6 +82,9 @@ $(document).ready(function () {
 		if (forumData.hide == '') {
 			forumData.hide = 0;
 		}
+		if (forumData.autoAddTopics == '') {
+			forumData.autoAddTopics = 0;
+		}
 		var torrentClientID = $("#forum-client option[value=" + forumData.client + "]").val();
 		if (typeof torrentClientID === "undefined") {
 			$("#forum-client :first").prop("selected", "selected");
@@ -100,6 +103,12 @@ $(document).ready(function () {
 		} else {
 			$("#forum-hide-topics [value=" + hideTopics + "]").prop("selected", "selected");
 		}
+		var autoAddTopics = $("#forum-auto-add-topics [value=" + forumData.autoAddTopics + "]").val();
+		if (typeof autoAddTopics === "undefined") {
+			$("#forum-auto-add-topics :first").prop("selected", "selected");
+		} else {
+			$("#forum-auto-add-topics [value=" + autoAddTopics + "]").prop("selected", "selected");
+		}
 		$("#forum-label").val(forumData.label);
 		$("#forum-savepath").val(forumData.savepath);
 		$("#forum-control-peers").val(forumData.peers);
@@ -108,6 +117,7 @@ $(document).ready(function () {
 		$("#forum-client").selectmenu().selectmenu("refresh");
 		$("#forum-subdirectory").selectmenu().selectmenu("refresh");
 		$("#forum-hide-topics").selectmenu().selectmenu("refresh");
+		$("#forum-auto-add-topics").selectmenu().selectmenu("refresh");
 	});
 
 	// изменение свойств подраздела
@@ -117,6 +127,7 @@ $(document).ready(function () {
 		var forumSavePath = $("#forum-savepath").val();
 		var forumSubdirectory = $("#forum-subdirectory").val();
 		var forumHideTopics = $("#forum-hide-topics :selected").val();
+		var forumAutoAddTopics = $("#forum-auto-add-topics :selected").val();
 		var forumControlPeers = $("#forum-control-peers").val();
 		var optionForum = $("#list-forums option[value=" + editableForumID + "]");
 		optionForum.attr("data-client", forumClient).data("client", forumClient);
@@ -124,6 +135,7 @@ $(document).ready(function () {
 		optionForum.attr("data-savepath", forumSavePath).data("savepath", forumSavePath);
 		optionForum.attr("data-subdirectory", forumSubdirectory).data("subdirectory", forumSubdirectory);
 		optionForum.attr("data-hide", forumHideTopics).data("hide", forumHideTopics);
+		optionForum.attr("data-auto", forumAutoAddTopics).data("autoAdd", forumAutoAddTopics);
 		optionForum.attr("data-peers", forumControlPeers).data("peers", forumControlPeers);
 	});
 
@@ -269,6 +281,7 @@ function getForums() {
 				"savepath": forumData.savepath,
 				"subdirectory": forumData.subdirectory,
 				"hide": forumData.hide,
+				"autoAdd": forumData.autoAdd,
 				"control_peers": forumData.peers
 			};
 		}
