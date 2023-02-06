@@ -21,8 +21,6 @@ if (isset($cfg['subsections'])) {
                 $tessst = array_map(function ($key, $value) {
                     return [$value['name'] => $value['value']];
                 }, array_keys($_POST['filter']), array_values($_POST['filter']));
-                $a = 1;
-
                 $_POST['filter'] = http_build_query(
                     array_merge_recursive(
                         ...array_map(function ($key, $value) {
