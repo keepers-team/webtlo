@@ -9,15 +9,17 @@ use Psr\Log\LoggerInterface;
 
 trait Authentication
 {
+    use XMLHelper;
+
     private static string $authCookieName = 'bb_session';
 
     private static function parseFormToken(string $page): ?string
     {
-        libxml_use_internal_errors(use_errors: true);
         $result = null;
-        $html = new DOMDocument();
-        $html->loadHtml(source: $page);
-        $dom = simplexml_import_dom($html);
+        $dom = self::parseDOM($page);
+        if (null === $dom) {
+            return null;
+        }
         $nodes = $dom->xpath(expression: "/html/head/script[1]");
         if (count($nodes) === 1) {
             $matches = [];
@@ -28,18 +30,17 @@ trait Authentication
         }
         unset($nodes);
         unset($dom);
-        unset($html);
 
         return $result;
     }
 
     protected static function parseApiCredentials(string $page): ?ApiCredentials
     {
-        libxml_use_internal_errors(use_errors: true);
         $result = null;
-        $html = new DOMDocument();
-        $html->loadHtml(source: $page);
-        $dom = simplexml_import_dom($html);
+        $dom = self::parseDOM($page);
+        if (null === $dom) {
+            return null;
+        }
         $nodes = $dom->xpath(expression: "//table[contains(@class, 'user_details')]/tr[9]/td/b/text()");
         if (count($nodes) === 3) {
             $result = new ApiCredentials(
@@ -50,7 +51,6 @@ trait Authentication
         }
         unset($nodes);
         unset($dom);
-        unset($html);
 
         return $result;
     }

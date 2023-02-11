@@ -6,13 +6,15 @@ use DOMDocument;
 
 trait Parsers
 {
+    use XMLHelper;
+
     protected static function parseTopicIdFromList(string $page, string $fullForumName): ?int
     {
-        libxml_use_internal_errors(use_errors: true);
         $result = null;
-        $html = new DOMDocument();
-        $html->loadHtml(source: $page);
-        $dom = simplexml_import_dom($html);
+        $dom = self::parseDOM($page);
+        if (null === $dom) {
+            return null;
+        }
 
         $xpathQuery = (
             // Main container
@@ -34,7 +36,6 @@ trait Parsers
         }
         unset($nodes);
         unset($dom);
-        unset($html);
 
         return $result;
     }
