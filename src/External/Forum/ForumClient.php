@@ -28,6 +28,7 @@ final class ForumClient
     private const loginURL = '/forum/login.php';
     private const profileURL = '/forum/profile.php';
     private const torrentUrl = '/forum/dl.php';
+    private const postUrl = '/forum/posting.php';
     private const searchUrl = '/forum/search.php';
 
     private const reportsSubforumId = 1584;
@@ -149,6 +150,12 @@ final class ForumClient
         return self::request($this->client, $this->logger, 'GET', $url, $options);
     }
 
+    private function post(string $url, array $options): ?string
+    {
+        return self::request($this->client, $this->logger, 'POST', $url, $options);
+    }
+
+
     /**
      * Download torrent file
      *
@@ -203,5 +210,36 @@ final class ForumClient
             $this->logger->error('Failed to extract topic identifier from page', ['name' => $fullForumName]);
         }
         return $topicId;
+    }
+
+    public function sendMessage(PostType $postType, int $topicId, string $message, ?int $postId = null): ?int
+    {
+        $options = [
+            'form_params' => [
+                't' => $topicId,
+                'mode' => $postType->value,
+                'submit_mode' => 'submit',
+                'form_token' => $this->formToken,
+                'message' => mb_convert_encoding($message, 'Windows-1251', 'UTF-8'),
+            ]
+        ];
+        if (PostType::Edit === $postType) {
+            if (null === $postId) {
+                $this->logger->error('Impossible to edit post without its identifier', ['topic_id' => $topicId]);
+                return null;
+            } else {
+                $options['form_params']['p'] = $postId;
+            }
+        }
+        $response = $this->post(self::postUrl, $options);
+        if (null === $response) {
+            return null;
+        }
+
+        $postId = self::parseTopicIdFromPostResponse($response);
+        if (null === $postId) {
+            $this->logger->error('Failed to extract post identifier from page');
+        }
+        return $postId;
     }
 }
