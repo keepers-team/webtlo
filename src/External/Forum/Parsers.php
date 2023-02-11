@@ -70,4 +70,35 @@ trait Parsers
 
         return $result;
     }
+
+    protected static function parseMessageIdFromReportSearch(string $page): ?int
+    {
+        $result = null;
+        $dom = self::parseDOM($page);
+        if (null === $dom) {
+            return null;
+        }
+        $xpathQuery = (
+            // Main container
+            "/html/body/div[@id='body_container']/div[@id='page_container']/div[@id='page_content']"
+            // Table with message response
+            . "/table/tr[1]/td[1]/div[1]/table[contains(@class, 'topic')]"
+            // Row with user's message
+            . "/tr[2]/td[2]"
+            // Link with message identifier
+            . "/div[@class='post_head']/p[1]/a/@href"
+        );
+        $nodes = $dom->xpath(expression: $xpathQuery);
+        if (count($nodes) === 1) {
+            $matches = [];
+            preg_match("|viewtopic\.php\?p=(\d+)#.*|si", (string)$nodes[0], $matches);
+            if (count($matches) === 2) {
+                $result = (int)$matches[1];
+            }
+        }
+        unset($nodes);
+        unset($dom);
+
+        return $result;
+    }
 }

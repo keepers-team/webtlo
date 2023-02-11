@@ -32,6 +32,7 @@ final class ForumClient
     private const searchUrl = '/forum/search.php';
 
     private const reportsSubforumId = 1584;
+    private const reportsTopicId = 4275633;
 
 
     private function __construct(
@@ -239,6 +240,32 @@ final class ForumClient
         $postId = self::parseTopicIdFromPostResponse($response);
         if (null === $postId) {
             $this->logger->error('Failed to extract post identifier from page');
+        }
+        return $postId;
+    }
+
+    /**
+     * Search user's message in topic with overall reports
+     *
+     * @return int|null Message identifier, if search succeeded, null otherwise
+     */
+    public function searchReportMessageId(): ?int
+    {
+        $userId =  $this->apiCredentials->userId;
+        $options = [
+            'query' => [
+                'uid' => $userId,
+                't' => self::reportsTopicId,
+                'dm' => 1
+            ]
+        ];
+        $response = $this->get(self::searchUrl, $options);
+        if (null === $response) {
+            return null;
+        }
+        $postId = self::parseMessageIdFromReportSearch($response);
+        if (null === $postId) {
+            $this->logger->warning('No reports found for given user', ['user_id' => $userId]);
         }
         return $postId;
     }
