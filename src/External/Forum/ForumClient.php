@@ -21,6 +21,7 @@ final class ForumClient
     use Validation;
     use Authentication;
     use WebClient;
+    use Parsers;
 
     private const loginAction = 'вход';
     private const profileAction = 'viewprofile';
@@ -28,6 +29,7 @@ final class ForumClient
     private const loginURL = '/forum/login.php';
     private const profileURL = '/forum/profile.php';
     private const torrentUrl = '/forum/dl.php';
+    private const searchUrl = '/forum/search.php';
     private const sensitiveParams = [
         'login_username',
         'login_password',
@@ -35,12 +37,15 @@ final class ForumClient
         'keeper_api_key',
         'form_token',
     ];
+    private const reportsSubforumId = 1584;
+
 
     private function __construct(
         private readonly LoggerInterface $logger,
         private readonly Client $client,
         private readonly CookieJar $cookieJar,
-        private readonly string $formToken,  /** @phpstan-ignore-line */
+        private readonly string $formToken,
+        /** @phpstan-ignore-line */
         private readonly ApiCredentials $apiCredentials,
     ) {
     }
@@ -179,6 +184,11 @@ final class ForumClient
         return $this->cookieJar;
     }
 
+    private function get(string $url, array $options): ?string
+    {
+        return self::request($this->client, $this->logger, 'GET', $url, $options);
+    }
+
     /**
      * Download torrent file
      *
@@ -208,5 +218,30 @@ final class ForumClient
         } else {
             return false;
         }
+    }
+
+    /**
+     * Search identifier of topic with reports in page
+     *
+     * @param string $fullForumName Full forum name (hierarchy included)
+     * @return int|null Topic identifier, if search succeeded, null otherwise
+     */
+    public function searchTopicId(string $fullForumName): ?int
+    {
+        $options = [
+            'query' => [
+                'nm' => $fullForumName,
+                'f' => self::reportsSubforumId,
+            ]
+        ];
+        $response = $this->get(self::searchUrl, $options);
+        if (null === $response) {
+            return null;
+        }
+        $topicId = self::parseTopicIdFromList($response, $fullForumName);
+        if (null === $topicId) {
+            $this->logger->error('Failed to extract topic identifier from page', ['name' => $fullForumName]);
+        }
+        return $topicId;
     }
 }
