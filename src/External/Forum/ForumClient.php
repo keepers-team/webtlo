@@ -3,7 +3,6 @@
 namespace KeepersTeam\Webtlo\External\Forum;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
@@ -30,13 +29,7 @@ final class ForumClient
     private const profileURL = '/forum/profile.php';
     private const torrentUrl = '/forum/dl.php';
     private const searchUrl = '/forum/search.php';
-    private const sensitiveParams = [
-        'login_username',
-        'login_password',
-        'login',
-        'keeper_api_key',
-        'form_token',
-    ];
+
     private const reportsSubforumId = 1584;
 
 
@@ -144,39 +137,6 @@ final class ForumClient
             formToken: $formToken,
             apiCredentials: $apiCredentials
         );
-    }
-
-    private static function request(
-        ClientInterface $client,
-        LoggerInterface $logger,
-        string $method,
-        string $url,
-        array $options
-    ): ?string {
-        $redactedParams = ['url' => $url, ...$options];
-        array_walk_recursive(
-            array: $redactedParams,
-            callback: fn (&$v, $k) => in_array($k, self::sensitiveParams) ? $v = '[SENSITIVE]' : null
-        );
-        $logger->info('Fetching page', $redactedParams);
-        try {
-            $response = $client->request($method, $url, $options);
-        } catch (GuzzleException $e) {
-            $logger->error('Failed to fetch page', [...$redactedParams, 'error' => $e]);
-            return null;
-        }
-
-        if (!self::isValidMime($logger, $response, self::$webMime)) {
-            $logger->error('Broken page', $redactedParams);
-            return null;
-        }
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            $logger->error('Unexpected code', [...$redactedParams, 'code' => $statusCode]);
-            return null;
-        }
-
-        return $response->getBody()->getContents();
     }
 
     public function getCookieJar(): CookieJar

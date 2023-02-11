@@ -3,7 +3,9 @@
 namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\HandlerStack;
 use GuzzleRetry\GuzzleRetryMiddleware;
 use KeepersTeam\Webtlo\Config\Defaults;
@@ -15,6 +17,14 @@ use Psr\Log\LoggerInterface;
 
 trait WebClient
 {
+    private static array $sensitiveParams = [
+        'login_username',
+        'login_password',
+        'login',
+        'keeper_api_key',
+        'form_token',
+    ];
+
     private static function getProxyConfig(LoggerInterface $logger, ?Proxy $proxy): array
     {
         $options = [];
@@ -87,5 +97,38 @@ trait WebClient
         ]);
         $logger->info('Created client', ['base' => $baseUrl]);
         return $client;
+    }
+
+    protected static function request(
+        ClientInterface $client,
+        LoggerInterface $logger,
+        string $method,
+        string $url,
+        array $options
+    ): ?string {
+        $redactedParams = ['url' => $url, ...$options];
+        array_walk_recursive(
+            array: $redactedParams,
+            callback: fn (&$v, $k) => in_array($k, self::$sensitiveParams) ? $v = '[SENSITIVE]' : null
+        );
+        $logger->info('Fetching page', $redactedParams);
+        try {
+            $response = $client->request($method, $url, $options);
+        } catch (GuzzleException $e) {
+            $logger->error('Failed to fetch page', [...$redactedParams, 'error' => $e]);
+            return null;
+        }
+
+        if (!self::isValidMime($logger, $response, self::$webMime)) {
+            $logger->error('Broken page', $redactedParams);
+            return null;
+        }
+        $statusCode = $response->getStatusCode();
+        if ($statusCode !== 200) {
+            $logger->error('Unexpected code', [...$redactedParams, 'code' => $statusCode]);
+            return null;
+        }
+
+        return $response->getBody()->getContents();
     }
 }
