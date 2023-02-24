@@ -28,6 +28,7 @@ try {
         LEFT JOIN Torrents ON Torrents.info_hash = TopicsUnregistered.info_hash
         WHERE
             priority IS NOT "низкий"
+            AND Torrents.done = 1.0
             AND status IN (' . $in . ')',
         $allowedStatuses,
         true
