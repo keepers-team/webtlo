@@ -89,7 +89,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topics = Db::query_database(
         "SELECT Topics.id,ss,na,si,st,dl FROM Topics
 		LEFT JOIN (SELECT hs,cl,MAX(ABS(dl)) as dl FROM Clients WHERE dl IN (1,-1,0) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-		WHERE ss = ? AND dl IN (1,-1,0) AND se / qt <= 10",
+		WHERE ss = ? AND dl IN (1,-1,0)",
         array($forum_id),
         true
     );

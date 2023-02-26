@@ -64,7 +64,7 @@ try {
         $stored = Db::query_database(
             "SELECT ss,COUNT(),SUM(si) FROM Topics
 			LEFT JOIN (SELECT * FROM Clients WHERE dl IN (1,-1) GROUP BY hs) Clients ON Topics.hs = Clients.hs
-			WHERE dl IN (1,-1) AND ss IN ($in) AND se / qt <= 10 GROUP BY ss",
+			WHERE dl IN (1,-1) AND ss IN ($in) GROUP BY ss",
             $forums_ids,
             true,
             PDO::FETCH_NUM | PDO::FETCH_UNIQUE
