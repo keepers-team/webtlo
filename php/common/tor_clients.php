@@ -167,13 +167,15 @@ $untrackedTorrentHashes = Db::query_database(
 );
 
 if (!empty($untrackedTorrentHashes)) {
-    Log::append('Найдено сторонних раздач: ' . count($untrackedTorrentHashes) . ' шт.');
+    Log::append('Найдено уникальных сторонних раздач в клиентах: ' . count($untrackedTorrentHashes) . ' шт.');
     // подключаемся к api
     if (!isset($api)) {
         $api = new Api($cfg['api_address'], $cfg['api_key']);
         // применяем таймауты
         $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
     }
+
+    // Пробуем найти на форуме раздачи по их хешам из клиента.
     $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
     unset($untrackedTorrentHashes);
     if (!empty($untrackedTopics)) {
@@ -181,6 +183,7 @@ if (!empty($untrackedTorrentHashes)) {
             if (empty($topicData)) {
                 continue;
             }
+            // Пропускаем раздачи в статусе "поглощено"
             if (in_array($topicData['tor_status'], [7])) {
                 continue;
             }
@@ -196,25 +199,31 @@ if (!empty($untrackedTorrentHashes)) {
             ];
         }
         unset($untrackedTopics);
-        $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
-        foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
-            $select = Db::combine_set($insertedUntrackedTopics);
+
+        // Если нашлись существующие на форуме раздачи, то записываем их в БД.
+        if (!empty($insertedUntrackedTopics)) {
+            Log::append('Записано уникальных сторонних раздач: ' . count($insertedUntrackedTopics) . ' шт.');
+
+            $insertedUntrackedTopics = array_chunk($insertedUntrackedTopics, 500);
+            foreach ($insertedUntrackedTopics as $insertedUntrackedTopics) {
+                $select = Db::combine_set($insertedUntrackedTopics);
+                unset($insertedUntrackedTopics);
+                Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
+                unset($select);
+            }
             unset($insertedUntrackedTopics);
-            Db::query_database('INSERT INTO temp.TopicsUntrackedNew ' . $select);
-            unset($select);
-        }
-        unset($insertedUntrackedTopics);
-        $numberUntrackedTopics = Db::query_database(
-            'SELECT COUNT() FROM temp.TopicsUntrackedNew',
-            [],
-            true,
-            PDO::FETCH_COLUMN
-        );
-        if ($numberUntrackedTopics[0] > 0) {
-            Db::query_database(
-                'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
-                SELECT * FROM temp.TopicsUntrackedNew'
+            $numberUntrackedTopics = Db::query_database(
+                'SELECT COUNT() FROM temp.TopicsUntrackedNew',
+                [],
+                true,
+                PDO::FETCH_COLUMN
             );
+            if ($numberUntrackedTopics[0] > 0) {
+                Db::query_database(
+                    'INSERT INTO TopicsUntracked (id,ss,na,hs,se,si,st,rg)
+                    SELECT * FROM temp.TopicsUntrackedNew'
+                );
+            }
         }
     }
 }
