@@ -485,7 +485,41 @@ try {
         $st = str_repeat('?,', count($filter['filter_tracker_status']) - 1) . '?';
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
 
-        // 1 - fields, 2 - left join, 3 - where
+
+        // Данный подзапрос, для каждой раздачи, определяет наличие:
+        // - хотя бы одного хранителя, у которого раздача есть в списке, "хранитель", Keepers, "posted"
+        // - хотя бы одного хранителя, который в данный момент раздаёт эту раздачу, "сид-хранитель", KeepersSeeders, "seeding"
+        $keepers_status_statement = sprintf(
+            'SELECT
+                id,
+                MAX(posted) as posted,
+                complete,
+                MAX(seeding) as seeding
+            FROM (
+                SELECT
+                    tp.id,
+                    k.complete,
+                    k.posted,
+                    NULL as seeding
+                FROM Topics as tp
+                INNER JOIN Keepers k ON k.id = tp.id
+                %1$s
+                UNION ALL
+                SELECT
+                    tp.id,
+                    1 as complete,
+                    NULL as posted,
+                    1 as seeding
+                FROM Topics as tp
+                INNER JOIN KeepersSeeders as k ON k.topic_id = tp.id
+                %1$s
+            )
+            GROUP BY id',
+            // Исключаем себя из списка, при необходимости
+            $exclude_self_keep ? "WHERE k.nick != '{$cfg['tracker_login']}'" : ''
+        );
+
+        // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $pattern_statement =
             'SELECT
                 Topics.id,
@@ -503,32 +537,7 @@ try {
             LEFT JOIN Torrents ON Topics.hs = Torrents.info_hash
             %s
             LEFT JOIN (
-                SELECT
-                    id,
-                    nick,
-                    MAX(posted) as posted,
-                    complete,
-                    MAX(seeding) as seeding
-                FROM (
-                    SELECT
-                        Topics.id,
-                        Keepers.nick,
-                        complete,posted,
-                        NULL as seeding
-                    FROM Topics
-                    LEFT JOIN Keepers ON Topics.id = Keepers.id
-                    WHERE Keepers.id IS NOT NULL
-                    UNION ALL
-                    SELECT
-                        topic_id,
-                        nick,
-                        1,
-                        NULL,
-                        1
-                    FROM Topics
-                    LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
-                    WHERE KeepersSeeders.topic_id IS NOT NULL
-                ) GROUP BY id
+                %s
             ) Keepers ON Topics.id = Keepers.id
             LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
             WHERE
@@ -602,10 +611,13 @@ try {
                 PDO::FETCH_ASSOC | PDO::FETCH_GROUP
             );
         }
+
+        // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = sprintf(
             $pattern_statement,
             ',' . implode(',', $fields),
             ' ' . implode(' ', $left_join),
+            $keepers_status_statement,
             ' ' . implode(' ', $where)
         );
 
