@@ -516,7 +516,7 @@ try {
             )
             GROUP BY id',
             // Исключаем себя из списка, при необходимости
-            $exclude_self_keep ? "WHERE k.nick != '{$cfg['tracker_login']}'" : ''
+            $exclude_self_keep ? "WHERE k.nick != '{$cfg['tracker_login']}' COLLATE NOCASE" : ''
         );
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
@@ -605,7 +605,7 @@ try {
                     WHERE ss IN (' . $ss . ') AND KeepersSeeders.topic_id IS NOT NULL
                 ) as k
                 GROUP BY id, nick
-                ORDER BY (CASE WHEN k.nick == ? THEN 1 ELSE 0 END) DESC',
+                ORDER BY (CASE WHEN k.nick == ? COLLATE NOCASE THEN 1 ELSE 0 END) DESC',
                 array_merge($forumsIDsChunk, $forumsIDsChunk, [$cfg['tracker_login']]),
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_GROUP
@@ -700,8 +700,8 @@ try {
             // фильтрация раздач по своим спискам
             if ($forum_id == -6) {
                 $exclude_self_keep = 0;
-                $topicKeepers = array_column($topic_keepers, 'nick');
-                if (!count($topicKeepers) || !in_array($cfg['tracker_login'], $topicKeepers)) {
+                $topicKeepers = array_map('strtolower', array_column($topic_keepers, 'nick'));
+                if (!count($topicKeepers) || !in_array(strtolower($cfg['tracker_login']), $topicKeepers)) {
                     continue;
                 }
             }
