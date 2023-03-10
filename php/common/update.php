@@ -216,8 +216,7 @@ if (isset($cfg['subsections'])) {
                 foreach ($topicsKeepersFromForum as $keeperTopicID => $keepersIDs) {
                     foreach ($keepersIDs as $keeperID) {
                         if (
-                            strcasecmp($cfg['user_id'], $keeperID) !== 0
-                            && isset($keepersUserData['result'][$keeperID])
+                            isset($keepersUserData['result'][$keeperID])
                         ) {
                             $dbTopicsKeepers[] = $keeperTopicID;
                             $dbTopicsKeepers[] = $keepersUserData['result'][$keeperID][0];
