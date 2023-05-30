@@ -37,8 +37,7 @@ try {
     );
 
     $apiAddressList = array(
-        'api.t-ru.org',
-        'api.rutracker.org',
+        'api.rutracker.cc',
         'custom'
     );
 
