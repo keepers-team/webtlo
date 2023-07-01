@@ -5,7 +5,7 @@ try {
 
     $ch = curl_init();
     curl_setopt_array($ch, array(
-        CURLOPT_URL => 'https://api.github.com/repos/berkut-174/webtlo/releases/latest',
+        CURLOPT_URL => $webtlo->release_api,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 40,
         CURLOPT_TIMEOUT => 40,

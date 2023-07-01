@@ -7,7 +7,8 @@ include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 
 // версия Web-TLO
-$webtlo_version = file_get_contents(dirname(__FILE__) . '/../version.txt');
+$webtlo = json_decode(file_get_contents(dirname(__FILE__) . '/../version.json'));
+$webtlo->version_url = $webtlo->github . '/releases/tag/' . $webtlo->version;
 
 // подключаемся к базе
 Db::create();
