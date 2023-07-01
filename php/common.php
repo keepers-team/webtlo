@@ -6,6 +6,9 @@ include_once dirname(__FILE__) . '/classes/db.php';
 include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 
+// версия Web-TLO
+$webtlo_version = file_get_contents(dirname(__FILE__) . '/../version.txt');
+
 // подключаемся к базе
 Db::create();
 
