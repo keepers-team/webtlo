@@ -73,6 +73,13 @@ try {
             $filter['filter_sort'],
             $filter['filter_sort_direction']
         );
+
+        $pattern_topic_head =
+            '<div class="subsection-title">'.
+            '<a href="#" onclick="addUnsavedSubsection(%1$s, \'%2$s\');" '.
+            'title="Нажмите, чтобы добавить подраздел в хранимые">(%1$s)</a> %2$s'.
+            '</div>';
+
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             $data = '';
@@ -85,7 +92,11 @@ try {
                 }
             }
             if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] = '<div class="subsection-title">' . $forumsTitles[$forumID] . '</div>';
+                $preparedOutput[$forumID] = sprintf(
+                    $pattern_topic_head,
+                    $forumID,
+                    $forumsTitles[$forumID]
+                );
             }
             $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,

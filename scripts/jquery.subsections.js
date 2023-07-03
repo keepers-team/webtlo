@@ -143,9 +143,15 @@ $(document).ready(function () {
 			if ((ui.content.length) === 0) {
 				$(this).addClass("ui-state-error");
 			}
+			if ((ui.content.length) === 1) {
+				$(this).data('ui-autocomplete')._trigger('select', 'autocompleteselect', { item: ui.content[0] });
+				$("#list-forums-button").addClass("ui-state-highlight");
+				$(this).val("").autocomplete("close");
+			}
 		},
 	}).on("input", function(){
 		$(this).removeClass("ui-state-error");
+		$("#list-forums-button").removeClass("ui-state-highlight");
 	});
 
 	// удалить подраздел
@@ -218,6 +224,35 @@ function addSubsection(event, ui) {
 	$("#reports-subsections").val(reportsSelectedForumID).selectmenu("refresh");
 	$("#list-forums").val(forumID).selectmenu("refresh").change();
 	ui.item.value = "";
+}
+
+// Добавление раздела в хранимые, по нажатию на ид форума
+function addUnsavedSubsection(forum_id, forum_title) {
+	$("#dialog").dialog(
+		{
+			buttons: [
+				{
+					text: "Да, добавить",
+					click: function () {
+						// Открываем вкладку настроек, настройки хранимых подразделов и вставляем ид раздела
+						$("#menutabs").tabs("option", "active", 1);
+						$("div.sub_settings").accordion("option", "active" , 3);
+						$("#add-forum").val(forum_id).autocomplete("search", forum_id);
+						$(this).dialog("close");
+					},
+				},
+				{
+					text: "Нет",
+					click: function() {
+						$(this).dialog("close");
+					}
+				}
+			],
+			modal: true,
+			resizable: false
+		}
+	).text("Добавить в хранимые подраздел '" + forum_title + "'?");
+	$("#dialog").dialog("open");
 }
 
 function getForums() {

@@ -25,7 +25,9 @@ try {
     $forums = array();
 
     foreach ($pattern as $pattern) {
-        $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
+        if (!is_numeric($pattern)) {
+            $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
+        }
         $data = Db::query_database(
             "SELECT id AS value, na AS label FROM Forums
             WHERE id LIKE :term OR na LIKE :term ORDER BY LOWER(na)",
@@ -35,7 +37,7 @@ try {
         $forums = array_merge_recursive($forums, $data);
     }
 
-    echo json_encode($forums);
+    echo json_encode($forums, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     echo json_encode(array(array(
         'label' => $e->getMessage(),
