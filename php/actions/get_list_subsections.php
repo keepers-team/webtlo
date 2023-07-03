@@ -37,7 +37,7 @@ try {
         $forums = array_merge_recursive($forums, $data);
     }
 
-    echo json_encode($forums);
+    echo json_encode($forums, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     echo json_encode([[
         'label' => $e->getMessage(),
