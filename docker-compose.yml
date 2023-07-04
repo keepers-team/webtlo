@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  webtlo:
+    # use local build
+    build: .
+    container_name: webtlo
+    restart: on-failure
+    ports:
+      - "1844:80"
+    volumes:
+      - ./webtlo-data:/var/www/html/data
+      # use mount all for debug
+      # - .:/var/www/html

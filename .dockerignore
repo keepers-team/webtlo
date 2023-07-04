@@ -1,2 +1,13 @@
-Dockerfile
 .git
+.gitignore
+.idea
+.vscode
+Dockerfile
+.dockerignore
+docker-compose.*
+.htaccess
+LICENSE
+README.md
+data
+webtlo-data
+webtlo-config
