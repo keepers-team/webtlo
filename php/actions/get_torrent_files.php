@@ -83,11 +83,18 @@ try {
     // скачивание торрент-файлов
     $download = new TorrentDownload($cfg['forum_address']);
 
-    Log::append(
-        $replace_passkey
-            ? 'Выполняется скачивание торрент-файлов с заменой Passkey...'
-            : 'Выполняется скачивание торрент-файлов...'
+    $log_string = sprintf(
+        "Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ",
+        count($topics_ids['topics_ids']),
+        $cfg['tor_for_user'] ? 'пользовательские' : 'хранительские'
     );
+    if ($replace_passkey) {
+        $log_string .=
+            !empty($cfg['user_passkey'])
+                ? 'Замена Passkey: ' .$cfg['user_passkey']
+                : 'Passkey пуст.';
+    }
+    Log::append($log_string);
 
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
@@ -106,9 +113,16 @@ try {
             }
             $trackers = $torrent->getTrackers();
             foreach ($trackers as &$tracker) {
-                $tracker = preg_replace('/(?<==)\w+$/', $cfg['user_passkey'], $tracker);
+                // Если задан пустой заменный ключ, то пихаем дефолтный 'ann?magnet'
+                if (empty($cfg['user_passkey'])) {
+                    $tracker = preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
+                } else {
+                    $tracker = preg_replace('/(?<==)\w+$/', $cfg['user_passkey'], $tracker);
+                }
+
+                // Для обычных пользователей заменяем адрес трекера и тип ключа.
                 if ($cfg['tor_for_user']) {
-                    $tracker = preg_replace('/\w+(?==)/', 'pk', $tracker);
+                    $tracker = preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
                 }
             }
             unset($tracker);
@@ -140,7 +154,7 @@ try {
     echo json_encode(array(
         'log' => Log::get(),
         'result' => $result,
-    ));
+    ), JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     Log::append($e->getMessage());
     echo json_encode(array(
