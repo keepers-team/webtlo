@@ -103,9 +103,9 @@ function get_settings($filename = "")
     }
 
     // фильтрация раздач
-    $config['rule_topics'] = $ini->read('sections', 'rule_topics', 3);
-    $config['rule_date_release'] = $ini->read('sections', 'rule_date_release', 0);
-    $config['avg_seeders'] = $ini->read('sections', 'avg_seeders', 0);
+    $config['rule_topics'] = $ini->read('sections', 'rule_topics', 5);
+    $config['rule_date_release'] = $ini->read('sections', 'rule_date_release', 5);
+    $config['avg_seeders'] = $ini->read('sections', 'avg_seeders', 1);
     $config['avg_seeders_period'] = $ini->read('sections', 'avg_seeders_period', 14);
     $config['avg_seeders_period_outdated'] = $ini->read('sections', 'avg_seeders_period_outdated', 7);
     $config['enable_auto_apply_filter'] = $ini->read('sections', 'enable_auto_apply_filter', 1);
