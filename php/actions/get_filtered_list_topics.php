@@ -610,7 +610,7 @@ try {
                     WHERE ss IN (' . $ss . ') AND KeepersSeeders.topic_id IS NOT NULL
                 ) as k
                 GROUP BY id, nick
-                ORDER BY (CASE WHEN k.nick == ? COLLATE NOCASE THEN 1 ELSE 0 END) DESC',
+                ORDER BY (CASE WHEN k.nick == ? COLLATE NOCASE THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.nick',
                 array_merge($forumsIDsChunk, $forumsIDsChunk, [$cfg['tracker_login']]),
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_GROUP
