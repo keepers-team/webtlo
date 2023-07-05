@@ -208,7 +208,7 @@ function addSubsection(event, ui) {
 		optionForum.attr("data-client", 0).data("client", 0);
 		optionForum.attr("data-label", forumLabel).data("label", forumLabel);
 		optionForum.attr("data-savepath", "").data("savepath", "");
-		optionForum.attr("data-subdirectory", 0).data("subdirectory", 0);
+		optionForum.attr("data-subdirectory", 1).data("subdirectory", 1);
 		optionForum.attr("data-hide", 0).data("hide", 0);
 		optionForum.attr("data-peers", "").data("peers", "");
 		optionForum.text(forumTitle);
