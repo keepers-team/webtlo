@@ -235,7 +235,7 @@ try {
             $listTorrentClientsNames = array_map(function ($e) use ($cfg, $formatTorrentClientList) {
                 if (isset($cfg['clients'][$e['cl']])) {
                     if ($e['dl'] == '1') {
-                        $stateTorrentClientStatus = 'arrow-up';
+                        $stateTorrentClientStatus = 'hard-drive';
                         $stateTorrentClientColor = 'success';
                     } elseif ($e['dl'] == '0') {
                         $stateTorrentClientStatus = 'arrow-down';
@@ -523,7 +523,7 @@ try {
                         if ($e['posted'] === null) {
                             $stateKeeperIcon = 'arrow-circle-up';
                         } else {
-                            $stateKeeperIcon = $e['seeding'] == 1 ? 'upload' : 'arrow-up';
+                            $stateKeeperIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
                         }
                         $stateKeeperColor = 'success';
                     } else {
