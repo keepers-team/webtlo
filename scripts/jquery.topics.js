@@ -446,7 +446,7 @@ function getFilteredTopics() {
 			if (response.topics != null) {
 				$("#topics").html(response.topics);
 				$("#filtered_topics_count").text(response.count);
-				$("#filtered_topics_size").text(сonvertBytes(response.size));
+				$("#filtered_topics_size").text(convertBytes(response.size));
 			}
 			showCountSizeSelectedTopics();
 		}
@@ -456,7 +456,7 @@ function getFilteredTopics() {
 // вывод на экран кол-во, объём выделенных раздач
 function showCountSizeSelectedTopics(count = 0, size = 0.00) {
 	$("#topics_count").text(count);
-	$("#topics_size").text(сonvertBytes(size));
+	$("#topics_size").text(convertBytes(size));
 }
 
 // получение кол-ва, объёма выделенных раздач
