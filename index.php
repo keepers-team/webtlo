@@ -151,7 +151,9 @@ try {
     <script src="scripts/js.cookie.min.js"></script>
     <link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
     <link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
-    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css"> <!-- шрифт с иконками -->
+    <link rel="stylesheet" href="css/v4-shims.min.css"> <!-- иконки от v4 -->
+
 </head>
 
 <body>
