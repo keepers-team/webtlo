@@ -517,7 +517,7 @@ try {
             // список хранителей на раздаче
             $keepers_list = '';
             if (isset($keepers[$topic_data['id']])) {
-                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="keeper bold text-%2$s">%3$s</i>';
+                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s" title="%4$s"></i> <i class="keeper bold text-%2$s" title="%4$s">%3$s</i>';
                 $keepers_list = array_map(function ($e) use ($formatKeeperList) {
                     if ($e['complete'] == 1) {
                         if ($e['posted'] === null) {
@@ -534,7 +534,8 @@ try {
                         $formatKeeperList,
                         $stateKeeperIcon,
                         $stateKeeperColor,
-                        $e['nick']
+                        $e['nick'],
+                        get_keeper_title($stateKeeperIcon)
                     );
                 }, $keepers[$topic_data['id']]);
                 $keepers_list = '| ' . implode(', ', $keepers_list);
@@ -646,4 +647,22 @@ try {
         'size' => 0,
         'count' => 0,
     ));
+}
+
+/**
+ * Собрать заголовок для хранителя в зависимости от его связи с раздачей
+ *
+ * @param      string  $bulletState  Состояние раздачи
+ *
+ * @return     string  Заголовок
+ */
+function get_keeper_title(string $bulletState): string
+{
+    $keeperBullets = [
+        'upload'          => 'Есть в списке и раздаёт',
+        'hard-drive'      => 'Есть в списке, не раздаёт',
+        'arrow-circle-up' => 'Нет в списке и раздаёт',
+        'arrow-down'      => 'Скачивает'
+    ];
+    return isset($keeperBullets[$bulletState]) ? $keeperBullets[$bulletState] : "";
 }
