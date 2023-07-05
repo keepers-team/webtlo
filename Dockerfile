@@ -42,7 +42,7 @@ WORKDIR /var/www/webtlo
 # copy application to workdir
 COPY cron cron
 COPY css css
-COPY fonts fonts
+COPY webfonts webfonts
 COPY scripts scripts
 COPY php php
 COPY favicon.ico .
