@@ -233,6 +233,40 @@ function get_settings($filename = "")
         $ini->updateFile();
     }
 
+    if ($user_version < 3) {
+        // Парсим опцию исключения из отчётов
+        $excludeForumsIDs = $ini->read("reports", "exclude", "");
+        $excludeForumsIDs = array_filter(explode(",", trim($excludeForumsIDs)));
+        $excludeForumsIDs = array_unique($excludeForumsIDs);
+        $ini->write("reports", "exclude", "");
+
+        if (count($excludeForumsIDs)) {
+            $checkedForumIDs = [];
+            foreach ($excludeForumsIDs as $forum_id) {
+                $forum_id = (int)$forum_id;
+                if (isset($config['subsections'][$forum_id])) {
+                    $config['subsections'][$forum_id]['exclude'] = 1;
+                    $ini->write($forum_id, 'exclude', 1);
+
+                    $checkedForumIDs[] = $forum_id;
+                    unset($forum_id);
+                }
+            }
+            $excludeForumsIDs = $checkedForumIDs;
+            unset($checkedForumIDs);
+
+            if (count($excludeForumsIDs)) {
+                sort($excludeForumsIDs);
+
+                $config['reports']['exclude_forums_ids'] = $excludeForumsIDs;
+                $ini->write('reports', 'exclude_forums_ids', implode(',', $excludeForumsIDs));
+            }
+        }
+
+        $ini->write("other", "user_version", 3);
+        $ini->updateFile();
+    }
+
     // установка настроек прокси
     Proxy::options(
         $config['proxy_activate_forum'],
