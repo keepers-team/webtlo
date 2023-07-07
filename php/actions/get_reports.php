@@ -87,7 +87,6 @@ try {
             WHERE
                 Torrents.info_hash IS NOT NULL
                 AND Topics.ss IN ($in)
-                AND Topics.se / Topics.qt <= 10
             GROUP BY ss",
             array_merge($excludeClientsIDs, $forums_ids),
             true,
@@ -182,8 +181,7 @@ try {
             ) Torrents ON Topics.hs = Torrents.info_hash
             WHERE
                 Torrents.info_hash IS NOT NULL
-                AND Topics.ss = ?
-                AND Topics.se / Topics.qt <= 10",
+                AND Topics.ss = ?",
             array_merge($excludeClientsIDs, [$forum_id]),
             true
         );
