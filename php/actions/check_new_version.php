@@ -1,5 +1,6 @@
 <?php
 
+$result = array_fill_keys(['newVersionNumber','newVersionLink','whatsNew'], '');
 try {
     include_once dirname(__FILE__) . '/../common.php';
 
@@ -8,14 +9,14 @@ try {
         CURLOPT_URL => $webtlo->release_api,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 40,
+        CURLOPT_SSL_VERIFYPEER => false,
         CURLOPT_TIMEOUT => 40,
         CURLOPT_USERAGENT => 'web-TLO'
     ]);
     $response = curl_exec($ch);
     if ($response === false) {
         Log::append('CURL ошибка: ' . curl_error($ch));
-        Log::append('Невозможно связаться с api.github.com');
-        return false;
+        throw new Exception('Невозможно связаться с api.github.com');
     }
     $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -25,22 +26,12 @@ try {
         throw new Exception('Что-то пошло не так при попытке получить актуальную версию с GitHub');
     }
 
-    echo json_encode(
-        [
-            'log' => '',
-            'newVersionNumber' => $infoFromGitHub['name'],
-            'newVersionLink' => $infoFromGitHub['zipball_url'],
-            'whatsNew' => $infoFromGitHub['body'],
-        ]
-    );
+    $result['newVersionNumber'] = $infoFromGitHub['name'];
+    $result['newVersionLink']   = $infoFromGitHub['zipball_url'];
+    $result['whatsNew']         = $infoFromGitHub['body'];
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    echo json_encode(
-        [
-            'log' => Log::get(),
-            'newVersionNumber' => '',
-            'newVersionLink' => '',
-            'whatsNew' => '',
-        ]
-    );
 }
+$result['log'] = Log::get();
+
+echo json_encode($result, JSON_UNESCAPED_UNICODE);
