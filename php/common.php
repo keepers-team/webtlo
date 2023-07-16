@@ -5,6 +5,7 @@ include_once dirname(__FILE__) . '/classes/log.php';
 include_once dirname(__FILE__) . '/classes/db.php';
 include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
+include_once dirname(__FILE__) . '/migration/Backup.php';
 
 // версия Web-TLO
 $webtlo = get_webtlo_version();
@@ -275,6 +276,9 @@ function get_settings($filename = "")
     }
 
     if ($user_version < 3) {
+        // Бекапим конфиг при изменении версии.
+        Backup::config($ini->getFile(), $user_version);
+
         // Парсим опцию исключения из отчётов
         $excludeForumsIDs = $ini->read("reports", "exclude", "");
         $excludeForumsIDs = array_filter(explode(",", trim($excludeForumsIDs)));
