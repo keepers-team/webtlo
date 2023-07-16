@@ -404,6 +404,15 @@ function mkdir_recursive($path)
     return ($return && is_writable($prev_path) && !file_exists($path)) ? mkdir($path) : false;
 }
 
+function ckdir_recursive(string $path): void
+{
+    if (!file_exists($path)) {
+        if (!mkdir_recursive($path)) {
+            throw new Exception('Не удалось создать каталог ' . $path);
+        }
+    }
+}
+
 function natsort_field(array $input, $field, $direct = 1)
 {
     uasort($input, function ($a, $b) use ($field, $direct) {
