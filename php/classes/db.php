@@ -120,6 +120,11 @@ class Db
         else if ($currentPragma > 0) {
             // Создаём запросы для миграции БД.
             $statements = (new DatabaseMigration())->getStatements($currentPragma, self::PRAGMA_VERSION);
+
+            // Бекапим БД при изменении версии.
+            if (count($statements)) {
+                Backup::database($databasePath, self::PRAGMA_VERSION);
+            }
         }
 
         // формируем структуру БД
