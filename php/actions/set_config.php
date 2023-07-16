@@ -224,6 +224,24 @@ try {
     // обновление файла с настройками
     $ini->updateFile();
 
+    // Сделаем копию конфига, убрав приватные данные.
+    $ini->copyFile('config_public.ini');
+    $private_options = [
+        'torrent-tracker' => [
+            'login',
+            'password',
+            'user_id',
+            'bt_key',
+            'api_key',
+        ]
+    ];
+    foreach($private_options as $section => $keys) {
+        foreach($keys as $key) {
+            $ini->write($section, $key, '');
+        }
+    }
+    $ini->updateFile();
+
     echo Log::get();
 } catch (Exception $e) {
     Log::append($e->getMessage());
