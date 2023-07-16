@@ -1,12 +1,7 @@
 #!/command/with-contenv bash
 if [ "${WEBTLO_CRON:=false}" = "true" ]; then
-  user="${WEBTLO_UID:=nobody}"
-  group="${WEBTLO_GID:=nobody}"
-  account="$user:$group"
-  uid=$(s6-envuidgid -nB $account importas UID UID s6-echo '$UID')
-  gid=$(s6-envuidgid -nB $account importas GID GID s6-echo '$GID')
-  s6-echo "Enabled cron with user $account"
-  exec s6-setuidgid "$uid:$gid" crond -f
+  s6-echo "Enabled cron jobs"
+  exec crond -f
 else
   s6-echo "Running with disabled cron"
   exec sleep infinity
