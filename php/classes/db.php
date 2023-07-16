@@ -113,7 +113,10 @@ class Db
 
         $currentPragma = self::getCurrentPragma();
         $statements = [];
-        if ($currentPragma === 0) {
+        if ($currentPragma > self::PRAGMA_VERSION) {
+            throw new Exception(sprintf('Ваша версия БД (#%d), опережает указанную в настройках web-TLO. Вероятно, вы откатились на прошлую версию программы. Удалите файл БД и запустите обновление сведений.', $currentPragma));
+        }
+        else if ($currentPragma === 0) {
             // Создание БД с нуля
             $statements = self::initTables();
         }

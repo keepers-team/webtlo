@@ -3,10 +3,15 @@
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
+// 1. Подключаем общие настройки (запуск БД).
 try {
     include_once dirname(__FILE__) . '/php/common.php';
+} catch (Exception $e) {
+    // $e->getMessage();
+}
 
-    // получение настроек
+// 2. Загружаем конфиг и рисуем селекторы.
+try {
     $cfg = get_settings();
 
     // чекбоксы
