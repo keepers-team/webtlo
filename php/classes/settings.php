@@ -18,7 +18,7 @@ class TIniFileEx
     public function __construct($filename = "")
     {
         if (!empty($filename)) {
-            self::$filename = getStorageDir() . DIRECTORY_SEPARATOR . $filename;
+            self::setFile($filename);
         }
         $this->loadFromFile();
     }
@@ -26,9 +26,19 @@ class TIniFileEx
     private static function loadFromFile()
     {
         if (empty(self::$filename)) {
-            self::$filename = getStorageDir() . DIRECTORY_SEPARATOR . "config.ini";
+            self::setFile('config.ini');
         }
         self::$rcfg = is_readable(self::$filename) ? parse_ini_file(self::$filename, true) : [];
+    }
+
+    private static function setFile($filename)
+    {
+        self::$filename = getStorageDir() . DIRECTORY_SEPARATOR . $filename;
+    }
+
+    public static function getFile()
+    {
+        return self::$filename;
     }
 
     public static function read($section, $key, $def = "")
@@ -47,7 +57,7 @@ class TIniFileEx
         self::$wcfg[$section][$key] = $value;
     }
 
-    public static function updateFile()
+    public static function writeFile()
     {
         if (empty(self::$wcfg)) {
             return;
@@ -64,9 +74,21 @@ class TIniFileEx
             }
             $result .= _BR_;
         }
-        Log::append(file_put_contents(self::$filename, $result)
+        return file_put_contents(self::$filename, $result);
+    }
+
+    public static function updateFile()
+    {
+        $result = self::writeFile();
+        Log::append($result
             ? 'Настройки успешно сохранены в файл.'
             : 'Не удалось записать настройки в файл.');
+    }
+
+    public static function copyFile($filename)
+    {
+        self::$wcfg = self::$rcfg;
+        self::setFile($filename);
     }
 
     //~ public function eraseSection( $section ) {
