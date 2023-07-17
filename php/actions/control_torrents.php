@@ -1,4 +1,5 @@
 <?php
+
 $control_result = [
     'result' => '',
 ];
@@ -8,7 +9,7 @@ try {
 
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    $update_result['result'] = 'В процессе регулировки раздач были ошибки. ' .
+    $control_result['result'] = 'В процессе регулировки раздач были ошибки. ' .
         'Для получения подробностей обратитесь к журналу событий.';
 }
 // выводим лог
