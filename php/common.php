@@ -53,6 +53,47 @@ function get_webtlo_version()
     return $result;
 }
 
+/**
+ * Получить timestamp последнего обновления заданного подраздела.
+ */
+function get_last_update_time(int $forum_id): int
+{
+    $update_time = Db::query_database_row(
+        "SELECT ud FROM UpdateTime WHERE id = ?",
+        [$forum_id],
+        true,
+        PDO::FETCH_COLUMN
+    );
+
+    return $update_time ?? 0;
+}
+
+/**
+ * Записать timestamp последнего обновления заданного подраздела.
+ */
+function set_last_update_time(int $forum_id, ?int $update_time = null): void
+{
+    $update_time = $update_time ?? time();
+    Db::query_database(
+        "INSERT INTO UpdateTime (id,ud) SELECT ?,?",
+        [$forum_id, $update_time]
+    );
+}
+
+/**
+ * Проверить прошло ли заданное количество секунд с последнего обновления подраздела.
+ */
+function check_update_available($forum_id, $compare = 3600): bool
+{
+    $update_time = get_last_update_time($forum_id);
+
+    if (time() - $update_time < $compare) {
+        // Если время не прошло, запретить обновление чего-либо.
+        return false;
+    }
+    return true;
+}
+
 function get_settings($filename = "")
 {
     $config = [];
