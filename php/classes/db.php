@@ -9,6 +9,18 @@ class Db
 
     public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
+        $sth = self::prepare_query($sql, $param);
+        return $fetch ? $sth->fetchAll($pdo) : true;
+    }
+
+    public static function query_database_row($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
+    {
+        $sth = self::prepare_query($sql, $param);
+        return $fetch ? $sth->fetch($pdo) : true;
+    }
+
+    private static function prepare_query($sql, $param = [])
+    {
         self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
         $sth = self::$db->prepare($sql);
         if (self::$db->errorCode() != '0000') {
@@ -16,7 +28,12 @@ class Db
             throw new Exception('SQL ошибка: ' . $error[2]);
         }
         $sth->execute($param);
-        return $fetch ? $sth->fetchAll($pdo) : true;
+        return $sth;
+    }
+
+    public static function query_count($sql, $param = [])
+    {
+        return self::query_database_row($sql, $param, true, PDO::FETCH_COLUMN);
     }
 
     // https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
