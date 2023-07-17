@@ -1,5 +1,9 @@
 <?php
 
+$statistics_result = [
+    'tbody' => '',
+    'tfoot' => '',
+];
 try {
     include_once dirname(__FILE__) . '/../common.php';
 
@@ -42,11 +46,11 @@ try {
                 FROM Topics t
                 LEFT JOIN Seeders s ON t.id = s.id
                 LEFT JOIN Torrents ON t.hs = Torrents.info_hash
-                LEFT JOIN (SELECT id,MAX(posted) as posted FROM Keepers GROUP BY id) k ON t.id = k.id
+                LEFT JOIN (SELECT id, MAX(posted) as posted FROM Keepers WHERE complete = 1 GROUP BY id) k ON t.id = k.id
                 WHERE t.ss IN (" . $placeholdersForumsIDs . ")
                     AND t.pt IN(1,2)
-                    AND strftime('%s', 'now') - t.rg >= 2592000
                     AND Torrents.info_hash IS NULL
+                    AND strftime('%s', 'now') - t.rg >= 2592000
                     AND (k.id IS NULL OR strftime('%s', 'now') - k.posted >= 2592000)
             ) AS seeds ON seeds.ss = f.id
             WHERE f.id IN (" . $placeholdersForumsIDs . ")
@@ -91,6 +95,7 @@ try {
         $tfoot[1][7] += $e['Size15'] + $e['Size0'] + $e['Size5'] + $e['Size10'];
         $tfoot[1][8] += $e['qt'];
         $tfoot[1][9] += $e['si'];
+
         // состояние раздела (цвет)
         if (preg_match('/DVD|HD/', $e['na'])) {
             $size = pow(1024, 4);
@@ -118,11 +123,11 @@ try {
             }
         }
         // байты
-        $e['Size0'] = convert_bytes($e['Size0']);
-        $e['Size5'] = convert_bytes($e['Size5']);
+        $e['Size0']  = convert_bytes($e['Size0']);
+        $e['Size5']  = convert_bytes($e['Size5']);
         $e['Size10'] = convert_bytes($e['Size10']);
         $e['Size15'] = convert_bytes($e['Size15']);
-        $e['si'] = convert_bytes($e['si']);
+        $e['si']     = convert_bytes($e['si']);
         $e = implode("", array_map(function ($e) {
             return "<td>$e</td>";
         }, $e));
@@ -143,13 +148,12 @@ try {
         return $e;
     }, $tfoot)) . "</tr>";
 
-    echo json_encode([
+    $statistics_result = [
         'tbody' => $tbody,
         'tfoot' => $tfoot,
-    ]);
+    ];
 } catch (Exception $e) {
-    echo json_encode([
-        'tbody' => '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>',
-        'tfoot' => '',
-    ]);
+    $statistics_result['tbody'] = '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>';
 }
+
+echo json_encode($statistics_result, JSON_UNESCAPED_UNICODE);
