@@ -400,16 +400,25 @@ class Reports
                 $topic_main = pq($topic_main);
                 foreach ($topic_main->find('tbody') as $row) {
                     $row = pq($row);
-                    $post_id = str_replace('post_', '', $row->attr('id'));
-                    if (empty($post_id)) {
+
+                    // вытаскиваем параметры сообщения и ид пользователя
+                    $link_data = $row->find('div.post_body')->attr('data-ext_link_data');
+                    if (!empty($link_data)) {
+                        $link_data = json_decode($link_data);
+                    }
+                    if (empty($link_data) || empty($link_data->p)) {
                         continue;
                     }
                     $index++;
+
                     $nickname = $row->find('p.nick > a')->text();
                     $keepers[$index] = [
-                        'post_id' => $post_id,
+                        'post_id' => $link_data->p,
+                        'user_id' => $link_data->u,
                         'nickname' => $nickname,
                     ];
+                    unset($link_data);
+
                     // вытаскиваем дату отправки/редактирования сообщения
                     $postedDateMessage = $row->find('.p-link')->text();
                     $editedDateMessage = $row->find('.posted_since')->text();
