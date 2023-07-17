@@ -41,8 +41,8 @@ $excludeForumsIDs = explode(',', $cfg['reports']['exclude_forums_ids']);
 
 // const & pattern
 $message_length_max = 119000;
-$pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s';
-$pattern_spoiler = '[spoiler="№№ %s — %s"][list=1][*=%s]%s[/list][/spoiler]';
+$pattern_topic = '[url=viewtopic.php?t=%s]%s|%s[/url]';
+$pattern_spoiler = '[spoiler="№№ %s — %s"][font=mono2][list=1][*=%s]%s[/list][/font][/spoiler]';
 $pattern_common = '[url=viewtopic.php?t=%s][u]%s[/u][/url] — %s шт. (%s)';
 $pattern_header = 'Хранитель %s: [url=profile.php?mode=viewprofile&u=%s&name=1][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s[br]';
 $spoiler_length = mb_strlen($pattern_spoiler, 'UTF-8');
@@ -87,7 +87,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // получение данных о раздачах
     $topics = Db::query_database(
-        "SELECT Topics.id,ss,na,si,st,dl FROM Topics
+        "SELECT Topics.id,ss,hs,si,st,dl FROM Topics
 		LEFT JOIN (SELECT hs,cl,MAX(ABS(dl)) as dl FROM Clients WHERE dl IN (1,-1,0) GROUP BY hs) Clients ON Topics.hs = Clients.hs
 		WHERE ss = ? AND dl IN (1,-1,0)",
         array($forum_id),
@@ -100,7 +100,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     }
 
     // сортировка раздач
-    $topics = natsort_field($topics, 'na');
+    $topics = natsort_field($topics, 'id');
 
     // количество раздач
     $topics_count = count($topics);
@@ -124,8 +124,8 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
         $str = sprintf(
             $pattern_topic,
             $topicLink,
-            $topic['na'],
-            convert_bytes($topic['si'])
+            $topic['hs'],
+            $topic['id']
         );
         if ($topic['dl'] == 0) {
             $tmp['dlqtsub']++;
