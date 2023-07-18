@@ -718,4 +718,38 @@ class DatabaseMigration
         ];
         $this->statements[] = 'PRAGMA user_version = 9';
     }
+
+    // user_version = 10
+    private function setPragmaVersion_10(): void
+    {
+        // Новые поля в списке раздач.
+        $this->statements[] = 'ALTER TABLE Topics ADD COLUMN ps INT DEFAULT 0'; // poster_id
+        $this->statements[] = 'ALTER TABLE Topics ADD COLUMN ls INT DEFAULT 0'; // seeder_last_seen
+        $this->statements[] = 'DROP TRIGGER IF EXISTS topic_exists';
+        $this->statements[] = [
+            'CREATE TRIGGER IF NOT EXISTS topic_exists',
+            'BEFORE INSERT ON Topics',
+            'WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)',
+            'BEGIN',
+            '    UPDATE Topics SET',
+            '        ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,',
+            '        na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,',
+            '        hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,',
+            '        se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,',
+            '        si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,',
+            '        st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,',
+            '        rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END,',
+            '        qt = CASE WHEN NEW.qt IS NULL THEN qt ELSE NEW.qt END,',
+            '        ds = CASE WHEN NEW.ds IS NULL THEN ds ELSE NEW.ds END,',
+            '        pt = CASE WHEN NEW.pt IS NULL THEN pt ELSE NEW.pt END,',
+            '        ps = CASE WHEN NEW.ps IS NULL THEN ps ELSE NEW.ps END,',
+            '        ls = CASE WHEN NEW.ls IS NULL THEN ls ELSE NEW.ls END',
+            '    WHERE id = NEW.id;',
+            '    SELECT RAISE(IGNORE);',
+            'END;'
+        ];
+        $this->statements[] = 'CREATE INDEX IF NOT EXISTS IX_Topics_ss_hs ON Topics (ss, hs);';
+
+        $this->statements[] = 'PRAGMA user_version = 10';
+    }
 }
