@@ -9,7 +9,7 @@ class Db
     private static string $databaseFilename = 'webtlo.db';
 
     /** Актуальная версия БД */
-    private const PRAGMA_VERSION = 9;
+    private const PRAGMA_VERSION = 10;
 
     public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -219,7 +219,9 @@ class Db
             '    rg INT,',                      // reg_time
             '    qt INT,',                      // sum_updates
             '    ds INT,',                      // days_update
-            '    pt INT DEFAULT 1',             // keeping_priority
+            '    pt INT DEFAULT 1,',            // keeping_priority
+            '    ps INT DEFAULT 0,',            // poster_id
+            '    ls INT DEFAULT 0',             // seeder_last_seen
             ');'
         ];
         $statements[] = [
@@ -237,11 +239,14 @@ class Db
             '        rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END,',
             '        qt = CASE WHEN NEW.qt IS NULL THEN qt ELSE NEW.qt END,',
             '        ds = CASE WHEN NEW.ds IS NULL THEN ds ELSE NEW.ds END,',
-            '        pt = CASE WHEN NEW.pt IS NULL THEN pt ELSE NEW.pt END',
+            '        pt = CASE WHEN NEW.pt IS NULL THEN pt ELSE NEW.pt END,',
+            '        ps = CASE WHEN NEW.ps IS NULL THEN ps ELSE NEW.ps END,',
+            '        ls = CASE WHEN NEW.ls IS NULL THEN ls ELSE NEW.ls END',
             '    WHERE id = NEW.id;',
             '    SELECT RAISE(IGNORE);',
             'END;'
         ];
+        $statements[] = 'CREATE INDEX IF NOT EXISTS IX_Topics_ss_hs ON Topics (ss, hs);';
         $statements[] = [
             'CREATE TRIGGER IF NOT EXISTS topics_delete',
             'AFTER DELETE ON Topics FOR EACH ROW',
