@@ -160,7 +160,7 @@ try {
             <li class="menu"><a href="#manual" class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
-            <p id="new_version_description"></p>
+            <p id="new_version_description"><?= "v$webtlo->version" ?></p>
         </div>
         <div id="content">
             <div id="main" class="content">
