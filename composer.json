@@ -11,5 +11,9 @@
             "KeepersTeam\\Webtlo\\": "src/"
         }
     },
-    "require": {}
+    "require": {
+        "ext-pdo": "*",
+        "ext-curl": "*",
+        "ext-mbstring": "*"
+    }
 }
