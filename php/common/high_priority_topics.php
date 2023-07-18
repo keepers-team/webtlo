@@ -41,7 +41,7 @@ Db::query_database(
 );
 Db::query_database(
     "CREATE TEMP TABLE HighTopicsRenew AS
-    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
+    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
 );
 
 // все открытые раздачи
@@ -73,7 +73,7 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
     $in = str_repeat('?,', count($topicsIDs) - 1) . '?';
 
     $previousTopicsData = Db::query_database(
-        "SELECT id,se,rg,qt,ds,length(na) as lgth FROM Topics WHERE id IN ($in)",
+        "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($in)",
         $topicsIDs,
         true,
         PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
@@ -111,11 +111,12 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
         } else {
             $isTopicDataDelete = false;
         }
-        // получить для раздачи info_hash и topic_title
+        // получить для раздачи info_hash, topic_title, poster_id, seeder_last_seen
         if (
             empty($previousTopicData)
             || $isTopicDataDelete
-            || $previousTopicData['lgth'] == 0
+            || $previousTopicData['lgth'] == 0 // Пустое название
+            || $previousTopicData['ps'] === 0  // Нет автора раздачи
         ) {
             $insertTopicsRenew[$topicID] = [
                 'id' => $topicID,
@@ -129,6 +130,8 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
                 'qt' => $sumUpdates,
                 'ds' => $daysUpdate,
                 'pt' => 2,
+                'ps' => 0,
+                'ls' => 0,
             ];
             unset($previousTopicData);
             continue;
@@ -175,6 +178,8 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
             if (isset($insertTopicsRenew[$topicID])) {
                 $insertTopicsRenew[$topicID]['hs'] = $topicData['info_hash'];
                 $insertTopicsRenew[$topicID]['na'] = $topicData['topic_title'];
+                $insertTopicsRenew[$topicID]['ps'] = $topicData['poster_id'];
+                $insertTopicsRenew[$topicID]['ls'] = $topicData['seeder_last_seen'];
             }
         }
         unset($topicsHighPriorityData);
@@ -219,7 +224,7 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
             SELECT * FROM temp.HighTopicsUpdate"
     );
     Db::query_database(
-        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt)
+        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls)
             SELECT * FROM temp.HighTopicsRenew"
     );
     Db::query_database(
