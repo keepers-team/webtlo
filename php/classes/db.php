@@ -126,7 +126,7 @@ class Db
 
             // Бекапим БД при изменении версии.
             if (count($statements)) {
-                Backup::database($databasePath, self::PRAGMA_VERSION);
+                Backup::database($databasePath, $currentPragma);
             }
         }
 
