@@ -376,6 +376,11 @@ var filter_hold = false;
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
 	var forum_id = $("#main-subsections").val();
+	$("#loading, #process").hide();
+
+	// Ничего не загружать.
+	if (forum_id == -999) return;
+
 	// блокировка фильтра
 	if (
 		forum_id > 0

@@ -166,6 +166,9 @@ try {
             <div id="main" class="content">
                 <select id="main-subsections">
                     <optgroup>
+                        <option value="-999">[[Выберите необходимый раздел из списка]]</option>
+                    </optgroup>
+                    <optgroup label="Общие группы раздач">
                         <option value="-3">Раздачи из всех хранимых подразделов</option>
                         <option value="-5">Раздачи с высоким приоритетом хранения</option>
                         <option value="-2">Раздачи из «чёрного списка»</option>
