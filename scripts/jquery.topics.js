@@ -446,6 +446,11 @@ var filter_hold = false;
 function getFilteredTopics() {
 	var forum_id = $("#main-subsections").val();
 	$("#excluded_topics_size").parent().hide();
+	$("#loading, #process").hide();
+
+	// Ничего не загружать.
+	if (forum_id == -999) return;
+
 	// блокировка фильтра
 	if (
 		forum_id > 0
