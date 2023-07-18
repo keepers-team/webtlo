@@ -87,7 +87,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
 
     // получение данных о раздачах
     $topics = Db::query_database(
-        "SELECT Topics.id,ss,hs,si,st,dl FROM Topics
+        "SELECT Topics.id,ss,Topics.hs,si,st,dl FROM Topics
 		LEFT JOIN (SELECT hs,cl,MAX(ABS(dl)) as dl FROM Clients WHERE dl IN (1,-1,0) GROUP BY hs) Clients ON Topics.hs = Clients.hs
 		WHERE ss = ? AND dl IN (1,-1,0)",
         array($forum_id),
