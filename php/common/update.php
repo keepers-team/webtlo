@@ -32,11 +32,11 @@ Db::query_database(
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds,pt FROM Topics WHERE 0 = 1"
+    SELECT id,ss,se,st,qt,ds,pt,ls FROM Topics WHERE 0 = 1"
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsRenew AS
-    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt FROM Topics WHERE 0 = 1"
+    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
 );
 
 Db::query_database(
@@ -99,7 +99,7 @@ if (isset($cfg['subsections'])) {
             $topics_ids = array_keys($topics_result);
             $in = str_repeat('?,', count($topics_ids) - 1) . '?';
             $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds,length(na) as lgth FROM Topics WHERE id IN ($in)",
+                "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($in)",
                 $topics_ids,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
@@ -150,11 +150,12 @@ if (isset($cfg['subsections'])) {
                     $isTopicDataDelete = false;
                 }
 
-                // Если нет доп. данных о раздаче, их надо получить. topic_title
+                // Если нет доп. данных о раздаче, их надо получить. topic_title, poster_id
                 if (
                     empty($previous_data)
                     || $isTopicDataDelete
-                    || $previous_data['lgth'] == 0
+                    || $previous_data['lgth'] === 0 // Пустое название
+                    || $previous_data['ps'] === 0   // Нет автора раздачи
                 ) {
                     $db_topics_renew[$topic_id] = [
                         'id' => $topic_id,
@@ -168,6 +169,8 @@ if (isset($cfg['subsections'])) {
                         'qt' => $sum_updates,
                         'ds' => $days_update,
                         'pt' => $topic_data['keeping_priority'],
+                        'ps' => 0,
+                        'ls' => $topic_data['seeder_last_seen'],
                     ];
                     if (!empty($topic_data['keepers'])) {
                         $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
@@ -197,6 +200,7 @@ if (isset($cfg['subsections'])) {
                     'qt' => $sum_updates,
                     'ds' => $days_update,
                     'pt' => $topic_data['keeping_priority'],
+                    'ls' => $topic_data['seeder_last_seen'],
                 ];
                 if (!empty($topic_data['keepers'])) {
                     $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
@@ -250,6 +254,7 @@ if (isset($cfg['subsections'])) {
                     }
                     if (isset($db_topics_renew[$topic_id])) {
                         $db_topics_renew[$topic_id]['na'] = $topic_data['topic_title'];
+                        $db_topics_renew[$topic_id]['ps'] = $topic_data['poster_id'];
                     }
                 }
                 unset($topics_data);
@@ -312,11 +317,11 @@ if ($countKeepersSeeders > 0) {
 if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // переносим данные в основную таблицу
     Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
+        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt,ls)
         SELECT * FROM temp.TopicsUpdate"
     );
     Db::query_database(
-        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt)
+        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls)
         SELECT * FROM temp.TopicsRenew"
     );
     $forums_ids = array_keys($forumsUpdateTime);
