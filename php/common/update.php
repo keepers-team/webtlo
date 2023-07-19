@@ -41,7 +41,7 @@ Db::query_database(
 
 Db::query_database(
     "CREATE TEMP TABLE KeepersSeedersNew AS
-    SELECT topic_id,nick FROM KeepersSeeders WHERE 0 = 1"
+    SELECT * FROM KeepersSeeders WHERE 0 = 1"
 );
 
 // время текущего и предыдущего обновления
@@ -54,6 +54,8 @@ if (isset($cfg['subsections'])) {
     $allowedTorrentStatuses = [0, 2, 3, 8, 10];
     // получим список всех хранителей
     $keepersUserData = $api->getKeepersUserData();
+    $keepersUserData = $keepersUserData['result'] ?? [];
+
     // обновим каждый хранимый подраздел
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
         // получаем дату предыдущего обновления
@@ -213,28 +215,24 @@ if (isset($cfg['subsections'])) {
             if (!empty($topicsKeepersFromForum)) {
                 foreach ($topicsKeepersFromForum as $keeperTopicID => $keepersIDs) {
                     foreach ($keepersIDs as $keeperID) {
-                        if (
-                            isset($keepersUserData['result'][$keeperID])
-                        ) {
-                            $dbTopicsKeepers[] = $keeperTopicID;
-                            $dbTopicsKeepers[] = $keepersUserData['result'][$keeperID][0];
+                        if (isset($keepersUserData[$keeperID])) {
+                            $dbTopicsKeepers[] = [
+                                'id'          => $keeperTopicID,
+                                'keeper_id'   => $keeperID,
+                                'keeper_name' => $keepersUserData[$keeperID][0],
+                            ];
                         }
                     }
                 }
-                unset($topicsKeepersFromForum);
+
                 // обновление данных в базе о сидах-хранителях
                 $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 998);
                 foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
-                    $select = str_repeat(
-                        'SELECT ?,? UNION ALL ',
-                        (count($dbTopicsKeepersChunk) / 2) - 1
-                    ) . 'SELECT ?,?';
-                    Db::query_database(
-                        "INSERT INTO temp.KeepersSeedersNew (topic_id, nick) $select",
-                        $dbTopicsKeepersChunk
-                    );
+                    $select = Db::combine_set($dbTopicsKeepersChunk);
+                    Db::query_database("INSERT INTO temp.KeepersSeedersNew (id, keeper_id, keeper_name) $select");
+                    unset($dbTopicsKeepersChunk, $select);
                 }
-                unset($dbTopicsKeepersChunks);
+                unset($topicsKeepersFromForum, $dbTopicsKeepersChunks);
             }
 
             unset($topics_data_previous);
@@ -306,10 +304,11 @@ if ($countKeepersSeeders > 0) {
     Log::append("Запись в базу данных списка сидов-хранителей...");
     Db::query_database("INSERT INTO KeepersSeeders SELECT * FROM temp.KeepersSeedersNew");
     Db::query_database(
-        "DELETE FROM KeepersSeeders WHERE topic_id || nick NOT IN (
-            SELECT KeepersSeeders.topic_id || KeepersSeeders.nick FROM temp.KeepersSeedersNew
-            LEFT JOIN KeepersSeeders ON temp.KeepersSeedersNew.topic_id = KeepersSeeders.topic_id AND temp.KeepersSeedersNew.nick = KeepersSeeders.nick
-            WHERE KeepersSeeders.topic_id IS NOT NULL
+        "DELETE FROM KeepersSeeders WHERE id || keeper_id NOT IN (
+            SELECT ks.id || ks.keeper_id
+            FROM temp.KeepersSeedersNew tmp
+            LEFT JOIN KeepersSeeders ks ON tmp.id = ks.id AND tmp.keeper_id = ks.keeper_id
+            WHERE ks.id IS NOT NULL
         )"
     );
 }
