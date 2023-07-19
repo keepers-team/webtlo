@@ -763,4 +763,60 @@ class DatabaseMigration
 
         $this->statements[] = 'PRAGMA user_version = 10';
     }
+
+    // user_version = 11
+    private function setPragmaVersion_11(): void
+    {
+        // Пересоздадим таблицу раздач других хранителей.
+        $this->statements[] = ['DROP TABLE IF EXISTS Keepers'];
+        $this->statements[] = ['DROP TRIGGER IF EXISTS keepers_exists'];
+        $this->statements[] = [
+            'CREATE TABLE IF NOT EXISTS KeepersLists (',
+            '    id INTEGER NOT NULL,',
+            '    keeper_id INTEGER NOT NULL,',
+            '    keeper_name VARCHAR,',
+            '    posted INTEGER,',
+            '    complete INT DEFAULT 1,',
+            '    PRIMARY KEY (id, keeper_id)',
+            ');'
+        ];
+        $this->statements[] = [
+            'CREATE TRIGGER IF NOT EXISTS keepers_lists_exists',
+            'BEFORE INSERT ON KeepersLists',
+            'WHEN EXISTS (SELECT id FROM KeepersLists WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
+            'BEGIN',
+            '    UPDATE KeepersLists SET',
+            '        keeper_name = NEW.keeper_name,',
+            '        posted      = NEW.posted,',
+            '        complete    = NEW.complete',
+            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
+            '    SELECT RAISE(IGNORE);',
+            'END;'
+        ];
+
+        // Список сидов-хранителей.
+        $this->statements[] = ['DROP TABLE IF EXISTS KeepersSeeders'];
+        $this->statements[] = ['DROP TRIGGER IF EXISTS keepers_seeders_exists'];
+        $this->statements[] = [
+            'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
+            '    id INTEGER NOT NULL,',
+            '    keeper_id INTEGER NOT NULL,',
+            '    keeper_name VARCHAR,',
+            '    PRIMARY KEY (id, keeper_id)',
+            ');'
+        ];
+        $this->statements[] = [
+            'CREATE TRIGGER IF NOT EXISTS keepers_seeders_exists',
+            'BEFORE INSERT ON KeepersSeeders',
+            'WHEN EXISTS (SELECT id FROM KeepersSeeders WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
+            'BEGIN',
+            '    UPDATE KeepersSeeders SET',
+            '        keeper_name = NEW.keeper_name',
+            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
+            '    SELECT RAISE(IGNORE);',
+            'END;'
+        ];
+
+        $this->statements[] = 'PRAGMA user_version = 11';
+    }
 }
