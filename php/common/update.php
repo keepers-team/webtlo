@@ -1,11 +1,9 @@
 <?php
 
-$starttime = microtime(true);
-
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
-Log::append("Начато обновление сведений о раздачах...");
+Timers::start('full_update');
 
 // обновляем дерево подразделов
 include_once dirname(__FILE__) . '/forum_tree.php';
@@ -18,6 +16,15 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
+// подключаемся к api
+if (!isset($api)) {
+    $api = new Api($cfg['api_address'], $cfg['api_key']);
+    // применяем таймауты
+    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
+}
+
+Timers::start('topics_update');
+Log::append("Начато обновление сведений о раздачах в хранимых подразделах...");
 // создаём временные таблицы
 Db::query_database(
     "CREATE TEMP TABLE UpdateTimeNow AS
@@ -37,49 +44,30 @@ Db::query_database(
     SELECT topic_id,nick FROM KeepersSeeders WHERE 0 = 1"
 );
 
-// подключаемся к api
-if (!isset($api)) {
-    $api = new Api($cfg['api_address'], $cfg['api_key']);
-    // применяем таймауты
-    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
-}
-
-// все открытые раздачи
-$tor_status = [0, 2, 3, 8, 10];
-
 // время текущего и предыдущего обновления
-$current_update_time = new DateTime();
+$currentUpdateTime  = new DateTime();
 $previousUpdateTime = new DateTime();
 
+$forumsUpdateTime = [];
 if (isset($cfg['subsections'])) {
+    // все открытые раздачи
+    $allowedTorrentStatuses = [0, 2, 3, 8, 10];
     // получим список всех хранителей
     $keepersUserData = $api->getKeepersUserData();
     // обновим каждый хранимый подраздел
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
         // получаем дату предыдущего обновления
-        $update_time = Db::query_database(
-            "SELECT ud FROM UpdateTime WHERE id = ?",
-            [$forum_id],
-            true,
-            PDO::FETCH_COLUMN
-        );
-
-        // при первом обновлении
-        if (empty($update_time[0])) {
-            $update_time[0] = 0;
-        }
-
-        $time_diff = time() - $update_time[0];
+        $update_time = get_last_update_time($forum_id);
 
         // если не прошёл час
-        if ($time_diff < 3600) {
+        if (time() - $update_time < 3600) {
             Log::append("Notice: Не требуется обновление для подраздела № " . $forum_id);
             continue;
         }
 
+        Timers::start("update_forum_$forum_id");
         // получаем данные о раздачах
         $topics_data = $api->getForumTopicsData($forum_id);
-
         if (empty($topics_data['result'])) {
             Log::append("Error: Не получены данные о подразделе № " . $forum_id);
             continue;
@@ -87,27 +75,26 @@ if (isset($cfg['subsections'])) {
 
         // количество и вес раздач
         $topics_count = count($topics_data['result']);
-        $topics_size = $topics_data['total_size_bytes'];
-
-        // Log::append( "Список раздач подраздела № $forum_id получен ($topics_count шт.)" );
+        $topics_size  = $topics_data['total_size_bytes'];
+        $topic_keys   = $topics_data['format']['topic_id'];
 
         // запоминаем время обновления каждого подраздела
-        $forums_update_time[$forum_id]['ud'] = $topics_data['update_time'];
+        $forumsUpdateTime[$forum_id]['ud'] = $topics_data['update_time'];
 
         // текущее обновление в DateTime
-        $current_update_time->setTimestamp($topics_data['update_time']);
+        $currentUpdateTime->setTimestamp($topics_data['update_time']);
 
         // предыдущее обновление в DateTime
-        $previousUpdateTime->setTimestamp($update_time[0])->setTime(0, 0, 0);
+        $previousUpdateTime->setTimestamp($update_time)->setTime(0, 0);
 
         // разница в днях между обновлениями сведений
-        $daysDiffAdjusted = $current_update_time->diff($previousUpdateTime)->format('%d');
+        $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
 
         // разбиваем result по 500 раздач
-        $topics_result = array_chunk($topics_data['result'], 500, true);
+        $topics_chunks = array_chunk($topics_data['result'], 500, true);
         unset($topics_data);
 
-        foreach ($topics_result as $topics_result) {
+        foreach ($topics_chunks as $topics_result) {
             // получаем данные о раздачах за предыдущее обновление
             $topics_ids = array_keys($topics_result);
             $in = str_repeat('?,', count($topics_ids) - 1) . '?';
@@ -121,27 +108,30 @@ if (isset($cfg['subsections'])) {
 
             $topicsKeepersFromForum = [];
             $dbTopicsKeepers = [];
+            $db_topics_renew = $db_topics_update = [];
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers )
-            foreach ($topics_result as $topic_id => $topic_data) {
-                if (empty($topic_data)) {
+            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers, seeder_last_seen, info_hash )
+            foreach ($topics_result as $topic_id => $topic_raw) {
+                if (empty($topic_raw)) {
                     continue;
                 }
 
-                if (count($topic_data) < 6) {
+                if (count($topic_raw) < 6) {
                     throw new Exception("Error: Недостаточно элементов в ответе");
                 }
+                $topic_data = array_combine($topic_keys, $topic_raw);
+                unset($topic_raw);
 
                 if (
-                    !in_array($topic_data[0], $tor_status)
-                    || $topic_data[4] == 2
+                    !in_array($topic_data['tor_status'], $allowedTorrentStatuses)
+                    || $topic_data['keeping_priority'] == 2
                 ) {
                     continue;
                 }
 
                 $days_update = 0;
                 $sum_updates = 1;
-                $sum_seeders = $topic_data[1];
+                $sum_seeders = $topic_data['seeders'];
 
                 // запоминаем имеющиеся данные о раздаче в локальной базе
                 if (isset($topics_data_previous[$topic_id])) {
@@ -152,7 +142,7 @@ if (isset($cfg['subsections'])) {
                 // в том числе, чтобы очистить значения сидов для старой раздачи
                 if (
                     isset($previous_data['rg'])
-                    && $previous_data['rg'] != $topic_data[2]
+                    && $previous_data['rg'] != $topic_data['reg_time']
                 ) {
                     $topics_delete[] = $topic_id;
                     $isTopicDataDelete = true;
@@ -160,27 +150,27 @@ if (isset($cfg['subsections'])) {
                     $isTopicDataDelete = false;
                 }
 
-                // получить для раздачи info_hash и topic_title
+                // Если нет доп. данных о раздаче, их надо получить. topic_title
                 if (
                     empty($previous_data)
-                    || $previous_data['lgth'] == 0
                     || $isTopicDataDelete
+                    || $previous_data['lgth'] == 0
                 ) {
                     $db_topics_renew[$topic_id] = [
                         'id' => $topic_id,
                         'ss' => $forum_id,
                         'na' => '',
-                        'hs' => '',
+                        'hs' => $topic_data['info_hash'],
                         'se' => $sum_seeders,
-                        'si' => $topic_data[3],
-                        'st' => $topic_data[0],
-                        'rg' => $topic_data[2],
+                        'si' => $topic_data['tor_size_bytes'],
+                        'st' => $topic_data['tor_status'],
+                        'rg' => $topic_data['reg_time'],
                         'qt' => $sum_updates,
                         'ds' => $days_update,
-                        'pt' => $topic_data[4],
+                        'pt' => $topic_data['keeping_priority'],
                     ];
-                    if (!empty($topic_data[5])) {
-                        $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                    if (!empty($topic_data['keepers'])) {
+                        $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
                     }
                     unset($previous_data);
                     continue;
@@ -203,15 +193,19 @@ if (isset($cfg['subsections'])) {
                     'id' => $topic_id,
                     'ss' => $forum_id,
                     'se' => $sum_seeders,
-                    'st' => $topic_data[0],
+                    'st' => $topic_data['tor_status'],
                     'qt' => $sum_updates,
                     'ds' => $days_update,
-                    'pt' => $topic_data[4],
+                    'pt' => $topic_data['keeping_priority'],
                 ];
-                if (!empty($topic_data[5])) {
-                    $topicsKeepersFromForum[$topic_id] = $topic_data[5];
+                if (!empty($topic_data['keepers'])) {
+                    $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
                 }
+
+                unset($topic_id, $topic_data);
             }
+            unset($topics_result);
+
             if (!empty($topicsKeepersFromForum)) {
                 foreach ($topicsKeepersFromForum as $keeperTopicID => $keepersIDs) {
                     foreach ($keepersIDs as $keeperID) {
@@ -242,7 +236,7 @@ if (isset($cfg['subsections'])) {
             unset($topics_data_previous);
 
             // вставка данных в базу о новых раздачах
-            if (isset($db_topics_renew)) {
+            if (count($db_topics_renew)) {
                 $topics_renew_ids = array_keys($db_topics_renew);
                 $in = str_repeat('?,', count($topics_renew_ids) - 1) . '?';
                 $topics_data = $api->getTorrentTopicData($topics_renew_ids);
@@ -255,65 +249,55 @@ if (isset($cfg['subsections'])) {
                         continue;
                     }
                     if (isset($db_topics_renew[$topic_id])) {
-                        $db_topics_renew[$topic_id]['hs'] = $topic_data['info_hash'];
                         $db_topics_renew[$topic_id]['na'] = $topic_data['topic_title'];
                     }
                 }
                 unset($topics_data);
+
                 $select = Db::combine_set($db_topics_renew);
-                unset($db_topics_renew);
                 Db::query_database("INSERT INTO temp.TopicsRenew $select");
-                unset($select);
+
+                unset($db_topics_renew, $select);
             }
             unset($db_topics_renew);
 
             // обновление данных в базе о существующих раздачах
-            if (isset($db_topics_update)) {
+            if (count($db_topics_update)) {
                 $select = Db::combine_set($db_topics_update);
-                unset($db_topics_update);
                 Db::query_database("INSERT INTO temp.TopicsUpdate $select");
-                unset($select);
+
+                unset($db_topics_update, $select);
             }
-            unset($db_topics_update);
         }
-        unset($topics_result);
+
+        Log::append(sprintf(
+            'Обновление списка раздач подраздела № %d завершено за %s, %d шт',
+            $forum_id,
+            Timers::getExecTime("update_forum_$forum_id"),
+            $topics_count
+        ));
     }
 }
 
 // удаляем перерегистрированные раздачи
 // чтобы очистить значения сидов для старой раздачи
 if (isset($topics_delete)) {
-    $topics_delete = array_chunk($topics_delete, 500);
-    foreach ($topics_delete as $topics_delete) {
+    $topics_delete_chunk = array_chunk($topics_delete, 500);
+    foreach ($topics_delete_chunk as $topics_delete) {
         $in = str_repeat('?,', count($topics_delete) - 1) . '?';
         Db::query_database(
             "DELETE FROM Topics WHERE id IN ($in)",
             $topics_delete
         );
     }
+    unset($topics_delete, $topics_delete_chunk);
 }
 
-$countTopicsUpdate = Db::query_database(
-    "SELECT COUNT() FROM temp.TopicsUpdate",
-    [],
-    true,
-    PDO::FETCH_COLUMN
-);
-$countTopicsRenew = Db::query_database(
-    "SELECT COUNT() FROM temp.TopicsRenew",
-    [],
-    true,
-    PDO::FETCH_COLUMN
-);
+$countKeepersSeeders = Db::query_count('SELECT COUNT() FROM temp.KeepersSeedersNew');
+$countTopicsUpdate   = Db::query_count('SELECT COUNT() FROM temp.TopicsUpdate');
+$countTopicsRenew    = Db::query_count('SELECT COUNT() FROM temp.TopicsRenew');
 
-$countKeepersSeeders = Db::query_database(
-    "SELECT COUNT() FROM temp.KeepersSeedersNew",
-    [],
-    true,
-    PDO::FETCH_COLUMN
-);
-
-if ($countKeepersSeeders[0] > 0) {
+if ($countKeepersSeeders > 0) {
     Log::append("Запись в базу данных списка сидов-хранителей...");
     Db::query_database("INSERT INTO KeepersSeeders SELECT * FROM temp.KeepersSeedersNew");
     Db::query_database(
@@ -325,10 +309,7 @@ if ($countKeepersSeeders[0] > 0) {
     );
 }
 
-if (
-    $countTopicsUpdate[0] > 0
-    || $countTopicsRenew[0] > 0
-) {
+if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // переносим данные в основную таблицу
     Db::query_database(
         "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
@@ -338,7 +319,7 @@ if (
         "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt)
         SELECT * FROM temp.TopicsRenew"
     );
-    $forums_ids = array_keys($forums_update_time);
+    $forums_ids = array_keys($forumsUpdateTime);
     $in = implode(',', $forums_ids);
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
@@ -349,9 +330,9 @@ if (
         )"
     );
     // время последнего обновления для каждого подраздела
-    $forums_update_time = array_chunk($forums_update_time, 500, true);
-    foreach ($forums_update_time as $forums_update_time) {
-        $select = Db::combine_set($forums_update_time);
+    $forums_update_chunk = array_chunk($forumsUpdateTime, 500, true);
+    foreach ($forums_update_chunk as $forums_update_part) {
+        $select = Db::combine_set($forums_update_part);
         Db::query_database("INSERT INTO temp.UpdateTimeNow $select");
         unset($select);
     }
@@ -359,20 +340,19 @@ if (
         "INSERT INTO UpdateTime (id,ud)
         SELECT id,ud FROM temp.UpdateTimeNow"
     );
-    // время окончания обновления
-    Db::query_database(
-        "INSERT INTO UpdateTime (id,ud) SELECT 7777,?",
-        [time()]
-    );
-    $countTopicsTotalUpdate = $countTopicsUpdate[0] + $countTopicsRenew[0];
-    Log::append("Обработано хранимых подразделов: " . count($forums_update_time) . " шт.");
-    Log::append("Обработано раздач в хранимых подразделах: " . $countTopicsTotalUpdate . " шт.");
-    // Log::append("Запись в базу данных сведений о раздачах...");
+    // Записываем время обновления.
+    set_last_update_time(7777);
+
+    Log::append(sprintf(
+        'Обработано хранимых подразделов: %d шт, раздач в них %d',
+        count($forumsUpdateTime),
+        $countTopicsUpdate + $countTopicsRenew
+    ));
 }
+Log::append("Обновление сведений о раздачах завершено за " . Timers::getExecTime('topics_update'));
 
 // дёргаем скрипт
 include_once dirname(__FILE__) . '/tor_clients.php';
 
-$endtime = microtime(true);
 
-Log::append("Обновление сведений о раздачах завершено за " . convert_seconds($endtime - $starttime));
+Log::append("Обновление всех данных завершено за " . Timers::getExecTime('full_update'));
