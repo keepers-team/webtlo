@@ -16,6 +16,7 @@ try {
 
     // получаем настройки
     $cfg = get_settings();
+    $user_id = (int)$cfg['user_id'];
 
     // кодировка для regexp
     mb_regex_encoding('UTF-8');
@@ -491,7 +492,7 @@ try {
 
 
         // Данный подзапрос, для каждой раздачи, определяет наличие:
-        // - хотя бы одного хранителя, у которого раздача есть в списке, "хранитель", Keepers, "posted"
+        // - хотя бы одного хранителя, у которого раздача есть в списке, "хранитель", KeepersLists, "posted"
         // - хотя бы одного хранителя, который в данный момент раздаёт эту раздачу, "сид-хранитель", KeepersSeeders, "seeding"
         $keepers_status_statement = sprintf(
             'SELECT
@@ -506,7 +507,7 @@ try {
                     k.posted,
                     NULL as seeding
                 FROM Topics as tp
-                INNER JOIN Keepers k ON k.id = tp.id
+                INNER JOIN KeepersLists as k ON k.id = tp.id
                 %1$s
                 UNION ALL
                 SELECT
@@ -515,12 +516,12 @@ try {
                     NULL as posted,
                     1 as seeding
                 FROM Topics as tp
-                INNER JOIN KeepersSeeders as k ON k.topic_id = tp.id
+                INNER JOIN KeepersSeeders as k ON k.id = tp.id
                 %1$s
             )
             GROUP BY id',
             // Исключаем себя из списка, при необходимости
-            $exclude_self_keep ? "WHERE k.nick != '{$cfg['tracker_login']}' COLLATE NOCASE" : ''
+            $exclude_self_keep ? "WHERE k.keeper_id != '{$user_id}'" : ''
         );
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
@@ -600,18 +601,21 @@ try {
         $keepers = [];
         foreach ($forumsIDsChunks as $forumsIDsChunk) {
             $keepers += Db::query_database(
-                'SELECT k.id,k.nick,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding FROM (
-                    SELECT Topics.id,Keepers.nick,complete,posted,NULL as seeding FROM Topics
-                    LEFT JOIN Keepers ON Topics.id = Keepers.id
-                    WHERE ss IN (' . $ss . ') AND rg < posted AND Keepers.id IS NOT NULL
+                'SELECT k.id,k.keeper_id,k.keeper_name,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding 
+                FROM (
+                    SELECT kl.id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
+                    FROM Topics
+                    LEFT JOIN KeepersLists as kl ON Topics.id = kl.id
+                    WHERE ss IN (' . $ss . ') AND rg < posted AND kl.id IS NOT NULL
                     UNION ALL
-                    SELECT topic_id,nick,1 as complete,NULL as posted,1 as seeding FROM Topics
-                    LEFT JOIN KeepersSeeders ON Topics.id = KeepersSeeders.topic_id
-                    WHERE ss IN (' . $ss . ') AND KeepersSeeders.topic_id IS NOT NULL
+                    SELECT ks.id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
+                    FROM Topics
+                    LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.id
+                    WHERE ss IN (' . $ss . ') AND ks.id IS NOT NULL
                 ) as k
-                GROUP BY id, nick
-                ORDER BY (CASE WHEN k.nick == ? COLLATE NOCASE THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.nick',
-                array_merge($forumsIDsChunk, $forumsIDsChunk, [$cfg['tracker_login']]),
+                GROUP BY k.id, k.keeper_id, k.keeper_name
+                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.keeper_name',
+                array_merge($forumsIDsChunk, $forumsIDsChunk, [$user_id]),
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_GROUP
             );
@@ -695,28 +699,25 @@ try {
                 continue;
             }
             // список хранителей на раздаче
-            $topic_keepers = [];
-            if (isset($keepers[$topic_data['id']])) {
-                $topic_keepers = $keepers[$topic_data['id']];
-            }
+            $topic_keepers = $keepers[$topic_data['id']] ?? [];
             // фильтрация раздач по своим спискам
             if ($forum_id == -6) {
                 $exclude_self_keep = 0;
-                $topicKeepers = array_map('strtolower', array_column($topic_keepers, 'nick'));
-                if (!count($topicKeepers) || !in_array(strtolower($cfg['tracker_login']), $topicKeepers)) {
+                $topicKeepers = array_column($topic_keepers, 'keeper_id');
+                if (!count($topicKeepers) || !in_array($user_id, $topicKeepers)) {
                     continue;
                 }
             }
             // исключим себя из списка хранителей раздачи
             if ($exclude_self_keep) {
-                $topic_keepers =  array_filter($topic_keepers, function($e) use ($cfg) {
-                    return strcasecmp($cfg['tracker_login'], $e['nick']) !== 0;
+                $topic_keepers =  array_filter($topic_keepers, function($e) use ($user_id) {
+                    return $user_id !== (int)$e['keeper_id'];
                 });
             }
             $keepers_list = '';
             if (count($topic_keepers)) {
                 $formatKeeperList = '<i class="fa fa-%1$s text-%2$s" title="%4$s"></i> <i class="keeper bold text-%2$s" title="%4$s">%3$s</i>';
-                $keepers_list = array_map(function ($e) use ($formatKeeperList, $cfg) {
+                $keepers_list = array_map(function ($e) use ($formatKeeperList, $user_id) {
                     if ($e['complete'] == 1) {
                         if ($e['posted'] === null) {
                             $stateKeeperIcon = 'arrow-circle-up';
@@ -728,14 +729,14 @@ try {
                         $stateKeeperIcon = 'arrow-down';
                         $stateKeeperColor = 'danger';
                     }
-                    if (strcasecmp($cfg['tracker_login'], $e['nick']) === 0) {
+                    if ($user_id === (int)$e['keeper_id']) {
                         $stateKeeperColor = 'self';
                     }
                     return sprintf(
                         $formatKeeperList,
                         $stateKeeperIcon,
                         $stateKeeperColor,
-                        $e['nick'],
+                        $e['keeper_name'],
                         get_keeper_title($stateKeeperIcon)
                     );
                 }, $topic_keepers);
@@ -744,7 +745,7 @@ try {
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
                 if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
-                    $topicKeepers = array_column($topic_keepers, 'nick');
+                    $topicKeepers = array_column($topic_keepers, 'keeper_name');
                     unset($matchKeepers);
                     foreach ($filterValues as $filterKeeper) {
                         if (empty($filterKeeper)) {
@@ -839,7 +840,7 @@ try {
             );
         }
 
-        $excluded = Db::query_database(
+        $excluded = Db::query_database_row(
             'SELECT COUNT(1) AS ex_count, IFNULL(SUM(t.si),0) AS ex_size
             FROM TopicsExcluded ex
             INNER JOIN Topics t on t.hs = ex.info_hash
@@ -853,8 +854,8 @@ try {
             ),
             true
         );
-        if (count($excluded[0])) {
-            $excluded_topics = $excluded[0];
+        if (count($excluded)) {
+            $excluded_topics = $excluded;
         }
     }
 
