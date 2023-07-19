@@ -643,7 +643,6 @@ class DatabaseMigration
     // user_version = 8
     private function setPragmaVersion_8(): void
     {
-        $this->statements[] = ['DROP TABLE IF EXISTS Clients'];
         $this->statements[] = [
             'CREATE TABLE IF NOT EXISTS Torrents (',
             '    info_hash     TEXT    NOT NULL,',
@@ -663,6 +662,18 @@ class DatabaseMigration
             '    ON CONFLICT REPLACE',
             ');'
         ];
+
+        $this->statements[] = [
+            'INSERT INTO Torrents (info_hash, client_id, topic_id, name, total_size, paused, done, time_added, error)',
+            'SELECT c.hs info_hash, c.cl client_id, t.id topic_id, t.na name, t.si total_size',
+            '    ,CASE WHEN c.dl = -1 THEN 1 ELSE 0 END paused',
+            '    ,CASE WHEN c.dl != 0 THEN 1 ELSE 0 END done',
+            '    ,t.rg time_added, 0 error',
+            'from Clients c',
+            '    INNER JOIN Topics t ON t.hs = c.hs'
+        ];
+
+        $this->statements[] = ['DROP TABLE IF EXISTS Clients'];
         $this->statements[] = [
             'CREATE TRIGGER IF NOT EXISTS remove_untracked_topics',
             'AFTER DELETE ON Torrents FOR EACH ROW',
