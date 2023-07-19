@@ -9,7 +9,7 @@ class Db
     private static string $databaseFilename = 'webtlo.db';
 
     /** Актуальная версия БД */
-    private const PRAGMA_VERSION = 10;
+    private const PRAGMA_VERSION = 11;
 
     public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -166,25 +166,27 @@ class Db
             'END;'
         ];
 
-        // Список хранителей.
+        // Список хранителей по спискам.
         $statements[] = [
-            'CREATE TABLE IF NOT EXISTS Keepers (',
+            'CREATE TABLE IF NOT EXISTS KeepersLists (',
             '    id INTEGER NOT NULL,',
-            '    nick VARCHAR NOT NULL,',
+            '    keeper_id INTEGER NOT NULL,',
+            '    keeper_name VARCHAR,',
             '    posted INTEGER,',
             '    complete INT DEFAULT 1,',
-            '    PRIMARY KEY (id, nick)',
+            '    PRIMARY KEY (id, keeper_id)',
             ');'
         ];
         $statements[] = [
-            'CREATE TRIGGER IF NOT EXISTS keepers_exists',
-            'BEFORE INSERT ON Keepers',
-            'WHEN EXISTS (SELECT id FROM Keepers WHERE id = NEW.id AND nick = NEW.nick)',
+            'CREATE TRIGGER IF NOT EXISTS keepers_lists_exists',
+            'BEFORE INSERT ON KeepersLists',
+            'WHEN EXISTS (SELECT id FROM KeepersLists WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
             'BEGIN',
-            '    UPDATE Keepers SET',
-            '        posted = NEW.posted,',
-            '        complete = NEW.complete',
-            '    WHERE id = NEW.id AND nick = NEW.nick;',
+            '    UPDATE KeepersLists SET',
+            '        keeper_name = NEW.keeper_name,',
+            '        posted      = NEW.posted,',
+            '        complete    = NEW.complete',
+            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
             '    SELECT RAISE(IGNORE);',
             'END;'
         ];
@@ -192,16 +194,20 @@ class Db
         // Список сидов-хранителей.
         $statements[] = [
             'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
-            '    topic_id INTEGER NOT NULL,',
-            '    nick VARCHAR NOT NULL,',
-            '    PRIMARY KEY (topic_id, nick)',
-            ')'
+            '    id INTEGER NOT NULL,',
+            '    keeper_id INTEGER NOT NULL,',
+            '    keeper_name VARCHAR,',
+            '    PRIMARY KEY (id, keeper_id)',
+            ');'
         ];
         $statements[] = [
             'CREATE TRIGGER IF NOT EXISTS keepers_seeders_exists',
             'BEFORE INSERT ON KeepersSeeders',
-            'WHEN EXISTS (SELECT topic_id FROM KeepersSeeders WHERE topic_id = NEW.topic_id AND nick = NEW.nick)',
+            'WHEN EXISTS (SELECT id FROM KeepersSeeders WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
             'BEGIN',
+            '    UPDATE KeepersSeeders SET',
+            '        keeper_name = NEW.keeper_name',
+            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
             '    SELECT RAISE(IGNORE);',
             'END;'
         ];
