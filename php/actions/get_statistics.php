@@ -46,7 +46,7 @@ try {
                 FROM Topics t
                 LEFT JOIN Seeders s ON t.id = s.id
                 LEFT JOIN Torrents ON t.hs = Torrents.info_hash
-                LEFT JOIN (SELECT id, MAX(posted) as posted FROM Keepers WHERE complete = 1 GROUP BY id) k ON t.id = k.id
+                LEFT JOIN (SELECT id, MAX(posted) as posted FROM KeepersLists WHERE complete = 1 GROUP BY id) k ON t.id = k.id
                 WHERE t.ss IN (" . $placeholdersForumsIDs . ")
                     AND t.pt IN(1,2)
                     AND Torrents.info_hash IS NULL
