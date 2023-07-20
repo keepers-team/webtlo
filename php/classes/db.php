@@ -35,9 +35,69 @@ class Db
         return $sth;
     }
 
-    public static function query_count($sql, $param = [])
+    /**
+     * Выполнить запрос подсчёта количества записей в таблице.
+     */
+    public static function query_count($sql, $param = []): int
     {
-        return self::query_database_row($sql, $param, true, PDO::FETCH_COLUMN);
+        return self::query_database_row($sql, $param, true, PDO::FETCH_COLUMN) ?? 0;
+    }
+
+    /**
+     * Посчитать количество записей в таблице.
+     */
+    public static function select_count(string $table): int
+    {
+        return self::query_count("SELECT COUNT() FROM $table") ?? 0;
+    }
+
+    /**
+     * Создать временную таблицу как копию существующей.
+     */
+    public static function temp_copy_table(string $table, string $prefix = 'New'): string
+    {
+        $copyTable = $prefix . $table;
+        $tempTable = "temp.$copyTable";
+
+        $sql = "CREATE TEMP TABLE $copyTable AS SELECT * FROM $table WHERE 0 = 1";
+        self::query_database($sql);
+
+        return $tempTable;
+    }
+
+    /**
+     * Создать временную таблицу по списку полей.
+     */
+    public static function temp_keys_table(string $table, array $keys): string
+    {
+        $tempTable = "temp.$table";
+
+        $sql = sprintf('CREATE TEMP TABLE %s %s', $table, implode(',', $keys));
+        self::query_database($sql);
+
+        return $tempTable;
+    }
+
+
+    /**
+     * Вставить в таблицу массив сырых данных.
+     */
+    public static function table_insert_dataset(
+        string $table, array $dataset, string $primaryKey = 'id', array $keys = []
+    ): void {
+        $keys = count($keys) ? sprintf('(%s)', implode(',', $keys)) : '';
+        $sql  = "INSERT INTO $table $keys " . self::combine_set($dataset, $primaryKey);
+
+        self::query_database($sql);
+    }
+
+    /**
+     * Перенести данные из временной таблицы в основную.
+     */
+    public static function table_insert_temp(string $table, string $tempTable, array $keys = []): void
+    {
+        $keys = count($keys) ? sprintf('(%s)', implode(',', $keys)) : '*';
+        self::query_database("INSERT INTO $table SELECT $keys FROM $tempTable");
     }
 
     // https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
@@ -52,13 +112,13 @@ class Db
         return preg_match($mask, $value);
     }
 
-    public static function combine_set($set)
+    public static function combine_set($set, $primaryKey = 'id')
     {
         foreach ($set as $id => &$value) {
             $value = array_map(function ($e) {
                 return is_numeric($e) ? $e : Db::$db->quote($e);
             }, $value);
-            $value = (empty($value['id']) ? "$id," : "") . implode(',', $value);
+            $value = (empty($value[$primaryKey]) ? "$id," : "") . implode(',', $value);
         }
         $statement = 'SELECT ' . implode(' UNION ALL SELECT ', $set);
         return $statement;
