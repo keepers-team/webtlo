@@ -46,12 +46,12 @@ try {
                 FROM Topics t
                 LEFT JOIN Seeders s ON t.id = s.id
                 LEFT JOIN Torrents ON t.hs = Torrents.info_hash
-                LEFT JOIN (SELECT id, MAX(posted) as posted FROM KeepersLists WHERE complete = 1 GROUP BY id) k ON t.id = k.id
+                LEFT JOIN (SELECT topic_id, MAX(posted) as posted FROM KeepersLists WHERE complete = 1 GROUP BY topic_id) k ON t.id = k.topic_id
                 WHERE t.ss IN (" . $placeholdersForumsIDs . ")
                     AND t.pt IN(1,2)
                     AND Torrents.info_hash IS NULL
                     AND strftime('%s', 'now') - t.rg >= 2592000
-                    AND (k.id IS NULL OR strftime('%s', 'now') - k.posted >= 2592000)
+                    AND (k.topic_id IS NULL OR strftime('%s', 'now') - k.posted >= 2592000)
             ) AS seeds ON seeds.ss = f.id
             WHERE f.id IN (" . $placeholdersForumsIDs . ")
             GROUP BY f.id
