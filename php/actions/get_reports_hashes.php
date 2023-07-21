@@ -56,7 +56,7 @@ try {
     }
 
     // ищем тему со списками
-    $topic_id = $reports->search_topic_id($forum[$forum_id]['na']);
+    $topic_id = $reports->search_topic_id($forum[$forum_id]['name']);
 
     Log::append("Сканирование списков...");
 
