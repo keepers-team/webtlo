@@ -275,6 +275,10 @@ $(document).ready(function () {
 		$(e).val(new_path);
 	});
 
+	// Обновить отчёт.
+	$("#get_reports").on("click", function () {
+		getReport();
+	})
 	// получение статистики
 	$("#get_statistics").on("click", function () {
 		$.ajax({

@@ -517,6 +517,11 @@ li.menu.ui-tabs-active {
 	font-size: small;
 }
 
+#get_reports {
+	margin: 0 0 10px 15px;
+	padding: .3em .7em;
+}
+
 #reports-content {
 	margin: 0;
 	padding: 5px 10px 0 10px;

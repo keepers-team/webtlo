@@ -165,6 +165,7 @@ function getReport() {
 			forum_id: forum_id
 		},
 		beforeSend: function () {
+			$("#get_reports").addClass("ui-state-disabled").prop("disabled", true);
 			$("#reports-subsections").selectmenu("disable");
 			$("#reports-content").html("<i class=\"fa fa-spinner fa-pulse\"></i>");
 		},
@@ -185,6 +186,7 @@ function getReport() {
 			});
 		},
 		complete: function () {
+			$("#get_reports").removeClass("ui-state-disabled").prop("disabled", false);
 			$("#reports-subsections").selectmenu("enable");
 		},
 	});
