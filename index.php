@@ -878,6 +878,11 @@ try {
                 </form>
             </div>
             <div id="reports" class="content">
+                <div>
+                    <button type="button" disabled id="get_reports" title="Повторить построение выбранного отчёта">
+                        Обновить отчёт
+                    </button>
+                </div>
                 <select id="reports-subsections">
                     <optgroup>
                         <option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
