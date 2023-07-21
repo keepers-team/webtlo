@@ -507,7 +507,7 @@ try {
                     k.posted,
                     NULL as seeding
                 FROM Topics as tp
-                INNER JOIN KeepersLists as k ON k.id = tp.id
+                INNER JOIN KeepersLists as k ON k.topic_id = tp.id
                 %1$s
                 UNION ALL
                 SELECT
@@ -516,7 +516,7 @@ try {
                     NULL as posted,
                     1 as seeding
                 FROM Topics as tp
-                INNER JOIN KeepersSeeders as k ON k.id = tp.id
+                INNER JOIN KeepersSeeders as k ON k.topic_id = tp.id
                 %1$s
             )
             GROUP BY id',
@@ -601,19 +601,19 @@ try {
         $keepers = [];
         foreach ($forumsIDsChunks as $forumsIDsChunk) {
             $keepers += Db::query_database(
-                'SELECT k.id,k.keeper_id,k.keeper_name,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding 
+                'SELECT k.topic_id,k.keeper_id,k.keeper_name,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding 
                 FROM (
-                    SELECT kl.id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
+                    SELECT kl.topic_id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
                     FROM Topics
-                    LEFT JOIN KeepersLists as kl ON Topics.id = kl.id
-                    WHERE ss IN (' . $ss . ') AND rg < posted AND kl.id IS NOT NULL
+                    LEFT JOIN KeepersLists as kl ON Topics.id = kl.topic_id
+                    WHERE ss IN (' . $ss . ') AND rg < posted AND kl.topic_id IS NOT NULL
                     UNION ALL
-                    SELECT ks.id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
+                    SELECT ks.topic_id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
                     FROM Topics
-                    LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.id
-                    WHERE ss IN (' . $ss . ') AND ks.id IS NOT NULL
+                    LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.topic_id
+                    WHERE ss IN (' . $ss . ') AND ks.topic_id IS NOT NULL
                 ) as k
-                GROUP BY k.id, k.keeper_id, k.keeper_name
+                GROUP BY k.topic_id, k.keeper_id, k.keeper_name
                 ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.keeper_name',
                 array_merge($forumsIDsChunk, $forumsIDsChunk, [$user_id]),
                 true,

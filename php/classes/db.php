@@ -229,24 +229,24 @@ class Db
         // Список хранителей по спискам.
         $statements[] = [
             'CREATE TABLE IF NOT EXISTS KeepersLists (',
-            '    id INTEGER NOT NULL,',
+            '    topic_id INTEGER NOT NULL,',
             '    keeper_id INTEGER NOT NULL,',
             '    keeper_name VARCHAR,',
             '    posted INTEGER,',
             '    complete INT DEFAULT 1,',
-            '    PRIMARY KEY (id, keeper_id)',
+            '    PRIMARY KEY (topic_id, keeper_id)',
             ');'
         ];
         $statements[] = [
             'CREATE TRIGGER IF NOT EXISTS keepers_lists_exists',
             'BEFORE INSERT ON KeepersLists',
-            'WHEN EXISTS (SELECT id FROM KeepersLists WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
+            'WHEN EXISTS (SELECT topic_id FROM KeepersLists WHERE topic_id = NEW.topic_id AND keeper_id = NEW.keeper_id)',
             'BEGIN',
             '    UPDATE KeepersLists SET',
             '        keeper_name = NEW.keeper_name,',
             '        posted      = NEW.posted,',
             '        complete    = NEW.complete',
-            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
+            '    WHERE topic_id = NEW.topic_id AND keeper_id = NEW.keeper_id;',
             '    SELECT RAISE(IGNORE);',
             'END;'
         ];
@@ -254,20 +254,20 @@ class Db
         // Список сидов-хранителей.
         $statements[] = [
             'CREATE TABLE IF NOT EXISTS KeepersSeeders (',
-            '    id INTEGER NOT NULL,',
+            '    topic_id INTEGER NOT NULL,',
             '    keeper_id INTEGER NOT NULL,',
             '    keeper_name VARCHAR,',
-            '    PRIMARY KEY (id, keeper_id)',
+            '    PRIMARY KEY (topic_id, keeper_id)',
             ');'
         ];
         $statements[] = [
             'CREATE TRIGGER IF NOT EXISTS keepers_seeders_exists',
             'BEFORE INSERT ON KeepersSeeders',
-            'WHEN EXISTS (SELECT id FROM KeepersSeeders WHERE id = NEW.id AND keeper_id = NEW.keeper_id)',
+            'WHEN EXISTS (SELECT topic_id FROM KeepersSeeders WHERE topic_id = NEW.topic_id AND keeper_id = NEW.keeper_id)',
             'BEGIN',
             '    UPDATE KeepersSeeders SET',
             '        keeper_name = NEW.keeper_name',
-            '    WHERE id = NEW.id AND keeper_id = NEW.keeper_id;',
+            '    WHERE topic_id = NEW.topic_id AND keeper_id = NEW.keeper_id;',
             '    SELECT RAISE(IGNORE);',
             'END;'
         ];

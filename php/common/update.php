@@ -217,7 +217,7 @@ if (isset($cfg['subsections'])) {
                     foreach ($keepersIDs as $keeperID) {
                         if (isset($keepersUserData[$keeperID])) {
                             $dbTopicsKeepers[] = [
-                                'id'          => $keeperTopicID,
+                                'topic_id'    => $keeperTopicID,
                                 'keeper_id'   => $keeperID,
                                 'keeper_name' => $keepersUserData[$keeperID][0],
                             ];
@@ -226,10 +226,10 @@ if (isset($cfg['subsections'])) {
                 }
 
                 // обновление данных в базе о сидах-хранителях
-                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 998);
+                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 250);
                 foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
-                    $select = Db::combine_set($dbTopicsKeepersChunk);
-                    Db::query_database("INSERT INTO temp.KeepersSeedersNew (id, keeper_id, keeper_name) $select");
+                    $select = Db::combine_set($dbTopicsKeepersChunk, 'topic_id');
+                    Db::query_database("INSERT INTO temp.KeepersSeedersNew (topic_id, keeper_id, keeper_name) $select");
                     unset($dbTopicsKeepersChunk, $select);
                 }
                 unset($topicsKeepersFromForum, $dbTopicsKeepersChunks);
@@ -304,11 +304,11 @@ if ($countKeepersSeeders > 0) {
     Log::append("Запись в базу данных списка сидов-хранителей...");
     Db::query_database("INSERT INTO KeepersSeeders SELECT * FROM temp.KeepersSeedersNew");
     Db::query_database(
-        "DELETE FROM KeepersSeeders WHERE id || keeper_id NOT IN (
-            SELECT ks.id || ks.keeper_id
+        "DELETE FROM KeepersSeeders WHERE topic_id || keeper_id NOT IN (
+            SELECT ks.topic_id || ks.keeper_id
             FROM temp.KeepersSeedersNew tmp
-            LEFT JOIN KeepersSeeders ks ON tmp.id = ks.id AND tmp.keeper_id = ks.keeper_id
-            WHERE ks.id IS NOT NULL
+            LEFT JOIN KeepersSeeders ks ON tmp.topic_id = ks.topic_id AND tmp.keeper_id = ks.keeper_id
+            WHERE ks.topic_id IS NOT NULL
         )"
     );
 }
