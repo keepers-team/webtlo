@@ -79,7 +79,7 @@ try {
         $forumsTitles = Db::query_database(
             "SELECT
                 id,
-                na
+                name
             FROM Forums
             WHERE id IN (SELECT DISTINCT ss FROM TopicsUntracked)",
             [],

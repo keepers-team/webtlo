@@ -8,29 +8,21 @@ try {
         return false;
     }
 
-    $pattern = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
+    $patterns = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
 
-    $q = Db::query_database(
-        "SELECT COUNT() FROM Forums",
-        [],
-        true,
-        PDO::FETCH_COLUMN
-    );
-
-    if (empty($q[0])) {
+    if (empty(Db::select_count('Forums'))) {
         // дёргаем скрипт
         include_once dirname(__FILE__) . '/../common/forum_tree.php';
     }
 
     $forums = [];
-
-    foreach ($pattern as $pattern) {
+    foreach ($patterns as $pattern) {
         if (!is_numeric($pattern)) {
             $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
         }
         $data = Db::query_database(
-            "SELECT id AS value, na AS label FROM Forums
-            WHERE si > 0 AND (id LIKE :term OR na LIKE :term) ORDER BY LOWER(na)",
+            "SELECT id AS value, name AS label FROM Forums
+            WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)",
             ['term' => $pattern],
             true
         );

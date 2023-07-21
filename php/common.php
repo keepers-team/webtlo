@@ -127,7 +127,7 @@ function get_settings($filename = "")
         $subsections = explode(',', $subsections);
         $in = str_repeat('?,', count($subsections) - 1) . '?';
         $titles = Db::query_database(
-            "SELECT id,na FROM Forums WHERE id IN ($in)",
+            "SELECT id,name FROM Forums WHERE id IN ($in)",
             $subsections,
             true,
             PDO::FETCH_KEY_PAIR
@@ -140,7 +140,7 @@ function get_settings($filename = "")
             $config['subsections'][$id]['sub_folder'] = $ini->read($id, "data-sub-folder", 0);
             $config['subsections'][$id]['hide_topics'] = $ini->read($id, "hide-topics", 0);
             $config['subsections'][$id]['id'] = $id;
-            $config['subsections'][$id]['na'] = isset($titles[$id]) ? $titles[$id] : $ini->read("$id", "title", "$id");
+            $config['subsections'][$id]['na'] = $titles[$id] ?? $ini->read("$id", "title", "$id");
             $config['subsections'][$id]['control_peers'] = $ini->read($id, 'control-peers', '');
             $config['subsections'][$id]['exclude'] = $ini->read($id, 'exclude', 0);
         }

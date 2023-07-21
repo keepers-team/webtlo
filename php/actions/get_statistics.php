@@ -20,8 +20,8 @@ try {
     foreach ($forumsIDsChunks as $forumsIDs) {
         $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
         $sql = "SELECT
-            f.id AS id,
-            f.na AS na,
+            f.id AS forum_id,
+            f.name AS forum_name,
             COUNT(CASE WHEN seeds.se = 0 THEN 1 ELSE NULL END) AS Count0,
             SUM(CASE WHEN seeds.se = 0 THEN seeds.si ELSE 0 END) AS Size0,
             COUNT(CASE WHEN seeds.se > 0 AND seeds.se <= 0.5 THEN 1 ELSE NULL END) AS Count5,
@@ -30,8 +30,8 @@ try {
             SUM(CASE WHEN seeds.se > 0.5 AND seeds.se <= 1.0 THEN seeds.si ELSE 0 END) AS Size10,
             COUNT(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN 1 ELSE NULL END) AS Count15,
             SUM(CASE WHEN seeds.se > 1.0 AND seeds.se <= 1.5 THEN seeds.si ELSE 0 END) AS Size15,
-            f.qt AS qt,
-            f.si AS si
+            f.quantity,
+            f.size
             FROM Forums f
             LEFT JOIN (
                 SELECT
@@ -55,7 +55,7 @@ try {
             ) AS seeds ON seeds.ss = f.id
             WHERE f.id IN (" . $placeholdersForumsIDs . ")
             GROUP BY f.id
-            ORDER BY LOWER(f.na)";
+            ORDER BY LOWER(f.name)";
 
         $data = Db::query_database(
             $sql,
@@ -82,8 +82,8 @@ try {
         $tfoot[0][5] += $e['Size10'];
         $tfoot[0][6] += $e['Count15'];
         $tfoot[0][7] += $e['Size15'];
-        $tfoot[0][8] += $e['qt'];
-        $tfoot[0][9] += $e['si'];
+        $tfoot[0][8] += $e['quantity'];
+        $tfoot[0][9] += $e['size'];
         // всего (от нуля)
         $tfoot[1][0] += $e['Count0'];
         $tfoot[1][1] += $e['Size0'];
@@ -93,11 +93,12 @@ try {
         $tfoot[1][5] += $e['Size10'] + $e['Size0'] + $e['Size5'];
         $tfoot[1][6] += $e['Count15'] + $e['Count0'] + $e['Count5'] + $e['Count10'];
         $tfoot[1][7] += $e['Size15'] + $e['Size0'] + $e['Size5'] + $e['Size10'];
-        $tfoot[1][8] += $e['qt'];
-        $tfoot[1][9] += $e['si'];
+        $tfoot[1][8] += $e['quantity'];
+        $tfoot[1][9] += $e['size'];
 
         // состояние раздела (цвет)
-        if (preg_match('/DVD|HD/', $e['na'])) {
+        $state = '';
+        if (preg_match('/DVD|HD/', $e['forum_name'])) {
             $size = pow(1024, 4);
             if ($e['Size5'] + $e['Size0'] < $size) {
                 if ($e['Size5'] + $e['Size0'] >= $size * 3 / 4) {
@@ -127,7 +128,7 @@ try {
         $e['Size5']  = convert_bytes($e['Size5']);
         $e['Size10'] = convert_bytes($e['Size10']);
         $e['Size15'] = convert_bytes($e['Size15']);
-        $e['si']     = convert_bytes($e['si']);
+        $e['size']   = convert_bytes($e['size']);
         $e = implode("", array_map(function ($e) {
             return "<td>$e</td>";
         }, $e));

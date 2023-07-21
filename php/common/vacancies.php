@@ -116,7 +116,7 @@ foreach ($include as $forum_id) {
 
 // получаем список всех подразделов
 $forums = Db::query_database(
-    "SELECT id,na,qt,si FROM Forums WHERE qt > 0",
+    "SELECT id, name, quantity, size FROM Forums WHERE quantity > 0",
     [],
     true,
     PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
@@ -138,7 +138,7 @@ foreach ($ids as $forum_id => $tor_sizes) {
     if (!isset($forums[$forum_id])) {
         continue;
     }
-    $title = $forums[$forum_id]['na'];
+    $title = $forums[$forum_id]['name'];
     $count_vacant_topics = count($tor_sizes);
     $size_vacant_topics = array_sum($tor_sizes);
     switch (count($title)) {
@@ -146,15 +146,15 @@ foreach ($ids as $forum_id => $tor_sizes) {
             $topics[$title[0]][$title[1]]['root']['id'] = $forum_id;
             $topics[$title[0]][$title[1]]['root']['qt'] = $count_vacant_topics;
             $topics[$title[0]][$title[1]]['root']['si'] = $size_vacant_topics;
-            $topics[$title[0]][$title[1]]['root']['sum_qt'] = $forums[$forum_id]['qt'];
-            $topics[$title[0]][$title[1]]['root']['sum_si'] = $forums[$forum_id]['si'];
+            $topics[$title[0]][$title[1]]['root']['sum_qt'] = $forums[$forum_id]['quantity'];
+            $topics[$title[0]][$title[1]]['root']['sum_si'] = $forums[$forum_id]['size'];
             break;
         case 3:
             $topics[$title[0]][$title[1]][$title[2]]['id'] = $forum_id;
             $topics[$title[0]][$title[1]][$title[2]]['qt'] = $count_vacant_topics;
             $topics[$title[0]][$title[1]][$title[2]]['si'] = $size_vacant_topics;
-            $topics[$title[0]][$title[1]][$title[2]]['sum_qt'] = $forums[$forum_id]['qt'];
-            $topics[$title[0]][$title[1]][$title[2]]['sum_si'] = $forums[$forum_id]['si'];
+            $topics[$title[0]][$title[1]][$title[2]]['sum_qt'] = $forums[$forum_id]['quantity'];
+            $topics[$title[0]][$title[1]][$title[2]]['sum_si'] = $forums[$forum_id]['size'];
             break;
     }
     $total_count_vacant_topics += $count_vacant_topics;

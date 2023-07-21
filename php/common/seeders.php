@@ -15,7 +15,7 @@ include_once dirname(__FILE__) . '/high_priority_topics.php';
 
 // получаем список подразделов
 $forums_ids = Db::query_database(
-    "SELECT id FROM Forums WHERE qt > 0 AND si > 0",
+    "SELECT id FROM Forums WHERE quantity > 0 AND size > 0",
     [],
     true,
     PDO::FETCH_COLUMN
