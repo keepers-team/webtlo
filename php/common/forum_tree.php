@@ -39,17 +39,17 @@ foreach ($forumTree['result']['c'] as $catId => $catTitle) {
         // разделы
         $forumTitle = $catTitle . ' » ' . $forumTree['result']['f'][$forum_id];
         $forums[$forum_id] = [
-            'na' => $forumTitle,
-            'qt' => 0,
-            'si' => 0,
+            'name'     => $forumTitle,
+            'quantity' => 0,
+            'size'     => 0,
         ];
         // подразделы
         foreach ($subForum as $subForumId) {
             $subForumTitle = $catTitle . ' » ' . $forumTree['result']['f'][$forum_id] . ' » ' . $forumTree['result']['f'][$subForumId];
             $forums[$subForumId] = [
-                'na' => $subForumTitle,
-                'qt' => 0,
-                'si' => 0,
+                'name'     => $subForumTitle,
+                'quantity' => 0,
+                'size'     => 0,
             ];
             unset($subForumId, $subForumTitle);
         }
@@ -74,7 +74,7 @@ foreach ($forum_size['result'] as $forum_id => $values) {
         $forums[$forum_id] = array_merge(
             $forums[$forum_id],
             array_combine(
-                ['qt', 'si'],
+                ['quantity', 'size'],
                 $values
             )
         );
@@ -82,31 +82,34 @@ foreach ($forum_size['result'] as $forum_id => $values) {
 }
 
 if (isset($forums) && count($forums)) {
-    // создаём временную таблицу
-    Db::query_database(
-        'CREATE TEMP TABLE ForumsNew AS
-    SELECT id,na,qt,si FROM Forums WHERE 0 = 1'
-    );
+    // Параметры таблиц.
+    $FT = (object)[
+        'table'   => 'Forums',
+        'temp'    => Db::temp_copy_table('Forums'),
+    ];
 
     // отправляем в базу данных
     $forumsChunks = array_chunk($forums, 500, true);
 
     foreach ($forumsChunks as $forumsParts) {
-        $select = Db::combine_set($forumsParts);
-        Db::query_database("INSERT INTO temp.ForumsNew (id,na,qt,si) $select");
-        unset($forumsParts, $select);
+        Db::table_insert_dataset($FT->temp, $forumsParts);
+        unset($forumsParts);
     }
 
     Log::append("Обновление дерева подразделов...");
 
-    Db::query_database('INSERT INTO Forums (id,na,qt,si) SELECT id,na,qt,si FROM temp.ForumsNew');
+    // Переносим данные из временной таблицы в основную.
+    Db::table_insert_temp($FT->table, $FT->temp);
 
-    Db::query_database('DELETE FROM Forums WHERE id IN (
-        SELECT Forums.id FROM Forums
-        LEFT JOIN temp.ForumsNew ON Forums.id = temp.ForumsNew.id
-        WHERE temp.ForumsNew.id IS NULL
-    )');
-
+    // Удаляем неактуальные записи.
+    Db::query_database("
+        DELETE FROM $FT->table WHERE id IN (
+            SELECT upd.id
+            FROM $FT->table AS upd
+            LEFT JOIN $FT->temp AS tmp ON upd.id = tmp.id
+            WHERE tmp.id IS NULL
+        )
+    ");
 
     // Записываем время обновления.
     set_last_update_time(FORUM_TREE_UPDATE, $treeUpdateTime);
