@@ -31,6 +31,13 @@ if (!isset($reports)) {
 }
 Log::append('Начато обновление списков раздач хранителей...');
 
+if (!$reports->check_access())
+{
+    Log::append('Error: Нет доступа к подфоруму хранителей. Обновление списков невозможно. ' .
+        'Если вы Кандидат, то ожидайте включения в основную группу.');
+    return;
+}
+
 $numberForumsScanned = 0;
 
 $keeperIds      = [];
@@ -43,19 +50,27 @@ $KL = (object)[
     'primary' => 'topic_id',
     'keys'    => ['topic_id', 'keeper_id', 'keeper_name', 'posted', 'complete'],
 ];
+$FP = (object)[
+    'table'   => 'ForumsOptions',
+    'temp'    => Db::temp_copy_table('ForumsOptions'),
+    'primary' => 'forum_id',
+];
 
+$forumsParams = [];
 if (isset($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
+        // Ид обновления хранителей подраздела.
         $updateForumId = 100000 + $forum_id;
         if (!check_update_available($updateForumId)) {
             $noUpdateForums[] = $forum_id;
             continue;
         }
 
-        $topic_id = $reports->search_topic_id($subsection['na']);
+        // ид темы со списками хранителей.
+        $forum_topic_id = $reports->search_topic_id($subsection['na']);
 
-        if (empty($topic_id)) {
+        if (empty($forum_topic_id)) {
             Log::append("Error: Не удалось найти тему со списками для подраздела № $forum_id.");
             continue;
         } else {
@@ -63,13 +78,18 @@ if (isset($cfg['subsections'])) {
         }
 
         // Ищем списки хранимого другими хранителями.
-        $keepers = $reports->scanning_viewtopic($topic_id);
+        $keepers = $reports->scanning_viewtopic($forum_topic_id);
         if (!empty($keepers)) {
+
+            $userPosts = [];
             foreach ($keepers as $keeper) {
                 if (empty($keeper['topics_ids'])) {
                     continue;
                 }
                 $keeperIds[] = $keeper['user_id'];
+                if ($keeper['user_id'] == $cfg['user_id']) {
+                    $userPosts[] = $keeper['post_id'];
+                }
 
                 foreach ($keeper['topics_ids'] as $complete => $keeperTopicsIDs) {
                     $topics_ids_chunks = array_chunk($keeperTopicsIDs, 249);
@@ -93,11 +113,41 @@ if (isset($cfg['subsections'])) {
                 unset($keeper);
             }
 
+            // Сохраним данных о своих постах в теме по подразделу.
+            $forumsParams[$forum_id] = [
+                'forum_id'       => $forum_id,
+                'topic_id'       => $forum_topic_id,
+                'author_id'      => $keepers[0]['user_id'] ?? 0,
+                'author_name'    => $keepers[0]['nickname'] ?? '',
+                'author_post_id' => $keepers[0]['post_id'] ?? 0,
+                'post_ids'       => json_encode($userPosts),
+            ];
+
             set_last_update_time($updateForumId);
             unset($keepers, $updateForumId);
         }
     }
 }
+
+// Записываем дополнительные данные о хранимых подразделах, в т.ч. ид своих постов.
+if (count($forumsParams)) {
+    Db::table_insert_dataset($FP->temp, $forumsParams, $FP->primary);
+
+    // Переносим данные из временной таблицы в основную.
+    Db::table_insert_temp($FP->table, $FP->temp);
+
+    // TODO to function
+    // Удаляем неактуальные записи подразделов.
+    Db::query_database(
+        "DELETE FROM $FP->table WHERE $FP->primary NOT IN (
+            SELECT upd.$FP->primary
+            FROM $FP->temp AS tmp
+            LEFT JOIN $FP->table AS upd ON tmp.$FP->primary = upd.$FP->primary
+            WHERE upd.$FP->primary IS NOT NULL
+        )"
+    );
+}
+
 if (count($noUpdateForums)) {
     sort($noUpdateForums);
     Log::append(sprintf(
@@ -120,7 +170,7 @@ if ($count_kept_topics > 0) {
     // Переносим данные из временной таблицы в основную.
     Db::table_insert_temp($KL->table, $KL->temp);
 
-    // Удаляем неактуальные записи.
+    // Удаляем неактуальные записи списков.
     Db::query_database(
         "DELETE FROM $KL->table WHERE topic_id || keeper_id NOT IN (
             SELECT upd.topic_id || upd.keeper_id
