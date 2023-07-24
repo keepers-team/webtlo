@@ -25,11 +25,16 @@ class Db
 
     private static function prepare_query($sql, $param = [])
     {
-        self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
-        $sth = self::$db->prepare($sql);
-        if (self::$db->errorCode() != '0000') {
-            $error = self::$db->errorInfo();
-            throw new Exception('SQL ошибка: ' . $error[2]);
+        try {
+            self::$db->sqliteCreateFunction('like', 'Db::lexa_ci_utf8_like', 2);
+            $sth = self::$db->prepare($sql);
+            if (self::$db->errorCode() != '0000') {
+                $error = self::$db->errorInfo();
+                throw new Exception('SQL ошибка: ' . $error[2]);
+            }
+        } catch (Exception $e) {
+            Log::append($sql);
+            throw new Exception($e->getMessage(), (int)$e->getCode(), $e);
         }
         $sth->execute($param);
         return $sth;
