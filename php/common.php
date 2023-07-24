@@ -7,6 +7,8 @@ include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/settings.php';
 include_once dirname(__FILE__) . '/classes/Timers.php';
 include_once dirname(__FILE__) . '/migration/Backup.php';
+include_once dirname(__FILE__) . '/Module/Forums.php';
+include_once dirname(__FILE__) . '/DTO/ForumObject.php';
 
 // версия Web-TLO
 $webtlo = get_webtlo_version();
