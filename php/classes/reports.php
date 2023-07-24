@@ -26,6 +26,11 @@ class Reports
     protected $blocking_send;
 
     /**
+     * @var string
+     */
+    protected $blocking_reason;
+
+    /**
      * @var array
      */
     private $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -475,20 +480,28 @@ class Reports
     {
         // блокировка отправки сообщений
         if (!isset($this->blocking_send)) {
-            $data = $this->make_request(
-                $this->forum_url . "/forum/viewtopic.php?t=4546540"
-            );
-            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
-            unset($data);
+            $html = $this->request_tlo_topic();
+
+            if (!$this->check_topic_access($html)) {
+                $this->blocking_send = true;
+                $this->blocking_reason = 'Error: У вас нет доступа в рабочий подфорум хранителей. ' .
+                    'Ожидайте включения в основную группу.';
+                throw new Exception($this->blocking_reason);
+            }
             $topic_title = $html->find('a#topic-title')->text();
             unset($html);
             phpQuery::unloadDocuments();
-            $this->blocking_send = preg_match('/#3$/', $topic_title);
-            if (!$this->blocking_send) {
+            $this->blocking_send = !(str_ends_with($topic_title, '#3'));
+            if ($this->blocking_send) {
                 Log::append("Notice: Установите актуальную версию web-TLO для корректной отправки отчётов");
-                throw new Exception("Error: Отправка отчётов для текущей версии web-TLO заблокирована");
+                $this->blocking_reason = 'Error: Отправка отчётов для текущей версии web-TLO заблокирована';
+                throw new Exception($this->blocking_reason);
             }
         }
+        if ($this->blocking_send) {
+            throw new Exception($this->blocking_reason);
+        }
+
         $message = str_replace('<br />', '', $message);
         $message = str_replace('[br]', "\n", $message);
         // получение form_token
@@ -532,6 +545,30 @@ class Reports
         phpQuery::unloadDocuments();
         $post_id = preg_replace('/.*?([0-9]*)$/', '$1', $post_id);
         return $post_id;
+    }
+
+    private function request_tlo_topic()
+    {
+        $data = $this->make_request(
+            $this->forum_url . "/forum/viewtopic.php?t=4546540"
+        );
+        return phpQuery::newDocumentHTML($data, 'UTF-8');
+    }
+
+    private function check_topic_access($html)
+    {
+        $topic_content = $html->find('div.mrg_16')->text();
+        if ($topic_content == 'Тема не найдена') {
+            return false;
+        }
+        return true;
+    }
+
+    public function check_access()
+    {
+        $html = $this->request_tlo_topic();
+
+        return $this->check_topic_access($html);
     }
 
     public function __destruct()
