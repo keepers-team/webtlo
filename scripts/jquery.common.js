@@ -98,19 +98,21 @@ function doSortSelectByValue(selectID, sortElement = "option") {
 // сохранение настроек
 function setSettings() {
 	savecfg.dataset["unsaved"] = 0;
-    $("#savecfg").change();
+	$("#savecfg").change();
 	var forums = getForums();
 	var tor_clients = getListTorrentClients();
 	var $data = $("#config").serialize();
+
 	$.ajax({
 		context: this,
 		type: "POST",
 		url: "php/actions/set_config.php",
-		data: {
+		dataType: 'json',
+		data: JSON.stringify({
 			cfg: $data,
 			forums: forums,
-			tor_clients: tor_clients
-		},
+			tor_clients: tor_clients,
+		}),
 		beforeSend: function () {
 			$(this).addClass("ui-state-disabled").prop("disabled", true);
 		},
