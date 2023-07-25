@@ -297,7 +297,27 @@ $(document).ready(function () {
 
 	// очистка лога
 	$("#clear_log").on("click", function () {
-		$("#log").text("");
+
+		var log_file = $("#log_tabs .ui-tabs-panel:visible").prop("id").replace(/log_?/, '');
+		if (!log_file) {
+			$("#log").text("");
+			return;
+		}
+
+		// request
+		$.ajax({
+			type: "POST",
+			url: "php/actions/clear_log_content.php",
+			data: {
+				log_file: log_file
+			},
+			success: function (response) {
+				$("#log_" + log_file).text("");
+			},
+			beforeSend: function () {
+				$("#log_" + log_file).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
+			}
+		});
 	});
 
 	// чтение лога из файла
