@@ -3,17 +3,19 @@
 try {
     include_once dirname(__FILE__) . '/../common.php';
 
+    $request = json_decode(file_get_contents('php://input'), true);
+
     // парсим настройки
-    if (isset($_POST['cfg'])) {
-        parse_str($_POST['cfg'], $cfg);
+    if (isset($request['cfg'])) {
+        parse_str($request['cfg'], $cfg);
     }
 
-    if (isset($_POST['forums'])) {
-        $forums = $_POST['forums'];
+    if (isset($request['forums'])) {
+        $forums = $request['forums'];
     }
 
-    if (isset($_POST['tor_clients'])) {
-        $torrentClients = $_POST['tor_clients'];
+    if (isset($request['tor_clients'])) {
+        $torrentClients = $request['tor_clients'];
     }
 
     $ini = new TIniFileEx();
