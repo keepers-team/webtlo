@@ -375,6 +375,11 @@ var filter_hold = false;
 
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
+	// Ставим в "очередь" поиск раздач при выполнении тяжелых запросов.
+	if (filter_hold) {
+		return filter_delay(getFilteredTopics);
+	}
+
 	var forum_id = $("#main-subsections").val();
 	$("#loading, #process").hide();
 
@@ -438,9 +443,11 @@ function getFilteredTopics() {
 			filter: $filter,
 		},
 		beforeSend: function () {
+			filter_hold = true;
 			block_actions();
 		},
 		complete: function () {
+			filter_hold = false;
 			block_actions();
 		},
 		success: function (response) {
