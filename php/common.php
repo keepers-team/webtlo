@@ -227,6 +227,13 @@ function get_settings($filename = "")
         'send_summary_report' => $ini->read('reports', 'common', 1)
     ];
 
+    // автоматизация
+    $config['automation'] = [
+        'update'  => $ini->read('automation', 'update',  1),
+        'reports' => $ini->read('automation', 'reports', 0),
+        'control' => $ini->read('automation', 'control', 0),
+    ];
+
     // таймауты
     $config['curl_setopt'] = [
         'api' => [
