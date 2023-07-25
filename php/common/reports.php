@@ -1,15 +1,19 @@
 <?php
 
+use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Module\ReportCreator;
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
-include_once dirname(__FILE__) . '/../classes/ReportCreator.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 Timers::start('send_reports');
 Log::append('Начат процесс отправки отчётов...');
 
 // получение настроек
-$cfg = get_settings();
+if (!isset($cfg)) {
+    $cfg = get_settings();
+}
 
 // проверка настроек
 if (empty($cfg['subsections'])) {
@@ -24,61 +28,93 @@ if (empty($cfg['tracker_paswd'])) {
     throw new Exception('Error: Не указан пароль пользователя для доступа к форуму');
 }
 
-// подключаемся к форуму
-$reports = new Reports(
-    $cfg['forum_address'],
-    $cfg['tracker_login'],
-    $cfg['tracker_paswd']
-);
-// применяем таймауты
-$reports->curl_setopts($cfg['curl_setopt']['forum']);
+// Подключаемся к форуму.
+if (!isset($reports)) {
+    $reports = new Reports(
+        $cfg['forum_address'],
+        $cfg['tracker_login'],
+        $cfg['tracker_paswd']
+    );
+    // применяем таймауты
+    $reports->curl_setopts($cfg['curl_setopt']['forum']);
+}
+
+if (!$reports->check_access())
+{
+    throw new Exception('Error: Нет доступа к подфоруму хранителей. Отправка списков невозможна. ' .
+        'Если вы Кандидат, то ожидайте включения в основную группу.');
+}
 
 // Создание отчётов.
 $forumReports = new ReportCreator(
     $cfg,
-    $webtlo,
-    $reports
+    get_webtlo_version()
 );
 
 $editedTopicsIDs = [];
+$Timers = [];
 foreach ($cfg['subsections'] as $forum_id => $subsection) {
+    $forum = Forums::getForum($forum_id);
+    // Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($forum, JSON_UNESCAPED_UNICODE)));
+    if (null === $forum->topic_id) {
+        Log::append(sprintf('Notice: Отсутствует номер темы со списками для подраздела %d. Выполните обновление сведений.', $forum_id));
+        continue;
+    }
+
+    Timers::start("create_$forum_id");
+    try {
+        $forumReport = $forumReports->getForumReport($forum);
+    } catch (Exception $e) {
+        Log::append(sprintf(
+            'Notice: Формирование отчёта для подраздела %d пропущено. Причина %s',
+            $forum_id,
+            $e->getMessage()
+        ));
+        continue;
+    }
+    $createTime  = Timers::getExecTime("create_$forum_id");
+
     Timers::start("send_$forum_id");
 
-    $forumReport = $forumReports->getForumReport($forum_id);
-
+    $topicId  = $forum->topic_id;
     $messages = $forumReport['messages'];
-    $topicParams = $forumReports->getTopicSavedParams($forum_id);
-    // Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($topicParams, JSON_UNESCAPED_UNICODE)));
-
-    $topicId = $topicParams['topicId'];
     // Редактируем шапку темы, если её автор - пользователь.
-    if (strcasecmp($cfg['tracker_login'], $topicParams['authorNickName']) === 0) {
-        Log::append(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $topicParams['authorPostId']));
+    if ((int)$cfg['user_id'] === $forum->author_id && $forum->author_post_id) {
+        Log::append(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
         // отправка сообщения с шапкой
         $reports->send_message(
             'editpost',
             $forumReport['header'],
             $topicId,
-            $topicParams['authorPostId'],
-            '[Список] ' . $subsection['na']
+            $forum->author_post_id,
+            '[Список] ' . $forum->name
         );
         usleep(500);
     }
 
     // вставка доп. сообщений
-    $postList = $topicParams['postList'];
+    $postList = $forum->post_ids ?? [];
     if (count($messages) > count($postList)) {
         $count_post_reply = count($messages) - count($postList);
         for ($i = 1; $i <= $count_post_reply; $i++) {
             // Log::append("Вставка дополнительного $i-ого сообщения...");
             $message = '[spoiler]' . $i . str_repeat('?', 119981 - mb_strlen($i)) . '[/spoiler]';
-            $postList[] = $reports->send_message(
+            $post_id = $reports->send_message(
                 'reply',
                 $message,
                 $topicId
             );
+            if ($post_id > 0) {
+                $postList[] = (int)$post_id;
+            }
             usleep(500);
+
+            unset($message, $post_id);
         }
+        if ($count_post_reply > 0) {
+            Forums::updatePostList($forum_id, $postList);
+        }
+        unset($count_post_reply);
     }
 
     // редактирование сообщений
@@ -97,15 +133,17 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     }
 
     $editedTopicsIDs[] = $topicId;
-    Log::append(sprintf(
-        'Отправка отчёта для подраздела № %d завершена за %s. Сообщений отредактировано %d.',
-        $forum_id,
-        Timers::getExecTime("send_$forum_id"),
-        count($postList)
-    ));
+
+    $Timers[] = [
+        'forum'    => $forum_id,
+        'create'   => $createTime,
+        'send'     => Timers::getExecTime("send_$forum_id"),
+        'messages' => count($postList),
+    ];
 }
 
 Log::append("Обработано подразделов: " . count($editedTopicsIDs) . " шт.");
+Log::append(json_encode($Timers));
 
 // работаем со сводным отчётом
 if ($cfg['reports']['send_summary_report']) {
