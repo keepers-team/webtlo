@@ -437,14 +437,19 @@ $(document).ready(function () {
 
 
 // задержка при выборе свойств фильтра
-var filter_delay = makeDelay(600);
+let filter_delay = makeDelay(600);
 
 // подавление срабатывания фильтрации раздач
-var filter_hold = false;
+let filter_hold = false;
 
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
-	var forum_id = $("#main-subsections").val();
+	// Ставим в "очередь" поиск раздач при выполнении тяжелых запросов.
+	if (filter_hold) {
+		return filter_delay(getFilteredTopics);
+	}
+
+	let forum_id = $("#main-subsections").val();
 	$("#excluded_topics_size").parent().hide();
 	$("#loading, #process").hide();
 
@@ -515,9 +520,11 @@ function getFilteredTopics() {
 			filter: $filter,
 		},
 		beforeSend: function () {
+			filter_hold = true;
 			block_actions();
 		},
 		complete: function () {
+			filter_hold = false;
 			block_actions();
 		},
 		success: function (response) {
