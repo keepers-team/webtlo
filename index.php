@@ -130,6 +130,12 @@ try {
     // $e->getMessage();
 }
 
+function automation_checkbox($cfg, $option)
+{
+    $value = $cfg['automation'][$option] ?? 0;
+    return $value == 1 ? "checked" : "";
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -774,6 +780,30 @@ try {
                                 <input name="auto_clear_messages" type="checkbox" size="24" <?php echo $auto_clear_messages ?> />
                                 очищать свои неактуальные сообщения в рабочем подфоруме
                             </label>
+                        </div>
+                        <h2>Настройки автоматизации</h2>
+                        <div>
+                            <label class="label">
+                                <input name="automation_update" type="checkbox" size="24" <?= automation_checkbox($cfg, 'update') ?> />
+                                <sub>[update.php, keepers.php]</sub>
+                                обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
+                            </label>
+                            <label class="label">
+                                <input name="automation_reports" type="checkbox" size="24" <?= automation_checkbox($cfg, 'reports') ?> />
+                                <sub>[reports.php]</sub>
+                                отправка отчётов на форум
+                            </label>
+                            <label class="label">
+                                <input name="automation_control" type="checkbox" size="24" <?= automation_checkbox($cfg, 'control') ?> />
+                                <sub>[control.php]</sub>
+                                управление раздачами в торрент-клиентах
+                            </label>
+                            <p class="footnote">
+                                <sup>2</sup>
+                                Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
+                                Запуск алгоритмов должен быть настроен самостоятельно (cron|планировщик windows). <br />
+                                За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.
+                            </p>
                         </div>
                         <h2>Настройки интерфейса</h2>
                         <div>

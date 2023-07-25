@@ -198,6 +198,12 @@ try {
     // Очистка своих сообщений на форуме
     $ini->write('reports', 'auto_clear_messages', isset($cfg['auto_clear_messages']) ? 1 : 0);
 
+    // автоматизация
+    $ini->write('automation', 'update',  isset($cfg['automation_update'])  ? 1 : 0);
+    $ini->write('automation', 'reports', isset($cfg['automation_reports']) ? 1 : 0);
+    $ini->write('automation', 'control', isset($cfg['automation_control']) ? 1 : 0);
+
+
     // обновление файла с настройками
     $ini->updateFile();
 
