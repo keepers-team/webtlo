@@ -16,6 +16,14 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
+if (isset($checkEnabledCronAction)) {
+    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
+    if ($checkEnabledCronAction == 0) {
+        throw new Exception('Notice: Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.');
+    }
+}
+
+
 // подключаемся к api
 if (!isset($api)) {
     $api = new Api($cfg['api_address'], $cfg['api_key']);
