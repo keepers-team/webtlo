@@ -6,16 +6,19 @@ $(document).ready(function () {
 			type: "POST",
 			url: "php/actions/update_info.php",
 			beforeSend: function () {
+				filter_hold = true;
 				block_actions();
 				$("#process").text("Обновление сведений о раздачах...");
 			},
 			success: function (response) {
+				filter_hold = false;
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
 				showResultTopics(response.result);
 				getFilteredTopics();
 			},
 			complete: function () {
+				filter_hold = false;
 				block_actions();
 			},
 		});
