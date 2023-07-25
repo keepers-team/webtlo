@@ -20,6 +20,7 @@ try {
     $unadded_subsections = $cfg['topics_control']['unadded_subsections'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
     $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
+    $auto_clear_messages = $cfg['reports']['auto_clear_messages'] == 1 ? "checked" : "";
 
     // вставка option в select
 
@@ -765,6 +766,13 @@ try {
                             <label>
                                 <input name="tor_for_user" type="checkbox" size="24" <?php echo $tor_for_user ?> />
                                 скачать торрент-файлы для обычного пользователя
+                            </label>
+                        </div>
+                        <h2>Настройки отправляемых отчётов</h2>
+                        <div>
+                            <label class="label">
+                                <input name="auto_clear_messages" type="checkbox" size="24" <?php echo $auto_clear_messages ?> />
+                                очищать свои неактуальные сообщения в рабочем подфоруме
                             </label>
                         </div>
                         <h2>Настройки интерфейса</h2>
