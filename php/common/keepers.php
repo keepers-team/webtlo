@@ -21,6 +21,14 @@ if (empty($cfg['tracker_paswd'])) {
     throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
 }
 
+if (isset($checkEnabledCronAction)) {
+    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
+    if ($checkEnabledCronAction == 0) {
+        throw new Exception('Notice: Автоматическое обновление списков других хранителей отключено в настройках.');
+    }
+}
+
+
 // создаём временную таблицу
 Db::query_database(
     "CREATE TEMP TABLE KeepersNew AS

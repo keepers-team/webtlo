@@ -18,6 +18,14 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
+if (isset($checkEnabledCronAction)) {
+    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
+    if ($checkEnabledCronAction == 0) {
+        throw new Exception('Notice: Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.');
+    }
+}
+
+
 // создаём временные таблицы
 Db::query_database(
     "CREATE TEMP TABLE UpdateTimeNow AS

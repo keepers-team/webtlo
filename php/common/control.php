@@ -16,6 +16,15 @@ if (empty($cfg['clients'])) {
 if (empty($cfg['subsections'])) {
     throw new Exception('Error: Не выбраны хранимые подразделы');
 }
+
+if (isset($checkEnabledCronAction)) {
+    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
+    if ($checkEnabledCronAction == 0) {
+        throw new Exception('Notice: Автоматическая регулировка раздач отключена в настройках.');
+    }
+}
+
+
 $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 

@@ -3,6 +3,7 @@
 try {
     // файл лога
     $logFile = "keepers.log";
+    $checkEnabledCronAction = 'update';
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../php/common/keepers.php';
     // записываем в лог

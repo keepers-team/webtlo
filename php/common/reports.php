@@ -24,6 +24,14 @@ if (empty($cfg['tracker_paswd'])) {
     throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
 }
 
+if (isset($checkEnabledCronAction)) {
+    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
+    if ($checkEnabledCronAction == 0) {
+        throw new Exception('Notice: Автоматическая отправка отчётов отключена в настройках.');
+    }
+}
+
+
 // update_time[0] время последнего обновления сведений
 $update_time = Db::query_database(
     "SELECT ud FROM UpdateTime WHERE id = 7777",
