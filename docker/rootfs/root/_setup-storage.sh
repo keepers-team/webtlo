@@ -1,8 +1,10 @@
-#!/command/with-contenv bash
+#!/bin/bash
 
 user="${WEBTLO_UID:=nobody}"
 group="${WEBTLO_GID:=nobody}"
 account="$user:$group"
+
+echo "Running container with UID=${user}, GID=${group}"
 
 uid=$(s6-envuidgid -nB $account importas UID UID s6-echo '$UID')
 gid=$(s6-envuidgid -nB $account importas GID GID s6-echo '$GID')
