@@ -3,6 +3,7 @@
 try {
     // файл лога
     $logFile = "control.log";
+    $checkEnabledCronAction = 'control';
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../php/common/control.php';
     // записываем в лог
