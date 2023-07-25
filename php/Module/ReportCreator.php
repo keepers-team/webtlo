@@ -1,5 +1,13 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Module;
+
+use Exception;
+use PDO;
+use Db;
+use Log;
+use KeepersTeam\Webtlo\DTO\ForumObject;
+
 /**
  * Объект для создания новый отчётов.
  */
@@ -9,8 +17,7 @@ class ReportCreator
     private const FULL_UPDATE = 7777;
 
     private array $config;
-    private $webtlo;
-    private $reports;
+    private object $webtlo;
 
     /** Исключённые из отчётов подразделы */
     private array $excludeForumsIDs = [];
@@ -27,8 +34,6 @@ class ReportCreator
     private string $implodeGlue = '[br]';
     private string $topicGlue = '';
 
-    private array $topicParams = [];
-
     private array $keeperKeys = [
         'keep_count', // Общее кол-во хранимых раздач
         'keep_size',  // Общий вес хранимых раздач
@@ -36,15 +41,15 @@ class ReportCreator
         'dl_size',    // Вес скачиваемых раздач
     ];
 
+    /**
+     * @throws Exception
+     */
     public function __construct(
-        array $config,
-        $webtlo,
-        $reports
+        array  $config,
+        object $webtlo
     ) {
-        $this->config  = $config;
-        $this->webtlo  = $webtlo;
-        $this->reports = $reports;
-
+        $this->config = $config;
+        $this->webtlo = $webtlo;
 
         $this->setUser();
         $this->setExcluded();
@@ -58,41 +63,46 @@ class ReportCreator
      */
     public function getSummaryReport(): string
     {
-        $subsections = $this->config['subsections'];
-
         // идентификаторы хранимых подразделов
-        $forums_ids = array_keys($subsections);
+        $forums_ids = array_keys($this->config['subsections'] ?? []);
+        if (!count($forums_ids)) {
+            throw new Exception('Error: Отсутствуют хранимые подразделы. Проверьте настройки.');
+        }
 
         // вытаскиваем из базы хранимое
         $stored = $this->getStoredForumsValues($forums_ids);
         $total  = $this->calcSummary($stored);
 
-        $subsectionPattern = '[url=viewtopic.php?t=%s][u]%s[/u][/url] — %s шт. (%s)';
+        // Строка хранимого подраздела.
+        // Первая ссылка в тему со списками, вторая на своё сообщение.
+        $subsectionPattern = '[url=viewtopic.php?t=%s][u]%s[/u][/url] — [url=viewtopic.php?p=%s][u]%s шт. (%s)[/u][/url]';
         // разбираем хранимое
         $savedSubsections = [];
-        foreach ($subsections as $forum_id => $subsection) {
+        foreach ($forums_ids as $forum_id) {
             if (!isset($stored[$forum_id])) {
                 continue;
             }
             // исключаем подразделы
             if (in_array($forum_id, $this->excludeForumsIDs)) {
-                Log::append("Notice: Из сводного отчёта исключен подраздел № $forum_id");
                 continue;
             }
 
-            // ищем тему со списками
-            $topic_id = $this->getForumTopicId($forum_id, $subsection['na']);
-            $topic_id = empty($topic_id) ? 'NaN' : $topic_id;
+            $forum = Forums::getForum($forum_id);
+
+            $topic_id = $forum->topic_id ?: 'NaN';
+            $post_id  = $forum->post_ids[0] ?? 'NaN';
+
             // инфа о подразделе в сводный
             $savedSubsections[] = sprintf(
                 $subsectionPattern,
                 $topic_id,
-                $subsection['na'],
+                $forum->name,
+                $post_id,
                 $stored[$forum_id]['keep_count'],
                 $this->bytes($stored[$forum_id]['keep_size'])
             );
 
-            unset($forum_id, $subsection, $topic_id);
+            unset($forum_id, $topic_id);
         }
         unset($stored);
 
@@ -105,25 +115,25 @@ class ReportCreator
         $summary[] = $this->webtlo->version_line_url;
         $summary[] = '[hr]';
 
-        return implode($this->implodeGlue, array_merge($summary, $savedSubsections));
+        return implode($this->implodeGlue, [...$summary, ...$savedSubsections]);
     }
+
 
     /**
      * Собрать отчёт по заданному разделу.
      *
      * @throws Exception
      */
-    public function getForumReport($forum_id): array
+    public function getForumReport(ForumObject $forum): array
     {
         // исключаем подразделы
-        if (in_array($forum_id, $this->excludeForumsIDs)) {
-            throw new Exception("Notice: Из отчёта исключен подраздел № $forum_id");
+        if (in_array($forum->id, $this->excludeForumsIDs)) {
+            throw new Exception("Из отчёта исключен подраздел № $forum->id");
         }
 
-        $forum = $this->getForumParams($forum_id);
         // Вытаскиваем из базы хранимое.
-        $stored = $this->getStoredForumsValues([$forum_id]);
-        $userStored = $stored[$forum_id];
+        $stored = $this->getStoredForumsValues([$forum->id]);
+        $userStored = $stored[$forum->id];
 
         $topicHeader = $this->createTopicFirstMessage($forum, $userStored);
 
@@ -137,11 +147,11 @@ class ReportCreator
 
         // const & pattern.
         $message_length_max = 119000;
-        $pattern_spoiler = '[spoiler="№№ %s — %s"][list=1]<br />[font=mono2][*=%s]%s<br />[/font][/list][/spoiler]';
+        $pattern_spoiler = '[spoiler="№№ %s — %s"][font=mono2][list=1]<br />[*=%s]%s<br />[/list][/font][/spoiler]';
         $spoiler_length  = mb_strlen($pattern_spoiler, 'UTF-8');
 
         // Найти раздачи в БД.
-        $topics = $this->getStoredForumTopics($forum_id);
+        $topics = $this->getStoredForumTopics($forum->id);
         // Количество раздач.
         $topics_count = count($topics);
 
@@ -184,7 +194,7 @@ class ReportCreator
         unset($topics, $topics_count);
 
         if (empty($topicMessages)) {
-            throw new Exception("Error: Не удалось сформировать список хранимого для подраздела № $forum_id");
+            throw new Exception("Error: Не удалось сформировать список хранимого для подраздела № $forum->id");
         }
 
         // В первое сообщение дописываем заголовок.
@@ -201,10 +211,13 @@ class ReportCreator
      */
     private function prepareSummaryHeader(array &$rows, array $val): void
     {
+        $split_pattern = '- из них раздач %s10 сидов: [b]%d[/b] шт. (%s)';
+
         $rows[] = sprintf('Всего хранимых раздач: [b]%s[/b] шт. (%s)', $val['keep_count'], $this->boldBytes($val['keep_size']));
-        if ($val['more10_count'] > 0) {
-            $split_pattern = '- из них раздач %s10 сидов: [b]%d[/b] шт. (%s)';
+        if ($val['less10_count'] > 0 && $val['more10_count'] > 0) {
             $rows[] = sprintf($split_pattern, '&#8804;', $val['less10_count'], $this->boldBytes($val['less10_size']));
+        }
+        if ($val['more10_count'] > 0) {
             $rows[] = sprintf($split_pattern, '>',       $val['more10_count'], $this->boldBytes($val['more10_size']));
         }
         if ($val['dl_count'] > 0) {
@@ -299,7 +312,7 @@ class ReportCreator
      */
     private function createTopicFirstMessage($forum, $userStored): string
     {
-        $stored = $this->getKeepersPostedReports($forum->id, $forum->name);
+        $stored = $this->getKeepersStoredReports($forum);
 
         // Добавим себя в список хранителей.
         $userStored['keeper_name'] = $this->userName;
@@ -356,110 +369,47 @@ class ReportCreator
     }
 
     /**
-     * Найти списки других хранителей указанного подраздела.
+     * Посчитать хранимое других хранителей указанного подраздела.
      */
-    private function getKeepersPostedReports(int $forum_id, string $forum_name): array
+    private function getKeepersStoredReports(ForumObject $forum): array
     {
-        // ищем тему со списками
-        $topic_id = $this->getForumTopicId($forum_id, $forum_name);
+        $values = Db::query_database(
+            'SELECT
+                    keeper_id, keeper_name,
+                    SUM(CASE WHEN done = 1 THEN 1 ELSE 0 END) keep_count,
+                    SUM(CASE WHEN done < 1 THEN 1 ELSE 0 END) dl_count,
+                    SUM(CASE WHEN done = 1 THEN topic_size ELSE 0 END) keep_size,
+                    SUM(CASE WHEN done < 1 THEN topic_size ELSE 0 END) dl_size
+                FROM (
+                    SELECT
+                        kl.keeper_id, kl.keeper_name,
+                        kl.complete as done,
+                        tp.si AS topic_size
+                    FROM Topics tp
+                    INNER JOIN KeepersLists kl ON kl.topic_id = tp.id
+                    WHERE tp.ss = ?
+                )
+                GROUP BY keeper_id, keeper_name
+                ORDER BY 3 DESC
+            ',
+            [$forum->id],
+            true,
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+        );
 
-        if (empty($topic_id)) {
-            Log::append("Error: Не удалось найти тему со списком для подраздела №$forum_id");
-            return [];
+        if (empty($values)) {
+            $notice_pattern = 'Notice: В БД отсутствуют данные о хранимом другими хранителями в подразделе [(%d) %s]. '.
+                'Возможно, нужно выполнить обновление сведений.';
+            Log::append(sprintf($notice_pattern, $forum->id, $forum->name));
+
+            $values = [];
         }
 
-        // сканируем имеющиеся списки
-        $keepers = $this->reports->scanning_viewtopic($topic_id);
-        if ($keepers === false) {
-            Log::append("Error: Не удалось получить данные из темы со списками для подраздела №$forum_id, тема $topic_id");
-            return [];
-        }
-
-        $topicParams = [
-            'topicId'        => $topic_id,
-            'authorPostId'   => 0,
-            'authorNickName' => '',
-            'postList'       => [],
-        ];
-
-        $stored = [];
-        // разбираем инфу, полученную из списков
-        foreach ($keepers as $index => $keeper) {
-            $keeper_id   = $keeper['user_id'];
-            $keeper_name = $keeper['nickname'];
-
-            if ($index === 0) {
-                $topicParams['authorPostId']   = $keeper['post_id'];
-                $topicParams['authorId']       = $keeper_id;
-                $topicParams['authorNickName'] = $keeper_name;
-                continue;
-            }
-
-            // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
-            if (strcasecmp($this->userId, $keeper_id) === 0) {
-                $topicParams['postList'][] = $keeper['post_id'];
-                continue;
-            }
-            // Skip post from user StatsBot
-            if ($keeper_name === 'StatsBot') {
-                continue;
-            }
-            if (empty($keeper['topics_ids'])) {
-                continue;
-            }
-
-            $stored[$keeper_id] = $stored[$keeper_id] ?? array_fill_keys($this->keeperKeys, 0);
-            $stored[$keeper_id]['keeper_name'] = $keeper_name;
-
-            // считаем сообщения других хранителей в подразделе
-            // index[0,1] => topics_ids[1,2,3,4], где 0 - раздача скачивается, 1 - скачана.
-            foreach ($keeper['topics_ids'] as $done => $keeperTopicsIDs) {
-                $topicsIdChunks = array_chunk($keeperTopicsIDs, 500);
-                foreach ($topicsIdChunks as $topicIds) {
-                    $in = str_repeat('?,', count($topicIds) - 1) . '?';
-                    $values = Db::query_database_row(
-                        "SELECT COUNT(), SUM(si)
-                        FROM Topics
-                        WHERE id IN ($in) AND ss = ? AND rg < CAST(? as INTEGER)",
-                        array_merge($topicIds, [$forum_id, $keeper['posted']]),
-                        true,
-                        PDO::FETCH_NUM
-                    );
-                    if ($done == 1) {
-                        $stored[$keeper_id]['keep_count'] += $values[0];
-                        $stored[$keeper_id]['keep_size']  += $values[1];
-                    } else {
-                        $stored[$keeper_id]['dl_count'] += $values[0];
-                        $stored[$keeper_id]['dl_size']  += $values[1];
-                    }
-                    unset($in, $values);
-                }
-                unset($done, $keeperTopicsIDs, $topicIds);
-            }
-            unset($keeper, $keeper_id, $keeper_name);
-        }
-
-        // Сохраним данные о теме со списками.
-        $this->saveTopicParams($forum_id, $topicParams);
-
-        return $stored;
+        return $values;
     }
 
     /**
-     * Сохраним данные о теме со списками заданного подраздела.
-     */
-    private function saveTopicParams(int $forum_id, array $topicParams): void
-    {
-        $this->topicParams[$forum_id] = $topicParams;
-    }
-
-    public function getTopicSavedParams(int $forum_id): array
-    {
-        return $this->topicParams[$forum_id] ?? [];
-    }
-
-    /**
-     * Найти в БД суммарные данные о хранимых раздачах подразделов.
+     * Найти в БД хранимое пользователем в указанных подразделах.
      *
      * @throws Exception
      */
@@ -505,7 +455,8 @@ class ReportCreator
 
         if (empty($values)) {
             throw new Exception(sprintf(
-                "Error: Не получены данные о хранимых раздачах разделов %s",
+                'Error: В БД отсутствуют данные о раздачах хранимых подразделов %s. ' .
+                    'Возможно, нужно выполнить обновление сведений.',
                 implode(',', $forums_ids)
             ));
         }
@@ -541,7 +492,8 @@ class ReportCreator
                 WHERE error = 0 AND client_id NOT IN ($client_exclude)
                 GROUP BY info_hash
             ) tr ON tp.hs = tr.info_hash
-            WHERE tp.ss = ?",
+            WHERE tp.ss = ?
+            ORDER BY tp.id",
             array_merge($this->excludeClientsIDs, [$forum_id]),
             true
         );
@@ -550,8 +502,7 @@ class ReportCreator
             throw new Exception("Error: Не получены данные о хранимых раздачах для подраздела № $forum_id");
         }
 
-        // сортировка раздач
-        return natsort_field($topics, 'id');
+        return $topics;
     }
 
     /**
@@ -566,35 +517,6 @@ class ReportCreator
         }
 
         $this->updateTime = $updateTime;
-    }
-
-    /**
-     * Получение параметров подраздела.
-     *
-     * @throws Exception
-     */
-    private function getForumParams(int $forum_id): object
-    {
-        $result = Db::query_database_row(
-            "SELECT id, na name, qt quantity, si size FROM Forums WHERE id = ?",
-            [$forum_id],
-            true
-        );
-
-        if (empty($result)) {
-            throw new Exception("Error: Не получены данные о хранимом подразделе № $forum_id");
-        }
-        return (object)$result;
-    }
-
-    /**
-     * Поиск ид темы с отчётами, по ид хранимого подраздела.
-     */
-    private function getForumTopicId(int $forumId, string $forumName): ?int
-    {
-        $topicId = $this->reports->search_topic_id($forumName);
-
-        return $topicId ?? null;
     }
 
     private function getFormattedUpdateTime(): string
@@ -627,7 +549,10 @@ class ReportCreator
         $cfg_reports = $this->config['reports'];
 
         if (!empty($cfg_reports['exclude_clients_ids'])) {
-            Log::append("Notice: Из отчёта исключены торрент клиенты: {$cfg_reports['exclude_clients_ids']}");
+            Log::append("Notice: Из отчётов исключены торрент клиенты: {$cfg_reports['exclude_clients_ids']}");
+        }
+        if (!empty($cfg_reports['exclude_forums_ids'])) {
+            Log::append("Notice: Из отчётов исключены подразделы: {$cfg_reports['exclude_forums_ids']}");
         }
 
         $this->excludeForumsIDs  = explode(',', $cfg_reports['exclude_forums_ids']);

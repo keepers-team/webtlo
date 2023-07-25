@@ -1,22 +1,19 @@
 <?php
 
+use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Module\ReportCreator;
+
 $reports_result = [
     'report' => '',
 ];
 try {
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/reports.php';
-    include_once dirname(__FILE__) . '/../classes/ReportCreator.php';
 
     // идентификатор подраздела
-    if (isset($_POST['forum_id'])) {
-        $forum_id = (int) $_POST['forum_id'];
-    }
+    $forum_id = (int)$_POST['forum_id'] ?? -1;
 
-    if (
-        !is_int($forum_id)
-        || $forum_id < 0
-    ) {
+    if ($forum_id < 0) {
         throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");
     }
 
@@ -48,19 +45,36 @@ try {
     // Создание отчётов.
     $forumReports = new ReportCreator(
         $cfg,
-        $webtlo,
-        $reports
+        get_webtlo_version()
     );
     $forumReports->setMode('UI');
 
+    $Timers = [];
+    Timers::start('create_report');
     if ($forum_id === 0) {
         // Сводный отчёт
         $output = $forumReports->getSummaryReport();
     } else {
         // Хранимые подразделы
-        $forumReport = $forumReports->getForumReport($forum_id);
+        $forum = Forums::getForum($forum_id);
+        Timers::start("create_$forum_id");
+        try {
+            $forumReport = $forumReports->getForumReport($forum);
+        } catch (Exception $e) {
+            throw new Exception(sprintf(
+                'Notice: Формирование отчёта для подраздела %d прекращено. Причина %s',
+                $forum_id,
+                $e->getMessage()
+            ));
+        }
+
         $output = $forumReports->prepareReportsMessages($forumReport);
     }
+
+    Log::append(json_encode([
+        'forum'    => $forum_id,
+        'create'   => Timers::getExecTime('create_report'),
+    ]));
 
     $reports_result['report'] = $output;
 } catch (Exception $e) {
