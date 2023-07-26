@@ -1,4 +1,4 @@
-#!/command/with-contenv bash
+#!/command/with-contenv sh
 if [ "${WEBTLO_CRON:=false}" = "true" ]; then
   s6-echo "Enabled cron jobs"
   exec crond -f
