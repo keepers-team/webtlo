@@ -391,10 +391,6 @@ li.menu.ui-tabs-active {
 	vertical-align: middle;
 }
 
-#settings label {
-	margin: 0 50px 0 0;
-}
-
 .label {
 	padding: 2px 0;
 	display: block;
@@ -412,6 +408,12 @@ li.menu.ui-tabs-active {
 
 #check_mirrors_access, #forum_auth {
 	margin-bottom: 5px;
+}
+
+.param-name {
+    display: inline-block;
+    text-align: right;
+    width: 8em;
 }
 
 #forum_url_params label, #api_url_params label {
@@ -489,7 +491,6 @@ li.menu.ui-tabs-active {
 }
 
 .forum-props {
-	width: 60%;
 	margin: 0 0 0 10px;
 }
 

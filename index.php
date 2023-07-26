@@ -490,8 +490,51 @@ function automation_checkbox($cfg, $option)
                 </div>
                 <form id="config">
                     <div class="sub_settings">
-                        <h2>Настройки авторизации на форуме</h2>
+                        <h2>Связь с форумом и API</h2>
                         <div>
+                            <div id="forum_url_params">
+                                <label class="param-name">Адрес форума:</label>
+                                <select name="forum_url" id="forum_url" class="myinput">
+                                    <?php echo $optionForumAddress ?>
+                                </select>
+                                
+                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
+                                <label>
+                                    <input id="forum_ssl" name="forum_ssl" type="checkbox" <?php echo $forumVerifySSL ?> />
+                                    HTTPS
+                                </label>
+                                <label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
+                                    <input name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
+                                    Через прокси
+                                </label>
+                                <i id="forum_url_result" class=""></i>
+                            </div>
+                            <div id="api_url_params">
+                                <label class="param-name">Адрес API:</label>
+                                    <select name="api_url" id="api_url" class="myinput">
+                                        <?php echo $optionApiAddress ?>
+                                    </select>
+                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
+                                <label>
+                                    <input id="api_ssl" name="api_ssl" type="checkbox" <?php echo $apiVerifySSL ?> />
+                                    HTTPS
+                                </label>
+                                <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
+                                    <input name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
+                                    Через прокси
+                                </label>
+                                <i id="api_url_result" class=""></i>
+                            </div>
+                            <div id="forum_auth_params">
+                                <div>
+                                    <label class="param-name">Логин:</label>
+                                    <input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
+                                </div>
+                                <div>
+                                    <label class="param-name">Пароль:</label>
+                                    <input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
+                                </div>
+                            </div>
                             <button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
                                 Проверить доступ
                             </button>
@@ -499,81 +542,21 @@ function automation_checkbox($cfg, $option)
                                 Авторизоваться
                                 <i id="forum_auth_result"></i>
                             </button>
-                            <div id="forum_url_params">
-                                <label>
-                                    Используемый адрес форума:
-                                    <select name="forum_url" id="forum_url" class="myinput">
-                                        <?php echo $optionForumAddress ?>
-                                    </select>
-                                </label>
-                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
-                                <label title="Использовать SSL/TLS">
-                                    <input id="forum_ssl" name="forum_ssl" type="checkbox" <?php echo $forumVerifySSL ?> />
-                                    SSL/TLS
-                                </label>
-                                <i id="forum_url_result" class=""></i>
-                            </div>
-                            <div id="api_url_params">
-                                <label>
-                                    Используемый адрес API:
-                                    <select name="api_url" id="api_url" class="myinput">
-                                        <?php echo $optionApiAddress ?>
-                                    </select>
-                                </label>
-                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
-                                <label title="Использовать SSL/TLS">
-                                    <input id="api_ssl" name="api_ssl" type="checkbox" <?php echo $apiVerifySSL ?> />
-                                    SSL/TLS
-                                </label>
-                                <i id="api_url_result" class=""></i>
-                            </div>
-                            <div id="forum_auth_params">
-                                <div>
-                                    <label>
-                                        Логин:
-                                        <input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
-                                    </label>
-                                    <label>
-                                        Пароль:
-                                        <input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
-                                    </label>
-                                </div>
-                            </div>
                             <div id="api_auth_params">
                                 <div>
+                                    Полученные ключи:
                                     <label>
-                                        Ключ bt:
-                                        <input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ bt" value="<?php echo $cfg['bt_key'] ?>" />
-                                    </label>
-                                    <label>
-                                        Ключ api:
-                                        <input id="api_key" name="api_key" class="myinput user_details" type="password" size="24" title="Хранительский ключ api" value="<?php echo $cfg['api_key'] ?>" />
-                                    </label>
-                                    <label>
-                                        Ключ id:
-                                        <input id="user_id" name="user_id" class="myinput user_details" type="text" size="24" title="Идентификатор пользователя" value="<?php echo $cfg['user_id'] ?>" />
+                                        bt  <input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="10" readonly="" value="<?php echo $cfg['bt_key'] ?>" />
+                                        api <input id="api_key" name="api_key" class="myinput user_details" type="password" size="10" readonly="" value="<?php echo $cfg['api_key'] ?>" />
+                                        id  <input id="user_id" name="user_id" class="myinput user_details" type="text" size="10" readonly="" value="<?php echo $cfg['user_id'] ?>" />
                                     </label>
                                 </div>
                             </div>
-                        </div>
-                        <h2>Настройки прокси-сервера</h2>
-                        <div>
-                            <div>
-                                <label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
-                                    <input name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
-                                    использовать прокси-сервер при обращении к форуму
-                                </label>
-                            </div>
-                            <div>
-                                <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-                                    <input name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
-                                    использовать прокси-сервер при обращении к API
-                                </label>
-                            </div>
                             <div id="proxy_prop">
+                            <h2>Настройки прокси-сервера</h2>
                                 <div>
                                     <label>
-                                        Тип прокси-сервера:
+                                        Тип:
                                         <select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
                                             <option value="http" <?php echo ($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
                                             <option value="socks4" <?php echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
@@ -585,12 +568,10 @@ function automation_checkbox($cfg, $option)
                                 </div>
                                 <div>
                                     <label>
-                                        IP-адрес/сетевое имя:
+                                        Адрес:
                                         <input name="proxy_hostname" id="proxy_hostname" class="myinput" type="text" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="<?php echo $cfg['proxy_hostname'] ?>" />
-                                    </label>
-                                    <label>
                                         Порт:
-                                        <input name="proxy_port" id="proxy_port" class="myinput" type="text" size="24" title="Порт прокси-сервера." value="<?php echo $cfg['proxy_port'] ?>" />
+                                        <input name="proxy_port" id="proxy_port" class="myinput" type="text" size="6" title="Порт прокси-сервера." value="<?php echo $cfg['proxy_port'] ?>" />
                                     </label>
                                 </div>
                                 <div>
@@ -605,7 +586,7 @@ function automation_checkbox($cfg, $option)
                                 </div>
                             </div>
                         </div>
-                        <h2>Настройки торрент-клиентов</h2>
+                        <h2>Торрент-клиенты</h2>
                         <div>
                             <div>
                                 <button type="button" id="add-torrent-client" title="Добавить новый торрент-клиент в список">
@@ -648,8 +629,8 @@ function automation_checkbox($cfg, $option)
                                     <label>
                                         IP-адрес/сетевое имя:
                                         <input name="torrent-client-hostname" id="torrent-client-hostname" class="torrent-client-props" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." />
-                                        <input name="torrent-client-ssl" id="torrent-client-ssl" class="torrent-client-props" type="checkbox" title="Использовать SSL/TLS" />
-                                        SSL/TLS
+                                        <input name="torrent-client-ssl" id="torrent-client-ssl" class="torrent-client-props" type="checkbox" />
+                                        HTTPS
                                     </label>
                                     <label>
                                         Порт:
@@ -683,7 +664,7 @@ function automation_checkbox($cfg, $option)
                                 </div>
                             </div>
                         </div>
-                        <h2>Настройки сканируемых подразделов</h2>
+                        <h2>Сканируемые подразделы</h2>
                         <div>
                             <div class="input-container">
                                 <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
@@ -703,7 +684,7 @@ function automation_checkbox($cfg, $option)
                             <fieldset id="forum-props">
                                 <label>
                                     Индекс:
-                                    <input disabled id="forum-id" class="myinput forum-props ui-state-disabled" type="text" title="Индекс подраздела" />
+                                    <input disabled size=10 id="forum-id" class="myinput forum-props ui-state-disabled" type="text" title="Индекс подраздела" />
                                 </label>
                                 <label>
                                     Торрент-клиент:
@@ -748,9 +729,8 @@ function automation_checkbox($cfg, $option)
                                 </label>
                             </fieldset>
                         </div>
-                        <h2>Настройки управления раздачами</h2>
+                        <h2>Фильтрация раздач и внешний вид</h2>
                         <div>
-                            <h3>Фильтрация раздач</h3>
                             <label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
                                 Предлагать для хранения раздачи с количеством сидов не более:
                                 <input id="rule_topics" name="rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
@@ -779,31 +759,37 @@ function automation_checkbox($cfg, $option)
                                 <input name="exclude_self_keep" type="checkbox" size="24" <?php echo $exclude_self_keep ?> />
                                 не показывать себя, как хранителя, в списке раздач на главной
                             </label>
-                            <h3>Регулировка раздач<sup>1</sup></h3>
-                            <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
-                                Останавливать раздачи с количеством пиров более:
-                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
+                            <label class="label">
+                                Цветовая схема интерфейса:
+                                <select id="theme-selector" class="myinput">
+                                    <option value="black-tie">Black Tie</option>
+                                    <option value="blitzer">Blitzer</option>
+                                    <option value="cupertino">Cupertino</option>
+                                    <option value="dark-hive">Dark Hive</option>
+                                    <option value="dot-luv">Dot Luv</option>
+                                    <option value="eggplant">Eggplant</option>
+                                    <option value="excite-bike">Excite Bike</option>
+                                    <option value="flick">Flick</option>
+                                    <option value="hot-sneaks">Hot Sneaks</option>
+                                    <option value="humanity">Humanity</option>
+                                    <option value="le-frog">Le Frog</option>
+                                    <option value="mint-choc">Mint Choc</option>
+                                    <option value="overcast">Overcast</option>
+                                    <option value="pepper-grinder">Pepper Grinder</option>
+                                    <option value="redmond">Redmond</option>
+                                    <option value="smoothness">Smoothness</option>
+                                    <option value="south-street">South Street</option>
+                                    <option value="start">Start</option>
+                                    <option value="sunny">Sunny</option>
+                                    <option value="swanky-purse">Swanky Purse</option>
+                                    <option value="trontastic">Trontastic</option>
+                                    <option value="ui-darkness">UI Darkness</option>
+                                    <option value="ui-lightness">UI Lightness</option>
+                                    <option value="vader">Vader</option>
+                                </select>
                             </label>
-                            <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
-                                Не учитывать до
-                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?php echo $cfg['topics_control']['keepers'] ?>" />
-                                сидирующих хранителей, при подсчете текущих сидов
-                            </label>
-                            <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
-                                <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
-                                регулировать раздачи не из хранимых подразделов
-                            </label>
-                            <label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
-                                <input name="leechers" type="checkbox" <?php echo $leechers ?> />
-                                учитывать значение личей
-                            </label>
-                            <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
-                                <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
-                                запускать раздачи с 0 (нулём) личей
-                            </label>
-                            <p class="footnote"><sup>1</sup>Необходимо настроить запуск скрипта control.php. Обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице за подробностями.</p>
                         </div>
-                        <h2>Настройки загрузки торрент-файлов</h2>
+                        <h2>Скачивание торрент-файлов</h2>
                         <div>
                             <h3>Каталог для скачиваемых *.torrent файлов</h3>
                             <div>
@@ -832,7 +818,7 @@ function automation_checkbox($cfg, $option)
                                 скачать торрент-файлы для обычного пользователя
                             </label>
                         </div>
-                        <h2>Настройки отправляемых отчётов</h2>
+                        <h2>Отправка отчётов</h2>
                         <div>
                             <label class="label">
                                 <input name="auto_clear_messages" type="checkbox" size="24" <?php echo $auto_clear_messages ?> />
@@ -848,61 +834,51 @@ function automation_checkbox($cfg, $option)
                                 <input id="exclude_forums_ids" type="text" size="20" readonly value="<?php echo $cfg['reports']['exclude_forums_ids'] ?>" />
                             </label>
                         </div>
-                        <h2>Настройки автоматизации</h2>
+                        <h2>Автоматизация и регулировка раздач</h2>
                         <div>
+                            <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
                                 <input name="automation_update" type="checkbox" size="24" <?= automation_checkbox($cfg, 'update') ?> />
                                 <sub>[update.php, keepers.php]</sub>
-                                обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
+                                Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
                             <label class="label">
                                 <input name="automation_reports" type="checkbox" size="24" <?= automation_checkbox($cfg, 'reports') ?> />
                                 <sub>[reports.php]</sub>
-                                отправка отчётов на форум
+                                Отправка отчётов на форум
                             </label>
                             <label class="label">
                                 <input name="automation_control" type="checkbox" size="24" <?= automation_checkbox($cfg, 'control') ?> />
                                 <sub>[control.php]</sub>
-                                управление раздачами в торрент-клиентах
+                                Регулировка раздач в торрент-клиентах
+                            </label>
+                            <h3>Регулировка раздач<sup>2</sup></h3>
+                            <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
+                                Останавливать раздачи с количеством пиров более:
+                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
+                            </label>
+                            <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
+                                Не учитывать до
+                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?php echo $cfg['topics_control']['keepers'] ?>" />
+                                сидирующих хранителей, при подсчете текущих сидов
+                            </label>
+                            <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
+                                <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
+                                регулировать раздачи не из хранимых подразделов
+                            </label>
+                            <label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
+                                <input name="leechers" type="checkbox" <?php echo $leechers ?> />
+                                учитывать значение личей
+                            </label>
+                            <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
+                                <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
+                                запускать раздачи с 0 (нулём) личей
                             </label>
                             <p class="footnote">
-                                <sup>2</sup>
-                                Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
+                                <sup>1</sup> Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                 Запуск алгоритмов должен быть настроен самостоятельно (cron|планировщик windows). <br />
-                                За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.
-                            </p>
-                        </div>
-                        <h2>Настройки интерфейса</h2>
-                        <div>
-                            <label>
-                                Цветовая схема:
-                                <select id="theme-selector" class="myinput">
-                                    <option value="black-tie">Black Tie</option>
-                                    <option value="blitzer">Blitzer</option>
-                                    <option value="cupertino">Cupertino</option>
-                                    <option value="dark-hive">Dark Hive</option>
-                                    <option value="dot-luv">Dot Luv</option>
-                                    <option value="eggplant">Eggplant</option>
-                                    <option value="excite-bike">Excite Bike</option>
-                                    <option value="flick">Flick</option>
-                                    <option value="hot-sneaks">Hot Sneaks</option>
-                                    <option value="humanity">Humanity</option>
-                                    <option value="le-frog">Le Frog</option>
-                                    <option value="mint-choc">Mint Choc</option>
-                                    <option value="overcast">Overcast</option>
-                                    <option value="pepper-grinder">Pepper Grinder</option>
-                                    <option value="redmond">Redmond</option>
-                                    <option value="smoothness">Smoothness</option>
-                                    <option value="south-street">South Street</option>
-                                    <option value="start">Start</option>
-                                    <option value="sunny">Sunny</option>
-                                    <option value="swanky-purse">Swanky Purse</option>
-                                    <option value="trontastic">Trontastic</option>
-                                    <option value="ui-darkness">UI Darkness</option>
-                                    <option value="ui-lightness">UI Lightness</option>
-                                    <option value="vader">Vader</option>
-                                </select>
-                            </label>
+                                За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.<br />
+                                <sup>2</sup> Необходимо настроить автозапуск control.php</p>
                         </div>
                     </div>
                 </form>
