@@ -874,6 +874,8 @@ class DatabaseMigration
 
         // Удалим признак обновления дерева подразделов.
         $this->statements[] = 'DELETE FROM UpdateTime WHERE id = 8888';
+        // Удалим признакми обновления списков других хранителей, для обновления параметров подразделов.
+        $this->statements[] = 'DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000';
 
         $this->statements[] = 'CREATE INDEX IF NOT EXISTS IX_Torrents_error ON Torrents (error);';
 
