@@ -95,31 +95,30 @@ $(document).ready(function () {
 
 	// проверка доступности форума и API
 	$("#check_mirrors_access").on("click", function () {
-		$(this).addClass("ui-state-disabled").prop("disabled", true);
-		var check_list = ['forum', 'api'];
-		var check_count = check_list.length;
-		var result_list = ['text-danger', 'text-success'];
-		var $data = $("#config").serialize();
+		const $data = $("#config").serialize();
+		const check_list = ['forum', 'api'];
+		const result_list = ['text-danger', 'text-success'];
+		let forumButtons = $('#forum_auth, #check_mirrors_access').toggleDisable(true);
+		let check_count = check_list.length;
 
 		$.each(check_list, function (index, value) {
-			let lockElems = $(`.check_access_${value}`).toggleDisable(true);
+			let element = "#" + value + "_url";
+			let url = $(element).val();
+			let url_custom = $(element + "_custom").val();
+			let ssl = $("#" + value + "_ssl").is(":checked");
 
-			var element = "#" + value + "_url";
-			var url = $(element).val();
-			var url_custom = $(element + "_custom").val();
-			var ssl = $("#" + value + "_ssl").is(":checked");
-			$(element).addClass("ui-state-disabled").prop("disabled", true);
-			$(element + "_custom").addClass("ui-state-disabled").prop("disabled", true);
+			let lockElems = $(`.check_access_${value}`)
+				.add(element)
+				.add(element + "_custom")
+				.toggleDisable(true);
 
 			if (typeof url === "undefined" || $.isEmptyObject(url)) {
 				check_count--;
-				if (check_count == 0) {
-					$("#check_mirrors_access").removeClass("ui-state-disabled").prop("disabled", false);
+				if (check_count === 0) {
+					forumButtons.toggleDisable(false);
 				}
-				$(element + "_params i").removeAttr("class");
-				$(element).removeClass("ui-state-disabled").prop("disabled", false);
-				$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
 
+				$(element + "_params i").removeAttr("class");
 				lockElems.toggleDisable(false);
 				return true;
 			}
@@ -135,11 +134,9 @@ $(document).ready(function () {
 				},
 				success: function (response) {
 					$(element + "_params i").removeAttr("class");
-					$(element).removeClass("ui-state-disabled").prop("disabled", false);
-					$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
-
 					lockElems.toggleDisable(false);
-					var result = result_list[response];
+
+					const result = result_list[response];
 					if (typeof result !== "undefined") {
 						$(element + "_params i").addClass("fa fa-circle " + result);
 					}
@@ -150,8 +147,8 @@ $(document).ready(function () {
 				},
 				complete: function () {
 					check_count--;
-					if (check_count == 0) {
-						$("#check_mirrors_access").removeClass("ui-state-disabled").prop("disabled", false);
+					if (check_count === 0) {
+						forumButtons.toggleDisable(false);
 					}
 				}
 			});
