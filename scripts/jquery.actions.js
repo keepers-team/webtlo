@@ -100,14 +100,17 @@ $(document).ready(function () {
 		var check_count = check_list.length;
 		var result_list = ['text-danger', 'text-success'];
 		var $data = $("#config").serialize();
+
 		$.each(check_list, function (index, value) {
+			let lockElems = $(`.check_access_${value}`).toggleDisable(true);
+
 			var element = "#" + value + "_url";
 			var url = $(element).val();
 			var url_custom = $(element + "_custom").val();
 			var ssl = $("#" + value + "_ssl").is(":checked");
 			$(element).addClass("ui-state-disabled").prop("disabled", true);
 			$(element + "_custom").addClass("ui-state-disabled").prop("disabled", true);
-			$("#" + value + "_ssl").addClass("ui-state-disabled").prop("disabled", true);
+
 			if (typeof url === "undefined" || $.isEmptyObject(url)) {
 				check_count--;
 				if (check_count == 0) {
@@ -116,7 +119,8 @@ $(document).ready(function () {
 				$(element + "_params i").removeAttr("class");
 				$(element).removeClass("ui-state-disabled").prop("disabled", false);
 				$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
-				$("#" + value + "_ssl").removeClass("ui-state-disabled").prop("disabled", false);
+
+				lockElems.toggleDisable(false);
 				return true;
 			}
 			$.ajax({
@@ -133,7 +137,8 @@ $(document).ready(function () {
 					$(element + "_params i").removeAttr("class");
 					$(element).removeClass("ui-state-disabled").prop("disabled", false);
 					$(element + "_custom").removeClass("ui-state-disabled").prop("disabled", false);
-					$("#" + value + "_ssl").removeClass("ui-state-disabled").prop("disabled", false);
+
+					lockElems.toggleDisable(false);
 					var result = result_list[response];
 					if (typeof result !== "undefined") {
 						$(element + "_params i").addClass("fa fa-circle " + result);

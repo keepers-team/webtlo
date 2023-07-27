@@ -500,11 +500,11 @@ function automation_checkbox($cfg, $option)
                                 
                                 <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
                                 <label>
-                                    <input id="forum_ssl" name="forum_ssl" type="checkbox" <?php echo $forumVerifySSL ?> />
+                                    <input id="forum_ssl" name="forum_ssl" class="check_access_forum" type="checkbox" <?php echo $forumVerifySSL ?> />
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
-                                    <input name="proxy_activate_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
+                                    <input name="proxy_activate_forum" class="check_access_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
                                     Через прокси
                                 </label>
                                 <i id="forum_url_result" class=""></i>
@@ -516,11 +516,11 @@ function automation_checkbox($cfg, $option)
                                     </select>
                                 <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
                                 <label>
-                                    <input id="api_ssl" name="api_ssl" type="checkbox" <?php echo $apiVerifySSL ?> />
+                                    <input id="api_ssl" name="api_ssl" class="check_access_api" type="checkbox" <?php echo $apiVerifySSL ?> />
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-                                    <input name="proxy_activate_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
+                                    <input name="proxy_activate_api" class="check_access_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
                                     Через прокси
                                 </label>
                                 <i id="api_url_result" class=""></i>
@@ -552,6 +552,7 @@ function automation_checkbox($cfg, $option)
                                     </label>
                                 </div>
                             </div>
+                            <hr>
                             <div id="proxy_prop">
                             <h2>Настройки прокси-сервера</h2>
                                 <div>
@@ -759,6 +760,7 @@ function automation_checkbox($cfg, $option)
                                 <input name="exclude_self_keep" type="checkbox" size="24" <?php echo $exclude_self_keep ?> />
                                 не показывать себя, как хранителя, в списке раздач на главной
                             </label>
+                            <hr>
                             <label class="label">
                                 Цветовая схема интерфейса:
                                 <select id="theme-selector" class="myinput">
@@ -852,6 +854,7 @@ function automation_checkbox($cfg, $option)
                                 <sub>[control.php]</sub>
                                 Регулировка раздач в торрент-клиентах
                             </label>
+                            <hr>
                             <h3>Регулировка раздач<sup>2</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:

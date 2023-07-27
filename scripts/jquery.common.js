@@ -333,4 +333,9 @@ function versionCompare(v1, v2, options) {
 		});
 		return data;
 	}
+
+	$.fn.toggleDisable = function(disable) {
+		disable = !!disable;
+		return this.toggleClass("ui-state-disabled", disable).prop("disabled", disable);
+	};
 })(jQuery);
