@@ -64,6 +64,7 @@ try {
             'api_key' => UserDetails::$api,
             'user_id' => UserDetails::$uid,
             'captcha' => '',
+            'captcha_path' => '',
             'log' => Log::get(),
         ]
     );
@@ -75,6 +76,7 @@ try {
             'api_key' => '',
             'user_id' => '',
             'captcha' => UserDetails::$captcha,
+            'captcha_path' => UserDetails::$captcha_path,
             'log' => Log::get(),
         ]
     );

@@ -171,10 +171,13 @@ $(document).ready(function () {
 		) {
 			return false;
 		}
-		$(this).addClass("ui-state-disabled").prop("disabled", true);
-		var cap_code = $("#cap_code").val();
-		var cap_fields = $("#cap_fields").val();
-		var $data = $("#config").serialize();
+		let forumButtons = $('#forum_auth, #check_mirrors_access').toggleDisable(true);
+		const $data = $("#config").serialize();
+		const cap_code = $("#cap_code").val();
+		const cap_fields = $("#cap_fields").val();
+
+		let dialog = $('#dialog');
+		let authResult = $('#forum_auth_result');
 		$.ajax({
 			type: "POST",
 			url: "php/actions/get_user_details.php",
@@ -188,19 +191,19 @@ $(document).ready(function () {
 				response = $.parseJSON(response);
 				$("#log").append(response.log);
 				if (!$.isEmptyObject(response.captcha)) {
-					$("#forum_auth_result").removeAttr("class").addClass("fa fa-circle text-danger");
-					$("#dialog").dialog(
+					authResult.removeAttr("class").addClass("fa fa-circle text-danger");
+					dialog.dialog(
 						{
 							buttons: [
 								{
 									text: "OK",
 									click: function () {
-										var username_correct = $("#tracker_username_correct").val();
-										var password_correct = $("#tracker_password_correct").val();
+										let username_correct = $("#tracker_username_correct").val();
+										let password_correct = $("#tracker_password_correct").val();
 										$("#tracker_username").val(username_correct);
 										$("#tracker_password").val(password_correct);
 										$("#forum_auth").click();
-										$("#dialog").dialog("close");
+										dialog.dialog("close");
 									},
 								},
 							],
@@ -213,32 +216,32 @@ $(document).ready(function () {
 						'Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
 						'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br /><br />' +
 						'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
-						'<div><img src="data/captcha.jpg?' + new Date().valueOf() + '" /></div>' +
+						'<div><img src="' + response.captcha_path + '" /></div>' +
 						'<input id="cap_code" size="27" />');
-					$("#dialog").dialog("open");
+					dialog.dialog("open");
 				} else {
-					$("#forum_auth_result").removeAttr("class");
+					authResult.removeAttr("class");
 					if (
 						!$.isEmptyObject(response.bt_key)
 						&& !$.isEmptyObject(response.api_key)
 						&& !$.isEmptyObject(response.user_id)
 					) {
-						$("#forum_auth_result").addClass("fa fa-circle text-success");
+						authResult.addClass("fa fa-circle text-success");
 						$("#bt_key").val(response.bt_key);
 						$("#api_key").val(response.api_key);
 						$("#user_id").val(response.user_id);
 						setSettings();
 					} else {
-						$("#forum_auth_result").addClass("fa fa-circle text-danger");
+						authResult.addClass("fa fa-circle text-danger");
 					}
 				}
 			},
 			beforeSend: function () {
-				$("#forum_auth_result").removeAttr("class");
-				$("#forum_auth_result").addClass("fa fa-spinner fa-spin");
+				authResult.removeAttr("class");
+				authResult.addClass("fa fa-spinner fa-spin");
 			},
 			complete: function () {
-				$(this).removeClass("ui-state-disabled").prop("disabled", false);
+				forumButtons.toggleDisable(false);
 			}
 		});
 	});
@@ -248,7 +251,7 @@ $(document).ready(function () {
 	});
 
 	$("#forum_auth_params, #api_auth_params").on("keypress", function () {
-		var disabled = $("#forum_auth").prop("disabled");
+		let disabled = $("#forum_auth").prop("disabled");
 		if (disabled !== false) {
 			return false;
 		}
