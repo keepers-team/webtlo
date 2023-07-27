@@ -841,17 +841,17 @@ function automation_checkbox($cfg, $option)
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
                                 <input name="automation_update" type="checkbox" size="24" <?= automation_checkbox($cfg, 'update') ?> />
-                                <sub>[update.php, keepers.php]</sub>
+                                <span class="scriptname">[update.php, keepers.php]</span>
                                 Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
                             <label class="label">
                                 <input name="automation_reports" type="checkbox" size="24" <?= automation_checkbox($cfg, 'reports') ?> />
-                                <sub>[reports.php]</sub>
+                                <span class="scriptname">[reports.php]</span>
                                 Отправка отчётов на форум
                             </label>
                             <label class="label">
                                 <input name="automation_control" type="checkbox" size="24" <?= automation_checkbox($cfg, 'control') ?> />
-                                <sub>[control.php]</sub>
+                                <span class="scriptname">[control.php]</span>
                                 Регулировка раздач в торрент-клиентах
                             </label>
                             <hr>
@@ -877,11 +877,13 @@ function automation_checkbox($cfg, $option)
                                 <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
-                            <p class="footnote">
-                                <sup>1</sup> Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
-                                Запуск алгоритмов должен быть настроен самостоятельно (cron|планировщик windows). <br />
-                                За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.<br />
-                                <sup>2</sup> Необходимо настроить автозапуск control.php</p>
+                            <hr>
+                            <ol class="footnote">
+                                <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
+                                    Запуск алгоритмов должен быть настроен самостоятельно (cron/планировщик windows). <br />
+                                    За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
+                                <li>Необходимо настроить автозапуск control.php</li>
+                            </ol>
                         </div>
                     </div>
                 </form>

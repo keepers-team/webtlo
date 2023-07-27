@@ -499,11 +499,18 @@ li.menu.ui-tabs-active {
 	margin: 5px 0;
 }
 
+.scriptname {
+	font-family: Consolas;
+	font-size: 11px;
+}
+
 .footnote {
-	font-size: small;
-	margin: 15px 0 0 0;
-	padding: 5px 0 0 0;
-	border-top: 1px solid #000;
+	padding: 5px 0 0 16px;
+	list-style: decimal;
+}
+
+.footnote > li {
+	font-size: 12px;
 }
 
 /* reports */
