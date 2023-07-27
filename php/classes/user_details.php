@@ -10,6 +10,7 @@ class UserDetails
     public static $uid;
     public static $cookie;
     public static $captcha;
+    public static $captcha_path;
     public static $forum_url;
     public static $form_token;
 
@@ -88,19 +89,18 @@ class UserDetails
                         unset($html);
                         if (!empty($captcha)) {
                             $captcha = pq($captcha);
-                            $captcha_img = $captcha->find('img')->attr('src');
-                            $captcha_img = str_replace('https', 'http', $captcha_img);
-                            $captcha_img = file_get_contents($captcha_img);
-                            file_put_contents(
-                                dirname(__FILE__) . '/../../data/captcha.jpg',
-                                $captcha_img
-                            );
+                            $sourcePath = $captcha->find('img')->attr('src');
+                            if (!self::get_captcha($sourcePath)) {
+                                throw new Exception('Error: Не удалось получить изображение капчи, ' . $sourcePath);
+                            }
+                            self::$captcha_path = $sourcePath;
                             foreach ($captcha->find('input') as $input) {
                                 $input = pq($input);
                                 self::$captcha[] = $input->attr('name');
                                 self::$captcha[] = $input->val();
                             }
                         }
+                        unset($captcha);
                         Log::append('Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.');
                         phpQuery::unloadDocuments();
                     }
@@ -155,5 +155,33 @@ class UserDetails
         }
 
         self::$form_token = $form_token[1];
+    }
+
+    public static function get_captcha($url)
+    {
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CONNECTTIMEOUT => 2,
+        ]);
+        $sourceData = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$sourceData || !strlen($sourceData)) {
+            return false;
+        }
+        $targetPath = dirname(__FILE__) . '/../../data/captcha.jpg';
+
+        $targetData = file_put_contents($targetPath, $sourceData);
+        if ($targetData === false) {
+            throw new Exception('Error: Не удалось сохранить изображение капчи');
+        }
+
+        return true;
     }
 }

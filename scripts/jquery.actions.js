@@ -211,7 +211,7 @@ $(document).ready(function () {
 						'Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
 						'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br /><br />' +
 						'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
-						'<div><img src="data/captcha.jpg?' + new Date().valueOf() + '" /></div>' +
+						'<div><img src="' + response.captcha_path + '" /></div>' +
 						'<input id="cap_code" size="27" />');
 					$("#dialog").dialog("open");
 				} else {
