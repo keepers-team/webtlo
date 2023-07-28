@@ -84,7 +84,8 @@ class TIniFileEx
         if ($r == false) {
             return false;
         }
-        return $wRes;    }
+        return $wRes;
+    }
 
     public static function updateFile()
     {
