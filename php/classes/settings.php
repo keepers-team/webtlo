@@ -74,7 +74,17 @@ class TIniFileEx
             }
             $result .= _BR_;
         }
-        return file_put_contents(self::$filename, $result);
+
+        // Write config file atomically
+        $wRes = file_put_contents(self::$filename .".tmp", $result, LOCK_EX);
+        if ($wRes === false) {
+            return $wRes;
+        }
+        $r = rename(self::$filename . ".tmp", self::$filename);
+        if ($r == false) {
+            return false;
+        }
+        return $wRes;
     }
 
     public static function updateFile()
