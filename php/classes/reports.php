@@ -418,9 +418,9 @@ class Reports
 
                     $nickname = $row->find('p.nick > a')->text();
                     $keepers[$index] = [
-                        'post_id' => $link_data->p,
-                        'user_id' => $link_data->u,
-                        'nickname' => $nickname,
+                        'post_id'  => $link_data->p,
+                        'user_id'  => $link_data->u,
+                        'nickname' => htmlspecialchars($nickname),
                     ];
                     unset($link_data);
 
