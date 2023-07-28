@@ -719,7 +719,7 @@ try {
                 $formatKeeperList = '<i class="fa fa-%1$s text-%2$s" title="%4$s"></i> <i class="keeper bold text-%2$s" title="%4$s">%3$s</i>';
                 $keepers_list = array_map(function ($e) use ($formatKeeperList, $user_id) {
                     if ($e['complete'] == 1) {
-                        if ($e['posted'] === null) {
+                        if ($e['posted'] === 0) {
                             $stateKeeperIcon = 'arrow-circle-up';
                         } else {
                             $stateKeeperIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
