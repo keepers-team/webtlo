@@ -648,7 +648,7 @@ function automation_checkbox($cfg, $option)
                             <div>
                                 <label>
                                     Подраздел:
-                                    <select name="list-forums" id="list-forums">
+                                    <select name="list-forums" id="list-forums" class="ignore-save-change">
                                         <?php echo $optionForumsDataset ?>
                                     </select>
                                 </label>

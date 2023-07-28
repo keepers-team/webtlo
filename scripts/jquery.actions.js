@@ -77,7 +77,7 @@ $(document).ready(function () {
 		});
 
 	// Проверяем, что настройки были изменены
-	$("form#config :input").on("change selectmenuchange spinstop", function () {
+	$("form#config :input").not(".ignore-save-change").on("change selectmenuchange spinstop", function () {
 		savecfg.dataset["unsaved"] = 1;
 		$("#savecfg").change();
 	});
