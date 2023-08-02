@@ -940,9 +940,12 @@ function automation_checkbox($cfg, $option)
                 </div>
             </div>
             <div id="journal" class="content">
-                <div>
+                <div id="toolbar-journal-buttons">
                     <button type="button" id="clear_log" title="Очистить содержимое лога">
                         Очистить лог
+                    </button>
+                    <button type="button" id="refresh_log" title="Обновить лог">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div id="log_tabs" class="menu">

@@ -603,10 +603,12 @@ li.menu.ui-tabs-active {
 	height: calc(100% - 2px);
 }
 
-#clear_log {
+#toolbar-journal-buttons  {
 	margin: 0 0 10px 15px;
-	padding: .3em .7em;
 	font-size: 85%;
+}
+#toolbar-journal-buttons .ui-button {
+	padding: .3em .7em;
 }
 
 #log_tabs {

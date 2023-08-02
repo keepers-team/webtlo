@@ -306,8 +306,8 @@ $(document).ready(function () {
 
 	// очистка лога
 	$("#clear_log").on("click", function () {
-
-		var log_file = $("#log_tabs .ui-tabs-panel:visible").prop("id").replace(/log_?/, '');
+		// active log tab
+		let log_file = $("#log_tabs .ui-tabs-panel:visible").prop("id").replace(/log_?/, '');
 		if (!log_file) {
 			$("#log").text("");
 			return;
@@ -332,33 +332,45 @@ $(document).ready(function () {
 	// чтение лога из файла
 	$("#log_tabs").on("tabsactivate", function (event, ui) {
 		// current tab
-		var element_new = $(ui.newTab).children("a");
-		var name_new = $(element_new).text();
+		let element_new = $(ui.newTab).children("a");
+		let name_new = $(element_new).text();
 		if (!element_new.hasClass("log_file")) {
 			return false;
 		}
 		// previous tab
-		var element_old = $(ui.oldTab).children("a");
-		var name_old = $(element_old).text();
+		let element_old = $(ui.oldTab).children("a");
+		let name_old = $(element_old).text();
 		if (element_old.hasClass("log_file")) {
 			$("#log_" + name_old).text("");
 		}
+		get_log_content(name_new);;
+	});
+
+	$("#refresh_log").on("click", function () {
+		// active log tab
+		let log_file = $("#log_tabs .ui-tabs-panel:visible").prop("id").replace(/log_?/, '');
+		get_log_content(log_file);
+	});
+
+	function get_log_content(log_name)
+	{
+		if (!log_name) return;
 		// request
 		$.ajax({
 			type: "POST",
 			url: "php/actions/get_log_content.php",
 			data: {
-				log_file: name_new
+				log_file: log_name
 			},
 			success: function (response) {
 				if (typeof response !== "undefined") {
-					$("#log_" + name_new).html(response);
+					$("#log_" + log_name).html(response);
 				}
 			},
 			beforeSend: function () {
-				$("#log_" + name_new).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
+				$("#log_" + log_name).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
 			}
 		});
-	});
+	}
 
 });

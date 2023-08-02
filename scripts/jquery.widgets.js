@@ -60,6 +60,8 @@ $(document).ready(function () {
     $("#toolbar-select-topics").buttonset();
     $("#toolbar-control-topics").buttonset();
     $("#toolbar-filter-topics").buttonset();
+    $("#toolbar-journal-buttons").buttonset();
+
     $("#log_tabs").tabs();
     $("#tor_download_options").selectmenu({
         classes: {
