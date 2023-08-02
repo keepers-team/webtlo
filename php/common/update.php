@@ -40,7 +40,7 @@ Db::query_database(
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds,pt,ls FROM Topics WHERE 0 = 1"
+    SELECT id,ss,se,st,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
 );
 Db::query_database(
     "CREATE TEMP TABLE TopicsRenew AS
@@ -120,7 +120,8 @@ if (isset($cfg['subsections'])) {
             $dbTopicsKeepers = [];
             $db_topics_renew = $db_topics_update = [];
             // разбираем раздачи
-            // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, keeping_priority, keepers, seeder_last_seen, info_hash )
+            // topic_id => [tor_status, seeders, reg_time, tor_size_bytes, keeping_priority,
+            //              keepers, seeder_last_seen, info_hash, topic_poster]
             foreach ($topics_result as $topic_id => $topic_raw) {
                 if (empty($topic_raw)) {
                     continue;
@@ -179,7 +180,7 @@ if (isset($cfg['subsections'])) {
                         'qt' => $sum_updates,
                         'ds' => $days_update,
                         'pt' => $topic_data['keeping_priority'],
-                        'ps' => 0,
+                        'ps' => $topic_data['topic_poster'],
                         'ls' => $topic_data['seeder_last_seen'],
                     ];
                     if (!empty($topic_data['keepers'])) {
@@ -210,6 +211,7 @@ if (isset($cfg['subsections'])) {
                     'qt' => $sum_updates,
                     'ds' => $days_update,
                     'pt' => $topic_data['keeping_priority'],
+                    'ps' => $topic_data['topic_poster'],
                     'ls' => $topic_data['seeder_last_seen'],
                 ];
                 if (!empty($topic_data['keepers'])) {
@@ -260,7 +262,6 @@ if (isset($cfg['subsections'])) {
                     }
                     if (isset($db_topics_renew[$topic_id])) {
                         $db_topics_renew[$topic_id]['na'] = $topic_data['topic_title'];
-                        $db_topics_renew[$topic_id]['ps'] = $topic_data['poster_id'];
                     }
                 }
                 unset($topics_data);
@@ -324,7 +325,7 @@ if ($countKeepersSeeders > 0) {
 if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // переносим данные в основную таблицу
     Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt,ls)
+        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt,ps,ls)
         SELECT * FROM temp.TopicsUpdate"
     );
     Db::query_database(
