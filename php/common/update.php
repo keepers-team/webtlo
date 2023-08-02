@@ -3,6 +3,8 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\Module\CloneTable;
+
 Timers::start('full_update');
 
 // обновляем дерево подразделов
@@ -33,31 +35,37 @@ if (!isset($api)) {
 
 Timers::start('topics_update');
 Log::append("Начато обновление сведений о раздачах в хранимых подразделах...");
-// создаём временные таблицы
-Db::query_database(
-    "CREATE TEMP TABLE UpdateTimeNow AS
-    SELECT id,ud FROM UpdateTime WHERE 0 = 1"
-);
-Db::query_database(
-    "CREATE TEMP TABLE TopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
-);
-Db::query_database(
-    "CREATE TEMP TABLE TopicsRenew AS
-    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
-);
 
-Db::query_database(
-    "CREATE TEMP TABLE KeepersSeedersNew AS
-    SELECT * FROM KeepersSeeders WHERE 0 = 1"
+// Параметры таблиц.
+$tabTime = CloneTable::create('UpdateTime');
+// Обновляемые раздачи.
+$tabTopicsUpdate = CloneTable::create(
+    'Topics',
+    ['id', 'ss', 'se', 'st', 'qt', 'ds', 'pt', 'ps', 'ls'],
+    'id',
+    'Update'
 );
+// Новые раздачи.
+$tabTopicsRenew = CloneTable::create(
+    'Topics',
+    ['id','ss','na','hs','se','si','st','rg','qt','ds','pt','ps','ls'],
+    'id',
+    'Renew'
+);
+// Сиды-Хранители раздач.
+$tabKeepers = CloneTable::create('KeepersSeeders', [], 'topic_id');
+
 
 // время текущего и предыдущего обновления
 $currentUpdateTime  = new DateTime();
 $previousUpdateTime = new DateTime();
 
 $forumsUpdateTime = [];
+$noUpdateForums   = [];
 if (isset($cfg['subsections'])) {
+    $subsections = array_keys($cfg['subsections']);
+    sort($subsections);
+
     // все открытые раздачи
     $allowedTorrentStatuses = [0, 2, 3, 8, 10];
     // получим список всех хранителей
@@ -65,13 +73,13 @@ if (isset($cfg['subsections'])) {
     $keepersUserData = $keepersUserData['result'] ?? [];
 
     // обновим каждый хранимый подраздел
-    foreach ($cfg['subsections'] as $forum_id => $subsection) {
+    foreach ($subsections as $forum_id) {
         // получаем дату предыдущего обновления
         $update_time = get_last_update_time($forum_id);
 
         // если не прошёл час
         if (time() - $update_time < 3600) {
-            Log::append("Notice: Не требуется обновление для подраздела № " . $forum_id);
+            $noUpdateForums[] = $forum_id;
             continue;
         }
 
@@ -236,13 +244,8 @@ if (isset($cfg['subsections'])) {
                 }
 
                 // обновление данных в базе о сидах-хранителях
-                $dbTopicsKeepersChunks = array_chunk($dbTopicsKeepers, 250);
-                foreach ($dbTopicsKeepersChunks as $dbTopicsKeepersChunk) {
-                    $select = Db::combine_set($dbTopicsKeepersChunk, 'topic_id');
-                    Db::query_database("INSERT INTO temp.KeepersSeedersNew (topic_id, keeper_id, keeper_name) $select");
-                    unset($dbTopicsKeepersChunk, $select);
-                }
-                unset($topicsKeepersFromForum, $dbTopicsKeepersChunks);
+                $tabKeepers->cloneFillChunk($dbTopicsKeepers, 250);
+                unset($dbTopicsKeepers);
             }
 
             unset($topics_data_previous);
@@ -250,7 +253,6 @@ if (isset($cfg['subsections'])) {
             // вставка данных в базу о новых раздачах
             if (count($db_topics_renew)) {
                 $topics_renew_ids = array_keys($db_topics_renew);
-                $in = str_repeat('?,', count($topics_renew_ids) - 1) . '?';
                 $topics_data = $api->getTorrentTopicData($topics_renew_ids);
                 unset($topics_renew_ids);
                 if (empty($topics_data)) {
@@ -266,19 +268,15 @@ if (isset($cfg['subsections'])) {
                 }
                 unset($topics_data);
 
-                $select = Db::combine_set($db_topics_renew);
-                Db::query_database("INSERT INTO temp.TopicsRenew $select");
-
-                unset($db_topics_renew, $select);
+                $tabTopicsRenew->cloneFill($db_topics_renew);
+                unset($db_topics_renew);
             }
             unset($db_topics_renew);
 
             // обновление данных в базе о существующих раздачах
             if (count($db_topics_update)) {
-                $select = Db::combine_set($db_topics_update);
-                Db::query_database("INSERT INTO temp.TopicsUpdate $select");
-
-                unset($db_topics_update, $select);
+                $tabTopicsUpdate->cloneFill($db_topics_update);
+                unset($db_topics_update);
             }
         }
 
@@ -289,6 +287,13 @@ if (isset($cfg['subsections'])) {
             $topics_count
         ));
     }
+}
+
+if (count($noUpdateForums)) {
+    Log::append(sprintf(
+        'Notice: Обновление списков раздач не требуется для подразделов №№ %s.',
+        implode(',', $noUpdateForums)
+    ));
 }
 
 // удаляем перерегистрированные раздачи
@@ -305,54 +310,42 @@ if (isset($topics_delete)) {
     unset($topics_delete, $topics_delete_chunk);
 }
 
-$countKeepersSeeders = Db::query_count('SELECT COUNT() FROM temp.KeepersSeedersNew');
-$countTopicsUpdate   = Db::query_count('SELECT COUNT() FROM temp.TopicsUpdate');
-$countTopicsRenew    = Db::query_count('SELECT COUNT() FROM temp.TopicsRenew');
-
-if ($countKeepersSeeders > 0) {
+if ($tabKeepers->cloneCount() > 0) {
     Log::append("Запись в базу данных списка сидов-хранителей...");
-    Db::query_database("INSERT INTO KeepersSeeders SELECT * FROM temp.KeepersSeedersNew");
+    $tabKeepers->moveToOrigin();
+
+    // Удалить ненужные записи.
     Db::query_database(
-        "DELETE FROM KeepersSeeders WHERE topic_id || keeper_id NOT IN (
+        "DELETE FROM $tabKeepers->origin WHERE topic_id || keeper_id NOT IN (
             SELECT ks.topic_id || ks.keeper_id
-            FROM temp.KeepersSeedersNew tmp
-            LEFT JOIN KeepersSeeders ks ON tmp.topic_id = ks.topic_id AND tmp.keeper_id = ks.keeper_id
+            FROM $tabKeepers->clone tmp
+            LEFT JOIN $tabKeepers->origin ks ON tmp.topic_id = ks.topic_id AND tmp.keeper_id = ks.keeper_id
             WHERE ks.topic_id IS NOT NULL
         )"
     );
 }
 
+$countTopicsUpdate = $tabTopicsUpdate->cloneCount();
+$countTopicsRenew  = $tabTopicsRenew->cloneCount();
 if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // переносим данные в основную таблицу
-    Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt,ps,ls)
-        SELECT * FROM temp.TopicsUpdate"
-    );
-    Db::query_database(
-        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls)
-        SELECT * FROM temp.TopicsRenew"
-    );
+    $tabTopicsUpdate->moveToOrigin();
+    $tabTopicsRenew->moveToOrigin();
+
     $forums_ids = array_keys($forumsUpdateTime);
     $in = implode(',', $forums_ids);
+    // TODO высокий приоритет.
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
             SELECT Topics.id FROM Topics
-            LEFT JOIN temp.TopicsUpdate ON Topics.id = temp.TopicsUpdate.id
-            LEFT JOIN temp.TopicsRenew ON Topics.id = temp.TopicsRenew.id
-            WHERE temp.TopicsUpdate.id IS NULL AND temp.TopicsRenew.id IS NULL AND Topics.ss IN ($in) AND Topics.pt <> 2
+            LEFT JOIN $tabTopicsUpdate->clone tpu ON Topics.id = tpu.id
+            LEFT JOIN $tabTopicsRenew->clone tpr ON Topics.id = tpr.id
+            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.ss IN ($in) AND Topics.pt <> 2
         )"
     );
     // время последнего обновления для каждого подраздела
-    $forums_update_chunk = array_chunk($forumsUpdateTime, 500, true);
-    foreach ($forums_update_chunk as $forums_update_part) {
-        $select = Db::combine_set($forums_update_part);
-        Db::query_database("INSERT INTO temp.UpdateTimeNow $select");
-        unset($select);
-    }
-    Db::query_database(
-        "INSERT INTO UpdateTime (id,ud)
-        SELECT id,ud FROM temp.UpdateTimeNow"
-    );
+    $tabTime->cloneFillChunk($forumsUpdateTime);
+    $tabTime->moveToOrigin();
     // Записываем время обновления.
     set_last_update_time(7777);
 
