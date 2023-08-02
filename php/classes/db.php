@@ -59,12 +59,13 @@ class Db
     /**
      * Создать временную таблицу как копию существующей.
      */
-    public static function temp_copy_table(string $table, string $prefix = 'New'): string
+    public static function temp_copy_table(string $table, array $keys = [], string $prefix = 'New'): string
     {
         $copyTable = $prefix . $table;
         $tempTable = "temp.$copyTable";
+        $tempKeys  = count($keys) ? implode(',', $keys) : '*';
 
-        $sql = "CREATE TEMP TABLE $copyTable AS SELECT * FROM $table WHERE 0 = 1";
+        $sql = "CREATE TEMP TABLE $copyTable AS SELECT $tempKeys FROM $table WHERE 0 = 1";
         self::query_database($sql);
 
         return $tempTable;
@@ -77,7 +78,7 @@ class Db
     {
         $tempTable = "temp.$table";
 
-        $sql = sprintf('CREATE TEMP TABLE %s %s', $table, implode(',', $keys));
+        $sql = sprintf('CREATE TEMP TABLE %s (%s)', $table, implode(',', $keys));
         self::query_database($sql);
 
         return $tempTable;
@@ -101,8 +102,16 @@ class Db
      */
     public static function table_insert_temp(string $table, string $tempTable, array $keys = []): void
     {
-        $keys = count($keys) ? sprintf('(%s)', implode(',', $keys)) : '*';
-        self::query_database("INSERT INTO $table SELECT $keys FROM $tempTable");
+        $insKeys = '';
+        $selKeys = '*';
+
+        if (count($keys)) {
+            $selKeys = implode(',', $keys);
+            $insKeys = sprintf('(%s)',$selKeys);
+        }
+
+        $sql  = "INSERT INTO $table $insKeys SELECT $selKeys FROM $tempTable";
+        self::query_database($sql);
     }
 
     // https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
