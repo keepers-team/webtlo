@@ -60,7 +60,7 @@ class TIniFileEx
     public static function writeFile()
     {
         if (empty(self::$wcfg)) {
-            return;
+            return false;
         }
         if (!isset(self::$rcfg)) {
             self::loadFromFile();
@@ -78,10 +78,10 @@ class TIniFileEx
         // Write config file atomically
         $wRes = file_put_contents(self::$filename .".tmp", $result, LOCK_EX);
         if ($wRes === false) {
-            return $wRes;
+            return false;
         }
         $r = rename(self::$filename . ".tmp", self::$filename);
-        if ($r == false) {
+        if ($r === false) {
             return false;
         }
         return $wRes;
