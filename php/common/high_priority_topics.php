@@ -5,6 +5,7 @@ include_once dirname(__FILE__) . '/../classes/api.php';
 
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\DTO\KeysObject;
 
 Timers::start('hp_topics');
 /** Ид подраздела обновления высокоприоритетных раздач */
@@ -69,9 +70,18 @@ $previousUpdateTime->setTimestamp($updateTime)->setTime(0, 0);
 $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
 
 $topicsKeys = $topicsHighPriorityData['format']['topic_id'];
+$flipKeys   = array_flip($topicsKeys);
 
-// разбиваем result по 500 раздач
-$topicsHighPriority = array_chunk($topicsHighPriorityData['result'], 500, true);
+// Хранимые подразделы.
+$subsections = array_keys($cfg['subsections'] ?? []);
+
+// Убираем раздачи, из разделов, которые храним.
+$topicsHighPriority = array_filter($topicsHighPriorityData['result'], function($el) use ($flipKeys, $subsections) {
+    return !in_array($el[$flipKeys['forum_id']], $subsections);
+});
+
+// Разбиваем список раздач по 500 шт.
+$topicsHighPriority = array_chunk($topicsHighPriority, 500, true);
 
 unset($topicsHighPriorityData);
 
@@ -222,13 +232,18 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     $tabHighUpdate->moveToOrigin();
     $tabHighRenew->moveToOrigin();
 
+    // Удалим раздачи с высоким приоритетом, которых нет во временных таблицах за исключением хранимых подразделов.
+    $exclude = KeysObject::create($subsections);
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
             SELECT Topics.id FROM Topics
             LEFT JOIN $tabHighUpdate->clone AS thu ON Topics.id = thu.id
             LEFT JOIN $tabHighRenew->clone  AS thr ON Topics.id = thr.id
-            WHERE thu.id IS NULL AND thr.id IS NULL AND Topics.pt = 2
-        )"
+            WHERE thu.id IS NULL AND thr.id IS NULL
+                AND Topics.pt = 2
+                AND Topics.ss NOT IN ($exclude->keys)
+        )",
+        $exclude->values
     );
     // Записываем время обновления.
     set_last_update_time(HIGH_PRIORITY_UPDATE, $topicsHighPriorityUpdateTime);
