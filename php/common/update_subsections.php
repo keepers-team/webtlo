@@ -5,6 +5,7 @@ include_once dirname(__FILE__) . '/../classes/api.php';
 
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\DTO\KeysObject;
 
 // получение настроек
 if (!isset($cfg)) {
@@ -105,15 +106,14 @@ if (isset($cfg['subsections'])) {
 
         foreach ($topics_chunks as $topics_result) {
             // получаем данные о раздачах за предыдущее обновление
-            $topics_ids = array_keys($topics_result);
-            $in = str_repeat('?,', count($topics_ids) - 1) . '?';
+            $selectTopics = KeysObject::create(array_keys($topics_result));
             $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($in)",
-                $topics_ids,
+                "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($selectTopics->keys)",
+                $selectTopics->values,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
             );
-            unset($topics_ids);
+            unset($selectTopics);
 
             $topicsKeepersFromForum = [];
             $dbTopicsKeepers = [];
@@ -133,10 +133,7 @@ if (isset($cfg['subsections'])) {
                 unset($topic_raw);
 
                 // Пропускаем раздачи в невалидных статусах. Или с высоким приоритетом.
-                if (
-                    !in_array($topic_data['tor_status'], Topics::VALID_STATUSES)
-                    || $topic_data['keeping_priority'] == 2
-                ) {
+                if (!in_array($topic_data['tor_status'], Topics::VALID_STATUSES)) {
                     continue;
                 }
 
@@ -290,15 +287,8 @@ if (count($noUpdateForums)) {
 // удаляем перерегистрированные раздачи
 // чтобы очистить значения сидов для старой раздачи
 if (isset($topics_delete)) {
-    $topics_delete_chunk = array_chunk($topics_delete, 500);
-    foreach ($topics_delete_chunk as $topics_delete) {
-        $in = str_repeat('?,', count($topics_delete) - 1) . '?';
-        Db::query_database(
-            "DELETE FROM Topics WHERE id IN ($in)",
-            $topics_delete
-        );
-    }
-    unset($topics_delete, $topics_delete_chunk);
+    Topics::deleteTopicsByIds($topics_delete);
+    unset($topics_delete);
 }
 
 if ($tabKeepers->cloneCount() > 0) {
@@ -325,13 +315,12 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
 
     $forums_ids = array_keys($forumsUpdateTime);
     $in = implode(',', $forums_ids);
-    // TODO высокий приоритет.
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
             SELECT Topics.id FROM Topics
             LEFT JOIN $tabTopicsUpdate->clone tpu ON Topics.id = tpu.id
             LEFT JOIN $tabTopicsRenew->clone tpr ON Topics.id = tpr.id
-            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.ss IN ($in) AND Topics.pt <> 2
+            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.ss IN ($in)
         )"
     );
     // время последнего обновления для каждого подраздела
