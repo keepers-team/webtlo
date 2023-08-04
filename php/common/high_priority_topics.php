@@ -3,14 +3,17 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\Topics;
+
 Timers::start('hp_topics');
 /** Ид подраздела обновления высокоприоритетных раздач */
 const HIGH_PRIORITY_UPDATE = 9999;
 
 // получаем дату предыдущего обновления
 $updateTime = get_last_update_time(HIGH_PRIORITY_UPDATE);
-// если не прошёл час
-if (time() - $updateTime < 3600) {
+// если не прошло два часа
+if (time() - $updateTime < 7200) {
     Log::append("Notice: Не требуется обновление списка высокоприоритетных раздач");
     return;
 }
@@ -34,18 +37,22 @@ if (empty($topicsHighPriorityData['result'])) {
     return;
 }
 
-// создаём временные таблицы
-Db::query_database(
-    "CREATE TEMP TABLE HighTopicsUpdate AS
-    SELECT id,ss,se,st,qt,ds,pt FROM Topics WHERE 0 = 1"
+// Обновляемые раздачи.
+$tabHighUpdate = CloneTable::create(
+    'Topics',
+    ['id','ss','se','st','qt','ds','pt','ps'],
+    'id',
+    'HighUpdate'
 );
-Db::query_database(
-    "CREATE TEMP TABLE HighTopicsRenew AS
-    SELECT id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls FROM Topics WHERE 0 = 1"
+// Новые раздачи.
+$tabHighRenew = CloneTable::create(
+    'Topics',
+    ['id','ss','na','hs','se','si','st','rg','qt','ds','pt','ps','ls'],
+    'id',
+    'HighRenew'
 );
 
-// все открытые раздачи
-$allowedTorrentStatuses = [0, 2, 3, 8, 10];
+
 // время текущего и предыдущего обновления
 $currentUpdateTime  = new DateTime();
 $previousUpdateTime = new DateTime();
@@ -60,14 +67,16 @@ $currentUpdateTime->setTimestamp($topicsHighPriorityData['update_time']);
 $previousUpdateTime->setTimestamp($updateTime)->setTime(0, 0);
 // разница в днях между обновлениями сведений
 $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
-// разбиваем result по 500 раздач
-$topicsHighPriorityResultChunk = array_chunk($topicsHighPriorityData['result'], 500, true);
 
 $topicsKeys = $topicsHighPriorityData['format']['topic_id'];
+
+// разбиваем result по 500 раздач
+$topicsHighPriority = array_chunk($topicsHighPriorityData['result'], 500, true);
+
 unset($topicsHighPriorityData);
 
 // проходим по всем раздачам
-foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
+foreach ($topicsHighPriority as $topicsHighPriorityResult) {
     // получаем данные о раздачах за предыдущее обновление
     $topicsIDs = array_keys($topicsHighPriorityResult);
     $in = str_repeat('?,', count($topicsIDs) - 1) . '?';
@@ -89,7 +98,7 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
             throw new Exception("Error: Недостаточно элементов в ответе");
         }
         $topicData = array_combine($topicsKeys, $topicRaw);
-        if (!in_array($topicData['tor_status'], $allowedTorrentStatuses)) {
+        if (!in_array($topicData['tor_status'], Topics::VALID_STATUSES)) {
             continue;
         }
 
@@ -136,6 +145,7 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
             unset($previousTopicData);
             continue;
         }
+
         // алгоритм нахождения среднего значения сидов
         if ($cfg['avg_seeders']) {
             $daysUpdate = $previousTopicData['ds'];
@@ -147,7 +157,6 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
                 $sumSeeders += $previousTopicData['se'];
             }
         }
-        unset($previousTopicData);
 
         $insertTopicsUpdate[$topicID] = [
             'id' => $topicID,
@@ -157,9 +166,11 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
             'qt' => $sumUpdates,
             'ds' => $daysUpdate,
             'pt' => 2,
+            'ps' => $previousTopicData['ps'],
         ];
+        unset($previousTopicData);
     }
-    unset($previousTopicsData);
+    unset($previousTopicsData, $topicsHighPriorityResult);
 
     // вставка данных в базу о новых раздачах
     if (isset($insertTopicsRenew)) {
@@ -183,56 +194,40 @@ foreach ($topicsHighPriorityResultChunk as $topicsHighPriorityResult) {
             }
         }
         unset($topicsHighPriorityData);
-        $select = Db::combine_set($insertTopicsRenew);
+
+        $tabHighRenew->cloneFill($insertTopicsRenew);
         unset($insertTopicsRenew);
-        Db::query_database("INSERT INTO temp.HighTopicsRenew $select");
-        unset($insertTopicsRenew, $select);
     }
 
     // обновление данных в базе о существующих раздачах
     if (isset($insertTopicsUpdate)) {
-        $select = Db::combine_set($insertTopicsUpdate);
+        $tabHighUpdate->cloneFill($insertTopicsUpdate);
         unset($insertTopicsUpdate);
-        Db::query_database("INSERT INTO temp.HighTopicsUpdate $select");
-        unset($select);
     }
     unset($insertTopicsUpdate);
 }
-unset($topicsHighPriorityResult);
+unset($topicsHighPriority);
 
 // удаляем перерегистрированные раздачи
 // чтобы очистить значения сидов для старой раздачи
 if (isset($topicsDelete)) {
-    $topicsDeleteChunk = array_chunk($topicsDelete, 500);
-    foreach ($topicsDeleteChunk as $topicsDeletePart) {
-        $in = str_repeat('?,', count($topicsDeletePart) - 1) . '?';
-        Db::query_database(
-            "DELETE FROM Topics WHERE id IN ($in)",
-            $topicsDeletePart
-        );
-        unset($topicsDeletePart, $im);
-    }
-    unset($topicsDelete, $topicsDeleteChunk);
+    Topics::deleteTopicsByIds($topicsDelete);
+    unset($topicsDelete);
 }
 
-$countTopicsUpdate = Db::query_count('SELECT COUNT() FROM temp.HighTopicsUpdate');
-$countTopicsRenew  = Db::query_count('SELECT COUNT() FROM temp.HighTopicsRenew');
+$countTopicsUpdate = $tabHighUpdate->cloneCount();
+$countTopicsRenew  = $tabHighRenew->cloneCount();
 if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // переносим данные в основную таблицу
-    Db::query_database(
-        "INSERT INTO Topics (id,ss,se,st,qt,ds,pt)
-            SELECT * FROM temp.HighTopicsUpdate"
-    );
-    Db::query_database(
-        "INSERT INTO Topics (id,ss,na,hs,se,si,st,rg,qt,ds,pt,ps,ls)
-            SELECT * FROM temp.HighTopicsRenew"
-    );
+    $tabHighUpdate->moveToOrigin();
+    $tabHighRenew->moveToOrigin();
+
     Db::query_database(
         "DELETE FROM Topics WHERE id IN (
             SELECT Topics.id FROM Topics
-            LEFT JOIN temp.HighTopicsUpdate ON Topics.id = temp.HighTopicsUpdate.id
-            LEFT JOIN temp.HighTopicsRenew ON Topics.id = temp.HighTopicsRenew.id
-            WHERE temp.HighTopicsUpdate.id IS NULL AND temp.HighTopicsRenew.id IS NULL AND Topics.pt = 2
+            LEFT JOIN $tabHighUpdate->clone AS thu ON Topics.id = thu.id
+            LEFT JOIN $tabHighRenew->clone  AS thr ON Topics.id = thr.id
+            WHERE thu.id IS NULL AND thr.id IS NULL AND Topics.pt = 2
         )"
     );
     // Записываем время обновления.
