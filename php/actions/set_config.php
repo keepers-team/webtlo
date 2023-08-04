@@ -55,7 +55,7 @@ try {
             }
             if (isset($torrentClientData['exclude'])) {
                 if ($torrentClientData['exclude']) {
-                    $excludeClientsIDs[] = $torrentClientNumber;
+                    $excludeClientsIDs[] = $torrentClientID;
                 }
                 $ini->write($torrentClientSection, 'exclude', $torrentClientData['exclude']);
             }
