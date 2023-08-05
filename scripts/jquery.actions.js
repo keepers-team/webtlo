@@ -346,34 +346,13 @@ $(document).ready(function () {
 		if (element_old.hasClass("log_file")) {
 			$("#log_" + name_old).text("");
 		}
-		get_log_content(name_new);;
+		getLogContent(name_new);;
 	});
 
 	$("#refresh_log").on("click", function () {
 		// active log tab
 		let log_file = $("#log_tabs .ui-tabs-panel:visible").prop("id").replace(/log_?/, '');
-		get_log_content(log_file);
+		getLogContent(log_file);
 	});
-
-	function get_log_content(log_name)
-	{
-		if (!log_name) return;
-		// request
-		$.ajax({
-			type: "POST",
-			url: "php/actions/get_log_content.php",
-			data: {
-				log_file: log_name
-			},
-			success: function (response) {
-				if (typeof response !== "undefined") {
-					$("#log_" + log_name).html(response);
-				}
-			},
-			beforeSend: function () {
-				$("#log_" + log_name).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
-			}
-		});
-	}
 
 });
