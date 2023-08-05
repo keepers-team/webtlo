@@ -3,13 +3,16 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\Module\CloneTable;
+
 Timers::start('forum_tree');
 /** Ид подраздела обновления дерева подразделов  */
 const FORUM_TREE_UPDATE = 8888;
 
+Log::append('Info: Начато обновление дерева подразделов...');
 // Проверяем время последнего обновления.
 if (!check_update_available(FORUM_TREE_UPDATE)) {
-    Log::append('Обновление списка подразделов не требуется.');
+    Log::append('Notice: Обновление дерева подразделов не требуется.');
     return;
 }
 
@@ -83,39 +86,22 @@ foreach ($forum_size['result'] as $forum_id => $values) {
 
 if (isset($forums) && count($forums)) {
     // Параметры таблиц.
-    $FT = (object)[
-        'table'   => 'Forums',
-        'temp'    => Db::temp_copy_table('Forums'),
-    ];
+    $tabForums = CloneTable::create('Forums');
 
     // отправляем в базу данных
-    $forumsChunks = array_chunk($forums, 500, true);
-
-    foreach ($forumsChunks as $forumsParts) {
-        Db::table_insert_dataset($FT->temp, $forumsParts);
-        unset($forumsParts);
-    }
-
-    Log::append("Обновление дерева подразделов...");
+    $tabForums->cloneFillChunk($forums);
 
     // Переносим данные из временной таблицы в основную.
-    Db::table_insert_temp($FT->table, $FT->temp);
+    $tabForums->moveToOrigin();
 
     // Удаляем неактуальные записи.
-    Db::query_database("
-        DELETE FROM $FT->table WHERE id IN (
-            SELECT upd.id
-            FROM $FT->table AS upd
-            LEFT JOIN $FT->temp AS tmp ON upd.id = tmp.id
-            WHERE tmp.id IS NULL
-        )
-    ");
+    $tabForums->clearUnusedRows();
 
     // Записываем время обновления.
     set_last_update_time(FORUM_TREE_UPDATE, $treeUpdateTime);
 
     Log::append(sprintf(
-        'Обновление дерева подразделов завершено за %s, обработано подразделов: %d шт',
+        'Info: Обновление дерева подразделов завершено за %s, обработано подразделов: %d шт',
         Timers::getExecTime('forum_tree'),
         count($forums)
     ));
