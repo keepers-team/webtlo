@@ -25,7 +25,9 @@ $(document).ready(function () {
 	});
 
 	// отправка отчётов
-	$("#send_reports").on("click", function () {
+	$("button.send_reports").on("click", function () {
+		let buttons = $("button.send_reports").toggleDisable(true);
+		let icon = buttons.find("i.fa").toggleClass('fa-paper-plane-o fa-spinner');
 		$.ajax({
 			type: "POST",
 			url: "php/actions/send_reports.php",
@@ -40,6 +42,8 @@ $(document).ready(function () {
 			},
 			complete: function () {
 				block_actions();
+				buttons.toggleDisable(false);
+				icon.toggleClass('fa-paper-plane-o fa-spinner');
 			},
 		});
 	});
