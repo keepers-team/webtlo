@@ -23,23 +23,23 @@ function showResultTopics(text = "") {
 	$("#topics_result").html(text);
 }
 
-var lock_actions = 0;
+let lock_actions = 0;
 
 function block_actions() {
-	if (lock_actions == 0) {
-		$("#topics_control button").addClass("ui-state-disabled").prop("disabled", true);
+	if (lock_actions === 0) {
+		$("#topics_control button").add("button.send_reports").toggleDisable(true);
 		$("#main-subsections, #tor_download_options").selectmenu("disable");
 		$("#loading, #process").show();
 		lock_actions = 1;
 	} else {
-		$("#topics_control button").removeClass("ui-state-disabled").prop("disabled", false);
+		$("#topics_control button").add("button.send_reports").toggleDisable(false);
 		if (
 			$("#main-subsections").val() < 1
 			|| !$("input[name=filter_status]").eq(1).prop("checked")
 		) {
-			$(".tor_add").addClass("ui-state-disabled").prop("disabled", true);
+			$(".tor_add").toggleDisable(true);
 		} else {
-			$(".tor_stop, .tor_remove, .tor_label, .tor_start").addClass("ui-state-disabled").prop("disabled", true);
+			$(".tor_stop, .tor_remove, .tor_label, .tor_start").toggleDisable(true);
 		}
 		$("#main-subsections, #tor_download_options").selectmenu("enable");
 		$("#loading, #process").hide();

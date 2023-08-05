@@ -513,6 +513,17 @@ li.menu.ui-tabs-active {
 	font-size: 12px;
 }
 
+/* toolbars with buttons */
+
+div.toolbar-buttons {
+	margin: 0 0 10px 15px;
+	font-size: 85%;
+}
+
+div.toolbar-buttons > button.ui-button {
+	padding: .3em .7em;
+}
+
 /* reports */
 
 #reports {
@@ -522,12 +533,6 @@ li.menu.ui-tabs-active {
 	flex-direction: column;
 	box-sizing: border-box;
 	height: calc(100% - 2px);
-	font-size: small;
-}
-
-#get_reports {
-	margin: 0 0 10px 15px;
-	padding: .3em .7em;
 }
 
 #reports-content {
@@ -536,10 +541,12 @@ li.menu.ui-tabs-active {
 	/* padding: 0; */
 	flex: 1;
 	overflow-y: auto;
+	font-size: small;
 }
 
 #reports-subsections-button {
 	margin-bottom: 5px;
+	font-size: small;
 }
 
 #reports-subsections-menu * {
@@ -555,12 +562,6 @@ li.menu.ui-tabs-active {
 	flex-direction: column;
 	box-sizing: border-box;
 	height: calc(100% - 2px);
-}
-
-#get_statistics {
-	margin: 0 0 10px 15px;
-	padding: .3em .7em;
-	font-size: 85%;
 }
 
 #data_statistics {
@@ -601,14 +602,6 @@ li.menu.ui-tabs-active {
 	flex-direction: column;
 	box-sizing: border-box;
 	height: calc(100% - 2px);
-}
-
-#toolbar-journal-buttons  {
-	margin: 0 0 10px 15px;
-	font-size: 85%;
-}
-#toolbar-journal-buttons .ui-button {
-	padding: .3em .7em;
 }
 
 #log_tabs {

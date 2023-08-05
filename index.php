@@ -269,7 +269,7 @@ function cfg_checkbox($cfg): Closure
                         <button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
                             <i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
                         </button>
-                        <button id="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
+                        <button class="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
                             <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                         </button>
                         <button id="control_torrents" name="control_torrents" type="button" title="Выполнить регулировку раздач в торрент-клиентах">
@@ -900,9 +900,12 @@ function cfg_checkbox($cfg): Closure
                 </form>
             </div>
             <div id="reports" class="content">
-                <div>
+                <div id="toolbar-reports-buttons" class="toolbar-buttons">
                     <button type="button" disabled id="get_reports" title="Повторить построение выбранного отчёта">
-                        Обновить отчёт
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="send_reports" name="send_reports" title="Отправить отчёты на форум">
+                        <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                     </button>
                 </div>
                 <select id="reports-subsections">
@@ -919,7 +922,7 @@ function cfg_checkbox($cfg): Closure
                 <div id="reports-content"></div>
             </div>
             <div id="statistics" class="content">
-                <div>
+                <div class="toolbar-buttons">
                     <button type="button" id="get_statistics" title="Получить статистику по хранимым подразделам">
                         Отобразить статистику
                     </button>
@@ -951,12 +954,13 @@ function cfg_checkbox($cfg): Closure
                 </div>
             </div>
             <div id="journal" class="content">
-                <div id="toolbar-journal-buttons">
-                    <button type="button" id="clear_log" title="Очистить содержимое лога">
-                        Очистить лог
-                    </button>
+                <div id="toolbar-journal-buttons" class="toolbar-buttons">
                     <button type="button" id="refresh_log" title="Обновить лог">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" id="clear_log" title="Очистить содержимое лога">
+                        <i class="fa fa-trash-can" aria-hidden="true"></i>
+                        Очистить лог
                     </button>
                 </div>
                 <div id="log_tabs" class="menu">
