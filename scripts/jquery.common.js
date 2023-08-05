@@ -154,6 +154,27 @@ function checkSaveSettings() {
 	$("#dialog").dialog("open");
 }
 
+/** Получить содержимое лог-файла */
+function getLogContent(log_name) {
+	if (!log_name) return;
+	// request
+	$.ajax({
+		type: "POST",
+		url: "php/actions/get_log_content.php",
+		data: {
+			log_file: log_name
+		},
+		success: function (response) {
+			if (typeof response !== "undefined") {
+				$("#log_" + log_name).html(response);
+			}
+		},
+		beforeSend: function () {
+			$("#log_" + log_name).html("<i class=\"fa fa-spinner fa-pulse\"></i>");
+		}
+	});
+}
+
 // получение отчётов
 function getReport() {
 	var forum_id = $("#reports-subsections").val();
