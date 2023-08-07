@@ -37,6 +37,16 @@ abstract class TorrentClient
     protected $password;
 
     /**
+     * Домен, по которому определять ид раздачи.
+     */
+    protected string $defaultDomain = 'rutracker';
+
+    /**
+     * Домен, по которому определять ид раздачи.
+     */
+    protected ?string $customDomain = null;
+
+    /**
      * @var string Session ID, полученный от торрент-клиента
      */
     protected $sid;
@@ -81,6 +91,29 @@ abstract class TorrentClient
     public function setUserConnectionOptions($options)
     {
         curl_setopt_array($this->ch, $options);
+    }
+
+    /** Установка кастомного докена трекера. */
+    public function setDomain(?string $domain): void
+    {
+        $this->customDomain = $domain;
+    }
+
+    /** Получить ид раздачи из комментария. */
+    function getTorrentTopicId(string $comment): ?int
+    {
+        if (empty($comment)) {
+            return null;
+        }
+
+        // если комментарий содержит подходящий домен
+        $isCustom = null !== $this->customDomain && str_contains($comment, $this->customDomain);
+        if ($isCustom || str_contains($comment, $this->defaultDomain)) {
+            $topicID = preg_replace('/.*?([0-9]*)$/', '$1', $comment);
+            $topicID = (int)$topicID;
+        }
+
+        return $topicID ?? null;
     }
 
     /**
