@@ -155,20 +155,22 @@ class Deluge extends TorrentClient
         }
         $torrents = [];
         foreach ($response as $torrentHash => $torrent) {
-            $torrentHash = strtoupper($torrentHash);
+            $torrentHash   = strtoupper($torrentHash);
             $torrentPaused = $torrent['paused'] == 1 ? 1 : 0;
-            $torrentError = $torrent['message'] != 'OK' ? 1 : 0;
+            $torrentError  = $torrent['message'] != 'OK' ? 1 : 0;
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
-            $torrentTrackerError = isset($matches[1]) ? $matches[1] : '';
+            $torrentTrackerError = $matches[1] ?? '';
+
             $torrents[$torrentHash] = [
-                'comment' => $torrent['comment'],
-                'done' => $torrent['progress'] / 100,
-                'error' => $torrentError,
-                'name' => $torrent['name'],
-                'paused' => $torrentPaused,
-                'time_added' => $torrent['time_added'],
-                'total_size' => $torrent['total_size'],
-                'tracker_error' => $torrentTrackerError
+                'topic_id'      => $this->getTorrentTopicId($torrent['comment']),
+                'comment'       => $torrent['comment'],
+                'done'          => $torrent['progress'] / 100,
+                'error'         => $torrentError,
+                'name'          => $torrent['name'],
+                'paused'        => $torrentPaused,
+                'time_added'    => $torrent['time_added'],
+                'total_size'    => $torrent['total_size'],
+                'tracker_error' => $torrentTrackerError,
             ];
         }
         return $torrents;

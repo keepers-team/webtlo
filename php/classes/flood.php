@@ -120,15 +120,17 @@ class Flood extends TorrentClient
                     break;
                 }
             }
+
             $torrents[$torrentHash] = [
-                'comment' => $torrent['comment'],
-                'done' => $torrent['percentComplete']/100,
-                'error' => $torrentError,
-                'name' => $torrent['name'],
-                'paused' => $torrentPaused,
-                'time_added' => $torrent['dateAdded'],
-                'total_size' => $torrent['sizeBytes'],
-                'tracker_error' => $torrentErrorMessage
+                'topic_id'      => $this->getTorrentTopicId($torrent['comment']),
+                'comment'       => $torrent['comment'],
+                'done'          => $torrent['percentComplete'] / 100,
+                'error'         => $torrentError,
+                'name'          => $torrent['name'],
+                'paused'        => $torrentPaused,
+                'time_added'    => $torrent['dateAdded'],
+                'total_size'    => $torrent['sizeBytes'],
+                'tracker_error' => $torrentErrorMessage,
             ];
         }
         return $torrents;
