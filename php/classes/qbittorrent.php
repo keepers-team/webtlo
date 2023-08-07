@@ -1,8 +1,11 @@
 <?php
 
+use KeepersTeam\Webtlo\Module\Topics;
+
 /**
  * Class Qbittorrent
  * Supported by qBittorrent 4.1 and later
+ * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
  */
 class Qbittorrent extends TorrentClient
 {
@@ -97,12 +100,15 @@ class Qbittorrent extends TorrentClient
 
     public function getAllTorrents()
     {
+        Timers::start('torrents_info');
         $response = $this->makeRequest('api/v2/torrents/info');
         if ($response === false) {
             return false;
         }
+        Timers::stash('torrents_info');
 
         $torrents = [];
+        Timers::start('processing');
         foreach ($response as $torrent) {
             $clientHash    = $torrent['hash'];
             $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $torrent['hash']);
@@ -139,16 +145,35 @@ class Qbittorrent extends TorrentClient
 
             unset($clientHash, $torrentHash, $torrentPaused, $torrentError);
         }
+        Timers::stash('processing');
 
-        foreach ($torrents as $torrentHash => $torrent) {
-            // получение ссылки на раздачу
-            $properties = $this->getProperties($torrent['client_hash']);
-            if ($properties !== false) {
-                $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
-                $torrents[$torrentHash]['comment']  = $properties['comment'];
-            }
-            unset($torrentHash, $torrent, $properties);
+        Timers::start('db_search');
+        // Пробуем найти раздачи в локальной БД.
+        $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
+        if (count($topics)) {
+            $torrents = array_replace_recursive($torrents, $topics);
         }
+        unset($topics);
+        Timers::stash('db_search');
+
+        // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий
+        $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
+        if (count($emptyTopics)) {
+            Timers::start('comment_search');
+            foreach ($emptyTopics as $torrentHash => $torrent) {
+                // получение ссылки на раздачу
+                $properties = $this->getProperties($torrent['client_hash']);
+                if ($properties !== false) {
+                    $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
+                    $torrents[$torrentHash]['comment']  = $properties['comment'];
+                }
+                unset($torrentHash, $torrent, $properties);
+            }
+            Timers::stash('comment_search');
+        }
+        unset($emptyTopics);
+
+        Log::append(json_encode(Timers::getStash(), true));
 
         return $torrents;
     }
