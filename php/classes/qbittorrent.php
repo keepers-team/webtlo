@@ -101,27 +101,30 @@ class Qbittorrent extends TorrentClient
         if ($response === false) {
             return false;
         }
+
         $torrents = [];
         foreach ($response as $torrent) {
-            $clientHash = $torrent['hash'];
-            $torrentHash = isset($torrent['infohash_v1']) ? $torrent['infohash_v1'] : $torrent['hash'];
-            $torrentHash = strtoupper($torrentHash);
-            $torrentPaused = preg_match('/^paused/', $torrent['state']) ? 1 : 0;
-            $torrentError = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
+            $clientHash    = $torrent['hash'];
+            $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $torrent['hash']);
+            $torrentPaused = str_starts_with($torrent['state'], 'paused') ? 1 : 0;
+            $torrentError  = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
+
             $torrents[$torrentHash] = [
-                'comment' => '',
-                'done' => $torrent['progress'],
-                'error' => $torrentError,
-                'name' => $torrent['name'],
-                'paused' => $torrentPaused,
-                'time_added' => $torrent['added_on'],
-                'total_size' => $torrent['total_size'],
+                'topic_id'    => null,
+                'comment'     => '',
+                'done'        => $torrent['progress'],
+                'error'       => $torrentError,
+                'name'        => $torrent['name'],
+                'paused'      => $torrentPaused,
+                'time_added'  => $torrent['added_on'],
+                'total_size'  => $torrent['total_size'],
                 'client_hash' => $clientHash,
                 'tracker_error' => ''
             ];
 
-            // получение ошибок трекера
-            if (empty($torrent['tracker'])) {
+            // Получение ошибок трекера.
+            // Для раздач на паузе, нет рабочих трекеров и смысла их проверять тоже нет.
+            if (!$torrentPaused && empty($torrent['tracker'])) {
                 $torrentTrackers = $this->getTrackers($clientHash);
                 if ($torrentTrackers !== false) {
                     foreach ($torrentTrackers as $torrentTracker) {
@@ -131,13 +134,20 @@ class Qbittorrent extends TorrentClient
                         }
                     }
                 }
+                unset($torrentTrackers);
             }
 
+            unset($clientHash, $torrentHash, $torrentPaused, $torrentError);
+        }
+
+        foreach ($torrents as $torrentHash => $torrent) {
             // получение ссылки на раздачу
-            $properties = $this->getProperties($clientHash);
+            $properties = $this->getProperties($torrent['client_hash']);
             if ($properties !== false) {
-                $torrents[$torrentHash]['comment'] = $properties['comment'];
+                $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
+                $torrents[$torrentHash]['comment']  = $properties['comment'];
             }
+            unset($torrentHash, $torrent, $properties);
         }
 
         return $torrents;

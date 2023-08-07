@@ -152,19 +152,21 @@ class Transmission extends TorrentClient
         }
         $torrents = [];
         foreach ($response['torrents'] as $torrent) {
-            $torrentHash = strtoupper($torrent['hashString']);
-            $torrentPaused = $torrent['status'] == 0 ? 1 : 0;
-            $torrentError = $torrent['error'] != 0 ? 1 : 0;
+            $torrentHash         = strtoupper($torrent['hashString']);
+            $torrentPaused       = $torrent['status'] == 0 ? 1 : 0;
+            $torrentError        = $torrent['error'] != 0 ? 1 : 0;
             $torrentTrackerError = $torrent['error'] == 2 ? $torrent['errorString'] : '';
+
             $torrents[$torrentHash] = [
-                'comment' => $torrent['comment'],
-                'done' => $torrent['percentDone'],
-                'error' => $torrentError,
-                'name' => $torrent['name'],
-                'paused' => $torrentPaused,
-                'time_added' => $torrent['addedDate'],
-                'total_size' => $torrent['totalSize'],
-                'tracker_error' => $torrentTrackerError
+                'topic_id'      => $this->getTorrentTopicId($torrent['comment']),
+                'comment'       => $torrent['comment'],
+                'done'          => $torrent['percentDone'],
+                'error'         => $torrentError,
+                'name'          => $torrent['name'],
+                'paused'        => $torrentPaused,
+                'time_added'    => $torrent['addedDate'],
+                'total_size'    => $torrent['totalSize'],
+                'tracker_error' => $torrentTrackerError,
             ];
         }
         return $torrents;
