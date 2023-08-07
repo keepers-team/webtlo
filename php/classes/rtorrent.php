@@ -113,14 +113,15 @@ class Rtorrent extends TorrentClient
                 $torrentTrackerError = empty($matches[2]) ? $matches[1] : $matches[2];
             }
             $torrents[$torrentHash] = [
-                'comment' => $torrentComment,
-                'done' => $torrent[0],
-                'error' => $torrentError,
-                'name' => $torrent[4],
-                'paused' => (int) !$torrent[6],
-                'time_added' => $torrent[7],
-                'total_size' => $torrent[5],
-                'tracker_error' => $torrentTrackerError
+                'topic_id'      => $this->getTorrentTopicId($torrentComment),
+                'comment'       => $torrentComment,
+                'done'          => $torrent[0],
+                'error'         => $torrentError,
+                'name'          => $torrent[4],
+                'paused'        => (int)!$torrent[6],
+                'time_added'    => $torrent[7],
+                'total_size'    => $torrent[5],
+                'tracker_error' => $torrentTrackerError,
             ];
         }
         return $torrents;

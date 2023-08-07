@@ -105,7 +105,7 @@ class Utorrent extends TorrentClient
         }
         $torrents = [];
         foreach ($response['torrents'] as $torrent) {
-            /*
+            /* status reference
                 0 - loaded
                 1 - queued
                 2 - paused
@@ -115,18 +115,20 @@ class Utorrent extends TorrentClient
                 6 - checking
                 7 - started
             */
-            $torrentState = decbin($torrent[1]);
-            $torrentHash = strtoupper($torrent[0]);
+            $torrentState  = decbin($torrent[1]);
+            $torrentHash   = strtoupper($torrent[0]);
             $torrentPaused = $torrentState[2] || !$torrentState[7] ? 1 : 0;
+
             $torrents[$torrentHash] = [
-                'comment' => '',
-                'done' => $torrent[4] / 1000,
-                'error' => $torrentState[3],
-                'name' => $torrent[2],
-                'paused' => $torrentPaused,
-                'time_added' => '',
-                'total_size' => $torrent[3],
-                'tracker_error' => ''
+                'topic_id'      => null,
+                'comment'       => '',
+                'done'          => $torrent[4] / 1000,
+                'error'         => $torrentState[3],
+                'name'          => $torrent[2],
+                'paused'        => $torrentPaused,
+                'time_added'    => '',
+                'total_size'    => $torrent[3],
+                'tracker_error' => '',
             ];
         }
         return $torrents;
