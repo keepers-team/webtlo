@@ -1,8 +1,12 @@
 <?php
 
+use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Module\Torrents;
+
 /**
  * Class Utorrent
  * Supported by uTorrent 1.8.2 and later
+ * https://forum.utorrent.com/topic/21814-web-ui-api/
  */
 class Utorrent extends TorrentClient
 {
@@ -99,11 +103,15 @@ class Utorrent extends TorrentClient
 
     public function getAllTorrents()
     {
+        Timers::start('torrents_info');
         $response = $this->makeRequest('?list=1');
         if ($response === false) {
             return false;
         }
+        Timers::stash('torrents_info');
+
         $torrents = [];
+        Timers::start('processing');
         foreach ($response['torrents'] as $torrent) {
             /* status reference
                 0 - loaded
@@ -131,6 +139,31 @@ class Utorrent extends TorrentClient
                 'tracker_error' => '',
             ];
         }
+        Timers::stash('processing');
+
+        // Пробуем найти раздачи в локальной БД.
+        Timers::start('db_topics_search');
+        $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
+        if (count($topics)) {
+            $torrents = array_replace_recursive($torrents, $topics);
+        }
+        Timers::stash('db_topics_search');
+
+        // Пробуем найти раздачи в локальной таблице раздач в клиентах.
+        $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
+        if (count($emptyTopics)) {
+            Timers::start('db_torrents_search');
+            $topics = Torrents::getTopicsIdsByHashes(array_keys($emptyTopics));
+            if (count($topics)) {
+                $torrents = array_replace_recursive($torrents, $topics);
+            }
+            unset($topics);
+            Timers::stash('db_torrents_search');
+        }
+        unset($emptyTopics);
+
+        Log::append(json_encode(Timers::getStash(), true));
+
         return $torrents;
     }
 
