@@ -6,6 +6,7 @@
 class Timers
 {
     private static array $markers = [];
+    private static array $stash = [];
 
     public static function start(string $marker = 'default'): void
     {
@@ -38,5 +39,18 @@ class Timers
     public static function printExecTime(string $marker = 'default'): void
     {
         echo sprintf('ExecTime [%s]: %s<br>', $marker, self::getExecTime($marker));
+    }
+
+    public static function stash(string $marker = 'default'): void
+    {
+        self::$stash[$marker] = self::getExecTime($marker);
+    }
+
+    public static function getStash(): array
+    {
+        $stash = self::$stash;
+        self::$stash = [];
+
+        return $stash;
     }
 }
