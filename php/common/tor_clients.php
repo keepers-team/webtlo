@@ -75,6 +75,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
     // применяем таймауты
     $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
+    $client->setDomain(get_config_domain($cfg));
 
     // получаем список раздач
     $torrents = $client->getAllTorrents();
@@ -86,28 +87,12 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $insertedTorrents = [];
     $countTorrents = count($torrents);
     foreach ($torrents as $torrentHash => $torrentData) {
-        // TODO вынести в функцию
-        $topicID = '';
-        // поисковый домен
-        $currentSearchDomain = 'rutracker';
-        if ($cfg['forum_url'] != 'custom') {
-            $currentSearchDomain = $cfg['forum_url'];
-        } elseif (!empty($cfg['forum_url_custom'])) {
-            $currentSearchDomain = $cfg['forum_url_custom'];
-        }
-        // если комментарий содержит подходящий домен
-        if (
-            strpos($torrentData['comment'], 'rutracker') !== false
-            || strpos($torrentData['comment'], $currentSearchDomain) !== false
-        ) {
-            $topicID = preg_replace('/.*?([0-9]*)$/', '$1', $torrentData['comment']);
-        }
 
         $insertedTorrents[] = array_combine(
             $tabTorrents->keys,
             [
                 $torrentHash,
-                $topicID,
+                $torrentData['topic_id'],
                 $torrentClientID,
                 $torrentData['done'],
                 $torrentData['error'],
@@ -236,7 +221,7 @@ $timers['search_untracked'] = Timers::getExecTime('search_untracked');
 // Найдём разрегистрированные раздачи.
 Timers::start('search_unregistered');
 $topicsUnregistered = Db::query_database(
-    'SELECT
+    "SELECT
         Torrents.info_hash,
         Torrents.topic_id
     FROM Torrents
@@ -245,7 +230,7 @@ $topicsUnregistered = Db::query_database(
     WHERE
         Topics.hs IS NULL
         AND TopicsUntracked.hs IS NULL
-        AND Torrents.topic_id IS NOT ""',
+        AND Torrents.topic_id <> ''",
     [],
     true,
     PDO::FETCH_KEY_PAIR
