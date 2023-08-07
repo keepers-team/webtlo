@@ -7,6 +7,7 @@ include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\DTO\KeysObject;
 
 // получение настроек
 if (!isset($cfg)) {
@@ -52,6 +53,9 @@ $tabUnregistered = CloneTable::create(
 
 
 $timers = [];
+
+/** Клиенты, данные от которых получить не удалось */
+$failedClients = [];
 Timers::start('update_clients');
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     Timers::start("update_client_$torrentClientID");
@@ -71,6 +75,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     // доступность торрент-клиента
     if ($client->isOnline() === false) {
         Log::append("Торрент-клиент $clientTag в данный момент недоступен");
+        $failedClients[] = $torrentClientID;
         continue;
     }
     // применяем таймауты
@@ -81,13 +86,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $torrents = $client->getAllTorrents();
     if ($torrents === false) {
         Log::append("Error: Не удалось получить данные о раздачах от торрент-клиента $clientTag");
+        $failedClients[] = $torrentClientID;
         continue;
     }
 
     $insertedTorrents = [];
     $countTorrents = count($torrents);
     foreach ($torrents as $torrentHash => $torrentData) {
-
         $insertedTorrents[] = array_combine(
             $tabTorrents->keys,
             [
@@ -126,39 +131,36 @@ $timers['update_clients'] = Timers::getExecTime('update_clients');
 // Добавим в БД полученные данные о раздачах.
 if ($tabTorrents->cloneCount() > 0) {
     $tabTorrents->moveToOrigin();
+}
 
-    // Удалим лишние раздачи из БД.
-    Db::query_database(
-        "DELETE FROM $tabTorrents->origin WHERE info_hash || client_id NOT IN (
+
+$failedClients = KeysObject::create($failedClients);
+// Удалим лишние раздачи из БД.
+Db::query_database("
+    DELETE FROM $tabTorrents->origin 
+    WHERE client_id NOT IN ($failedClients->keys) AND (
+        info_hash || client_id NOT IN (
             SELECT ins.info_hash || ins.client_id
             FROM $tabTorrents->clone AS tmp
-            LEFT JOIN $tabTorrents->origin AS ins ON tmp.info_hash = ins.info_hash AND tmp.client_id = ins.client_id
-            WHERE ins.info_hash IS NOT NULL
+            INNER JOIN $tabTorrents->origin AS ins ON tmp.info_hash = ins.info_hash AND tmp.client_id = ins.client_id
         ) OR client_id NOT IN (
             SELECT DISTINCT client_id FROM $tabTorrents->clone
-        )"
-    );
-}
-
-if (isset($cfg['subsections'])) {
-    $forumsIDs = array_keys($cfg['subsections']);
-    $placeholders = str_repeat('?,', count($forumsIDs) - 1) . '?';
-} else {
-    $forumsIDs = [];
-    $placeholders = '';
-}
+        )
+    )
+", $failedClients->values);
 
 
-Timers::start('search_untracked');
 // Найдём раздачи из нехранимых подразделов.
+Timers::start('search_untracked');
+$subsections = KeysObject::create(array_keys($cfg['subsections'] ?? []));
 $untrackedTorrentHashes = Db::query_database(
     "SELECT tmp.info_hash
     FROM $tabTorrents->clone AS tmp
     LEFT JOIN Topics ON Topics.hs = tmp.info_hash
     WHERE
         Topics.id IS NULL
-        OR Topics.ss NOT IN ($placeholders)",
-    $forumsIDs,
+        OR Topics.ss NOT IN ($subsections->keys)",
+    $subsections->values,
     true,
     PDO::FETCH_COLUMN
 );
