@@ -446,3 +446,14 @@ function natsort_field(array $input, $field, $direct = 1)
     });
     return $input;
 }
+
+/** Найти используемый домер трекера в настройках. */
+function get_config_domain(array $cfg): ?string
+{
+    if (!empty($cfg['forum_url'] && $cfg['forum_url'] !== 'custom')) {
+        return $cfg['forum_url'];
+    } elseif (!empty($cfg['forum_url_custom'])) {
+        return $cfg['forum_url_custom'];
+    }
+    return null;
+}
