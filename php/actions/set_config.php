@@ -230,6 +230,8 @@ try {
 
     // Обновление список раздач
     $ini->write('update', 'priority', isset($cfg['update_priority']) ? 1 : 0);
+    $ini->write('update', 'untracked', isset($cfg['update_untracked']) ? 1 : 0);
+    $ini->write('update', 'unregistered', isset($cfg['update_unregistered']) ? 1 : 0);
 
     // обновление файла с настройками
     $ini->updateFile();

@@ -235,6 +235,8 @@ function get_settings($filename = "")
     // Обновление список раздач
     $config['update'] = [
         'priority'     => $ini->read('update', 'priority', 0),
+        'untracked'    => $ini->read('update', 'untracked', 1),
+        'unregistered' => $ini->read('update', 'unregistered', 1),
     ];
 
     // таймауты
