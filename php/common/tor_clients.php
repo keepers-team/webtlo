@@ -74,7 +74,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 
     // доступность торрент-клиента
     if ($client->isOnline() === false) {
-        Log::append("Торрент-клиент $clientTag в данный момент недоступен");
+        Log::append("Notice: Клиент $clientTag в данный момент недоступен");
         $failedClients[] = $torrentClientID;
         continue;
     }
@@ -151,130 +151,138 @@ Db::query_database("
 
 
 // Найдём раздачи из нехранимых подразделов.
-Timers::start('search_untracked');
-$subsections = KeysObject::create(array_keys($cfg['subsections'] ?? []));
-$untrackedTorrentHashes = Db::query_database(
-    "SELECT tmp.info_hash
-    FROM $tabTorrents->clone AS tmp
-    LEFT JOIN Topics ON Topics.hs = tmp.info_hash
-    WHERE
-        Topics.id IS NULL
-        OR Topics.ss NOT IN ($subsections->keys)",
-    $subsections->values,
-    true,
-    PDO::FETCH_COLUMN
-);
+if ($cfg['update']['untracked']) {
+    Timers::start('search_untracked');
+    $subsections = KeysObject::create(array_keys($cfg['subsections'] ?? []));
 
-if (!empty($untrackedTorrentHashes)) {
-    Log::append('Найдено уникальных сторонних раздач в клиентах: ' . count($untrackedTorrentHashes) . ' шт.');
-    // подключаемся к api
-    if (!isset($api)) {
-        $api = new Api($cfg['api_address'], $cfg['api_key']);
-        // применяем таймауты
-        $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
+    $untrackedTorrentHashes = Db::query_database(
+        "SELECT tmp.info_hash
+        FROM $tabTorrents->clone AS tmp
+        LEFT JOIN Topics ON Topics.hs = tmp.info_hash
+        WHERE
+            Topics.id IS NULL
+            OR Topics.ss NOT IN ($subsections->keys)",
+        $subsections->values,
+        true,
+        PDO::FETCH_COLUMN
+    );
+
+    if (!empty($untrackedTorrentHashes)) {
+        Log::append('Найдено уникальных сторонних раздач в клиентах: ' . count($untrackedTorrentHashes) . ' шт.');
+        // подключаемся к api
+        if (!isset($api)) {
+            $api = new Api($cfg['api_address'], $cfg['api_key']);
+            // применяем таймауты
+            $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
+        }
+
+        // Пробуем найти на форуме раздачи по их хешам из клиента.
+        $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
+        unset($untrackedTorrentHashes);
+        if (!empty($untrackedTopics)) {
+            foreach ($untrackedTopics as $topicID => $topicData) {
+                if (empty($topicData)) {
+                    continue;
+                }
+                // Пропускаем раздачи в невалидных статусах.
+                if (!in_array($topicData['tor_status'], Topics::VALID_STATUSES)) {
+                    continue;
+                }
+
+                $insertedUntrackedTopics[] = array_combine(
+                    $tabUntracked->keys,
+                    [
+                        $topicID,
+                        $topicData['forum_id'],
+                        $topicData['topic_title'],
+                        $topicData['info_hash'],
+                        $topicData['seeders'],
+                        $topicData['size'],
+                        $topicData['tor_status'],
+                        $topicData['reg_time'],
+                    ]
+                );
+            }
+            unset($untrackedTopics);
+
+            // Если нашлись существующие на форуме раздачи, то записываем их в БД.
+            if (!empty($insertedUntrackedTopics)) {
+                Log::append(sprintf('Записано уникальных сторонних раздач: %d шт.', count($insertedUntrackedTopics)));
+
+                $tabUntracked->cloneFillChunk($insertedUntrackedTopics);
+                unset($insertedUntrackedTopics);
+
+                if ($tabUntracked->cloneCount() > 0) {
+                    $tabUntracked->moveToOrigin();
+                }
+            }
+        }
     }
 
-    // Пробуем найти на форуме раздачи по их хешам из клиента.
-    $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
-    unset($untrackedTorrentHashes);
-    if (!empty($untrackedTopics)) {
-        foreach ($untrackedTopics as $topicID => $topicData) {
-            if (empty($topicData)) {
-                continue;
-            }
-            // Пропускаем раздачи в невалидных статусах.
-            if (!in_array($topicData['tor_status'], Topics::VALID_STATUSES)) {
-                continue;
-            }
-            $insertedUntrackedTopics[] = array_combine(
-                $tabUntracked->keys,
-                [
-                    $topicID,
-                    $topicData['forum_id'],
-                    $topicData['topic_title'],
-                    $topicData['info_hash'],
-                    $topicData['seeders'],
-                    $topicData['size'],
-                    $topicData['tor_status'],
-                    $topicData['reg_time'],
-                ]
-            );
-        }
-        unset($untrackedTopics);
-
-        // Если нашлись существующие на форуме раздачи, то записываем их в БД.
-        if (!empty($insertedUntrackedTopics)) {
-            Log::append(sprintf('Записано уникальных сторонних раздач: %d шт.', count($insertedUntrackedTopics)));
-
-            $tabUntracked->cloneFillChunk($insertedUntrackedTopics);
-            unset($insertedUntrackedTopics);
-
-            if ($tabUntracked->cloneCount() > 0) {
-                $tabUntracked->moveToOrigin();
-            }
-        }
-    }
+    $timers['search_untracked'] = Timers::getExecTime('search_untracked');
 }
 // Удалим лишние раздачи из БД нехранимых.
 $tabUntracked->clearUnusedRows();
-$timers['search_untracked'] = Timers::getExecTime('search_untracked');
 
 
 // Найдём разрегистрированные раздачи.
-Timers::start('search_unregistered');
-$topicsUnregistered = Db::query_database(
-    "SELECT
-        Torrents.info_hash,
-        Torrents.topic_id
-    FROM Torrents
-    LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
-    LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Torrents.info_hash
-    WHERE
-        Topics.hs IS NULL
-        AND TopicsUntracked.hs IS NULL
-        AND Torrents.topic_id <> ''",
-    [],
-    true,
-    PDO::FETCH_KEY_PAIR
-);
+if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
+    Timers::start('search_unregistered');
+    $topicsUnregistered = Db::query_database(
+        "SELECT
+                Torrents.info_hash,
+                Torrents.topic_id
+            FROM Torrents
+            LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
+            LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Torrents.info_hash
+            WHERE
+                Topics.hs IS NULL
+                AND TopicsUntracked.hs IS NULL
+                AND Torrents.topic_id <> ''",
+        [],
+        true,
+        PDO::FETCH_KEY_PAIR
+    );
 
-if (!empty($topicsUnregistered)) {
-    if (!isset($reports)) {
-        $reports = new Reports($cfg['forum_address'], $cfg['tracker_login'], $cfg['tracker_paswd']);
-        $reports->curl_setopts($cfg['curl_setopt']['forum']);
-    }
-    $insertedUnregisteredTopics = [];
-    foreach ($topicsUnregistered as $infoHash => $topicID) {
-        $topicData = $reports->getDataUnregisteredTopic($topicID);
-        if ($topicData === false) {
-            continue;
+    if (!empty($topicsUnregistered)) {
+        if (!isset($reports)) {
+            $reports = new Reports($cfg['forum_address'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+            $reports->curl_setopts($cfg['curl_setopt']['forum']);
         }
-        $insertedUnregisteredTopics[] = array_combine(
-            $tabUnregistered->keys,
-            [
-                $infoHash,
-                $topicData['name'],
-                $topicData['status'],
-                $topicData['priority'],
-                $topicData['transferred_from'],
-                $topicData['transferred_to'],
-                $topicData['transferred_by_whom']
-            ]
-        );
-    }
-    unset($topicsUnregistered);
+        $insertedUnregisteredTopics = [];
+        foreach ($topicsUnregistered as $infoHash => $topicID) {
+            $topicData = $reports->getDataUnregisteredTopic($topicID);
+            if ($topicData === false) {
+                continue;
+            }
+            $insertedUnregisteredTopics[] = array_combine(
+                $tabUnregistered->keys,
+                [
+                    $infoHash,
+                    $topicData['name'],
+                    $topicData['status'],
+                    $topicData['priority'],
+                    $topicData['transferred_from'],
+                    $topicData['transferred_to'],
+                    $topicData['transferred_by_whom']
+                ]
+            );
+        }
+        unset($topicsUnregistered);
 
-    $tabUnregistered->cloneFillChunk($insertedUnregisteredTopics);
-    unset($insertedUnregisteredTopics);
+        $tabUnregistered->cloneFillChunk($insertedUnregisteredTopics);
+        unset($insertedUnregisteredTopics);
 
-    $countUnregistered = $tabUnregistered->cloneCount();
-    if ($countUnregistered > 0) {
-        Log::append(sprintf('Обнаружено разрегистрированных или обновлённых раздач: %d шт.', $countUnregistered));
-        $tabUnregistered->moveToOrigin();
+        $countUnregistered = $tabUnregistered->cloneCount();
+        if ($countUnregistered > 0) {
+            Log::append(sprintf('Найдено разрегистрированных или обновлённых раздач: %d шт.', $countUnregistered));
+            $tabUnregistered->moveToOrigin();
+        }
     }
+
+    $timers['search_unregistered'] = Timers::getExecTime('search_unregistered');
 }
 // Удалим лишние раздачи из БД разрегов.
 $tabUnregistered->clearUnusedRows();
-$timers['search_unregistered'] = Timers::getExecTime('search_unregistered');
 
 Log::append(json_encode($timers));
