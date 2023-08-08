@@ -865,6 +865,14 @@ function cfg_checkbox($cfg): Closure
                                 <input name="update_priority" type="checkbox" size="24" <?= $checkbox_check('update', 'priority') ?> />
                                 Обновлять списки раздач с высоким приоритетом хранения всего трекера
                             </label>
+                            <label class="label">
+                                <input name="update_untracked" type="checkbox" size="24" <?= $checkbox_check('update', 'untracked') ?> />
+                                Поиск хранимых раздач из других подразделов
+                            </label>
+                            <label class="label">
+                                <input name="update_unregistered" type="checkbox" size="24" <?= $checkbox_check('update', 'unregistered') ?> />
+                                Поиск хранимых раздач незарегистрированных на трекере
+                            </label>
                             <hr>
                             <h3>Регулировка раздач<sup>2</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
