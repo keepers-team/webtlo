@@ -100,7 +100,7 @@ class Flood extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents(array $filter = [])
     {
         $response = $this->makeRequest('api/torrents');
         if ($response === false) {

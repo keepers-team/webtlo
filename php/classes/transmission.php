@@ -128,7 +128,7 @@ class Transmission extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents(array $filter = [])
     {
         $fields = [
             'method' => 'torrent-get',

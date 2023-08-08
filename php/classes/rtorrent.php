@@ -82,7 +82,7 @@ class Rtorrent extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents(array $filter = [])
     {
         $response = $this->makeRequest(
             'd.multicall2',
