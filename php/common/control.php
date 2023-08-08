@@ -1,12 +1,12 @@
 <?php
 
-$starttime = microtime(true);
-
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
 
-Log::append('Начат процесс регулировки раздач в торрент-клиентах...');
+Timers::start('control');
+Log::append('Info: Начат процесс регулировки раздач в торрент-клиентах...');
+
 // получение настроек
 $cfg = get_settings();
 // проверка настроек
@@ -29,12 +29,15 @@ $forumsIDs = array_keys($cfg['subsections']);
 $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
+    $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
+
     $clientControlPeers = ($torrentClientData['control_peers'] !== "") ? (int)$torrentClientData['control_peers'] : -2;
     if ($clientControlPeers == -1) {
-        Log::append('Для клиента '. $torrentClientData['cm'] .' отключена регулировка');
+        Log::append("Notice: Для клиента $clientTag отключена регулировка");
         continue;
     }
 
+    Timers::start("control_client_$torrentClientID");
     /**
      * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
      * */
@@ -47,22 +50,27 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     );
     // проверка доступности торрент-клиента
     if ($client->isOnline() === false) {
+        Log::append("Notice: Клиент $clientTag в данный момент недоступен");
         continue;
     }
-
-    Log::append('Получаем раздачи торрент-клиента "' . $torrentClientData['cm'] . '"');
     // применяем таймауты
     $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
-    $startclient = microtime(true);
+
     // получение данных от торрент-клиента
-    $torrents = $client->getAllTorrents();
+    Log::append("Info: Получаем раздачи торрент-клиента $clientTag");
+    Timers::start("get_client_$torrentClientID");
+    $torrents = $client->getAllTorrents(['simple' => true]);
     if ($torrents === false) {
-        Log::append('Error: Не удалось получить данные о раздачах от торрент-клиента "' . $torrentClientData['cm'] . '"');
+        Log::append("Error: Не удалось получить данные о раздачах от торрент-клиента $clientTag");
         continue;
     }
-    $endclient = microtime(true);
-    Log::append('Получение раздач ('. count($torrents) .'шт) завершено за ' . convert_seconds($endclient - $startclient));
+    Log::append(sprintf('%s получено раздач: %d шт за %s',
+        $clientTag,
+        count($torrents),
+        Timers::getExecTime("get_client_$torrentClientID")
+    ));
 
+    Timers::start("get_topics_$torrentClientID");
     // ограничение на количество хэшей за раз
     $placeholdersLimit = 999;
     $torrentsHashes = array_chunk(
@@ -98,8 +106,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         unset($responseTopicsHashes);
     }
     Log::append(sprintf(
-        "Поиск раздач в БД завершён за %s. Найдено раздач из хранимых подразделов %d шт, из прочих %d шт.",
-        convert_seconds(microtime(true) - $endclient),
+        'Поиск раздач в БД завершён за %s. Найдено раздач из хранимых подразделов %d шт, из прочих %d шт.',
+        Timers::getExecTime("get_topics_$torrentClientID"),
         count($topicsHashes, COUNT_RECURSIVE) - count($topicsHashes),
         count($unaddedHashes)
     ));
@@ -108,7 +116,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     if (count($unaddedHashes)) {
         $topicsHashes["unadded"] = $unaddedHashes;
     }
-    unset($torrentsHashes,$unaddedHashes,$endclient,$startclient);
+    unset($torrentsHashes, $unaddedHashes);
 
     if (!empty($topicsHashes)) {
         // подключаемся к api
@@ -118,25 +126,26 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
             Log::append('Получение данных о пирах...');
         }
+
         foreach ($topicsHashes as $forumID => $hashes) {
             // пропустим не хранимые подразделы, если их регулировка отключена
             if (!$cfg['topics_control']['unadded_subsections'] && !isset($cfg['subsections'][$forumID])) {
                 continue;
             }
             // пропустим исключённые из регулировки подразделы
-            $subControlPeers = isset($cfg['subsections'][$forumID]['control_peers']) ? $cfg['subsections'][$forumID]['control_peers'] : -2;
+            $subControlPeers = $cfg['subsections'][$forumID]['control_peers'] ?? -2;
             $subControlPeers = ($subControlPeers !== "") ? (int)$subControlPeers : -2;
             if ($subControlPeers == -1) {
-                Log::append('Для раздела '. $forumID .' отключена регулировка');
+                Log::append('Для подраздела '. $forumID .' отключена регулировка');
                 continue;
             }
             // регулируемое значение пиров
             $controlPeers = get_control_peers($cfg['topics_control']['peers'], $clientControlPeers, $subControlPeers);
 
-            $startforum = microtime(true);
+            Timers::start("subsection_$forumID");
             // получаем данные о пирах
             $peerStatistics = $api->getPeerStats($hashes, 'hash');
-            unset($topicsHashhasheses);
+
             if ($peerStatistics !== false) {
                 foreach ($peerStatistics as $topicHash => $topicData) {
                     if (
@@ -191,19 +200,17 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 }
             }
 
-            $endforum = microtime(true);
-            Log::append(sprintf(
-                "Обработка раздач раздела %s (%d шт) завершена за %s, лимит сидов %d",
+            Log::append(sprintf('Обработка раздач раздела %s (%d шт) завершена за %s, лимит сидов %d',
                 $forumID,
                 count($hashes),
-                convert_seconds($endforum - $startforum),
+                Timers::getExecTime("subsection_$forumID"),
                 $controlPeers
             ));
-            unset($peerStatistics,$startforum,$endforum);
+            unset($forumID, $hashes, $peerStatistics);
         }
     }
     if (empty($controlTopics)) {
-        Log::append('Notice: Регулировка раздач не требуется для торрент-клиента "' . $torrentClientData['cm'] . '"');
+        Log::append("Notice: Регулировка раздач не требуется для торрент-клиента $clientTag");
         continue;
     }
     // запускаем
@@ -216,7 +223,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 Log::append('Error: Возникли проблемы при отправке запроса на запуск раздач');
             }
         }
-        Log::append('Запрос на запуск раздач торрент-клиенту "' . $torrentClientData['cm'] . '" отправлен (' . $totalStartedTopics . ')');
+        Log::append("Запрос на запуск раздач торрент-клиенту $clientTag отправлен ($totalStartedTopics шт)");
     }
     // останавливаем
     if (!empty($controlTopics['stop'])) {
@@ -228,12 +235,16 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 Log::append('Error: Возникли проблемы при отправке запроса на остановку раздач');
             }
         }
-        Log::append('Запрос на остановку раздач торрент-клиенту "' . $torrentClientData['cm'] . '" отправлен (' . $totalStoppedTopics . ')');
+        Log::append("Запрос на остановку раздач торрент-клиенту $clientTag отправлен ($totalStoppedTopics шт)");
     }
     unset($controlTopics);
+
+    Log::append(sprintf('Info: Регулировка раздач в торрент-клиенте %s завершена за %s',
+        $clientTag,
+        Timers::getExecTime("control_client_$torrentClientID")
+    ));
 }
-$endtime = microtime(true);
-Log::append('Регулировка раздач в торрент-клиентах завершена за ' . convert_seconds($endtime - $starttime));
+Log::append('Info: Регулировка раздач в торрент-клиентах завершена за ' . Timers::getExecTime('control'));
 
 
 // Определяем лимит для регулировки раздач
@@ -256,5 +267,5 @@ function get_control_peers(int $controlPeers, int $clientControlPeers, int $subC
         $controlPeers = $subControlPeers;
     }
 
-    return $controlPeers > 0 ? $controlPeers : 0;
+    return max($controlPeers, 0);
 }
