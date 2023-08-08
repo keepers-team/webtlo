@@ -130,7 +130,7 @@ class Deluge extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents(array $filter = [])
     {
         $fields = [
             'method' => 'core.get_torrents_status',

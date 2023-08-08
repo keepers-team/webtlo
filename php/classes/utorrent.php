@@ -101,8 +101,11 @@ class Utorrent extends TorrentClient
         }
     }
 
-    public function getAllTorrents()
+    public function getAllTorrents(array $filter = [])
     {
+        /** Получить просто список раздач без дополнительных действий */
+        $simpleRun = $filter['simple'] ?? false;
+
         Timers::start('torrents_info');
         $response = $this->makeRequest('?list=1');
         if ($response === false) {
@@ -141,26 +144,28 @@ class Utorrent extends TorrentClient
         }
         Timers::stash('processing');
 
-        // Пробуем найти раздачи в локальной БД.
-        Timers::start('db_topics_search');
-        $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
-        if (count($topics)) {
-            $torrents = array_replace_recursive($torrents, $topics);
-        }
-        Timers::stash('db_topics_search');
-
-        // Пробуем найти раздачи в локальной таблице раздач в клиентах.
-        $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
-        if (count($emptyTopics)) {
-            Timers::start('db_torrents_search');
-            $topics = Torrents::getTopicsIdsByHashes(array_keys($emptyTopics));
+        if (!$simpleRun) {
+            // Пробуем найти раздачи в локальной БД.
+            Timers::start('db_topics_search');
+            $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
             if (count($topics)) {
                 $torrents = array_replace_recursive($torrents, $topics);
             }
-            unset($topics);
-            Timers::stash('db_torrents_search');
+            Timers::stash('db_topics_search');
+
+            // Пробуем найти раздачи в локальной таблице раздач в клиентах.
+            $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
+            if (count($emptyTopics)) {
+                Timers::start('db_torrents_search');
+                $topics = Torrents::getTopicsIdsByHashes(array_keys($emptyTopics));
+                if (count($topics)) {
+                    $torrents = array_replace_recursive($torrents, $topics);
+                }
+                unset($topics);
+                Timers::stash('db_torrents_search');
+            }
+            unset($emptyTopics);
         }
-        unset($emptyTopics);
 
         Log::append(json_encode(Timers::getStash(), true));
 

@@ -121,7 +121,7 @@ abstract class TorrentClient
      * @return bool|array
      * array[torrentHash] => (comment, done, error, name, paused, time_added, total_size, tracker_error)
      */
-    abstract public function getAllTorrents();
+    abstract public function getAllTorrents(array $filter = []);
 
     /**
      * добавить торрент
