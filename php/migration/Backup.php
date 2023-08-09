@@ -58,7 +58,10 @@ class Backup
 
         // Остальное - удалим.
         foreach($matches as $file) {
-            unlink($path . DIRECTORY_SEPARATOR . $file);
+            $filePath = $path . DIRECTORY_SEPARATOR . $file;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
         }
     }
 }
