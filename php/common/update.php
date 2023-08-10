@@ -5,14 +5,11 @@ include_once dirname(__FILE__) . '/../classes/api.php';
 
 Timers::start('full_update');
 
-// обновляем дерево подразделов
-include_once dirname(__FILE__) . '/forum_tree.php';
+// обновляем списоки раздач в хранимых подразделах
+include_once dirname(__FILE__) . '/update_subsections.php';
 
 // обновляем список высокоприоритетных раздач
 include_once dirname(__FILE__) . '/high_priority_topics.php';
-
-// обновляем списоки раздач в хранимых подразделах
-include_once dirname(__FILE__) . '/update_subsections.php';
 
 // обновляем списоки раздач в хранимых подразделах
 include_once dirname(__FILE__) . '/tor_clients.php';
