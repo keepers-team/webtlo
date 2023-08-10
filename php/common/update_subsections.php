@@ -65,7 +65,7 @@ if (isset($cfg['subsections'])) {
 
     // получим список всех хранителей
     $keepersUserData = $api->getKeepersUserData();
-    $keepersUserData = $keepersUserData['result'] ?? [];
+    $keepersUserData = array_filter(array_map(fn($el) => $el[0] ?? null, $keepersUserData['result']));
 
     // обновим каждый хранимый подраздел
     foreach ($subsections as $forum_id) {
@@ -104,14 +104,13 @@ if (isset($cfg['subsections'])) {
         $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
 
         // разбиваем result по 500 раздач
-        $topics_chunks = array_chunk($topics_data['result'], 500, true);
-        unset($topics_data);
+        $topics_data = array_chunk($topics_data['result'], 500, true);
 
-        foreach ($topics_chunks as $topics_result) {
+        foreach ($topics_data as $topics_result) {
             // получаем данные о раздачах за предыдущее обновление
             $selectTopics = KeysObject::create(array_keys($topics_result));
             $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($selectTopics->keys)",
+                "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($selectTopics->keys)",
                 $selectTopics->values,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
@@ -140,14 +139,17 @@ if (isset($cfg['subsections'])) {
                     continue;
                 }
 
+                // Хранители раздачи
+                if (!empty($topic_data['keepers'])) {
+                    $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
+                }
+
                 $days_update = 0;
                 $sum_updates = 1;
                 $sum_seeders = $topic_data['seeders'];
 
                 // запоминаем имеющиеся данные о раздаче в локальной базе
-                if (isset($topics_data_previous[$topic_id])) {
-                    $previous_data = $topics_data_previous[$topic_id];
-                }
+                $previous_data = $topics_data_previous[$topic_id] ?? [];
 
                 // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
                 // в том числе, чтобы очистить значения сидов для старой раздачи
@@ -161,12 +163,10 @@ if (isset($cfg['subsections'])) {
                     $isTopicDataDelete = false;
                 }
 
-                // Если нет доп. данных о раздаче, их надо получить. topic_title, poster_id
+                // Новая или обновлённая раздача
                 if (
                     empty($previous_data)
                     || $isTopicDataDelete
-                    || $previous_data['lgth'] === 0 // Пустое название
-                    || $previous_data['ps'] === 0   // Нет автора раздачи
                 ) {
                     $db_topics_renew[$topic_id] = [
                         'id' => $topic_id,
@@ -183,9 +183,6 @@ if (isset($cfg['subsections'])) {
                         'ps' => $topic_data['topic_poster'],
                         'ls' => $topic_data['seeder_last_seen'],
                     ];
-                    if (!empty($topic_data['keepers'])) {
-                        $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
-                    }
                     unset($previous_data);
                     continue;
                 }
@@ -214,9 +211,6 @@ if (isset($cfg['subsections'])) {
                     'ps' => $topic_data['topic_poster'],
                     'ls' => $topic_data['seeder_last_seen'],
                 ];
-                if (!empty($topic_data['keepers'])) {
-                    $topicsKeepersFromForum[$topic_id] = $topic_data['keepers'];
-                }
 
                 unset($topic_id, $topic_data);
             }
@@ -229,7 +223,7 @@ if (isset($cfg['subsections'])) {
                             $dbTopicsKeepers[] = [
                                 'topic_id'    => $keeperTopicID,
                                 'keeper_id'   => $keeperID,
-                                'keeper_name' => $keepersUserData[$keeperID][0],
+                                'keeper_name' => $keepersUserData[$keeperID],
                             ];
                         }
                     }
@@ -244,22 +238,6 @@ if (isset($cfg['subsections'])) {
 
             // вставка данных в базу о новых раздачах
             if (count($db_topics_renew)) {
-                $topics_renew_ids = array_keys($db_topics_renew);
-                $topics_data = $api->getTorrentTopicData($topics_renew_ids);
-                unset($topics_renew_ids);
-                if (empty($topics_data)) {
-                    throw new Exception("Error: Не получены дополнительные данные о раздачах");
-                }
-                foreach ($topics_data as $topic_id => $topic_data) {
-                    if (empty($topic_data)) {
-                        continue;
-                    }
-                    if (isset($db_topics_renew[$topic_id])) {
-                        $db_topics_renew[$topic_id]['na'] = $topic_data['topic_title'];
-                    }
-                }
-                unset($topics_data);
-
                 $tabTopicsRenew->cloneFill($db_topics_renew);
             }
             unset($db_topics_renew);
@@ -270,6 +248,7 @@ if (isset($cfg['subsections'])) {
             }
             unset($db_topics_update);
         }
+        unset($topics_data);
 
         Log::append(sprintf(
             'Обновление списка раздач подраздела № %d завершено за %s, %d шт',
@@ -283,7 +262,7 @@ if (isset($cfg['subsections'])) {
 if (count($noUpdateForums)) {
     Log::append(sprintf(
         'Notice: Обновление списков раздач не требуется для подразделов №№ %s.',
-        implode(',', $noUpdateForums)
+        implode(', ', $noUpdateForums)
     ));
 }
 
