@@ -153,7 +153,7 @@ class Deluge extends TorrentClient
         foreach ($response as $hashString => $torrent) {
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             if (
-                $torrent['message' == 'OK']
+                $torrent['message'] == 'OK'
                 && !isset($matches[1])
             ) {
                 if ($torrent['progress'] == 100) {
