@@ -7,6 +7,9 @@ use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 
+// Обновляем дерево подразделов
+include_once dirname(__FILE__) . '/forum_tree.php';
+
 // получение настроек
 if (!isset($cfg)) {
     $cfg = get_settings();
