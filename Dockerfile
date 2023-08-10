@@ -49,6 +49,6 @@ COPY favicon.ico .
 COPY version.json .
 COPY index.php .
 
-HEALTHCHECK CMD curl -f http://localhost || exit 1
+HEALTHCHECK --interval=15m --timeout=5s CMD curl -f http://localhost/php/actions/keepAlive.php || exit 1
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
