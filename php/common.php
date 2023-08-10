@@ -17,16 +17,28 @@ Db::create();
 
 // данные о сидах устарели
 $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
-$avgSeedersPeriodOutdatedSeconds = $avgSeedersPeriodOutdated * 86400;
+$outdatedTime = time() - (int)$avgSeedersPeriodOutdated * 86400;
+
+// Удалим устарешвие метки обновления.
 Db::query_database(
-    "DELETE FROM Topics WHERE ss IN (SELECT id FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(:ud as INTEGER)) AND pt <> 2
-    OR strftime('%s', 'now') - (SELECT ud FROM UpdateTime WHERE id = 9999) > CAST(:ud as INTEGER) AND pt = 2",
-    [':ud' => $avgSeedersPeriodOutdatedSeconds]
+    "DELETE FROM UpdateTime WHERE ud < ?",
+    [$outdatedTime]
 );
+
+// Удалим раздачи из подразделов, для которых нет в списке "обновлённых".
 Db::query_database(
-    "DELETE FROM UpdateTime WHERE strftime('%s', 'now') - ud > CAST(? as INTEGER)",
-    [$avgSeedersPeriodOutdatedSeconds]
+    "DELETE FROM Topics WHERE pt <> 2 AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)"
 );
+
+// Удалим устарешвие раздачи высокого приоритета.
+Db::query_database(
+    "DELETE FROM Topics
+        WHERE pt = 2
+            AND IFNULL((SELECT ud FROM UpdateTime WHERE id = 9999), 0) < ?
+            AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)",
+    [$outdatedTime]
+);
+
 
 function get_webtlo_version()
 {
