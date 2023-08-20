@@ -355,8 +355,19 @@ function versionCompare(v1, v2, options) {
         return data;
     }
 
-    $.fn.toggleDisable = function(disable) {
-        disable = !!disable;
-        return this.toggleClass("ui-state-disabled", disable).prop("disabled", disable);
+    /** Блокировка элемента + визуальное отображение */
+    $.fn.toggleDisable = function(disabled = false) {
+        return this.toggleClass('ui-state-disabled', disabled).prop('disabled', disabled);
     };
+
+    /** Блокировка элемента + дополнительный класс */
+    $.fn.disableManual = function(disabled = false, className = 'disabled-manual') {
+        return this.toggleClass(className, disabled).toggleDisable(disabled);
+    };
+
+    /** Заменить иконку у элементов на колёсико и обратно. */
+    $.fn.toggleIconSpinner = function(className = '') {
+        this.find('i.fa').toggleClass(className).toggleClass('fa-spinner fa-pulse');
+        return this;
+    }
 })(jQuery);
