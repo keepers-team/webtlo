@@ -999,11 +999,14 @@ $checkbox_check = cfg_checkbox($cfg);
     <div id="dialog" title="Сообщение"></div>
     <!-- скрипты webtlo -->
     <script type="text/javascript" src="scripts/jquery.common.js"></script>
-    <script type="text/javascript" src="scripts/jquery.tor_clients.js"></script>
-    <script type="text/javascript" src="scripts/jquery.subsections.js"></script>
+    <script type="text/javascript" src="scripts/jquery.topics.func.js"></script>
+    <script type="text/javascript" src="scripts/jquery.subsections.func.js"></script>
+    <script type="text/javascript" src="scripts/jquery.clients.func.js"></script>
+    <script type="text/javascript" src="scripts/jquery.widgets.init.js"></script>
+    <script type="text/javascript" src="scripts/jquery.topics.init.js"></script>
+    <script type="text/javascript" src="scripts/jquery.subsections.init.js"></script>
+    <script type="text/javascript" src="scripts/jquery.clients.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.actions.js"></script>
-    <script type="text/javascript" src="scripts/jquery.widgets.js"></script>
-    <script type="text/javascript" src="scripts/jquery.topics.js"></script>
 </body>
 
 </html>

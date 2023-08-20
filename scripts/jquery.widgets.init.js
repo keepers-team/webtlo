@@ -1,3 +1,6 @@
+
+/* Инициализация работы элементов UI */
+
 $(document).ready(function () {
 
     // настройки jQuery UI
