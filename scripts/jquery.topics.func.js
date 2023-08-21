@@ -287,3 +287,81 @@ function loadSavedFilterOptions(filter_options) {
         $(".keepers_filter_rule_fieldset").show();
     }
 }
+
+/** Проверка наличия раздач без названия + отображение. */
+let refreshTopics = {
+    interval: null,
+    isRun: false,
+};
+function checkEmptyTitleTopics(manualUpdate = false) {
+    const bar = $('.process-bar');
+
+    $.ajax({
+        url: 'php/actions/count_topics.php',
+        success: function (response) {
+            response = $.parseJSON(response);
+
+            if (response.log) {
+                $('#log').append(response.log);
+            }
+
+            // Обновлять нечего, скрываем и обнуляем прогрессбар, очищаем интервал.
+            if (!response.unnamed) {
+                clearRefreshTopicsInterval();
+                return;
+            }
+
+            // Создаём интервал, если нужно следить за процессом обновления имён.
+            if (!refreshTopics.interval) {
+                refreshTopics.interval = setInterval(checkEmptyTitleTopics, 15000);
+            }
+
+            // Ручной запуск обновления имён.
+            if (manualUpdate) {
+                updateEmptyTitleTopics();
+            }
+
+            // Задаём максимум прогрессбара, если его нет.
+            const optionMax = bar.progressbar('option', 'max');
+            if (!optionMax) {
+                bar.show().progressbar('option', 'max', response.total);
+            }
+            // Обновляем значение в прогрессаре.
+            bar.progressbar('value', response.current);
+
+            showResultTopics(`Обновляем имена раздач: [${response.current}/${response.total}]`);
+        },
+    });
+}
+
+/** Ручной запуск обновления дополнительных сведений о раздачах. */
+function updateEmptyTitleTopics() {
+    if (refreshTopics.isRun) return;
+
+    refreshTopics.isRun = true;
+    processStatus.set('Обновляем имена раздач...');
+    $.ajax({
+        url: 'php/actions/update_topics_details.php',
+        success: function (response) {
+            response = $.parseJSON(response);
+
+            if (response.log) {
+                $('#log').append(response.log);
+            }
+        },
+        complete: function () {
+            refreshTopics.isRun = false;
+            clearRefreshTopicsInterval();
+
+            processStatus.hide();
+        },
+    });
+}
+
+/** Очистка интервала и обнуление статус бара. */
+function clearRefreshTopicsInterval() {
+    clearInterval(refreshTopics.interval);
+    refreshTopics.interval = null;
+
+    $('.process-bar').progressbar('option', 'max', 0);
+}
