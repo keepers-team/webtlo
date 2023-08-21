@@ -23,13 +23,32 @@ function showResultTopics(text = "") {
     $("#topics_result").html(text);
 }
 
+let processStatus = {
+    status : $('.process-status'),
+    loading: $('.process-loading'),
+    show: function () {
+        this.loading.show();
+    },
+    hide: function () {
+        this.loading.hide();
+    },
+    set: function (text = '') {
+        this.status.text(text);
+        if (text) {
+            this.show();
+        }
+    }
+
+};
+
 let lock_actions = 0;
 
 function block_actions() {
     if (lock_actions === 0) {
         $("#topics_control button").add("button.send_reports").toggleDisable(true);
         $("#main-subsections, #tor_download_options").selectmenu("disable");
-        $("#loading, #process").show();
+
+        processStatus.show();
         lock_actions = 1;
     } else {
         $("#topics_control button").add("button.send_reports").toggleDisable(false);
@@ -42,10 +61,12 @@ function block_actions() {
             $(".tor_stop, .tor_remove, .tor_label, .tor_start").toggleDisable(true);
         }
         $("#main-subsections, #tor_download_options").selectmenu("enable");
-        $("#loading, #process").hide();
+
+        processStatus.hide();
         lock_actions = 0;
     }
 }
+
 // выполнить функцию с задержкой
 function makeDelay(ms) {
     var timer = 0;
