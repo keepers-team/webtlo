@@ -10,7 +10,7 @@ function downloadTorrents(replace_passkey) {
     }
     var forum_id = $("#main-subsections").val();
     var config = $("#config").serialize();
-    $("#process").text("Скачивание торрент-файлов...");
+    processStatus.set("Скачивание торрент-файлов...");
     $.ajax({
         type: "POST",
         url: "php/actions/get_torrent_files.php",
@@ -41,7 +41,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
     if ($.isEmptyObject(forum_id)) {
         return false;
     }
-    $("#process").text("Получение списка раздач...");
+    processStatus.set("Получение списка раздач...");
     $.ajax({
         type: "POST",
         url: "php/actions/get_reports_hashes.php",
@@ -64,7 +64,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
                 showResultTopics("Не удалось получить список раздач для загрузки");
                 return false;
             }
-            $("#process").text("Скачивание торрент-файлов...");
+            processStatus.set("Скачивание торрент-файлов...");
             $.ajax({
                 type: "POST",
                 url: "php/actions/get_torrent_files.php",
@@ -105,7 +105,6 @@ function getFilteredTopics() {
 
     let forum_id = $("#main-subsections").val();
     $("#excluded_topics_size").parent().hide();
-    $("#loading, #process").hide();
 
     // Ничего не загружать.
     if (forum_id == -999) return;
@@ -165,7 +164,7 @@ function getFilteredTopics() {
     }
     // сериализим параметры фильтра
     var $filter = $("#topics_filter").serialize();
-    $("#process").text("Получение данных о раздачах...");
+    processStatus.set("Получение данных о раздачах...");
     $.ajax({
         type: "POST",
         url: "php/actions/get_filtered_list_topics.php",
@@ -224,7 +223,7 @@ function getCountSizeSelectedTopics() {
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
 function execActionTopics(topic_hashes, tor_clients, action, label, force_start, remove_data) {
     $("#dialog").dialog("close");
-    $("#process").text("Управление раздачами...");
+    processStatus.set("Управление раздачами...");
     $.ajax({
         type: "POST",
         context: this,

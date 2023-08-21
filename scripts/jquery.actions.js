@@ -8,7 +8,7 @@ $(document).ready(function () {
             beforeSend: function () {
                 filter_hold = true;
                 block_actions();
-                $("#process").text("Обновление сведений о раздачах...");
+                processStatus.set("Обновление сведений о раздачах...");
             },
             success: function (response) {
                 filter_hold = false;
@@ -33,7 +33,7 @@ $(document).ready(function () {
             url: "php/actions/send_reports.php",
             beforeSend: function () {
                 block_actions();
-                $("#process").text("Отправка отчётов на форум...");
+                processStatus.set("Отправка отчётов на форум...");
             },
             success: function (response) {
                 response = $.parseJSON(response);
@@ -55,7 +55,7 @@ $(document).ready(function () {
             url: "php/actions/control_torrents.php",
             beforeSend: function () {
                 block_actions();
-                $("#process").text("Регулировка раздач...");
+                processStatus.set("Регулировка раздач...");
             },
             success: function (response) {
                 response = $.parseJSON(response);

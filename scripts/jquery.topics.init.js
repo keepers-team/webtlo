@@ -16,7 +16,7 @@ $(document).ready(function () {
         }
         var forum_id = $("#main-subsections").val();
         var value = forum_id != -2 ? 1 : 0;
-        $("#process").text('Редактирование "чёрного списка" раздач...');
+        processStatus.set('Редактирование "чёрного списка" раздач...');
         $.ajax({
             type: "POST",
             url: "php/actions/exclude_topics.php",
@@ -44,7 +44,7 @@ $(document).ready(function () {
             showResultTopics("Выберите раздачи");
             return false;
         }
-        $("#process").text("Добавление раздач в торрент-клиент...");
+        processStatus.set("Добавление раздач в торрент-клиент...");
         $.ajax({
             type: "POST",
             url: "php/actions/add_topics_to_client.php",
