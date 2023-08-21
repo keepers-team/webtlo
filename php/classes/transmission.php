@@ -172,7 +172,7 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         $torrentFile = file_get_contents($torrentFilePath);
         if ($torrentFile === false) {
@@ -188,6 +188,10 @@ class Transmission extends TorrentClient
         ];
         if (!empty($savePath)) {
             $fields['arguments']['download-dir'] = $savePath;
+        }
+        if (!empty($label)) {
+            $label = str_replace(',', '', $label);
+            $fields['arguments']['labels'] = [$label];
         }
         $response = $this->makeRequest($fields);
         if ($response === false) {

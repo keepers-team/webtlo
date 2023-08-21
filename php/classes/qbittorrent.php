@@ -11,6 +11,12 @@ class Qbittorrent extends TorrentClient
 {
     protected static $base = '%s://%s:%s/%s';
 
+    /** Пауза при добавлении раздач в клиент, мс. */
+    protected int $torrentAddingSleep = 100000;
+
+    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
+    protected bool $categoryAddingAllowed = true;
+
     private $categories;
     private $responseHttpCode;
     private $errorStates = ['error', 'missingFiles', 'unknown'];
@@ -215,7 +221,7 @@ class Qbittorrent extends TorrentClient
         return $properties;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         if (version_compare(PHP_VERSION, '5.5.0') >= 0) {
             $torrentFile = new CurlFile($torrentFilePath, 'application/x-bittorrent');
@@ -226,6 +232,10 @@ class Qbittorrent extends TorrentClient
             'torrents' => $torrentFile,
             'savepath' => $savePath,
         ];
+        if (!empty($label)) {
+            $this->checkLabelExists($label);
+            $fields['category'] = $label;
+        }
         $response = $this->makeRequest('api/v2/torrents/add', $fields);
         if (
             $response === false
@@ -238,19 +248,7 @@ class Qbittorrent extends TorrentClient
 
     public function setLabel($torrentHashes, $labelName = '')
     {
-        if ($this->categories === null) {
-            $this->categories = $this->makeRequest('api/v2/torrents/categories');
-            if ($this->categories === false) {
-                return false;
-            }
-        }
-        if (
-            is_array($this->categories)
-            && !array_key_exists($labelName, $this->categories)
-        ) {
-            $this->createCategory($labelName);
-            $this->categories[$labelName] = [];
-        }
+        $this->checkLabelExists($labelName);
         $fields = http_build_query(
             [
                 'hashes' => implode('|', array_map('strtolower', $torrentHashes)),
@@ -268,6 +266,25 @@ class Qbittorrent extends TorrentClient
             Log::append('Error: Category name does not exist');
         }
         return $response;
+    }
+
+    private function checkLabelExists(string $labelName = ''): void
+    {
+        if (empty($labelName)) return;
+
+        if ($this->categories === null) {
+            $this->categories = $this->makeRequest('api/v2/torrents/categories');
+            if ($this->categories === false) {
+                return;
+            }
+        }
+        if (
+            is_array($this->categories)
+            && !array_key_exists($labelName, $this->categories)
+        ) {
+            $this->createCategory($labelName);
+            $this->categories[$labelName] = [];
+        }
     }
 
     public function createCategory($categoryName, $savePath = '')
