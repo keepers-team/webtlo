@@ -291,16 +291,16 @@ li.menu.ui-tabs-active {
     margin: 0 10px;
 }
 
-#indication, #indication * {
+.process-indication, .process-indication * {
     display: inline-block;
 }
 
-#loading {
+.process-icon {
     font-size: small;
     margin-left: 5px;
 }
 
-#process {
+.process-status {
     margin-left: 5px;
 }
 

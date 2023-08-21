@@ -3,6 +3,9 @@
 
 $(document).ready(function () {
 
+    // Скрываем прогресс загрузки.
+    $(".process-loading").hide();
+
     // настройки jQuery UI
     jqueryUIVersion = "1.12.1";
     defaultUITheme = "smoothness";
