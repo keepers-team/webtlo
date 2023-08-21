@@ -232,6 +232,11 @@ function get_settings($filename = "")
         'control' => $ini->read('automation', 'control', 0),
     ];
 
+    // Обновление список раздач
+    $config['update'] = [
+        'priority'     => $ini->read('update', 'priority', 0),
+    ];
+
     // таймауты
     $config['curl_setopt'] = [
         'api' => [
