@@ -71,12 +71,19 @@ try {
         $result = 'Не удалось создать каталог "' . $localPath . '": неверно указан путь или недостаточно прав';
         throw new Exception();
     }
-    $totalTorrentFilesAdded = 0;
-    $usedTorrentClientsIDs = [];
+    // шаблон для сохранения
+    $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent';
+    if (PHP_OS == 'WINNT') {
+        $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
+    }
+
     // скачивание торрент-файлов
     $download = new TorrentDownload($cfg['forum_address']);
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
+
+    $totalTorrentFilesAdded = 0;
+    $usedTorrentClientsIDs = [];
     foreach ($topicHashesByForums as $forumID => $topicHashes) {
         if (empty($topicHashes)) {
             continue;
@@ -100,11 +107,7 @@ try {
         }
         // данные текущего торрент-клиента
         $torrentClient = $cfg['clients'][$torrentClientID];
-        // шаблон для сохранения
-        $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent';
-        if (PHP_OS == 'WINNT') {
-            $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
-        }
+
         foreach ($topicHashes as $topicHash) {
             $torrentFile = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicHash, $cfg['retracker']);
             if ($torrentFile === false) {
@@ -126,6 +129,7 @@ try {
             Log::append('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $torrentClient['cm'] . '"');
             continue;
         }
+
         $numberDownloadedTorrentFiles = count($downloadedTorrentFiles);
         // подключаемся к торрент-клиенту
         /**
@@ -145,25 +149,29 @@ try {
         }
         // применяем таймауты
         $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
+
         // убираем последний слэш в пути каталога для данных
         if (preg_match('/(\/|\\\\)$/', $forumData['df'])) {
             $forumData['df'] = substr($forumData['df'], 0, -1);
         }
         // определяем направление слэша в пути каталога для данных
         $delimiter = strpos($forumData['df'], '/') === false ? '\\' : '/';
+
+        $forumLabel = $forumData['lb'] ?? '';
         // добавление раздач
         $downloadedTorrentFiles = array_chunk($downloadedTorrentFiles, 999);
-        foreach ($downloadedTorrentFiles as $downloadedTorrentFiles) {
+        foreach ($downloadedTorrentFiles as $downloadedTorrentFilesChunk) {
             // получаем идентификаторы раздач
-            $placeholders = str_repeat('?,', count($downloadedTorrentFiles) - 1) . '?';
+            $placeholders = str_repeat('?,', count($downloadedTorrentFilesChunk) - 1) . '?';
             $topicIDsByHash = Db::query_database(
                 'SELECT hs, id FROM Topics WHERE hs IN (' . $placeholders . ')',
-                $downloadedTorrentFiles,
+                $downloadedTorrentFilesChunk,
                 true,
                 PDO::FETCH_KEY_PAIR
             );
             unset($placeholders);
-            foreach ($downloadedTorrentFiles as $topicHash) {
+
+            foreach ($downloadedTorrentFilesChunk as $topicHash) {
                 $savePath = '';
                 if (!empty($forumData['df'])) {
                     $savePath = $forumData['df'];
@@ -181,31 +189,35 @@ try {
                 }
                 // путь до торрент-файла на сервере
                 $torrentFilePath = sprintf($formatPathTorrentFile, $topicHash);
-                $response = $client->addTorrent($torrentFilePath, $savePath);
+                $response = $client->addTorrent($torrentFilePath, $savePath, $forumLabel);
                 if ($response !== false) {
                     $addedTorrentFiles[] = $topicHash;
                 }
-                // ждём полсекунды
-                usleep(500000);
+
+                // Пауза между добавлениями раздач, в зависимости от клиента (0.5 сек по умолчанию)
+                usleep($client->getTorrentAddingSleep());
             }
-            unset($topicIDsByHash);
+            unset($downloadedTorrentFilesChunk, $topicIDsByHash);
         }
         unset($downloadedTorrentFiles);
+
         if (empty($addedTorrentFiles)) {
             Log::append('Не удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
             continue;
         }
         $numberAddedTorrentFiles = count($addedTorrentFiles);
+
         // устанавливаем метку
-        if (!empty($forumData['lb'])) {
+        if ($forumLabel !== '' && !$client->isCategoryAddingAllowed()) {
             // ждём добавления раздач, чтобы проставить метку
-            sleep(round(count($addedTorrentFiles) / 3) + 1); // < 3 дольше ожидание
+            sleep(round(count($addedTorrentFiles) / 20) + 1);
             // устанавливаем метку
-            $response = $client->setLabel($addedTorrentFiles, $forumData['lb']);
+            $response = $client->setLabel($addedTorrentFiles, $forumLabel);
             if ($response === false) {
                 Log::append('Error: Возникли проблемы при отправке запроса на установку метки');
             }
         }
+
         // помечаем в базе добавленные раздачи
         $addedTorrentFiles = array_chunk($addedTorrentFiles, 998);
         foreach ($addedTorrentFiles as $addedTorrentFiles) {
@@ -231,6 +243,7 @@ try {
             unset($placeholders);
         }
         unset($addedTorrentFiles);
+
         Log::append('Добавлено раздач в торрент-клиент "' . $torrentClient['cm'] . '": ' . $numberAddedTorrentFiles . ' шт.');
         if (!in_array($torrentClientID, $usedTorrentClientsIDs)) {
             $usedTorrentClientsIDs[] = $torrentClientID;
