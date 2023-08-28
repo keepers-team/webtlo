@@ -7,21 +7,39 @@ use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 
+// получение настроек
+if (!isset($cfg)) {
+    $cfg = get_settings();
+}
+
+// Хранимые подразделы.
+$subsections = array_keys($cfg['subsections'] ?? []);
+
+if ($cfg['update']['priority'] == 0) {
+    Log::append('Notice: Обновление списка раздач с высоким приоритетом отключено в настройках.');
+
+    // Если обновление списка высокоприоритетных раздач отключено, то удалим лишние записи в БД.
+    if (count($subsections)) {
+        $sub = KeysObject::create($subsections);
+        Db::query_database(
+            "DELETE FROM Topics WHERE Topics.pt = 2 AND Topics.ss NOT IN ($sub->keys)",
+            $sub->values
+        );
+    }
+    return;
+}
+
 Timers::start('hp_topics');
 /** Ид подраздела обновления высокоприоритетных раздач */
 const HIGH_PRIORITY_UPDATE = 9999;
 
+Log::append('Info: Начато обновление списка высокоприоритетных раздач...');
 // получаем дату предыдущего обновления
 $updateTime = get_last_update_time(HIGH_PRIORITY_UPDATE);
 // если не прошло два часа
 if (time() - $updateTime < 7200) {
     Log::append("Notice: Не требуется обновление списка высокоприоритетных раздач");
     return;
-}
-
-// получение настроек
-if (!isset($cfg)) {
-    $cfg = get_settings();
 }
 
 // подключаемся к api
@@ -71,9 +89,6 @@ $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
 
 $topicsKeys = $topicsHighPriorityData['format']['topic_id'];
 $flipKeys   = array_flip($topicsKeys);
-
-// Хранимые подразделы.
-$subsections = array_keys($cfg['subsections'] ?? []);
 
 // Убираем раздачи, из разделов, которые храним.
 $topicsHighPriority = array_filter($topicsHighPriorityData['result'], function($el) use ($flipKeys, $subsections) {
@@ -249,7 +264,7 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     set_last_update_time(HIGH_PRIORITY_UPDATE, $topicsHighPriorityUpdateTime);
 
     Log::append(sprintf(
-        'Обновление высокоприоритетных раздач завершено за %s, обработано раздач: %d шт',
+        'Info: Обновление высокоприоритетных раздач завершено за %s, обработано раздач: %d шт',
         Timers::getExecTime('hp_topics'),
         $countTopicsUpdate + $countTopicsRenew
     ));
