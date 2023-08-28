@@ -228,6 +228,8 @@ try {
     $ini->write('automation', 'reports', isset($cfg['automation_reports']) ? 1 : 0);
     $ini->write('automation', 'control', isset($cfg['automation_control']) ? 1 : 0);
 
+    // Обновление список раздач
+    $ini->write('update', 'priority', isset($cfg['update_priority']) ? 1 : 0);
 
     // обновление файла с настройками
     $ini->updateFile();

@@ -14,6 +14,9 @@ try {
 try {
     $cfg = get_settings();
 
+    // Callback для чекбоксов.
+    $checkbox_check = cfg_checkbox($cfg);
+
     // чекбоксы
     $savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
@@ -152,10 +155,12 @@ try {
     // $e->getMessage();
 }
 
-function automation_checkbox($cfg, $option)
+function cfg_checkbox($cfg): Closure
 {
-    $value = $cfg['automation'][$option] ?? 0;
-    return $value == 1 ? "checked" : "";
+    return function($section, $option) use ($cfg) {
+        $value = $cfg[$section][$option] ?? 0;
+        return $value == 1 ? "checked" : "";
+    };
 }
 
 ?>
@@ -836,23 +841,29 @@ function automation_checkbox($cfg, $option)
                                 <input id="exclude_forums_ids" type="text" size="20" readonly value="<?php echo $cfg['reports']['exclude_forums_ids'] ?>" />
                             </label>
                         </div>
-                        <h2>Автоматизация и регулировка раздач</h2>
+                        <h2>Автоматизация и дополнительные настройки</h2>
                         <div>
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
-                                <input name="automation_update" type="checkbox" size="24" <?= automation_checkbox($cfg, 'update') ?> />
+                                <input name="automation_update" type="checkbox" size="24" <?= $checkbox_check('automation', 'update') ?> />
                                 <span class="scriptname">[update.php, keepers.php]</span>
                                 Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
                             <label class="label">
-                                <input name="automation_reports" type="checkbox" size="24" <?= automation_checkbox($cfg, 'reports') ?> />
+                                <input name="automation_reports" type="checkbox" size="24" <?= $checkbox_check('automation', 'reports') ?> />
                                 <span class="scriptname">[reports.php]</span>
                                 Отправка отчётов на форум
                             </label>
                             <label class="label">
-                                <input name="automation_control" type="checkbox" size="24" <?= automation_checkbox($cfg, 'control') ?> />
+                                <input name="automation_control" type="checkbox" size="24" <?= $checkbox_check('automation', 'control') ?> />
                                 <span class="scriptname">[control.php]</span>
                                 Регулировка раздач в торрент-клиентах
+                            </label>
+                            <hr>
+                            <h3>Дополнительные настройки обновления сведений</h3>
+                            <label class="label">
+                                <input name="update_priority" type="checkbox" size="24" <?= $checkbox_check('update', 'priority') ?> />
+                                Обновлять списки раздач с высоким приоритетом хранения всего трекера
                             </label>
                             <hr>
                             <h3>Регулировка раздач<sup>2</sup></h3>
@@ -880,7 +891,7 @@ function automation_checkbox($cfg, $option)
                             <hr>
                             <ol class="footnote">
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
-                                    Запуск алгоритмов должен быть настроен самостоятельно (cron/планировщик windows). <br />
+                                    Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
                                     За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
