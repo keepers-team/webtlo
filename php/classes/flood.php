@@ -138,7 +138,7 @@ class Flood extends TorrentClient
     {
         $fields = [
             'files' => [base64_encode(file_get_contents($torrentFilePath))],
-            'destination' => '', # $savePath,
+            'destination' => $savePath,
             'start' => true
             ];
         $response = $this->makeRequest('api/torrents/add-files', $fields);
