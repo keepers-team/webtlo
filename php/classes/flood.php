@@ -143,10 +143,12 @@ class Flood extends TorrentClient
         $label = str_replace([',', '/', '\\'], '', $label);
         $fields = [
             'files' => [base64_encode(file_get_contents($torrentFilePath))],
-            'tags' => [$label],
             'destination' => $savePath,
             'start' => true
             ];
+        if (!empty($label)) {
+            $fields['tags'] = [$label];
+        }
         $response = $this->makeRequest('api/torrents/add-files', $fields);
         if (
             $response === false
