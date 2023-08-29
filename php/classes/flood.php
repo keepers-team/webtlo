@@ -7,6 +7,8 @@
 class Flood extends TorrentClient
 {
     protected static $base = '%s://%s:%s/%s';
+    
+    protected bool $categoryAddingAllowed = true;
 
     private $responseHttpCode;
     private $errorStates = ['/.*Couldn\'t connect.*/', '/.*error.*/', '/.*Timeout.*/', '/.*missing.*/', '/.*unknown.*/'];
@@ -138,9 +140,11 @@ class Flood extends TorrentClient
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
+        $label = str_replace([',', '/', '\\'], '', $label);
         $fields = [
             'files' => [base64_encode(file_get_contents($torrentFilePath))],
-            'destination' => '', # $savePath,
+            'tags' => [$label],
+            'destination' => $savePath,
             'start' => true
             ];
         $response = $this->makeRequest('api/torrents/add-files', $fields);
