@@ -8,6 +8,9 @@ class Flood extends TorrentClient
 {
     protected static $base = '%s://%s:%s/%s';
 
+    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
+    protected bool $categoryAddingAllowed = true;
+
     private $responseHttpCode;
     private $errorStates = ['/.*Couldn\'t connect.*/', '/.*error.*/', '/.*Timeout.*/', '/.*missing.*/', '/.*unknown.*/'];
 
@@ -139,10 +142,15 @@ class Flood extends TorrentClient
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         $fields = [
-            'files' => [base64_encode(file_get_contents($torrentFilePath))],
+            'files'       => [base64_encode(file_get_contents($torrentFilePath))],
             'destination' => $savePath,
-            'start' => true
-            ];
+            'start'       => true,
+        ];
+        if (!empty($label)) {
+            $label = $this->prepareLabel($label);
+            $fields['tags'] = [$label];
+        }
+
         $response = $this->makeRequest('api/torrents/add-files', $fields);
         if (
             $response === false
@@ -167,12 +175,17 @@ class Flood extends TorrentClient
 
     public function setLabel($torrentHashes, $labelName = '')
     {
-        $labelName = str_replace([',', '/', '\\'], '', $labelName);
+        $labelName = $this->prepareLabel($labelName);
         $fields = [
             'hashes' => $torrentHashes,
             'tags' => [$labelName]
         ];
         return $this->makeRequest('api/torrents/tags', $fields, [CURLOPT_CUSTOMREQUEST => 'PATCH']);
+    }
+
+    private function prepareLabel(string $label): string
+    {
+        return str_replace([',', '/', '\\'], '', $label);
     }
 
     public function startTorrents($torrentHashes, $forceStart = false)
