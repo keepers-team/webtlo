@@ -13,6 +13,8 @@ use KeepersTeam\Webtlo\DTO\ForumObject;
  */
 class ReportCreator
 {
+    /** Ид темы для публикации сводных отчётов */
+    public const SUMMARY_FORUM = 4275633;
     /** Ид подраздела полного обновления сведений */
     private const FULL_UPDATE = 7777;
 

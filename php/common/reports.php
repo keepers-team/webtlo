@@ -160,16 +160,20 @@ if ($cfg['reports']['send_summary_report']) {
     $summaryReport = $forumReports->getSummaryReport();
 
     // ищем сообщение со сводным
-    $summaryPostId = $reports->search_post_id(4275633, true);
+    $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
 
     $summaryPostMode = empty($summaryPostId) ? 'reply' : 'editpost';
     // отправляем сводный отчёт
     $reports->send_message(
         $summaryPostMode,
         $summaryReport,
-        4275633,
+        ReportCreator::SUMMARY_FORUM,
         $summaryPostId
     );
+
+    // Запишем ид темы со сводными, чтобы очистка сообщений не задела.
+    $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
+
     Log::append(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
 }
 
