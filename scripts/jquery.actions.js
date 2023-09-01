@@ -1,27 +1,62 @@
 $(document).ready(function () {
 
+
     // обновление сведений о раздачах
     $("#update_info").on("click", function () {
-        $.ajax({
-            type: "POST",
-            url: "php/actions/update_info.php",
-            beforeSend: function () {
-                filter_hold = true;
-                block_actions();
-                processStatus.set("Обновление сведений о раздачах...");
-            },
-            success: function (response) {
-                filter_hold = false;
-                response = $.parseJSON(response);
-                $("#log").append(response.log);
-                showResultTopics(response.result);
-                getFilteredTopics();
-            },
-            complete: function () {
-                filter_hold = false;
-                block_actions();
-            },
-        });
+        let button = $(this);
+        let update_info_local = function () {
+            $.ajax({
+                type: "GET",
+                url: "php/actions/update_info.php",
+                data: {
+                    process: button.val() || 'all',
+                },
+                beforeSend: function () {
+                    filter_hold = true;
+                    block_actions();
+                    processStatus.set(button.prop('title') + "...");
+                },
+                success: function (response) {
+                    filter_hold = false;
+                    response = $.parseJSON(response);
+                    $("#log").append(response.log);
+                    showResultTopics(response.result);
+
+                    checkEmptyTitleTopics(true);
+                    getFilteredTopics();
+                },
+                complete: function () {
+                    filter_hold = false;
+                    block_actions();
+                },
+            });
+        }
+
+        if (!refreshTopics.interval) {
+            update_info_local();
+        } else {
+            $("#dialog")
+                .text('Имеются раздачи, в процессе обновления дополнительных сведений. Вы уверены, что хотите запустить обновление сейчас?')
+                .dialog({
+                    modal: true,
+                    autoOpen: true,
+                    buttons: [
+                        {
+                            text: "Да, запустить",
+                            click: function () {
+                                $(this).dialog("close");
+                                update_info_local();
+                            },
+                        },
+                        {
+                            text: "Нет, подождём",
+                            click: function () {
+                                $(this).dialog("close");
+                            }
+                        }
+                    ],
+                });
+        }
     });
 
     // отправка отчётов

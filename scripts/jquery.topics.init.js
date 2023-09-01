@@ -339,6 +339,9 @@ $(document).ready(function () {
         loadSavedFilterOptions(filter_options);
     }
 
+    // Проверяем наличие раздач, которым нужно обновить названия.
+    checkEmptyTitleTopics();
+
     // отобразим раздачи на главной
     getFilteredTopics();
 

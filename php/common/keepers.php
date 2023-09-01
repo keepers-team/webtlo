@@ -37,7 +37,7 @@ if (!isset($reports)) {
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
-Log::append('Начато обновление списков раздач хранителей...');
+Log::append('Info: Начато обновление списков раздач хранителей...');
 
 if (!$reports->check_access())
 {
@@ -188,5 +188,5 @@ if ($count_kept_topics > 0) {
         )"
     );
 
-    Log::append('Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
+    Log::append('Info: Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
 }

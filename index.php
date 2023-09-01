@@ -239,11 +239,11 @@ function cfg_checkbox($cfg): Closure
                         <button type="button" id="tor_add" title="Добавить выделенные раздачи текущего подраздела в торрент-клиент">
                             <i class="fa fa-plus" aria-hidden="true"></i>
                         </button>
-                        <div class="tor_download_dropdown">
+                        <div class="control-group">
                             <button type="button" class="tor_download" value="0" title="Скачать *.torrent файлы выделенных раздач текущего подраздела в каталог">
                                 <i class="fa fa-download" aria-hidden="true"></i>
                             </button>
-                            <select id="tor_download_options">
+                            <select id="tor_download_options" class="filter-select-menu">
                                 <option class="tor_download" value="1" title="Скачать *.torrent-файлы выделенных раздач текущего подраздела в каталог с заменой Passkey">с заменой Passkey</option>
                                 <option class="tor_download_by_keepers_list" value="0" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог">по спискам с форума</option>
                                 <option class="tor_download_by_keepers_list" value="1" title="Скачать *.torrent-файлы хранимых раздач (по спискам с форума) текущего подраздела в каталог с заменой Passkey">по спискам с форума и с заменой Passkey</option>
@@ -266,9 +266,14 @@ function cfg_checkbox($cfg): Closure
                                 <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <button id="update_info" name="update_info" type="button" title="Обновить сведения о раздачах">
-                            <i class="fa fa-refresh" aria-hidden="true"></i> Обновить сведения
-                        </button>
+                        <div class="control-group">
+                            <button type="button" id="update_info" name="update_info" title="Обновить сведения о раздачах">
+                                <i class="fa fa-refresh" aria-hidden="true"></i>
+                                <span>Обновить сведения</span>
+                            </button>
+                            <select id="update_info_select" class="filter-select-menu">
+                            </select>
+                        </div>
                         <button class="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
                             <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                         </button>
@@ -475,6 +480,7 @@ function cfg_checkbox($cfg): Closure
                             </div>
                         </div>
                     </form>
+                    <div class="process-bar"></div>
                     <div class="status_info">
                         <div id="counter">
                             Выбрано раздач: <span id="topics_count" class="bold">0</span> (<span id="topics_size">0.00</span>)
