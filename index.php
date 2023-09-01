@@ -166,20 +166,23 @@ function cfg_checkbox($cfg): Closure
 ?>
 
 <!DOCTYPE html>
-<html class="ui-widget-content">
+<html class="ui-widget-content" lang="ru">
 
 <head>
     <meta charset="utf-8" />
     <title>web-TLO-<?php echo $webtlo->version ?></title>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/i18n/jquery-ui-i18n.min.js"></script>
-    <script src="scripts/jquery.mousewheel.min.js"></script>
-    <script src="scripts/js.cookie.min.js"></script>
+
+    <script src="scripts/jquery.lib/js.cookie.min.js"></script>
+    <script src="scripts/jquery.lib/jquery.1.12.4.min.js"></script>
+    <script src="scripts/jquery.lib/jquery.mousewheel.min.js"></script>
+    <script src="scripts/jquery.lib/jquery-ui.1.12.1.min.js"></script>
+    <script src="scripts/jquery.lib/jquery-ui-i18n.1.11.4.min.js"></script>
+
     <link rel="stylesheet" href="css/reset.css" /> <!-- сброс стилей -->
     <link rel="stylesheet" href="css/style.css" /> <!-- таблица стилей webtlo -->
     <link rel="stylesheet" href="css/fontawesome-all.min.css"> <!-- шрифт с иконками -->
     <link rel="stylesheet" href="css/v4-shims.min.css"> <!-- иконки от v4 -->
+    <link rel="stylesheet" href="css/jquery-ui.smoothness.min.css" /> <!-- Стандартный стиль jquery -->
 
 </head>
 
