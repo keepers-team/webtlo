@@ -633,7 +633,6 @@ function cfg_checkbox($cfg): Closure
                                             <option value="deluge" title="WebUi plugin">Deluge</option>
                                             <option value="qbittorrent">qBittorrent</option>
                                             <option value="flood">Flood</option>
-                                            <option value="ktorrent">KTorrent</option>
                                             <option value="rtorrent">rTorrent</option>
                                         </select>
                                     </label>
@@ -712,7 +711,7 @@ function cfg_checkbox($cfg): Closure
                                 </label>
                                 <label>
                                     Каталог для данных:
-                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог (поддерживаются все кроме KTorrent)" />
+                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог" />
                                 </label>
                                 <label>
                                     Создавать подкаталог для добавляемой раздачи:

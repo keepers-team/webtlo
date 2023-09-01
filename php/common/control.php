@@ -39,7 +39,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 
     Timers::start("control_client_$torrentClientID");
     /**
-     * * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
+     * * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
      * */
     $client = new $torrentClientData['cl'](
         $torrentClientData['ssl'],
