@@ -777,7 +777,7 @@ function cfg_checkbox($cfg): Closure
                             <hr>
                             <label class="label">
                                 Цветовая схема интерфейса:
-                                <select id="theme-selector" class="myinput">
+                                <select id="theme-selector" class="myinput ignore-save-change">
                                     <option value="black-tie">Black Tie</option>
                                     <option value="blitzer">Blitzer</option>
                                     <option value="cupertino">Cupertino</option>
@@ -1013,11 +1013,11 @@ function cfg_checkbox($cfg): Closure
     <script type="text/javascript" src="scripts/jquery.topics.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.subsections.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.clients.func.js"></script>
+    <script type="text/javascript" src="scripts/jquery.actions.js"></script>
     <script type="text/javascript" src="scripts/jquery.widgets.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.topics.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.subsections.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.clients.init.js"></script>
-    <script type="text/javascript" src="scripts/jquery.actions.js"></script>
 </body>
 
 </html>
