@@ -14,7 +14,7 @@ include_once dirname(__FILE__) . '/high_priority_topics.php';
 // обновляем дополнительные сведения о раздачах (названия раздач)
 include_once dirname(__FILE__) . '/update_details.php';
 
-// обновляем списоки раздач в хранимых подразделах
+// обновляем списки раздач в торрент-клиентах
 include_once dirname(__FILE__) . '/tor_clients.php';
 
 Log::append("Обновление всех данных завершено за " . Timers::getExecTime('full_update'));

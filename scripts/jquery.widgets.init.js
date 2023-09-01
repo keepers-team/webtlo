@@ -4,7 +4,15 @@
 $(document).ready(function () {
 
     // Скрываем прогресс загрузки.
-    $(".process-loading").hide();
+    $(".process-loading, .process-bar").hide();
+
+    $('.process-bar').progressbar({
+        max: 0,
+        complete : function () {
+            $(this).hide();
+            showResultTopics();
+        }
+    });
 
     // настройки jQuery UI
     jqueryUIVersion = "1.12.1";
@@ -16,7 +24,7 @@ $(document).ready(function () {
     $("#theme-selector [value=" + currentUITheme + "]").prop("selected", true);
     setUITheme();
 
-    $("select:not(#tor_download_options)").selectmenu();
+    $("select:not(.filter-select-menu)").selectmenu();
     $("#list-forums").selectmenu("option", "width", "auto");
     $("input").addClass("ui-widget-content");
 
@@ -39,7 +47,7 @@ $(document).ready(function () {
         },
         beforeActivate: function(event, ui) {
             // Ловим переход с вкладки "настройки"
-            if (ui.oldTab.index() === 1) {
+            if (ui.oldPanel.prop('id') === 'settings') {
                 checkSaveSettings();
             }
         },
@@ -68,9 +76,10 @@ $(document).ready(function () {
     $("#toolbar-filter-topics").buttonset();
 
     $("#log_tabs").tabs();
+
     $("#tor_download_options").selectmenu({
         classes: {
-            "ui-selectmenu-button": "ui-button-icon-only tor_download-splitbutton-select"
+            "ui-selectmenu-button": "ui-button-icon-only split-button-select"
         },
         select: function (event, ui) {
             if (ui.item.element.attr("class") === "tor_download") {
@@ -80,7 +89,9 @@ $(document).ready(function () {
             }
         }
     });
-    $(".tor_download_dropdown").controlgroup();
+
+    // Инициализация кнопок с дополнительным меню.
+    $("div.control-group").controlgroup();
 
     // фильтрация раздач, количество сидов
     $("#rule_topics, .filter_rule input[type=text]").spinner({
@@ -112,6 +123,61 @@ $(document).ready(function () {
         ).datepicker(
             "refresh"
         );
+
+
+    // Меню обновления сведений.
+    let updateInfoSelect = $("#update_info_select");
+    updateInfoSelect.selectmenu({
+        classes: {
+            "ui-selectmenu-menu": "ui-menu-update-info",
+            "ui-selectmenu-button": "ui-button-icon-only split-button-select",
+        },
+        position: {
+            my: "right+12 top", at: "left bottom", collision: "flip"
+        },
+        select: function (event, data) {
+            Cookies.set('update-info-select-state', data.item.value);
+
+            $('#update_info')
+                .val(data.item.value)
+                .prop('title', $(data.item.element).prop('title'))
+                .find('span').text(data.item.label);
+        }
+    });
+
+    let updateInfoOptions = {
+        'all': {
+            'name': 'Обновить сведения',
+            'title': 'Обновление всех сведений из всех источников',
+        },
+        'subsections': {
+            'name': 'Обновить хранимые подразделы',
+            'title': 'Обновление списков раздач всех хранимых подразделов',
+        },
+        'keepers': {
+            'name': 'Обновить списки хранителей',
+            'title': 'Обновление списков раздач, хранимых другими хранителями',
+        },
+        'priority': {
+            'name': 'Обновить высокий приоритет',
+            'title': 'Обновление списоков раздач с высоким приоритетом со всего трекера',
+        },
+        'clients': {
+            'name': 'Обновить клиенты',
+            'title': 'Обновление списков раздач в торрент-клиентах',
+        },
+    };
+
+    updateInfoSelect.empty();
+    $.each(updateInfoOptions, function (value, el){
+        updateInfoSelect.append(`<option value="${value}" title="${el.title}">${el.name}</option>`);
+    });
+    updateInfoSelect.selectmenu('refresh');
+
+    let updateInfoSelectState = Cookies.get('update-info-select-state');
+    if (updateInfoSelectState !== undefined) {
+        updateInfoSelect.val(updateInfoSelectState).selectmenu('refresh').change();
+    }
 
     // регулировка раздач, количество пиров
     $(".spinner-peers").spinner({

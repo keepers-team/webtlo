@@ -44,14 +44,21 @@ let processStatus = {
 let lock_actions = 0;
 
 function block_actions() {
+    let buttons = $('#topics_control button')
+        .add("button.send_reports")
+        .not('button.disabled-manual');
+
+
     if (lock_actions === 0) {
-        $("#topics_control button").add("button.send_reports").toggleDisable(true);
-        $("#main-subsections, #tor_download_options").selectmenu("disable");
+        buttons.toggleDisable(true);
+
+        $("#main-subsections, .filter-select-menu").selectmenu("disable");
 
         processStatus.show();
         lock_actions = 1;
     } else {
-        $("#topics_control button").add("button.send_reports").toggleDisable(false);
+        buttons.toggleDisable(false);
+
         if (
             $("#main-subsections").val() < 1
             || !$("input[name=filter_status]").eq(1).prop("checked")
@@ -60,7 +67,7 @@ function block_actions() {
         } else {
             $(".tor_stop, .tor_remove, .tor_label, .tor_start").toggleDisable(true);
         }
-        $("#main-subsections, #tor_download_options").selectmenu("enable");
+        $("#main-subsections, .filter-select-menu").selectmenu("enable");
 
         processStatus.hide();
         lock_actions = 0;

@@ -16,8 +16,8 @@ try {
         'clients'     => 'tor_clients',
     ];
 
-    $process = $_GET['process'] ?? null;
-    if (null !== $process) {
+    $process = $_GET['process'] ?: null;
+    if (null !== $process && 'all' !== $process) {
         $pairs = array_filter($pairs, fn($el) => $el === $process, ARRAY_FILTER_USE_KEY);
     }
     // Запускаем задачи по очереди.

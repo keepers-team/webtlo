@@ -127,9 +127,13 @@ li.menu.ui-tabs-active {
     cursor: default;
 }
 
-.ui-button.ui-button-icon-only.tor_download-splitbutton-select {
+.ui-button.ui-button-icon-only.split-button-select {
     width: 1em;
     padding: .4em .1em;
+}
+
+.ui-menu-update-info .ui-menu-item-wrapper.ui-state-active {
+    color: #28a745;
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor, .ui-tabs-panel .ui-accordion-header {
@@ -302,6 +306,10 @@ li.menu.ui-tabs-active {
 
 .process-status {
     margin-left: 5px;
+}
+
+.process-bar.ui-progressbar {
+    height: 5px;
 }
 
 .bold {
