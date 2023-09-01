@@ -133,7 +133,7 @@ try {
         $numberDownloadedTorrentFiles = count($downloadedTorrentFiles);
         // подключаемся к торрент-клиенту
         /**
-         * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
+         * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
          */
         $client = new $torrentClient['cl'](
             $torrentClient['ssl'],

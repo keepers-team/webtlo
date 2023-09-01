@@ -8,7 +8,7 @@ try {
     $torrentClient = $_POST['tor_client'];
 
     /**
-     * @var utorrent|transmission|vuze|deluge|ktorrent|rtorrent|qbittorrent|flood $client
+     * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
      */
     $client = new $torrentClient['type'](
         $torrentClient['ssl'],
