@@ -11,6 +11,9 @@ include_once dirname(__FILE__) . '/update_subsections.php';
 // обновляем список высокоприоритетных раздач
 include_once dirname(__FILE__) . '/high_priority_topics.php';
 
+// обновляем дополнительные сведения о раздачах (названия раздач)
+include_once dirname(__FILE__) . '/update_details.php';
+
 // обновляем списоки раздач в хранимых подразделах
 include_once dirname(__FILE__) . '/tor_clients.php';
 
