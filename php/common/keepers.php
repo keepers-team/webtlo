@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\DTO\KeysObject;
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
@@ -37,19 +39,13 @@ if (!isset($reports)) {
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
-Log::append('Info: Начато обновление списков раздач хранителей...');
 
-if (!$reports->check_access())
-{
+Log::append('Info: Начато обновление списков раздач хранителей...');
+if (!$reports->check_access()) {
     Log::append('Error: Нет доступа к подфоруму хранителей. Обновление списков невозможно. ' .
         'Если вы Кандидат, то ожидайте включения в основную группу.');
     return;
 }
-
-$numberForumsScanned = 0;
-
-$keeperIds      = [];
-$noUpdateForums = [];
 
 // Параметры таблиц.
 $KL = (object)[
@@ -64,17 +60,47 @@ $FP = (object)[
     'primary' => 'forum_id',
 ];
 
-$forumsParams = [];
+// Список ид хранимых подразделов.
+$keptForums = array_keys($cfg['subsections'] ?? []);
+$forumKeys = KeysObject::create($keptForums);
+
+// Список ид обновлений подразделов.
+$keptForumsUpdate = array_map(fn($el) => 100000 + $el, $keptForums);
+$forumUpdateKeys = KeysObject::create($keptForumsUpdate);
+
+// Удалим данные о нехранимых более подразделах.
+Db::query_database("DELETE FROM $FP->table WHERE $FP->primary NOT IN ($forumKeys->keys)", $forumKeys->values);
+
+// Определим количество маркеров обновлений данных подразделов.
+// Если не совпадает, обнулим имеющиеся.
+$updateCount = Db::query_count("SELECT COUNT(1) FROM UpdateTime WHERE id IN ($forumUpdateKeys->keys)", $forumUpdateKeys->values);
+if ($updateCount !== count($keptForums)) {
+    Db::query_database("DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000");
+}
+
+// Найдём минимальную дату обновления данных других хранителей.
+$lastUpdate = Db::query_database_row(
+    "SELECT MIN(ud) FROM UpdateTime WHERE id IN ($forumUpdateKeys->keys)",
+    $forumUpdateKeys->values,
+    true,
+    PDO::FETCH_COLUMN
+) ?? 0;
+
+// Если не прошло два часа, то запретить обновление.
+if (time() - $lastUpdate < 7200) {
+    Log::append(sprintf(
+        'Notice: Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
+        date("d.m.y H:i:s", $lastUpdate)
+    ));
+    return;
+}
+
+$forumsScanned = 0;
+$keeperIds     = [];
+$forumsParams  = [];
 if (isset($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-        // Ид обновления хранителей подраздела.
-        $updateForumId = 100000 + $forum_id;
-        if (!check_update_available($updateForumId)) {
-            $noUpdateForums[] = $forum_id;
-            continue;
-        }
-
         // ид темы со списками хранителей.
         $forum_topic_id = $reports->search_topic_id($subsection['na']);
 
@@ -82,13 +108,12 @@ if (isset($cfg['subsections'])) {
             Log::append("Error: Не удалось найти тему со списками для подраздела № $forum_id.");
             continue;
         } else {
-            $numberForumsScanned++;
+            $forumsScanned++;
         }
 
         // Ищем списки хранимого другими хранителями.
         $keepers = $reports->scanning_viewtopic($forum_topic_id);
         if (!empty($keepers)) {
-
             $userPosts = [];
             foreach ($keepers as $keeper) {
                 if (empty($keeper['topics_ids'])) {
@@ -131,8 +156,8 @@ if (isset($cfg['subsections'])) {
                 'post_ids'       => json_encode($userPosts),
             ];
 
-            set_last_update_time($updateForumId);
-            unset($keepers, $updateForumId);
+            set_last_update_time(100000 + $forum_id);
+            unset($keepers);
         }
     }
 }
@@ -156,20 +181,12 @@ if (count($forumsParams)) {
     );
 }
 
-if (count($noUpdateForums)) {
-    sort($noUpdateForums);
-    Log::append(sprintf(
-        'Notice: Обновление списков хранителей не требуется для подразделов №№ %s.',
-        implode(',', $noUpdateForums)
-    ));
-}
-
 // записываем изменения в локальную базу
 $count_kept_topics = Db::select_count($KL->temp);
 if ($count_kept_topics > 0) {
     Log::append(sprintf(
         'Просканировано подразделов: %d шт, хранителей: %d, хранимых раздач: %d шт.',
-        $numberForumsScanned,
+        $forumsScanned,
         count(array_unique($keeperIds)),
         $count_kept_topics
     ));
@@ -187,6 +204,5 @@ if ($count_kept_topics > 0) {
             WHERE upd.topic_id IS NOT NULL
         )"
     );
-
-    Log::append('Info: Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
 }
+Log::append('Info: Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
