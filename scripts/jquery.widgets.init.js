@@ -1,6 +1,10 @@
 
 /* Инициализация работы элементов UI */
 
+// настройки jQuery UI
+let jqueryUIVersion = '1.12.1';
+let currentUITheme, defaultUITheme = 'smoothness';
+
 $(document).ready(function () {
 
     // Скрываем прогресс загрузки.
@@ -14,21 +18,11 @@ $(document).ready(function () {
         }
     });
 
-    // настройки jQuery UI
-    jqueryUIVersion = "1.12.1";
-    defaultUITheme = "smoothness";
-    currentUITheme = Cookies.get('theme');
-    if (currentUITheme === undefined) {
-        currentUITheme = defaultUITheme;
-    }
-    $("#theme-selector [value=" + currentUITheme + "]").prop("selected", true);
+    // Переключатель тем оформления.
+    currentUITheme = Cookies.get('theme') ?? defaultUITheme;
+    $(`#theme-selector [value=${currentUITheme}]`).prop('selected', true);
     setUITheme();
 
-    $("select:not(.filter-select-menu)").selectmenu();
-    $("#list-forums").selectmenu("option", "width", "auto");
-    $("input").addClass("ui-widget-content");
-
-    // переключатель тем оформления
     $("#theme-selector").selectmenu({
         change: function (event, ui) {
             Cookies.set('theme', ui.item.value);
@@ -36,6 +30,10 @@ $(document).ready(function () {
             setUITheme();
         }
     });
+
+    $("select:not(.filter-select-menu)").selectmenu();
+    $("#list-forums").selectmenu("option", "width", "auto");
+    $("input").addClass("ui-widget-content");
 
     // инициализация главного меню
     $("#menutabs").tabs({
