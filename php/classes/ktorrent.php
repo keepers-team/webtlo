@@ -168,7 +168,7 @@ class Ktorrent extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         /**
          * https://cgit.kde.org/ktorrent.git/tree/plugins/webinterface/torrentposthandler.cpp#n55

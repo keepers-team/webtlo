@@ -8,6 +8,9 @@ class Transmission extends TorrentClient
 {
     protected static $base = '%s://%s:%s/transmission/rpc';
 
+    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
+    protected bool $categoryAddingAllowed = true;
+
     private $rpcVersion;
 
     /**
@@ -172,7 +175,7 @@ class Transmission extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         $torrentFile = file_get_contents($torrentFilePath);
         if ($torrentFile === false) {
@@ -188,6 +191,10 @@ class Transmission extends TorrentClient
         ];
         if (!empty($savePath)) {
             $fields['arguments']['download-dir'] = $savePath;
+        }
+        if (!empty($label)) {
+            $label = $this->prepareLabel($label);
+            $fields['arguments']['labels'] = [$label];
         }
         $response = $this->makeRequest($fields);
         if ($response === false) {
@@ -208,7 +215,7 @@ class Transmission extends TorrentClient
             Log::append('Error: Торрент-клиент не поддерживает установку меток');
             return false;
         }
-        $labelName = str_replace(',', '', $labelName);
+        $labelName = $this->prepareLabel($labelName);
         $fields = [
             'method' => 'torrent-set',
             'arguments' => [
@@ -217,6 +224,11 @@ class Transmission extends TorrentClient
             ],
         ];
         return $this->makeRequest($fields);
+    }
+
+    private function prepareLabel(string $label): string
+    {
+        return str_replace(',', '', $label);
     }
 
     public function startTorrents($torrentHashes, $forceStart = false)

@@ -56,6 +56,12 @@ abstract class TorrentClient
      */
     protected $ch;
 
+    /** Пауза при добавлении раздач в клиент, мс. */
+    protected int $torrentAddingSleep = 500000;
+
+    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
+    protected bool $categoryAddingAllowed = false;
+
     /**
      * default constructor
      * @param bool|int $ssl
@@ -99,6 +105,17 @@ abstract class TorrentClient
         $this->customDomain = $domain;
     }
 
+    /** Значение паузы при добавлении раздач, мс */
+    public function getTorrentAddingSleep(): int
+    {
+        return $this->torrentAddingSleep;
+    }
+
+    public function isCategoryAddingAllowed(): bool
+    {
+        return $this->categoryAddingAllowed;
+    }
+
     /** Получить ид раздачи из комментария. */
     public function getTorrentTopicId(string $comment): ?int
     {
@@ -129,7 +146,7 @@ abstract class TorrentClient
      * @param string $savePath полный путь до каталога куда сохранять загружаемые данные
      * @return bool|mixed
      */
-    abstract public function addTorrent($torrentFilePath, $savePath = '');
+    abstract public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '');
 
     /**
      * установка метки у раздач перечисленных в $torrentHashes
