@@ -136,7 +136,7 @@ class Flood extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         $fields = [
             'files' => [base64_encode(file_get_contents($torrentFilePath))],

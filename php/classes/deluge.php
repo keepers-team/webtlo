@@ -176,7 +176,7 @@ class Deluge extends TorrentClient
         return $torrents;
     }
 
-    public function addTorrent($torrentFilePath, $savePath = '')
+    public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = '')
     {
         $torrentFile = file_get_contents($torrentFilePath);
         if ($torrentFile === false) {
