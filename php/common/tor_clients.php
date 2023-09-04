@@ -5,16 +5,22 @@ include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Module\Topics;
 
 // получение настроек
 if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
+// Если нет настроенных торрент-клиентов, удалим все раздачи и отметку.
 if (empty($cfg['clients'])) {
+    Log::append('Notice: Торрент-клиенты не найдены.');
+
+    LastUpdate::setTime(UpdateMark::CLIENTS->value, 0);
     Db::query_database("DELETE FROM Torrents");
     return;
 }
@@ -133,6 +139,10 @@ if ($tabTorrents->cloneCount() > 0) {
     $tabTorrents->moveToOrigin();
 }
 
+// Если обновление всех клиентов прошло успешно - отметим это.
+if (!count($failedClients)) {
+    LastUpdate::setTime(UpdateMark::CLIENTS->value);
+}
 
 $failedClients = KeysObject::create($failedClients);
 // Удалим лишние раздачи из БД.
