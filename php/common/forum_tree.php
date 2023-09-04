@@ -3,15 +3,15 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\LastUpdate;
 
 Timers::start('forum_tree');
-/** Ид подраздела обновления дерева подразделов  */
-const FORUM_TREE_UPDATE = 8888;
 
 Log::append('Info: Начато обновление дерева подразделов...');
 // Проверяем время последнего обновления.
-if (!check_update_available(FORUM_TREE_UPDATE)) {
+if (!LastUpdate::checkUpdateAvailable(UpdateMark::FORUM_TREE->value)) {
     Log::append('Notice: Обновление дерева подразделов не требуется.');
     return;
 }
@@ -98,7 +98,7 @@ if (isset($forums) && count($forums)) {
     $tabForums->clearUnusedRows();
 
     // Записываем время обновления.
-    set_last_update_time(FORUM_TREE_UPDATE, $treeUpdateTime);
+    LastUpdate::setTime(UpdateMark::FORUM_TREE->value, $treeUpdateTime);
 
     Log::append(sprintf(
         'Info: Обновление дерева подразделов завершено за %s, обработано подразделов: %d шт',

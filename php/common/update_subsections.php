@@ -3,9 +3,11 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
-use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Module\Topics;
 
 // Обновляем дерево подразделов
 include_once dirname(__FILE__) . '/forum_tree.php';
@@ -70,7 +72,7 @@ if (isset($cfg['subsections'])) {
     // обновим каждый хранимый подраздел
     foreach ($subsections as $forum_id) {
         // получаем дату предыдущего обновления
-        $update_time = get_last_update_time($forum_id);
+        $update_time = LastUpdate::getTime($forum_id);
 
         // если не прошёл час
         if (time() - $update_time < 3600) {
@@ -309,7 +311,7 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     $tabTime->cloneFillChunk($forumsUpdateTime);
     $tabTime->moveToOrigin();
     // Записываем время обновления.
-    set_last_update_time(7777);
+    LastUpdate::setTime(UpdateMark::SUBSECTIONS->value);
 
     Log::append(sprintf(
         'Обработано хранимых подразделов: %d шт, раздач в них %d',

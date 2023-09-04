@@ -3,9 +3,11 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
-use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Module\Topics;
 
 // получение настроек
 if (!isset($cfg)) {
@@ -17,6 +19,7 @@ $subsections = array_keys($cfg['subsections'] ?? []);
 
 if ($cfg['update']['priority'] == 0) {
     Log::append('Notice: Обновление списка раздач с высоким приоритетом отключено в настройках.');
+    LastUpdate::setTime(UpdateMark::HIGH_PRIORITY->value, 0);
 
     // Если обновление списка высокоприоритетных раздач отключено, то удалим лишние записи в БД.
     if (count($subsections)) {
@@ -30,12 +33,10 @@ if ($cfg['update']['priority'] == 0) {
 }
 
 Timers::start('hp_topics');
-/** Ид подраздела обновления высокоприоритетных раздач */
-const HIGH_PRIORITY_UPDATE = 9999;
 
 Log::append('Info: Начато обновление списка высокоприоритетных раздач...');
 // получаем дату предыдущего обновления
-$updateTime = get_last_update_time(HIGH_PRIORITY_UPDATE);
+$updateTime = LastUpdate::getTime(UpdateMark::HIGH_PRIORITY->value);
 // если не прошло два часа
 if (time() - $updateTime < 7200) {
     Log::append("Notice: Не требуется обновление списка высокоприоритетных раздач");
@@ -261,7 +262,7 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
         $exclude->values
     );
     // Записываем время обновления.
-    set_last_update_time(HIGH_PRIORITY_UPDATE, $topicsHighPriorityUpdateTime);
+    LastUpdate::setTime(UpdateMark::HIGH_PRIORITY->value, $topicsHighPriorityUpdateTime);
 
     Log::append(sprintf(
         'Info: Обновление высокоприоритетных раздач завершено за %s, обработано раздач: %d шт',
