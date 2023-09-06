@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\DTO;
 
-class ForumObject
+final class ForumObject
 {
     public function __construct(
         public int     $id,

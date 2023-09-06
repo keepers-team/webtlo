@@ -2,21 +2,21 @@
 
 namespace KeepersTeam\Webtlo\Module;
 
-use Exception;
-use PDO;
 use Db;
+use PDO;
 use Log;
+use Exception;
 use KeepersTeam\Webtlo\DTO\ForumObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Enum\UpdateStatus;
 
 /**
  * Объект для создания новый отчётов.
  */
-class ReportCreator
+final class ReportCreator
 {
     /** Ид темы для публикации сводных отчётов */
     public const SUMMARY_FORUM = 4275633;
-    /** Ид подраздела полного обновления сведений */
-    private const FULL_UPDATE = 7777;
 
     private array $config;
     private object $webtlo;
@@ -77,7 +77,7 @@ class ReportCreator
 
         // Строка хранимого подраздела.
         // Первая ссылка в тему со списками, вторая на своё сообщение.
-        $subsectionPattern = '[url=viewtopic.php?t=%s][u]%s[/u][/url] — [url=viewtopic.php?p=%s][u]%s шт. (%s)[/u][/url]';
+        $subsectionPattern = '[*][url=viewtopic.php?t=%s][u]%s[/u][/url] — [url=viewtopic.php?p=%s][u]%s шт. (%s)[/u][/url]';
         // разбираем хранимое
         $savedSubsections = [];
         foreach ($forums_ids as $forum_id) {
@@ -109,15 +109,16 @@ class ReportCreator
         unset($stored);
 
         // формируем сводный отчёт
-        $summary = [];
+        $summary   = [];
         $summary[] = $this->getFormattedUpdateTime();
         $summary[] = '';
+        $summary[] = sprintf('Всего хранимых подразделов: [b]%s[/b] шт.', count($savedSubsections));
         $this->prepareSummaryHeader($summary, $total);
         $summary[] = '';
         $summary[] = $this->webtlo->version_line_url;
         $summary[] = '[hr]';
 
-        return implode($this->implodeGlue, [...$summary, ...$savedSubsections]);
+        return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
     }
 
 
@@ -220,7 +221,7 @@ class ReportCreator
             $rows[] = sprintf($split_pattern, '&#8804;', $val['less10_count'], $this->boldBytes($val['less10_size']));
         }
         if ($val['more10_count'] > 0) {
-            $rows[] = sprintf($split_pattern, '>',       $val['more10_count'], $this->boldBytes($val['more10_size']));
+            $rows[] = sprintf($split_pattern, '>', $val['more10_count'], $this->boldBytes($val['more10_size']));
         }
         if ($val['dl_count'] > 0) {
             $rows[] = sprintf('Всего скачиваемых раздач: [b]%s[/b] шт. (%s)', $val['dl_count'], $this->boldBytes($val['dl_size']));
@@ -265,7 +266,7 @@ class ReportCreator
     public function prepareReportsMessages(array $report): string
     {
         $messages = $report['messages'];
-        array_walk($messages, function(&$a, $b) {
+        array_walk($messages, function (&$a, $b) {
             $b++;
             $a = sprintf('<h3>Сообщение %d</h3><div>%s</div>', $b, $a);
         });
@@ -336,7 +337,9 @@ class ReportCreator
 
             $pattern_keeper = '[*][url=profile.php?mode=viewprofile&u=%d][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s';
             foreach ($stored as $keeper_id => $values) {
-                if (!$values['keep_count']) continue;
+                if (!$values['keep_count']) {
+                    continue;
+                }
 
                 $count_keepers++;
                 $keepers[] = sprintf(
@@ -512,12 +515,18 @@ class ReportCreator
      */
     private function getLastUpdateTime(): void
     {
-        $updateTime = get_last_update_time(self::FULL_UPDATE);
+        $updateTime = LastUpdate::getTime(UpdateMark::FULL_UPDATE->value);
         if ($updateTime === 0) {
-            throw new Exception('Сформировать отчёт невозможно. ' .
-                'Выполните полное обновление данных и попробуйте снова.');
-        }
+            $update = LastUpdate::checkFullUpdate($this->config);
+            if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
+                $update->addLog();
+                throw new Exception('Сформировать отчёт невозможно. ' .
+                    'Данные в локальной БД неполные. ' .
+                    'Выполните полное обновление данных и попробуйте снова.');
+            }
 
+            $updateTime = $update->getLastCheckUpdateTime();
+        }
         $this->updateTime = $updateTime;
     }
 

@@ -11,7 +11,7 @@ use KeepersTeam\Webtlo\DTO\ForumObject;
 /**
  * Работа с хранимыми подразделами.
  */
-class Forums
+final class Forums
 {
     private static array $forums = [];
 
