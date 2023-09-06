@@ -1,6 +1,8 @@
 <?php
 
+use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\ReportCreator;
 
 include_once dirname(__FILE__) . '/../common.php';
@@ -35,6 +37,13 @@ if (isset($checkEnabledCronAction)) {
     }
 }
 
+// Проверим полное обновление.
+LastUpdate::checkReportsSendAvailable($cfg);
+
+// Проверим заполненность таблиц.
+if (Db::select_count('ForumsOptions') === 0) {
+    throw new Exception('Error: Отправка отчётов невозможна. Отсутствуют сведеения о сканировании подразделов. Выполните полное обновление сведений.');
+}
 
 // Подключаемся к форуму.
 if (!isset($reports)) {
@@ -47,9 +56,8 @@ if (!isset($reports)) {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
-if (!$reports->check_access())
-{
-    throw new Exception('Error: Нет доступа к подфоруму хранителей. Отправка списков невозможна. ' .
+if (!$reports->check_access()) {
+    throw new Exception('Error: Отправка отчётов невозможна. Нет доступа к подфоруму хранителей. ' .
         'Если вы Кандидат, то ожидайте включения в основную группу.');
 }
 
@@ -150,6 +158,12 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     ];
 }
 
+// Если ни одного отчёта по разделу не отправлено, то тормозим выполнение.
+if (!count($editedTopicsIDs)) {
+    Log::append('Не удалось отправить отчёты, см. журнал выше.');
+    return;
+}
+
 Log::append("Обработано подразделов: " . count($editedTopicsIDs) . " шт.");
 Log::append(json_encode($Timers));
 
@@ -173,6 +187,9 @@ if ($cfg['reports']['send_summary_report']) {
 
     // Запишем ид темы со сводными, чтобы очистка сообщений не задела.
     $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
+
+    // Запишем время отправки отчётов.
+    LastUpdate::setTime(UpdateMark::FULL_UPDATE->value);
 
     Log::append(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
 }
