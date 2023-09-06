@@ -1,6 +1,10 @@
 <?php
 
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Enum\UpdateStatus;
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Module\LastUpdate;
 
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
@@ -29,6 +33,42 @@ if (isset($checkEnabledCronAction)) {
 }
 
 
+Log::append('Info: Начато обновление списков раздач хранителей...');
+
+// Параметры таблиц.
+$tabForumsOptions = CloneTable::create('ForumsOptions', [], 'forum_id');
+$tabKeepersList   = CloneTable::create(
+    'KeepersLists',
+    ['topic_id', 'keeper_id', 'keeper_name', 'posted', 'complete'],
+    'topic_id'
+);
+
+// Список ид хранимых подразделов.
+$keptForums = array_keys($cfg['subsections'] ?? []);
+$forumKeys  = KeysObject::create($keptForums);
+
+// Удалим данные о нехранимых более подразделах.
+Db::query_database("DELETE FROM $tabForumsOptions->origin WHERE $tabForumsOptions->primary NOT IN ($forumKeys->keys)", $forumKeys->values);
+
+
+// Список ид обновлений подразделов.
+$keptForumsUpdate = array_map(fn ($el) => 100000 + $el, $keptForums);
+$updateStatus = new LastUpdate($keptForumsUpdate);
+$updateStatus->checkMarkersLess(7200);
+
+// Если количество маркеров не совпадает, обнулим имеющиеся.
+if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
+    Db::query_database("DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000");
+}
+// Проверим минимальную дату обновления данных других хранителей.
+if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
+    Log::append(sprintf(
+        'Notice: Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
+        date("d.m.y H:i", $updateStatus->getLastCheckUpdateTime())
+    ));
+    return;
+}
+
 // Подключаемся к форуму.
 if (!isset($reports)) {
     $reports = new Reports(
@@ -40,58 +80,9 @@ if (!isset($reports)) {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
-Log::append('Info: Начато обновление списков раздач хранителей...');
 if (!$reports->check_access()) {
     Log::append('Error: Нет доступа к подфоруму хранителей. Обновление списков невозможно. ' .
         'Если вы Кандидат, то ожидайте включения в основную группу.');
-    return;
-}
-
-// Параметры таблиц.
-$KL = (object)[
-    'table'   => 'KeepersLists',
-    'temp'    => Db::temp_copy_table('KeepersLists'),
-    'primary' => 'topic_id',
-    'keys'    => ['topic_id', 'keeper_id', 'keeper_name', 'posted', 'complete'],
-];
-$FP = (object)[
-    'table'   => 'ForumsOptions',
-    'temp'    => Db::temp_copy_table('ForumsOptions'),
-    'primary' => 'forum_id',
-];
-
-// Список ид хранимых подразделов.
-$keptForums = array_keys($cfg['subsections'] ?? []);
-$forumKeys = KeysObject::create($keptForums);
-
-// Список ид обновлений подразделов.
-$keptForumsUpdate = array_map(fn($el) => 100000 + $el, $keptForums);
-$forumUpdateKeys = KeysObject::create($keptForumsUpdate);
-
-// Удалим данные о нехранимых более подразделах.
-Db::query_database("DELETE FROM $FP->table WHERE $FP->primary NOT IN ($forumKeys->keys)", $forumKeys->values);
-
-// Определим количество маркеров обновлений данных подразделов.
-// Если не совпадает, обнулим имеющиеся.
-$updateCount = Db::query_count("SELECT COUNT(1) FROM UpdateTime WHERE id IN ($forumUpdateKeys->keys)", $forumUpdateKeys->values);
-if ($updateCount !== count($keptForums)) {
-    Db::query_database("DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000");
-}
-
-// Найдём минимальную дату обновления данных других хранителей.
-$lastUpdate = Db::query_database_row(
-    "SELECT MIN(ud) FROM UpdateTime WHERE id IN ($forumUpdateKeys->keys)",
-    $forumUpdateKeys->values,
-    true,
-    PDO::FETCH_COLUMN
-) ?? 0;
-
-// Если не прошло два часа, то запретить обновление.
-if (time() - $lastUpdate < 7200) {
-    Log::append(sprintf(
-        'Notice: Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
-        date("d.m.y H:i:s", $lastUpdate)
-    ));
     return;
 }
 
@@ -105,7 +96,11 @@ if (isset($cfg['subsections'])) {
         $forum_topic_id = $reports->search_topic_id($subsection['na']);
 
         if (empty($forum_topic_id)) {
-            Log::append("Error: Не удалось найти тему со списками для подраздела № $forum_id.");
+            Log::append(sprintf(
+                'Error: Не удалось найти тему со списками для подраздела № %d (%s).',
+                $forum_id,
+                $subsection['na']
+            ));
             continue;
         } else {
             $forumsScanned++;
@@ -116,34 +111,34 @@ if (isset($cfg['subsections'])) {
         if (!empty($keepers)) {
             $userPosts = [];
             foreach ($keepers as $keeper) {
-                if (empty($keeper['topics_ids'])) {
-                    continue;
-                }
-                $keeperIds[] = $keeper['user_id'];
+                // Записываем свои посты, для формирования отчётов.
                 if ($keeper['user_id'] == $cfg['user_id']) {
                     $userPosts[] = $keeper['post_id'];
                 }
 
-                foreach ($keeper['topics_ids'] as $complete => $keeperTopicsIDs) {
-                    $topics_ids_chunks = array_chunk($keeperTopicsIDs, 249);
-                    foreach ($topics_ids_chunks as $topics_ids) {
-                        $keepers_topics_ids = [];
-                        foreach ($topics_ids as $topic_id) {
-                            $keepers_topics_ids[] = array_combine($KL->keys, [
-                                $topic_id,
-                                $keeper['user_id'],
-                                $keeper['nickname'],
-                                $keeper['posted'],
-                                $complete,
-                            ]);
-                        }
-
-                        Db::table_insert_dataset($KL->temp, $keepers_topics_ids, $KL->primary);
-                        unset($topics_ids, $keepers_topics_ids, $select);
-                    }
-                    unset($complete, $keeperTopicsIDs, $topics_ids_chunks);
+                if (empty($keeper['topics_ids'])) {
+                    continue;
                 }
-                unset($keeper);
+                $keeperIds[] = $keeper['user_id'];
+
+                $preparedTopics = [];
+                foreach ($keeper['topics_ids'] as $complete => $keeperTopicsIDs) {
+                    foreach ($keeperTopicsIDs as $topic_id) {
+                        $preparedTopics[] = array_combine($tabKeepersList->keys, [
+                            $topic_id,
+                            $keeper['user_id'],
+                            $keeper['nickname'],
+                            $keeper['posted'],
+                            $complete,
+                        ]);
+
+                        unset($topic_id);
+                    }
+                    unset($complete, $keeperTopicsIDs);
+                }
+                $tabKeepersList->cloneFillChunk($preparedTopics, 200);
+
+                unset($keeper, $preparedTopics);
             }
 
             // Сохраним данных о своих постах в теме по подразделу.
@@ -156,7 +151,7 @@ if (isset($cfg['subsections'])) {
                 'post_ids'       => json_encode($userPosts),
             ];
 
-            set_last_update_time(100000 + $forum_id);
+            LastUpdate::setTime(100000 + $forum_id);
             unset($keepers);
         }
     }
@@ -164,25 +159,15 @@ if (isset($cfg['subsections'])) {
 
 // Записываем дополнительные данные о хранимых подразделах, в т.ч. ид своих постов.
 if (count($forumsParams)) {
-    Db::table_insert_dataset($FP->temp, $forumsParams, $FP->primary);
-
+    $tabForumsOptions->cloneFillChunk($forumsParams, 200);
     // Переносим данные из временной таблицы в основную.
-    Db::table_insert_temp($FP->table, $FP->temp);
+    $tabForumsOptions->moveToOrigin();
 
-    // TODO to function
-    // Удаляем неактуальные записи подразделов.
-    Db::query_database(
-        "DELETE FROM $FP->table WHERE $FP->primary NOT IN (
-            SELECT upd.$FP->primary
-            FROM $FP->temp AS tmp
-            LEFT JOIN $FP->table AS upd ON tmp.$FP->primary = upd.$FP->primary
-            WHERE upd.$FP->primary IS NOT NULL
-        )"
-    );
+    LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
 }
 
 // записываем изменения в локальную базу
-$count_kept_topics = Db::select_count($KL->temp);
+$count_kept_topics = $tabKeepersList->cloneCount();
 if ($count_kept_topics > 0) {
     Log::append(sprintf(
         'Просканировано подразделов: %d шт, хранителей: %d, хранимых раздач: %d шт.',
@@ -193,14 +178,14 @@ if ($count_kept_topics > 0) {
     Log::append('Запись в базу данных списков раздач хранителей...');
 
     // Переносим данные из временной таблицы в основную.
-    Db::table_insert_temp($KL->table, $KL->temp);
+    $tabKeepersList->moveToOrigin();
 
     // Удаляем неактуальные записи списков.
     Db::query_database(
-        "DELETE FROM $KL->table WHERE topic_id || keeper_id NOT IN (
+        "DELETE FROM $tabKeepersList->origin WHERE topic_id || keeper_id NOT IN (
             SELECT upd.topic_id || upd.keeper_id
-            FROM $KL->temp AS tmp
-            LEFT JOIN $KL->table AS upd ON tmp.topic_id = upd.topic_id AND tmp.keeper_id = upd.keeper_id
+            FROM $tabKeepersList->clone AS tmp
+            LEFT JOIN $tabKeepersList->origin AS upd ON tmp.topic_id = upd.topic_id AND tmp.keeper_id = upd.keeper_id
             WHERE upd.topic_id IS NOT NULL
         )"
     );
