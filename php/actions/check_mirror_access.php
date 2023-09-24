@@ -32,13 +32,13 @@ if ($url == 'custom') {
 }
 
 if (!isset($_POST['ssl'])) {
-	$schema = 'http';
+    $schema = 'http';
 } else {
-	if ($_POST['ssl'] === "true") {
-		$schema = 'https';
-	} else {
-		$schema = 'http';
-	}
+    if ($_POST['ssl'] === "true") {
+        $schema = 'https';
+    } else {
+        $schema = 'http';
+    }
 }
 $address = $schema . '://' . basename($url);
 

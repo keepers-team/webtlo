@@ -6,7 +6,6 @@ try {
     $updateDetailsPerRun = 1500;
 
     include_once dirname(__FILE__) . '/../common/update_details.php';
-
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }

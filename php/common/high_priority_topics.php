@@ -92,7 +92,7 @@ $topicsKeys = $topicsHighPriorityData['format']['topic_id'];
 $flipKeys   = array_flip($topicsKeys);
 
 // Убираем раздачи, из разделов, которые храним.
-$topicsHighPriority = array_filter($topicsHighPriorityData['result'], function($el) use ($flipKeys, $subsections) {
+$topicsHighPriority = array_filter($topicsHighPriorityData['result'], function ($el) use ($flipKeys, $subsections) {
     return !in_array($el[$flipKeys['forum_id']], $subsections);
 });
 

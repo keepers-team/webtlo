@@ -6,7 +6,6 @@ $control_result = [
 try {
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../common/control.php';
-
 } catch (Exception $e) {
     Log::append($e->getMessage());
     $control_result['result'] = 'В процессе регулировки раздач были ошибки. ' .

@@ -67,7 +67,7 @@ if (isset($cfg['subsections'])) {
 
     // получим список всех хранителей
     $keepersUserData = $api->getKeepersUserData();
-    $keepersUserData = array_filter(array_map(fn($el) => $el[0] ?? null, $keepersUserData['result']));
+    $keepersUserData = array_filter(array_map(fn ($el) => $el[0] ?? null, $keepersUserData['result']));
 
     // обновим каждый хранимый подраздел
     foreach ($subsections as $forum_id) {

@@ -89,7 +89,10 @@ class Db
      * Вставить в таблицу массив сырых данных.
      */
     public static function table_insert_dataset(
-        string $table, array $dataset, string $primaryKey = 'id', array $keys = []
+        string $table,
+        array $dataset,
+        string $primaryKey = 'id',
+        array $keys = []
     ): void {
         $keys = count($keys) ? sprintf('(%s)', implode(',', $keys)) : '';
         $sql  = "INSERT INTO $table $keys " . self::combine_set($dataset, $primaryKey);
@@ -107,7 +110,7 @@ class Db
 
         if (count($keys)) {
             $selKeys = implode(',', $keys);
-            $insKeys = sprintf('(%s)',$selKeys);
+            $insKeys = sprintf('(%s)', $selKeys);
         }
 
         $sql  = "INSERT INTO $table $insKeys SELECT $selKeys FROM $tempTable";
@@ -189,12 +192,10 @@ class Db
         $statements = [];
         if ($currentPragma > self::PRAGMA_VERSION) {
             throw new Exception(sprintf('Ваша версия БД (#%d), опережает указанную в настройках web-TLO. Вероятно, вы откатились на прошлую версию программы. Удалите файл БД и запустите обновление сведений.', $currentPragma));
-        }
-        else if ($currentPragma === 0) {
+        } elseif ($currentPragma === 0) {
             // Создание БД с нуля
             $statements = self::initTables();
-        }
-        else if ($currentPragma > 0) {
+        } elseif ($currentPragma > 0) {
             // Создаём запросы для миграции БД.
             $statements = (new DatabaseMigration())->getStatements($currentPragma, self::PRAGMA_VERSION);
 
