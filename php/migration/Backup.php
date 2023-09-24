@@ -48,7 +48,7 @@ class Backup
     private static function clearBackups(string $path, string $pattern): void
     {
         // Все файлы по указанному пути.
-        $files = array_diff(scandir($path, SCANDIR_SORT_DESCENDING), array('..', '.'));
+        $files = array_diff(scandir($path, SCANDIR_SORT_DESCENDING), ['..', '.']);
 
         // Фильтр по паттерну имени.
         $matches = preg_grep($pattern, $files);
@@ -57,7 +57,7 @@ class Backup
         $matches = array_slice($matches, self::MAX_BACKUPS);
 
         // Остальное - удалим.
-        foreach($matches as $file) {
+        foreach ($matches as $file) {
             $filePath = $path . DIRECTORY_SEPARATOR . $file;
             if (file_exists($filePath)) {
                 unlink($filePath);

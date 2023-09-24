@@ -15,7 +15,7 @@ class DatabaseMigration
     public function getStatements(int $version, int $pragmaVersion): array
     {
         // Повышаем версию по одной, собирая нужные запросы.
-        while($version < $pragmaVersion) {
+        while ($version < $pragmaVersion) {
             $version++;
             $method = "setPragmaVersion_$version";
             if (method_exists($this, $method)) {

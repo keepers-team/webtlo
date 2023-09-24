@@ -23,7 +23,10 @@ final class CloneTable
      * Создать временую таблицу и вернуть объект.
      */
     public static function create(
-        string $table, array $keys = [], string $primary = 'id', string $prefix = 'New'
+        string $table,
+        array $keys = [],
+        string $primary = 'id',
+        string $prefix = 'New'
     ): self {
         $clone = Db::temp_copy_table($table, $keys, $prefix);
 

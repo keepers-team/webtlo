@@ -17,5 +17,4 @@ final class KeysObject
 
         return new self($keys, $values);
     }
-
 }

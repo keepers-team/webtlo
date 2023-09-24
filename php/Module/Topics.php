@@ -12,7 +12,7 @@ use KeepersTeam\Webtlo\DTO\KeysObject;
 final class Topics
 {
     /** Допустимые статус раздач */
-    const VALID_STATUSES = [0, 2, 3, 8, 10];
+    public const VALID_STATUSES = [0, 2, 3, 8, 10];
 
     /** Поиск в БД ид раздач, по хешу */
     public static function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
