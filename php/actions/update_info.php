@@ -18,13 +18,12 @@ try {
 
     $process = $_GET['process'] ?: null;
     if (null !== $process && 'all' !== $process) {
-        $pairs = array_filter($pairs, fn($el) => $el === $process, ARRAY_FILTER_USE_KEY);
+        $pairs = array_filter($pairs, fn ($el) => $el === $process, ARRAY_FILTER_USE_KEY);
     }
     // Запускаем задачи по очереди.
     foreach ($pairs as $fileName) {
         include_once sprintf('%s/../common/%s.php', dirname(__FILE__), $fileName);
     }
-
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }

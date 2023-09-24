@@ -224,7 +224,7 @@ try {
     $ini->write('reports', 'exclude_forums_ids', implode(',', $excludeForumsIDs));
 
     // автоматизация
-    $ini->write('automation', 'update',  isset($cfg['automation_update'])  ? 1 : 0);
+    $ini->write('automation', 'update', isset($cfg['automation_update']) ? 1 : 0);
     $ini->write('automation', 'reports', isset($cfg['automation_reports']) ? 1 : 0);
     $ini->write('automation', 'control', isset($cfg['automation_control']) ? 1 : 0);
 
@@ -247,8 +247,8 @@ try {
             'api_key',
         ]
     ];
-    foreach($private_options as $section => $keys) {
-        foreach($keys as $key) {
+    foreach ($private_options as $section => $keys) {
+        foreach ($keys as $key) {
             $ini->write($section, $key, '');
         }
     }

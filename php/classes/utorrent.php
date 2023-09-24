@@ -154,7 +154,7 @@ class Utorrent extends TorrentClient
             Timers::stash('db_topics_search');
 
             // Пробуем найти раздачи в локальной таблице раздач в клиентах.
-            $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
+            $emptyTopics = array_filter($torrents, fn ($el) => empty($el['topic_id']));
             if (count($emptyTopics)) {
                 Timers::start('db_torrents_search');
                 $topics = Torrents::getTopicsIdsByHashes(array_keys($emptyTopics));

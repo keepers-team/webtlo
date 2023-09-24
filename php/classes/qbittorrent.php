@@ -169,7 +169,7 @@ class Qbittorrent extends TorrentClient
             Timers::stash('db_search');
 
             // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий
-            $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
+            $emptyTopics = array_filter($torrents, fn ($el) => empty($el['topic_id']));
             if (count($emptyTopics)) {
                 Timers::start('comment_search');
                 foreach ($emptyTopics as $torrentHash => $torrent) {
@@ -270,7 +270,9 @@ class Qbittorrent extends TorrentClient
 
     private function checkLabelExists(string $labelName = ''): void
     {
-        if (empty($labelName)) return;
+        if (empty($labelName)) {
+            return;
+        }
 
         if ($this->categories === null) {
             $this->categories = $this->makeRequest('api/v2/torrents/categories');

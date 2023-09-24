@@ -200,7 +200,7 @@ function get_settings($filename = "")
 
     // автоматизация
     $config['automation'] = [
-        'update'  => $ini->read('automation', 'update',  1),
+        'update'  => $ini->read('automation', 'update', 1),
         'reports' => $ini->read('automation', 'reports', 0),
         'control' => $ini->read('automation', 'control', 0),
     ];

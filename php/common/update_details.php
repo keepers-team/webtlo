@@ -30,10 +30,12 @@ $details = $detailsClass->getResult();
 
 
 if (null !== $details) {
-    Log::append(sprintf('Обновление дополнительных сведений о раздачах завершено за %s.',
+    Log::append(sprintf(
+        'Обновление дополнительных сведений о раздачах завершено за %s.',
         convert_seconds($details->execFull)
     ));
-    Log::append(sprintf('Раздач обновлено %d из %d.',
+    Log::append(sprintf(
+        'Раздач обновлено %d из %d.',
         $details->before - $details->after,
         $details->before
     ));

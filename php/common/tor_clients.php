@@ -123,7 +123,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $tabTorrents->cloneFillChunk($insertedTorrents);
     unset($insertedTorrents);
 
-    Log::append(sprintf('%s получено раздач: %d шт за %s',
+    Log::append(sprintf(
+        '%s получено раздач: %d шт за %s',
         $clientTag,
         $countTorrents,
         Timers::getExecTime("update_client_$torrentClientID")

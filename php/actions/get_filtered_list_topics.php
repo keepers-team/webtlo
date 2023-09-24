@@ -710,7 +710,7 @@ try {
             }
             // исключим себя из списка хранителей раздачи
             if ($exclude_self_keep) {
-                $topic_keepers =  array_filter($topic_keepers, function($e) use ($user_id) {
+                $topic_keepers =  array_filter($topic_keepers, function ($e) use ($user_id) {
                     return $user_id !== (int)$e['keeper_id'];
                 });
             }
@@ -888,7 +888,9 @@ try {
  */
 function get_client_name(int|null $clientID, array $cfg): string
 {
-    if (!$clientID || !isset($cfg['clients'][$clientID])) return '';
+    if (!$clientID || !isset($cfg['clients'][$clientID])) {
+        return '';
+    }
     return sprintf(
         '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']

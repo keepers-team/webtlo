@@ -64,7 +64,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         Log::append("Error: Не удалось получить данные о раздачах от торрент-клиента $clientTag");
         continue;
     }
-    Log::append(sprintf('%s получено раздач: %d шт за %s',
+    Log::append(sprintf(
+        '%s получено раздач: %d шт за %s',
         $clientTag,
         count($torrents),
         Timers::getExecTime("get_client_$torrentClientID")
@@ -200,7 +201,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 }
             }
 
-            Log::append(sprintf('Обработка раздач раздела %s (%d шт) завершена за %s, лимит сидов %d',
+            Log::append(sprintf(
+                'Обработка раздач раздела %s (%d шт) завершена за %s, лимит сидов %d',
                 $forumID,
                 count($hashes),
                 Timers::getExecTime("subsection_$forumID"),
@@ -239,7 +241,8 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
     unset($controlTopics);
 
-    Log::append(sprintf('Info: Регулировка раздач в торрент-клиенте %s завершена за %s',
+    Log::append(sprintf(
+        'Info: Регулировка раздач в торрент-клиенте %s завершена за %s',
         $clientTag,
         Timers::getExecTime("control_client_$torrentClientID")
     ));

@@ -46,7 +46,7 @@ try {
     // получение данных о подразделе
     $forum = Db::query_database(
         "SELECT * FROM Forums WHERE id = ?",
-        array($forum_id),
+        [$forum_id],
         true,
         PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
     );
