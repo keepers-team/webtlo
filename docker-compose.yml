@@ -1,17 +1,22 @@
 version: "3.9"
 
-volumes:
-  data:
-
 services:
-  app:
+  # Рабочая версия WebTLO
+  webtlo:
     image: berkut174/webtlo:master
-    container_name: webtlo
-#    environment:
-#      WEBTLO_UID: 1000
-#      WEBTLO_GID: nobody
-    restart: on-failure
+    container_name: webtlo-master
+    environment:
+      # Часовой пояс
+      - TZ=Europe/Moscow
+      # Выполняемые внутри контейнера фоновые задачи
+      - WEBTLO_CRON=true
+      # Стандартный пользователь внутри контейнера
+      - WEBTLO_UID=1000
+      - WEBTLO_GID=1000
     ports:
+      # Порт для доступа к UI
       - "8080:80"
     volumes:
-      - data:/data
+      # Проброшенный каталог с файлами конфигурации
+      - ./webtlo-data:/data
+    restart: on-failure
