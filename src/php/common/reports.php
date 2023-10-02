@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\ReportCreator;
@@ -16,19 +17,13 @@ Log::append('Начат процесс отправки отчётов...');
 if (!isset($cfg)) {
     $cfg = get_settings();
 }
+$user = ConfigValidate::checkUser($cfg);
 
 // проверка настроек
 if (empty($cfg['subsections'])) {
     throw new Exception('Error: Не выбраны хранимые подразделы');
 }
 
-if (empty($cfg['tracker_login'])) {
-    throw new Exception('Error: Не указано имя пользователя для доступа к форуму');
-}
-
-if (empty($cfg['tracker_paswd'])) {
-    throw new Exception('Error: Не указан пароль пользователя для доступа к форуму');
-}
 
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
@@ -49,8 +44,8 @@ if (Db::select_count('ForumsOptions') === 0) {
 if (!isset($reports)) {
     $reports = new Reports(
         $cfg['forum_address'],
-        $cfg['tracker_login'],
-        $cfg['tracker_paswd']
+        $user->userName,
+        $user->password
     );
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
@@ -64,6 +59,7 @@ if (!$reports->check_access()) {
 // Создание отчётов.
 $forumReports = new ReportCreator(
     $cfg,
+    $user,
     get_webtlo_version()
 );
 

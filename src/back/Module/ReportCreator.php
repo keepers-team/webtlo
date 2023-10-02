@@ -9,6 +9,7 @@ use Exception;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
+use KeepersTeam\Webtlo\Config\Credentials;
 
 /**
  * Объект для создания новый отчётов.
@@ -19,6 +20,7 @@ final class ReportCreator
     public const SUMMARY_FORUM = 4275633;
 
     private array $config;
+    private Credentials $user;
     private object $webtlo;
 
     /** Исключённые из отчётов подразделы */
@@ -27,9 +29,6 @@ final class ReportCreator
     private array $excludeClientsIDs = [];
 
     private ?int $updateTime = null;
-
-    private int $userId = 0;
-    private string $userName = '';
 
     private string $mode = 'cron';
 
@@ -48,12 +47,13 @@ final class ReportCreator
      */
     public function __construct(
         array  $config,
+        Credentials $user,
         object $webtlo
     ) {
         $this->config = $config;
+        $this->user   = $user;
         $this->webtlo = $webtlo;
 
-        $this->setUser();
         $this->setExcluded();
         $this->getLastUpdateTime();
     }
@@ -318,8 +318,8 @@ final class ReportCreator
         $stored = $this->getKeepersStoredReports($forum);
 
         // Добавим себя в список хранителей.
-        $userStored['keeper_name'] = $this->userName;
-        $stored[$this->userId] = $userStored;
+        $userStored['keeper_name'] = $this->user->userName;
+        $stored[$this->user->userId] = $userStored;
 
         // Значения общего хранимого.
         $total = [];
@@ -544,12 +544,6 @@ final class ReportCreator
     {
         $formatted = $this->bytes($bytes);
         return vsprintf("[b]%s[/b] %s", explode(" ", $formatted));
-    }
-
-    private function setUser(): void
-    {
-        $this->userId   = $this->config['user_id'];
-        $this->userName = $this->config['tracker_login'];
     }
 
     /**
