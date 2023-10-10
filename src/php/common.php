@@ -158,6 +158,7 @@ function get_settings($filename = "")
     $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom', ''));
     $config['api_ssl'] = $ini->read('torrent-tracker', 'api_ssl', 1);
     $config['user_id'] = $ini->read('torrent-tracker', 'user_id', '');
+    $config['user_session'] = $ini->read('torrent-tracker', 'user_session', '');
     $config['forum_url'] = basename($ini->read('torrent-tracker', 'forum_url', 'rutracker.org'));
     $config['forum_url_custom'] = basename($ini->read('torrent-tracker', 'forum_url_custom', ''));
     $config['forum_ssl'] = $ini->read('torrent-tracker', 'forum_ssl', 1);

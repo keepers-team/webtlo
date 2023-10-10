@@ -544,16 +544,22 @@ function cfg_checkbox($cfg): Closure
                                 <div>
                                     <label class="param-name">Логин:</label>
                                     <input id="tracker_username" name="tracker_username" type="text"
-                                           class="myinput" size="24"
+                                           class="myinput" size="25"
                                            placeholder="Логин на форуме" title="Логин на форуме"
                                            value="<?= $cfg['tracker_login'] ?>"/>
                                 </div>
                                 <div>
                                     <label class="param-name">Пароль:</label>
                                     <input id="tracker_password" name="tracker_password" type="password"
-                                           class="myinput user_protected" size="24"
+                                           class="myinput user_protected" size="25"
                                            placeholder="Пароль на форуме" title="Пароль на форуме"
                                            value="<?= $cfg['tracker_paswd'] ?>"/>
+                                </div>
+                                <div>
+                                    <label class="param-name">Сессия:</label>
+                                    <input id="user_session" name="user_session" type="password"
+                                           class="myinput user_protected" size="25" readonly
+                                           value="<?= $cfg['user_session'] ?>"/>
                                 </div>
                             </div>
                             <button type="button" id="check_mirrors_access" class="settings-button" title="Проверить доступность форума и API">

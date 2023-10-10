@@ -10,7 +10,6 @@ try {
         empty($cfg['tracker_username'])
         || empty($cfg['tracker_password'])
         || empty($cfg['forum_url'])
-        || empty($cfg['forum_ssl'])
     ) {
         throw new Exception();
     }
@@ -31,8 +30,8 @@ try {
     }
 
     // параметры прокси
-    $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
-    $activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
+    $activate_forum = !empty($cfg['proxy_activate_forum']) ? 1 : 0;
+    $activate_api = !empty($cfg['proxy_activate_api']) ? 1 : 0;
     $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
     $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
 
@@ -46,7 +45,7 @@ try {
     );
 
     // адрес форума
-    $forum_schema = isset($cfg['forum_ssl']) ? 'https' : 'http';
+    $forum_schema = !empty($cfg['forum_ssl']) ? 'https' : 'http';
     $forum_url = $cfg['forum_url'] == 'custom' ? $cfg['forum_url_custom'] : $cfg['forum_url'];
     $forum_address = $forum_schema . '://' . $forum_url;
 
@@ -63,6 +62,7 @@ try {
             'bt_key' => UserDetails::$bt,
             'api_key' => UserDetails::$api,
             'user_id' => UserDetails::$uid,
+            'user_session' => UserDetails::$cookie,
             'captcha' => '',
             'captcha_path' => '',
             'log' => Log::get(),
