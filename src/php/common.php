@@ -321,31 +321,32 @@ function convert_bytes($size)
     return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0 B';
 }
 
-function convert_seconds($seconds, $leadzeros = false)
+function convert_seconds($seconds, $leadZeros = false): string
 {
-    $ret = "";
-    $hours = floor($seconds / 3600);
-    $mins = floor($seconds / 60 % 60);
-    $secs = $seconds % 60;
-    if ($leadzeros) {
-        if (strlen($hours) == 1) {
-            $hours = "0" . $hours;
+    $hh = floor($seconds / 3600);
+    $mm = floor($seconds / 60 % 60);
+    $ss = $seconds % 60;
+
+    if ($leadZeros) {
+        if (strlen($hh) == 1) {
+            $hh = "0" . $hh;
         }
-        if (strlen($secs) == 1) {
-            $secs = "0" . $secs;
+        if (strlen($ss) == 1) {
+            $ss = "0" . $ss;
         }
-        if (strlen($mins) == 1) {
-            $mins = "0" . $mins;
+        if (strlen($mm) == 1) {
+            $mm = "0" . $mm;
         }
     }
-    if ($hours == 0) {
-        if ($mins == 0) {
-            $ret = "${secs}s";
+
+    if ($hh == 0) {
+        if ($mm == 0) {
+            $ret = "{$ss}s";
         } else {
-            $ret = "${mins}m ${secs}s";
+            $ret = "{$mm}m {$ss}s";
         }
     } else {
-        $ret = "${hours}h ${mins}m ${secs}s";
+        $ret = "{$hh}h {$mm}m {$ss}s";
     }
     return $ret;
 }
