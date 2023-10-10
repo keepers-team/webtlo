@@ -231,6 +231,11 @@ $(document).ready(function () {
                 $("#log").append(response.log);
                 if (!$.isEmptyObject(response.captcha)) {
                     authResult.removeAttr("class").addClass("fa fa-circle text-danger");
+
+                    let capFields = response.captcha.join(',');
+                    let curLogin = $("#tracker_username").val();
+                    let curPass  = $("#tracker_password").val();
+
                     dialog.dialog(
                         {
                             buttons: [
@@ -248,14 +253,13 @@ $(document).ready(function () {
                             ],
                             modal: true,
                             resizable: false,
-                            // position: [ 'center', 200 ]
                         }
                     ).html('<span class="text-danger">Вы видите это сообщение, потому что ввели неверные логин и/или пароль</span><br /><br />' +
                         'Введите правильные данные для авторизации на форуме RuTracker.org ниже и нажмите "ОК"<br /><br />' +
-                        'Логин: <input type="text" class="myinput" id="tracker_username_correct" /><br />' +
-                        'Пароль: <input class="myinput" type="text" id="tracker_password_correct" /><br /><br />' +
-                        'Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="' + response.captcha.join(',') + '" />' +
-                        '<div><img src="' + response.captcha_path + '" /></div>' +
+                        `Логин: <input type="text" class="myinput" id="tracker_username_correct" value="${curLogin}"/><br />` +
+                        `Пароль: <input class="myinput" type="text" id="tracker_password_correct" value="${curPass}"/><br /><br />` +
+                        `Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="${capFields}" />` +
+                        `<div><img src="${response.captcha_path}" /></div>` +
                         '<input id="cap_code" size="27" />');
                     dialog.dialog("open");
                 } else {

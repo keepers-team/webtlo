@@ -1,25 +1,71 @@
 <?php
 
+use KeepersTeam\Webtlo\Config\Credentials;
+
 include_once dirname(__FILE__) . '/../phpQuery.php';
 
-class UserDetails
+final class UserDetails
 {
-    public static $bt;
-    public static $api;
-    public static $uid;
-    public static $cookie;
-    public static $captcha;
-    public static $captcha_path;
-    public static $forum_url;
-    public static $form_token;
+    /** Ключи для авторизации. Строки, чтобы не переписывать проверки на фронте. */
+    public static string $bt;
+    public static string $api;
+    public static string $uid;
+    public static string $cookie;
 
-    public static function get_details($forum_url, $login, $passwd, $cap_fields = [])
+    public static array  $captcha = [];
+    public static string $captcha_path = '';
+
+    public static string $forum_url;
+    public static string $form_token;
+
+    private static bool $backendRequest = false;
+
+    /** Проверить наличие данных авторизации или авторизоваться если нужно.
+     *
+     * @throws Exception
+     */
+    public static function checkSession(string $forum_url, Credentials $user): Credentials
+    {
+        self::$backendRequest = true;
+
+        if (null === $user->session) {
+            // Авторизуемся на форуме.
+            self::get_details($forum_url, $user->userName, $user->password);
+
+            Log::append('Notice: Отсутствуют данные сессии. Пройдите авторизацию в настройках.');
+            // Перезаписываем данные авторизации для текущего процесса.
+            $user = new Credentials(
+                $user->userName,
+                $user->password,
+                self::$uid,
+                self::$bt,
+                self::$api,
+                self::$cookie
+            );
+        } else {
+            self::$forum_url = $forum_url;
+            self::$uid       = $user->userId;
+            self::$api       = $user->apiKey;
+            self::$bt        = $user->btKey;
+            self::$cookie    = $user->session;
+        }
+
+        return $user;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function get_details($forum_url, $login, $passwd, $cap_fields = []): void
     {
         self::$forum_url = $forum_url;
         self::get_cookie($login, $passwd, $cap_fields);
         self::get_keys();
     }
 
+    /**
+     * @throws Exception
+     */
     public static function make_request($url, $fields = [], $options = [])
     {
         $ch = curl_init();
@@ -57,7 +103,10 @@ class UserDetails
         }
     }
 
-    public static function get_cookie($login, $passwd, $cap_fields = [])
+    /**
+     * @throws Exception
+     */
+    public static function get_cookie($login, $passwd, $cap_fields = []): void
     {
         $passwd = mb_convert_encoding($passwd, 'Windows-1251', 'UTF-8');
         $login = mb_convert_encoding($login, 'Windows-1251', 'UTF-8');
@@ -78,6 +127,9 @@ class UserDetails
             empty($uid[1])
             || empty($cookie[1])
         ) {
+            if (self::$backendRequest) {
+                throw new Exception('Error: Не удалось авторизоваться на форуме. Пройдите авторизацию в настройках.');
+            }
             preg_match('|<title> *(.*)</title>|si', $data, $title);
             if (!empty($title)) {
                 if ($title[1] == 'rutracker.org') {
@@ -113,7 +165,10 @@ class UserDetails
         self::$cookie = $cookie[1];
     }
 
-    public static function get_keys()
+    /**
+     * @throws Exception
+     */
+    public static function get_keys(): void
     {
         $keys = '';
         $data = self::make_request(
@@ -140,7 +195,10 @@ class UserDetails
         self::$api = $keys[2];
     }
 
-    public static function get_form_token()
+    /**
+     * @throws Exception
+     */
+    public static function get_form_token(): void
     {
         $data = self::make_request(
             self::$forum_url . '/forum/profile.php?u=' . self::$uid,
@@ -156,7 +214,10 @@ class UserDetails
         self::$form_token = $form_token[1];
     }
 
-    public static function get_captcha($url)
+    /**
+     * @throws Exception
+     */
+    public static function get_captcha($url): bool
     {
         $ch = curl_init();
         curl_setopt_array($ch, [
