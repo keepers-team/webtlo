@@ -543,27 +543,36 @@ function cfg_checkbox($cfg): Closure
                             <div id="forum_auth_params">
                                 <div>
                                     <label class="param-name">Логин:</label>
-                                    <input id="tracker_username" name="tracker_username" class="myinput" type="text" size="24" title="Логин на http://rutracker.org" value="<?php echo $cfg['tracker_login'] ?>" />
+                                    <input id="tracker_username" name="tracker_username" type="text"
+                                           class="myinput" size="24"
+                                           placeholder="Логин на форуме" title="Логин на форуме"
+                                           value="<?= $cfg['tracker_login'] ?>"/>
                                 </div>
                                 <div>
                                     <label class="param-name">Пароль:</label>
-                                    <input id="tracker_password" name="tracker_password" class="myinput" type="password" size="24" title="Пароль на http://rutracker.org" value="<?php echo $cfg['tracker_paswd'] ?>" />
+                                    <input id="tracker_password" name="tracker_password" type="password"
+                                           class="myinput user_protected" size="24"
+                                           placeholder="Пароль на форуме" title="Пароль на форуме"
+                                           value="<?= $cfg['tracker_paswd'] ?>"/>
                                 </div>
                             </div>
-                            <button type="button" id="check_mirrors_access" title="Проверить доступность форума и API">
+                            <button type="button" id="check_mirrors_access" class="settings-button" title="Проверить доступность форума и API">
                                 Проверить доступ
                             </button>
-                            <button type="button" id="forum_auth" title="Авторизоваться на форуме">
+                            <button type="button" id="forum_auth" class="settings-button" title="Авторизоваться на форуме">
                                 Авторизоваться
                                 <i id="forum_auth_result"></i>
+                            </button>
+                            <button type="button" id="show_passwords" class="settings-button" title="Показать/скрыть пароли и ключи">
+                                <i class="fa fa-eye"></i>
                             </button>
                             <div id="api_auth_params">
                                 <div>
                                     Полученные ключи:
                                     <label>
-                                        bt  <input id="bt_key" name="bt_key" class="myinput user_details" type="password" size="10" readonly="" value="<?php echo $cfg['bt_key'] ?>" />
-                                        api <input id="api_key" name="api_key" class="myinput user_details" type="password" size="10" readonly="" value="<?php echo $cfg['api_key'] ?>" />
-                                        id  <input id="user_id" name="user_id" class="myinput user_details" type="text" size="10" readonly="" value="<?php echo $cfg['user_id'] ?>" />
+                                        bt  <input id="bt_key" name="bt_key" class="myinput user_details user_protected" type="password" size="10" readonly value="<?= $cfg['bt_key'] ?>" />
+                                        api <input id="api_key" name="api_key" class="myinput user_details user_protected" type="password" size="10" readonly value="<?= $cfg['api_key'] ?>" />
+                                        id  <input id="user_id" name="user_id" class="myinput user_details" type="text" size="10" readonly value="<?= $cfg['user_id'] ?>" />
                                     </label>
                                 </div>
                             </div>
@@ -585,19 +594,31 @@ function cfg_checkbox($cfg): Closure
                                 <div>
                                     <label>
                                         Адрес:
-                                        <input name="proxy_hostname" id="proxy_hostname" class="myinput" type="text" size="24" title="IP-адрес или сетевое/доменное имя прокси-сервера." value="<?php echo $cfg['proxy_hostname'] ?>" />
+                                        <input name="proxy_hostname" id="proxy_hostname" type="text"
+                                               class="myinput" size="24"
+                                               title="IP-адрес или сетевое/доменное имя прокси-сервера."
+                                               value="<?= $cfg['proxy_hostname'] ?>"/>
                                         Порт:
-                                        <input name="proxy_port" id="proxy_port" class="myinput" type="text" size="6" title="Порт прокси-сервера." value="<?php echo $cfg['proxy_port'] ?>" />
+                                        <input name="proxy_port" id="proxy_port" type="text"
+                                               class="myinput" size="6"
+                                               title="Порт прокси-сервера."
+                                               value="<?= $cfg['proxy_port'] ?>"/>
                                     </label>
                                 </div>
                                 <div>
                                     <label>
                                         Логин:
-                                        <input name="proxy_login" id="proxy_login" class="myinput" type="text" size="24" title="Имя пользователя для доступа к прокси-серверу (необязательно)." value="<?php echo $cfg['proxy_login'] ?>" />
+                                        <input name="proxy_login" id="proxy_login" type="text"
+                                               class="myinput" size="24"
+                                               title="Имя пользователя для доступа к прокси-серверу (необязательно)."
+                                               value="<?= $cfg['proxy_login'] ?>"/>
                                     </label>
                                     <label>
                                         Пароль:
-                                        <input name="proxy_paswd" id="proxy_paswd" class="myinput" type="password" size="24" title="Пароль для доступа к прокси-серверу (необязатально)." value="<?php echo $cfg['proxy_paswd'] ?>" />
+                                        <input name="proxy_paswd" id="proxy_paswd" type="password"
+                                               class="myinput user_protected" size="24"
+                                               title="Пароль для доступа к прокси-серверу (необязатально)."
+                                               value="<?= $cfg['proxy_paswd'] ?>"/>
                                     </label>
                                 </div>
                             </div>
@@ -1014,6 +1035,7 @@ function cfg_checkbox($cfg): Closure
     <script type="text/javascript" src="scripts/jquery.subsections.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.clients.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.actions.js"></script>
+    <script type="text/javascript" src="scripts/jquery.settings.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.widgets.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.topics.init.js"></script>
     <script type="text/javascript" src="scripts/jquery.subsections.init.js"></script>

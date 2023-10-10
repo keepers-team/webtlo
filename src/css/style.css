@@ -414,7 +414,7 @@ li.menu.ui-tabs-active {
     padding: 0 3px;
 }
 
-#check_mirrors_access, #forum_auth {
+button.settings-button {
     margin-bottom: 5px;
 }
 
