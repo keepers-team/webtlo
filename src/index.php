@@ -383,11 +383,11 @@ function cfg_checkbox($cfg): Closure
                                 <fieldset class="filter_common">
                                     <label title="Выберите произвольный период средних сидов">
                                         Период средних сидов:
-                                        <input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?php echo $cfg['avg_seeders_period'] ?>" />
+                                        <input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?= $cfg['avg_seeders_period'] ?>" />
                                     </label>
                                     <label class="date_container ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
                                         Дата регистрации до:
-                                        <input type="text" id="filter_date_release" name="filter_date_release" value="<?php echo "-${cfg['rule_date_release']}" ?>" />
+                                        <input type="text" id="filter_date_release" name="filter_date_release" value="<?= -$cfg['rule_date_release'] ?>" />
                                     </label>
                                 </fieldset>
                                 <hr />
