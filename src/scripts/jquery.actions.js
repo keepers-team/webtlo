@@ -264,11 +264,15 @@ $(document).ready(function () {
                         !$.isEmptyObject(response.bt_key)
                         && !$.isEmptyObject(response.api_key)
                         && !$.isEmptyObject(response.user_id)
+                        && !$.isEmptyObject(response.user_session)
                     ) {
-                        authResult.addClass("fa fa-circle text-success");
+                        // Записываем полученные значения ключей и сохраняем настройки.
                         $("#bt_key").val(response.bt_key);
                         $("#api_key").val(response.api_key);
                         $("#user_id").val(response.user_id);
+                        $("#user_session").val(response.user_session);
+
+                        authResult.addClass("fa fa-circle text-success");
                         setSettings();
                     } else {
                         authResult.addClass("fa fa-circle text-danger");
