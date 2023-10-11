@@ -49,9 +49,8 @@ if (!isset($reports)) {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
-if (!$reports->check_access()) {
-    throw new Exception('Error: Отправка отчётов невозможна. Нет доступа к подфоруму хранителей. ' .
-        'Если вы Кандидат, то ожидайте включения в основную группу.');
+if ($unavailable = $reports->check_access()) {
+    throw new Exception($unavailable->value);
 }
 
 // Создание отчётов.

@@ -4,6 +4,7 @@ use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Forum\AccessCheck;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 
@@ -72,10 +73,11 @@ if (!isset($reports)) {
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
 }
 
-if (!$reports->check_access()) {
-    Log::append('Error: Нет доступа к подфоруму хранителей. Обновление списков невозможно. ' .
-        'Если вы Кандидат, то ожидайте включения в основную группу.');
-    return;
+if ($unavailable = $reports->check_access()) {
+    if (in_array($unavailable, [AccessCheck::NOT_AUTHORIZED, AccessCheck::USER_CANDIDATE])) {
+        Log::append($unavailable->value);
+        return;
+    }
 }
 
 $forumsScanned = 0;
