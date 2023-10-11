@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Forum\AccessCheck;
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
@@ -24,6 +25,9 @@ class Reports
 
     private array $months_ru = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 
+    /**
+     * @throws Exception
+     */
     public function __construct(string $forum_url, Credentials $user)
     {
         // Проверяем наличие сессии или пробуем авторизоваться.
@@ -465,22 +469,11 @@ class Reports
     {
         // блокировка отправки сообщений
         if (!isset($this->blocking_send)) {
-            $html = $this->request_tlo_topic();
+            $this->blocking_send = false;
 
-            if (!$this->check_topic_access($html)) {
+            if ($unavailable = $this->check_access()) {
                 $this->blocking_send = true;
-                $this->blocking_reason = 'Error: У вас нет доступа в рабочий подфорум хранителей. ' .
-                    'Ожидайте включения в основную группу.';
-                throw new Exception($this->blocking_reason);
-            }
-            $topic_title = $html->find('a#topic-title')->text();
-            unset($html);
-            phpQuery::unloadDocuments();
-            $this->blocking_send = !(str_ends_with($topic_title, '#3'));
-            if ($this->blocking_send) {
-                Log::append("Notice: Установите актуальную версию web-TLO для корректной отправки отчётов");
-                $this->blocking_reason = 'Error: Отправка отчётов для текущей версии web-TLO заблокирована';
-                throw new Exception($this->blocking_reason);
+                $this->blocking_reason = $unavailable->value;
             }
         }
         if ($this->blocking_send) {
@@ -532,28 +525,24 @@ class Reports
         return $post_id;
     }
 
-    private function request_tlo_topic()
+    public function check_access(): ?AccessCheck
     {
         $data = $this->make_request(
             $this->forum_url . "/forum/viewtopic.php?t=4546540"
         );
-        return phpQuery::newDocumentHTML($data, 'UTF-8');
-    }
+        $html = phpQuery::newDocumentHTML($data, 'UTF-8');
 
-    private function check_topic_access($html)
-    {
-        $topic_content = $html->find('div.mrg_16')->text();
-        if ($topic_content == 'Тема не найдена') {
-            return false;
+        if ($html->find('h1.pagetitle')->text() === 'Вход') {
+            return AccessCheck::NOT_AUTHORIZED;
         }
-        return true;
-    }
-
-    public function check_access()
-    {
-        $html = $this->request_tlo_topic();
-
-        return $this->check_topic_access($html);
+        if ($html->find('div.mrg_16')->text() === 'Тема не найдена') {
+            return AccessCheck::USER_CANDIDATE;
+        }
+        $topic_title = $html->find('a#topic-title')->text();
+        if (!(str_ends_with($topic_title, '#3'))) {
+            return AccessCheck::VERSION_OUTDATED;
+        }
+        return null;
     }
 
     public function __destruct()
