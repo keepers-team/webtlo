@@ -62,10 +62,11 @@ $forumReports = new ReportCreator(
     $user,
     get_webtlo_version()
 );
+$forumReports->fillStoredValues();
 
 $editedTopicsIDs = [];
 $Timers = [];
-foreach ($cfg['subsections'] as $forum_id => $subsection) {
+foreach ($forumReports->forums as $forum_id) {
     $forum = Forums::getForum($forum_id);
     // Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($forum, JSON_UNESCAPED_UNICODE)));
     if (null === $forum->topic_id) {
@@ -91,7 +92,7 @@ foreach ($cfg['subsections'] as $forum_id => $subsection) {
     $topicId  = $forum->topic_id;
     $messages = $forumReport['messages'];
     // Редактируем шапку темы, если её автор - пользователь.
-    if ((int)$cfg['user_id'] === $forum->author_id && $forum->author_post_id) {
+    if ((int)$cfg['user_id'] === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
         Log::append(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
         // отправка сообщения с шапкой
         $reports->send_message(
