@@ -121,7 +121,7 @@ final class LastUpdate
      */
     public static function setTime(int $markerId, ?int $updateTime = null): void
     {
-        $updateTime = $updateTime ?? time();
+        $updateTime ??= time();
         Db::query_database(
             "INSERT INTO UpdateTime (id, ud) SELECT ?,?",
             [$markerId, $updateTime]
