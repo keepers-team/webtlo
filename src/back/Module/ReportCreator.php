@@ -19,13 +19,17 @@ final class ReportCreator
     /** Ид темы для публикации сводных отчётов */
     public const SUMMARY_FORUM = 4275633;
 
+    /** @var int[] */
+    public ?array $forums = null;
+
     private array $config;
     private Credentials $user;
     private object $webtlo;
 
-    /** Исключённые из отчётов подразделы */
+    /** @var int[] Исключённые из отчётов подразделы */
     private array $excludeForumsIDs = [];
-    /** Исключённые из отчётов торрент-клиенты */
+
+    /** @var int[] Исключённые из отчётов торрент-клиенты */
     private array $excludeClientsIDs = [];
 
     private ?int $updateTime = null;
@@ -42,20 +46,23 @@ final class ReportCreator
         'dl_size',    // Вес скачиваемых раздач
     ];
 
+    private ?array $stored = null;
+
     /**
      * @throws Exception
      */
     public function __construct(
-        array  $config,
+        array       $config,
         Credentials $user,
-        object $webtlo
+        object      $webtlo
     ) {
         $this->config = $config;
         $this->user   = $user;
         $this->webtlo = $webtlo;
 
-        $this->setExcluded();
         $this->getLastUpdateTime();
+        $this->setExcluded();
+        $this->setForums();
     }
 
     /**
@@ -65,31 +72,29 @@ final class ReportCreator
      */
     public function getSummaryReport(): string
     {
-        // идентификаторы хранимых подразделов
-        $forums_ids = array_keys($this->config['subsections'] ?? []);
-        if (!count($forums_ids)) {
-            throw new Exception('Error: Отсутствуют хранимые подразделы. Проверьте настройки.');
+        if (null === $this->stored) {
+            $this->fillStoredValues();
         }
-
-        // вытаскиваем из базы хранимое
-        $stored = $this->getStoredForumsValues($forums_ids);
-        $total  = $this->calcSummary($stored);
+        // Вытаскиваем из базы хранимое
+        $total = $this->calcSummary($this->stored);
 
         // Строка хранимого подраздела.
         // Первая ссылка в тему со списками, вторая на своё сообщение.
         $subsectionPattern = '[*][url=viewtopic.php?t=%s][u]%s[/u][/url] — [url=viewtopic.php?p=%s][u]%s шт. (%s)[/u][/url]';
-        // разбираем хранимое
+        // Разбираем хранимое
         $savedSubsections = [];
-        foreach ($forums_ids as $forum_id) {
-            if (!isset($stored[$forum_id])) {
-                continue;
-            }
-            // исключаем подразделы
-            if (in_array($forum_id, $this->excludeForumsIDs)) {
+        foreach ($this->forums as $forumId) {
+            // Исключаем подразделы, согласно конфига.
+            if (in_array($forumId, $this->excludeForumsIDs)) {
                 continue;
             }
 
-            $forum = Forums::getForum($forum_id);
+            $forumValues = $this->stored[$forumId] ?? [];
+            if (!count($forumValues)) {
+                continue;
+            }
+
+            $forum = Forums::getForum($forumId);
 
             $topic_id = $forum->topic_id ?: 'NaN';
             $post_id  = $forum->post_ids[0] ?? 'NaN';
@@ -100,11 +105,11 @@ final class ReportCreator
                 $topic_id,
                 $forum->name,
                 $post_id,
-                $stored[$forum_id]['keep_count'],
-                $this->bytes($stored[$forum_id]['keep_size'])
+                $forumValues['keep_count'],
+                $this->bytes($forumValues['keep_size'])
             );
 
-            unset($forum_id, $topic_id);
+            unset($forumId, $forumValues, $topic_id);
         }
         unset($stored);
 
@@ -121,7 +126,6 @@ final class ReportCreator
         return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
     }
 
-
     /**
      * Собрать отчёт по заданному разделу.
      *
@@ -135,21 +139,20 @@ final class ReportCreator
         }
 
         // Вытаскиваем из базы хранимое.
-        $stored = $this->getStoredForumsValues([$forum->id]);
-        $userStored = $stored[$forum->id];
+        $userStored = $this->getStoredForumValues($forum->id);
 
-        $topicHeader = $this->createTopicFirstMessage($forum, $userStored);
+        $topicHeader = '';
+        // Если отчёт для UI или текущий пользователь - автор шапки темы, собираем обновлённую шапку.
+        if ('UI' === $this->mode || $this->user->userId === $forum->author_id) {
+            $topicHeader = $this->createTopicFirstMessage($forum, $userStored);
+        }
 
         // Создаём заголовок отчёта по подразделу.
-        $header = [];
-        $header[] = $this->getFormattedUpdateTime();
-        $this->prepareSummaryHeader($header, $userStored);
-        $header[] = $this->webtlo->version_line;
-        $messageHeader = implode($this->implodeGlue, $header);
-        unset($header);
+        $messageHeader = $this->prepareMessageHeader($userStored);
 
         // const & pattern.
         $message_length_max = 119000;
+
         $pattern_spoiler = '[spoiler="№№ %s — %s"][font=mono2][list=1]<br />[*=%s]%s<br />[/list][/font][/spoiler]';
         $spoiler_length  = mb_strlen($pattern_spoiler, 'UTF-8');
 
@@ -162,20 +165,20 @@ final class ReportCreator
         // формируем списки
         foreach ($topics as $topic) {
             if (empty($tmp)) {
-                $tmp['firstTopic'] = 1;
+                $tmp['firstTopic']    = 1;
                 $tmp['messageLength'] = 0;
-                $tmp['topicCounter'] = 0;
+                $tmp['topicCounter']  = 0;
             }
             $topicUrl = $this->prepareTopicUrl($topic);
 
             $tmp['topicCounter']++;
             $tmp['topicLines'][] = $topicUrl;
 
-            $topicLineLength = mb_strlen($topicUrl, 'UTF-8');
+            $topicLineLength      = mb_strlen($topicUrl, 'UTF-8');
             $tmp['messageLength'] += $topicLineLength;
 
             // Режем раздачи на сообщения.
-            $fullLength = $tmp['messageLength'] + $topicLineLength;
+            $fullLength      = $tmp['messageLength'] + $topicLineLength;
             $availableLength = $message_length_max - $spoiler_length - ($tmp['topicCounter'] - $tmp['firstTopic'] + 1) * 4;
             if (
                 $fullLength > $availableLength
@@ -189,7 +192,7 @@ final class ReportCreator
                     implode($this->topicGlue . '[*]', $tmp['topicLines'])
                 );
                 // Обнуляем длину сообщения, запоминаем кол-во раздач.
-                $tmp['firstTopic'] = $tmp['topicCounter'] + 1;
+                $tmp['firstTopic']    = $tmp['topicCounter'] + 1;
                 $tmp['messageLength'] = 0;
                 unset($tmp['topicLines']);
             }
@@ -207,6 +210,19 @@ final class ReportCreator
             'header'   => $topicHeader,
             'messages' => $topicMessages,
         ];
+    }
+
+    /**
+     * Собрать заголовок сообщения с версией ПО.
+     */
+    private function prepareMessageHeader(array $userStored): string
+    {
+        $header   = [];
+        $header[] = $this->getFormattedUpdateTime();
+        $this->prepareSummaryHeader($header, $userStored);
+        $header[] = $this->webtlo->version_line;
+
+        return implode($this->implodeGlue, $header);
     }
 
     /**
@@ -238,6 +254,7 @@ final class ReportCreator
         if ($this->mode === 'UI') {
             // [url=viewtopic.php?t=topic_id#dl]topic_name[/url] 842 GB :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s%s';
+
             $topicUrl = sprintf(
                 $pattern_topic,
                 $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
@@ -249,6 +266,7 @@ final class ReportCreator
         if ($this->mode === 'cron') {
             // [url=viewtopic.php?t=topic_id#dl]topic_hash|topic_id[/url] :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s|%d[/url]%s';
+
             $topicUrl = sprintf(
                 $pattern_topic,
                 $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
@@ -266,7 +284,7 @@ final class ReportCreator
     public function prepareReportsMessages(array $report): string
     {
         $messages = $report['messages'];
-        array_walk($messages, function (&$a, $b) {
+        array_walk($messages, function(&$a, $b) {
             $b++;
             $a = sprintf('<h3>Сообщение %d</h3><div>%s</div>', $b, $a);
         });
@@ -291,6 +309,7 @@ final class ReportCreator
             'dl_count',     // Кол-во скачиваемых раздач
             'dl_size',      // Вес скачиваемых раздач
         ];
+
         $total = array_fill_keys($sumKeys, 0);
 
         foreach ($stored as $forum_id => $forumData) {
@@ -313,30 +332,33 @@ final class ReportCreator
     /**
      * Создание шапки темы, с общим списком всех хранителей и их хранимого.
      */
-    private function createTopicFirstMessage($forum, $userStored): string
+    private function createTopicFirstMessage(ForumObject $forum, array $userStored): string
     {
-        $stored = $this->getKeepersStoredReports($forum);
+        $keepersStored = $this->getKeepersStoredReports($forum);
 
         // Добавим себя в список хранителей.
         $userStored['keeper_name'] = $this->user->userName;
-        $stored[$this->user->userId] = $userStored;
+
+        $keepersStored[$this->user->userId] = $userStored;
 
         // Значения общего хранимого.
         $total = [];
         foreach ($this->keeperKeys as $key) {
-            $total[$key] = array_sum(array_column($stored, $key));
+            $total[$key] = array_sum(array_column($keepersStored, $key));
             unset($key);
         }
 
         // Создаём список хранителей.
         $count_keepers = 0;
+
         $header = $keepers = [];
+
         $keepers[] = '[list=1]';
-        if (count($stored)) {
-            uasort($stored, fn ($a, $b) => $b['keep_count'] <=> $a['keep_count']);
+        if (count($keepersStored)) {
+            uasort($keepersStored, fn($a, $b) => $b['keep_count'] <=> $a['keep_count']);
 
             $pattern_keeper = '[*][url=profile.php?mode=viewprofile&u=%d][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s';
-            foreach ($stored as $keeper_id => $values) {
+            foreach ($keepersStored as $keeper_id => $values) {
                 if (!$values['keep_count']) {
                     continue;
                 }
@@ -351,7 +373,7 @@ final class ReportCreator
                 );
             }
         }
-        unset($stored);
+        unset($keepersStored);
         $keepers[] = '[/list]';
 
         $header[] = sprintf(
@@ -372,6 +394,7 @@ final class ReportCreator
         // вставляем общее хранимое в шапку
         return implode($this->implodeGlue, array_merge($header, $keepers));
     }
+
 
     /**
      * Посчитать хранимое других хранителей указанного подраздела.
@@ -403,7 +426,7 @@ final class ReportCreator
         );
 
         if (empty($values)) {
-            $notice_pattern = 'Notice: В БД отсутствуют данные о хранимом другими хранителями в подразделе [(%d) %s]. '.
+            $notice_pattern = 'Notice: В БД отсутствуют данные о хранимом другими хранителями в подразделе [(%d) %s]. ' .
                 'Возможно, нужно выполнить обновление сведений.';
             Log::append(sprintf($notice_pattern, $forum->id, $forum->name));
 
@@ -418,12 +441,17 @@ final class ReportCreator
      *
      * @throws Exception
      */
-    private function getStoredForumsValues(array $forums_ids): array
+    public function fillStoredValues(?int $forumId = null): void
     {
-        sort($forums_ids);
+        if (null !== $forumId) {
+            $forumIds = [$forumId];
+        } else {
+            $forumIds = $this->forums;
+            sort($forumIds);
+        }
 
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
-        $in_forums      = str_repeat('?,', count($forums_ids) - 1) . '?';
+        $include_forums = str_repeat('?,', count($forumIds) - 1) . '?';
 
         // Вытаскиваем из базы хранимое.
         $values = Db::query_database(
@@ -450,10 +478,10 @@ final class ReportCreator
                     WHERE error = 0 AND client_id NOT IN ($client_exclude)
                     GROUP BY info_hash
                 ) tr ON tp.hs = tr.info_hash
-                WHERE tp.ss IN ($in_forums)
+                WHERE tp.ss IN ($include_forums)
             )
             GROUP BY forum_id",
-            array_merge($this->excludeClientsIDs, $forums_ids),
+            array_merge($this->excludeClientsIDs, $forumIds),
             true,
             PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
@@ -461,8 +489,28 @@ final class ReportCreator
         if (empty($values)) {
             throw new Exception(sprintf(
                 'Error: В БД отсутствуют данные о раздачах хранимых подразделов %s. ' .
-                    'Возможно, нужно выполнить обновление сведений.',
-                implode(',', $forums_ids)
+                'Возможно, нужно выполнить обновление сведений.',
+                implode(',', $forumIds)
+            ));
+        }
+
+        $this->stored = $values;
+    }
+
+    /**
+     * Найти хранимое пользователем в указанном подразделе.
+     *
+     * @throws Exception
+     */
+    private function getStoredForumValues(int $forumId): array
+    {
+        $values = $this->stored[$forumId] ?? [];
+
+        if (empty($values)) {
+            throw new Exception(sprintf(
+                'Notice: В БД отсутствуют данные о раздачах хранимого подраздела %s. ' .
+                'Возможно, нужно выполнить обновление сведений.',
+                $forumId
             ));
         }
 
@@ -480,26 +528,22 @@ final class ReportCreator
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
 
         $topics = Db::query_database(
-            "SELECT
-                tp.id,
-                tp.hs topic_hash,
-                tp.ss forum_id,
-                tp.na topic_name,
-                tp.si topic_size,
-                tp.st topic_status,
-                tr.done
-            FROM Topics tp
-            INNER JOIN (
+            "
                 SELECT
-                    info_hash,
-                    MAX(done) done
-                FROM Torrents tr
-                WHERE error = 0 AND client_id NOT IN ($client_exclude)
-                GROUP BY info_hash
-            ) tr ON tp.hs = tr.info_hash
-            WHERE tp.ss = ?
-            ORDER BY tp.id",
-            array_merge($this->excludeClientsIDs, [$forum_id]),
+                    tp.id,
+                    tp.hs topic_hash,
+                    tp.ss forum_id,
+                    tp.na topic_name,
+                    tp.si topic_size,
+                    tp.st topic_status,
+                    MAX(tr.done) AS done
+                FROM Topics tp
+                INNER JOIN Torrents tr ON tr.info_hash = tp.hs
+                WHERE tp.ss = ? AND tr.error = 0 AND tr.client_id NOT IN ($client_exclude)
+                GROUP BY tp.id, tp.hs, tp.ss, tp.na, tp.si, tp.st
+                ORDER BY tp.id
+            ",
+            array_merge([$forum_id], $this->excludeClientsIDs),
             true
         );
 
@@ -564,10 +608,26 @@ final class ReportCreator
         $this->excludeClientsIDs = explode(',', $cfg_reports['exclude_clients_ids']);
     }
 
+    /**
+     * Найти данные хранимых подразделов.
+     *
+     * @throws Exception
+     */
+    private function setForums(): void
+    {
+        // Идентификаторы хранимых подразделов
+        $forums = array_keys($this->config['subsections'] ?? []);
+        if (!count($forums)) {
+            throw new Exception('Error: Отсутствуют хранимые подразделы. Проверьте настройки.');
+        }
+
+        $this->forums = $forums;
+    }
+
     public function setMode(string $mode): void
     {
         if ($mode === 'UI') {
-            $this->mode = $mode;
+            $this->mode        = $mode;
             $this->implodeGlue = '<br />';
             $this->topicGlue   = '<br />';
         }

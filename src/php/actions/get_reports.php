@@ -9,7 +9,6 @@ $reports_result = [
 ];
 try {
     include_once dirname(__FILE__) . '/../common.php';
-    include_once dirname(__FILE__) . '/../classes/reports.php';
 
     // идентификатор подраздела
     $forum_id = (int)$_POST['forum_id'] ?? -1;
@@ -26,15 +25,6 @@ try {
     if (empty($cfg['subsections'])) {
         throw new Exception("Error: Не выбраны хранимые подразделы");
     }
-
-    // Подключаемся к форуму.
-    $reports = new Reports(
-        $cfg['forum_address'],
-        $user->userName,
-        $user->password
-    );
-    // применяем таймауты
-    $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
     // Создание отчётов.
     $forumReports = new ReportCreator(
@@ -54,6 +44,7 @@ try {
         $forum = Forums::getForum($forum_id);
         Timers::start("create_$forum_id");
         try {
+            $forumReports->fillStoredValues($forum_id);
             $forumReport = $forumReports->getForumReport($forum);
         } catch (Exception $e) {
             throw new Exception(sprintf(
