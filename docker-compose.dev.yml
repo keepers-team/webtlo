@@ -22,9 +22,14 @@ services:
     environment:
       # Часовой пояс
       - TZ=Europe/Moscow
-      # Выполняемые внутри контейнера фоновые задачи
-      - WEBTLO_CRON=false
       # Стандартный пользователь внутри контейнера
       - WEBTLO_UID=1000
       - WEBTLO_GID=1000
+      # Выполняемые внутри контейнера фоновые задачи планировщика
+      - WEBTLO_CRON=true # false - чтобы отключить планировщик
+      # Задать расписание для конкретной задачи. false - чтобы выключить
+      - CRON_UPDATE=15 * * * *
+      - CRON_CONTROL=25 * * * *
+      - CRON_KEEPERS=0 6 * * *
+      - CRON_REPORTS=0 5 * * *
     restart: on-failure

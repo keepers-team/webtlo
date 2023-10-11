@@ -1,6 +1,29 @@
 #!/command/with-contenv sh
 if [ "${WEBTLO_CRON:=false}" = "true" ]; then
-  s6-echo "Enabled cron jobs"
+  cron_path="/var/www/webtlo/cron"
+  cron_file="/etc/crontabs/root"
+  s6-echo "Enable cron jobs:"
+
+  if [ "${CRON_UPDATE:=false}" != "false" ]; then
+    s6-echo "=> update.php enabled - ${CRON_UPDATE}"
+    s6-echo "${CRON_UPDATE} sleep \$(shuf -i 1-360 -n 1) && php ${cron_path}/update.php" >> ${cron_file}
+  fi
+
+  if [ "${CRON_CONTROL:=false}" != "false" ]; then
+    s6-echo "=> control.php enabled - ${CRON_CONTROL}"
+    s6-echo "${CRON_CONTROL} sleep \$(shuf -i 1-360 -n 1) && php ${cron_path}/control.php" >> ${cron_file}
+  fi
+
+  if [ "${CRON_KEEPERS:=false}" != "false" ]; then
+    s6-echo "=> keepers.php enabled - ${CRON_KEEPERS}"
+    s6-echo "${CRON_KEEPERS} sleep \$(shuf -i 1-1200 -n 1) && php ${cron_path}/keepers.php" >> ${cron_file}
+  fi
+
+  if [ "${CRON_REPORTS:=false}" != "false" ]; then
+    s6-echo "=> reports.php enabled - ${CRON_REPORTS}"
+    s6-echo "${CRON_REPORTS} sleep \$(shuf -i 1-1200 -n 1) && php ${cron_path}/reports.php" >> ${cron_file}
+  fi
+
   exec crond -f
 else
   s6-echo "Running with disabled cron"
