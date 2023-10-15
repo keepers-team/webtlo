@@ -6,6 +6,7 @@ use Db;
 use PDO;
 use Log;
 use Exception;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
@@ -53,12 +54,12 @@ final class ReportCreator
      */
     public function __construct(
         array       $config,
-        Credentials $user,
-        object      $webtlo
+        Credentials $user
     ) {
         $this->config = $config;
         $this->user   = $user;
-        $this->webtlo = $webtlo;
+
+        $this->webtlo = Helper::getVersion();
 
         $this->getLastUpdateTime();
         $this->setExcluded();
@@ -581,7 +582,7 @@ final class ReportCreator
 
     private function bytes(int $bytes): string
     {
-        return convert_bytes($bytes);
+        return Helper::convertBytes($bytes);
     }
 
     private function boldBytes(int $bytes): string
