@@ -1,12 +1,15 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
+
 try {
     $result = '';
     $starttime = microtime(true);
+
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
     include_once dirname(__FILE__) . '/../classes/download.php';
-    include_once dirname(__FILE__) . '/../common/storage.php';
+
     // список ID раздач
     if (empty($_POST['topic_hashes'])) {
         $result = 'Выберите раздачи';
@@ -63,7 +66,7 @@ try {
         throw new Exception();
     }
     // полный путь до каталога для сохранения торрент-файлов
-    $localPath = getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
+    $localPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
     // очищаем каталог от старых торрент-файлов
     rmdir_recursive($localPath);
     // создаём каталог для торрент-файлов

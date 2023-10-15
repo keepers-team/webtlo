@@ -2,7 +2,6 @@
 
 use KeepersTeam\Webtlo\Helper;
 
-include_once dirname(__FILE__) . "/../common/storage.php";
 include_once dirname(__FILE__) . "/../migration/DatabaseMigration.php";
 
 class Db
@@ -180,7 +179,7 @@ class Db
     public static function create()
     {
         // файл базы данных
-        $databaseDirName = getStorageDir();
+        $databaseDirName = Helper::getStorageDir();
         $databasePath = $databaseDirName . DIRECTORY_SEPARATOR . Db::$databaseFileName;
         Helper::checkDirRecursive($databaseDirName);
 

@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Config\Credentials;
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
@@ -235,7 +236,7 @@ final class UserDetails
         if (!$sourceData || !strlen($sourceData)) {
             return false;
         }
-        $targetPath = getStorageDir() . DIRECTORY_SEPARATOR . 'captcha.jpg';
+        $targetPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'captcha.jpg';
 
         $targetData = file_put_contents($targetPath, $sourceData);
         if ($targetData === false) {

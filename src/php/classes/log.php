@@ -1,49 +1,52 @@
 <?php
 
-include_once dirname(__FILE__) . "/../common/storage.php";
+use KeepersTeam\Webtlo\Helper;
 
 class Log
 {
-    private static $log;
+    private static array $log = [];
 
-    public static function append($message = "")
+    public static function append(string $message = ''): void
     {
         if (!empty($message)) {
             self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
         }
     }
 
-    public static function get($break = '<br />')
+    public static function get($break = '<br />'): string
     {
         if (!empty(self::$log)) {
             return implode($break, self::$log) . $break;
         }
+
+        return '';
     }
 
-    public static function write($filelog)
+    public static function write($logFile): void
     {
-        $dir = getLogDir();
+        $dir = Helper::getLogDir();
+
         $result = is_writable($dir) || mkdir($dir);
         if (!$result) {
             echo "Нет или недостаточно прав для доступа к каталогу logs";
         }
 
-        $filelog = "$dir/$filelog";
-        self::move($filelog);
-        if ($filelog = fopen($filelog, "a")) {
-            fwrite($filelog, self::get("\n"));
-            fwrite($filelog, " -- DONE --\n");
-            fclose($filelog);
+        $logFile = "$dir/$logFile";
+        self::move($logFile);
+        if ($logFile = fopen($logFile, "a")) {
+            fwrite($logFile, self::get("\n"));
+            fwrite($logFile, " -- DONE --\n");
+            fclose($logFile);
         } else {
             echo "Не удалось создать файл лога.";
         }
     }
 
-    private static function move($filelog)
+    private static function move(string $logFile): void
     {
         // переименовываем файл лога, если он больше 5 Мб
-        if (file_exists($filelog) && filesize($filelog) >= 5242880) {
-            if (!rename($filelog, preg_replace('|.log$|', '.1.log', $filelog))) {
+        if (file_exists($logFile) && filesize($logFile) >= 5242880) {
+            if (!rename($logFile, preg_replace('|.log$|', '.1.log', $logFile))) {
                 echo "Не удалось переименовать файл лога.";
             }
         }
