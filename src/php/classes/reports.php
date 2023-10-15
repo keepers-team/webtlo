@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Config\Credentials;
+
 include_once dirname(__FILE__) . '/../phpQuery.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
 
@@ -10,42 +12,25 @@ class Reports
      */
     protected $ch;
 
-    /**
-     * @var string
-     */
-    protected $login;
+    protected string $forum_url;
 
-    /**
-     * @var string
-     */
-    protected $forum_url;
+    protected Credentials $user;
 
-    /**
-     * @var bool
-     */
-    protected $blocking_send;
+    protected bool $blocking_send;
 
-    /**
-     * @var string
-     */
-    protected $blocking_reason;
+    protected string $blocking_reason;
 
-    /**
-     * @var array
-     */
-    private $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    private array $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    /**
-     * @var array
-     */
-    private $months_ru = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+    private array $months_ru = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
 
-    public function __construct($forum_url, $login, $paswd, $cap_fields = [])
+    public function __construct(string $forum_url, Credentials $user)
     {
-        $this->login = $login;
+        // Проверяем наличие сессии или пробуем авторизоваться.
+        $this->user = UserDetails::checkSession($forum_url, $user);
+
         $this->forum_url = $forum_url;
-        UserDetails::$forum_url = $forum_url;
-        UserDetails::get_cookie($login, $paswd, $cap_fields);
+
         $this->ch = curl_init();
         Log::append('Используется зеркало для форума: ' . $forum_url);
     }

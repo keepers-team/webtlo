@@ -7,6 +7,7 @@ include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
@@ -257,7 +258,9 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 
     if (!empty($topicsUnregistered)) {
         if (!isset($reports)) {
-            $reports = new Reports($cfg['forum_address'], $cfg['tracker_login'], $cfg['tracker_paswd']);
+            $user = ConfigValidate::checkUser($cfg);
+
+            $reports = new Reports($cfg['forum_address'], $user);
             $reports->curl_setopts($cfg['curl_setopt']['forum']);
         }
         $insertedUnregisteredTopics = [];

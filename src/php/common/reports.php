@@ -13,23 +13,22 @@ include_once dirname(__FILE__) . '/../classes/user_details.php';
 Timers::start('send_reports');
 Log::append('Начат процесс отправки отчётов...');
 
-// получение настроек
+// Получение настроек.
 if (!isset($cfg)) {
     $cfg = get_settings();
 }
-$user = ConfigValidate::checkUser($cfg);
-
-// проверка настроек
-if (empty($cfg['subsections'])) {
-    throw new Exception('Error: Не выбраны хранимые подразделы');
-}
-
 
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
     if ($checkEnabledCronAction == 0) {
         throw new Exception('Notice: Автоматическая отправка отчётов отключена в настройках.');
     }
+}
+
+// Проверка настроек.
+$user = ConfigValidate::checkUser($cfg);
+if (empty($cfg['subsections'])) {
+    throw new Exception('Error: Не выбраны хранимые подразделы');
 }
 
 // Проверим полное обновление.
@@ -44,8 +43,7 @@ if (Db::select_count('ForumsOptions') === 0) {
 if (!isset($reports)) {
     $reports = new Reports(
         $cfg['forum_address'],
-        $user->userName,
-        $user->password
+        $user,
     );
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
@@ -92,7 +90,7 @@ foreach ($forumReports->forums as $forum_id) {
     $topicId  = $forum->topic_id;
     $messages = $forumReport['messages'];
     // Редактируем шапку темы, если её автор - пользователь.
-    if ((int)$cfg['user_id'] === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
+    if ($user->userId === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
         Log::append(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
         // отправка сообщения с шапкой
         $reports->send_message(
@@ -197,7 +195,7 @@ if (
     && !empty($editedTopicsIDs)
 ) {
     $emptyMessages = [];
-    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $cfg['user_id']]);
+    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $user->userId]);
     $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
     if (!empty($uneditedTopicsIDs)) {
         foreach ($uneditedTopicsIDs as $topicID) {
@@ -211,7 +209,7 @@ if (
                     continue;
                 }
                 // только свои сообщения
-                if (strcasecmp($cfg['tracker_login'], $message['nickname']) === 0) {
+                if ($user->userId === $message['user_id']) {
                     $emptyMessages[] = $message['post_id'];
                     $reports->send_message('editpost', ':!: не актуально', $topicID, $message['post_id']);
                 }
