@@ -48,7 +48,7 @@ class Backup
      */
     private static function getPath(): string
     {
-        $backupPath = getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
+        $backupPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
         Helper::checkDirRecursive($backupPath);
         return $backupPath;
     }
