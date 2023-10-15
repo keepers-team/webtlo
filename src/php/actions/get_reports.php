@@ -29,8 +29,7 @@ try {
     // Создание отчётов.
     $forumReports = new ReportCreator(
         $cfg,
-        $user,
-        get_webtlo_version()
+        $user
     );
     $forumReports->setMode('UI');
 

@@ -56,8 +56,7 @@ if ($unavailable = $reports->check_access()) {
 // Создание отчётов.
 $forumReports = new ReportCreator(
     $cfg,
-    $user,
-    get_webtlo_version()
+    $user
 );
 $forumReports->fillStoredValues();
 
