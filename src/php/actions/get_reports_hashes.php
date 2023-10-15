@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+
 try {
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/api.php';
@@ -17,27 +19,19 @@ try {
         throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");
     }
 
-    // получение настроек
+    // Получение настроек.
     $cfg = get_settings();
 
-    // проверка настроек
+    // Проверка настроек.
+    $user = ConfigValidate::checkUser($cfg);
     if (empty($cfg['subsections'])) {
-        throw new Exception("Error: Не выбраны хранимые подразделы");
-    }
-
-    if (empty($cfg['tracker_login'])) {
-        throw new Exception("Error: Не указано имя пользователя для доступа к форуму");
-    }
-
-    if (empty($cfg['tracker_paswd'])) {
-        throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
+        throw new Exception('Error: Не выбраны хранимые подразделы');
     }
 
     // подключаемся к форуму
     $reports = new Reports(
         $cfg['forum_address'],
-        $cfg['tracker_login'],
-        $cfg['tracker_paswd']
+        $user
     );
 
     // применяем таймауты

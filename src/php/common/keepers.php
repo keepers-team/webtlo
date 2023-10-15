@@ -3,6 +3,7 @@
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 
@@ -16,15 +17,6 @@ if (!isset($cfg)) {
     $cfg = get_settings();
 }
 
-// проверка настроек
-if (empty($cfg['tracker_login'])) {
-    throw new Exception('Error: Не указано имя пользователя для доступа к форуму');
-}
-
-if (empty($cfg['tracker_paswd'])) {
-    throw new Exception('Error: Не указан пароль пользователя для доступа к форуму');
-}
-
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
     if ($checkEnabledCronAction == 0) {
@@ -32,6 +24,7 @@ if (isset($checkEnabledCronAction)) {
     }
 }
 
+$user = ConfigValidate::checkUser($cfg);
 
 Log::append('Info: Начато обновление списков раздач хранителей...');
 
@@ -73,8 +66,7 @@ if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
 if (!isset($reports)) {
     $reports = new Reports(
         $cfg['forum_address'],
-        $cfg['tracker_login'],
-        $cfg['tracker_paswd']
+        $user
     );
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
@@ -112,7 +104,7 @@ if (isset($cfg['subsections'])) {
             $userPosts = [];
             foreach ($keepers as $keeper) {
                 // Записываем свои посты, для формирования отчётов.
-                if ($keeper['user_id'] == $cfg['user_id']) {
+                if ($keeper['user_id'] == $user->userId) {
                     $userPosts[] = $keeper['post_id'];
                 }
 

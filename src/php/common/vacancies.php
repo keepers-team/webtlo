@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+
 $starttime = microtime(true);
 
 include_once dirname(__FILE__) . '/../common.php';
@@ -9,6 +11,7 @@ Log::append("Начат процесс формирования вакансий
 
 // получение настроек
 $cfg = get_settings();
+$user = ConfigValidate::checkUser($cfg);
 
 // настройки вакансий
 $vacancies = $cfg['vacancies'];
@@ -20,14 +23,6 @@ if (empty($vacancies['send_topic_id'])) {
 
 if (empty($vacancies['send_post_id'])) {
     throw new Exception("Error: Не указан send_post_id");
-}
-
-if (empty($cfg['tracker_login'])) {
-    throw new Exception("Error: Не указано имя пользователя для доступа к форуму");
-}
-
-if (empty($cfg['tracker_paswd'])) {
-    throw new Exception("Error: Не указан пароль пользователя для доступа к форуму");
 }
 
 // исключить/включить подразделы
@@ -261,8 +256,7 @@ if (!empty($output)) {
     if (!isset($reports)) {
         $reports = new Reports(
             $cfg['forum_address'],
-            $cfg['tracker_login'],
-            $cfg['tracker_paswd']
+            $user
         );
         // применяем таймауты
         $reports->curl_setopts($cfg['curl_setopt']['forum']);
