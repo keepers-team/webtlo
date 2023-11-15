@@ -1,8 +1,9 @@
 <?php
 
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Forum\Report\CreationMode;
+use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Module\Forums;
-use KeepersTeam\Webtlo\Module\ReportCreator;
 
 $reports_result = [
     'report' => '',
@@ -31,7 +32,7 @@ try {
         $cfg,
         $user
     );
-    $forumReports->setMode('UI');
+    $forumReports->initConfig(CreationMode::UI);
 
     $Timers = [];
     Timers::start('create_report');

@@ -1,21 +1,23 @@
 <?php
 
-namespace KeepersTeam\Webtlo\Module;
+namespace KeepersTeam\Webtlo\Forum\Report;
 
-use Db;
-use PDO;
-use Log;
-use Exception;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Module\LastUpdate;
+use Db;
+use PDO;
+use Log;
+use Exception;
 
 /**
  * Объект для создания новый отчётов.
  */
-final class ReportCreator
+final class Creator
 {
     /** Ид темы для публикации сводных отчётов */
     public const SUMMARY_FORUM = 4275633;
@@ -23,9 +25,9 @@ final class ReportCreator
     /** @var int[] */
     public ?array $forums = null;
 
-    private array $config;
+    private array       $config;
     private Credentials $user;
-    private object $webtlo;
+    private object      $webtlo;
 
     /** @var int[] Исключённые из отчётов подразделы */
     private array $excludeForumsIDs = [];
@@ -35,10 +37,10 @@ final class ReportCreator
 
     private ?int $updateTime = null;
 
-    private string $mode = 'cron';
+    private CreationMode $mode = CreationMode::CRON;
 
     private string $implodeGlue = '[br]';
-    private string $topicGlue = '';
+    private string $topicGlue   = '';
 
     private array $keeperKeys = [
         'keep_count', // Общее кол-во хранимых раздач
@@ -49,21 +51,12 @@ final class ReportCreator
 
     private ?array $stored = null;
 
-    /**
-     * @throws Exception
-     */
     public function __construct(
         array       $config,
         Credentials $user
     ) {
         $this->config = $config;
         $this->user   = $user;
-
-        $this->webtlo = Helper::getVersion();
-
-        $this->getLastUpdateTime();
-        $this->setExcluded();
-        $this->setForums();
     }
 
     /**
@@ -144,7 +137,7 @@ final class ReportCreator
 
         $topicHeader = '';
         // Если отчёт для UI или текущий пользователь - автор шапки темы, собираем обновлённую шапку.
-        if ('UI' === $this->mode || $this->user->userId === $forum->author_id) {
+        if (CreationMode::UI === $this->mode || $this->user->userId === $forum->author_id) {
             $topicHeader = $this->createTopicFirstMessage($forum, $userStored);
         }
 
@@ -214,6 +207,25 @@ final class ReportCreator
     }
 
     /**
+     * @throws Exception
+     */
+    public function initConfig(?CreationMode $mode = null): void
+    {
+        if (null !== $mode) {
+            $this->mode = $mode;
+
+            $this->implodeGlue = '<br />';
+            $this->topicGlue   = '<br />';
+        }
+
+        $this->webtlo = Helper::getVersion();
+
+        $this->getLastUpdateTime();
+        $this->setExcluded();
+        $this->setForums();
+    }
+
+    /**
      * Собрать заголовок сообщения с версией ПО.
      */
     private function prepareMessageHeader(array $userStored): string
@@ -252,7 +264,7 @@ final class ReportCreator
     {
         $topicUrl = '';
         // #dl - скачивание, :!: - смайлик.
-        if ($this->mode === 'UI') {
+        if (CreationMode::UI === $this->mode) {
             // [url=viewtopic.php?t=topic_id#dl]topic_name[/url] 842 GB :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s%s';
 
@@ -264,7 +276,7 @@ final class ReportCreator
                 ($topic['done'] != 1 ? ' :!: ' : '')
             );
         }
-        if ($this->mode === 'cron') {
+        if (CreationMode::CRON === $this->mode) {
             // [url=viewtopic.php?t=topic_id#dl]topic_hash|topic_id[/url] :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s|%d[/url]%s';
 
@@ -276,6 +288,7 @@ final class ReportCreator
                 ($topic['done'] != 1 ? ' :!: ' : '')
             );
         }
+
         return $topicUrl;
     }
 
@@ -392,7 +405,7 @@ final class ReportCreator
         $header[] = sprintf('Всего хранителей: [b]%d[/b]', $count_keepers);
         $header[] = '[hr]';
 
-        // вставляем общее хранимое в шапку
+        // Вставляем общее хранимое в шапку.
         return implode($this->implodeGlue, array_merge($header, $keepers));
     }
 
@@ -562,7 +575,11 @@ final class ReportCreator
     {
         $updateTime = LastUpdate::getTime(UpdateMark::FULL_UPDATE->value);
         if ($updateTime === 0) {
-            $update = LastUpdate::checkFullUpdate($this->config);
+            $update = LastUpdate::checkFullUpdate(
+                $this->config,
+                CreationMode::UI !== $this->mode
+            );
+
             if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
                 $update->addLog();
                 throw new Exception('Сформировать отчёт невозможно. ' .
@@ -572,6 +589,7 @@ final class ReportCreator
 
             $updateTime = $update->getLastCheckUpdateTime();
         }
+
         $this->updateTime = $updateTime;
     }
 
@@ -588,6 +606,7 @@ final class ReportCreator
     private function boldBytes(int $bytes): string
     {
         $formatted = $this->bytes($bytes);
+
         return vsprintf("[b]%s[/b] %s", explode(" ", $formatted));
     }
 
@@ -616,21 +635,12 @@ final class ReportCreator
      */
     private function setForums(): void
     {
-        // Идентификаторы хранимых подразделов
+        // Идентификаторы хранимых подразделов.
         $forums = array_keys($this->config['subsections'] ?? []);
         if (!count($forums)) {
             throw new Exception('Error: Отсутствуют хранимые подразделы. Проверьте настройки.');
         }
 
         $this->forums = $forums;
-    }
-
-    public function setMode(string $mode): void
-    {
-        if ($mode === 'UI') {
-            $this->mode        = $mode;
-            $this->implodeGlue = '<br />';
-            $this->topicGlue   = '<br />';
-        }
     }
 }

@@ -2,9 +2,9 @@
 
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;
-use KeepersTeam\Webtlo\Module\ReportCreator;
 
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
@@ -58,6 +58,7 @@ $forumReports = new ReportCreator(
     $cfg,
     $user
 );
+$forumReports->initConfig();
 $forumReports->fillStoredValues();
 
 $editedTopicsIDs = [];
