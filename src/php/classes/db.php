@@ -1,12 +1,14 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
+
 include_once dirname(__FILE__) . "/../common/storage.php";
 include_once dirname(__FILE__) . "/../migration/DatabaseMigration.php";
 
 class Db
 {
     public static $db;
-    private static string $databaseFilename = 'webtlo.db';
+    private static string $databaseFileName = 'webtlo.db';
 
     /** Актуальная версия БД */
     private const PRAGMA_VERSION = 12;
@@ -178,9 +180,9 @@ class Db
     public static function create()
     {
         // файл базы данных
-        $databaseDirname = getStorageDir();
-        $databasePath = $databaseDirname . DIRECTORY_SEPARATOR . Db::$databaseFilename;
-        ckdir_recursive($databaseDirname);
+        $databaseDirName = getStorageDir();
+        $databasePath = $databaseDirName . DIRECTORY_SEPARATOR . Db::$databaseFileName;
+        Helper::checkDirRecursive($databaseDirName);
 
         try {
             self::$db = new PDO('sqlite:' . $databasePath);

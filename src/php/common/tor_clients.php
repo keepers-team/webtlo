@@ -5,6 +5,7 @@ include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
@@ -87,7 +88,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
     // применяем таймауты
     $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
-    $client->setDomain(get_config_domain($cfg));
+    $client->setDomain(Helper::getForumDomain($cfg));
 
     // получаем список раздач
     $torrents = $client->getAllTorrents();
