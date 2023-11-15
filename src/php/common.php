@@ -288,123 +288,27 @@ function get_settings($filename = "")
     return $config;
 }
 
-function convert_bytes($size)
+function convert_bytes($size): string
 {
-    $filesizename = [" B", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB"];
-    $i = $size >= pow(1024, 4) ? 3 : floor(log($size, 1024));
-    return $size ? round($size / pow(1024, $i), 2) . $filesizename[$i] : '0 B';
+    return Helper::convertBytes($size);
 }
 
 function convert_seconds($seconds, $leadZeros = false): string
 {
-    $hh = floor($seconds / 3600);
-    $mm = floor($seconds / 60 % 60);
-    $ss = $seconds % 60;
-
-    if ($leadZeros) {
-        if (strlen($hh) == 1) {
-            $hh = "0" . $hh;
-        }
-        if (strlen($ss) == 1) {
-            $ss = "0" . $ss;
-        }
-        if (strlen($mm) == 1) {
-            $mm = "0" . $mm;
-        }
-    }
-
-    if ($hh == 0) {
-        if ($mm == 0) {
-            $ret = "{$ss}s";
-        } else {
-            $ret = "{$mm}m {$ss}s";
-        }
-    } else {
-        $ret = "{$hh}h {$mm}m {$ss}s";
-    }
-    return $ret;
+    return Helper::convertSeconds($seconds, $leadZeros);
 }
 
-function rmdir_recursive($path)
+function rmdir_recursive($path): bool
 {
-    $return = true;
-    if (!file_exists($path)) {
-        return true;
-    }
-    if (!is_dir($path)) {
-        return unlink($path);
-    }
-    foreach (scandir($path) as $next_path) {
-        if ('.' === $next_path || '..' === $next_path) {
-            continue;
-        }
-        if (is_dir("$path/$next_path")) {
-            if (!is_writable("$path/$next_path")) {
-                return false;
-            }
-            $return = rmdir_recursive("$path/$next_path");
-        } else {
-            unlink("$path/$next_path");
-        }
-    }
-    return ($return && is_writable($path)) ? rmdir($path) : false;
+    return Helper::removeDirRecursive($path);
 }
 
-function mkdir_recursive($path)
+function mkdir_recursive($path): bool
 {
-    $return = false;
-    if (PHP_OS == 'WINNT') {
-        $winpath = mb_convert_encoding($path, 'Windows-1251', 'UTF-8');
-        if (is_writable($winpath) && is_dir($winpath)) {
-            return true;
-        }
-    }
-    if (is_writable($path) && is_dir($path)) {
-        return true;
-    }
-    $prev_path = dirname($path);
-    if ($path != $prev_path) {
-        $return = mkdir_recursive($prev_path);
-    }
-    if (PHP_OS == 'WINNT') {
-        $winprev_path = mb_convert_encoding($prev_path, 'Windows-1251', 'UTF-8');
-        return ($return && is_writable($winprev_path) && !file_exists($winpath)) ? mkdir($winpath) : false;
-    }
-    return ($return && is_writable($prev_path) && !file_exists($path)) ? mkdir($path) : false;
+    return Helper::makeDirRecursive($path);
 }
 
-function ckdir_recursive(string $path): void
+function natsort_field(array $input, $field, $direct = 1): array
 {
-    if (!file_exists($path)) {
-        if (!mkdir_recursive($path)) {
-            throw new Exception('Не удалось создать каталог ' . $path);
-        }
-    }
-}
-
-function natsort_field(array $input, $field, $direct = 1)
-{
-    uasort($input, function ($a, $b) use ($field, $direct) {
-        if (
-            is_numeric($a[$field])
-            && is_numeric($b[$field])
-        ) {
-            return ($a[$field] != $b[$field] ? $a[$field] < $b[$field] ? -1 : 1 : 0) * $direct;
-        }
-        $a[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($a[$field], 'UTF-8'));
-        $b[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($b[$field], 'UTF-8'));
-        return (strnatcasecmp($a[$field], $b[$field])) * $direct;
-    });
-    return $input;
-}
-
-/** Найти используемый домер трекера в настройках. */
-function get_config_domain(array $cfg): ?string
-{
-    if (!empty($cfg['forum_url'] && $cfg['forum_url'] !== 'custom')) {
-        return $cfg['forum_url'];
-    } elseif (!empty($cfg['forum_url_custom'])) {
-        return $cfg['forum_url_custom'];
-    }
-    return null;
+    return Helper::natsortField($input, $field, $direct);
 }

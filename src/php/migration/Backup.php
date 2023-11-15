@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
+
 /**
  * Бекапим конфиг.
  */
@@ -9,6 +11,9 @@ class Backup
     private const MAX_BACKUPS = 5;
     private const FOLDER = 'backup';
 
+    /**
+     * @throws Exception
+     */
     public static function config(string $path, int $version): void
     {
         $backupName = sprintf('config-v%d-%s.ini', $version, date('Y-m-d-H-i'));
@@ -22,6 +27,9 @@ class Backup
         self::clearBackups($backupPath, '/config-(.*)\.ini/');
     }
 
+    /**
+     * @throws Exception
+     */
     public static function database(string $path, int $version): void
     {
         $backupName = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
@@ -35,10 +43,13 @@ class Backup
         self::clearBackups($backupPath, '/webtlo-(.*)\.db/');
     }
 
+    /**
+     * @throws Exception
+     */
     private static function getPath(): string
     {
         $backupPath = getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
-        ckdir_recursive($backupPath);
+        Helper::checkDirRecursive($backupPath);
         return $backupPath;
     }
 
