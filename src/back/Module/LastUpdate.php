@@ -185,14 +185,17 @@ final class LastUpdate
     /**
      * Записать минимальное значение обновления всех нужных маркеров для отправки отчётов.
      */
-    public static function checkFullUpdate(array $cfg): self
+    public static function checkFullUpdate(array $cfg, bool $checkForum = true): self
     {
         $markers = array_keys($cfg['subsections'] ?? []);
         // Добавим важные маркеры обновлений.
         $markers[] = UpdateMark::FORUM_TREE->value;
         $markers[] = UpdateMark::SUBSECTIONS->value;
-        $markers[] = UpdateMark::FORUM_SCAN->value;
         $markers[] = UpdateMark::CLIENTS->value;
+
+        if ($checkForum) {
+            $markers[] = UpdateMark::FORUM_SCAN->value;
+        }
 
         // TODO добавить опцию в UI и конфиг.
         $daysUpdateExpire = $cfg['reports']['daysUpdateExpire'] ?? 5;
