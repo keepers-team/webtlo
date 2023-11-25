@@ -7,8 +7,7 @@
 *.sqlite
 *.sql
 *.torrent
-*.ini
 *.log
 *.jpg
 
-/vendor/
+vendor/

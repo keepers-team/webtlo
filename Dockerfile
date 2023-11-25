@@ -1,6 +1,7 @@
-FROM alpine:3.16
+FROM alpine:3.17 as base
 
 # environment
+ENV TZ Europe/Moscow
 ENV TERM "xterm-color"
 ENV S6_OVERLAY_VERSION v3.1.4.2
 ENV S6_KEEP_ENV 1
@@ -12,18 +13,21 @@ ENV S6_KILL_GRACETIME 1000
 # packages & configure
 RUN apk add --update --no-cache \
     # base tools
-    bash ca-certificates curl openssl nano sqlite \
+    bash nano tzdata ca-certificates curl openssl sqlite \
     # web server
     nginx \
     # php interpreter
-    php81 php81-fpm php81-curl php81-sqlite3 php81-pdo_sqlite php81-xml php81-mbstring php81-dom \
+    php81 php81-fpm php81-curl php81-openssl php81-sqlite3 php81-pdo_sqlite \
+    php81-xml php81-mbstring php81-dom \
     && rm -rf /var/cache/apk/*
 
+
 # install s6 overlays
+ARG S6_OVERLAY_DOWNLOAD="https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}"
 RUN \
     export S6_ARCH=$(uname -m) && \
-    curl -L -s "https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz" | tar Jxpf - -C / && \
-    curl -L -s "https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-${S6_ARCH}.tar.xz" | tar Jxpf - -C / && \
+    curl -L -s "${S6_OVERLAY_DOWNLOAD}/s6-overlay-noarch.tar.xz"     | tar Jxpf - -C / && \
+    curl -L -s "${S6_OVERLAY_DOWNLOAD}/s6-overlay-${S6_ARCH}.tar.xz" | tar Jxpf - -C / && \
     # Move /init somewhere else to prevent issues with podman/RHEL
     mv /init /s6-init
 
@@ -33,22 +37,33 @@ COPY docker/rootfs /
 # set application-specific environment
 ENV WEBTLO_DIR "/data/storage"
 ENV WEBTLO_CRON "true"
-ENV WEBTLO_UID "nobody"
-ENV WEBTLO_GID "nobody"
+ENV WEBTLO_UID 1000
+ENV WEBTLO_GID 1000
 EXPOSE 80
 VOLUME /data
 WORKDIR /var/www/webtlo
 
-# copy application to workdir
-COPY cron cron
-COPY css css
-COPY webfonts webfonts
-COPY scripts scripts
-COPY php php
-COPY favicon.ico .
-COPY version.json .
-COPY index.php .
-
 HEALTHCHECK --interval=15m --timeout=5s CMD curl -f http://localhost/php/actions/keepAlive.php || exit 1
+
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
+
+# install composer
+FROM composer as builder
+COPY src/composer.* .
+COPY src/back back
+RUN composer install && composer dump-autoload -o --no-dev
+
+# image for development
+FROM base as dev
+RUN apk add --update --no-cache php81-phar php81-pecl-xdebug php81-tokenizer
+COPY /docker/debug /etc/php81/conf.d
+# copy composer parts
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
+# image for production
+FROM base as prod
+# copy application to workdir
+COPY src .
+# copy composer parts
+COPY --from=builder /app/vendor vendor
