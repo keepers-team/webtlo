@@ -173,8 +173,9 @@ try {
                     $topicBlock .= $pattern;
                 }
             }
-            // тип пульки: раздаю, качаю, на паузе, ошибка
-            $topicClientState = getTopicClientState($topic);
+
+            // Пулька [иконка, цвет, описание].
+            $topicBullet = getTopicBullet($topic);
 
             if (!isset($preparedOutput[$topicStatus])) {
                 $preparedOutput[$topicStatus] = '<div class="subsection-title">' . $topicStatus . '</div>';
@@ -191,9 +192,9 @@ try {
                     date('d.m.Y', $topic['time_added']),
                     '',
                     'text-success',
-                    $topicClientState,
+                    $topicBullet['icon'],
                     getClientName($topic['client_id'], $cfg),
-                    getBulletTittle($topicClientState)
+                    $topicBullet['title']
                 ),
                 ''
             );
@@ -675,11 +676,9 @@ try {
                     $data .= $pattern;
                 }
             }
-            // тип пульки: раздаю, качаю, на паузе, ошибка
-            $topicClientState = getTopicClientState($topic_data);
 
-            // Состояние раздачи в клиенте (цвет пульки).
-            $bulletColor = getBulletColor($topic_data, (int)$filter['avg_seeders_period']);
+            // Пулька [иконка, цвет, описание].
+            $topicBullet = getTopicBullet($topic_data, (int)$filter['avg_seeders_period']);
 
             // выводим строку
             $output .= sprintf(
@@ -693,10 +692,10 @@ try {
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
-                    $bulletColor,
-                    $topicClientState,
+                    $topicBullet['color'],
+                    $topicBullet['icon'],
                     getClientName($topic_data['cl'], $cfg),
-                    getBulletTittle($topicClientState, $bulletColor)
+                    $topicBullet['title']
                 ),
                 getFormattedKeepersList($topic_keepers, $user_id)
             );
@@ -944,6 +943,20 @@ function getClientName(?int $clientID, array $cfg): string
         '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']
     );
+}
+
+/** Собрать "пульку" - состояние раздачи. */
+function getTopicBullet(array $topic, int $avgSeedersPeriod = 14): array
+{
+    $icon  = getTopicClientState($topic);
+    $color = getBulletColor($topic, $avgSeedersPeriod);
+    $title = getBulletTittle($icon, $color);
+
+    return [
+        'icon'  => $icon,
+        'color' => $color,
+        'title' => $title,
+    ];
 }
 
 /** Определить состояние раздачи в клиенте. */
