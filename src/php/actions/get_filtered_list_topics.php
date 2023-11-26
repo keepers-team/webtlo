@@ -130,7 +130,7 @@ try {
                     $topic_data['se'],
                     '',
                     '',
-                    get_client_name($topic_data['cl'], $cfg)
+                    getClientName($topic_data['cl'], $cfg)
                 ),
                 ''
             );
@@ -171,17 +171,8 @@ try {
                 }
             }
             // тип пульки: раздаю, качаю, на паузе, ошибка
-            $stateTorrentClient = '';
-            if ($topic['done'] == 1) {
-                $stateTorrentClient = 'fa-arrow-up';
-            } elseif ($topic['done'] === null) {
-                $stateTorrentClient = 'fa-circle';
-            } else {
-                $stateTorrentClient = 'fa-arrow-down';
-            }
-            if ($topic['paused'] == 1) {
-                $stateTorrentClient = 'fa-pause';
-            }
+            $topicClientState = getTopicClientState($topic);
+
             if (!isset($preparedOutput[$topicStatus])) {
                 $preparedOutput[$topicStatus] = '<div class="subsection-title">' . $topicStatus . '</div>';
             }
@@ -197,9 +188,9 @@ try {
                     date('d.m.Y', $topic['time_added']),
                     '',
                     'text-success',
-                    $stateTorrentClient,
-                    get_client_name($topic['client_id'], $cfg),
-                    get_topic_title($stateTorrentClient)
+                    $topicClientState,
+                    getClientName($topic['client_id'], $cfg),
+                    getBulletTittle($topicClientState)
                 ),
                 ''
             );
@@ -322,14 +313,10 @@ try {
                     $outputLine .= $pattern;
                 }
             }
-            $stateAverageSeeders = '';
-            if (isset($topicData['ds'])) {
-                if ($topicData['ds'] < $filter['avg_seeders_period']) {
-                    $stateAverageSeeders = $topicData['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
-                } else {
-                    $stateAverageSeeders = 'text-success';
-                }
-            }
+
+            // Состояние раздачи в клиенте (цвет пульки).
+            $stateAverageSeeders = getBulletColor($topicData, (int)$filter['avg_seeders_period']);
+
             $statement =
                 'SELECT
                     client_id,
@@ -597,29 +584,7 @@ try {
         }
 
         // данные о других хранителях
-        $forumsIDsChunks = array_chunk($forumsIDs, 499);
-        $keepers = [];
-        foreach ($forumsIDsChunks as $forumsIDsChunk) {
-            $keepers += Db::query_database(
-                'SELECT k.topic_id,k.keeper_id,k.keeper_name,MAX(k.complete) as complete,MAX(k.posted) as posted,MAX(k.seeding) as seeding 
-                FROM (
-                    SELECT kl.topic_id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
-                    FROM Topics
-                    LEFT JOIN KeepersLists as kl ON Topics.id = kl.topic_id
-                    WHERE ss IN (' . $ss . ') AND rg < posted AND kl.topic_id IS NOT NULL
-                    UNION ALL
-                    SELECT ks.topic_id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
-                    FROM Topics
-                    LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.topic_id
-                    WHERE ss IN (' . $ss . ') AND ks.topic_id IS NOT NULL
-                ) as k
-                GROUP BY k.topic_id, k.keeper_id, k.keeper_name
-                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.keeper_name',
-                array_merge($forumsIDsChunk, $forumsIDsChunk, [$user_id]),
-                true,
-                PDO::FETCH_ASSOC | PDO::FETCH_GROUP
-            );
-        }
+        $keepers = getKeepersByForumList($forumsIDs, $ss, $user_id);
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = sprintf(
@@ -714,34 +679,7 @@ try {
                     return $user_id !== (int)$e['keeper_id'];
                 });
             }
-            $keepers_list = '';
-            if (count($topic_keepers)) {
-                $formatKeeperList = '<i class="fa fa-%1$s text-%2$s" title="%4$s"></i> <i class="keeper bold text-%2$s" title="%4$s">%3$s</i>';
-                $keepers_list = array_map(function ($e) use ($formatKeeperList, $user_id) {
-                    if ($e['complete'] == 1) {
-                        if ($e['posted'] === 0) {
-                            $stateKeeperIcon = 'arrow-circle-up';
-                        } else {
-                            $stateKeeperIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
-                        }
-                        $stateKeeperColor = 'success';
-                    } else {
-                        $stateKeeperIcon = 'arrow-down';
-                        $stateKeeperColor = 'danger';
-                    }
-                    if ($user_id === (int)$e['keeper_id']) {
-                        $stateKeeperColor = 'self';
-                    }
-                    return sprintf(
-                        $formatKeeperList,
-                        $stateKeeperIcon,
-                        $stateKeeperColor,
-                        $e['keeper_name'],
-                        get_keeper_title($stateKeeperIcon)
-                    );
-                }, $topic_keepers);
-                $keepers_list = '| ' . implode(', ', $keepers_list);
-            }
+
             // фильтрация по фразе
             if (!empty($filter['filter_phrase'])) {
                 if ($filter['filter_by_phrase'] == 0) { // в имени хранителя
@@ -796,29 +734,11 @@ try {
                 }
             }
             // тип пульки: раздаю, качаю, на паузе, ошибка
-            $stateTorrentClient = '';
-            if ($topic_data['done'] == 1) {
-                $stateTorrentClient = 'fa-arrow-up';
-            } elseif ($topic_data['done'] === null) {
-                $stateTorrentClient = 'fa-circle';
-            } else {
-                $stateTorrentClient = 'fa-arrow-down';
-            }
-            if ($topic_data['paused'] == 1) {
-                $stateTorrentClient = 'fa-pause';
-            }
-            if ($topic_data['error'] == 1) {
-                $stateTorrentClient = 'fa-times';
-            }
-            // цвет пульки
-            $bullet_color = '';
-            if (isset($topic_data['ds'])) {
-                if ($topic_data['ds'] < $filter['avg_seeders_period']) {
-                    $bullet_color = $topic_data['ds'] >= $filter['avg_seeders_period'] / 2 ? 'text-warning' : 'text-danger';
-                } else {
-                    $bullet_color = 'text-success';
-                }
-            }
+            $topicClientState = getTopicClientState($topic_data);
+
+            // Состояние раздачи в клиенте (цвет пульки).
+            $bulletColor = getBulletColor($topic_data, (int)$filter['avg_seeders_period']);
+
             // выводим строку
             $output .= sprintf(
                 $pattern_topic_block,
@@ -831,12 +751,12 @@ try {
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'], 2),
-                    $bullet_color,
-                    $stateTorrentClient,
-                    get_client_name($topic_data['cl'], $cfg),
-                    get_topic_title($stateTorrentClient, $bullet_color)
+                    $bulletColor,
+                    $topicClientState,
+                    getClientName($topic_data['cl'], $cfg),
+                    getBulletTittle($topicClientState, $bulletColor)
                 ),
-                $keepers_list
+                getFormattedKeepersList($topic_keepers, $user_id)
             );
         }
 
@@ -878,6 +798,73 @@ try {
     ]);
 }
 
+/** Собрать параметры фильтрации по типам хранителей. */
+function prepareKeepersFilter(array $filter): array
+{
+    $keys = ['is_keepers', 'not_keepers', 'is_keepers_seeders', 'not_keepers_seeders', 'is_keepers_download'];
+
+    $keeper_filter = array_combine(
+        $keys,
+        array_map(fn($el) => (bool)($filter[$el] ?? false), $keys)
+    );
+
+    $keeper_filter['keepers_min'] = (int)$filter['keepers_filter_rule_interval']['from'];
+    $keeper_filter['keepers_max'] = (int)$filter['keepers_filter_rule_interval']['to'];
+
+    return $keeper_filter;
+}
+
+/** Попадает ли количество хранителей раздачи в заданные пределы. */
+function isTopicKeepersInRange(array $params, array $topicKeepers): bool
+{
+    if (!$params['is_keepers']) {
+        return true;
+    }
+
+    /**
+     * $el['posted'] > 0 - раздача есть в отчётах хранителя.
+     * $el['complete'] == 1 - раздача скачана хранителем.
+     *  $params['is_keepers_download'] - учитывать качающих хранителей.
+     */
+    $keepersCount = count(
+        array_filter(
+            $topicKeepers,
+            fn($el) => $el['posted'] > 0 && ((int)$el['complete'] === 1 || $params['is_keepers_download'])
+        )
+    );
+
+    return $params['keepers_min'] <= $keepersCount && $keepersCount <= $params['keepers_max'];
+}
+
+/** Список хранителей всех раздач указанных подразделов. */
+function getKeepersByForumList(array $forumList, string $forumPlaceholder, int $user_id): array
+{
+    $keepers = [];
+    foreach (array_chunk($forumList, 499) as $forumsChunk) {
+        $keepers += Db::query_database(
+            'SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding 
+                FROM (
+                    SELECT kl.topic_id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
+                    FROM Topics
+                    LEFT JOIN KeepersLists as kl ON Topics.id = kl.topic_id
+                    WHERE ss IN (' . $forumPlaceholder . ') AND rg < posted AND kl.topic_id IS NOT NULL
+                    UNION ALL
+                    SELECT ks.topic_id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
+                    FROM Topics
+                    LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.topic_id
+                    WHERE ss IN (' . $forumPlaceholder . ') AND ks.topic_id IS NOT NULL
+                ) as k
+                GROUP BY k.topic_id, k.keeper_id, k.keeper_name
+                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.keeper_name',
+            array_merge($forumsChunk, $forumsChunk, [$user_id]),
+            true,
+            PDO::FETCH_ASSOC | PDO::FETCH_GROUP
+        );
+    }
+
+    return $keepers;
+}
+
 /**
  * Собрать имя клиента
  *
@@ -886,15 +873,56 @@ try {
  *
  * @return     string    The client name.
  */
-function get_client_name(int|null $clientID, array $cfg): string
+function getClientName(?int $clientID, array $cfg): string
 {
     if (!$clientID || !isset($cfg['clients'][$clientID])) {
         return '';
     }
+
     return sprintf(
         '<i class="client bold text-success">%s</i>',
         $cfg['clients'][$clientID]['cm']
     );
+}
+
+/** Определить состояние раздачи в клиенте. */
+function getTopicClientState(array $topic): string
+{
+    if ($topic['done'] == 1) {
+        // Раздаётся.
+        $topicState = 'fa-arrow-up';
+    } elseif ($topic['done'] === null) {
+        // Нет в клиенте.
+        $topicState = 'fa-circle';
+    } else {
+        // Скачивается.
+        $topicState = 'fa-arrow-down';
+    }
+    if ($topic['paused'] == 1) {
+        // Приостановлена.
+        $topicState = 'fa-pause';
+    }
+    if ($topic['error'] == 1) {
+        // С ошибкой в клиенте.
+        $topicState = 'fa-times';
+    }
+
+    return $topicState;
+}
+
+/** Определить состояние раздачи в клиенте. */
+function getBulletColor(array $topic, int $avgSeedersPeriod): string
+{
+    $bulletColor = '';
+    if (isset($topic['ds'])) {
+        if ($topic['ds'] < $avgSeedersPeriod) {
+            $bulletColor = ($topic['ds'] >= $avgSeedersPeriod / 2) ? 'text-warning' : 'text-danger';
+        } else {
+            $bulletColor = 'text-success';
+        }
+    }
+
+    return $bulletColor;
 }
 
 /**
@@ -905,28 +933,67 @@ function get_client_name(int|null $clientID, array $cfg): string
  *
  * @return     string  Заголовок раздачи
  */
-function get_topic_title(string $bulletState, string $bulletColor = ""): string
+function getBulletTittle(string $bulletState, string $bulletColor = ''): string
 {
     $topicsBullets = [
         "fa-arrow-up"   => "Раздаётся",
         "fa-arrow-down" => "Скачивается",
         "fa-pause"      => "Приостановлена",
         "fa-circle"     => "Нет в клиенте",
-        "fa-times"      => "C ошибкой в клиенте"
+        "fa-times"      => "С ошибкой в клиенте",
     ];
+
     $topicsColors = [
         "text-success" => "полные данные о средних сидах",
         "text-warning" => "неполные данные о средних сидах",
-        "text-danger"  => "отсутствуют данные о средних сидах"
+        "text-danger"  => "отсутствуют данные о средних сидах",
     ];
+
     $bulletTitle = [];
     if (isset($topicsBullets[$bulletState])) {
-        $bulletTitle[]= $topicsBullets[$bulletState];
+        $bulletTitle[] = $topicsBullets[$bulletState];
     }
     if (isset($topicsColors[$bulletColor])) {
-        $bulletTitle[]= $topicsColors[$bulletColor];
+        $bulletTitle[] = $topicsColors[$bulletColor];
     }
-    return implode(", ", $bulletTitle);
+
+    return implode(', ', $bulletTitle);
+}
+
+/** Хранители раздачи в виде списка. */
+function getFormattedKeepersList(array $topicKeepers, int $user_id): string
+{
+    if (!count($topicKeepers)) {
+        return '';
+    }
+
+    $format = function(string $icon, string $color, string $name, string $title): string {
+        $tagIcon = sprintf('<i class="fa fa-%s text-%s" title="%s"></i>', $icon, $color, $title);
+        $tagName = sprintf('<i class="keeper bold text-%s" title="%s">%s</i>', $color, $title, $name);
+
+        return "$tagIcon $tagName";
+    };
+
+    $keepersNames = array_map(function($e) use ($user_id, $format) {
+        if ($e['complete'] == 1) {
+            if ($e['posted'] === 0) {
+                $stateIcon = 'arrow-circle-up';
+            } else {
+                $stateIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
+            }
+            $stateColor = 'success';
+        } else {
+            $stateIcon  = 'arrow-down';
+            $stateColor = 'danger';
+        }
+        if ($user_id === (int)$e['keeper_id']) {
+            $stateColor = 'self';
+        }
+
+        return $format($stateIcon, $stateColor, (string)$e['keeper_name'], getKeeperTitle($stateIcon));
+    }, $topicKeepers);
+
+    return '| ' . implode(', ', $keepersNames);
 }
 
 /**
@@ -936,13 +1003,14 @@ function get_topic_title(string $bulletState, string $bulletColor = ""): string
  *
  * @return     string  Заголовок
  */
-function get_keeper_title(string $bulletState): string
+function getKeeperTitle(string $bulletState): string
 {
     $keeperBullets = [
         'upload'          => 'Есть в списке и раздаёт',
         'hard-drive'      => 'Есть в списке, не раздаёт',
         'arrow-circle-up' => 'Нет в списке и раздаёт',
-        'arrow-down'      => 'Скачивает'
+        'arrow-down'      => 'Скачивает',
     ];
-    return isset($keeperBullets[$bulletState]) ? $keeperBullets[$bulletState] : "";
+
+    return $keeperBullets[$bulletState] ?? '';
 }
