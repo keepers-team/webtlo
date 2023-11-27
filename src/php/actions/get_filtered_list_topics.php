@@ -1,18 +1,68 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
+
+/** Сортировка задач по параметрам фильтра. */
+function topicsSortByFilter(array $topics, array $filter): array
+{
+    return natsort_field(
+        $topics,
+        $filter['filter_sort'],
+        $filter['filter_sort_direction']
+    );
+}
+
+/** Получить шаблон строки с раздачей. */
+function buildTopicPattern(array $topicFieldsPatterns, array $topic_data): string
+{
+    $topicPattern = '';
+    foreach ($topicFieldsPatterns as $field => $pattern) {
+        if (isset($topic_data[$field])) {
+            $topicPattern .= $pattern;
+        }
+    }
+
+    return $topicPattern;
+}
+
+function getForumIdList(array $cfg, int $forum_id): array
+{
+    $forumsIDs = [0];
+    if ($forum_id > 0) {
+        $forumsIDs = [$forum_id];
+    } elseif ($forum_id === -5) {
+        $forumsIDs = (array)Db::query_database(
+            'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
+            [],
+            true,
+            PDO::FETCH_COLUMN
+        );
+    } else {
+        // -3 || -6
+        if (isset($cfg['subsections'])) {
+            foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
+                if (!$subsection['hide_topics']) {
+                    $forumsIDs[] = $sub_forum_id;
+                }
+            }
+        }
+    }
+    if (empty($forumsIDs)) {
+        $forumsIDs = [0];
+    }
+
+    return $forumsIDs;
+}
+
+
 try {
     include_once dirname(__FILE__) . '/../common.php';
 
-    if (isset($_POST['forum_id'])) {
-        $forum_id = $_POST['forum_id'];
+    $forum_id = $_POST['forum_id'] ?? null;
+    if (!is_numeric($forum_id)) {
+        throw new Exception("Некорректный идентификатор подраздела: $forum_id");
     }
-
-    if (
-        !isset($forum_id)
-        || !is_numeric($forum_id)
-    ) {
-        throw new Exception('Некорректный идентификатор подраздела: ' . $forum_id);
-    }
+    $forum_id = (int)$forum_id;
 
     // получаем настройки
     $cfg = get_settings();
@@ -41,6 +91,7 @@ try {
     // -5 - высокоприоритетные раздачи
     // -6 - раздачи своим по спискам
 
+    $domain = Helper::getForumDomain($cfg);
     // topic_data => id,na,si,convert(si)rg,se,ds,cl
     $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
     $pattern_topic_data = [
@@ -48,7 +99,7 @@ try {
         'ds' => ' <i class="fa %9$s %8$s" title="%11$s"></i>',
         'rg' => ' | <span>%6$s | </span> ',
         'cl' => ' <span>%10$s | </span> ',
-        'na' => '<a href="' . $cfg['forum_address'] . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
+        'na' => '<a href="' . $domain . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
         'si' => ' (%5$s)',
         'se' => ' - <span class="text-danger">%7$s</span>',
     ];
@@ -61,9 +112,9 @@ try {
     $filtered_topics_size = 0;
     $excluded_topics = ["ex_count" => 0, "ex_size" => 0];
 
-    if ($forum_id == 0) {
-        // сторонние раздачи
-        $topics = Db::query_database(
+    // Хранимые раздачи из других подразделов.
+    if ($forum_id === 0) {
+        $topics = (array)Db::query_database(
             'SELECT
                 TopicsUntracked.id,
                 TopicsUntracked.hs,
@@ -72,6 +123,10 @@ try {
                 TopicsUntracked.rg,
                 TopicsUntracked.ss,
                 TopicsUntracked.se,
+                -1 AS ds,
+                Torrents.done,
+                Torrents.paused,
+                Torrents.error,
                 Torrents.client_id as cl
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
@@ -79,6 +134,8 @@ try {
             [],
             true
         );
+        $topics = topicsSortByFilter($topics, $filter);
+
         $forumsTitles = (array)Db::query_database(
             "SELECT
                 id,
@@ -89,41 +146,32 @@ try {
             true,
             PDO::FETCH_KEY_PAIR
         );
-        // сортировка раздач
-        $topics = natsort_field(
-            $topics,
-            $filter['filter_sort'],
-            $filter['filter_sort_direction']
-        );
 
-        $pattern_topic_head =
-            '<div class="subsection-title">'.
-            '<a href="#" onclick="addUnsavedSubsection(%1$s, \'%2$s\');" '.
-            'title="Нажмите, чтобы добавить подраздел в хранимые">(%1$s)</a> %2$s'.
-            '</div>';
+        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
+
+        $getForumHeader = function(int $id, string $name): string {
+            $click = "addUnsavedSubsection($id, '$name');";
+
+            return "<div class='subsection-title'><a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>($id)</a>$name</div>";
+        };
 
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
-            $data = '';
             $forumID = $topic_data['ss'];
+
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (isset($topic_data[$field])) {
-                    $data .= $pattern;
-                }
-            }
+
             if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] = sprintf(
-                    $pattern_topic_head,
-                    $forumID,
-                    $forumsTitles[$forumID]
-                );
+                $preparedOutput[$forumID] = $getForumHeader($forumID, $forumsTitles[$forumID]);
             }
+
+            $topicBullet = getTopicBullet($topic_data);
+
             $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
                 sprintf(
-                    $data,
+                    $topicPattern,
                     $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
@@ -131,9 +179,10 @@ try {
                     convert_bytes($topic_data['si']),
                     date('d.m.Y', $topic_data['rg']),
                     $topic_data['se'],
-                    '',
-                    '',
-                    getClientName($topic_data['cl'], $cfg)
+                    'text-success',
+                    $topicBullet['icon'],
+                    getClientName($topic_data['cl'], $cfg),
+                    $topicBullet['title']
                 ),
                 ''
             );
@@ -141,49 +190,54 @@ try {
         unset($topics);
         natcasesort($preparedOutput);
         $output = implode('', $preparedOutput);
-    } elseif ($forum_id == -1) {
-        // незарегистрированные раздачи
-        $topics = Db::query_database(
-            'SELECT
-                Torrents.topic_id,
-                CASE WHEN TopicsUnregistered.name IS "" OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
-                TopicsUnregistered.status,
-                Torrents.info_hash,
-                Torrents.client_id,
-                Torrents.total_size,
-                Torrents.time_added,
-                Torrents.paused,
-                Torrents.done
-            FROM TopicsUnregistered
-            LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
-            WHERE TopicsUnregistered.info_hash IS NOT NULL
-            ORDER BY TopicsUnregistered.name',
+    }
+    // Хранимые раздачи незарегистрированные на трекере.
+    elseif ($forum_id === -1) {
+        $topics = (array)Db::query_database(
+            "
+                SELECT
+                    Torrents.topic_id,
+                    CASE WHEN TopicsUnregistered.name IS '' OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
+                    TopicsUnregistered.status,
+                    Torrents.info_hash,
+                    Torrents.client_id,
+                    Torrents.total_size,
+                    Torrents.time_added,
+                    Torrents.paused,
+                    Torrents.error,
+                    Torrents.done
+                FROM TopicsUnregistered
+                LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
+                WHERE TopicsUnregistered.info_hash IS NOT NULL
+                ORDER BY TopicsUnregistered.name
+            ",
             [],
             true
         );
+
+        $topicPattern = implode('', array_intersect_key(
+            $pattern_topic_data,
+            array_flip(['id', 'rg', 'ds', 'cl', 'na', 'si'])
+        ));
+
         // формирование строки вывода
         foreach ($topics as $topic) {
             $filtered_topics_count++;
             $filtered_topics_size += $topic['total_size'];
-            $topicStatus = $topic['status'];
 
-            $topicBlock = '';
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (in_array($field, ['id', 'rg', 'ds', 'cl', 'na', 'si'])) {
-                    $topicBlock .= $pattern;
-                }
-            }
+            $topicStatus = $topic['status'];
 
             // Пулька [иконка, цвет, описание].
             $topicBullet = getTopicBullet($topic);
 
             if (!isset($preparedOutput[$topicStatus])) {
-                $preparedOutput[$topicStatus] = '<div class="subsection-title">' . $topicStatus . '</div>';
+                $preparedOutput[$topicStatus] = "<div class='subsection-title'>$topicStatus</div>";
             }
+
             $preparedOutput[$topicStatus] .= sprintf(
                 $pattern_topic_block,
                 sprintf(
-                    $topicBlock,
+                    $topicPattern,
                     $topic['info_hash'],
                     $topic['topic_id'],
                     $topic['name'],
@@ -202,50 +256,45 @@ try {
         unset($topics);
         natcasesort($preparedOutput);
         $output = implode('', $preparedOutput);
-    } elseif ($forum_id == -2) {
-        // находим значение за последний день
-        $se = $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se';
-        // чёрный список
-        $topics = Db::query_database(
-            'SELECT
-                Topics.id,
-                Topics.hs,
-                Topics.ss,
-                Topics.na,
-                Topics.si,
-                Topics.rg,'
-                . $se . ',
-                TopicsExcluded.comment
-            FROM Topics
-            LEFT JOIN TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
-            WHERE TopicsExcluded.info_hash IS NOT NULL',
-            [],
-            true
+    }
+    // Раздачи из "Черного списка".
+    elseif ($forum_id === -2) {
+        $statement = sprintf("
+                SELECT
+                    Topics.id,
+                    Topics.hs,
+                    Topics.ss,
+                    Topics.na,
+                    Topics.si,
+                    Topics.rg,
+                    %s,
+                    TopicsExcluded.comment
+                FROM Topics
+                LEFT JOIN TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
+                WHERE TopicsExcluded.info_hash IS NOT NULL
+            ",
+            $cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se'
         );
-        // сортировка раздач
-        $topics = natsort_field(
-            $topics,
-            $filter['filter_sort'],
-            $filter['filter_sort_direction']
-        );
+
+        $topics = (array)Db::query_database($statement, [], true);
+        $topics = topicsSortByFilter($topics, $filter);
+
+        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
+
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
-            $data = '';
-            $forumID = $topic_data['ss'];
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (isset($topic_data[$field])) {
-                    $data .= $pattern;
-                }
-            }
+
+            $forumID = $topic_data['ss'];
+
             if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] = '<div class="subsection-title">' . $cfg['subsections'][$forumID]['na'] . '</div>';
+                $preparedOutput[$forumID] = "<div class='subsection-title'>{$cfg['subsections'][$forumID]['na']}</div>";
             }
             $preparedOutput[$forumID] .= sprintf(
                 $pattern_topic_block,
                 sprintf(
-                    $data,
+                    $topicPattern,
                     $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
@@ -254,54 +303,45 @@ try {
                     date('d.m.Y', $topic_data['rg']),
                     round($topic_data['se'])
                 ),
-                '<span class="bold">' . $topic_data['comment'] . '</span>'
+                "<span class='bold'>{$topic_data['comment']}</span>"
             );
         }
         unset($topics);
         natcasesort($preparedOutput);
         $output = implode('', $preparedOutput);
-    } elseif ($forum_id == -4) {
-        // дублирующиеся раздачи
-
+    }
+    // Хранимые дублирующиеся раздачи.
+    elseif ($forum_id === -4) {
         // Данные для фильтрации по средним сидам.
         $averagePeriodFilter = prepareAveragePeriodFilter($filter, $cfg);
 
         [$statementFields, $statementLeftJoin] = prepareAverageQueryParam($averagePeriodFilter);
 
-        $statementSQL = '
-            SELECT
-                Topics.id,
-                Topics.hs,
-                Topics.na,
-                Topics.si,
-                Topics.rg
-                %s
-            FROM Topics
-                %s
-            WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(*) > 1)
-        ';
         $statement = sprintf(
-            $statementSQL,
-            ',' . implode(',', $statementFields),
-            ' ' . implode(' ', $statementLeftJoin)
+            "
+                SELECT
+                    Topics.id,
+                    Topics.hs,
+                    Topics.na,
+                    Topics.si,
+                    Topics.rg,
+                    %s
+                FROM Topics
+                    %s
+                WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(1) > 1)
+            ",
+            implode(',', $statementFields),
+            implode(' ', $statementLeftJoin)
         );
 
-        $topicsData = Db::query_database($statement, [], true);
-        $topicsData = natsort_field(
-            $topicsData,
-            $filter['filter_sort'],
-            $filter['filter_sort_direction']
-        );
+        $topics = (array)Db::query_database($statement, [], true);
+        $topics = topicsSortByFilter($topics, $filter);
 
-        foreach ($topicsData as $topicID => $topicData) {
-            $outputLine = '';
+        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
+
+        foreach ($topics as $topicID => $topicData) {
             $filtered_topics_count++;
             $filtered_topics_size += $topicData['si'];
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (isset($topicData[$field])) {
-                    $outputLine .= $pattern;
-                }
-            }
 
             // Пулька [цвет, описание].
             $stateColor = getBulletColor($topicData, $averagePeriodFilter['seedPeriod']);
@@ -325,7 +365,7 @@ try {
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(
-                    $outputLine,
+                    $topicPattern,
                     $topicData['hs'],
                     $topicData['id'],
                     $topicData['na'],
@@ -341,13 +381,14 @@ try {
                 $listTorrentClientsNames
             );
         }
-    } elseif (
-        $forum_id > 0       // заданный раздел
-        || $forum_id == -3  // все хранимые подразделы
-        || $forum_id == -5  // высокий приоритет
-        || $forum_id == -6  // все хранимые подразделы по спискам
+    }
+    // Основной поиск раздач.
+    elseif (
+        $forum_id > 0        // заданный раздел
+        || $forum_id === -3  // все хранимые подразделы
+        || $forum_id === -5  // высокий приоритет
+        || $forum_id === -6  // все хранимые подразделы по спискам
     ) {
-        // все хранимые раздачи
         // не выбраны статусы раздач
         if (empty($filter['filter_tracker_status'])) {
             throw new Exception('Не выбраны статусы раздач для трекера');
@@ -381,30 +422,7 @@ try {
         $exclude_self_keep = $cfg['exclude_self_keep'];
 
         // хранимые подразделы
-        if ($forum_id > 0) {
-            $forumsIDs = [$forum_id];
-        } elseif ($forum_id == -5) {
-            $forumsIDs = Db::query_database(
-                'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
-                [],
-                true,
-                PDO::FETCH_COLUMN
-            );
-            if (empty($forumsIDs)) {
-                $forumsIDs = [0];
-            }
-        } else {
-            // -3 || -6
-            if (isset($cfg['subsections'])) {
-                foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
-                    if (!$subsection['hide_topics']) {
-                        $forumsIDs[] = $sub_forum_id;
-                    }
-                }
-            } else {
-                $forumsIDs = [0];
-            }
-        }
+        $forumsIDs = getForumIdList($cfg, $forum_id);
 
         // Шаблоны для подразделов, статусов раздач, приоритета хранения.
         $ss = str_repeat('?,', count($forumsIDs) - 1) . '?';
@@ -445,8 +463,8 @@ try {
         );
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
-        $pattern_statement =
-            'SELECT
+        $statement = "
+            SELECT
                 Topics.id,
                 Topics.hs,
                 Topics.na,
@@ -456,7 +474,7 @@ try {
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
-                Torrents.client_id as cl
+                Torrents.client_id as cl,
                 %s
             FROM Topics
             LEFT JOIN Torrents ON Topics.hs = Torrents.info_hash
@@ -466,12 +484,13 @@ try {
             ) Keepers ON Topics.id = Keepers.topic_id AND (Keepers.max_posted IS NULL OR Topics.rg < Keepers.max_posted)
             LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
             WHERE
-                ss IN (' . $ss . ')
-                AND st IN (' . $st . ')
-                AND pt IN (' . $pt . ')
-                AND (' . $torrentDone . ')
+                ss IN ($ss)
+                AND st IN ($st)
+                AND pt IN ($pt)
+                AND ($torrentDone)
                 AND TopicsExcluded.info_hash IS NULL
-                %s';
+                %s
+        ";
 
         // Данные о средних сидах.
         [$fields, $left_join] = prepareAverageQueryParam($averagePeriodFilter);
@@ -481,15 +500,15 @@ try {
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = sprintf(
-            $pattern_statement,
-            ',' . implode(',', $fields),
-            ' ' . implode(' ', $left_join),
+            $statement,
+            implode(',', $fields),
+            implode(' ', $left_join),
             $keepers_status_statement,
-            ' ' . implode(' ', $where)
+            implode(' ', $where)
         );
 
         // из базы
-        $topics = Db::query_database(
+        $topics = (array)Db::query_database(
             $statement,
             array_merge(
                 $forumsIDs,
@@ -498,13 +517,9 @@ try {
             ),
             true
         );
+        $topics = topicsSortByFilter($topics, $filter);
 
-        // сортировка раздач
-        $topics = natsort_field(
-            $topics,
-            $filter['filter_sort'],
-            $filter['filter_sort_direction']
-        );
+        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
 
         // фильтрация по фразе е=ё
         if (!empty($filter['filter_phrase'])) {
@@ -604,14 +619,9 @@ try {
                 continue;
             }
 
-            $data = '';
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
-            foreach ($pattern_topic_data as $field => $pattern) {
-                if (isset($topic_data[$field])) {
-                    $data .= $pattern;
-                }
-            }
+
 
             // Пулька [иконка, цвет, описание].
             $topicBullet = getTopicBullet($topic_data, $averagePeriodFilter['seedPeriod']);
@@ -620,7 +630,7 @@ try {
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(
-                    $data,
+                    $topicPattern,
                     $topic_data['hs'],
                     $topic_data['id'],
                     $topic_data['na'],
@@ -637,7 +647,7 @@ try {
             );
         }
 
-        $excluded = Db::query_database_row(
+        $excluded = (array)Db::query_database_row(
             'SELECT COUNT(1) AS ex_count, IFNULL(SUM(t.si),0) AS ex_size
             FROM TopicsExcluded ex
             INNER JOIN Topics t on t.hs = ex.info_hash
