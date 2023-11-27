@@ -262,52 +262,37 @@ try {
         $output = implode('', $preparedOutput);
     } elseif ($forum_id == -4) {
         // дублирующиеся раздачи
-        $statementFields = [];
-        $statementLeftJoin = [];
-        if ($cfg['avg_seeders']) {
-            if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
-            }
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
-            for ($dayNumber = 0; $dayNumber < $filter['avg_seeders_period']; $dayNumber++) {
-                $statementTotal['seeders'][] = 'CASE WHEN d' . $dayNumber . ' IS "" OR d' . $dayNumber . ' IS NULL THEN 0 ELSE d' . $dayNumber . ' END';
-                $statementTotal['updates'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE q' . $dayNumber . ' END';
-                $statementTotal['values'][] = 'CASE WHEN q' . $dayNumber . ' IS "" OR q' . $dayNumber . ' IS NULL THEN 0 ELSE 1 END';
-            }
-            $statementTotalValues = implode('+', $statementTotal['values']);
-            $statementTotalUpdates = implode('+', $statementTotal['updates']);
-            $statementTotalSeeders = implode('+', $statementTotal['seeders']);
-            $statementAverageSeeders = 'CASE WHEN ' . $statementTotalValues . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $statementTotalSeeders . ') / ( qt + ' . $statementTotalUpdates . ') END';
-            $statementFields = [
-                $statementTotalValues . ' as ds',
-                $statementAverageSeeders . ' as se'
-            ];
-            $statementLeftJoin[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
-        } else {
-            $statementFields[] = 'se';
-        }
-        $statementSQL =
-            'SELECT
+
+        // Данные для фильтрации по средним сидам.
+        $averagePeriodFilter = prepareAveragePeriodFilter($filter, $cfg);
+
+        [$statementFields, $statementLeftJoin] = prepareAverageQueryParam($averagePeriodFilter);
+
+        $statementSQL = '
+            SELECT
                 Topics.id,
                 Topics.hs,
                 Topics.na,
                 Topics.si,
                 Topics.rg
                 %s
-            FROM Topics %s
-            WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(*) > 1)';
+            FROM Topics
+                %s
+            WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(*) > 1)
+        ';
         $statement = sprintf(
             $statementSQL,
             ',' . implode(',', $statementFields),
             ' ' . implode(' ', $statementLeftJoin)
         );
+
         $topicsData = Db::query_database($statement, [], true);
         $topicsData = natsort_field(
             $topicsData,
             $filter['filter_sort'],
             $filter['filter_sort_direction']
         );
+
         foreach ($topicsData as $topicID => $topicData) {
             $outputLine = '';
             $filtered_topics_count++;
@@ -318,54 +303,25 @@ try {
                 }
             }
 
-            // Состояние раздачи в клиенте (цвет пульки).
-            $stateAverageSeeders = getBulletColor($topicData, (int)$filter['avg_seeders_period']);
+            // Пулька [цвет, описание].
+            $stateColor = getBulletColor($topicData, $averagePeriodFilter['seedPeriod']);
+            $stateTitle = getBulletTittle('', $stateColor);
 
-            $statement =
-                'SELECT
-                    client_id,
-                    done,
-                    paused,
-                    error
+            $statement = '
+                SELECT client_id, done, paused, error
                 FROM Torrents
                 WHERE info_hash = ?
-                ORDER BY client_id';
-            $listTorrentClientsIDs = Db::query_database(
+                ORDER BY client_id
+            ';
+
+            $listTorrentClientsIDs = (array)Db::query_database(
                 $statement,
                 [$topicData['hs']],
                 true
             );
-            // сортировка торрент-клиентов
-            $sortOrderTorrentClients = array_flip(array_keys($cfg['clients']));
-            usort($listTorrentClientsIDs, function ($a, $b) use ($sortOrderTorrentClients) {
-                return $sortOrderTorrentClients[$a['client_id']] - $sortOrderTorrentClients[$b['client_id']];
-            });
-            $formatTorrentClientList = '<i class="fa fa-%1$s text-%2$s"></i> <i class="bold text-%2$s">%3$s</i>';
-            $listTorrentClientsNames = array_map(function ($e) use ($cfg, $formatTorrentClientList) {
-                if (isset($cfg['clients'][$e['client_id']])) {
-                    if ($e['done'] == 1) {
-                        $stateTorrentClientStatus = 'hard-drive';
-                        $stateTorrentClientColor = 'success';
-                    } else {
-                        $stateTorrentClientStatus = 'arrow-down';
-                        $stateTorrentClientColor = 'danger';
-                    }
-                    if ($e['paused'] == 1) {
-                        $stateTorrentClientStatus = 'pause';
-                    }
-                    if ($e['error'] == 1) {
-                        $stateTorrentClientStatus = 'times';
-                        $stateTorrentClientColor = 'danger';
-                    }
-                    return sprintf(
-                        $formatTorrentClientList,
-                        $stateTorrentClientStatus,
-                        $stateTorrentClientColor,
-                        $cfg['clients'][$e['client_id']]['cm']
-                    );
-                }
-            }, $listTorrentClientsIDs);
-            $listTorrentClientsNames = '| ' . implode(', ', $listTorrentClientsNames);
+
+            $listTorrentClientsNames = getFormattedClientsList($cfg['clients'] ?? [], $listTorrentClientsIDs);
+
             $output .= sprintf(
                 $pattern_topic_block,
                 sprintf(
@@ -377,10 +333,10 @@ try {
                     convert_bytes($topicData['si']),
                     date('d.m.Y', $topicData['rg']),
                     round($topicData['se']),
-                    $stateAverageSeeders,
+                    $stateColor,
                     'fa-circle',
                     '',
-                    ''
+                    $stateTitle
                 ),
                 $listTorrentClientsNames
             );
@@ -411,6 +367,9 @@ try {
 
         // Некорректный ввод значения сидов или количества хранителей
         validateFilterRuleIntervals($filter);
+
+        // Данные для фильтрации по средним сидам.
+        $averagePeriodFilter = prepareAveragePeriodFilter($filter, $cfg);
 
         // некорректная дата
         $date_release = DateTime::createFromFormat('d.m.Y', $filter['filter_date_release']);
@@ -514,34 +473,11 @@ try {
                 AND TopicsExcluded.info_hash IS NULL
                 %s';
 
-        $fields = [];
+        // Данные о средних сидах.
+        [$fields, $left_join] = prepareAverageQueryParam($averagePeriodFilter);
+
+        // Применить фильтр по статусу хранимого.
         $where = getKeptStatusFilter($keepersFilter);
-        $left_join = [];
-
-        if ($cfg['avg_seeders']) {
-            // некорректный период средних сидов
-            if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
-            }
-            // жёсткое ограничение на 30 дней для средних сидов
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] > 0 ? $filter['avg_seeders_period'] : 1;
-            $filter['avg_seeders_period'] = $filter['avg_seeders_period'] <= 30 ? $filter['avg_seeders_period'] : 30;
-            for ($i = 0; $i < $filter['avg_seeders_period']; $i++) {
-                $avg['sum_se'][] = 'CASE WHEN d' . $i . ' IS "" OR d' . $i . ' IS NULL THEN 0 ELSE d' . $i . ' END';
-                $avg['sum_qt'][] = 'CASE WHEN q' . $i . ' IS "" OR q' . $i . ' IS NULL THEN 0 ELSE q' . $i . ' END';
-                $avg['qt'][] = 'CASE WHEN q' . $i . ' IS "" OR q' . $i . ' IS NULL THEN 0 ELSE 1 END';
-            }
-            $qt = implode('+', $avg['qt']);
-            $sum_qt = implode('+', $avg['sum_qt']);
-            $sum_se = implode('+', $avg['sum_se']);
-            $avg = 'CASE WHEN ' . $qt . ' IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + ' . $sum_se . ') / ( qt + ' . $sum_qt . ') END';
-
-            $fields[] = $qt . ' as ds';
-            $fields[] = $avg . ' as se';
-            $left_join[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
-        } else {
-            $fields[] = 'se';
-        }
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = sprintf(
@@ -678,7 +614,7 @@ try {
             }
 
             // Пулька [иконка, цвет, описание].
-            $topicBullet = getTopicBullet($topic_data, (int)$filter['avg_seeders_period']);
+            $topicBullet = getTopicBullet($topic_data, $averagePeriodFilter['seedPeriod']);
 
             // выводим строку
             $output .= sprintf(
@@ -810,6 +746,56 @@ function prepareKeepersFilter(array $filter): array
     $keeper_filter['keepers_max'] = (int)($filter['keepers_filter_count']['max'] ?? 10);
 
     return $keeper_filter;
+}
+
+/**
+ * Собрать параметры для работы со средними сидами.
+ * @throws Exception
+ */
+function prepareAveragePeriodFilter(array $filter, array $cfg): array
+{
+    $useAvgSeeders = (bool)($cfg['avg_seeders'] ?? false);
+    if ($useAvgSeeders) {
+        // Проверка периода средних сидов.
+        if (!is_numeric($filter['avg_seeders_period'])) {
+            throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+        }
+    }
+
+    // Жёсткое ограничение от 1 до 30 дней для средних сидов.
+    return [
+        'useAverage' => $useAvgSeeders,
+        'seedPeriod' => min(max((int)$filter['avg_seeders_period'], 1), 30),
+    ];
+}
+
+/** Подготовить части запросов БД при поиске средних сидов. */
+function prepareAverageQueryParam(array $avgPeriodFilter): array
+{
+    $fields = $leftJoin = [];
+    // Применить фильтр средних сидов.
+    if ($avgPeriodFilter['useAverage']) {
+        $temp = [];
+        for ($i = 0; $i < $avgPeriodFilter['seedPeriod']; $i++) {
+            $temp['sum_se'][] = "CASE WHEN d$i IS '' OR d$i IS NULL THEN 0 ELSE d$i END";
+            $temp['sum_qt'][] = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE q$i END";
+            $temp['qt'][]     = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE 1 END";
+        }
+
+        $qt     = implode('+', $temp['qt']);
+        $sum_qt = implode('+', $temp['sum_qt']);
+        $sum_se = implode('+', $temp['sum_se']);
+
+        $fields[] = "$qt as ds";
+        $fields[] = "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END as se";
+
+        $leftJoin[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
+    } else {
+        $fields[] = '-1 AS ds';
+        $fields[] = 'Topics.se';
+    }
+
+    return [$fields, $leftJoin];
 }
 
 /** Фильтр раздач по статусу хранения. */
@@ -946,10 +932,10 @@ function getClientName(?int $clientID, array $cfg): string
 }
 
 /** Собрать "пульку" - состояние раздачи. */
-function getTopicBullet(array $topic, int $avgSeedersPeriod = 14): array
+function getTopicBullet(array $topic, int $averageSeedPeriod = 14): array
 {
     $icon  = getTopicClientState($topic);
-    $color = getBulletColor($topic, $avgSeedersPeriod);
+    $color = getBulletColor($topic, $averageSeedPeriod);
     $title = getBulletTittle($icon, $color);
 
     return [
@@ -985,14 +971,16 @@ function getTopicClientState(array $topic): string
 }
 
 /** Определить состояние раздачи в клиенте. */
-function getBulletColor(array $topic, int $avgSeedersPeriod): string
+function getBulletColor(array $topic, int $averageSeedPeriod): string
 {
-    $bulletColor = '';
-    if (isset($topic['ds'])) {
-        if ($topic['ds'] < $avgSeedersPeriod) {
-            $bulletColor = ($topic['ds'] >= $avgSeedersPeriod / 2) ? 'text-warning' : 'text-danger';
-        } else {
-            $bulletColor = 'text-success';
+    $bulletColor = 'text-info';
+
+    // Количество дней, в которые набирались данные о средних сидах.
+    $period = (int)($topic['ds'] ?? -1);
+    if ($period > 0) {
+        $bulletColor = 'text-success';
+        if ($period < $averageSeedPeriod) {
+            $bulletColor = ($period >= $averageSeedPeriod / 2) ? 'text-warning' : 'text-danger';
         }
     }
 
@@ -1087,4 +1075,32 @@ function getKeeperTitle(string $bulletState): string
     ];
 
     return $keeperBullets[$bulletState] ?? '';
+}
+
+/** Собрать заголовок со списком клиентов, в котором есть раздача. */
+function getFormattedClientsList(array $cfgClients, array $listTorrentClientsIDs): string
+{
+    $listTorrentClientsNames = array_map(function($e) use ($cfgClients): string {
+        if (isset($cfgClients[$e['client_id']])) {
+            $clientState = getTopicClientState($e);
+            $clientTitle = getBulletTittle($clientState);
+
+            $stateColor  = 'success';
+            if ($e['done'] != 1 || $e['error'] == 1) {
+                $stateColor  = 'danger';
+            }
+
+            return sprintf(
+                '<i class="fa %1$s text-%2$s" title="%4$s"></i> <i class="bold text-%2$s" title="%4$s">%3$s</i>',
+                $clientState,
+                $stateColor,
+                $cfgClients[$e['client_id']]['cm'],
+                $clientTitle
+            );
+        }
+
+        return '';
+    }, $listTorrentClientsIDs);
+
+    return '| ' . implode(', ', array_filter($listTorrentClientsNames));
 }
