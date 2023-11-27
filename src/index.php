@@ -403,7 +403,7 @@ function cfg_checkbox($cfg): Closure
                                 <fieldset title="Поиск раздач по фразе">
                                     <label>
                                         Поиск по фразе:
-                                        <input type="search" name="filter_phrase" size="20" />
+                                        <input type="search" name="filter_phrase" size="16" />
                                     </label>
                                     <label title="Искать совпадение в названии раздачи">
                                         <input type="radio" name="filter_by_phrase" value="1" class="default" checked />
@@ -419,40 +419,122 @@ function cfg_checkbox($cfg): Closure
                                     </label>
                                 </fieldset>
                             </div>
-                            <div class="filter_block filter_rule ui-widget" title="">
+                            <div class="filter_block ui-widget"
+                                 title="Статус определяется при сканировании чужих списков на форуме и обновлении сведений по данным трекера. Каждая раздача может иметь (или не иметь):
+                                 'Хранителя', который включил раздачу в свой отчёт;
+                                 'Хранителя', который раздаёт раздачу на момент последнего обновления сведений;
+                                 'Хранителя', который скачивает раздачу.">
+                                <legend>Статус хранения раздачи</legend>
+                                <hr/>
+                                <fieldset class="filter-topic-kept-status">
+                                    <fieldset title="Отобразить раздачи, которые включены в отчёт как минимум одного хранителя / раздачи, которых нет ни в одном отчёте.">
+                                        <legend>
+                                            <i class="fa fa-hard-drive text-success" title="Есть в списке, не раздаёт"></i>
+                                            Хранитель с отчётом
+                                        </legend>
+                                        <div class="filter_status_controlgroup filter_status_has_keeper">
+                                            <input type="radio" id="has_keeper_null" name="filter_status_has_keeper" value="-1" checked="checked" class="default">
+                                            <label for="has_keeper_null">--</label>
+
+                                            <input type="radio" id="has_keeper_yes" name="filter_status_has_keeper" value="1">
+                                            <label for="has_keeper_yes">да</label>
+
+                                            <input type="radio" id="has_keeper_no" name="filter_status_has_keeper" value="0">
+                                            <label for="has_keeper_no">нет</label>
+                                        </div>
+                                    </fieldset>
+                                    <fieldset title="Отобразить раздачи, которые раздаются как минимум одним хранителем / раздачи, которые не раздаёт никто">
+                                        <legend>
+                                            <i class="fa fa-upload text-success"></i>
+                                            <i class="fa fa-arrow-circle-o-up text-success"></i>
+                                            Хранитель раздаёт
+                                        </legend>
+                                        <div class="filter_status_controlgroup filter_status_has_seeder">
+                                            <input type="radio" id="has_seeder_null" name="filter_status_has_seeder" value="-1" checked="checked" class="default">
+                                            <label for="has_seeder_null">--</label>
+
+                                            <input type="radio" id="has_seeder_yes" name="filter_status_has_seeder" value="1">
+                                            <label for="has_seeder_yes">да</label>
+
+                                            <input type="radio" id="has_seeder_no" name="filter_status_has_seeder" value="0">
+                                            <label for="has_seeder_no">нет</label>
+                                        </div>
+                                    </fieldset>
+                                    <fieldset title="Отобразить раздачи, которые скачивает как минимум один хранитель / раздачи, которые не скачивает ни один хранитель">
+                                        <legend>
+                                            <i class="fa fa-arrow-circle-o-down text-danger" title="Скачивает"></i>
+                                            Хранитель скачивает
+                                        </legend>
+                                        <div class="filter_status_controlgroup filter_status_has_downloader">
+                                            <input type="radio" id="has_downloader_null" name="filter_status_has_downloader" value="-1" checked="checked" class="default">
+                                            <label for="has_downloader_null">--</label>
+
+                                            <input type="radio" id="has_downloader_yes" name="filter_status_has_downloader" value="1">
+                                            <label for="has_downloader_yes">да</label>
+
+                                            <input type="radio" id="has_downloader_no" name="filter_status_has_downloader" value="0">
+                                            <label for="has_downloader_no">нет</label>
+                                        </div>
+                                    </fieldset>
+                                </fieldset>
+                            </div>
+                            <div class="filter_block filter_rule ui-widget">
                                 <fieldset>
-                                    <label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
-                                        <input type="checkbox" name="avg_seeders_complete" />
-                                        "зелёные"
-                                    </label>
-                                    <label title="Отображать только те раздачи, которые никто не хранит из числа других хранителей">
-                                        <input type="checkbox" name="not_keepers" class="default keepers" checked />
-                                        нет хранителей
-                                    </label>
-                                    <label title="Отображать только те раздачи, которые хранит кто-то ещё из числа других хранителей">
+                                    <label title="Отобразить раздачи, по количеству хранителей, подходящих под условия.">
                                         <input type="checkbox" class="keepers" name="is_keepers" />
-                                        есть хранители
+                                        количество хранителей
                                     </label>
-                                    <fieldset class="keepers_filter_rule_fieldset" title="Количество хранителей на раздаче">
-                                        <label class="keepers_filter_rule_value" title="Начальное количество хранителей">
-                                            хранители от
-                                            <input type="text" id="keepers_filter_rule_from" name="keepers_filter_rule_interval[from]" size="1" value="1" />
+                                    <fieldset class="keepers_filter_rule_fieldset">
+                                        <label class="keepers-filter-count-padding25">
+                                            от
+                                            <input type="text" id="keepers_filter_count_min" class="keepers_filter_count"
+                                                   title="Минимум хранителей"
+                                                   name="keepers_filter_count[min]" size="1" value="1"/>
+                                            до
+                                            <input type="text" id="keepers_filter_count_max" class="keepers_filter_count"
+                                                   title="Максимум хранителей"
+                                                   name="keepers_filter_count[max]" size="1" value="10"/>
                                         </label>
-                                        <label class="keepers_filter_rule_value" title="Конечное количество хранителей">
-                                            хранители до
-                                            <input type="text" id="keepers_filter_rule_to" name="keepers_filter_rule_interval[to]" size="1" value="10" />
+                                        <label class="keepers-filter-count-padding25" style="padding-top: 3px; padding-bottom: 3px;"
+                                               title="К хранителям каждой раздачи применяется фильтр выбираемый ниже. После чего применяется фильтр по количеству.">
+                                            фильтры хранителей
+                                        </label>
+                                        <label class="keepers-filter-count-padding20"
+                                               title="Хранитель добавил раздачу в свой список и, в данный момент, качает её.">
+                                            <input type="checkbox" class="keepers" name="keepers_count_download"/>
+                                            <i class="fa fa-arrow-circle-o-down text-danger" title="Скачивает"></i>
+                                            качает
+                                        </label>
+                                        <label class="keepers-filter-count-padding20"
+                                               title="Хранитель скачал раздачу, не добавил её в свой список и, в данный момент, раздаёт её.">
+                                            <input type="checkbox" class="keepers" name="keepers_count_seed"/>
+                                            <i class="fa fa-upload text-success" title="Есть в списке и раздаёт"></i>
+                                            <i class="fa fa-arrow-circle-o-up text-success" title="Нет в списке и раздаёт"></i>
+                                            раздаёт
+                                        </label>
+                                        <label class="keepers-filter-count-padding20"
+                                               title="Хранитель скачал раздачу, добавил её в свой список и, в данный момент, не раздаёт её.">
+                                            <input type="checkbox" class="keepers default" name="keepers_count_kept" checked/>
+                                            <i class="fa fa-hard-drive text-success" title="Есть в списке, не раздаёт"></i>
+                                            хранит, не раздаёт
+                                        </label>
+                                        <label class="keepers-filter-count-padding20"
+                                               title="Хранитель скачал раздачу, добавил её в свой список и, в данный момент, раздаёт её.">
+                                            <input type="checkbox" class="keepers default" name="keepers_count_kept_seed" checked/>
+                                            <i class="fa fa-upload text-success" title="Есть в списке и раздаёт"></i>
+                                            хранит и раздаёт
                                         </label>
                                     </fieldset>
-                                    <label title="Отображать только те раздачи, которые никто не сидирует из числа других хранителей">
-                                        <input type="checkbox" class="keepers_seeders" name="not_keepers_seeders" />
-                                        нет сидов-хранителей
-                                    </label>
-                                    <label title="Отображать только те раздачи, которые кто-то сидирует из числа других хранителей">
-                                        <input type="checkbox" class="keepers_seeders" name="is_keepers_seeders" />
-                                        есть сиды-хранители
-                                    </label>
                                 </fieldset>
-                                <hr />
+                                <hr/>
+                                <label title="Отображать только раздачи, для которых информация о сидах содержится за весь период, указанный в настройках (при использовании алгоритма нахождения среднего значения количества сидов)">
+                                    <input type="checkbox" name="avg_seeders_complete"/>
+                                    <i class="fa fa-circle text-success" title="Полные данные о средних сидах"></i>
+<!--                                    <i class="fa fa-circle text-warning" title="Неполные данные о средних сидах"></i>-->
+<!--                                    <i class="fa fa-circle text-danger" title="Отсутствуют данные о средних сидах"></i>-->
+                                    "зелёные"
+                                </label>
+                                <hr/>
                                 <label title="Использовать интервал сидов">
                                     <input type="checkbox" name="filter_interval" />
                                     интервал
@@ -467,17 +549,17 @@ function cfg_checkbox($cfg): Closure
                                         не менее
                                     </label>
                                     <label class="filter_rule_value" title="Количество сидов">
-                                        <input type="text" id="filter_rule" name="filter_rule" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+                                        <input type="text" id="filter_rule" name="filter_rule" size="1" value="<?= $cfg['rule_topics'] ?>" />
                                     </label>
                                 </fieldset>
                                 <fieldset class="filter_rule_interval">
-                                    <label class="filter_rule_value" title="Начальное количество сидов">
+                                    <label class="filter_rule_value">
                                         от
-                                        <input type="text" id="filter_rule_from" name="filter_rule_interval[from]" size="1" value="0" />
-                                    </label>
-                                    <label class="filter_rule_value" title="Конечное количество сидов">
+                                        <input type="text" id="filter_rule_min" title="Минимальное количество сидов"
+                                               name="filter_rule_interval[min]" size="1" value="0"/>
                                         до
-                                        <input type="text" id="filter_rule_to" name="filter_rule_interval[to]" size="1" value="<?php echo $cfg['rule_topics'] ?>" />
+                                        <input type="text" id="filter_rule_max" title="Максимальное количество сидов"
+                                               name="filter_rule_interval[max]" size="1" value="<?= $cfg['rule_topics'] ?>"/>
                                     </label>
                                 </fieldset>
                             </div>

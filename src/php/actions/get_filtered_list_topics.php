@@ -22,6 +22,7 @@ try {
     mb_regex_encoding('UTF-8');
 
     // парсим параметры фильтра
+    $filter = [];
     parse_str($_POST['filter'], $filter);
 
     if (!isset($filter['filter_sort'])) {
@@ -52,6 +53,8 @@ try {
         'se' => ' - <span class="text-danger">%7$s</span>',
     ];
 
+    $keepersFilter = prepareKeepersFilter($filter);
+
     $output = '';
     $preparedOutput = [];
     $filtered_topics_count = 0;
@@ -76,7 +79,7 @@ try {
             [],
             true
         );
-        $forumsTitles = Db::query_database(
+        $forumsTitles = (array)Db::query_database(
             "SELECT
                 id,
                 name
@@ -405,35 +408,8 @@ try {
             throw new Exception('Не выбраны статусы раздач для торрент-клиента');
         }
 
-        // некорретный ввод значения сидов или количества хранителей
-        $filters_hints = [
-            "filter_rule_interval" => "сидов",
-            "keepers_filter_rule_interval" => "количества хранителей",
-        ];
-        foreach ($filters_hints as $filter_name => $hint) {
-            if (isset($filter['filter_interval']) || $filter_name == "keepers_filter_rule_interval") {
-                if (
-                    !is_numeric($filter[$filter_name]['from'])
-                    || !is_numeric($filter[$filter_name]['to'])
-                ) {
-                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
-                }
-                if ($filter[$filter_name]['from'] < 0 || $filter[$filter_name]['to'] < 0) {
-                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
-                }
-                if ($filter[$filter_name]['from'] > $filter[$filter_name]['to']) {
-                    throw new Exception('Начальное значение ' . $hint . ' в фильтре должно быть меньше или равно конечному значению');
-                }
-            } else {
-                if (!is_numeric($filter['filter_rule'])) {
-                    throw new Exception('В фильтре введено некорректное значение ' . $hint);
-                }
-
-                if ($filter['filter_rule'] < 0) {
-                    throw new Exception('Значение ' . $hint . ' в фильтре должно быть больше 0');
-                }
-            }
-        }
+        // Некорректный ввод значения сидов или количества хранителей
+        validateFilterRuleIntervals($filter);
 
         // некорректная дата
         $date_release = DateTime::createFromFormat('d.m.Y', $filter['filter_date_release']);
@@ -479,36 +455,33 @@ try {
 
 
         // Данный подзапрос, для каждой раздачи, определяет наличие:
-        // - хотя бы одного хранителя, у которого раздача есть в списке, "хранитель", KeepersLists, "posted"
-        // - хотя бы одного хранителя, который в данный момент раздаёт эту раздачу, "сид-хранитель", KeepersSeeders, "seeding"
+        // max_posted - хранителя включившего раздачу в отчёт, по данным форума (KeepersLists);
+        // has_complete - хранителя завершившего скачивание раздачи;
+        // has_download - хранителя скачивающего раздачу;
+        // has_seeding - хранителя раздающего раздачу, по данным апи (KeepersSeeders);
         $keepers_status_statement = sprintf(
-            'SELECT
-                id,
-                MAX(posted) as posted,
-                complete,
-                MAX(seeding) as seeding
-            FROM (
-                SELECT
-                    tp.id,
-                    k.complete,
-                    k.posted,
-                    NULL as seeding
-                FROM Topics as tp
-                INNER JOIN KeepersLists as k ON k.topic_id = tp.id
-                %1$s
-                UNION ALL
-                SELECT
-                    tp.id,
-                    1 as complete,
-                    NULL as posted,
-                    1 as seeding
-                FROM Topics as tp
-                INNER JOIN KeepersSeeders as k ON k.topic_id = tp.id
-                %1$s
-            )
-            GROUP BY id',
+            '
+                SELECT topic_id,
+                    MAX(complete) AS has_complete,
+                    MAX(posted) AS max_posted,
+                    MAX(NOT complete) AS has_download,
+                    MAX(seeding) AS has_seeding
+                FROM (
+                    SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
+                    FROM (
+                        SELECT topic_id, keeper_id, complete, posted, 0 AS seeding
+                        FROM KeepersLists
+                        UNION ALL
+                        SELECT topic_id, keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
+                        FROM KeepersSeeders
+                    )
+                    %s
+                    GROUP BY topic_id, keeper_id
+                )
+                GROUP BY topic_id
+            ',
             // Исключаем себя из списка, при необходимости
-            $exclude_self_keep ? "WHERE k.keeper_id != '{$user_id}'" : ''
+            $exclude_self_keep ? "WHERE keeper_id != '$user_id'" : ''
         );
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
@@ -530,7 +503,7 @@ try {
             %s
             LEFT JOIN (
                 %s
-            ) Keepers ON Topics.id = Keepers.id
+            ) Keepers ON Topics.id = Keepers.topic_id AND (Keepers.max_posted IS NULL OR Topics.rg < Keepers.max_posted)
             LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
             WHERE
                 ss IN (' . $ss . ')
@@ -541,7 +514,7 @@ try {
                 %s';
 
         $fields = [];
-        $where = [];
+        $where = getKeptStatusFilter($keepersFilter);
         $left_join = [];
 
         if ($cfg['avg_seeders']) {
@@ -568,23 +541,6 @@ try {
         } else {
             $fields[] = 'se';
         }
-
-        // есть/нет хранители
-        if (isset($filter['not_keepers'])) {
-            $where[] = 'AND Keepers.posted IS NULL AND (posted IS NULL OR rg > posted)';
-        } elseif (isset($filter['is_keepers'])) {
-            $where[] = 'AND Keepers.posted IS NOT NULL AND (posted IS NULL OR rg < posted)';
-        }
-
-        // есть/нет сиды-хранители
-        if (isset($filter['not_keepers_seeders'])) {
-            $where[] = 'AND seeding IS NULL';
-        } elseif (isset($filter['is_keepers_seeders'])) {
-            $where[] = 'AND seeding = 1';
-        }
-
-        // данные о других хранителях
-        $keepers = getKeepersByForumList($forumsIDs, $ss, $user_id);
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = sprintf(
@@ -626,6 +582,9 @@ try {
             $filterValues = array_filter($filterValues);
         }
 
+        // Данные о других хранителях.
+        $keepers = getKeepersByForumList($forumsIDs, $ss, $user_id);
+
         // выводим раздачи
         foreach ($topics as $topic_id => $topic_data) {
             // фильтрация по клиенту
@@ -636,25 +595,12 @@ try {
             if ($topic_data['rg'] > $date_release->format('U')) {
                 continue;
             }
-            // фильтрация по количеству сидов
-            if (isset($filter['filter_interval'])) {
-                if (
-                    $filter['filter_rule_interval']['from'] > $topic_data['se']
-                    || $filter['filter_rule_interval']['to'] < $topic_data['se']
-                ) {
-                    continue;
-                }
-            } else {
-                if ($filter['filter_rule_direction']) {
-                    if ($filter['filter_rule'] < $topic_data['se']) {
-                        continue;
-                    }
-                } else {
-                    if ($filter['filter_rule'] > $topic_data['se']) {
-                        continue;
-                    }
-                }
+
+            // Фильтрация по количеству сидов.
+            if (!isSeedCountInRange($filter, (int)$topic_data['se'])) {
+                continue;
             }
+
             // фильтрация по статусу "зелёные"
             if (
                 isset($topic_data['ds'])
@@ -716,15 +662,11 @@ try {
                 }
             }
 
-            if (
-                isset($filter['is_keepers'])
-                && (
-                    $filter['keepers_filter_rule_interval']['from'] > count($topic_keepers)
-                    || $filter['keepers_filter_rule_interval']['to'] < count($topic_keepers)
-                )
-            ) {
+            // Фильтрация по количеству хранителей
+            if (!isTopicKeepersInRange($keepersFilter, $topic_keepers)) {
                 continue;
             }
+
             $data = '';
             $filtered_topics_count++;
             $filtered_topics_size += $topic_data['si'];
@@ -798,42 +740,161 @@ try {
     ]);
 }
 
+/**
+ * Проверим ввод значения сидов или количества хранителей.
+ *
+ * @throws Exception
+ */
+function validateFilterRuleIntervals(array $filter): void
+{
+    $makeException = function(string $hint, string $type): void {
+        $patterns = [
+            'invalid' => 'В фильтре введено некорректное значение %s.',
+            'zero'    => 'Значение %s в фильтре должно быть больше 0.',
+            'minmax'  => 'Максимальное значение %s в фильтре должно быть больше минимального.',
+        ];
+
+        throw new Exception(sprintf($patterns[$type] ?? '%s', $hint));
+    };
+
+    // Проверки для значения количества сидов.
+    if (!is_numeric($filter['filter_rule'])) {
+        $makeException('сидов', 'invalid');
+    }
+    if ($filter['filter_rule'] < 0) {
+        $makeException('сидов', 'zero');
+    }
+
+    // Для диапазонов свои проверки.
+    $filters_hints = [
+        "filter_rule_interval" => "сидов",
+        "keepers_filter_count" => "количества хранителей",
+    ];
+    foreach ($filters_hints as $filter_name => $hint) {
+        if (
+            !is_numeric($filter[$filter_name]['min'])
+            || !is_numeric($filter[$filter_name]['max'])
+        ) {
+            $makeException($hint, 'invalid');
+        }
+
+        if ($filter[$filter_name]['min'] < 0 || $filter[$filter_name]['max'] < 0) {
+            $makeException($hint, 'zero');
+        }
+
+        if ($filter[$filter_name]['min'] > $filter[$filter_name]['max']) {
+            $makeException($hint, 'minmax');
+        }
+    }
+}
+
 /** Собрать параметры фильтрации по типам хранителей. */
 function prepareKeepersFilter(array $filter): array
 {
-    $keys = ['is_keepers', 'not_keepers', 'is_keepers_seeders', 'not_keepers_seeders', 'is_keepers_download'];
+    $topic_kept_status_keys = ['filter_status_has_keeper', 'filter_status_has_seeder', 'filter_status_has_downloader'];
 
-    $keeper_filter = array_combine(
-        $keys,
-        array_map(fn($el) => (bool)($filter[$el] ?? false), $keys)
+    $filter1 = array_combine(
+        $topic_kept_status_keys,
+        array_map(fn($el) => (int)($filter[$el] ?? -1), $topic_kept_status_keys)
     );
 
-    $keeper_filter['keepers_min'] = (int)$filter['keepers_filter_rule_interval']['from'];
-    $keeper_filter['keepers_max'] = (int)$filter['keepers_filter_rule_interval']['to'];
+    $keepers_count_keys = ['is_keepers', 'keepers_count_seed', 'keepers_count_download', 'keepers_count_kept', 'keepers_count_kept_seed'];
+
+    $filter2 = array_combine(
+        $keepers_count_keys,
+        array_map(fn($el) => (bool)($filter[$el] ?? false), $keepers_count_keys)
+    );
+
+    $keeper_filter = array_merge($filter1, $filter2);
+
+    $keeper_filter['keepers_min'] = (int)($filter['keepers_filter_count']['min'] ?? 1);
+    $keeper_filter['keepers_max'] = (int)($filter['keepers_filter_count']['max'] ?? 10);
 
     return $keeper_filter;
 }
 
-/** Попадает ли количество хранителей раздачи в заданные пределы. */
+/** Фильтр раздач по статусу хранения. */
+function getKeptStatusFilter(array $keepersFilter): array
+{
+    $filter = [];
+    // Фильтр "Хранитель с отчётом" = "да"/"нет"
+    if ($keepersFilter['filter_status_has_keeper'] === 1) {
+        $filter[] = 'AND Keepers.max_posted IS NOT NULL';
+    }
+    elseif ($keepersFilter['filter_status_has_keeper'] === 0) {
+        $filter[] = 'AND Keepers.max_posted IS NULL';
+    }
+
+    // Фильтр "Хранитель раздаёт" = "да"/"нет"
+    if ($keepersFilter['filter_status_has_seeder'] === 1) {
+        $filter[] = 'AND Keepers.has_seeding = 1';
+    }
+    elseif ($keepersFilter['filter_status_has_seeder'] === 0) {
+        $filter[] = 'AND (Keepers.has_seeding = 0 OR Keepers.has_seeding IS NULL)';
+    }
+
+    // Фильтр "Хранитель скачивает" = "да"/"нет"
+    if ($keepersFilter['filter_status_has_downloader'] === 1) {
+        $filter[] = 'AND Keepers.has_download = 1';
+    }
+    elseif ($keepersFilter['filter_status_has_downloader'] === 0) {
+        $filter[] = 'AND (Keepers.has_download = 0 OR Keepers.has_download IS NULL)';
+    }
+
+    return $filter;
+}
+
+/** Попадает ли количество хранителей раздачи в заданные пределы по заданным правилам. */
 function isTopicKeepersInRange(array $params, array $topicKeepers): bool
 {
     if (!$params['is_keepers']) {
         return true;
     }
 
-    /**
-     * $el['posted'] > 0 - раздача есть в отчётах хранителя.
-     * $el['complete'] == 1 - раздача скачана хранителем.
-     *  $params['is_keepers_download'] - учитывать качающих хранителей.
-     */
-    $keepersCount = count(
-        array_filter(
-            $topicKeepers,
-            fn($el) => $el['posted'] > 0 && ((int)$el['complete'] === 1 || $params['is_keepers_download'])
-        )
+    $matchedKeepers = array_filter(
+        $topicKeepers,
+        function($kp) use ($params) {
+            // Хранитель раздаёт.
+            if ($params['keepers_count_seed'] && $kp['seeding'] === 1) {
+                return true;
+            }
+            // Хранитель качает.
+            if ($params['keepers_count_download'] && $kp['complete'] < 1) {
+                return true;
+            }
+            // Хранитель хранит, не раздаёт.
+            if ($params['keepers_count_kept'] && $kp['complete'] === 1 && $kp['posted'] > 0 && $kp['seeding'] === 0) {
+                return true;
+            }
+            // Хранитель хранит и раздаёт.
+            if ($params['keepers_count_kept_seed'] && $kp['complete'] === 1 && $kp['posted'] > 0 && $kp['seeding'] === 1) {
+                return true;
+            }
+
+            return false;
+        }
     );
 
+    $keepersCount = count($matchedKeepers);
+
     return $params['keepers_min'] <= $keepersCount && $keepersCount <= $params['keepers_max'];
+}
+
+/** Попадает ли количество сидов раздачи в заданные пределы. */
+function isSeedCountInRange(array $filter, int $topicSeeds): bool {
+    $useInterval = (bool)($filter['filter_interval'] ?? false);
+    if ($useInterval) {
+        $min = (int)$filter['filter_rule_interval']['min'];
+        $max = (int)$filter['filter_rule_interval']['max'];
+
+        return $min <= $topicSeeds && $topicSeeds <= $max;
+    }
+
+    if ($filter['filter_rule_direction']) {
+        return $filter['filter_rule'] > $topicSeeds;
+    } else {
+        return $filter['filter_rule'] < $topicSeeds;
+    }
 }
 
 /** Список хранителей всех раздач указанных подразделов. */
@@ -844,18 +905,18 @@ function getKeepersByForumList(array $forumList, string $forumPlaceholder, int $
         $keepers += Db::query_database(
             'SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding 
                 FROM (
-                    SELECT kl.topic_id,kl.keeper_id, kl.keeper_name,kl.complete,kl.posted,0 as seeding
+                    SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, kl.posted, 0 as seeding
                     FROM Topics
                     LEFT JOIN KeepersLists as kl ON Topics.id = kl.topic_id
                     WHERE ss IN (' . $forumPlaceholder . ') AND rg < posted AND kl.topic_id IS NOT NULL
                     UNION ALL
-                    SELECT ks.topic_id,ks.keeper_id,ks.keeper_name,1 as complete,0 as posted,1 as seeding
+                    SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 as complete, 0 as posted, 1 as seeding
                     FROM Topics
                     LEFT JOIN KeepersSeeders as ks ON Topics.id = ks.topic_id
                     WHERE ss IN (' . $forumPlaceholder . ') AND ks.topic_id IS NOT NULL
                 ) as k
                 GROUP BY k.topic_id, k.keeper_id, k.keeper_name
-                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, k.complete DESC, k.posted, k.keeper_name',
+                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name',
             array_merge($forumsChunk, $forumsChunk, [$user_id]),
             true,
             PDO::FETCH_ASSOC | PDO::FETCH_GROUP
@@ -890,13 +951,13 @@ function getTopicClientState(array $topic): string
 {
     if ($topic['done'] == 1) {
         // Раздаётся.
-        $topicState = 'fa-arrow-up';
+        $topicState = 'fa-arrow-circle-o-up';
     } elseif ($topic['done'] === null) {
         // Нет в клиенте.
         $topicState = 'fa-circle';
     } else {
         // Скачивается.
-        $topicState = 'fa-arrow-down';
+        $topicState = 'fa-arrow-circle-o-down';
     }
     if ($topic['paused'] == 1) {
         // Приостановлена.
@@ -936,11 +997,11 @@ function getBulletColor(array $topic, int $avgSeedersPeriod): string
 function getBulletTittle(string $bulletState, string $bulletColor = ''): string
 {
     $topicsBullets = [
-        "fa-arrow-up"   => "Раздаётся",
-        "fa-arrow-down" => "Скачивается",
-        "fa-pause"      => "Приостановлена",
-        "fa-circle"     => "Нет в клиенте",
-        "fa-times"      => "С ошибкой в клиенте",
+        "fa-arrow-circle-o-up"   => "Раздаётся",
+        "fa-arrow-circle-o-down" => "Скачивается",
+        "fa-pause"               => "Приостановлена",
+        "fa-circle"              => "Нет в клиенте",
+        "fa-times"               => "С ошибкой в клиенте",
     ];
 
     $topicsColors = [
@@ -977,13 +1038,13 @@ function getFormattedKeepersList(array $topicKeepers, int $user_id): string
     $keepersNames = array_map(function($e) use ($user_id, $format) {
         if ($e['complete'] == 1) {
             if ($e['posted'] === 0) {
-                $stateIcon = 'arrow-circle-up';
+                $stateIcon = 'arrow-circle-o-up';
             } else {
                 $stateIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
             }
             $stateColor = 'success';
         } else {
-            $stateIcon  = 'arrow-down';
+            $stateIcon  = 'arrow-circle-o-down';
             $stateColor = 'danger';
         }
         if ($user_id === (int)$e['keeper_id']) {
@@ -1006,10 +1067,10 @@ function getFormattedKeepersList(array $topicKeepers, int $user_id): string
 function getKeeperTitle(string $bulletState): string
 {
     $keeperBullets = [
-        'upload'          => 'Есть в списке и раздаёт',
-        'hard-drive'      => 'Есть в списке, не раздаёт',
-        'arrow-circle-up' => 'Нет в списке и раздаёт',
-        'arrow-down'      => 'Скачивает',
+        'upload'              => 'Есть в списке и раздаёт',
+        'hard-drive'          => 'Есть в списке, не раздаёт',
+        'arrow-circle-o-up'   => 'Нет в списке и раздаёт',
+        'arrow-circle-o-down' => 'Скачивает',
     ];
 
     return $keeperBullets[$bulletState] ?? '';

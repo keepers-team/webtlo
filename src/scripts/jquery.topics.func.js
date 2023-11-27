@@ -121,9 +121,8 @@ function getFilteredTopics() {
         $("#filter_avg_seeders_period").spinner("enable");
         $("#filter_rule").spinner("enable");
         $("#filter_rule_from").spinner("enable");
-        $("#keepers_filter_rule_from").spinner("enable");
         $("#filter_rule_to").spinner("enable");
-        $("#keepers_filter_rule_to").spinner("enable");
+        $(".keepers_filter_count").spinner("enable");
         $("#filter_date_release").datepicker("enable");
         if (forum_id == -5) {
             $("#tor_add").button("disable");
@@ -150,9 +149,8 @@ function getFilteredTopics() {
         $("#filter_avg_seeders_period").spinner("disable");
         $("#filter_rule").spinner("disable");
         $("#filter_rule_from").spinner("disable");
-        $("#keepers_filter_rule_from").spinner("disable");
         $("#filter_rule_to").spinner("disable");
-        $("#keepers_filter_rule_to").spinner("disable");
+        $(".keepers_filter_count").spinner("disable");
         $("#filter_date_release").datepicker("disable");
         if (forum_id == -4) {
             $("#filter_avg_seeders_period").spinner("enable");
@@ -286,6 +284,9 @@ function loadSavedFilterOptions(filter_options) {
     if ($("input[name=is_keepers]").prop("checked")) {
         $(".keepers_filter_rule_fieldset").show();
     }
+
+    // Обновить выбранные статусы хранения раздач.
+    $('.filter_status_controlgroup').controlgroup('refresh');
 }
 
 /** Проверка наличия раздач без названия + отображение. */

@@ -199,6 +199,23 @@ li.menu.ui-tabs-active {
     height: calc(100% - 34px);
 }
 
+.ui-controlgroup.hide-dot label .ui-icon {
+    display: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ui-controlgroup.lesser-button .ui-button {
+    padding: 0.1em;
+    width: 3em;
+}
+
+/* Уберём зависающее jquery-ui выделение */
+.ui-state-focus.ui-visual-focus {
+    box-shadow: none;
+    z-index: auto;
+}
+
 /* topics control */
 
 #topics_control {
@@ -259,6 +276,14 @@ li.menu.ui-tabs-active {
 
 .filter_rule_value {
     margin: 6px 0 0 6px;
+}
+
+.keepers-filter-count-padding20 {
+    padding-left: 20px;
+}
+
+.keepers-filter-count-padding25 {
+    padding-left: 25px;
 }
 
 .filter_common {
