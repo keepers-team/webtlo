@@ -103,65 +103,17 @@ function getFilteredTopics() {
         return filter_delay(getFilteredTopics);
     }
 
-    let forum_id = $("#main-subsections").val();
+    const forum_id = +$("#main-subsections").val();
     $("#excluded_topics_size").parent().hide();
 
     // Ничего не загружать.
-    if (forum_id == -999) return;
+    if (forum_id === -999) return;
 
-    // блокировка фильтра
-    if (
-        forum_id > 0
-        || forum_id == -3
-        || forum_id == -5
-        || forum_id == -6
-    ) {
-        $(".topics_filter input").removeClass("ui-state-disabled").prop("disabled", false);
-        $("#toolbar-control-topics").buttonset("enable");
-        $("#filter_avg_seeders_period").spinner("enable");
-        $("#filter_rule").spinner("enable");
-        $("#filter_rule_from").spinner("enable");
-        $("#filter_rule_to").spinner("enable");
-        $(".keepers_filter_count").spinner("enable");
-        $("#filter_date_release").datepicker("enable");
-        if (forum_id == -5) {
-            $("#tor_add").button("disable");
-            $(".topics_filter input[name^='keeping_priority']").addClass("ui-state-disabled").prop("disabled", true);
-        } else {
-            $("#tor_add").button("enable");
-            $(".topics_filter input[name^='keeping_priority']").removeClass("ui-state-disabled").prop("disabled", false);
-        }
-        $("#filter_client_id").selectmenu("enable");
+    // Блокировка/разблокировка элементов после смены выбранного разворота.
+    blockTopicsFilters(forum_id);
 
-        // заблокировать кнопки загрузки по спискам, если не выбран подраздел
-        $(".tor_download_by_keepers_list").prop("disabled", forum_id < 0);
-        $("#tor_download_options").selectmenu("refresh");
-    } else {
-        if (forum_id == -2) {
-            $("#toolbar-control-topics").buttonset("disable");
-            $("#tor_blacklist").button("enable");
-        } else {
-            $("#toolbar-control-topics").buttonset("enable");
-            $("#tor_blacklist").button("disable");
-        }
-        $(".topics_filter input").addClass("ui-state-disabled").prop("disabled", true);
-        $(".topics_filter input.sort").removeClass("ui-state-disabled").prop("disabled", false);
-        $("#filter_avg_seeders_period").spinner("disable");
-        $("#filter_rule").spinner("disable");
-        $("#filter_rule_from").spinner("disable");
-        $("#filter_rule_to").spinner("disable");
-        $(".keepers_filter_count").spinner("disable");
-        $("#filter_date_release").datepicker("disable");
-        if (forum_id == -4) {
-            $("#filter_avg_seeders_period").spinner("enable");
-            $(".tor_remove").button("disable");
-        }
-        $(".tor_download_by_keepers_list").prop("disabled", true);
-        $("#tor_download_options").selectmenu("refresh");
-        $("#filter_client_id").val(0).selectmenu("refresh").selectmenu("disable");
-    }
-    // сериализим параметры фильтра
-    var $filter = $("#topics_filter").serialize();
+    // Параметры фильтра в строку.
+    let $filter = $("#topics_filter").serialize();
     processStatus.set("Получение данных о раздачах...");
     $.ajax({
         type: "POST",
@@ -173,10 +125,16 @@ function getFilteredTopics() {
         beforeSend: function () {
             filter_hold = true;
             block_actions();
+
+            // Очистка прошлого результата.
+            showResultTopics();
         },
         complete: function () {
             filter_hold = false;
             block_actions();
+
+            // Блокировка/разблокировка элементов строго после разблокировки прочих кнопок.
+            blockTopicsFilters(forum_id);
         },
         success: function (response) {
             response = $.parseJSON(response);
@@ -195,6 +153,96 @@ function getFilteredTopics() {
             showCountSizeSelectedTopics();
         }
     });
+}
+
+/**
+ * Изменить набор доступных к работе элементов.
+ * @param {number} forum_id
+ */
+function blockTopicsFilters(forum_id) {
+    //  0 - из других подразделов
+    // -1 - незарегистрированные
+    // -2 - черный список
+    // -3 - все хранимые
+    // -4 - дублирующиеся раздачи
+    // -5 - высокоприоритетные раздачи
+    // -6 - раздачи своим по спискам
+
+    if (
+        forum_id > 0
+        || forum_id === -3
+        || forum_id === -5
+        || forum_id === -6
+    ) {
+        // Разблокировать.
+
+        // Разблокируем все input.
+        $('.topics_filter input').toggleDisable(false);
+
+        $('#toolbar-control-topics').buttonset('enable');
+
+        // Разблокируем элементы прокрутки.
+        $('#filter_rule') // фильтр по сидам
+            .add('#filter_rule_min, #filter_rule_max') // интервал сидов
+            .add('#filter_avg_seeders_period') // средние сиды
+            .add('.keepers_filter_count') // интервал хранителей
+            .spinner('enable');
+
+        // Разблокируем выбор даты регистрации.
+        $('#filter_date_release').datepicker('enable');
+
+        // Для высокого приоритета, блокируем добавление раздач и фильтр по приоритету.
+        if (forum_id === -5) {
+            $('#tor_add').button('disable');
+            $(".topics_filter input[name^='keeping_priority']").toggleDisable(true);
+        }
+
+        // Фильтр по клиенту разблокируем.
+        $('#filter_client_id').selectmenu('enable');
+        // Фильтр по статусу хранения.
+        $('.filter_status_controlgroup').controlgroup('enable')
+    } else {
+        // Заблокировать.
+
+        if (forum_id === -2) {
+            $("#toolbar-control-topics").buttonset("disable");
+            $("#tor_blacklist").button("enable");
+        } else {
+            $("#toolbar-control-topics").buttonset("enable");
+            $("#tor_blacklist").button("disable");
+        }
+
+        // Блокируем все input, за исключением сортировки.
+        $('.topics_filter input').not('.topics_filter input.sort')
+            .toggleDisable(true);
+
+        // Блокируем элементы прокрутки.
+        $('#filter_rule') // фильтр по сидам
+            .add('#filter_rule_min, #filter_rule_max') // интервал сидов
+            .add('#filter_avg_seeders_period') // средние сиды
+            .add('.keepers_filter_count') // интервал хранителей
+            .spinner('disable');
+
+        // Блокируем выбор даты регистрации.
+        $('#filter_date_release').datepicker('disable');
+
+        // Фильтр по клиенту установим в состояние по-умолчанию и заблокируем.
+        $('#filter_client_id').val(0).selectmenu('refresh').selectmenu('disable');
+        // Фильтр по статусу хранения.
+        $('.filter_status_controlgroup').controlgroup('disable')
+
+        // Для дублирующихся раздач, разблокируем фильтр средних сидов.
+        if (forum_id === -4) {
+            $('.tor_remove').toggleDisable(true);
+            $('#filter_avg_seeders_period')
+                .toggleDisable(false)
+                .spinner('enable');
+        }
+    }
+
+    // Блокируем кнопки загрузки по спискам, если не выбран подраздел.
+    $('.tor_download_by_keepers_list').prop('disabled', forum_id < 0);
+    $('#tor_download_options').selectmenu('refresh');
 }
 
 // вывод на экран кол-во, объём выделенных раздач
