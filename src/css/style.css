@@ -199,6 +199,10 @@ li.menu.ui-tabs-active {
     height: calc(100% - 34px);
 }
 
+#topics i.keeper:hover {
+    cursor: pointer;
+}
+
 .ui-controlgroup.hide-dot label .ui-icon {
     display: none;
     padding: 0;
@@ -435,6 +439,11 @@ li.menu.ui-tabs-active {
 
 .label * {
     vertical-align: middle;
+}
+
+
+.fa-size:before {
+    font-size: 1.15em;
 }
 
 .myinput {
