@@ -72,8 +72,3 @@ function mkdir_recursive($path): bool
 {
     return Helper::makeDirRecursive($path);
 }
-
-function natsort_field(array $input, $field, $direct = 1): array
-{
-    return Helper::natsortField($input, $field, $direct);
-}
