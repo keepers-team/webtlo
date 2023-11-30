@@ -33,9 +33,9 @@ final class Forums
                 WHERE f.id = ?
             ';
 
-            $res = Db::query_database_row($sql, [$forumId], true);
+            $res = (array)Db::query_database_row($sql, [$forumId], true);
 
-            if (!$res || !count($res)) {
+            if (empty($res)) {
                 throw new Exception("Error: Нет данных о хранимом подразделе № $forumId");
             }
             if (null !== $res['post_ids']) {
@@ -56,8 +56,10 @@ final class Forums
     {
         try {
             $forum = self::getForum($forumId);
+
             return $forum->name;
         } catch (Exception $e) {
+            // TODO запись в лог.
             return '';
         }
     }
