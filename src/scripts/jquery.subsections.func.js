@@ -41,31 +41,30 @@ function addSubsection(event, ui) {
 
 // Добавление раздела в хранимые, по нажатию на ид форума
 function addUnsavedSubsection(forum_id, forum_title) {
-    $("#dialog").dialog(
-        {
-            buttons: [
-                {
-                    text: "Да, добавить",
-                    click: function () {
-                        // Открываем вкладку настроек, настройки хранимых подразделов и вставляем ид раздела
-                        $("#menutabs").tabs("option", "active", 1);
-                        $("div.sub_settings").accordion("option", "active" , 3);
-                        $("#add-forum").val(forum_id).autocomplete("search", forum_id);
-                        $(this).dialog("close");
-                    },
+    $('#dialog').dialog({
+        buttons  : [
+            {
+                text : 'Да, добавить',
+                click: function() {
+                    // Открываем вкладку настроек, настройки хранимых подразделов и вставляем ид раздела
+                    $('#menutabs').tabs('option', 'active', 1);
+                    $('div.sub_settings').accordion('option', 'active', 2);
+                    $('#add-forum').val(forum_id).autocomplete("search", forum_id);
+                    $(this).dialog('close');
                 },
-                {
-                    text: "Нет",
-                    click: function() {
-                        $(this).dialog("close");
-                    }
+            },
+            {
+                text : "Нет",
+                click: function() {
+                    $(this).dialog('close');
                 }
-            ],
-            modal: true,
-            resizable: false
-        }
-    ).text("Добавить в хранимые подраздел '" + forum_title + "'?");
-    $("#dialog").dialog("open");
+            }
+        ],
+        modal    : true,
+        resizable: false
+    })
+        .text(`Добавить в хранимые подраздел '${forum_title}'?`)
+        .dialog('open');
 }
 
 function getForums() {
