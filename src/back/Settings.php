@@ -68,7 +68,7 @@ final class Settings
                 $config['subsections'][$id]['control_peers'] = $ini->read($id, 'control-peers');
                 $config['subsections'][$id]['exclude']       = $ini->read($id, 'exclude', 0);
             }
-            $config['subsections'] = natsort_field($config['subsections'], 'na');
+            $config['subsections'] = Helper::natsortField($config['subsections'], 'na');
         }
 
         // фильтрация раздач
