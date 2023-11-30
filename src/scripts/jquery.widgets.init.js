@@ -117,22 +117,19 @@ $(document).ready(function () {
         }
     });
 
-    // дата релиза в фильтре
-    $("#filter_date_release").datepicker($.datepicker.regional['ru'])
+    // Фильтр по дате релиза.
+    let releaseDateFilter = $('#filter_date_release').css('width', 90);
+    releaseDateFilter
+        .datepicker($.datepicker.regional['ru'])
         .datepicker({
             changeMonth: true,
-            changeYear: true,
-            showOn: "both",
-            dateFormat: 'dd.mm.yy',
-            maxDate: "now",
-        }).datepicker(
-            "setDate",
-            $("#filter_date_release").val()
-        ).css(
-            "width", 90
-        ).datepicker(
-            "refresh"
-        );
+            changeYear : true,
+            showOn     : 'both',
+            dateFormat : 'dd.mm.yy',
+            maxDate    : 'now',
+        })
+        .datepicker('setDate', releaseDateFilter.val())
+        .datepicker('refresh');
 
 
     // Меню обновления сведений.
@@ -170,7 +167,7 @@ $(document).ready(function () {
         },
         'priority': {
             'name': 'Обновить высокий приоритет',
-            'title': 'Обновление списоков раздач с высоким приоритетом со всего трекера',
+            'title': 'Обновление списков раздач с высоким приоритетом со всего трекера',
         },
         'clients': {
             'name': 'Обновить клиенты',
@@ -202,12 +199,10 @@ $(document).ready(function () {
         mouseWheel: true
     });
 
-    // инициализация "аккордиона" для вкладки настройки
-    $("div.sub_settings").each(function () {
-        $(this).accordion({
-            collapsible: true,
-            heightStyle: "content"
-        });
+    // Инициализация "аккордеона" для настроек.
+    $('div.sub_settings').accordion({
+        collapsible: true,
+        heightStyle: 'content',
     });
 
     // выпадающее меню для отчётов
