@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
+use DateTimeImmutable;
+use KeepersTeam\Webtlo\Helper as TloHelper;
+
 final class Helper
 {
     /** Сортировка задач по параметрам фильтра. */
     public static function topicsSortByFilter(array $topics, array $filter): array
     {
-        return natsort_field(
+        return TloHelper::natsortField(
             $topics,
             $filter['filter_sort'],
-            $filter['filter_sort_direction']
+            (int)$filter['filter_sort_direction']
         );
     }
 
@@ -98,5 +101,11 @@ final class Helper
         }, $listTorrentClientsIDs);
 
         return implode(', ', array_filter($listTorrentClientsNames));
+    }
+
+    /** Дата из timestamp */
+    public static function setTimestamp(int $timestamp): DateTimeImmutable
+    {
+        return (new DateTimeImmutable())->setTimestamp($timestamp);
     }
 }

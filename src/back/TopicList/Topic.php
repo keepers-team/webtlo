@@ -14,6 +14,7 @@ final class Topic
         public readonly string            $name,
         public readonly int               $size,
         public readonly DateTimeImmutable $regDate,
+        public readonly ?int              $forumId = null,
         public readonly ?float            $averageSeed = null,
         public readonly ?int              $priority = null,
         public readonly ?State            $state = null,

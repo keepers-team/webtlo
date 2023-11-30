@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
+use KeepersTeam\Webtlo\Module\Forums;
 use Db;
-use PDO;
-use DateTimeImmutable;
 
 final class Module
 {
@@ -38,53 +37,47 @@ final class Module
             WHERE TopicsUntracked.hs IS NOT NULL
         ';
 
-        $topics = (array)Db::query_database($statement, [], true);
-        $topics = Helper::topicsSortByFilter($topics, $filter);
+        $topics = $this->selectSortedTopics($statement, $filter);
 
-        $forumsTitles = $this->getUntrackedForumTitles();
-
-        $getForumHeader = function(int $id, string $name): string {
+        $getForumHeader = function(int $id): string {
+            $name  = Forums::getForumName($id);
             $click = sprintf('addUnsavedSubsection(%s, "%s");', $id, $name);
 
-            return "<div class='subsection-title'><a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>($id)</a>$name</div>";
+            return "<div class='subsection-title'>$name <a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>[$id]</a></div>";
         };
 
-        $dateImmutable  = new DateTimeImmutable();
         $preparedOutput = [];
 
         $filtered_topics_count = $filtered_topics_size = 0;
-        // Перебираем раздачи.
         foreach ($topics as $topicData) {
-            $filtered_topics_count++;
-            $filtered_topics_size += $topicData['si'];
-
-            $forumID = $topicData['ss'];
-
-            if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] = $getForumHeader($forumID, $forumsTitles[$forumID]);
-            }
-
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly($topicData);
 
-            $topicObject = new Topic(
+            // Типизируем данные раздачи в объект.
+            $topic = new Topic(
                 $topicData['id'],
                 $topicData['hs'],
                 $topicData['na'],
                 $topicData['si'],
-                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                Helper::setTimestamp((int)$topicData['rg']),
+                $topicData['ss'],
                 $topicData['se'],
                 null,
                 $topicState,
                 $topicData['cl'] ?? null
             );
+            unset($topicData);
+
+            $filtered_topics_count++;
+            $filtered_topics_size += $topic->size;
+
+            if (!isset($preparedOutput[$topic->forumId])) {
+                $preparedOutput[$topic->forumId] = $getForumHeader($topic->forumId);
+            }
 
             // Выводим строку с данными раздачи.
-            $preparedOutput[$forumID] .= $this->topicPattern->getFormatted($topicObject);
-
-            unset($topicData, $forumID, $topicState, $topicObject);
+            $preparedOutput[$topic->forumId] .= $this->topicPattern->getFormatted($topic);
         }
-        unset($topics);
 
         natcasesort($preparedOutput);
 
@@ -114,40 +107,39 @@ final class Module
 
         $topics = (array)Db::query_database($statement, [], true);
 
-        $dateImmutable  = new DateTimeImmutable();
         $preparedOutput = [];
 
         $filtered_topics_count = $filtered_topics_size = 0;
-        // Перебираем раздачи.
         foreach ($topics as $topicData) {
-            $filtered_topics_count++;
-            $filtered_topics_size += $topicData['total_size'];
-
-            $topicStatus = $topicData['status'];
-
-            if (!isset($preparedOutput[$topicStatus])) {
-                $preparedOutput[$topicStatus] = "<div class='subsection-title'>$topicStatus</div>";
-            }
-
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly($topicData);
 
-            $topicObject = new Topic(
+            // Типизируем данные раздачи в объект.
+            $topic = new Topic(
                 $topicData['topic_id'],
                 $topicData['info_hash'],
                 $topicData['name'],
                 $topicData['total_size'],
-                $dateImmutable->setTimestamp((int)$topicData['time_added']),
+                Helper::setTimestamp((int)$topicData['time_added']),
+                null,
                 null,
                 null,
                 $topicState,
                 $topicData['client_id'] ?? null
             );
 
-            // Выводим строку с данными раздачи.
-            $preparedOutput[$topicStatus] .= $this->topicPattern->getFormatted($topicObject);
+            $filtered_topics_count++;
+            $filtered_topics_size += $topic->size;
 
-            unset($topicData, $topicStatus, $topicState, $topicObject);
+            $topicStatus = $topicData['status'];
+            if (!isset($preparedOutput[$topicStatus])) {
+                $preparedOutput[$topicStatus] = "<div class='subsection-title'>$topicStatus</div>";
+            }
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[$topicStatus] .= $this->topicPattern->getFormatted($topic);
+
+            unset($topicData, $topicStatus, $topicState, $topic);
         }
         unset($topics);
 
@@ -177,38 +169,37 @@ final class Module
             $this->cfg['avg_seeders'] ? '(se * 1.) / qt as se' : 'se'
         );
 
-        $topics = (array)Db::query_database($statement, [], true);
-        $topics = Helper::topicsSortByFilter($topics, $filter);
+        $topics = $this->selectSortedTopics($statement, $filter);
 
-        $dateImmutable  = new DateTimeImmutable();
         $preparedOutput = [];
 
         $filtered_topics_count = $filtered_topics_size = 0;
-        // Перебираем раздачи.
         foreach ($topics as $topicData) {
-            $filtered_topics_count++;
-            $filtered_topics_size += $topicData['si'];
-
-            $forumID = $topicData['ss'];
-
-            if (!isset($preparedOutput[$forumID])) {
-                $preparedOutput[$forumID] =
-                    "<div class='subsection-title'>{$this->cfg['subsections'][$forumID]['na']}</div>";
-            }
-
-            $topicObject = new Topic(
+            // Типизируем данные раздачи в объект.
+            $topic = new Topic(
                 $topicData['id'],
                 $topicData['hs'],
                 $topicData['na'],
                 $topicData['si'],
-                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                Helper::setTimestamp((int)$topicData['rg']),
+                $topicData['ss'],
                 round($topicData['se'], 2)
             );
+            unset($topicData);
+
+            $filtered_topics_count++;
+            $filtered_topics_size += $topic->size;
+
+            if (!isset($preparedOutput[$topic->forumId])) {
+                $preparedOutput[$topic->forumId] = sprintf(
+                    "<div class='subsection-title'>%s [%d]</div>",
+                    Forums::getForumName($topic->forumId),
+                    $topic->forumId,
+                );
+            }
 
             // Выводим строку с данными раздачи.
-            $preparedOutput[$forumID] .= $this->topicPattern->getFormatted($topicObject);
-
-            unset($topicData, $forumID, $topicObject);
+            $preparedOutput[$topic->forumId] .= $this->topicPattern->getFormatted($topic);
         }
         unset($topics);
 
@@ -230,6 +221,7 @@ final class Module
                 Topics.na,
                 Topics.si,
                 Topics.rg,
+                Topics.ss,
                 Topics.pt,
                 ' . implode(',', $statementFields) . '
             FROM Topics
@@ -237,17 +229,35 @@ final class Module
             WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(1) > 1)
         ';
 
-        $topics = (array)Db::query_database($statement, [], true);
-        $topics = Helper::topicsSortByFilter($topics, $filter);
+        $topics = $this->selectSortedTopics($statement, $filter);
 
-        $dateImmutable  = new DateTimeImmutable();
         $preparedOutput = [];
 
         $filtered_topics_count = $filtered_topics_size = 0;
         // Перебираем раздачи.
         foreach ($topics as $topicData) {
+            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
+            $topicState = State::seedOnly(
+                $averagePeriodFilter['seedPeriod'],
+                $topicData['ds']
+            );
+
+            // Типизируем данные раздачи в объект.
+            $topic = new Topic(
+                $topicData['id'],
+                $topicData['hs'],
+                $topicData['na'],
+                $topicData['si'],
+                Helper::setTimestamp((int)$topicData['rg']),
+                $topicData['ss'],
+                round($topicData['se'], 2),
+                $topicData['pt'],
+                $topicState,
+            );
+            unset($topicData);
+
             $filtered_topics_count++;
-            $filtered_topics_size += $topicData['si'];
+            $filtered_topics_size += $topic->size;
 
             // Данные о клиентах, в которых есть найденные раздачи.
             $statement = '
@@ -259,44 +269,24 @@ final class Module
 
             $listTorrentClientsIDs = (array)Db::query_database(
                 $statement,
-                [$topicData['hs']],
+                [$topic->hash],
                 true
             );
 
             $listTorrentClientsNames = Helper::getFormattedClientsList($this->cfg['clients'] ?? [], $listTorrentClientsIDs);
 
-            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
-            $topicState = State::seedOnly(
-                $averagePeriodFilter['seedPeriod'],
-                $topicData['ds']
-            );
-
-            $topicObject = new Topic(
-                $topicData['id'],
-                $topicData['hs'],
-                $topicData['na'],
-                $topicData['si'],
-                $dateImmutable->setTimestamp((int)$topicData['rg']),
-                round($topicData['se'], 2),
-                $topicData['pt'],
-                $topicState,
-            );
-
             // Выводим строку с данными раздачи.
-            $preparedOutput[] = $this->topicPattern->getFormatted($topicObject, $listTorrentClientsNames);
+            $preparedOutput[] = $this->topicPattern->getFormatted($topic, $listTorrentClientsNames);
         }
 
         return [$preparedOutput, $filtered_topics_count, $filtered_topics_size];
     }
 
-    /** Получить список наименований не отслеживаемых подразделов */
-    private function getUntrackedForumTitles(): array
+    /** Получить из БД список раздач и отсортировать по заданному фильтру. */
+    private function selectSortedTopics(string $statement, array $filter): array
     {
-        return (array)Db::query_database(
-            'SELECT id, name FROM Forums WHERE id IN (SELECT DISTINCT ss FROM TopicsUntracked)',
-            [],
-            true,
-            PDO::FETCH_KEY_PAIR
-        );
+        $topics = (array)Db::query_database($statement, [], true);
+
+        return Helper::topicsSortByFilter($topics, $filter);
     }
 }

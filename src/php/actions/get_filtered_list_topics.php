@@ -37,7 +37,6 @@ try {
     // -5 - высокоприоритетные раздачи
     // -6 - раздачи своим по спискам
 
-    $dateImmutable = new DateTimeImmutable();
     $topicPattern = new TopicPattern($cfg, $cfg['forum_address'] ?? '');
 
     $module = new Module($cfg, $topicPattern);
@@ -156,6 +155,7 @@ try {
                 Topics.na,
                 Topics.si,
                 Topics.rg,
+                Topics.ss,
                 Topics.pt,
                 Torrents.done,
                 Torrents.paused,
@@ -319,7 +319,8 @@ try {
                 $topicData['hs'],
                 $topicData['na'],
                 $topicData['si'],
-                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                Helper::setTimestamp((int)$topicData['rg']),
+                $topicData['ss'],
                 round($topicData['se'], 2),
                 $topicData['pt'],
                 $topicState,
