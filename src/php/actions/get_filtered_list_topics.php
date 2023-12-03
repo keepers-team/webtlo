@@ -1,60 +1,10 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Validate;
-
-/** Сортировка задач по параметрам фильтра. */
-function topicsSortByFilter(array $topics, array $filter): array
-{
-    return natsort_field(
-        $topics,
-        $filter['filter_sort'],
-        $filter['filter_sort_direction']
-    );
-}
-
-/** Получить шаблон строки с раздачей. */
-function buildTopicPattern(array $topicFieldsPatterns, array $topic_data): string
-{
-    $topicPattern = '';
-    foreach ($topicFieldsPatterns as $field => $pattern) {
-        if (isset($topic_data[$field])) {
-            $topicPattern .= $pattern;
-        }
-    }
-
-    return $topicPattern;
-}
-
-function getForumIdList(array $cfg, int $forum_id): array
-{
-    $forumsIDs = [0];
-    if ($forum_id > 0) {
-        $forumsIDs = [$forum_id];
-    } elseif ($forum_id === -5) {
-        $forumsIDs = (array)Db::query_database(
-            'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
-            [],
-            true,
-            PDO::FETCH_COLUMN
-        );
-    } else {
-        // -3 || -6
-        if (isset($cfg['subsections'])) {
-            foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
-                if (!$subsection['hide_topics']) {
-                    $forumsIDs[] = $sub_forum_id;
-                }
-            }
-        }
-    }
-    if (empty($forumsIDs)) {
-        $forumsIDs = [0];
-    }
-
-    return $forumsIDs;
-}
-
+use KeepersTeam\Webtlo\TopicList\State;
+use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicPattern;
 
 try {
     include_once dirname(__FILE__) . '/../common.php';
@@ -86,31 +36,21 @@ try {
     // -5 - высокоприоритетные раздачи
     // -6 - раздачи своим по спискам
 
-    $domain = Helper::getForumDomain($cfg);
-    // topic_data => id,na,si,convert(si)rg,se,ds,cl
-    $pattern_topic_block = '<div class="topic_data"><label>%s</label> %s</div>';
-    $pattern_topic_data = [
-        'id' => '<input type="checkbox" name="topic_hashes[]" class="topic" value="%1$s" data-size="%4$s">',
-        'ds' => ' <i class="fa %9$s %8$s" title="%11$s"></i>',
-        'rg' => ' | <span>%6$s | </span> ',
-        'cl' => ' <span>%10$s | </span> ',
-        'na' => '<a href="' . $domain . '/forum/viewtopic.php?t=%2$s" target="_blank">%3$s</a>',
-        'si' => ' (%5$s)',
-        'se' => ' - <span class="text-danger">%7$s</span>',
-    ];
+    $dateImmutable = new DateTimeImmutable();
+    $topicPattern = new TopicPattern($cfg, $cfg['forum_address'] ?? '');
 
     $keepersFilter = prepareKeepersFilter($filter);
 
-    $output = '';
     $preparedOutput = [];
     $filtered_topics_count = 0;
     $filtered_topics_size = 0;
     $excluded_topics = ["ex_count" => 0, "ex_size" => 0];
 
+
     // Хранимые раздачи из других подразделов.
     if ($forum_id === 0) {
-        $topics = (array)Db::query_database(
-            'SELECT
+        $statement = '
+            SELECT
                 TopicsUntracked.id,
                 TopicsUntracked.hs,
                 TopicsUntracked.na,
@@ -125,11 +65,11 @@ try {
                 Torrents.client_id as cl
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
-            WHERE TopicsUntracked.hs IS NOT NULL',
-            [],
-            true
-        );
-        $topics = topicsSortByFilter($topics, $filter);
+            WHERE TopicsUntracked.hs IS NOT NULL
+        ';
+
+        $topics = (array)Db::query_database($statement, [], true);
+        $topics = Helper::topicsSortByFilter($topics, $filter);
 
         $forumsTitles = (array)Db::query_database(
             "SELECT
@@ -142,115 +82,102 @@ try {
             PDO::FETCH_KEY_PAIR
         );
 
-        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
-
         $getForumHeader = function(int $id, string $name): string {
-            $click = "addUnsavedSubsection($id, '$name');";
+            $click = sprintf('addUnsavedSubsection(%s, "%s");', $id, $name);
 
             return "<div class='subsection-title'><a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>($id)</a>$name</div>";
         };
 
         // выводим раздачи
-        foreach ($topics as $topic_id => $topic_data) {
-            $forumID = $topic_data['ss'];
-
+        foreach ($topics as $topicData) {
             $filtered_topics_count++;
-            $filtered_topics_size += $topic_data['si'];
+            $filtered_topics_size += $topicData['si'];
+
+            $forumID = $topicData['ss'];
 
             if (!isset($preparedOutput[$forumID])) {
                 $preparedOutput[$forumID] = $getForumHeader($forumID, $forumsTitles[$forumID]);
             }
 
-            $topicBullet = getTopicBullet($topic_data);
+            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
+            $topicState = State::clientOnly($topicData);
 
-            $preparedOutput[$forumID] .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $topicPattern,
-                    $topic_data['hs'],
-                    $topic_data['id'],
-                    $topic_data['na'],
-                    $topic_data['si'],
-                    convert_bytes($topic_data['si']),
-                    date('d.m.Y', $topic_data['rg']),
-                    $topic_data['se'],
-                    'text-success',
-                    $topicBullet['icon'],
-                    getClientName($topic_data['cl'], $cfg),
-                    $topicBullet['title']
-                ),
-                ''
+            $topicObject = new Topic(
+                $topicData['id'],
+                $topicData['hs'],
+                $topicData['na'],
+                $topicData['si'],
+                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                $topicData['se'],
+                null,
+                $topicState,
+                $topicData['cl'] ?? null
             );
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[$forumID] .= $topicPattern->getFormatted($topicObject);
+
+            unset($topicData, $forumID, $topicState, $topicObject);
         }
         unset($topics);
+
         natcasesort($preparedOutput);
-        $output = implode('', $preparedOutput);
     }
     // Хранимые раздачи незарегистрированные на трекере.
     elseif ($forum_id === -1) {
-        $topics = (array)Db::query_database(
-            "
-                SELECT
-                    Torrents.topic_id,
-                    CASE WHEN TopicsUnregistered.name IS '' OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
-                    TopicsUnregistered.status,
-                    Torrents.info_hash,
-                    Torrents.client_id,
-                    Torrents.total_size,
-                    Torrents.time_added,
-                    Torrents.paused,
-                    Torrents.error,
-                    Torrents.done
-                FROM TopicsUnregistered
-                LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
-                WHERE TopicsUnregistered.info_hash IS NOT NULL
-                ORDER BY TopicsUnregistered.name
-            ",
-            [],
-            true
-        );
-
-        $topicPattern = implode('', array_intersect_key(
-            $pattern_topic_data,
-            array_flip(['id', 'rg', 'ds', 'cl', 'na', 'si'])
-        ));
+        $statement = "
+            SELECT
+                Torrents.topic_id,
+                CASE WHEN TopicsUnregistered.name IS '' OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END as name,
+                TopicsUnregistered.status,
+                Torrents.info_hash,
+                Torrents.client_id,
+                Torrents.total_size,
+                Torrents.time_added,
+                Torrents.paused,
+                Torrents.error,
+                Torrents.done
+            FROM TopicsUnregistered
+            LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
+            WHERE TopicsUnregistered.info_hash IS NOT NULL
+            ORDER BY TopicsUnregistered.name
+        ";
+        $topics = (array)Db::query_database($statement, [], true);
 
         // формирование строки вывода
-        foreach ($topics as $topic) {
+        foreach ($topics as $topicData) {
             $filtered_topics_count++;
-            $filtered_topics_size += $topic['total_size'];
+            $filtered_topics_size += $topicData['total_size'];
 
-            $topicStatus = $topic['status'];
-
-            // Пулька [иконка, цвет, описание].
-            $topicBullet = getTopicBullet($topic);
+            $topicStatus = $topicData['status'];
 
             if (!isset($preparedOutput[$topicStatus])) {
                 $preparedOutput[$topicStatus] = "<div class='subsection-title'>$topicStatus</div>";
             }
 
-            $preparedOutput[$topicStatus] .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $topicPattern,
-                    $topic['info_hash'],
-                    $topic['topic_id'],
-                    $topic['name'],
-                    $topic['total_size'],
-                    convert_bytes($topic['total_size']),
-                    date('d.m.Y', $topic['time_added']),
-                    '',
-                    'text-success',
-                    $topicBullet['icon'],
-                    getClientName($topic['client_id'], $cfg),
-                    $topicBullet['title']
-                ),
-                ''
+            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
+            $topicState = State::parseFromTorrent($topicData);
+
+            $topicObject = new Topic(
+                $topicData['topic_id'],
+                $topicData['info_hash'],
+                $topicData['name'],
+                $topicData['total_size'],
+                $dateImmutable->setTimestamp((int)$topicData['time_added']),
+                null,
+                null,
+                $topicState,
+                $topicData['client_id'] ?? null
             );
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[$topicStatus] .= $topicPattern->getFormatted($topicObject);
+
+            unset($topicData, $topicStatus, $topicState, $topicObject);
         }
         unset($topics);
+
         natcasesort($preparedOutput);
-        $output = implode('', $preparedOutput);
     }
     // Раздачи из "Черного списка".
     elseif ($forum_id === -2) {
@@ -272,38 +199,36 @@ try {
         );
 
         $topics = (array)Db::query_database($statement, [], true);
-        $topics = topicsSortByFilter($topics, $filter);
-
-        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
+        $topics = Helper::topicsSortByFilter($topics, $filter);
 
         // выводим раздачи
-        foreach ($topics as $topic_id => $topic_data) {
+        foreach ($topics as $topicData) {
             $filtered_topics_count++;
-            $filtered_topics_size += $topic_data['si'];
+            $filtered_topics_size += $topicData['si'];
 
-            $forumID = $topic_data['ss'];
+            $forumID = $topicData['ss'];
 
             if (!isset($preparedOutput[$forumID])) {
                 $preparedOutput[$forumID] = "<div class='subsection-title'>{$cfg['subsections'][$forumID]['na']}</div>";
             }
-            $preparedOutput[$forumID] .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $topicPattern,
-                    $topic_data['hs'],
-                    $topic_data['id'],
-                    $topic_data['na'],
-                    $topic_data['si'],
-                    convert_bytes($topic_data['si']),
-                    date('d.m.Y', $topic_data['rg']),
-                    round($topic_data['se'])
-                ),
-                "<span class='bold'>{$topic_data['comment']}</span>"
+
+            $topicObject = new Topic(
+                $topicData['id'],
+                $topicData['hs'],
+                $topicData['na'],
+                $topicData['si'],
+                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                round($topicData['se'], 2)
             );
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[$forumID] .= $topicPattern->getFormatted($topicObject);
+
+            unset($topicData, $forumID, $topicObject);
         }
         unset($topics);
+
         natcasesort($preparedOutput);
-        $output = implode('', $preparedOutput);
     }
     // Хранимые дублирующиеся раздачи.
     elseif ($forum_id === -4) {
@@ -320,6 +245,7 @@ try {
                     Topics.na,
                     Topics.si,
                     Topics.rg,
+                    Topics.pt,
                     %s
                 FROM Topics
                     %s
@@ -330,18 +256,13 @@ try {
         );
 
         $topics = (array)Db::query_database($statement, [], true);
-        $topics = topicsSortByFilter($topics, $filter);
-
-        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
+        $topics = Helper::topicsSortByFilter($topics, $filter);
 
         foreach ($topics as $topicID => $topicData) {
             $filtered_topics_count++;
             $filtered_topics_size += $topicData['si'];
 
-            // Пулька [цвет, описание].
-            $stateColor = getBulletColor($topicData, $averagePeriodFilter['seedPeriod']);
-            $stateTitle = getBulletTittle('', $stateColor);
-
+            // Данные о клиентах, в которых есть найденные раздачи.
             $statement = '
                 SELECT client_id, done, paused, error
                 FROM Torrents
@@ -355,26 +276,27 @@ try {
                 true
             );
 
-            $listTorrentClientsNames = getFormattedClientsList($cfg['clients'] ?? [], $listTorrentClientsIDs);
+            $listTorrentClientsNames = Helper::getFormattedClientsList($cfg['clients'] ?? [], $listTorrentClientsIDs);
 
-            $output .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $topicPattern,
-                    $topicData['hs'],
-                    $topicData['id'],
-                    $topicData['na'],
-                    $topicData['si'],
-                    convert_bytes($topicData['si']),
-                    date('d.m.Y', $topicData['rg']),
-                    round($topicData['se']),
-                    $stateColor,
-                    'fa-circle',
-                    '',
-                    $stateTitle
-                ),
-                $listTorrentClientsNames
+            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
+            $topicState = State::seedOnly(
+                $averagePeriodFilter['seedPeriod'],
+                $topicData['ds']
             );
+
+            $topicObject = new Topic(
+                $topicData['id'],
+                $topicData['hs'],
+                $topicData['na'],
+                $topicData['si'],
+                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                round($topicData['se'], 2),
+                $topicData['pt'],
+                $topicState,
+            );
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[] = $topicPattern->getFormatted($topicObject, $listTorrentClientsNames);
         }
     }
     // Основной поиск раздач.
@@ -512,9 +434,8 @@ try {
             ),
             true
         );
-        $topics = topicsSortByFilter($topics, $filter);
+        $topics = Helper::topicsSortByFilter($topics, $filter);
 
-        $topicPattern = buildTopicPattern($pattern_topic_data, reset($topics));
 
         // фильтрация по фразе е=ё
         if (!empty($filter['filter_phrase'])) {
@@ -533,31 +454,31 @@ try {
         $keepers = getKeepersByForumList($forumsIDs, $ss, $user_id);
 
         // выводим раздачи
-        foreach ($topics as $topic_id => $topic_data) {
+        foreach ($topics as $topicData) {
             // фильтрация по клиенту
-            if ($filter['filter_client_id'] > 0 && $filter['filter_client_id'] != $topic_data['cl']) {
+            if ($filter['filter_client_id'] > 0 && $filter['filter_client_id'] != $topicData['cl']) {
                 continue;
             }
             // фильтрация по дате релиза
-            if ($topic_data['rg'] > $date_release->format('U')) {
+            if ($topicData['rg'] > $date_release->format('U')) {
                 continue;
             }
 
             // Фильтрация по количеству сидов.
-            if (!isSeedCountInRange($filter, (int)$topic_data['se'])) {
+            if (!isSeedCountInRange($filter, round($topicData['se'], 2))) {
                 continue;
             }
 
             // фильтрация по статусу "зелёные"
             if (
-                isset($topic_data['ds'])
+                isset($topicData['ds'])
                 && isset($filter['avg_seeders_complete'])
-                && $filter['avg_seeders_period'] > $topic_data['ds']
+                && $filter['avg_seeders_period'] > $topicData['ds']
             ) {
                 continue;
             }
             // список хранителей на раздаче
-            $topic_keepers = $keepers[$topic_data['id']] ?? [];
+            $topic_keepers = $keepers[$topicData['id']] ?? [];
             // фильтрация раздач по своим спискам
             if ($forum_id == -6) {
                 $exclude_self_keep = 0;
@@ -592,14 +513,14 @@ try {
                         continue;
                     }
                 } elseif ($filter['filter_by_phrase'] == 1) { // в названии раздачи
-                    if (!mb_eregi($filterByTopicName, $topic_data['na'])) {
+                    if (!mb_eregi($filterByTopicName, $topicData['na'])) {
                         continue;
                     }
                 } elseif ($filter['filter_by_phrase'] == 2) { // в номере/ид раздачи
                     $matchId = false;
                     foreach ($filterValues as $filterId) {
                         $filterId = sprintf("^%s$", str_replace('*', '.*', $filterId));
-                        if (mb_eregi($filterId, $topic_data['id'])) {
+                        if (mb_eregi($filterId, $topicData['id'])) {
                             $matchId = true;
                         }
                     }
@@ -615,31 +536,32 @@ try {
             }
 
             $filtered_topics_count++;
-            $filtered_topics_size += $topic_data['si'];
+            $filtered_topics_size += $topicData['si'];
 
-
-            // Пулька [иконка, цвет, описание].
-            $topicBullet = getTopicBullet($topic_data, $averagePeriodFilter['seedPeriod']);
-
-            // выводим строку
-            $output .= sprintf(
-                $pattern_topic_block,
-                sprintf(
-                    $topicPattern,
-                    $topic_data['hs'],
-                    $topic_data['id'],
-                    $topic_data['na'],
-                    $topic_data['si'],
-                    convert_bytes($topic_data['si']),
-                    date('d.m.Y', $topic_data['rg']),
-                    round($topic_data['se'], 2),
-                    $topicBullet['color'],
-                    $topicBullet['icon'],
-                    getClientName($topic_data['cl'], $cfg),
-                    $topicBullet['title']
-                ),
-                getFormattedKeepersList($topic_keepers, $user_id)
+            // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
+            $topicState = State::parseFromTorrent(
+                $topicData,
+                $averagePeriodFilter['seedPeriod'],
+                $topicData['ds']
             );
+
+            $topicObject = new Topic(
+                $topicData['id'],
+                $topicData['hs'],
+                $topicData['na'],
+                $topicData['si'],
+                $dateImmutable->setTimestamp((int)$topicData['rg']),
+                round($topicData['se'], 2),
+                $topicData['pt'],
+                $topicState,
+                $topicData['cl'] ?? null,
+            );
+
+            // Форматированный список хранителей раздачи.
+            $topicKeepers = Helper::getFormattedKeepersList($topic_keepers, $user_id);
+
+            // Выводим строку с данными раздачи.
+            $preparedOutput[] = $topicPattern->getFormatted($topicObject, $topicKeepers);
         }
 
         $excluded = (array)Db::query_database_row(
@@ -663,7 +585,7 @@ try {
 
     echo json_encode([
         'log' => '',
-        'topics' => $output,
+        'topics' => implode('', $preparedOutput),
         'size' => $filtered_topics_size,
         'count' => $filtered_topics_count,
         'ex_count' => $excluded_topics['ex_count'],
@@ -680,6 +602,34 @@ try {
     ]);
 }
 
+function getForumIdList(array $cfg, int $forum_id): array
+{
+    $forumsIDs = [0];
+    if ($forum_id > 0) {
+        $forumsIDs = [$forum_id];
+    } elseif ($forum_id === -5) {
+        $forumsIDs = (array)Db::query_database(
+            'SELECT DISTINCT ss FROM Topics WHERE pt = 2',
+            [],
+            true,
+            PDO::FETCH_COLUMN
+        );
+    } else {
+        // -3 || -6
+        if (isset($cfg['subsections'])) {
+            foreach ($cfg['subsections'] as $sub_forum_id => $subsection) {
+                if (!$subsection['hide_topics']) {
+                    $forumsIDs[] = $sub_forum_id;
+                }
+            }
+        }
+    }
+    if (empty($forumsIDs)) {
+        $forumsIDs = [0];
+    }
+
+    return $forumsIDs;
+}
 
 /** Собрать параметры фильтрации по типам хранителей. */
 function prepareKeepersFilter(array $filter): array
@@ -824,7 +774,7 @@ function isTopicKeepersInRange(array $params, array $topicKeepers): bool
 }
 
 /** Попадает ли количество сидов раздачи в заданные пределы. */
-function isSeedCountInRange(array $filter, int $topicSeeds): bool {
+function isSeedCountInRange(array $filter, float $topicSeeds): bool {
     $useInterval = (bool)($filter['filter_interval'] ?? false);
     if ($useInterval) {
         $min = (int)$filter['filter_rule_interval']['min'];
@@ -869,196 +819,4 @@ function getKeepersByForumList(array $forumList, string $forumPlaceholder, int $
     return $keepers;
 }
 
-/**
- * Собрать имя клиента
- *
- * @param      int|null  $clientID  The client id
- * @param      array     $cfg       The configuration
- *
- * @return     string    The client name.
- */
-function getClientName(?int $clientID, array $cfg): string
-{
-    if (!$clientID || !isset($cfg['clients'][$clientID])) {
-        return '';
-    }
 
-    return sprintf(
-        '<i class="client bold text-success">%s</i>',
-        $cfg['clients'][$clientID]['cm']
-    );
-}
-
-/** Собрать "пульку" - состояние раздачи. */
-function getTopicBullet(array $topic, int $averageSeedPeriod = 14): array
-{
-    $icon  = getTopicClientState($topic);
-    $color = getBulletColor($topic, $averageSeedPeriod);
-    $title = getBulletTittle($icon, $color);
-
-    return [
-        'icon'  => $icon,
-        'color' => $color,
-        'title' => $title,
-    ];
-}
-
-/** Определить состояние раздачи в клиенте. */
-function getTopicClientState(array $topic): string
-{
-    if ($topic['done'] == 1) {
-        // Раздаётся.
-        $topicState = 'fa-arrow-circle-o-up';
-    } elseif ($topic['done'] === null) {
-        // Нет в клиенте.
-        $topicState = 'fa-circle';
-    } else {
-        // Скачивается.
-        $topicState = 'fa-arrow-circle-o-down';
-    }
-    if ($topic['paused'] == 1) {
-        // Приостановлена.
-        $topicState = 'fa-pause';
-    }
-    if ($topic['error'] == 1) {
-        // С ошибкой в клиенте.
-        $topicState = 'fa-times';
-    }
-
-    return $topicState;
-}
-
-/** Определить состояние раздачи в клиенте. */
-function getBulletColor(array $topic, int $averageSeedPeriod): string
-{
-    $bulletColor = 'text-info';
-
-    // Количество дней, в которые набирались данные о средних сидах.
-    $period = (int)($topic['ds'] ?? -1);
-    if ($period > 0) {
-        $bulletColor = 'text-success';
-        if ($period < $averageSeedPeriod) {
-            $bulletColor = ($period >= $averageSeedPeriod / 2) ? 'text-warning' : 'text-danger';
-        }
-    }
-
-    return $bulletColor;
-}
-
-/**
- * Собрать заголовок для раздачи, в зависимости от её состояния
- *
- * @param      string  $bulletState  Статус раздачи
- * @param      string  $bulletColor  Цвет раздачи (средние сиды)
- *
- * @return     string  Заголовок раздачи
- */
-function getBulletTittle(string $bulletState, string $bulletColor = ''): string
-{
-    $topicsBullets = [
-        "fa-arrow-circle-o-up"   => "Раздаётся",
-        "fa-arrow-circle-o-down" => "Скачивается",
-        "fa-pause"               => "Приостановлена",
-        "fa-circle"              => "Нет в клиенте",
-        "fa-times"               => "С ошибкой в клиенте",
-    ];
-
-    $topicsColors = [
-        "text-success" => "полные данные о средних сидах",
-        "text-warning" => "неполные данные о средних сидах",
-        "text-danger"  => "отсутствуют данные о средних сидах",
-    ];
-
-    $bulletTitle = [];
-    if (isset($topicsBullets[$bulletState])) {
-        $bulletTitle[] = $topicsBullets[$bulletState];
-    }
-    if (isset($topicsColors[$bulletColor])) {
-        $bulletTitle[] = $topicsColors[$bulletColor];
-    }
-
-    return implode(', ', $bulletTitle);
-}
-
-/** Хранители раздачи в виде списка. */
-function getFormattedKeepersList(array $topicKeepers, int $user_id): string
-{
-    if (!count($topicKeepers)) {
-        return '';
-    }
-
-    $format = function(string $icon, string $color, string $name, string $title): string {
-        $tagIcon = sprintf('<i class="fa fa-%s text-%s" title="%s"></i>', $icon, $color, $title);
-        $tagName = sprintf('<i class="keeper bold text-%s" title="%s">%s</i>', $color, $title, $name);
-
-        return "$tagIcon $tagName";
-    };
-
-    $keepersNames = array_map(function($e) use ($user_id, $format) {
-        if ($e['complete'] == 1) {
-            if ($e['posted'] === 0) {
-                $stateIcon = 'arrow-circle-o-up';
-            } else {
-                $stateIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
-            }
-            $stateColor = 'success';
-        } else {
-            $stateIcon  = 'arrow-circle-o-down';
-            $stateColor = 'danger';
-        }
-        if ($user_id === (int)$e['keeper_id']) {
-            $stateColor = 'self';
-        }
-
-        return $format($stateIcon, $stateColor, (string)$e['keeper_name'], getKeeperTitle($stateIcon));
-    }, $topicKeepers);
-
-    return '| ' . implode(', ', $keepersNames);
-}
-
-/**
- * Собрать заголовок для хранителя в зависимости от его связи с раздачей
- *
- * @param      string  $bulletState  Состояние раздачи
- *
- * @return     string  Заголовок
- */
-function getKeeperTitle(string $bulletState): string
-{
-    $keeperBullets = [
-        'upload'              => 'Есть в списке и раздаёт',
-        'hard-drive'          => 'Есть в списке, не раздаёт',
-        'arrow-circle-o-up'   => 'Нет в списке и раздаёт',
-        'arrow-circle-o-down' => 'Скачивает',
-    ];
-
-    return $keeperBullets[$bulletState] ?? '';
-}
-
-/** Собрать заголовок со списком клиентов, в котором есть раздача. */
-function getFormattedClientsList(array $cfgClients, array $listTorrentClientsIDs): string
-{
-    $listTorrentClientsNames = array_map(function($e) use ($cfgClients): string {
-        if (isset($cfgClients[$e['client_id']])) {
-            $clientState = getTopicClientState($e);
-            $clientTitle = getBulletTittle($clientState);
-
-            $stateColor  = 'success';
-            if ($e['done'] != 1 || $e['error'] == 1) {
-                $stateColor  = 'danger';
-            }
-
-            return sprintf(
-                '<i class="fa %1$s text-%2$s" title="%4$s"></i> <i class="bold text-%2$s" title="%4$s">%3$s</i>',
-                $clientState,
-                $stateColor,
-                $cfgClients[$e['client_id']]['cm'],
-                $clientTitle
-            );
-        }
-
-        return '';
-    }, $listTorrentClientsIDs);
-
-    return '| ' . implode(', ', array_filter($listTorrentClientsNames));
-}
