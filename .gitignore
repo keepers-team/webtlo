@@ -1,9 +1,14 @@
+# PHPSTORM idea settings
+.idea/*
+!.idea/fileTemplates
+!.idea/codeStyles
+
 /.vscode
-/.idea
 /.Trash*
 /data
 /webtlo-data*
 /test*
+.php-cs-fixer.cache
 *.db
 *.sqlite
 *.sql
