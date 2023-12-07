@@ -319,24 +319,28 @@ function cfg_checkbox($cfg): Closure
                                 </fieldset>
                                 <fieldset title="Критерий сортировки раздач">
                                     <label>
-                                        <input type="radio" name="filter_sort" value="na" class="sort" />
+                                        <input type="radio" name="filter_sort" value="name" class="sort" />
                                         по названию
                                     </label>
                                     <label>
-                                        <input type="radio" name="filter_sort" value="si" class="sort" />
+                                        <input type="radio" name="filter_sort" value="size" class="sort" />
                                         по объёму
                                     </label>
                                     <label>
-                                        <input type="radio" name="filter_sort" value="id" class="sort" />
+                                        <input type="radio" name="filter_sort" value="topic_id" class="sort" />
                                         по номеру темы
                                     </label>
                                     <label>
-                                        <input type="radio" name="filter_sort" value="se" checked class="default sort" />
+                                        <input type="radio" name="filter_sort" value="seed" checked class="default sort" />
                                         по количеству сидов
                                     </label>
                                     <label>
-                                        <input type="radio" name="filter_sort" value="rg" class="sort" />
+                                        <input type="radio" name="filter_sort" value="reg_time" class="sort" />
                                         по дате регистрации
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="filter_sort" value="client_id" class="sort" />
+                                        по клиенту
                                     </label>
                                 </fieldset>
                             </div>
