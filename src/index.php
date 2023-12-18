@@ -796,7 +796,7 @@ function cfg_checkbox($cfg): Closure
                                 <div>
                                     <label>
                                         Останавливать раздачи с количеством пиров более:
-                                        <input name="torrent-client-peers" id="torrent-client-peers" class="torrent-client-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
+                                        <input name="torrent-client-peers" id="torrent-client-peers" class="torrent-client-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Автоматизация и дополнительные настройки > Регулировка раздач.'" />
                                     </label>
                                 </div>
                             </div>
