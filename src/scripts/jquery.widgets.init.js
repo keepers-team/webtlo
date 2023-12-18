@@ -88,6 +88,13 @@ $(document).ready(function () {
         }
     });
 
+    // Инициализация кнопок статуса хранения.
+    $('.filter_status_controlgroup').controlgroup({
+        classes: {
+            'ui-controlgroup': 'hide-dot lesser-button'
+        }
+    });
+
     // Инициализация кнопок с дополнительным меню.
     $("div.control-group").controlgroup();
 
@@ -99,10 +106,15 @@ $(document).ready(function () {
     });
 
     // фильтрация раздач, количество хранителей
-    $("#keepers_filter_rule_from,#keepers_filter_rule_to").spinner({
-        min: 1,
+    $(".keepers_filter_count").spinner({
+        min: 0,
+        max: 20,
         step: 1,
         mouseWheel: true
+    }).on('input change', function(){
+        if (this.value.match(/[^0-9]/g)) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        }
     });
 
     // дата релиза в фильтре

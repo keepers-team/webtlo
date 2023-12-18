@@ -212,25 +212,28 @@ $(document).ready(function () {
 
     // сбросить настройки фильтра
     $("#filter_reset").on("click", function (e) {
+        let topic_filter = $("#topics_filter");
+
         if (e.ctrlKey) {
-            var filter_options = Cookies.get("filter-backup");
+            const filter_options = Cookies.get("filter-backup");
             if (typeof filter_options !== "undefined") {
                 loadSavedFilterOptions(filter_options);
 
-                $("#topics_filter").change();
+                topic_filter.change();
             }
             return;
         }
-        Cookies.set("filter-backup", $("#topics_filter").serializeAllArray());
+
+        Cookies.set("filter-backup", topic_filter.serializeAllArray());
 
         $("#topics_filter input[type=text]").val("");
         $("#topics_filter input[type=search]").val("");
         $("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
         $("#filter_date_release").datepicker("setDate", "-" + $("#rule_date_release").val());
-        $("#filter_rule, #filter_rule_to").val($("#rule_topics").val());
-        $("#filter_rule_from").val(0);
-        $("#keepers_filter_rule_from").val(1);
-        $("#keepers_filter_rule_to").val(10);
+        $("#filter_rule, #filter_rule_max").val($("#rule_topics").val());
+        $("#filter_rule_min").val(0);
+        $("#keepers_filter_count_min").val(1);
+        $("#keepers_filter_count_max").val(10);
         $("#filter_avg_seeders_period").val($("#avg_seeders_period").val());
         $(".filter_rule_interval").hide();
         $(".keepers_filter_rule_fieldset").hide();
@@ -238,6 +241,9 @@ $(document).ready(function () {
         $("#filter_client_id").val(0).selectmenu("refresh");
 
         $("#topics_filter .default").prop("checked", true).change();
+
+        // Обновить выбранные статусы хранения раздач.
+        $('.filter_status_controlgroup').controlgroup('refresh');
     });
 
     // вкл/выкл интервал сидов
@@ -249,23 +255,9 @@ $(document).ready(function () {
     // вкл/выкл интервал хранителей
     $("input[name=is_keepers]").on("change", function () {
         if ($(this).prop("checked")) {
-            $(".keepers_filter_rule_fieldset").show(500);
+            $(".keepers_filter_rule_fieldset").toggle(200);
         } else {
-            $(".keepers_filter_rule_fieldset").hide(500);
-        }
-    });
-
-    // есть/нет хранители
-    $(".topics_filter .keepers").on("change", function () {
-        if ($(this).prop("checked")) {
-            switch ($(this).attr("name")) {
-                case "not_keepers":
-                    $("input[name=is_keepers]").prop("checked", false).trigger("change");
-                    break;
-                case "is_keepers":
-                    $("input[name=not_keepers]").prop("checked", false);
-                    break;
-            }
+            $(".keepers_filter_rule_fieldset").hide(200);
         }
     });
 
@@ -274,20 +266,6 @@ $(document).ready(function () {
         Cookies.set("filter-options", $("#topics_filter").serializeAllArray());
         if ($("#enable_auto_apply_filter").prop("checked")) {
             filter_delay(getFilteredTopics);
-        }
-    });
-
-    // есть/нет сиды-хранители
-    $(".topics_filter .keepers_seeders").on("change", function () {
-        if ($(this).prop("checked")) {
-            switch ($(this).attr('name')) {
-                case 'not_keepers_seeders':
-                    $("input[name=is_keepers_seeders]").prop("checked", false);
-                    break;
-                case 'is_keepers_seeders':
-                    $("input[name=not_keepers_seeders]").prop("checked", false);
-                    break;
-            }
         }
     });
 
