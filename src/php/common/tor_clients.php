@@ -64,6 +64,8 @@ $timers = [];
 
 /** Клиенты, данные от которых получить не удалось */
 $failedClients = [];
+/** Клиенты исключённые из формирования отчётов и для успешного обновления - не обязательны. */
+$excludedClients = [];
 Timers::start('update_clients');
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     Timers::start("update_client_$torrentClientID");
@@ -79,6 +81,10 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         $torrentClientData['lg'],
         $torrentClientData['pw']
     );
+    // Признак исключения раздач клиента из формируемых отчётов.
+    if ($torrentClientData['exclude'] ?? false) {
+        $excludedClients[] = $torrentClientID;
+    }
 
     // доступность торрент-клиента
     if ($client->isOnline() === false) {
@@ -142,8 +148,8 @@ if ($tabTorrents->cloneCount() > 0) {
     $tabTorrents->moveToOrigin();
 }
 
-// Если обновление всех клиентов прошло успешно - отметим это.
-if (!count($failedClients)) {
+// Если обновление всех не исключённых клиентов прошло успешно - отметим это.
+if (!count(array_diff($failedClients, $excludedClients))) {
     LastUpdate::setTime(UpdateMark::CLIENTS->value);
 }
 
