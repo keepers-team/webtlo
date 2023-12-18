@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList;
 
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
+use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
+use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
 use KeepersTeam\Webtlo\TopicList\Filter\KeptStatus;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
@@ -16,18 +18,18 @@ use Exception;
 final class Validate
 {
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function sortFilter(array $filter): Sort
     {
         $sortRule = SortRule::tryFrom((string)($filter['filter_sort'] ?? null));
         if (null === $sortRule) {
-            throw new Exception('Не выбрано или неизвестное поле для сортировки');
+            throw new ValidationException('Не выбрано или неизвестное поле для сортировки.', 'filter-sort-rule');
         }
 
         $sortDirection = SortDirection::tryFrom((int)($filter['filter_sort_direction'] ?? null));
         if (null === $sortDirection) {
-            throw new Exception('Не выбрано или неизвестное направление сортировки');
+            throw new ValidationException('Не выбрано или неизвестное направление сортировки.', 'filter-sort-direction');
         }
 
         return new Sort($sortRule, $sortDirection);
@@ -82,24 +84,24 @@ final class Validate
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function checkTrackerStatus(array $filter): array
     {
         if (empty($filter['filter_tracker_status'])) {
-            throw new Exception('Не выбраны статусы раздач для трекера');
+            throw new ValidationException('Не выбраны статусы раздач для трекера.', 'filter-tracker-status');
         }
 
         return (array)$filter['filter_tracker_status'];
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function checkClientStatus(array $filter): void
     {
         if (empty($filter['filter_client_status'])) {
-            throw new Exception('Не выбраны статусы раздач для торрент-клиента');
+            throw new ValidationException('Не выбраны статусы раздач для торрент-клиента.', 'filter-client-status');
         }
     }
 
@@ -112,7 +114,7 @@ final class Validate
             if ($forumId === -5) {
                 return [2];
             } else {
-                throw new Exception('Не выбраны приоритеты раздач для трекера');
+                throw new ValidationException('Не выбраны приоритеты раздач для трекера.', 'filter-tracker-priority');
             }
         }
 
@@ -121,17 +123,17 @@ final class Validate
 
     public static function getDateRelease(array $filter): ?DateTimeImmutable
     {
-        return DateTimeImmutable::createFromFormat('d.m.Y', $filter['filter_date_release']);
+        return DateTimeImmutable::createFromFormat('d.m.Y', $filter['filter_date_release']) ?: null;
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function checkDateRelease(array $filter): DateTimeImmutable
     {
         $date = self::getDateRelease($filter);
         if (!$date) {
-            throw new Exception('В фильтре введена некорректная дата создания релиза');
+            throw new ValidationException('В фильтре введена некорректная дата создания релиза.', 'filter-date-release');
         }
 
         return $date;
@@ -140,7 +142,7 @@ final class Validate
     /**
      * Собрать параметры для работы со средними сидами.
      *
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
     {
@@ -154,7 +156,7 @@ final class Validate
         if ($useAvgSeeders) {
             // Проверка периода средних сидов.
             if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new Exception('В фильтре введено некорректное значение для периода средних сидов');
+                throw new ValidationException('В фильтре введено некорректное значение для периода средних сидов.', 'filter-seeders-period');
             }
 
             // Применить фильтр средних сидов.
@@ -187,6 +189,39 @@ final class Validate
         );
     }
 
+
+    /**
+     * Собрать параметры фильтрации по типам хранителей.
+     *
+     * @throws ValidationException
+     */
+    public static function prepareKeepersFilter(array $filter): Keepers
+    {
+        $count = new KeepersCount(
+            (bool)($filter['is_keepers'] ?? false),
+            (bool)($filter['keepers_count_seed'] ?? false),
+            (bool)($filter['keepers_count_download'] ?? false),
+            (bool)($filter['keepers_count_kept'] ?? false),
+            (bool)($filter['keepers_count_kept_seed'] ?? false),
+            (int)($filter['keepers_filter_count']['min'] ?? 1),
+            (int)($filter['keepers_filter_count']['max'] ?? 10),
+        );
+
+        if ($count->enabled) {
+            if (!$count->useSeed && !$count->useDownload && !$count->useKept && !$count->useKeptSeed) {
+                throw new ValidationException('Не выбраны параметры фильтрации хранителей по количеству.', 'filter-keepers-count');
+            }
+        }
+
+        return new Keepers(
+            new KeptStatus(
+                (int)($filter['filter_status_has_keeper'] ?? -1),
+                (int)($filter['filter_status_has_seeder'] ?? -1),
+                (int)($filter['filter_status_has_downloader'] ?? -1),
+            ),
+            $count,
+        );
+    }
 
     /** Фильтр раздач по статусу хранения. */
     public static function getKeptStatusFilter(KeptStatus $keptStatus): array

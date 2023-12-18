@@ -7,8 +7,6 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
-use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
-use KeepersTeam\Webtlo\TopicList\Filter\KeptStatus;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\DbHelper;
 use KeepersTeam\Webtlo\TopicList\Helper;
@@ -56,7 +54,7 @@ final class DefaultTopics implements ListInterface
         $seedFilter = Validate::prepareAverageSeedFilter($filter, $this->cfg);
 
         // Фильтры связанные со статусом хранения и количеством хранителей.
-        $filterKeepers = $this->prepareKeepersFilter($filter);
+        $filterKeepers = Validate::prepareKeepersFilter($filter);
 
         // Фильтрация по произвольной строке.
         $filterStrings = Validate::prepareFilterStrings($filter);
@@ -188,27 +186,6 @@ final class DefaultTopics implements ListInterface
         }
 
         return $forumsIDs;
-    }
-
-    /** Собрать параметры фильтрации по типам хранителей. */
-    private function prepareKeepersFilter(array $filter): Keepers
-    {
-        return new Keepers(
-            new KeptStatus(
-                (int)($filter['filter_status_has_keeper'] ?? -1),
-                (int)($filter['filter_status_has_seeder'] ?? -1),
-                (int)($filter['filter_status_has_downloader'] ?? -1),
-            ),
-            new KeepersCount(
-                (bool)($filter['is_keepers'] ?? false),
-                (bool)($filter['keepers_count_seed'] ?? false),
-                (bool)($filter['keepers_count_download'] ?? false),
-                (bool)($filter['keepers_count_kept'] ?? false),
-                (bool)($filter['keepers_count_kept_seed'] ?? false),
-                (int)($filter['keepers_filter_count']['min'] ?? 1),
-                (int)($filter['keepers_filter_count']['max'] ?? 10),
-            ),
-        );
     }
 
     private function getKeepersStatusStatement(int $userId, bool $excludeSelf): string

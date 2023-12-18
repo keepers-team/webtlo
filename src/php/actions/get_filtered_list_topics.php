@@ -5,6 +5,7 @@ declare(strict_types=1);
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 $returnObject = [
     'size'     => 0,
@@ -12,6 +13,7 @@ $returnObject = [
     'ex_count' => 0,
     'ex_size'  => 0,
     'log'      => '',
+    'validate' => '',
 ];
 
 try {
@@ -52,16 +54,16 @@ try {
     // Ищем раздачи.
     $topics = $module->getTopics($filter, $sorting);
 
-    $returnObject = [
-        'log'      => '',
-        'topics'   => $topics->mergeList(),
-        'size'     => $topics->size,
-        'count'    => $topics->count,
-        'ex_count' => $topics->excluded->count,
-        'ex_size'  => $topics->excluded->size,
-    ];
+    $returnObject['topics']   = $topics->mergeList();
+    $returnObject['size']     = $topics->size;
+    $returnObject['count']    = $topics->count;
+    $returnObject['ex_count'] = $topics->excluded->count;
+    $returnObject['ex_size']  = $topics->excluded->size;
+} catch (ValidationException $e) {
+    $returnObject['log']      = $e->getMessage();
+    $returnObject['validate'] = $e->getClass();
 } catch (Exception $e) {
     $returnObject['log'] = $e->getMessage();
 }
 
-echo json_encode($returnObject);
+echo json_encode($returnObject, JSON_UNESCAPED_UNICODE);

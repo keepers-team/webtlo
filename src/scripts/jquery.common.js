@@ -398,4 +398,10 @@ function versionCompare(v1, v2, options) {
         this.find('i.fa').toggleClass(className).toggleClass('fa-spinner fa-pulse');
         return this;
     }
+
+    /** Подсветить элемент. */
+    $.fn.highlight = function() {
+        this.effect('highlight', {color:'#ffc107'}, 1000);
+        return this;
+    }
 })(jQuery);

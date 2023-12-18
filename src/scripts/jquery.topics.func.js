@@ -138,8 +138,14 @@ function getFilteredTopics() {
         },
         success: function (response) {
             response = $.parseJSON(response);
+            // Если есть ошибка - выводим её текст.
             if (response.log.length) {
                 showResultTopics(response.log);
+
+                // Если указан элемент, вызывающий ошибку - покажем его.
+                if (response.validate) {
+                    $(`.${response.validate}`).highlight();
+                }
             }
             if (response.topics != null) {
                 $("#topics").html(response.topics);
