@@ -1,0 +1,28 @@
+name: Build artifacts
+run-name: Build on '${{ github.ref_name }}' branch push (${{ github.event.head_commit.message }})
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+
+  validate:
+    name: Check
+    uses: ./.github/workflows/sub-check.yml
+
+  docker:
+    name: Build
+    needs: [ validate ]
+    uses: ./.github/workflows/sub-build-docker.yml
+    with:
+      REGISTRY_IMAGE: ${{ vars.REGISTRY_IMAGE || 'berkut174/webtlo' }}
+    secrets:
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  zip:
+    name: Build
+    needs: [ validate ]
+    uses: ./.github/workflows/sub-build-zip.yml
