@@ -205,8 +205,10 @@ final class DefaultTopics implements ListInterface
                 FROM (
                     SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
                     FROM (
-                        SELECT topic_id, keeper_id, complete, posted, 0 AS seeding
-                        FROM KeepersLists
+                        SELECT topic_id, keeper_id, complete, CASE WHEN complete = 1 THEN posted END as posted, 0 AS seeding
+                        FROM KeepersLists kl
+                        INNER JOIN Topics t ON t.id = kl.topic_id
+                        WHERE kl.posted > t.rg
                         UNION ALL
                         SELECT topic_id, keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
                         FROM KeepersSeeders

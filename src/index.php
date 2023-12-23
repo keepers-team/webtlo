@@ -431,10 +431,11 @@ function cfg_checkbox($cfg): Closure
                                 <legend>Статус хранения раздачи</legend>
                                 <hr/>
                                 <fieldset class="filter-topic-kept-status">
-                                    <fieldset title="Отобразить раздачи, которые включены в отчёт как минимум одного хранителя / раздачи, которых нет ни в одном отчёте.">
+                                    <fieldset title="Отобразить раздачи, у которых есть минимум однин хранитель, с полностью скачанной раздачей / раздачи, у которых нет хранителей.">
                                         <legend>
+                                            <i class="fa fa-upload text-success" title="Есть в списке и раздаёт"></i>
                                             <i class="fa fa-hard-drive text-success" title="Есть в списке, не раздаёт"></i>
-                                            Хранитель с отчётом
+                                            Есть Хранитель
                                         </legend>
                                         <div class="filter_status_controlgroup filter_status_has_keeper">
                                             <input type="radio" id="has_keeper_null" name="filter_status_has_keeper" value="-1" checked="checked" class="default">
@@ -449,8 +450,8 @@ function cfg_checkbox($cfg): Closure
                                     </fieldset>
                                     <fieldset title="Отобразить раздачи, которые раздаются как минимум одним хранителем / раздачи, которые не раздаёт никто">
                                         <legend>
-                                            <i class="fa fa-upload text-success"></i>
-                                            <i class="fa fa-arrow-circle-o-up text-success"></i>
+                                            <i class="fa fa-upload text-success" title="Есть в списке и раздаёт"></i>
+                                            <i class="fa fa-arrow-circle-o-up text-success" title="Нет в списке и раздаёт"></i>
                                             Хранитель раздаёт
                                         </legend>
                                         <div class="filter_status_controlgroup filter_status_has_seeder">
@@ -503,22 +504,7 @@ function cfg_checkbox($cfg): Closure
                                             <label class="keepers-filter-count-padding25"
                                                    style="padding-top: 3px; padding-bottom: 3px;"
                                                    title="К хранителям каждой раздачи применяется фильтр выбираемый ниже. После чего применяется фильтр по количеству.">
-                                                фильтры хранителей
-                                            </label>
-                                            <label class="keepers-filter-count-padding20"
-                                                   title="Хранитель добавил раздачу в свой список и, в данный момент, качает её.">
-                                                <input type="checkbox" class="keepers" name="keepers_count_download"/>
-                                                <i class="fa fa-arrow-circle-o-down text-danger" title="Скачивает"></i>
-                                                качает
-                                            </label>
-                                            <label class="keepers-filter-count-padding20"
-                                                   title="Хранитель скачал раздачу и, в данный момент, раздаёт её.">
-                                                <input type="checkbox" class="keepers" name="keepers_count_seed"/>
-                                                <i class="fa fa-upload text-success"
-                                                   title="Есть в списке и раздаёт"></i>
-                                                <i class="fa fa-arrow-circle-o-up text-success"
-                                                   title="Нет в списке и раздаёт"></i>
-                                                раздаёт
+                                                учитываемые типы:
                                             </label>
                                             <label class="keepers-filter-count-padding20"
                                                    title="Хранитель скачал раздачу, добавил её в свой список и, в данный момент, не раздаёт её.">
@@ -535,6 +521,21 @@ function cfg_checkbox($cfg): Closure
                                                 <i class="fa fa-upload text-success"
                                                    title="Есть в списке и раздаёт"></i>
                                                 хранит и раздаёт
+                                            </label>
+                                            <label class="keepers-filter-count-padding20"
+                                                   title="Хранитель скачал раздачу и, в данный момент, раздаёт её.">
+                                                <input type="checkbox" class="keepers" name="keepers_count_seed"/>
+                                                <i class="fa fa-upload text-success"
+                                                   title="Есть в списке и раздаёт"></i>
+                                                <i class="fa fa-arrow-circle-o-up text-success"
+                                                   title="Нет в списке и раздаёт"></i>
+                                                раздаёт
+                                            </label>
+                                            <label class="keepers-filter-count-padding20"
+                                                   title="Хранитель добавил раздачу в свой список и, в данный момент, качает её.">
+                                                <input type="checkbox" class="keepers" name="keepers_count_download"/>
+                                                <i class="fa fa-arrow-circle-o-down text-danger" title="Скачивает"></i>
+                                                качает
                                             </label>
                                         </fieldset>
                                     </fieldset>
