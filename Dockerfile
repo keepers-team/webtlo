@@ -56,7 +56,7 @@ ENTRYPOINT ["/s6-init"]
 FROM composer as builder
 COPY src/composer.* .
 COPY src/back back
-RUN composer install && composer dump-autoload -o --no-dev
+RUN composer install --no-dev && composer dump-autoload -o
 
 # image for development
 FROM base as dev
