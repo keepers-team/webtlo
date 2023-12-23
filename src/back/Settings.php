@@ -186,7 +186,7 @@ final class Settings
         ];
 
         // версия конфига
-        $user_version = $ini->read('other', 'user_version', 0);
+        $user_version = (int)$ini->read('other', 'user_version', 0);
 
         // применение заплаток
         if ($user_version < 1) {
