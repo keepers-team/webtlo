@@ -315,7 +315,7 @@ final class DefaultTopics implements ListInterface
             $statement = "
                 SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
                 FROM (
-                    SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, kl.posted, 0 AS seeding
+                    SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
                     FROM Topics
                     LEFT JOIN KeepersLists AS kl ON Topics.id = kl.topic_id
                     WHERE ss IN ($keys->keys) AND rg < posted AND kl.topic_id IS NOT NULL
