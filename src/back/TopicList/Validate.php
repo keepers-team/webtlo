@@ -257,21 +257,40 @@ final class Validate
         $pattern = '';
         $values  = [];
 
+        $filterType = (int)$filter['filter_by_phrase'];
         if (!empty($filter['filter_phrase'])) {
-            $pattern = preg_replace(
-                '/[её]/ui',
-                '(е|ё)',
-                quotemeta($filter['filter_phrase'])
-            );
+            // В имени хранителя.
+            if (0 === $filterType) {
+                // Список ников режем по запятой, убираем пробелы и заменяем спецсимволы.
+                $values = explode(',', $filter['filter_phrase']);
+                $values = array_filter($values);
+                $values = array_map(fn($el) => htmlspecialchars(trim($el)), $values);
+            }
 
-            // Удалим лишние пробелы из поисковой строки.
-            $values = explode(',', preg_replace('/\s+/', '', $filter['filter_phrase']));
-            $values = array_filter($values);
+            // В названии раздачи.
+            if (1 === $filterType) {
+                $pattern = preg_replace(
+                    '/[её]/ui',
+                    '(е|ё)',
+                    quotemeta($filter['filter_phrase'])
+                );
+
+                $values = explode(',', $pattern);
+                $values = array_filter($values);
+                $values = array_map(fn($el) => trim($el), $values);
+            }
+
+            // В номере темы.
+            if (2 === $filterType) {
+                // Удалим лишние пробелы из поисковой строки.
+                $values = explode(',', preg_replace('/\s+/', '', $filter['filter_phrase']));
+                $values = array_filter($values);
+            }
         }
 
         return new Strings(
             !empty($filter['filter_phrase']),
-            (int)$filter['filter_by_phrase'],
+            $filterType,
             $values,
             $pattern
         );

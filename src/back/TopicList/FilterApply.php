@@ -103,7 +103,18 @@ final class FilterApply
             }
         } elseif ($filterStrings->type === 1) {
             // В названии раздачи.
-            if (!mb_eregi($filterStrings->pattern, $topic->name)) {
+            $filterCount = count($filterStrings->values);
+
+            $matched = [];
+            foreach ($filterStrings->values as $filter) {
+                if (mb_substr($filter, 0, 1) === '!') {
+                    $matched[] = !mb_eregi(mb_substr($filter, 1), $topic->name);
+                } else {
+                    $matched[] = mb_eregi($filter, $topic->name);
+                }
+            }
+
+            if (count(array_filter($matched)) !== $filterCount) {
                 return false;
             }
         } elseif ($filterStrings->type === 2) {
