@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\WebTLO;
+
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 mb_internal_encoding("UTF-8");
 
@@ -151,6 +153,8 @@ try {
             );
         }
     }
+
+    $webtlo = WebTLO::getVersion();
 } catch (Exception $e) {
     // $e->getMessage();
 }
@@ -1123,10 +1127,10 @@ function cfg_checkbox($cfg): Closure
                 </div>
             </div>
             <div id="manual" class="content">
-                <p>web-TLO <a href="<?php echo $webtlo->version_url ?>" target="_blank"><?php echo $webtlo->version ?></a></p>
+                <p>Web-TLO <a href="<?= $webtlo->versionUrl() ?>" target="_blank"><?= $webtlo->version ?></a></p>
                 <p>Простое веб-приложение для управления торрентами</p>
-                <p><a href="<?php echo $webtlo->wiki ?>" target="_blank">web-TLO wiki</a></p>
-                <p>Copyright © 2016-2023 Alexander Shemetov</p>
+                <p><a href="<?= $webtlo->wikiUrl() ?>" target="_blank">Web-TLO wiki</a></p>
+                <p>Copyright © 2016-2024 Alexander Shemetov</p>
             </div>
         </div>
     </div>

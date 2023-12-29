@@ -8,41 +8,6 @@ use Exception;
 
 final class Helper
 {
-    /**
-     * Определить версию webTLO из файла.
-     */
-    public static function getVersion(): object
-    {
-        $webtlo_version_defaults = [
-            'version'          => '',
-            'github'           => '',
-            'wiki'             => '',
-            'release'          => '',
-            'release_api'      => '',
-            'version_url'      => '',
-            'version_line'     => 'Версия TLO: [b]Web-TLO-unknown[/b]',
-            'version_line_url' => "Версия TLO: [b]Web-TLO-[url='#']unknown[/url][/b]",
-        ];
-
-        $version_json_path = __DIR__ . '/../version.json';
-
-        if (!file_exists($version_json_path)) {
-            error_log('`version.json` not found! Make sure you copied all files from the repo.');
-
-            return (object)$webtlo_version_defaults;
-        }
-        $version_json = json_decode(file_get_contents($version_json_path), true);
-
-        $result = (object)array_merge($webtlo_version_defaults, $version_json);
-
-        if (!empty($result->version)) {
-            $result->version_url      = $result->github . '/releases/tag/' . $result->version;
-            $result->version_line     = 'Версия TLO: [b]Web-TLO-' . $result->version . '[/b]';
-            $result->version_line_url = 'Версия TLO: [b]Web-TLO-[url=' . $result->version_url . ']' . $result->version . '[/url][/b]';
-        }
-        return $result;
-    }
-
     public static function natsortField(array $input, string $field, int $direct = 1): array
     {
         uasort($input, function($a, $b) use ($field, $direct) {

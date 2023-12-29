@@ -2,6 +2,7 @@
 
 namespace KeepersTeam\Webtlo\Forum\Report;
 
+use KeepersTeam\Webtlo\WebTLO;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -15,7 +16,7 @@ use Log;
 use Exception;
 
 /**
- * Объект для создания новый отчётов.
+ * Объект для создания новых отчётов.
  */
 final class Creator
 {
@@ -27,7 +28,7 @@ final class Creator
 
     private array       $config;
     private Credentials $user;
-    private object      $webtlo;
+    private WebTLO      $webtlo;
 
     /** @var int[] Исключённые из отчётов подразделы */
     private array $excludeForumsIDs = [];
@@ -114,7 +115,7 @@ final class Creator
         $summary[] = sprintf('Всего хранимых подразделов: [b]%s[/b] шт.', count($savedSubsections));
         $this->prepareSummaryHeader($summary, $total);
         $summary[] = '';
-        $summary[] = $this->webtlo->version_line_url;
+        $summary[] = $this->webtlo->versionLineUrl();
         $summary[] = '[hr]';
 
         return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
@@ -218,7 +219,7 @@ final class Creator
             $this->topicGlue   = '<br />';
         }
 
-        $this->webtlo = Helper::getVersion();
+        $this->webtlo = WebTLO::getVersion();
 
         $this->getLastUpdateTime();
         $this->setExcluded();
@@ -233,7 +234,7 @@ final class Creator
         $header   = [];
         $header[] = $this->getFormattedUpdateTime();
         $this->prepareSummaryHeader($header, $userStored);
-        $header[] = $this->webtlo->version_line;
+        $header[] = $this->webtlo->versionLine();
 
         return implode($this->implodeGlue, $header);
     }

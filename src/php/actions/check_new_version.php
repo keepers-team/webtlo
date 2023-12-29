@@ -1,12 +1,20 @@
 <?php
 
-$result = array_fill_keys(['newVersionNumber','newVersionLink','whatsNew'], '');
+use KeepersTeam\Webtlo\WebTLO;
+
+$result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
 try {
     include_once dirname(__FILE__) . '/../common.php';
 
+    $wbtApi = WebTLO::getVersion();
+
+    if (empty($wbtApi->releaseApi)) {
+        throw new Exception('Невозможно проверить наличие новой версии.');
+    }
+
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL => $webtlo->release_api,
+        CURLOPT_URL => $wbtApi->releaseApi,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 40,
         CURLOPT_SSL_VERIFYPEER => false,

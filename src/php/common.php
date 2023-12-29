@@ -13,9 +13,6 @@ include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/Timers.php';
 include_once dirname(__FILE__) . '/migration/Backup.php';
 
-// версия Web-TLO
-$webtlo = Helper::getVersion();
-
 // подключаемся к базе
 Db::create();
 
@@ -23,7 +20,7 @@ Db::create();
 $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
 $outdatedTime = time() - (int)$avgSeedersPeriodOutdated * 86400;
 
-// Удалим устарешвие метки обновления.
+// Удалим устаревшие метки обновления.
 Db::query_database(
     "DELETE FROM UpdateTime WHERE ud < ?",
     [$outdatedTime]
@@ -34,7 +31,7 @@ Db::query_database(
     "DELETE FROM Topics WHERE pt <> 2 AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)"
 );
 
-// Удалим устарешвие раздачи высокого приоритета.
+// Удалим устаревшие раздачи высокого приоритета.
 Db::query_database(
     "DELETE FROM Topics
         WHERE pt = 2
