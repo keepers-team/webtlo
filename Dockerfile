@@ -28,6 +28,7 @@ RUN \
     export S6_ARCH=$(uname -m) && \
     # https://github.com/just-containers/s6-overlay?tab=readme-ov-file#which-architecture-to-use-depending-on-your-targetarch
     [ "${S6_ARCH}" == "arm" ] && S6_ARCH="armhf"; \
+    [ "${S6_ARCH}" == "armv6l" ] && S6_ARCH="armhf"; \
     [ "${S6_ARCH}" == "armv7l" ] && S6_ARCH="arm"; \
     curl -L -s "${S6_OVERLAY_DOWNLOAD}/s6-overlay-noarch.tar.xz"     | tar Jxpf - -C / && \
     curl -L -s "${S6_OVERLAY_DOWNLOAD}/s6-overlay-${S6_ARCH}.tar.xz" | tar Jxpf - -C / && \
