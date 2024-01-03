@@ -1,9 +1,13 @@
 #!/command/with-contenv sh
+
 if [ "${WEBTLO_CRON:=false}" = "true" ]; then
   cron_path="/var/www/webtlo/cron"
   cron_file="/etc/crontabs/root"
-  s6-echo "Enable cron jobs:"
 
+  s6-echo 'Clear crontab file..'
+  s6-echo '' > ${cron_file}
+
+  s6-echo 'Enable cron jobs:'
   if [ "${CRON_UPDATE:=false}" != "false" ]; then
     s6-echo "=> update.php enabled - ${CRON_UPDATE}"
     s6-echo "${CRON_UPDATE} sleep \$(shuf -i 1-360 -n 1) && php ${cron_path}/update.php" >> ${cron_file}
@@ -24,8 +28,9 @@ if [ "${WEBTLO_CRON:=false}" = "true" ]; then
     s6-echo "${CRON_REPORTS} sleep \$(shuf -i 1-1200 -n 1) && php ${cron_path}/reports.php" >> ${cron_file}
   fi
 
+  s6-echo 'Running with enabled cron'
   exec crond -f
 else
-  s6-echo "Running with disabled cron"
+  s6-echo 'Running with disabled cron'
   exec sleep infinity
 fi
