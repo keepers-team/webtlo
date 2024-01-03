@@ -54,7 +54,7 @@ ENTRYPOINT ["/s6-init"]
 
 # install composer
 FROM composer as builder
-COPY src/composer.* .
+COPY src/composer.* ./
 COPY src/back back
 RUN composer install --no-dev && composer dump-autoload -o
 
