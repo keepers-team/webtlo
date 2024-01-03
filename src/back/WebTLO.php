@@ -12,6 +12,7 @@ final class WebTLO
         public readonly string $wiki,
         public readonly string $release,
         public readonly string $releaseApi,
+        public readonly string $sha,
     ) {
     }
 
@@ -36,6 +37,7 @@ final class WebTLO
             $result['wiki'] ?? '#',
             $result['release'] ?? '',
             $result['release_api'] ?? '',
+            $result['sha'] ?? '',
         );
     }
 
@@ -58,8 +60,24 @@ final class WebTLO
         return sprintf('Версия TLO: [b]Web-TLO-[url=%s]%s[/url][/b]', $this->versionUrl(), $this->version);
     }
 
-    public function wikiUrl(): string
+    public function getReleaseLink(): string
     {
-        return $this->wiki;
+        return sprintf('Web-TLO <a href="%s" target="_blank">%s</a>', $this->versionUrl(), $this->version);
+    }
+
+    public function getCommitLink(): string
+    {
+        if (empty($this->sha)) {
+            return '';
+        }
+
+        $url = sprintf('%s/commit/%s', $this->github, $this->sha);
+
+        return sprintf('<a class="version-sha" href="%s" target="_blank">#%s</a>', $url, $this->sha);
+    }
+
+    public function getWikiLink(): string
+    {
+        return sprintf('<a href="%s" target="_blank">Web-TLO wiki</a>', $this->wiki);
     }
 }

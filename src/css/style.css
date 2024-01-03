@@ -685,6 +685,11 @@ div.toolbar-buttons > button.ui-button {
     line-height: 1.5;
 }
 
+#manual a.version-sha {
+    font-size: 0.8em;
+    color: #7f7676;
+}
+
 #new_version_available {
     position: absolute;
     right: 25px;

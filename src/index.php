@@ -1127,9 +1127,14 @@ function cfg_checkbox($cfg): Closure
                 </div>
             </div>
             <div id="manual" class="content">
-                <p>Web-TLO <a href="<?= $webtlo->versionUrl() ?>" target="_blank"><?= $webtlo->version ?></a></p>
+                <p>
+                    <?= $webtlo->getReleaseLink() ?>
+                    <?= $webtlo->getCommitLink() ?>
+                </p>
                 <p>Простое веб-приложение для управления торрентами</p>
-                <p><a href="<?= $webtlo->wikiUrl() ?>" target="_blank">Web-TLO wiki</a></p>
+                <p>
+                    <?= $webtlo->getWikiLink() ?>
+                </p>
                 <p>Copyright © 2016-2024 Alexander Shemetov</p>
             </div>
         </div>
