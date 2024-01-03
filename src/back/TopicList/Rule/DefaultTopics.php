@@ -50,8 +50,11 @@ final class DefaultTopics implements ListInterface
         // Фильтр по приоритету хранения раздачи на форуме.
         $priority = KeysObject::create(Validate::checkKeepingPriority($filter, $this->forumId));
 
+        // Данные для фильтрации по количеству сидов раздачи.
+        $filterSeed = Validate::prepareSeedFilter($filter);
+
         // Данные для фильтрации по средним сидам.
-        $seedFilter = Validate::prepareAverageSeedFilter($filter, $this->cfg);
+        $filterAverageSeed = Validate::prepareAverageSeedFilter($filter, $this->cfg);
 
         // Фильтры связанные со статусом хранения и количеством хранителей.
         $filterKeepers = Validate::prepareKeepersFilter($filter);
@@ -77,7 +80,7 @@ final class DefaultTopics implements ListInterface
             $this->getKeepersStatusStatement($userId, $excludeSelfKeep),
             $filter,
             $filterKeepers,
-            $seedFilter,
+            $filterAverageSeed,
             $forum,
             $status,
             $priority
@@ -98,7 +101,7 @@ final class DefaultTopics implements ListInterface
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::parseFromTorrent(
                 $topicData,
-                $seedFilter->seedPeriod,
+                $filterAverageSeed->seedPeriod,
                 $daysSeed
             );
 
@@ -111,12 +114,12 @@ final class DefaultTopics implements ListInterface
             $topicKeepers = $keepers[$topic->id] ?? [];
 
             // Фильтрация по количеству сидов.
-            if (!FilterApply::isSeedCountInRange($filter, $topic->averageSeed)) {
+            if (!FilterApply::isSeedCountInRange($filterSeed, (float)$topic->averageSeed)) {
                 continue;
             }
 
             // Фильтрация по статусу "зелёные"
-            if (!FilterApply::isSeedCountGreen($seedFilter, $daysSeed)) {
+            if (!FilterApply::isSeedCountGreen($filterAverageSeed, $daysSeed)) {
                 continue;
             }
 

@@ -6,6 +6,8 @@ namespace KeepersTeam\Webtlo\TopicList;
 
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
+use KeepersTeam\Webtlo\TopicList\Filter\Seed;
+use KeepersTeam\Webtlo\TopicList\Filter\SeedComparison;
 use KeepersTeam\Webtlo\TopicList\Filter\Strings;
 
 /** Фильтрация полученного списка раздач. */
@@ -48,20 +50,16 @@ final class FilterApply
     }
 
     /** Попадает ли количество сидов раздачи в заданные пределы. */
-    public static function isSeedCountInRange(array $filter, float $topicSeeds): bool
+    public static function isSeedCountInRange(Seed $range, float $topicSeeds): bool
     {
-        $useInterval = (bool)($filter['filter_interval'] ?? false);
-        if ($useInterval) {
-            $min = (int)$filter['filter_rule_interval']['min'];
-            $max = (int)$filter['filter_rule_interval']['max'];
-
-            return $min <= $topicSeeds && $topicSeeds <= $max;
+        if (SeedComparison::INTERVAL === $range->comparisonType) {
+            return $range->min <= $topicSeeds && $topicSeeds <= $range->max;
         }
 
-        if ($filter['filter_rule_direction']) {
-            return $filter['filter_rule'] > $topicSeeds;
+        if (SeedComparison::NO_MORE === $range->comparisonType) {
+            return $topicSeeds <= $range->value;
         } else {
-            return $filter['filter_rule'] < $topicSeeds;
+            return $topicSeeds >= $range->value;
         }
     }
 

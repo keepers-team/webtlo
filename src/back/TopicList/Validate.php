@@ -8,6 +8,8 @@ use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
 use KeepersTeam\Webtlo\TopicList\Filter\KeptStatus;
+use KeepersTeam\Webtlo\TopicList\Filter\Seed;
+use KeepersTeam\Webtlo\TopicList\Filter\SeedComparison;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Filter\SortRule;
@@ -189,6 +191,23 @@ final class Validate
         );
     }
 
+    /** Собрать параметры для фильтра по количеству сидов. */
+    public static function prepareSeedFilter(array $filter): Seed
+    {
+        $comparison = SeedComparison::INTERVAL;
+
+        $useInterval = (bool)($filter['filter_interval'] ?? false);
+        if (!$useInterval) {
+            $comparison = SeedComparison::from((int)$filter['filter_rule_direction']);
+        }
+
+        return new Seed(
+            $comparison,
+            (float)($filter['filter_rule'] ?? 3),
+            (float)($filter['filter_rule_interval']['min'] ?? 1),
+            (float)($filter['filter_rule_interval']['max'] ?? 10)
+        );
+    }
 
     /**
      * Собрать параметры фильтрации по типам хранителей.
