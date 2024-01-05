@@ -9,12 +9,8 @@ use Throwable;
 
 final class ValidationException extends Exception
 {
-    private string $class = '';
-
-    public function __construct(string $message, string $class, int $code = 0, Throwable $previous = null)
+    public function __construct(string $message, private readonly string $class = '', int $code = 0, Throwable $previous = null)
     {
-        $this->class = $class;
-
         parent::__construct($message, $code, $previous);
     }
 

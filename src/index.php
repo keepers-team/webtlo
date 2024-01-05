@@ -296,7 +296,7 @@ function cfg_checkbox($cfg): Closure
                     <form method="post" id="topics_filter">
                         <div class="topics_filter">
                             <div class="filter_block ui-widget">
-                                <fieldset class="filter-client-status" title="Статус раздач в торрент-клиенте">
+                                <fieldset class="filter-exception-client-status" title="Статус раздач в торрент-клиенте">
                                     <label>
                                         <input type="checkbox" name="filter_client_status[]" value="1" />
                                         храню
@@ -311,7 +311,7 @@ function cfg_checkbox($cfg): Closure
                                     </label>
                                 </fieldset>
                                 <hr />
-                                <fieldset class="filter-sort-direction" title="Направление сортировки раздач">
+                                <fieldset class="filter-exception-sort-direction" title="Направление сортировки раздач">
                                     <label>
                                         <input type="radio" name="filter_sort_direction" value="1" checked class="default sort" />
                                         по возрастанию
@@ -321,7 +321,7 @@ function cfg_checkbox($cfg): Closure
                                         по убыванию
                                     </label>
                                 </fieldset>
-                                <fieldset class="filter-sort-rule" title="Критерий сортировки раздач">
+                                <fieldset class="filter-exception-sort-rule" title="Критерий сортировки раздач">
                                     <label>
                                         <input type="radio" name="filter_sort" value="name" class="sort" />
                                         по названию
@@ -349,7 +349,7 @@ function cfg_checkbox($cfg): Closure
                                 </fieldset>
                             </div>
                             <div class="filter_block ui-widget" title="Статус раздач на трекере">
-                                <fieldset class="filter-tracker-status">
+                                <fieldset class="filter-exception-tracker-status">
                                     <label>
                                         <input type="checkbox" name="filter_tracker_status[]" value="0" class="default" checked />
                                         не проверено
@@ -372,7 +372,7 @@ function cfg_checkbox($cfg): Closure
                                     </label>
                                 </fieldset>
                                 <hr />
-                                <fieldset class="filter-tracker-priority" title="Приоритет раздач на трекере">
+                                <fieldset class="filter-exception-tracker-priority" title="Приоритет раздач на трекере">
                                     <label>
                                         <input type="checkbox" name="keeping_priority[]" value="0" />
                                         низкий
@@ -389,11 +389,11 @@ function cfg_checkbox($cfg): Closure
                             </div>
                             <div class="filter_block ui-widget" title="">
                                 <fieldset class="filter_common">
-                                    <label class="filter-seeders-period" title="Выберите произвольный период средних сидов">
+                                    <label class="filter-exception-seeders-period" title="Выберите произвольный период средних сидов">
                                         Период средних сидов:
                                         <input type="text" id="filter_avg_seeders_period" name="avg_seeders_period" size="1" value="<?= $cfg['avg_seeders_period'] ?>" />
                                     </label>
-                                    <label class="date_container filter-date-release ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
+                                    <label class="date_container filter-exception-date-release ui-widget" title="Отображать раздачи зарегистрированные на форуме до">
                                         Дата регистрации до:
                                         <input type="text" id="filter_date_release" name="filter_date_release" value="<?= -$cfg['rule_date_release'] ?>" />
                                     </label>
@@ -488,7 +488,7 @@ function cfg_checkbox($cfg): Closure
                                 </fieldset>
                             </div>
                             <div class="filter_block filter_rule ui-widget">
-                                <fieldset>
+                                <fieldset class="filter-exception-keepers-count">
                                     <label title="Отобразить раздачи, по количеству хранителей, подходящих под условия.">
                                         <input type="checkbox" class="keepers" name="is_keepers" />
                                         количество хранителей
@@ -504,7 +504,7 @@ function cfg_checkbox($cfg): Closure
                                                    title="Максимум хранителей"
                                                    name="keepers_filter_count[max]" size="1" value="10"/>
                                         </label>
-                                        <fieldset class="filter-keepers-count">
+                                        <fieldset class="filter-exception-keepers-count">
                                             <label class="keepers-filter-count-padding25"
                                                    style="padding-top: 3px; padding-bottom: 3px;"
                                                    title="К хранителям каждой раздачи применяется фильтр выбираемый ниже. После чего применяется фильтр по количеству.">
@@ -557,7 +557,7 @@ function cfg_checkbox($cfg): Closure
                                     <input type="checkbox" name="filter_interval" />
                                     интервал
                                 </label>
-                                <fieldset class="filter_rule_one" title="Количество сидов на раздаче">
+                                <fieldset class="filter_rule_one filter-exception-seed-one"  title="Количество сидов на раздаче">
                                     <label>
                                         <input type="radio" name="filter_rule_direction" value="1" checked class="default" />
                                         не более
@@ -570,7 +570,7 @@ function cfg_checkbox($cfg): Closure
                                         <input type="text" id="filter_rule" name="filter_rule" size="1" value="<?= $cfg['rule_topics'] ?>" />
                                     </label>
                                 </fieldset>
-                                <fieldset class="filter_rule_interval">
+                                <fieldset class="filter_rule_interval filter-exception-seed-interval">
                                     <label class="filter_rule_value">
                                         от
                                         <input type="text" id="filter_rule_min" title="Минимальное количество сидов"

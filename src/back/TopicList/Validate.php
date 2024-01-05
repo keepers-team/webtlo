@@ -15,7 +15,6 @@ use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Filter\SortRule;
 use KeepersTeam\Webtlo\TopicList\Filter\Strings;
 use DateTimeImmutable;
-use Exception;
 
 final class Validate
 {
@@ -26,12 +25,18 @@ final class Validate
     {
         $sortRule = SortRule::tryFrom((string)($filter['filter_sort'] ?? null));
         if (null === $sortRule) {
-            throw new ValidationException('Не выбрано или неизвестное поле для сортировки.', 'filter-sort-rule');
+            throw new ValidationException(
+                'Не выбрано или неизвестное поле для сортировки.',
+                'filter-exception-sort-rule'
+            );
         }
 
         $sortDirection = SortDirection::tryFrom((int)($filter['filter_sort_direction'] ?? null));
         if (null === $sortDirection) {
-            throw new ValidationException('Не выбрано или неизвестное направление сортировки.', 'filter-sort-direction');
+            throw new ValidationException(
+                'Не выбрано или неизвестное направление сортировки.',
+                'filter-exception-sort-direction'
+            );
         }
 
         return new Sort($sortRule, $sortDirection);
@@ -40,47 +45,57 @@ final class Validate
     /**
      * Проверим ввод значения сидов или количества хранителей.
      *
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function filterRuleIntervals(array $filter): void
     {
-        $makeException = function(string $hint, string $type): void {
+        $makeException = function(string $hint, string $type, string $class = ''): void {
             $patterns = [
                 'invalid' => 'В фильтре введено некорректное значение %s.',
                 'zero'    => 'Значение %s в фильтре должно быть больше 0.',
                 'minmax'  => 'Максимальное значение %s в фильтре должно быть больше минимального.',
             ];
 
-            throw new Exception(sprintf($patterns[$type] ?? '%s', $hint));
+            $error = sprintf($patterns[$type] ?? '%s', $hint);
+
+            throw new ValidationException($error, $class);
         };
 
         // Проверки для значения количества сидов.
         if (!is_numeric($filter['filter_rule'])) {
-            $makeException('сидов', 'invalid');
+            $makeException('сидов', 'invalid', 'filter-exception-seed-one');
         }
         if ($filter['filter_rule'] < 0) {
-            $makeException('сидов', 'zero');
+            $makeException('сидов', 'zero', 'filter-exception-seed-one');
         }
 
         // Для диапазонов свои проверки.
-        $filters_hints = [
-            'filter_rule_interval' => 'сидов',
-            'keepers_filter_count' => 'количества хранителей',
+        $filterRules = [
+            [
+                'name'  => 'filter_rule_interval',
+                'hint'  => 'интервала сидов',
+                'class' => 'filter-exception-seed-interval',
+            ],
+            [
+                'name'  => 'keepers_filter_count',
+                'hint'  => 'количества хранителей',
+                'class' => 'filter-exception-keepers-count',
+            ],
         ];
-        foreach ($filters_hints as $filter_name => $hint) {
+        foreach ($filterRules as $rule) {
             if (
-                !is_numeric($filter[$filter_name]['min'])
-                || !is_numeric($filter[$filter_name]['max'])
+                !is_numeric($filter[$rule['name']]['min'])
+                || !is_numeric($filter[$rule['name']]['max'])
             ) {
-                $makeException($hint, 'invalid');
+                $makeException($rule['hint'], 'invalid', $rule['class']);
             }
 
-            if ($filter[$filter_name]['min'] < 0 || $filter[$filter_name]['max'] < 0) {
-                $makeException($hint, 'zero');
+            if ($filter[$rule['name']]['min'] < 0 || $filter[$rule['name']]['max'] < 0) {
+                $makeException($rule['hint'], 'zero', $rule['class']);
             }
 
-            if ($filter[$filter_name]['min'] > $filter[$filter_name]['max']) {
-                $makeException($hint, 'minmax');
+            if ($filter[$rule['name']]['min'] > $filter[$rule['name']]['max']) {
+                $makeException($rule['hint'], 'minmax', $rule['class']);
             }
         }
     }
@@ -91,7 +106,7 @@ final class Validate
     public static function checkTrackerStatus(array $filter): array
     {
         if (empty($filter['filter_tracker_status'])) {
-            throw new ValidationException('Не выбраны статусы раздач для трекера.', 'filter-tracker-status');
+            throw new ValidationException('Не выбраны статусы раздач для трекера.', 'filter-exception-tracker-status');
         }
 
         return (array)$filter['filter_tracker_status'];
@@ -103,12 +118,15 @@ final class Validate
     public static function checkClientStatus(array $filter): void
     {
         if (empty($filter['filter_client_status'])) {
-            throw new ValidationException('Не выбраны статусы раздач для торрент-клиента.', 'filter-client-status');
+            throw new ValidationException(
+                'Не выбраны статусы раздач для торрент-клиента.',
+                'filter-exception-client-status'
+            );
         }
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public static function checkKeepingPriority(array $filter, int $forumId): array
     {
@@ -116,7 +134,10 @@ final class Validate
             if ($forumId === -5) {
                 return [2];
             } else {
-                throw new ValidationException('Не выбраны приоритеты раздач для трекера.', 'filter-tracker-priority');
+                throw new ValidationException(
+                    'Не выбраны приоритеты раздач для трекера.',
+                    'filter-exception-tracker-priority'
+                );
             }
         }
 
@@ -135,7 +156,10 @@ final class Validate
     {
         $date = self::getDateRelease($filter);
         if (!$date) {
-            throw new ValidationException('В фильтре введена некорректная дата создания релиза.', 'filter-date-release');
+            throw new ValidationException(
+                'В фильтре введена некорректная дата создания релиза.',
+                'filter-exception-date-release'
+            );
         }
 
         return $date;
@@ -158,7 +182,10 @@ final class Validate
         if ($useAvgSeeders) {
             // Проверка периода средних сидов.
             if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new ValidationException('В фильтре введено некорректное значение для периода средних сидов.', 'filter-seeders-period');
+                throw new ValidationException(
+                    'В фильтре введено некорректное значение для периода средних сидов.',
+                    'filter-exception-seeders-period'
+                );
             }
 
             // Применить фильтр средних сидов.
@@ -174,7 +201,8 @@ final class Validate
             $sum_se = implode('+', $temp['sum_se']);
 
             $fields[] = "$qt AS days_seed";
-            $fields[] = "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END AS seed";
+            $fields[] =
+                "CASE WHEN $qt IS 0 THEN (se * 1.) / qt ELSE ( se * 1. + $sum_se) / ( qt + $sum_qt) END AS seed";
 
             $joins[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
         } else {
@@ -228,7 +256,10 @@ final class Validate
 
         if ($count->enabled) {
             if (!$count->useSeed && !$count->useDownload && !$count->useKept && !$count->useKeptSeed) {
-                throw new ValidationException('Не выбраны параметры фильтрации хранителей по количеству.', 'filter-keepers-count');
+                throw new ValidationException(
+                    'Не выбраны параметры фильтрации хранителей по количеству.',
+                    'filter-exception-keepers-count'
+                );
             }
         }
 
