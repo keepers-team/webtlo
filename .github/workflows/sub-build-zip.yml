@@ -2,25 +2,35 @@ name: Sub. Build webtlo zip
 
 on:
   workflow_call:
+    inputs:
+      WEBTLO_VERSION:
+        type: string
+        default: 'unknown'
+      WEBTLO_SHA:
+        type: string
+        default: 'none'
 
 jobs:
   build-zip:
     name: webtlo zip
     runs-on: ubuntu-latest
-    env:
-      WEBTLO_VERSION: ${{ github.ref_name || 'release' }}
     steps:
-      - run: |
-          echo $WEBTLO_VERSION
-          echo ${{ vars.WEBTLO_VERSION }}
-          echo ${{ github.ref_name }}
       - uses: actions/checkout@v4
       - name: Install dependencies
         uses: php-actions/composer@v6
         with:
           working_dir: src
-          args: --ignore-platform-reqs --optimize-autoloader
+          args: --ignore-platform-reqs
           dev: no
+
+      - name: Write version
+        run: |
+          cd src
+          cat version.json \
+            | jq --arg V ${{ inputs.WEBTLO_VERSION }} '.version=$V' \
+            | jq --arg SH ${{ inputs.WEBTLO_SHA }} '.sha=$SH' \
+            > tmp.$$.json
+          mv tmp.$$.json version.json
 
       - run: mkdir -p release
       - name: Build webtlo.zip
@@ -35,7 +45,7 @@ jobs:
 
       - name: Build webtlo-win.zip
         run: |
-          zip_name="webtlo-win-$WEBTLO_VERSION.zip"
+          zip_name="webtlo-win-${{ inputs.WEBTLO_VERSION }}.zip"
           zip_dir=webtlo-win
 
           rm -rf $zip_dir
@@ -73,6 +83,7 @@ jobs:
           retention-days: 7
 
       - name: Cache release
+        if: ${{ github.ref_type == 'tag' }}
         uses: actions/cache@v3
         with:
           path: ./release

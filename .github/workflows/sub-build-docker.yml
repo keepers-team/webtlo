@@ -6,6 +6,12 @@ on:
       REGISTRY_IMAGE:
         required: true
         type: string
+      WEBTLO_VERSION:
+        type: string
+        default: 'unknown'
+      WEBTLO_SHA:
+        type: string
+        default: 'none'
     secrets:
       DOCKER_HUB_USERNAME:
         required: true
@@ -19,6 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Write version
+        run: |
+          cd src
+          cat version.json \
+            | jq --arg V ${{ inputs.WEBTLO_VERSION }} '.version=$V' \
+            | jq --arg SH ${{ inputs.WEBTLO_SHA }} '.sha=$SH' \
+            > tmp.$$.json
+          mv tmp.$$.json version.json
 
       - name: Docker meta
         id: meta

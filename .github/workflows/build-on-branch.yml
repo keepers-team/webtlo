@@ -12,17 +12,26 @@ jobs:
     name: Check
     uses: ./.github/workflows/sub-check.yml
 
+  metadata:
+    name: Meta
+    uses: ./.github/workflows/sub-metadata.yml
+
   docker:
     name: Build
-    needs: [ validate ]
+    needs: [ validate, metadata ]
     uses: ./.github/workflows/sub-build-docker.yml
     with:
       REGISTRY_IMAGE: ${{ vars.REGISTRY_IMAGE || 'berkut174/webtlo' }}
+      WEBTLO_VERSION: ${{ needs.metadata.outputs.version }}
+      WEBTLO_SHA: ${{ needs.metadata.outputs.sha }}
     secrets:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
   zip:
     name: Build
-    needs: [ validate ]
+    needs: [ validate, metadata ]
     uses: ./.github/workflows/sub-build-zip.yml
+    with:
+      WEBTLO_VERSION: ${{ needs.metadata.outputs.version }}
+      WEBTLO_SHA: ${{ needs.metadata.outputs.sha }}
