@@ -4,21 +4,10 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
-use KeepersTeam\Webtlo\Helper as TloHelper;
 use DateTimeImmutable;
 
 final class Helper
 {
-    /** Сортировка задач по параметрам фильтра. */
-    public static function topicsSortByFilter(array $topics, array $filter): array
-    {
-        return TloHelper::natsortField(
-            $topics,
-            $filter['filter_sort'],
-            (int)$filter['filter_sort_direction']
-        );
-    }
-
     /** Собрать наименование клиента. */
     public static function getClientName(array $cfg, ?int $clientID): string
     {
