@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
+use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\DbHelper;
 use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
@@ -22,8 +22,10 @@ use Exception;
 final class DefaultTopics implements ListInterface
 {
     use FilterTrait;
+    use DbHelperTrait;
 
     public function __construct(
+        private readonly DB     $db,
         private readonly array  $cfg,
         private readonly Output $output,
         private readonly int    $forumId
@@ -172,7 +174,7 @@ final class DefaultTopics implements ListInterface
             $forumsIDs = [$this->forumId];
         } elseif ($this->forumId === -5) {
             // Высокий приоритет.
-            $forumsIDs = DbHelper::getHighPriorityForums();
+            $forumsIDs = $this->getHighPriorityForums();
         } else {
             $forumsIDs = [];
             // -3 Все хранимые подразделы.
@@ -300,7 +302,7 @@ final class DefaultTopics implements ListInterface
                 AND t.pt IN ($priority->keys)
         ";
 
-        $excluded = DbHelper::queryStatementRow(
+        $excluded = $this->queryStatementRow(
             $statement,
             [...$forum->values, ...$status->values, ...$priority->values]
         );
@@ -332,7 +334,7 @@ final class DefaultTopics implements ListInterface
                 ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
             ";
 
-            $keepers += DbHelper::queryStatementGroup(
+            $keepers += $this->queryStatementGroup(
                 $statement,
                 [...$keys->values, ...$keys->values, $user_id]
             );

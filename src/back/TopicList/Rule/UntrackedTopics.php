@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
+use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\State;
@@ -17,6 +18,7 @@ final class UntrackedTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
+        private readonly DB     $db,
         private readonly array  $cfg,
         private readonly Output $output
     ) {

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use KeepersTeam\Webtlo\DB as ModernDB;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\Output;
@@ -37,8 +38,10 @@ try {
     // Получаем настройки.
     $cfg = get_settings();
 
+    $db = ModernDB::getInstance();
+
     // Собираем фабрику.
-    $ruleFactory = new Factory($cfg, new Output($cfg, $cfg['forum_address'] ?? ''));
+    $ruleFactory = new Factory($db, $cfg, new Output($cfg, $cfg['forum_address'] ?? ''));
 
     //  0 - из других подразделов
     // -1 - незарегистрированные
