@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use Backup;
 use Db;
 use PDO;
 use Proxy;

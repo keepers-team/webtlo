@@ -1,14 +1,19 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
+declare(strict_types=1);
+
+namespace KeepersTeam\Webtlo;
+
+use Exception;
 
 /**
  * Бекапим конфиг.
  */
 class Backup
 {
-    /** Максимальное кол-во бекапов каждого вида */
+    /** Максимальное кол-во бекапов каждого вида. */
     private const MAX_BACKUPS = 5;
+    /** Название подкаталога с бекапами. */
     private const FOLDER = 'backup';
 
     /**
@@ -50,6 +55,7 @@ class Backup
     {
         $backupPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
         Helper::checkDirRecursive($backupPath);
+
         return $backupPath;
     }
 

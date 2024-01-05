@@ -153,6 +153,19 @@ final class Helper
         return self::getStorageDir() . DIRECTORY_SEPARATOR . "logs";
     }
 
+    /** Получить путь к каталогу/файлу миграций. */
+    public static function getMigrationPath(?string $file = null): string
+    {
+        // webtlo/sql
+        $path = __DIR__ . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 1) . 'sql';
+
+        if (null !== $file) {
+            $path .= DIRECTORY_SEPARATOR . $file;
+        }
+
+        return self::normalizePath($path);
+    }
+
     /**
      * Get normalized path, like realpath() for non-existing path or file
      */
