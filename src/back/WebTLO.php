@@ -44,7 +44,21 @@ final class WebTLO
     public function versionUrl(): string
     {
         if (!empty($this->github)) {
+            // Если версия принадлежит какой-то ветке, отправляем на коммит.
+            if (str_contains($this->version, '-br-')) {
+                return $this->commitUrl();
+            }
+
             return sprintf('%s/releases/tag/%s', $this->github, $this->version);
+        }
+
+        return '#';
+    }
+
+    public function commitUrl(): string
+    {
+        if (!empty($this->github)) {
+            return sprintf('%s/commit/%s', $this->github, $this->sha);
         }
 
         return '#';
@@ -71,9 +85,7 @@ final class WebTLO
             return '';
         }
 
-        $url = sprintf('%s/commit/%s', $this->github, $this->sha);
-
-        return sprintf('<a class="version-sha" href="%s" target="_blank">#%s</a>', $url, $this->sha);
+        return sprintf('<a class="version-sha" href="%s" target="_blank">#%s</a>', $this->commitUrl(), $this->sha);
     }
 
     public function getWikiLink(): string

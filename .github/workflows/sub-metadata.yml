@@ -23,17 +23,21 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Get metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          tags: type=sha,prefix=
+          tags: |
+            type=ref,event=branch,prefix=-br-
+            type=sha,prefix=
 
       - name: Get git ref version, sha
         id: version
         run: |
-          version=$( cd src && cat version.json | jq -r --arg V -br-${{ github.ref_name }} '.version + $V' )
+          suffix=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          version=$( cd src && cat version.json | jq -r --arg V $suffix '.version + $V' )
           [ ${{ github.ref_type }} == 'tag' ] && version=${{ github.ref_name }}
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "sha=$DOCKER_METADATA_OUTPUT_TAGS" >> "$GITHUB_OUTPUT"
+          echo "sha=${{ fromJSON(steps.meta.outputs.json).tags[1] }}" >> "$GITHUB_OUTPUT"
 
-          echo "webtlo-version=$version, sha=$DOCKER_METADATA_OUTPUT_TAGS"
+          echo "webtlo-version=$version, sha=$sha"
