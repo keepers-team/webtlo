@@ -5,9 +5,10 @@ $finder = PhpCsFixer\Finder::create()
 ;
 
 $config = new PhpCsFixer\Config();
+
 return $config->setRules([
     '@PSR12'          => true,
-    '@PHP82Migration' => true,
+    '@PHP83Migration' => true,
 
     'no_empty_statement'       => true,
     'single_blank_line_at_eof' => false,

@@ -38,7 +38,7 @@ final class DB
         if (null === self::$instance) {
             try {
                 $pdo = new PDO('sqlite:' . $databasePath);
-                $pdo->sqliteCreateFunction('like', ['self', 'lexa_ci_utf8_like'], 2);
+                $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
 
                 self::$instance = new DB($pdo);
             } catch (PDOException $e) {
