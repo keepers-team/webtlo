@@ -1,4 +1,4 @@
-FROM alpine:3.17 as base
+FROM alpine:3.19 as base
 
 # environment
 ENV TZ Europe/Moscow
@@ -17,8 +17,8 @@ RUN apk add --update --no-cache \
     # web server
     nginx \
     # php interpreter
-    php81 php81-fpm php81-curl php81-openssl php81-sqlite3 php81-pdo_sqlite \
-    php81-xml php81-mbstring php81-dom \
+    php82 php82-fpm php82-curl php82-openssl php82-sqlite3 php82-pdo_sqlite \
+    php82-xml php82-mbstring php82-dom \
     && rm -rf /var/cache/apk/*
 
 
@@ -60,8 +60,8 @@ RUN composer install --no-dev && composer dump-autoload -o
 
 # image for development
 FROM base as dev
-RUN apk add --update --no-cache php81-phar php81-pecl-xdebug php81-tokenizer
-COPY /docker/debug /etc/php81/conf.d
+RUN apk add --update --no-cache php82-phar php82-pecl-xdebug php82-tokenizer
+COPY /docker/debug /etc/php82/conf.d
 # copy composer parts
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
