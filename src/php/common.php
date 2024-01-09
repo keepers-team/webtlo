@@ -56,7 +56,7 @@ function convert_bytes($size): string
 
 function convert_seconds($seconds, $leadZeros = false): string
 {
-    return Helper::convertSeconds($seconds, $leadZeros);
+    return Helper::convertSeconds((int)$seconds, $leadZeros);
 }
 
 function rmdir_recursive($path): bool

@@ -47,18 +47,21 @@ final class Helper
     {
         $pad = fn(int $val): string => !$leadZeros ? (string)$val : str_pad((string)$val, 2, '0', STR_PAD_LEFT);
 
-        $hh = (int)floor($seconds / 3600);
-        $mm = (int)floor($seconds / 60 % 60);
-        $ss = $seconds % 60;
+        if ($seconds > 0) {
+            $ss = $seconds % 60;
+            $minutes = intdiv($seconds, 60);
+            $mm = $minutes % 60;
+            $hh = intdiv($minutes, 60);
 
-        if ($hh > 0) {
-            return sprintf('%sh %sm %ss', $pad($hh), $pad($mm), $pad($ss));
-        }
-        if ($mm > 0) {
-            return sprintf('%sm %ss', $pad($mm), $pad($ss));
+            if ($hh > 0) {
+                return sprintf('%sh %sm %ss', $pad($hh), $pad($mm), $pad($ss));
+            }
+            if ($mm > 0) {
+                return sprintf('%sm %ss', $pad($mm), $pad($ss));
+            }
         }
 
-        return sprintf('%ss', $pad($ss));
+        return sprintf('%ss', $pad($ss ?? $seconds));
     }
 
     /** Создать каталог по заданному пути. */
