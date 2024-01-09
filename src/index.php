@@ -20,7 +20,7 @@ try {
     $checkbox_check = cfg_checkbox($cfg);
 
     // чекбоксы
-    $savesubdir = $cfg['savesub_dir'] == 1 ? "checked" : "";
+    $savesub_dir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
     $proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
     $proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
@@ -36,32 +36,56 @@ try {
     // вставка option в select
 
     // форматы строк
-    $optionFormat = '<option value="%s" %s>%s</option>';
-    $itemFormat = '<li class="ui-widget-content" value="%s" %s>%s</li>';
-    $datasetFormatTorrentClient = 'data-comment="%s" data-type="%s" data-hostname="%s" data-port="%s" data-login="%s" data-password="%s" data-ssl="%s" data-peers="%s" data-exclude="%s"';
-    $datasetFormatForum = 'data-client="%s" data-label="%s" data-savepath="%s" data-subdirectory="%s" data-hide="%s" data-peers="%s" data-exclude="%s"';
+    $optionFormat = /** @lang text */
+        '<option value="%s" %s>%s</option>';
+    $itemFormat   = /** @lang text */
+        '<li class="ui-widget-content" value="%s" %s>%s</li>';
+
+    $makeTemplate = fn($keys) => implode(' ', array_map(fn($el) => "data-$el=\"%s\"", $keys));
+
+    /** Параметры торрент-клиента. */
+    $datasetFormatTorrentClient = $makeTemplate([
+        'comment',
+        'type',
+        'hostname',
+        'port',
+        'login',
+        'password',
+        'ssl',
+        'peers',
+        'exclude',
+    ]);
+
+    /** Параметры подраздела. */
+    $datasetFormatForum = $makeTemplate([
+        'client',
+        'label',
+        'savepath',
+        'subdirectory',
+        'hide',
+        'peers',
+        'exclude',
+    ]);
 
     // стандартные адреса
-    $forumAddressList = array(
+    $forumAddressList = [
         'rutracker.org',
         'rutracker.net',
         'rutracker.nl',
         'custom'
-    );
+    ];
 
-    $apiAddressList = array(
+    $apiAddressList = [
         'api.rutracker.cc',
         'custom'
-    );
+    ];
 
     // адреса форума
     $optionForumAddress = '';
     foreach ($forumAddressList as $value) {
-        $selected = '';
-        if ($value == $cfg['forum_url']) {
-            $selected = 'selected';
-        }
-        $text = $value == 'custom' ? 'другой' : $value;
+        $selected = $value == $cfg['forum_url'] ? 'selected' : '';
+        $text     = $value == 'custom' ? 'другой' : $value;
+
         $optionForumAddress .= sprintf($optionFormat, $value, $selected, $text);
     }
     $forumVerifySSL = $cfg['forum_ssl'] ? 'checked' : '';
@@ -69,11 +93,9 @@ try {
     // адреса api
     $optionApiAddress = '';
     foreach ($apiAddressList as $value) {
-        $selected = '';
-        if ($value == $cfg['api_url']) {
-            $selected = 'selected';
-        }
-        $text = $value == 'custom' ? 'другой' : $value;
+        $selected = $value == $cfg['api_url'] ? 'selected' : '';
+        $text     = $value == 'custom' ? 'другой' : $value;
+
         $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
     }
     $apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
@@ -88,9 +110,10 @@ try {
                 $excludeClientsIDs[] = sprintf(
                     '%s(%d)',
                     $torrentClientData['cm'],
-                    $torrentClientID
+                    (string)$torrentClientID
                 );
             }
+
             $datasetTorrentClient = sprintf(
                 $datasetFormatTorrentClient,
                 $torrentClientData['cm'],
@@ -103,23 +126,26 @@ try {
                 $torrentClientData['control_peers'],
                 $torrentClientData['exclude']
             );
+
             $optionTorrentClients .= sprintf(
                 $optionFormat,
-                $torrentClientID,
+                (string)$torrentClientID,
                 '',
                 $torrentClientData['cm']
             );
+
             $optionTorrentClientsDataset .= sprintf(
                 $itemFormat,
-                $torrentClientID,
+                (string)$torrentClientID,
                 $datasetTorrentClient,
                 $torrentClientData['cm']
             );
         }
     }
+
     $optionFilterClients = sprintf(
         $optionFormat,
-        0,
+        '0',
         '',
         'любой'
     ) . $optionTorrentClients;
@@ -139,15 +165,17 @@ try {
                 $forumData['control_peers'],
                 $forumData['exclude']
             );
+
             $optionForums .= sprintf(
                 $optionFormat,
-                $forumID,
+                (string)$forumID,
                 '',
                 $forumData['na']
             );
+
             $optionForumsDataset .= sprintf(
                 $optionFormat,
-                $forumID,
+                (string)$forumID,
                 $datasetForum,
                 $forumData['na']
             );
@@ -174,7 +202,7 @@ function cfg_checkbox($cfg): Closure
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-<?php echo $webtlo->version ?></title>
+    <title>web-TLO-<?= $webtlo->version ?? 'unknown' ?></title>
 
     <script src="scripts/jquery.lib/js.cookie.min.js"></script>
     <script src="scripts/jquery.lib/jquery.1.12.4.min.js"></script>
@@ -201,7 +229,7 @@ function cfg_checkbox($cfg): Closure
             <li class="menu"><a href="#manual" class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
-            <p id="new_version_description"><?= "v$webtlo->version" ?></p>
+            <p id="new_version_description"><?= "v$webtlo->version" ?? '' ?></p>
         </div>
         <div id="content">
             <div id="main" class="content">
@@ -219,7 +247,7 @@ function cfg_checkbox($cfg): Closure
                         <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="main-subsections-stored">
-                        <?php echo $optionForums ?>
+                        <?= $optionForums ?? '' ?>
                     </optgroup>
                 </select>
                 <div id="topics_data">
@@ -231,7 +259,7 @@ function cfg_checkbox($cfg): Closure
                             <button id="apply_filter" type="button" title="Применить параметры фильтра">
                                 <i class="fa fa-check" aria-hidden="true"></i>
                             </button>
-                            <button type="button" id="filter_reset" title="Click - cбросить параметры фильтра на значения по умолчанию. &#10;Ctrl+Click - восстановить последние сброшенные настройки.">
+                            <button type="button" id="filter_reset" title="Click - сбросить параметры фильтра на значения по умолчанию. &#10;Ctrl+Click - восстановить последние сброшенные настройки.">
                                 <i class="fa fa-undo" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -403,7 +431,7 @@ function cfg_checkbox($cfg): Closure
                                     <label>
                                         Клиент:
                                         <select name="filter_client_id" id="filter_client_id" class="myinput">
-                                            <?php echo $optionFilterClients ?>
+                                            <?= $optionFilterClients ?? '' ?>
                                         </select>
                                     </label>
                                 </fieldset>
@@ -610,15 +638,18 @@ function cfg_checkbox($cfg): Closure
                             <div id="forum_url_params">
                                 <label for="forum_url" class="param-name">Адрес форума:</label>
                                 <select name="forum_url" id="forum_url" class="myinput">
-                                    <?php echo $optionForumAddress ?>
+                                    <?= $optionForumAddress ?? '' ?>
                                 </select>
-                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
+                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text"
+                                       size="14" value="<?= $cfg['forum_url_custom'] ?? '' ?>"/>
                                 <label>
-                                    <input id="forum_ssl" name="forum_ssl" class="check_access_forum" type="checkbox" <?php echo $forumVerifySSL ?> />
+                                    <input id="forum_ssl" name="forum_ssl" class="check_access_forum"
+                                           type="checkbox" <?= $forumVerifySSL ?? 'checked' ?> />
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
-                                    <input name="proxy_activate_forum" class="check_access_forum" type="checkbox" size="24" <?php echo $proxy_activate_forum ?> />
+                                    <input name="proxy_activate_forum" class="check_access_forum" type="checkbox"
+                                           size="24" <?= $proxy_activate_forum ?? '' ?> />
                                     Через прокси
                                 </label>
                                 <i id="forum_url_result" class=""></i>
@@ -626,15 +657,18 @@ function cfg_checkbox($cfg): Closure
                             <div id="api_url_params">
                                 <label for="api_url" class="param-name">Адрес API:</label>
                                 <select name="api_url" id="api_url" class="myinput">
-                                    <?php echo $optionApiAddress ?>
+                                    <?= $optionApiAddress ?? '' ?>
                                 </select>
-                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
+                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14"
+                                       value="<?= $cfg['api_url_custom'] ?? '' ?>"/>
                                 <label>
-                                    <input id="api_ssl" name="api_ssl" class="check_access_api" type="checkbox" <?php echo $apiVerifySSL ?> />
+                                    <input id="api_ssl" name="api_ssl" class="check_access_api"
+                                           type="checkbox" <?= $apiVerifySSL ?? 'checked' ?> />
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-                                    <input name="proxy_activate_api" class="check_access_api" type="checkbox" size="24" <?php echo $proxy_activate_api ?> />
+                                    <input name="proxy_activate_api" class="check_access_api" type="checkbox"
+                                           size="24" <?= $proxy_activate_api ?? '' ?> />
                                     Через прокси
                                 </label>
                                 <i id="api_url_result" class=""></i>
@@ -688,11 +722,11 @@ function cfg_checkbox($cfg): Closure
                                     <label>
                                         Тип:
                                         <select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
-                                            <option value="http" <?php echo ($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
-                                            <option value="socks4" <?php echo ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
-                                            <option value="socks4a" <?php echo ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?>>SOCKS4A</option>
-                                            <option value="socks5" <?php echo ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?>>SOCKS5</option>
-                                            <option value="socks5h" <?php echo ($cfg['proxy_type'] == 'socks5h' ? "selected" : "") ?>>SOCKS5H</option>
+                                            <option value="http" <?= ($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
+                                            <option value="socks4" <?= ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
+                                            <option value="socks4a" <?= ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?>>SOCKS4A</option>
+                                            <option value="socks5" <?= ($cfg['proxy_type'] == 'socks5' ? "selected" : "") ?>>SOCKS5</option>
+                                            <option value="socks5h" <?= ($cfg['proxy_type'] == 'socks5h' ? "selected" : "") ?>>SOCKS5H</option>
                                         </select>
                                     </label>
                                 </div>
@@ -746,7 +780,7 @@ function cfg_checkbox($cfg): Closure
                             </div>
                             <div class="block-settings">
                                 <ol id="list-torrent-clients" title="Список сканируемых торрент-клиентов">
-                                    <?php echo $optionTorrentClientsDataset ?>
+                                    <?= $optionTorrentClientsDataset ?>
                                 </ol>
                             </div>
                             <div id="torrent-client-props" class="block-settings">
@@ -820,7 +854,7 @@ function cfg_checkbox($cfg): Closure
                                 <label>
                                     Подраздел:
                                     <select name="list-forums" id="list-forums" class="ignore-save-change">
-                                        <?php echo $optionForumsDataset ?>
+                                        <?= $optionForumsDataset ?? '' ?>
                                     </select>
                                 </label>
                             </div>
@@ -833,7 +867,7 @@ function cfg_checkbox($cfg): Closure
                                     Торрент-клиент:
                                     <select id="forum-client" class="myinput forum-props" title="Добавлять раздачи текущего подраздела в торрент-клиент">
                                         <option value=0>не выбран</option>
-                                        <?php echo $optionTorrentClients ?>
+                                        <?= $optionTorrentClients ?? '' ?>
                                     </select>
                                 </label>
                                 <label>
@@ -876,30 +910,40 @@ function cfg_checkbox($cfg): Closure
                         <div>
                             <label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
                                 Предлагать для хранения раздачи с количеством сидов не более:
-                                <input id="rule_topics" name="rule_topics" type="text" size="2" value="<?php echo $cfg['rule_topics'] ?>" />
+                                <input id="rule_topics" name="rule_topics" type="text" size="2"
+                                       value="<?= $cfg['rule_topics'] ?? 5 ?>"/>
                             </label>
                             <label class="label" title="Укажите необходимое количество дней">
                                 Предлагать для хранения раздачи старше
-                                <input id="rule_date_release" name="rule_date_release" type="text" size="2" value="<?php echo $cfg['rule_date_release'] ?>" />
+                                <input id="rule_date_release" name="rule_date_release" type="text" size="2"
+                                       value="<?= $cfg['rule_date_release'] ?? 5 ?>"/>
                                 дн.
                             </label>
-                            <label class="label" title="Если перерыв между обновлениями сведений составит больше этого периода, то накопленные данные о сидах будут считаться устаревшими (по умолчанию: 7)">
+                            <label class="label"
+                                   title="Если перерыв между обновлениями сведений составит больше этого периода, то накопленные данные о сидах будут считаться устаревшими (по умолчанию: 7)">
                                 Допустимый период простоя между обновлениями:
-                                <input id="avg_seeders_period_outdated" name="avg_seeders_period_outdated" type="text" size="2" value="<?php echo $cfg['avg_seeders_period_outdated'] ?>" />
+                                <input id="avg_seeders_period_outdated" name="avg_seeders_period_outdated" type="text"
+                                       size="2" value="<?= $cfg['avg_seeders_period_outdated'] ?? 7 ?>"/>
                                 дн.
                             </label>
-                            <label class="label" title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
-                                <input id="avg_seeders" name="avg_seeders" type="checkbox" <?php echo $avg_seeders ?> />
+                            <label class="label"
+                                   title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
+                                <input id="avg_seeders" name="avg_seeders" type="checkbox" <?= $avg_seeders ?? '' ?> />
                                 находить среднее значение количества сидов за
-                                <input id="avg_seeders_period" name="avg_seeders_period" title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)" type="text" size="2" value="<?php echo $cfg['avg_seeders_period'] ?>" />
+                                <input id="avg_seeders_period" name="avg_seeders_period"
+                                       title="Укажите период хранения сведений о средних сидах, максимум 30 дней (по умолчанию: 14)"
+                                       type="text" size="2" value="<?= $cfg['avg_seeders_period'] ?? 14 ?>"/>
                                 дн.
                             </label>
-                            <label class="label" title="При изменении параметров фильтра, автоматически обновлять список раздач на главной">
-                                <input id="enable_auto_apply_filter" name="enable_auto_apply_filter" type="checkbox" <?php echo $enable_auto_apply_filter ?> />
+                            <label class="label"
+                                   title="При изменении параметров фильтра, автоматически обновлять список раздач на главной">
+                                <input id="enable_auto_apply_filter" name="enable_auto_apply_filter"
+                                       type="checkbox" <?= $enable_auto_apply_filter ?? '' ?> />
                                 применять параметры фильтра автоматически
                             </label>
                             <label title="Всегда отключено для вкладки 'Хранимые раздачи по спискам'">
-                                <input name="exclude_self_keep" type="checkbox" size="24" <?php echo $exclude_self_keep ?> />
+                                <input name="exclude_self_keep" type="checkbox"
+                                       size="24" <?= $exclude_self_keep ?? '' ?> />
                                 не показывать себя, как хранителя, в списке раздач на главной
                             </label>
                             <hr>
@@ -937,52 +981,60 @@ function cfg_checkbox($cfg): Closure
                         <div>
                             <h3>Каталог для скачиваемых *.torrent файлов</h3>
                             <div>
-                                <input id="savedir" name="savedir" class="myinput" type="text" size="53" title="Каталог, куда будут сохраняться новые *.torrent-файлы." value="<?php echo $cfg['save_dir'] ?>" />
+                                <input id="savedir" name="savedir" class="myinput" type="text" size="53"
+                                       title="Каталог, куда будут сохраняться новые *.torrent-файлы."
+                                       value="<?= $cfg['save_dir'] ?? '' ?>"/>
                             </div>
                             <label title="При установленной метке *.torrent-файлы дополнительно будут помещены в подкаталог.">
-                                <input name="savesubdir" type="checkbox" size="24" <?php echo $savesubdir ?> />
+                                <input name="savesubdir" type="checkbox" size="24" <?= $savesub_dir ?? '' ?> />
                                 создавать подкаталоги
                             </label>
                             <h3>Настройки retracker.local</h3>
                             <label title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
-                                <input name="retracker" type="checkbox" size="24" <?php echo $retracker ?> />
+                                <input name="retracker" type="checkbox" size="24" <?= $retracker ?? '' ?> />
                                 добавлять retracker.local в скачиваемые *.torrent-файлы
                             </label>
                             <h3>Скачивание *.torrent файлов с заменой Passkey</h3>
                             <label class="label">
                                 Каталог:
-                                <input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53" title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey." value="<?php echo $cfg['dir_torrents'] ?>" />
+                                <input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53"
+                                       title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey."
+                                       value="<?= $cfg['dir_torrents'] ?? '' ?>"/>
                             </label>
                             <label class="label">
                                 Passkey:
-                                <input id="passkey" name="passkey" class="myinput" type="text" size="15" title="Passkey, который необходимо вшить в скачиваемые торрент-файлы." value="<?php echo $cfg['user_passkey'] ?>" />
+                                <input id="passkey" name="passkey" class="myinput" type="text" size="15"
+                                       title="Passkey, который необходимо вшить в скачиваемые торрент-файлы."
+                                       value="<?= $cfg['user_passkey'] ?? '' ?>"/>
                             </label>
                             <label>
-                                <input name="tor_for_user" type="checkbox" size="24" <?php echo $tor_for_user ?> />
+                                <input name="tor_for_user" type="checkbox" size="24" <?= $tor_for_user ?? '' ?> />
                                 скачать торрент-файлы для обычного пользователя
                             </label>
                         </div>
                         <h2>Отправка отчётов</h2>
                         <div>
                             <label class="label">
-                                <input name="auto_clear_messages" type="checkbox" size="24" <?php echo $auto_clear_messages ?> />
+                                <input name="auto_clear_messages" type="checkbox" size="24" <?= $auto_clear_messages ?? '' ?> />
                                 очищать свои неактуальные сообщения в рабочем подфоруме
                             </label>
                             <h3>Список исключённых групп, см. настройки торрент-клиентов/подразделов:</h3>
                             <label class="label">
                                 Исключенные клиенты
-                                <input id="exclude_clients_ids" type="text" size="20" readonly value="<?php echo implode(',', $excludeClientsIDs) ?>" />
+                                <input id="exclude_clients_ids" type="text" size="20" readonly
+                                       value="<?= implode(',', $excludeClientsIDs ?? []) ?>"/>
                             </label>
                             <label class="label">
                                 Исключенные подразделы
-                                <input id="exclude_forums_ids" type="text" size="20" readonly value="<?php echo $cfg['reports']['exclude_forums_ids'] ?>" />
+                                <input id="exclude_forums_ids" type="text" size="20" readonly
+                                       value="<?= $cfg['reports']['exclude_forums_ids'] ?? '' ?>"/>
                             </label>
                         </div>
                         <h2>Автоматизация и дополнительные настройки</h2>
                         <div>
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
-                                <input name="automation_update" type="checkbox" size="24" <?= $checkbox_check('automation', 'update') ?> />
+                                <input name="automation_update" type="checkbox" size="24" <?= $checkbox_check('automation', 'update')  ?> />
                                 <span class="scriptname">[update.php, keepers.php]</span>
                                 Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
@@ -1014,30 +1066,30 @@ function cfg_checkbox($cfg): Closure
                             <h3>Регулировка раздач<sup>2</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:
-                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?php echo $cfg['topics_control']['peers'] ?>" />
+                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?= $cfg['topics_control']['peers'] ?? 10 ?>" />
                             </label>
                             <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
                                 Не учитывать до
-                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?php echo $cfg['topics_control']['keepers'] ?>" />
+                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?= $cfg['topics_control']['keepers'] ?? 3 ?>" />
                                 сидирующих хранителей, при подсчете текущих сидов
                             </label>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
-                                <input name="unadded_subsections" type="checkbox" <?php echo $unadded_subsections ?> />
+                                <input name="unadded_subsections" type="checkbox" <?= $unadded_subsections ?? '' ?> />
                                 регулировать раздачи не из хранимых подразделов
                             </label>
                             <label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
-                                <input name="leechers" type="checkbox" <?php echo $leechers ?> />
+                                <input name="leechers" type="checkbox" <?= $leechers ?? '' ?> />
                                 учитывать значение личей
                             </label>
                             <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
-                                <input name="no_leechers" type="checkbox" <?php echo $no_leechers ?> />
+                                <input name="no_leechers" type="checkbox" <?= $no_leechers ?? '' ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
                             <hr>
                             <ol class="footnote">
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                     Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
-                                    За подробностями обратитесь к <a target="_blank" href="<?php echo $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
+                                    За подробностями обратитесь к <a target="_blank" href="<?= $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
                         </div>
@@ -1061,7 +1113,7 @@ function cfg_checkbox($cfg): Closure
                         <option value="0">Сводный отчёт</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="reports-subsections-stored">
-                        <?php echo $optionForums ?>
+                        <?= $optionForums ?? '' ?>
                     </optgroup>
                 </select>
                 <div id="reports-content"></div>
