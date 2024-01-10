@@ -190,6 +190,12 @@ li.menu.ui-tabs-active {
     font-size: small;
 }
 
+#load_error {
+    color: orangered;
+    font-size: larger;
+    padding: 2px 15px;
+}
+
 #topics_data {
     border: 1px solid #aaa;
     border-radius: 4px;

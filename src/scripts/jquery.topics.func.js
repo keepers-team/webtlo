@@ -135,6 +135,8 @@ function getFilteredTopics() {
 
             // Блокировка/разблокировка элементов строго после разблокировки прочих кнопок.
             blockTopicsFilters(forum_id);
+
+            $('#load_error').html('');
         },
         success: function (response) {
             response = $.parseJSON(response);

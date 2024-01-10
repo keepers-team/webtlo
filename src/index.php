@@ -9,7 +9,7 @@ mb_internal_encoding("UTF-8");
 try {
     include_once dirname(__FILE__) . '/php/common.php';
 } catch (Exception $e) {
-    // $e->getMessage();
+    $initError = $e->getMessage();
 }
 
 // 2. Загружаем конфиг и рисуем селекторы.
@@ -251,6 +251,7 @@ function cfg_checkbox($cfg): Closure
                     </optgroup>
                 </select>
                 <div id="topics_data">
+                    <span id="load_error"><?= $initError ?? '' ?></span>
                     <div id="topics_control">
                         <div id="toolbar-filter-topics">
                             <button type="button" id="filter_show" title="Скрыть или показать параметры фильтра">
