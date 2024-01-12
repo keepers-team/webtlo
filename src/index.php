@@ -221,12 +221,12 @@ function cfg_checkbox($cfg): Closure
 <body>
     <div id="menutabs" class="menu">
         <ul class="menu">
-            <li class="menu"><a href="#main" class="menu">Главная</a></li>
-            <li class="menu"><a href="#settings" class="menu">Настройки</a></li>
-            <li class="menu"><a href="#reports" class="menu">Отчёты</a></li>
-            <li class="menu"><a href="#statistics" class="menu">Статистика</a></li>
-            <li class="menu"><a href="#journal" class="menu">Журнал</a></li>
-            <li class="menu"><a href="#manual" class="menu">О программе</a></li>
+            <li id="menu_main"       class="menu"><a href="#main"       class="menu">Главная</a></li>
+            <li id="menu_settings"   class="menu"><a href="#settings"   class="menu">Настройки</a></li>
+            <li id="menu_reports"    class="menu"><a href="#reports"    class="menu">Отчёты</a></li>
+            <li id="menu_statistics" class="menu"><a href="#statistics" class="menu">Статистика</a></li>
+            <li id="menu_journal"    class="menu"><a href="#journal"    class="menu">Журнал</a></li>
+            <li id="menu_manual"     class="menu"><a href="#manual"     class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
             <p id="new_version_description"><?= "v$webtlo->version" ?? '' ?></p>
@@ -456,8 +456,8 @@ function cfg_checkbox($cfg): Closure
                                 </fieldset>
                             </div>
                             <div class="filter_block ui-widget"
-                                 title="Статус определяется при сканировании чужих списков на форуме и обновлении сведений по данным трекера. Каждая раздача может иметь (или не иметь):
-                                 'Хранителя', который включил раздачу в свой отчёт;
+                                 title="Статус определяется при сканировании списков хранимого на форуме и обновлении сведений через API форума. Каждая раздача может иметь (или не иметь):
+                                 'Хранителя', который скачал раздачу и включил её в свой отчёт;
                                  'Хранителя', который раздаёт раздачу на момент последнего обновления сведений;
                                  'Хранителя', который скачивает раздачу.">
                                 <span>Статус хранения раздачи</span>
@@ -633,7 +633,7 @@ function cfg_checkbox($cfg): Closure
                 </div>
                 <form id="config">
                     <div class="sub_settings">
-                        <h2>Связь с форумом и API</h2>
+                        <h2 id="sub_setting_auth">Связь с форумом и API</h2>
                         <div>
                             <div id="forum_url_params">
                                 <label for="forum_url" class="param-name">Адрес форума:</label>
@@ -764,7 +764,7 @@ function cfg_checkbox($cfg): Closure
                                 </div>
                             </div>
                         </div>
-                        <h2>Торрент-клиенты</h2>
+                        <h2 id="sub_setting_client">Торрент-клиенты</h2>
                         <div>
                             <div>
                                 <button type="button" id="add-torrent-client" title="Добавить новый торрент-клиент в список">
@@ -841,7 +841,7 @@ function cfg_checkbox($cfg): Closure
                                 </div>
                             </div>
                         </div>
-                        <h2>Сканируемые подразделы</h2>
+                        <h2 id="sub_setting_forum">Сканируемые подразделы</h2>
                         <div>
                             <div class="input-container">
                                 <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />

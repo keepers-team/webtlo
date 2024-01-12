@@ -203,6 +203,13 @@ $(document).ready(function () {
     $('div.sub_settings').accordion({
         collapsible: true,
         heightStyle: 'content',
+        active: +(Cookies.get('selected-sub-settings') ?? 0),
+        activate: function (event, ui) {
+            Cookies.set(
+                'selected-sub-settings',
+                $(this).accordion('option', 'active')
+            );
+        },
     });
 
     // выпадающее меню для отчётов
