@@ -206,7 +206,7 @@ function cfg_checkbox($cfg): Closure
         <div id="content">
             <div id="main" class="content">
                 <select id="main-subsections">
-                    <optgroup>
+                    <optgroup label="">
                         <option value="-999">[[Выберите необходимый раздел из списка]]</option>
                     </optgroup>
                     <optgroup label="Общие группы раздач">
@@ -432,7 +432,7 @@ function cfg_checkbox($cfg): Closure
                                  'Хранителя', который включил раздачу в свой отчёт;
                                  'Хранителя', который раздаёт раздачу на момент последнего обновления сведений;
                                  'Хранителя', который скачивает раздачу.">
-                                <legend>Статус хранения раздачи</legend>
+                                <span>Статус хранения раздачи</span>
                                 <hr/>
                                 <fieldset class="filter-topic-kept-status">
                                     <fieldset title="Отобразить раздачи, у которых есть минимум однин хранитель, с полностью скачанной раздачей / раздачи, у которых нет хранителей.">
@@ -505,11 +505,11 @@ function cfg_checkbox($cfg): Closure
                                                    name="keepers_filter_count[max]" size="1" value="10"/>
                                         </label>
                                         <fieldset class="filter-exception-keepers-count">
-                                            <label class="keepers-filter-count-padding25"
+                                            <legend class="keepers-filter-count-padding25"
                                                    style="padding-top: 3px; padding-bottom: 3px;"
                                                    title="К хранителям каждой раздачи применяется фильтр выбираемый ниже. После чего применяется фильтр по количеству.">
                                                 учитываемые типы:
-                                            </label>
+                                            </legend>
                                             <label class="keepers-filter-count-padding20"
                                                    title="Хранитель скачал раздачу, добавил её в свой список и, в данный момент, не раздаёт её.">
                                                 <input type="checkbox" class="keepers default" name="keepers_count_kept"
@@ -608,11 +608,10 @@ function cfg_checkbox($cfg): Closure
                         <h2>Связь с форумом и API</h2>
                         <div>
                             <div id="forum_url_params">
-                                <label class="param-name">Адрес форума:</label>
+                                <label for="forum_url" class="param-name">Адрес форума:</label>
                                 <select name="forum_url" id="forum_url" class="myinput">
                                     <?php echo $optionForumAddress ?>
                                 </select>
-                                
                                 <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['forum_url_custom'] ?>" />
                                 <label>
                                     <input id="forum_ssl" name="forum_ssl" class="check_access_forum" type="checkbox" <?php echo $forumVerifySSL ?> />
@@ -625,10 +624,10 @@ function cfg_checkbox($cfg): Closure
                                 <i id="forum_url_result" class=""></i>
                             </div>
                             <div id="api_url_params">
-                                <label class="param-name">Адрес API:</label>
-                                    <select name="api_url" id="api_url" class="myinput">
-                                        <?php echo $optionApiAddress ?>
-                                    </select>
+                                <label for="api_url" class="param-name">Адрес API:</label>
+                                <select name="api_url" id="api_url" class="myinput">
+                                    <?php echo $optionApiAddress ?>
+                                </select>
                                 <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14" value="<?php echo $cfg['api_url_custom'] ?>" />
                                 <label>
                                     <input id="api_ssl" name="api_ssl" class="check_access_api" type="checkbox" <?php echo $apiVerifySSL ?> />
@@ -642,21 +641,21 @@ function cfg_checkbox($cfg): Closure
                             </div>
                             <div id="forum_auth_params">
                                 <div>
-                                    <label class="param-name">Логин:</label>
+                                    <label for="tracker_username" class="param-name">Логин:</label>
                                     <input id="tracker_username" name="tracker_username" type="text"
                                            class="myinput" size="25"
                                            placeholder="Логин на форуме" title="Логин на форуме"
                                            value="<?= $cfg['tracker_login'] ?>"/>
                                 </div>
                                 <div>
-                                    <label class="param-name">Пароль:</label>
+                                    <label for="tracker_password" class="param-name">Пароль:</label>
                                     <input id="tracker_password" name="tracker_password" type="password"
                                            class="myinput user_protected" size="25"
                                            placeholder="Пароль на форуме" title="Пароль на форуме"
                                            value="<?= $cfg['tracker_paswd'] ?>"/>
                                 </div>
                                 <div>
-                                    <label class="param-name">Сессия:</label>
+                                    <label for="user_session" class="param-name">Сессия:</label>
                                     <input id="user_session" name="user_session" type="password"
                                            class="myinput user_protected" size="25" readonly
                                            value="<?= $cfg['user_session'] ?>"/>
@@ -704,6 +703,8 @@ function cfg_checkbox($cfg): Closure
                                                class="myinput" size="24"
                                                title="IP-адрес или сетевое/доменное имя прокси-сервера."
                                                value="<?= $cfg['proxy_hostname'] ?>"/>
+                                    </label>
+                                    <label>
                                         Порт:
                                         <input name="proxy_port" id="proxy_port" type="text"
                                                class="myinput" size="6"
@@ -1053,10 +1054,10 @@ function cfg_checkbox($cfg): Closure
                     </button>
                 </div>
                 <select id="reports-subsections">
-                    <optgroup>
+                    <optgroup label="">
                         <option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
                     </optgroup>
-                    <optgroup>
+                    <optgroup label="">
                         <option value="0">Сводный отчёт</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="reports-subsections-stored">

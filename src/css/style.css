@@ -29,6 +29,10 @@ a:visited {
     color: #660066;
 }
 
+legend:hover {
+    cursor: default;
+}
+
 label:hover {
     cursor: pointer;
 }
