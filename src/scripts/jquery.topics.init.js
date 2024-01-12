@@ -261,11 +261,16 @@ $(document).ready(function () {
         }
     });
 
-    $("#topics_filter").on("change input selectmenuchange spinstop", function () {
-        // запоминаем параметры фильтра в куки
-        Cookies.set("filter-options", $("#topics_filter").serializeAllArray());
-        if ($("#enable_auto_apply_filter").prop("checked")) {
-            filter_delay(getFilteredTopics);
+    let topicsFilter = $('#topics_filter');
+
+    topicsFilter.on('change input selectmenuchange spinstop', function (e) {
+        e.preventDefault();
+
+        // Запоминаем параметры фильтра в куки.
+        Cookies.set('filter-options', topicsFilter.serializeAllArray());
+
+        if ($('#enable_auto_apply_filter').prop('checked')) {
+            filter_delay(getFilteredTopics, window);
         }
     });
 

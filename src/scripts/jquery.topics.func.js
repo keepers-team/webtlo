@@ -91,7 +91,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
 }
 
 // задержка при выборе свойств фильтра
-let filter_delay = makeDelay(600);
+let filter_delay = makeDelay(1500);
 
 // подавление срабатывания фильтрации раздач
 let filter_hold = false;
@@ -411,6 +411,9 @@ function updateEmptyTitleTopics() {
         complete: function () {
             refreshTopics.updateInProgress = false;
             clearRefreshTopicsInterval();
+
+            // Примеряем фильтр поиска после успешного обновления имён раздач.
+            getFilteredTopics();
 
             processStatus.hide();
         },
