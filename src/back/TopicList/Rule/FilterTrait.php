@@ -6,7 +6,8 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use Exception;
+use Throwable;
+use RuntimeException;
 
 trait FilterTrait
 {
@@ -15,8 +16,8 @@ trait FilterTrait
     {
         try {
             $topics = $this->db->query($statement, $params);
-        } catch (Exception) {
-            $topics = [];
+        } catch (Throwable $e) {
+            throw new RuntimeException($e->getMessage());
         }
 
         return Helper::natsortField(

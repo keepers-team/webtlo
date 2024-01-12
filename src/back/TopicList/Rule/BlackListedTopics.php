@@ -26,25 +26,22 @@ final class BlackListedTopics implements ListInterface
     /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
-        $statement = sprintf(
-            "
-                SELECT
-                    Topics.id AS topic_id,
-                    Topics.hs AS info_hash,
-                    Topics.na AS name,
-                    Topics.si AS size,
-                    Topics.rg AS reg_time,
-                    Topics.ss AS forum_id,
-                    Topics.pt AS priority,
-                    0 AS client_id,
-                    %s,
-                    TopicsExcluded.comment
-                FROM Topics
-                LEFT JOIN TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
-                WHERE TopicsExcluded.info_hash IS NOT NULL
-            ",
-            $this->cfg['avg_seeders'] ? '(se * 1.) / qt AS seed' : 'se AS seed'
-        );
+        $statement = "
+            SELECT
+                tp.id topic_id,
+                tp.info_hash,
+                tp.name,
+                tp.size,
+                tp.reg_time,
+                tp.forum_id,
+                tp.keeping_priority AS priority,
+                0 AS client_id,
+                tp.seeders / tp.seeders_updates_today AS seed,
+                te.comment
+            FROM Topics AS tp
+            LEFT JOIN TopicsExcluded AS te ON tp.info_hash = te.info_hash
+            WHERE te.info_hash IS NOT NULL
+        ";
 
         $topics = $this->selectSortedTopics($sort, $statement);
 

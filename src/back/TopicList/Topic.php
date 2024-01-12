@@ -66,7 +66,10 @@ final class Topic
         $url  = sprintf('%s/forum/viewtopic.php?t=%d', $forum_address, $this->id);
         $size = convert_bytes($this->size);
 
-        return "<a href='$url' target='_blank'>$this->name</a> ($size)";
+        $pattern = /** @lang text */
+            "<a href='%s' target='_blank'>%s</a> (%s)";
+
+        return sprintf($pattern, $url, $this->name, $size);
     }
 
     public function getAverageSeed(): string

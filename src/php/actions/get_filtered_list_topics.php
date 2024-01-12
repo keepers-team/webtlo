@@ -68,5 +68,6 @@ try {
 } catch (Exception $e) {
     $returnObject['log'] = $e->getMessage();
 }
+$returnObject['details'] = Log::get();
 
 echo json_encode($returnObject, JSON_UNESCAPED_UNICODE);

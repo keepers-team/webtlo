@@ -37,18 +37,18 @@ final class DuplicatedTopics implements ListInterface
 
         $statement = '
             SELECT
-                Topics.id AS topic_id,
-                Topics.hs AS info_hash,
-                Topics.na AS name,
-                Topics.si AS size,
-                Topics.rg AS reg_time,
-                Topics.ss AS forum_id,
-                Topics.pt AS priority,
+                Topics.id topic_id,
+                Topics.info_hash,
+                Topics.name,
+                Topics.size,
+                Topics.reg_time,
+                Topics.forum_id,
+                Topics.keeping_priority AS priority,
                 0 AS client_id,
                 ' . implode(',', $seedFilter->fields) . '
             FROM Topics
                 ' . implode(' ', $seedFilter->joins) . '
-            WHERE Topics.hs IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(1) > 1)
+            WHERE Topics.info_hash IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(1) > 1)
         ';
 
         $topics = $this->selectSortedTopics($sort, $statement);

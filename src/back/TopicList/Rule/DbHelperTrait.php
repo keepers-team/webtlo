@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use PDO;
 use Exception;
+use RuntimeException;
 
 trait DbHelperTrait
 {
@@ -14,12 +15,12 @@ trait DbHelperTrait
     {
         try {
             return $this->db->query(
-                'SELECT DISTINCT ss FROM Topics WHERE pt = ?',
+                'SELECT DISTINCT forum_id FROM Topics WHERE keeping_priority = ?',
                 [2],
                 PDO::FETCH_COLUMN
             );
-        } catch (Exception) {
-            return [];
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
         }
     }
 
@@ -27,8 +28,8 @@ trait DbHelperTrait
     {
         try {
             return (array)$this->db->queryRow($statement, $params);
-        } catch (Exception) {
-            return [];
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
         }
     }
 
@@ -36,8 +37,8 @@ trait DbHelperTrait
     {
         try {
             return $this->db->query($statement, $params, PDO::FETCH_ASSOC | PDO::FETCH_GROUP);
-        } catch (Exception) {
-            return [];
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
         }
     }
 }

@@ -210,10 +210,10 @@ final class DefaultTopics implements ListInterface
                 FROM (
                     SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
                     FROM (
-                        SELECT topic_id, keeper_id, complete, CASE WHEN complete = 1 THEN posted END as posted, 0 AS seeding
+                        SELECT kl.topic_id, kl.keeper_id, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
                         FROM KeepersLists kl
                         INNER JOIN Topics t ON t.id = kl.topic_id
-                        WHERE kl.posted > t.rg
+                        WHERE kl.posted > t.reg_time
                         UNION ALL
                         SELECT topic_id, keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
                         FROM KeepersSeeders
@@ -244,28 +244,28 @@ final class DefaultTopics implements ListInterface
         $statement = "
             SELECT
                 Topics.id AS topic_id,
-                Topics.hs AS info_hash,
-                Topics.na AS name,
-                Topics.si AS size,
-                Topics.rg AS reg_time,
-                Topics.ss AS forum_id,
-                Topics.pt AS priority,
+                Topics.info_hash,
+                Topics.name,
+                Topics.size,
+                Topics.reg_time,
+                Topics.forum_id,
+                Topics.keeping_priority AS priority,
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
                 Torrents.client_id,
                 %s
             FROM Topics
-            LEFT JOIN Torrents ON Topics.hs = Torrents.info_hash
+            LEFT JOIN Torrents ON Topics.info_hash = Torrents.info_hash
             %s
             LEFT JOIN (
                 %s
-            ) Keepers ON Topics.id = Keepers.topic_id AND (Keepers.max_posted IS NULL OR Topics.rg < Keepers.max_posted)
-            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.hs = TopicsExcluded.info_hash
+            ) Keepers ON Topics.id = Keepers.topic_id AND (Keepers.max_posted IS NULL OR Topics.reg_time < Keepers.max_posted)
+            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.info_hash = TopicsExcluded.info_hash
             WHERE TopicsExcluded.info_hash IS NULL
-                AND ss IN ($forum->keys)
-                AND st IN ($status->keys)
-                AND pt IN ($priority->keys)
+                AND Topics.forum_id IN ($forum->keys)
+                AND Topics.status IN ($status->keys)
+                AND Topics.keeping_priority IN ($priority->keys)
                 AND ($torrentDone)
                 %s
         ";
@@ -274,7 +274,7 @@ final class DefaultTopics implements ListInterface
         $where = Validate::getKeptStatusFilter($filterKeepers->status);
 
         // Фильтр по дате регистрации раздачи.
-        $where[] = sprintf('AND Topics.rg < %d', Validate::getDateRelease($filter)->format('U'));
+        $where[] = sprintf('AND Topics.reg_time < %d', Validate::getDateRelease($filter)->format('U'));
 
         // Фильтр по клиенту.
         if ($filter['filter_client_id'] > 0) {
@@ -294,12 +294,12 @@ final class DefaultTopics implements ListInterface
     private function getExcluded(KeysObject $forum, KeysObject $status, KeysObject $priority): Excluded
     {
         $statement = "
-            SELECT COUNT(1) AS count, IFNULL(SUM(t.si),0) AS size
+            SELECT COUNT(1) AS count, IFNULL(SUM(t.size),0) AS size
             FROM TopicsExcluded ex
-            INNER JOIN Topics t on t.hs = ex.info_hash
-            WHERE t.ss IN ($forum->keys)
-                AND t.st IN ($status->keys)
-                AND t.pt IN ($priority->keys)
+            INNER JOIN Topics t on t.info_hash = ex.info_hash
+            WHERE t.forum_id IN ($forum->keys)
+                AND t.status IN ($status->keys)
+                AND t.keeping_priority IN ($priority->keys)
         ";
 
         $excluded = $this->queryStatementRow(
@@ -321,14 +321,14 @@ final class DefaultTopics implements ListInterface
                 SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
                 FROM (
                     SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                    FROM Topics
-                    LEFT JOIN KeepersLists AS kl ON Topics.id = kl.topic_id
-                    WHERE ss IN ($keys->keys) AND rg < posted AND kl.topic_id IS NOT NULL
+                    FROM Topics AS tp
+                    LEFT JOIN KeepersLists AS kl ON tp.id = kl.topic_id
+                    WHERE tp.forum_id IN ($keys->keys) AND tp.reg_time < posted AND kl.topic_id IS NOT NULL
                     UNION ALL
                     SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, 0 AS posted, 1 AS seeding
-                    FROM Topics
-                    LEFT JOIN KeepersSeeders AS ks ON Topics.id = ks.topic_id
-                    WHERE ss IN ($keys->keys) AND ks.topic_id IS NOT NULL
+                    FROM Topics AS tp
+                    LEFT JOIN KeepersSeeders AS ks ON tp.id = ks.topic_id
+                    WHERE tp.forum_id IN ($keys->keys) AND ks.topic_id IS NOT NULL
                 ) AS k
                 GROUP BY k.topic_id, k.keeper_id, k.keeper_name
                 ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
