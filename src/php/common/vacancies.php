@@ -36,9 +36,9 @@ Db::query_database("CREATE TEMP TABLE VacanciesKeepers (id INT NOT NULL, posted 
 if ($vacancies['scan_reports']) {
     $reports = new Reports(
         $cfg['forum_address'],
-        $cfg['tracker_login'],
-        $cfg['tracker_paswd']
+        $user
     );
+
     // применяем таймауты
     $reports->curl_setopts($cfg['curl_setopt']['forum']);
     $topics_ids = $reports->scanning_viewforum(1584);
@@ -71,6 +71,7 @@ if ($vacancies['scan_reports']) {
     unset($topics_ids);
 }
 
+$avg = [];
 // формируем ср. сиды
 for ($i = 0; $i < $vacancies['avg_seeders_period']; $i++) {
     $avg['sum_se'][] = "CASE WHEN d$i IS \"\" OR d$i IS NULL THEN 0 ELSE d$i END";
@@ -78,25 +79,29 @@ for ($i = 0; $i < $vacancies['avg_seeders_period']; $i++) {
 }
 $sum_se = implode('+', $avg['sum_se']);
 $sum_qt = implode('+', $avg['sum_qt']);
-$avg = "( se * 1. + $sum_se ) / ( qt + $sum_qt )";
+$avg = "( seeders * 1. + $sum_se ) / ( seeders_updates_today + $sum_qt )";
 
 // получаем из локальной базы список малосидируемых раздач
 $avg_seeders_value = $vacancies['avg_seeders_value'];
 $reg_time_seconds = $vacancies['reg_time_seconds'];
 $in = str_repeat('?,', count($exclude) - 1) . '?';
 $ids = Db::query_database(
-    "SELECT ss,si FROM Topics
-    LEFT JOIN Seeders ON Seeders.id = Topics.id
-    WHERE pt > 0
-    AND st IN (0,2,3,8,10)
-    AND ss NOT IN ($in)
-    AND $avg <= $avg_seeders_value
-    AND strftime('%s','now') - rg >= $reg_time_seconds
-    AND Topics.id NOT IN (
-        SELECT temp.VacanciesKeepers.id FROM temp.VacanciesKeepers
-        LEFT JOIN Topics ON Topics.id = temp.VacanciesKeepers.id
-        WHERE rg < posted
-    )",
+    "
+        SELECT forum_id, size
+        FROM Topics AS t
+        LEFT JOIN Seeders ON Seeders.id = t.id
+        WHERE t.keeping_priority > 0
+            AND t.status IN (0,2,3,8,10)
+            AND t.forum_id NOT IN ($in)
+            AND $avg <= $avg_seeders_value
+            AND unixepoch() - t.reg_time >= $reg_time_seconds
+            AND t.id NOT IN (
+                SELECT temp.VacanciesKeepers.id
+                FROM temp.VacanciesKeepers
+                LEFT JOIN Topics ON Topics.id = temp.VacanciesKeepers.id
+                WHERE Topics.reg_time < temp.VacanciesKeepers.posted
+            )
+    ",
     $exclude,
     true,
     PDO::FETCH_COLUMN | PDO::FETCH_GROUP
