@@ -6,12 +6,14 @@ namespace KeepersTeam\Webtlo;
 
 use Db;
 use PDO;
+use Log;
 use Proxy;
+use Exception;
 
 final class Settings
 {
     public function __construct(
-        private TIniFileEx $ini
+        private readonly TIniFileEx $ini
     ) {
     }
 
@@ -46,14 +48,7 @@ final class Settings
         if (!empty($subsections)) {
             $subsections = explode(',', $subsections);
 
-            $in = str_repeat('?,', count($subsections) - 1) . '?';
-
-            $titles = (array)Db::query_database(
-                "SELECT id,name FROM Forums WHERE id IN ($in)",
-                $subsections,
-                true,
-                PDO::FETCH_KEY_PAIR
-            );
+            $titles = $this->getSubsectionsTitles($subsections);
             foreach ($subsections as $id) {
                 $forum_client = $ini->read($id, "client", 0);
 
@@ -487,5 +482,24 @@ final class Settings
 
         // обновление файла с настройками
         $ini->updateFile();
+    }
+
+    /** Пробуем найти наименования подразделов в БД. */
+    private function getSubsectionsTitles(array $subsections): array
+    {
+        $in = str_repeat('?,', count($subsections) - 1) . '?';
+
+        try {
+            return (array)Db::query_database(
+                "SELECT id,name FROM Forums WHERE id IN ($in)",
+                $subsections,
+                true,
+                PDO::FETCH_KEY_PAIR
+            );
+        } catch (Exception $e) {
+            Log::append($e->getMessage());
+
+            return [];
+        }
     }
 }

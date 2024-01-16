@@ -37,17 +37,21 @@ final class DB
 
         if (null === self::$instance) {
             try {
+                // Подключаемся к БД. Создаём кастомную функцию like.
                 $pdo = new PDO('sqlite:' . $databasePath);
                 $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
 
-                self::$instance = new DB($pdo);
+                // Создаём экземпляр класса.
+                $db = new DB($pdo);
+
+                // Инциализация/миграция таблиц БД.
+                $db->checkDatabaseVersion($databasePath);
+
+                self::$instance = $db;
             } catch (PDOException $e) {
                 throw new Exception(sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e));
             }
         }
-
-        // Инциализация/миграция таблиц БД.
-        self::$instance->checkDatabaseVersion($databasePath);
 
         return self::$instance;
     }
@@ -252,7 +256,7 @@ final class DB
      * PHP SQLite case-insensitive LIKE for Unicode strings.
      * https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
      */
-    private static function lexa_ci_utf8_like($mask, $value): bool|int
+    private static function lexa_ci_utf8_like(string $mask, mixed $value): bool|int
     {
         $mask = str_replace(
             ["%", "_"],
@@ -261,6 +265,6 @@ final class DB
         );
         $mask = "/^$mask$/ui";
 
-        return preg_match($mask, $value);
+        return preg_match($mask, (string)$value);
     }
 }

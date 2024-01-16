@@ -1,10 +1,13 @@
 <?php
 
 use KeepersTeam\Webtlo\DB as ModernDB;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\TIniFileEx;
 
 class Db
 {
-    public static ModernDB $db;
+    public static ?ModernDB $db = null;
 
     public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
@@ -20,6 +23,8 @@ class Db
 
     private static function prepare_query($sql, $param = [])
     {
+        self::checkConnect();
+
         return self::$db->executeStatement($sql, $param);
     }
 
@@ -100,16 +105,18 @@ class Db
         self::query_database($sql);
     }
 
-    public static function combine_set($set, $primaryKey = 'id')
+    public static function combine_set($set, $primaryKey = 'id'): string
     {
+        self::checkConnect();
+
         foreach ($set as $id => &$value) {
             $value = array_map(function ($e) {
-                return is_numeric($e) ? $e : self::$db->db->quote($e);
+                return is_numeric($e) ? $e : self::$db->db->quote($e ?? '');
             }, $value);
             $value = (empty($value[$primaryKey]) ? "$id," : "") . implode(',', $value);
         }
-        $statement = 'SELECT ' . implode(' UNION ALL SELECT ', $set);
-        return $statement;
+
+        return 'SELECT ' . implode(' UNION ALL SELECT ', $set);
     }
 
     /**
@@ -119,6 +126,8 @@ class Db
      */
     public static function unionQuery($source)
     {
+        self::checkConnect();
+
         if (!is_array($source)) {
             return false;
         }
@@ -130,7 +139,7 @@ class Db
             }
             $row = array_map(
                 function ($e) {
-                    return is_numeric($e) ? $e : self::$db->db->quote($e);
+                    return is_numeric($e) ? $e : self::$db->db->quote($e ?? '');
                 },
                 $row
             );
@@ -146,5 +155,50 @@ class Db
     public static function create(): void
     {
         self::$db = ModernDB::create();
+
+        self::clearTables();
+    }
+
+    private static function checkConnect(): void
+    {
+        if (null === self::$db) {
+            self::create();
+        }
+    }
+
+    /** Удалим устаревшие данные о раздачах. */
+    private static function clearTables(): void
+    {
+        // Данные о сидах устарели
+        $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
+
+        $outdatedTime = time() - (int)$avgSeedersPeriodOutdated * 86400;
+
+        // Удалим устаревшие метки обновлений.
+        self::query_database(
+            'DELETE FROM UpdateTime WHERE ud < ?',
+            [$outdatedTime]
+        );
+
+        // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
+        self::query_database('
+            DELETE FROM Topics
+            WHERE pt <> 2
+                AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+        ');
+
+        // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
+        $updatePriority = (bool)TIniFileEx::read('update', 'priority', 0);
+        if ($updatePriority) {
+            // Удалим устаревшие раздачи высокого приоритета.
+            $lastHighUpdate = LastUpdate::getTime(UpdateMark::HIGH_PRIORITY->value);
+            if ($lastHighUpdate < $outdatedTime) {
+                self::query_database('
+                    DELETE FROM Topics
+                    WHERE pt = 2
+                        AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+                ');
+            }
+        }
     }
 }

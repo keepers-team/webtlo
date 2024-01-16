@@ -12,33 +12,7 @@ include_once dirname(__FILE__) . '/classes/db.php';
 include_once dirname(__FILE__) . '/classes/proxy.php';
 include_once dirname(__FILE__) . '/classes/Timers.php';
 
-// подключаемся к базе
 Db::create();
-
-// данные о сидах устарели
-$avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
-$outdatedTime = time() - (int)$avgSeedersPeriodOutdated * 86400;
-
-// Удалим устаревшие метки обновления.
-Db::query_database(
-    "DELETE FROM UpdateTime WHERE ud < ?",
-    [$outdatedTime]
-);
-
-// Удалим раздачи из подразделов, для которых нет в списке "обновлённых".
-Db::query_database(
-    "DELETE FROM Topics WHERE pt <> 2 AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)"
-);
-
-// Удалим устаревшие раздачи высокого приоритета.
-Db::query_database(
-    "DELETE FROM Topics
-        WHERE pt = 2
-            AND IFNULL((SELECT ud FROM UpdateTime WHERE id = 9999), 0) < ?
-            AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)",
-    [$outdatedTime]
-);
-
 
 function get_settings($filename = ''): array
 {
