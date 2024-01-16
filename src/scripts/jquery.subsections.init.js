@@ -4,43 +4,53 @@
 $(document).ready(function () {
 
     // последний выбранный подраздел
-    var editableForumID;
+    let editableForumID;
 
     // загрузка данных о выбранном подразделе на главной
-    $("#main-subsections").selectmenu({
+    $('#main-subsections').selectmenu({
         width: "calc(100% - 36px)",
         change: function (event, ui) {
             showResultTopics();
             getFilteredTopics();
-            Cookies.set("saved_forum_id", ui.item.value);
+            Cookies.set('saved_forum_id', ui.item.value);
         },
         create: function (event, ui) {
-            var forumID = Cookies.get("saved_forum_id");
-            if (typeof forumID !== "undefined") {
-                $("#main-subsections").val(forumID);
-                $("#main-subsections").selectmenu("refresh");
+            const forumID = Cookies.get('saved_forum_id');
+            if (typeof forumID !== 'undefined') {
+                $('#main-subsections').val(forumID).selectmenu("refresh");
             }
         },
         open: function (event, ui) {
-            // выделяем жирным в списке
-            var selectedForumID = $("#main-subsections-button").attr("aria-activedescendant");
-            $("#main-subsections-menu div[role=option]").css({ "font-weight": "normal" });
-            $("#" + selectedForumID).css({ "font-weight": "bold" });
+            // Выделяем выделенную строку жирным в списке.
+            let selectedForumID = $('#main-subsections-button').attr('aria-activedescendant');
+            $('#main-subsections-menu div[role=option]').css({ 'font-weight': 'normal' });
+            $(`#${selectedForumID}`).css({ 'font-weight': 'bold' });
+
+            const getIcon = function(faClass) {
+                return `<i class="fa ${faClass}" aria-hidden="true"></i> `;
+            }
+
             $("#main-subsections-menu li div").each(function () {
-                var forumIndication = '';
-                var forumTitle = $.trim($(this).text());
-                var forumData = $("#list-forums option").filter(function () {
+                let forumTitle = $.trim($(this).text());
+                let forumData = $('#list-forums option').filter(function () {
                     return $(this).text() === forumTitle;
                 }).data();
-                if (typeof forumData === "undefined") {
+
+                if (typeof forumData === 'undefined') {
                     return;
                 }
-                if (forumData.hide == 1) {
-                    forumIndication += '<i class="fa fa-eye-slash" aria-hidden="true"></i> ';
+
+                let forumIndication = '';
+                if (+forumData.hide === 1) {
+                    forumIndication += getIcon('fa-eye-slash');
                 }
-                if (forumData.peers == -1) {
-                    forumIndication += '<i class="fa fa-bolt" aria-hidden="true"></i> ';
+                if (+forumData.exclude === 1) {
+                    forumIndication += getIcon('fa-circle-minus');
                 }
+                if (+forumData.peers === -1) {
+                    forumIndication += getIcon('fa-bolt');
+                }
+
                 $(this).html(forumIndication + forumTitle);
             });
         },

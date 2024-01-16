@@ -887,23 +887,26 @@ function cfg_checkbox($cfg): Closure
                                         <option value="2">хэш раздачи</option>
                                     </select>
                                 </label>
-                                <label>
+                                <label title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
+                                    <i class="fa fa-eye-slash" aria-hidden="true" title="Иконка скрытого подраздела"></i>
                                     Скрывать раздачи в общем списке:
-                                    <select id="forum-hide-topics" class="myinput forum-props" title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
+                                    <select id="forum-hide-topics" class="myinput forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
                                 </label>
                                 <label title="Позволяет исключить все раздачи данного раздела из формируемых отчётов">
+                                    <i class="fa fa-circle-minus" title="Иконка исключённого из отчётов подраздела"></i>
                                     Исключить раздачи из отчётов
                                     <select id="forum-exclude" class="myinput forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
                                 </label>
-                                <label>
+                                <label title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'">
+                                    <i class="fa fa-bolt" aria-hidden="true" title="Иконка исключённого из регулировки подраздела"></i>
                                     Останавливать раздачи с количеством пиров более:
-                                    <input id="forum-control-peers" class="myinput forum-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Настройки управления раздачами.'" />
+                                    <input id="forum-control-peers" class="myinput forum-props spinner-peers" type="text" size="10" />
                                 </label>
                             </fieldset>
                         </div>
