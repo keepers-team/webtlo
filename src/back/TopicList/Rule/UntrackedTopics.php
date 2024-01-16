@@ -30,20 +30,20 @@ final class UntrackedTopics implements ListInterface
         $statement = '
             SELECT
                 TopicsUntracked.id AS topic_id,
-                TopicsUntracked.hs AS info_hash,
-                TopicsUntracked.na AS name,
-                TopicsUntracked.si AS size,
-                TopicsUntracked.rg AS reg_time,
-                TopicsUntracked.ss AS forum_id,
-                TopicsUntracked.se AS seed,
+                TopicsUntracked.info_hash,
+                TopicsUntracked.name,
+                TopicsUntracked.size,
+                TopicsUntracked.reg_time,
+                TopicsUntracked.forum_id,
+                TopicsUntracked.seeders AS seed,
                 -1 AS days_seed,
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
                 Torrents.client_id
             FROM TopicsUntracked
-            LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.hs
-            WHERE TopicsUntracked.hs IS NOT NULL
+            LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.info_hash
+            WHERE TopicsUntracked.info_hash IS NOT NULL
         ';
 
         $topics = $this->selectSortedTopics($sort, $statement);

@@ -49,7 +49,7 @@ $tabTorrents = CloneTable::create(
 // Таблица хранимых раздач из других подразделов.
 $tabUntracked = CloneTable::create(
     'TopicsUntracked',
-    ['id','ss','na','hs','se','si','st','rg']
+    ['id','forum_id','name','info_hash','seeders','size','status','reg_time'],
 );
 
 // Таблица хранимых раздач, более не зарегистрированных на трекере.
@@ -253,10 +253,10 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
                 Torrents.topic_id
             FROM Torrents
             LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
-            LEFT JOIN TopicsUntracked ON TopicsUntracked.hs = Torrents.info_hash
+            LEFT JOIN TopicsUntracked ON TopicsUntracked.info_hash = Torrents.info_hash
             WHERE
                 Topics.hs IS NULL
-                AND TopicsUntracked.hs IS NULL
+                AND TopicsUntracked.info_hash IS NULL
                 AND Torrents.topic_id <> ''",
         [],
         true,
