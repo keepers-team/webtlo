@@ -29,7 +29,7 @@ class Backup
         copy($path, $backupFile);
 
         // Удаляем лишние бекапы.
-        self::clearBackups($backupPath, '/config-(.*)\.ini/');
+        self::clearBackups($backupPath, 'config-*.ini');
     }
 
     /**
@@ -45,7 +45,7 @@ class Backup
         copy($path, $backupFile);
 
         // Удаляем лишние бекапы.
-        self::clearBackups($backupPath, '/webtlo-(.*)\.db/');
+        self::clearBackups($backupPath, 'webtlo-*.db');
     }
 
     /**
@@ -65,19 +65,21 @@ class Backup
     private static function clearBackups(string $path, string $pattern): void
     {
         // Все файлы по указанному пути.
-        $files = array_diff(scandir($path, SCANDIR_SORT_DESCENDING), ['..', '.']);
+        $files = glob($path . DIRECTORY_SEPARATOR . $pattern);
 
-        // Фильтр по паттерну имени.
-        $matches = preg_grep($pattern, $files);
+        // Сортируем он свежих к старым и удаляем самые старые.
+        foreach ($files as $file) {
+            $matches[filemtime($file)] = $file;
+        }
+        krsort($matches);
 
         // Оставим максимальное кол-во бекапов.
-        $matches = array_slice($matches, self::MAX_BACKUPS);
+        $unlink = array_slice($matches, self::MAX_BACKUPS);
 
         // Остальное - удалим.
-        foreach ($matches as $file) {
-            $filePath = $path . DIRECTORY_SEPARATOR . $file;
-            if (file_exists($filePath)) {
-                unlink($filePath);
+        foreach ($unlink as $file) {
+            if (file_exists($file)) {
+                unlink($file);
             }
         }
     }
