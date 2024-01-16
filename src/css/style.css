@@ -710,6 +710,14 @@ div.toolbar-buttons > button.ui-button {
     padding: 5px;
 }
 
+ul.about-installation
+{
+    list-style: disc;
+    padding-left: 30px;
+    font-size: 0.8em;
+    color: #7f7676;
+}
+
 /* spinner for input */
 
 .input-container {

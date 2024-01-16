@@ -37,8 +37,15 @@ jobs:
         run: |
           zip_name=webtlo.zip
           zip_dir=webtlo.local
+          json_version="$zip_dir/version.json"
 
           cp -r "src" "$zip_dir"
+
+          cat $json_version \
+            | jq '.installation="zip"' \
+            > tmp.$$.json
+          mv tmp.$$.json $json_version
+          
           zip -rm -9 "release/$zip_name" "$zip_dir"
 
           echo "Done $zip_name"
@@ -47,6 +54,12 @@ jobs:
         run: |
           zip_name="webtlo-win-${{ inputs.WEBTLO_VERSION }}.zip"
           zip_dir=webtlo-win
+          json_version="src/version.json"
+
+          cat $json_version \
+            | jq '.installation="standalone"' \
+            > tmp.$$.json
+          mv tmp.$$.json $json_version
 
           rm -rf $zip_dir
           mkdir -p $zip_dir/php

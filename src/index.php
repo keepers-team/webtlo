@@ -1192,6 +1192,15 @@ function cfg_checkbox($cfg): Closure
                 <p>
                     <?= $webtlo->getWikiLink() ?>
                 </p>
+
+                <hr />
+                <p>Данные о системе:</p>
+                <ul class="about-installation">
+                    <?= $webtlo->getInstallation() ?>
+                </ul>
+                <a href="/probe.php" target="_blank" style="font-size: small">Тест конфигурации</a>
+
+                <hr />
                 <p>Copyright © 2016-2024 Alexander Shemetov</p>
             </div>
         </div>

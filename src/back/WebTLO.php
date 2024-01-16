@@ -12,6 +12,7 @@ final class WebTLO
         public readonly string $wiki,
         public readonly string $release,
         public readonly string $releaseApi,
+        public readonly string $installation,
         public readonly string $sha,
     ) {
     }
@@ -37,6 +38,7 @@ final class WebTLO
             $result['wiki'] ?? '#',
             $result['release'] ?? '',
             $result['release_api'] ?? '',
+            $result['installation'] ?? 'git',
             $result['sha'] ?? '',
         );
     }
@@ -91,5 +93,25 @@ final class WebTLO
     public function getWikiLink(): string
     {
         return sprintf('<a href="%s" target="_blank">Web-TLO wiki</a>', $this->wiki);
+    }
+
+    public function getInstallation(): string
+    {
+        $system = array_filter([
+            $this->installation,
+            $_SERVER['SERVER_SOFTWARE'] ?? '',
+        ]);
+
+        $about['system']      = implode(' + ', $system);
+        $about['php_version'] = phpversion();
+
+        $about['memory_limit']       = ini_get('memory_limit');
+        $about['max_execution_time'] = ini_get('max_execution_time');
+        $about['max_input_time']     = ini_get('max_input_time');
+        $about['max_input_vars']     = ini_get('max_input_vars');
+
+        $about = array_map(fn($k) => sprintf('<li>%s: %s</li>', $k, $about[$k]), array_keys($about));
+
+        return implode('', $about);
     }
 }

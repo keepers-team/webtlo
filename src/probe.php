@@ -1,5 +1,9 @@
 <?php
 
+use KeepersTeam\Webtlo\TIniFileEx;
+
+include_once dirname(__FILE__) . '/vendor/autoload.php';
+
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 
 $proxies = [
@@ -31,13 +35,14 @@ function getWebTloVersion(){
     return $version_json->version;
 }
 
-function getConfig(){
-    $config_path = dirname(__FILE__) . '/data/config.ini';
+function getConfig(): array
+{
+    $config_path = (new TIniFileEx())::getFile();
     if (!file_exists($config_path)) {
         return array();
     }
-    $config = parse_ini_file($config_path, true);
-    return $config;
+
+    return parse_ini_file($config_path, true);
 }
 
 function getNullSafeProxy($proxy) {
@@ -66,12 +71,13 @@ function getUrl($url, $proxy) {
         }
         curl_exec($ch);
         return curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    } catch (Exception $e) {
+    } catch (Exception) {
         return null;
     }
 }
 
-function checkAccess($proxies, $hostnames, $tpl) {
+function checkAccess($proxies, $hostnames, $tpl): void
+{
     foreach ($hostnames as $hostname) {
         $url = sprintf($tpl, $hostname);
         foreach ($proxies as $proxy) {
@@ -113,7 +119,7 @@ $probe->php->max_input_time = ini_get('max_input_time');
 $probe->php->max_input_vars = ini_get('max_input_vars');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8"/>
     <title>webTLO configuration checker</title>

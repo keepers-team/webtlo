@@ -32,6 +32,7 @@ jobs:
           cat version.json \
             | jq --arg V ${{ inputs.WEBTLO_VERSION }} '.version=$V' \
             | jq --arg SH ${{ inputs.WEBTLO_SHA }} '.sha=$SH' \
+            | jq '.installation="docker"' \
             > tmp.$$.json
           mv tmp.$$.json version.json
 
