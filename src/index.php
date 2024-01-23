@@ -31,6 +31,8 @@ try {
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
     $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
     $exclude_self_keep = $cfg['exclude_self_keep'] == 1 ? "checked" : "";
+
+    $send_summary_report = $cfg['reports']['send_summary_report'] == 1 ? "checked" : "";
     $auto_clear_messages = $cfg['reports']['auto_clear_messages'] == 1 ? "checked" : "";
 
     // вставка option в select
@@ -1018,9 +1020,13 @@ function cfg_checkbox($cfg): Closure
                         </div>
                         <h2>Отправка отчётов</h2>
                         <div>
-                            <label class="label">
+                            <label class="label" title="Можно отключить отправку сводного отчёта. Отчёты по хранимым подразделам будут отправлены как обычно.">
+                                <input name="send_summary_report" type="checkbox" size="24" <?= $send_summary_report ?? '' ?> />
+                                Отправлять сводный отчёт
+                            </label>
+                            <label class="label" title="Посты с отчётами о нехранимых подразделах, Будут заменены на 'Не актуально'">
                                 <input name="auto_clear_messages" type="checkbox" size="24" <?= $auto_clear_messages ?? '' ?> />
-                                очищать свои неактуальные сообщения в рабочем подфоруме
+                                Очищать свои "неактуальные" сообщения в рабочем подфоруме
                             </label>
                             <h3>Список исключённых групп, см. настройки торрент-клиентов/подразделов:</h3>
                             <label class="label">

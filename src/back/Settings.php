@@ -143,10 +143,10 @@ final class Settings
 
         // отчёты
         $config['reports'] = [
+            'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
             'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids'),
-            'send_summary_report' => $ini->read('reports', 'common', 1),
         ];
 
         // автоматизация
@@ -458,6 +458,8 @@ final class Settings
         $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
 
 
+        // Отправка сводных отчётов на форум
+        $ini->write('reports', 'send_summary_report', isset($cfg['send_summary_report']) ? 1 : 0);
         // Очистка своих сообщений на форуме
         $ini->write('reports', 'auto_clear_messages', isset($cfg['auto_clear_messages']) ? 1 : 0);
 
