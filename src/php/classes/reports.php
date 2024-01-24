@@ -21,6 +21,8 @@ class Reports
 
     protected string $blocking_reason;
 
+    private int $StatBotUserId = 46790908;
+
     private array $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     private array $months_ru = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -405,6 +407,9 @@ class Reports
                     }
                     $index++;
 
+                    $post_id = $link_data->p;
+                    $user_id = $link_data->u;
+
                     $nickname = $row->find('p.nick > a')->text();
                     $keepers[$index] = [
                         'post_id'  => $link_data->p,
@@ -414,19 +419,10 @@ class Reports
                     unset($link_data);
 
                     // вытаскиваем дату отправки/редактирования сообщения
-                    $postedDateMessage = $row->find('.p-link')->text();
-                    $editedDateMessage = $row->find('.posted_since')->text();
-                    $changedMessage = preg_match('/(\d+)-(\D+)-(\d+) (\d+):(\d+)/', $editedDateMessage, $matches);
-                    if ($changedMessage) {
-                        $postedDateMessage = $matches[0];
-                    }
-                    $postedDateMessage = str_replace($this->months_ru, $this->months, $postedDateMessage);
-                    $postedDateTime = DateTime::createFromFormat('d-M-y H:i', $postedDateMessage);
-                    if (!$postedDateTime) {
-                        throw new Exception("Error: Неправильный формат даты отправки сообщения - " . $postedDateMessage);
-                    }
+                    $postedDateTime = $this->getPostedDateTime($row, $post_id);
                     $keepers[$index]['posted'] = $postedDateTime->format('U');
                     $days_diff = Date::now()->diff($postedDateTime)->format('%a');
+;
                     // пропускаем сообщение, если оно старше $posted_days дней
                     if (
                         $posted_days != -1
@@ -435,7 +431,7 @@ class Reports
                         continue;
                     }
                     // Skip topics links from user StatsBot
-                    if ($nickname == 'StatsBot') {
+                    if ($user_id === $this->StatBotUserId) {
                         continue;
                     }
                     // получаем id раздач хранимых другими хранителями
@@ -461,8 +457,51 @@ class Reports
             $i += 30;
             phpQuery::unloadDocuments();
         }
-        // array( 'post_id', 'nickname', 'posted', topics_ids' => array( [0] => array( ...), [1] => array(...) ) )
+        // array( 'post_id', 'user_id', 'nickname', 'posted', topics_ids' => array( [0] => array( ...), [1] => array(...) ) )
         return $keepers;
+    }
+
+    /**
+     * Определить дату актуальности списка из поста.
+     *
+     * @throws Exception
+     */
+    private function getPostedDateTime($row, int $post_id): DateTime
+    {
+        $dates    = [];
+        $postBody = $row->find('.post_body')->text();
+
+        // Дата публикации поста.
+        $postedMessage = $row->find('.p-link')->text();
+        $postedMessage = str_replace($this->months_ru, $this->months, $postedMessage);
+
+        $dates['posted'] = DateTime::createFromFormat('d-M-y H:i', $postedMessage);
+
+        // Дата редактирования поста.
+        $editedMessage = $row->find('.posted_since')->text();
+        $editedPattern = '/(\d+)-(\D+)-(\d+) (\d+):(\d+)/';
+        if (preg_match($editedPattern, $editedMessage, $matches) && !empty($matches)) {
+            $editedMessage = str_replace($this->months_ru, $this->months, $matches[0]);
+
+            $dates['edited'] = DateTime::createFromFormat('d-M-y H:i', $editedMessage);
+        }
+
+        // Дата актуальности списка.
+        $actualPattern = '/^Актуально на.{0,100}(\d{2}\.\d{2}\.\d{4})/';
+        if (preg_match($actualPattern, trim($postBody), $matches) && !empty($matches)) {
+            $parsed = DateTime::createFromFormat('d.m.Y', $matches[1]);
+            $parsed->setTime(1, 0);
+
+            $dates['actual'] = $parsed;
+        }
+
+        $dates = array_filter($dates);
+        if (!count($dates)) {
+            throw new Exception("Не удалось определить дату редактирования поста ($post_id)");
+        }
+
+        // Из всех найденных дат, выбираем максимальную.
+        return max($dates);
     }
 
     public function send_message($mode, $message, $topic_id, $post_id = "", $subject = "")
