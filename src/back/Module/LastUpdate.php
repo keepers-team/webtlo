@@ -16,7 +16,8 @@ use KeepersTeam\Webtlo\Enum\UpdateStatus;
 final class LastUpdate
 {
     private ?UpdateStatus $status = null;
-    private int $minTime = 0;
+
+    private int   $minTime = 0;
     private array $updates = [];
 
     public function __construct(
@@ -78,13 +79,24 @@ final class LastUpdate
             'updates'      => $this->updates,
         ];
         if ($this->status === UpdateStatus::MISSED) {
-            $log['missed'] = array_keys(
+            $missed = array_keys(
                 array_diff_key(
                     array_fill_keys($this->markers, 0),
                     $this->updates
                 )
             );
+
+            $log['missed'] = $missed;
+
+            $missed = array_map(function($markId) {
+                $mark = UpdateMark::tryFrom((int)$markId);
+
+                return $mark ? $mark->label() : "Раздачи подраздела №$markId";
+            }, $missed);
+
+            Log::append(sprintf('Notice: Отсутствут маркеры обновления для: %s.', implode(', ', $missed)));
         }
+        // TODO loglevel debug
         Log::append(json_encode($log));
     }
 
@@ -133,14 +145,10 @@ final class LastUpdate
      */
     public static function getTime(int $markerId): int
     {
-        $updateTime = (int)Db::query_database_row(
+        return Db::query_count(
             "SELECT ud FROM UpdateTime WHERE id = ?",
             [$markerId],
-            true,
-            PDO::FETCH_COLUMN
         );
-
-        return $updateTime ?? 0;
     }
 
     /**
@@ -154,6 +162,7 @@ final class LastUpdate
             // Если время не прошло, запретить обновление.
             return false;
         }
+
         return true;
     }
 
@@ -168,14 +177,18 @@ final class LastUpdate
 
         if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
             $update->addLog();
-            throw new Exception('Error: Отправка отчётов невозможна. Данные в локальной БД неполные. Выполните полное обновление сведений.');
+            throw new Exception(
+                'Error: Отправка отчётов невозможна. Данные в локальной БД неполные. Выполните полное обновление сведений.'
+            );
         }
         if ($update->getLastCheckStatus() === UpdateStatus::EXPIRED) {
             $update->addLog();
-            throw new Exception(sprintf(
-                'Error: Отправка отчётов невозможна. Данные в локальной БД устарели (%s).',
-                date('d.m.y H:i', $update->getLastCheckUpdateTime())
-            ));
+            throw new Exception(
+                sprintf(
+                    'Error: Отправка отчётов невозможна. Данные в локальной БД устарели (%s).',
+                    date('d.m.y H:i', $update->getLastCheckUpdateTime())
+                )
+            );
         }
 
         // Запишем минимальную дату обновления всех сведений.

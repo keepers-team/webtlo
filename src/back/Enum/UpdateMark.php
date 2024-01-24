@@ -21,4 +21,17 @@ enum UpdateMark: int
     case FULL_UPDATE   = 9900;
     /** Успешная отправка отчётов. */
     case SEND_REPORT   = 9901;
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::FORUM_TREE    => 'Дерево подразделов',
+            self::SUBSECTIONS   => 'Списки хранимых раздач в подразделах',
+            self::HIGH_PRIORITY => 'Раздачи с высоким приоритетом хранения',
+            self::FORUM_SCAN    => 'Сканирование списков на форуме',
+            self::CLIENTS       => 'Раздачи в торрент-клиентах',
+            self::FULL_UPDATE   => 'Полное обновление всех сведений',
+            self::SEND_REPORT   => 'Успешная отправка отчётов',
+        };
+    }
 }
