@@ -84,13 +84,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
         $responseTopicsHashes = Db::query_database(
-            'SELECT
-                ss,
-                hs
-            FROM Topics
-            WHERE
-                hs IN (' . $placeholdersTorrentsHashes . ')
-                AND ss IN (' . $placeholdersForumsIDs . ')',
+            '
+                SELECT forum_id, info_hash
+                FROM Topics
+                WHERE
+                    info_hash IN (' . $placeholdersTorrentsHashes . ')
+                    AND forum_id IN (' . $placeholdersForumsIDs . ')
+            ',
             array_merge($torrentsHashes, $forumsIDs),
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN

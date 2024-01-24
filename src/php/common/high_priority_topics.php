@@ -25,7 +25,7 @@ if ($cfg['update']['priority'] == 0) {
     if (count($subsections)) {
         $sub = KeysObject::create($subsections);
         Db::query_database(
-            "DELETE FROM Topics WHERE Topics.pt = 2 AND Topics.ss NOT IN ($sub->keys)",
+            "DELETE FROM Topics WHERE keeping_priority = 2 AND Topics.forum_id NOT IN ($sub->keys)",
             $sub->values
         );
     }
@@ -60,14 +60,38 @@ if (empty($topicsHighPriorityData['result'])) {
 // Обновляемые раздачи.
 $tabHighUpdate = CloneTable::create(
     'Topics',
-    ['id','ss','se','st','qt','ds','pt','ps'],
+    [
+        'id',
+        'forum_id',
+        'seeders',
+        'status',
+        'seeders_updates_today',
+        'seeders_updates_days',
+        'keeping_priority',
+        'poster',
+    ],
     'id',
     'HighUpdate'
 );
+
 // Новые раздачи.
 $tabHighRenew = CloneTable::create(
     'Topics',
-    ['id','ss','na','hs','se','si','st','rg','qt','ds','pt','ps','ls'],
+    [
+        'id',
+        'forum_id',
+        'name',
+        'info_hash',
+        'seeders',
+        'size',
+        'status',
+        'reg_time',
+        'seeders_updates_today',
+        'seeders_updates_days',
+        'keeping_priority',
+        'poster',
+        'seeder_last_seen',
+    ],
     'id',
     'HighRenew'
 );
@@ -101,19 +125,25 @@ $topicsHighPriority = array_chunk($topicsHighPriority, 500, true);
 
 unset($topicsHighPriorityData);
 
+// Приоритетт хранения раздач.
+$keepingPriority = 2;
+
 // проходим по всем раздачам
 foreach ($topicsHighPriority as $topicsHighPriorityResult) {
     // получаем данные о раздачах за предыдущее обновление
-    $topicsIDs = array_keys($topicsHighPriorityResult);
-    $in = str_repeat('?,', count($topicsIDs) - 1) . '?';
-
+    $selectTopics = KeysObject::create(array_keys($topicsHighPriorityResult));
     $previousTopicsData = Db::query_database(
-        "SELECT id,se,rg,qt,ds,ps,length(na) as lgth FROM Topics WHERE id IN ($in)",
-        $topicsIDs,
+        "
+            SELECT id, seeders, reg_time, seeders_updates_today, seeders_updates_days, poster, length(name) as lgth
+            FROM Topics
+            WHERE id IN ($selectTopics->keys)
+        ",
+        $selectTopics->values,
         true,
         PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
     );
-    unset($topicsIDs);
+    unset($selectTopics);
+
     // разбираем раздачи
     // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, forum_id )
     foreach ($topicsHighPriorityResult as $topicID => $topicRaw) {
@@ -138,8 +168,8 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
         // удалить перерегистрированную раздачу
         // в том числе, чтобы очистить значения сидов для старой раздачи
         if (
-            isset($previousTopicData['rg'])
-            && $previousTopicData['rg'] != $topicData['reg_time']
+            isset($previousTopicData['reg_time'])
+            && $previousTopicData['reg_time'] != $topicData['reg_time']
         ) {
             $topicsDelete[]    = $topicID;
             $isTopicDataDelete = true;
@@ -151,49 +181,55 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
             empty($previousTopicData)
             || $isTopicDataDelete
             || $previousTopicData['lgth'] == 0 // Пустое название
-            || $previousTopicData['ps'] === 0  // Нет автора раздачи
+            || $previousTopicData['poster'] === 0  // Нет автора раздачи
         ) {
-            $insertTopicsRenew[$topicID] = [
-                'id' => $topicID,
-                'ss' => $topicData['forum_id'],
-                'na' => '',
-                'hs' => '',
-                'se' => $sumSeeders,
-                'si' => $topicData['tor_size_bytes'],
-                'st' => $topicData['tor_status'],
-                'rg' => $topicData['reg_time'],
-                'qt' => $sumUpdates,
-                'ds' => $daysUpdate,
-                'pt' => 2,
-                'ps' => 0,
-                'ls' => 0,
-            ];
+            $insertTopicsRenew[$topicID] = array_combine(
+                $tabHighRenew->keys,
+                [
+                    $topicID,
+                    $topicData['forum_id'],
+                    '',
+                    '',
+                    $sumSeeders,
+                    $topicData['tor_size_bytes'],
+                    $topicData['tor_status'],
+                    $topicData['reg_time'],
+                    $sumUpdates,
+                    $daysUpdate,
+                    $keepingPriority,
+                    0,
+                    0,
+                ]
+            );
             unset($previousTopicData);
             continue;
         }
 
         // алгоритм нахождения среднего значения сидов
         if ($cfg['avg_seeders']) {
-            $daysUpdate = $previousTopicData['ds'];
+            $daysUpdate = $previousTopicData['seeders_updates_days'];
             // по прошествии дня
             if ($daysDiffAdjusted > 0) {
                 $daysUpdate++;
             } else {
-                $sumUpdates += $previousTopicData['qt'];
-                $sumSeeders += $previousTopicData['se'];
+                $sumUpdates += $previousTopicData['seeders_updates_today'];
+                $sumSeeders += $previousTopicData['seeders'];
             }
         }
 
-        $insertTopicsUpdate[$topicID] = [
-            'id' => $topicID,
-            'ss' => $topicData['forum_id'],
-            'se' => $sumSeeders,
-            'st' => $topicData['tor_status'],
-            'qt' => $sumUpdates,
-            'ds' => $daysUpdate,
-            'pt' => 2,
-            'ps' => $previousTopicData['ps'],
-        ];
+        $insertTopicsUpdate[$topicID] = array_combine(
+            $tabHighUpdate->keys,
+            [
+                $topicID,
+                $topicData['forum_id'],
+                $sumSeeders,
+                $topicData['tor_status'],
+                $sumUpdates,
+                $daysUpdate,
+                $keepingPriority,
+                $previousTopicData['poster'],
+            ]
+        );
         unset($previousTopicData);
     }
     unset($previousTopicsData, $topicsHighPriorityResult);
@@ -213,10 +249,10 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
                 continue;
             }
             if (isset($insertTopicsRenew[$topicID])) {
-                $insertTopicsRenew[$topicID]['hs'] = $topicData['info_hash'];
-                $insertTopicsRenew[$topicID]['na'] = $topicData['topic_title'];
-                $insertTopicsRenew[$topicID]['ps'] = $topicData['poster_id'];
-                $insertTopicsRenew[$topicID]['ls'] = $topicData['seeder_last_seen'];
+                $insertTopicsRenew[$topicID]['info_hash']        = $topicData['info_hash'];
+                $insertTopicsRenew[$topicID]['name']             = $topicData['topic_title'];
+                $insertTopicsRenew[$topicID]['poster']           = $topicData['poster_id'];
+                $insertTopicsRenew[$topicID]['seeder_last_seen'] = $topicData['seeder_last_seen'];
             }
         }
         unset($topicsHighPriorityData);
@@ -251,14 +287,18 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // Удалим раздачи с высоким приоритетом, которых нет во временных таблицах за исключением хранимых подразделов.
     $exclude = KeysObject::create($subsections);
     Db::query_database(
-        "DELETE FROM Topics WHERE id IN (
-            SELECT Topics.id FROM Topics
-            LEFT JOIN $tabHighUpdate->clone AS thu ON Topics.id = thu.id
-            LEFT JOIN $tabHighRenew->clone  AS thr ON Topics.id = thr.id
-            WHERE thu.id IS NULL AND thr.id IS NULL
-                AND Topics.pt = 2
-                AND Topics.ss NOT IN ($exclude->keys)
-        )",
+        "
+            DELETE FROM Topics
+            WHERE id IN (
+                SELECT Topics.id
+                FROM Topics
+                LEFT JOIN $tabHighUpdate->clone AS thu ON Topics.id = thu.id
+                LEFT JOIN $tabHighRenew->clone  AS thr ON Topics.id = thr.id
+                WHERE thu.id IS NULL AND thr.id IS NULL
+                    AND Topics.keeping_priority = 2
+                    AND Topics.forum_id NOT IN ($exclude->keys)
+            )
+        ",
         $exclude->values
     );
     // Записываем время обновления.

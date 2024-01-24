@@ -23,7 +23,7 @@ if (empty($cfg['clients'])) {
     Log::append('Notice: Торрент-клиенты не найдены.');
 
     LastUpdate::setTime(UpdateMark::CLIENTS->value, 0);
-    Db::query_database("DELETE FROM Torrents");
+    Db::query_database('DELETE FROM Torrents WHERE true');
     return;
 }
 Log::append(sprintf('Сканирование торрент-клиентов... Найдено %d шт.', count($cfg['clients'])));
@@ -175,12 +175,14 @@ if ($cfg['update']['untracked']) {
     $subsections = KeysObject::create(array_keys($cfg['subsections'] ?? []));
 
     $untrackedTorrentHashes = Db::query_database(
-        "SELECT tmp.info_hash
-        FROM $tabTorrents->clone AS tmp
-        LEFT JOIN Topics ON Topics.hs = tmp.info_hash
-        WHERE
-            Topics.id IS NULL
-            OR Topics.ss NOT IN ($subsections->keys)",
+        "
+            SELECT tmp.info_hash
+            FROM $tabTorrents->clone AS tmp
+            LEFT JOIN Topics ON Topics.info_hash = tmp.info_hash
+            WHERE
+                Topics.id IS NULL
+                OR Topics.forum_id NOT IN ($subsections->keys)
+        ",
         $subsections->values,
         true,
         PDO::FETCH_COLUMN
@@ -248,16 +250,17 @@ $tabUntracked->clearUnusedRows();
 if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
     Timers::start('search_unregistered');
     $topicsUnregistered = Db::query_database(
-        "SELECT
+        "
+            SELECT
                 Torrents.info_hash,
                 Torrents.topic_id
             FROM Torrents
-            LEFT JOIN Topics ON Topics.hs = Torrents.info_hash
+            LEFT JOIN Topics ON Topics.info_hash = Torrents.info_hash
             LEFT JOIN TopicsUntracked ON TopicsUntracked.info_hash = Torrents.info_hash
-            WHERE
-                Topics.hs IS NULL
+            WHERE Topics.info_hash IS NULL
                 AND TopicsUntracked.info_hash IS NULL
-                AND Torrents.topic_id <> ''",
+                AND Torrents.topic_id <> ''
+        ",
         [],
         true,
         PDO::FETCH_KEY_PAIR

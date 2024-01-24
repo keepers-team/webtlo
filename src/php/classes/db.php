@@ -183,8 +183,8 @@ class Db
         // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
         self::query_database('
             DELETE FROM Topics
-            WHERE pt <> 2
-                AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+            WHERE keeping_priority <> 2
+                AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
         ');
 
         // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
@@ -195,8 +195,8 @@ class Db
             if ($lastHighUpdate < $outdatedTime) {
                 self::query_database('
                     DELETE FROM Topics
-                    WHERE pt = 2
-                        AND ss NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+                    WHERE keeping_priority = 2
+                        AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
                 ');
             }
         }

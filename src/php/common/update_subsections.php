@@ -40,14 +40,38 @@ $tabTime = CloneTable::create('UpdateTime');
 // Обновляемые раздачи.
 $tabTopicsUpdate = CloneTable::create(
     'Topics',
-    ['id', 'ss', 'se', 'st', 'qt', 'ds', 'pt', 'ps', 'ls'],
+    [
+        'id',
+        'forum_id',
+        'seeders',
+        'status',
+        'seeders_updates_today',
+        'seeders_updates_days',
+        'keeping_priority',
+        'poster',
+        'seeder_last_seen',
+    ],
     'id',
     'Update'
 );
 // Новые раздачи.
 $tabTopicsRenew = CloneTable::create(
     'Topics',
-    ['id','ss','na','hs','se','si','st','rg','qt','ds','pt','ps','ls'],
+    [
+        'id',
+        'forum_id',
+        'name',
+        'info_hash',
+        'seeders',
+        'size',
+        'status',
+        'reg_time',
+        'seeders_updates_today',
+        'seeders_updates_days',
+        'keeping_priority',
+        'poster',
+        'seeder_last_seen',
+    ],
     'id',
     'Renew'
 );
@@ -84,7 +108,7 @@ if (isset($cfg['subsections'])) {
         // получаем данные о раздачах
         $topics_data = $api->getForumTopicsData($forum_id);
         if (empty($topics_data['result'])) {
-            Log::append("Error: Не получены данные о подразделе № " . $forum_id);
+            Log::append("Error: Не получены данные о подразделе № $forum_id");
             continue;
         }
 
@@ -112,7 +136,11 @@ if (isset($cfg['subsections'])) {
             // получаем данные о раздачах за предыдущее обновление
             $selectTopics = KeysObject::create(array_keys($topics_result));
             $topics_data_previous = Db::query_database(
-                "SELECT id,se,rg,qt,ds FROM Topics WHERE id IN ($selectTopics->keys)",
+                "
+                    SELECT id, seeders, reg_time, seeders_updates_today, seeders_updates_days
+                    FROM Topics
+                    WHERE id IN ($selectTopics->keys)
+                ",
                 $selectTopics->values,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
@@ -156,8 +184,8 @@ if (isset($cfg['subsections'])) {
                 // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
                 // в том числе, чтобы очистить значения сидов для старой раздачи
                 if (
-                    isset($previous_data['rg'])
-                    && $previous_data['rg'] != $topic_data['reg_time']
+                    isset($previous_data['reg_time'])
+                    && $previous_data['reg_time'] != $topic_data['reg_time']
                 ) {
                     $topics_delete[] = $topic_id;
                     $isTopicDataDelete = true;
@@ -170,49 +198,55 @@ if (isset($cfg['subsections'])) {
                     empty($previous_data)
                     || $isTopicDataDelete
                 ) {
-                    $db_topics_renew[$topic_id] = [
-                        'id' => $topic_id,
-                        'ss' => $forum_id,
-                        'na' => '',
-                        'hs' => $topic_data['info_hash'],
-                        'se' => $sum_seeders,
-                        'si' => $topic_data['tor_size_bytes'],
-                        'st' => $topic_data['tor_status'],
-                        'rg' => $topic_data['reg_time'],
-                        'qt' => $sum_updates,
-                        'ds' => $days_update,
-                        'pt' => $topic_data['keeping_priority'],
-                        'ps' => $topic_data['topic_poster'],
-                        'ls' => $topic_data['seeder_last_seen'],
-                    ];
+                    $db_topics_renew[$topic_id] = array_combine(
+                        $tabTopicsRenew->keys,
+                        [
+                            $topic_id,
+                            $forum_id,
+                            '',
+                            $topic_data['info_hash'],
+                            $sum_seeders,
+                            $topic_data['tor_size_bytes'],
+                            $topic_data['tor_status'],
+                            $topic_data['reg_time'],
+                            $sum_updates,
+                            $days_update,
+                            $topic_data['keeping_priority'],
+                            $topic_data['topic_poster'],
+                            $topic_data['seeder_last_seen'],
+                        ]
+                    );
                     unset($previous_data);
                     continue;
                 }
 
                 // алгоритм нахождения среднего значения сидов
                 if ($cfg['avg_seeders']) {
-                    $days_update = $previous_data['ds'];
+                    $days_update = $previous_data['seeders_updates_days'];
                     // по прошествии дня
                     if ($daysDiffAdjusted > 0) {
                         $days_update++;
                     } else {
-                        $sum_updates += $previous_data['qt'];
-                        $sum_seeders += $previous_data['se'];
+                        $sum_updates += $previous_data['seeders_updates_today'];
+                        $sum_seeders += $previous_data['seeders'];
                     }
                 }
                 unset($previous_data);
 
-                $db_topics_update[$topic_id] = [
-                    'id' => $topic_id,
-                    'ss' => $forum_id,
-                    'se' => $sum_seeders,
-                    'st' => $topic_data['tor_status'],
-                    'qt' => $sum_updates,
-                    'ds' => $days_update,
-                    'pt' => $topic_data['keeping_priority'],
-                    'ps' => $topic_data['topic_poster'],
-                    'ls' => $topic_data['seeder_last_seen'],
-                ];
+                $db_topics_update[$topic_id] = array_combine(
+                    $tabTopicsUpdate->keys,
+                    [
+                        $topic_id,
+                        $forum_id,
+                        $sum_seeders,
+                        $topic_data['tor_status'],
+                        $sum_updates,
+                        $days_update,
+                        $topic_data['keeping_priority'],
+                        $topic_data['topic_poster'],
+                        $topic_data['seeder_last_seen'],
+                    ]
+                );
 
                 unset($topic_id, $topic_data);
             }
@@ -299,14 +333,16 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
 
     $forums_ids = array_keys($forumsUpdateTime);
     $in = implode(',', $forums_ids);
-    Db::query_database(
-        "DELETE FROM Topics WHERE id IN (
-            SELECT Topics.id FROM Topics
+    Db::query_database("
+        DELETE FROM Topics
+        WHERE id IN (
+            SELECT Topics.id
+            FROM Topics
             LEFT JOIN $tabTopicsUpdate->clone tpu ON Topics.id = tpu.id
             LEFT JOIN $tabTopicsRenew->clone tpr ON Topics.id = tpr.id
-            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.ss IN ($in)
-        )"
-    );
+            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.forum_id IN ($in)
+        )
+    ");
     // время последнего обновления для каждого подраздела
     $tabTime->cloneFillChunk($forumsUpdateTime);
     $tabTime->moveToOrigin();

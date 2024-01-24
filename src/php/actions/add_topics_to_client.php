@@ -41,7 +41,7 @@ try {
     foreach ($topicHashes as $topicHashes) {
         $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
         $data = Db::query_database(
-            'SELECT ss, hs FROM Topics WHERE hs IN (' . $placeholders . ')',
+            'SELECT forum_id, info_hash FROM Topics WHERE info_hash IN (' . $placeholders . ')',
             $topicHashes,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
@@ -167,7 +167,7 @@ try {
             // получаем идентификаторы раздач
             $placeholders = str_repeat('?,', count($downloadedTorrentFilesChunk) - 1) . '?';
             $topicIDsByHash = Db::query_database(
-                'SELECT hs, id FROM Topics WHERE hs IN (' . $placeholders . ')',
+                'SELECT info_hash, id FROM Topics WHERE info_hash IN (' . $placeholders . ')',
                 $downloadedTorrentFilesChunk,
                 true,
                 PDO::FETCH_KEY_PAIR
@@ -234,13 +234,13 @@ try {
                     total_size
                 )
                 SELECT
-                    Topics.hs,
+                    Topics.info_hash,
                     ?,
                     Topics.id,
-                    Topics.na,
-                    Topics.si
+                    Topics.name,
+                    Topics.size
                 FROM Topics
-                WHERE hs IN (' . $placeholders . ')',
+                WHERE info_hash IN (' . $placeholders . ')',
                 array_merge([$torrentClientID], $addedTorrentFiles)
             );
             unset($placeholders);
