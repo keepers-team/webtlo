@@ -14,7 +14,7 @@ use Throwable;
 final class DB
 {
     /** Актуальная версия БД */
-    private const DATABASE_VERSION = 12;
+    private const DATABASE_VERSION = 13;
 
     /** Инициализация таблиц актуальной версии. */
     private const INIT_FILE = '9999-init-database.sql';

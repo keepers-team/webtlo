@@ -90,48 +90,42 @@ END;
 -- Данные раздач по данным форума.
 CREATE TABLE IF NOT EXISTS Topics
 (
-    id INT PRIMARY KEY NOT NULL,
-    ss INT,
-    na VARCHAR,
-    hs VARCHAR,
-    se INT,
-    si INT,
-    st INT,
-    rg INT,
-    qt INT,
-    ds INT,
-    pt INT DEFAULT 1,
-    ps INT DEFAULT 0,
-    ls INT DEFAULT 0
+    id                    INT PRIMARY KEY NOT NULL,
+    forum_id              INT,      -- Ид Подраздела
+    name                  VARCHAR,  -- Название раздачи
+    info_hash             VARCHAR,  -- Хеш раздачи
+    seeders               INT,      -- Симмарное количество сидов за сегодня
+    size                  INT,      -- Размер раздачи (байт)
+    status                INT,      -- Статус раздачи на форуме
+    reg_time              INT,      -- Дата регистрации
+    seeders_updates_today INT,      -- Количество обновлений за сегодня
+    seeders_updates_days  INT,      -- Количество дней обновлений
+    keeping_priority      INT,      -- Приоритет хранения
+    poster                INT DEFAULT 0,    -- Автор раздачи
+    seeder_last_seen      INT DEFAULT 0     -- Последняя доступность сида
 );
+
+CREATE INDEX IF NOT EXISTS IX_Topics_forum_hash ON Topics (forum_id, info_hash);
 
 CREATE TRIGGER IF NOT EXISTS topic_exists
     BEFORE INSERT ON Topics
     WHEN EXISTS (SELECT id FROM Topics WHERE id = NEW.id)
 BEGIN
     UPDATE Topics
-    SET ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,
-        na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,
-        hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,
-        se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,
-        si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,
-        st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,
-        rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END,
-        qt = CASE WHEN NEW.qt IS NULL THEN qt ELSE NEW.qt END,
-        ds = CASE WHEN NEW.ds IS NULL THEN ds ELSE NEW.ds END,
-        pt = CASE WHEN NEW.pt IS NULL THEN pt ELSE NEW.pt END,
-        ps = CASE WHEN NEW.ps IS NULL THEN ps ELSE NEW.ps END,
-        ls = CASE WHEN NEW.ls IS NULL THEN ls ELSE NEW.ls END
+    SET forum_id              = COALESCE(NEW.forum_id, forum_id),
+        name                  = COALESCE(NEW.name, name),
+        info_hash             = COALESCE(NEW.info_hash, info_hash),
+        seeders               = COALESCE(NEW.seeders, seeders),
+        size                  = COALESCE(NEW.size, size),
+        status                = COALESCE(NEW.status, status),
+        reg_time              = COALESCE(NEW.reg_time, reg_time),
+        seeders_updates_today = COALESCE(NEW.seeders_updates_today, seeders_updates_today),
+        seeders_updates_days  = COALESCE(NEW.seeders_updates_days, seeders_updates_days),
+        keeping_priority      = COALESCE(NEW.keeping_priority, keeping_priority),
+        poster                = CASE WHEN NEW.poster = 0 THEN poster ELSE NEW.poster END,
+        seeder_last_seen      = MAX(NEW.seeder_last_seen, seeder_last_seen)
     WHERE id = NEW.id;
     SELECT RAISE(IGNORE);
-END;
-
-CREATE INDEX IF NOT EXISTS IX_Topics_ss_hs ON Topics (ss, hs);
-
-CREATE TRIGGER IF NOT EXISTS topics_delete
-    AFTER DELETE ON Topics FOR EACH ROW
-BEGIN
-    DELETE FROM Seeders WHERE id = OLD.id;
 END;
 
 -- Исторические данные по средним сидам.
@@ -200,6 +194,12 @@ CREATE TABLE IF NOT EXISTS Seeders
     q29 INT
 );
 
+CREATE TRIGGER IF NOT EXISTS topic_delete
+    AFTER DELETE ON Topics FOR EACH ROW
+BEGIN
+    DELETE FROM Seeders WHERE id = OLD.id;
+END;
+
 CREATE TRIGGER IF NOT EXISTS seeders_insert
     AFTER INSERT ON Topics
 BEGIN
@@ -207,10 +207,10 @@ BEGIN
 END;
 
 CREATE TRIGGER IF NOT EXISTS seeders_transfer
-    AFTER UPDATE ON Topics WHEN NEW.ds <> OLD.ds
+    AFTER UPDATE ON Topics WHEN NEW.seeders_updates_days <> OLD.seeders_updates_days
 BEGIN
     UPDATE Seeders
-    SET d0  = OLD.se,
+    SET d0  = OLD.seeders,
         d1  = d0,
         d2  = d1,
         d3  = d2,
@@ -240,7 +240,7 @@ BEGIN
         d27 = d26,
         d28 = d27,
         d29 = d28,
-        q0  = OLD.qt,
+        q0  = OLD.seeders_updates_today,
         q1  = q0,
         q2  = q1,
         q3  = q2,
@@ -273,8 +273,9 @@ BEGIN
     WHERE id = NEW.id;
 END;
 
+
 -- Исключённые раздачи, чёрный список.
-CREATE TABLE TopicsExcluded
+CREATE TABLE IF NOT EXISTS TopicsExcluded
 (
     info_hash  TEXT PRIMARY KEY ON CONFLICT REPLACE NOT NULL,
     time_added INT DEFAULT (strftime('%s')),
@@ -296,14 +297,14 @@ CREATE TABLE IF NOT EXISTS TopicsUnregistered
 -- Неотслеживаемые раздачи, из нехранимых подразделов.
 CREATE TABLE IF NOT EXISTS TopicsUntracked
 (
-    id INT PRIMARY KEY NOT NULL,
-    ss INT,
-    na VARCHAR,
-    hs VARCHAR,
-    se INT,
-    si INT,
-    st INT,
-    rg INT
+    id        INT PRIMARY KEY NOT NULL,
+    forum_id  INT,
+    name      VARCHAR,
+    info_hash VARCHAR,
+    seeders   INT,
+    size      INT,
+    status    INT,
+    reg_time  INT
 );
 
 CREATE TRIGGER IF NOT EXISTS untracked_exists
@@ -311,13 +312,13 @@ CREATE TRIGGER IF NOT EXISTS untracked_exists
     WHEN EXISTS (SELECT id FROM TopicsUntracked WHERE id = NEW.id)
 BEGIN
     UPDATE TopicsUntracked
-    SET ss = CASE WHEN NEW.ss IS NULL THEN ss ELSE NEW.ss END,
-        na = CASE WHEN NEW.na IS NULL THEN na ELSE NEW.na END,
-        hs = CASE WHEN NEW.hs IS NULL THEN hs ELSE NEW.hs END,
-        se = CASE WHEN NEW.se IS NULL THEN se ELSE NEW.se END,
-        si = CASE WHEN NEW.si IS NULL THEN si ELSE NEW.si END,
-        st = CASE WHEN NEW.st IS NULL THEN st ELSE NEW.st END,
-        rg = CASE WHEN NEW.rg IS NULL THEN rg ELSE NEW.rg END
+    SET forum_id = CASE WHEN NEW.forum_id  IS NULL THEN forum_id  ELSE NEW.forum_id END,
+        name     = CASE WHEN NEW.name      IS NULL THEN name      ELSE NEW.name END,
+        info_hash= CASE WHEN NEW.info_hash IS NULL THEN info_hash ELSE NEW.info_hash END,
+        seeders  = CASE WHEN NEW.seeders   IS NULL THEN seeders   ELSE NEW.seeders END,
+        size     = CASE WHEN NEW.size      IS NULL THEN size      ELSE NEW.size END,
+        status   = CASE WHEN NEW.status    IS NULL THEN status    ELSE NEW.status END,
+        reg_time = CASE WHEN NEW.reg_time  IS NULL THEN reg_time  ELSE NEW.reg_time END
     WHERE id = NEW.id;
     SELECT RAISE(IGNORE);
 END;
@@ -353,7 +354,7 @@ END;
 CREATE TRIGGER IF NOT EXISTS remove_untracked_topics
     AFTER DELETE ON Torrents FOR EACH ROW
 BEGIN
-    DELETE FROM TopicsUntracked WHERE hs = OLD.info_hash;
+    DELETE FROM TopicsUntracked WHERE info_hash = OLD.info_hash;
 END;
 
 -- Время обновления сведений.
@@ -380,4 +381,4 @@ BEGIN
 END;
 
 -- Запишем текущую версию БД.
-PRAGMA user_version = 12;
+PRAGMA user_version = 13;
