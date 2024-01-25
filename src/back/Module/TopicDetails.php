@@ -16,10 +16,10 @@ final class TopicDetails
 {
     private const TOPIC_KEYS = [
         'id', // topic_id
-        'hs', // info_hash
-        'na', // topic_title
-        'ps', // poster_id
-        'ls', // seeder_last_seen
+        'info_hash',
+        'name', // topic_title
+        'poster', // poster_id
+        'seeder_last_seen',
     ];
 
     private ?UpdateDetailsResultObject $result = null;
@@ -103,14 +103,14 @@ final class TopicDetails
     /** Количество раздач без названия. */
     public static function countUnnamed(): int
     {
-        return Db::query_count("SELECT COUNT(1) FROM Topics WHERE na IS NULL OR na = ''");
+        return Db::query_count("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
     }
 
-    /** Количество раздач без названия. */
+    /** Получить N раздач без названия. */
     public static function getUnnamedTopics(int $limit = 5000): array
     {
         return Db::query_database(
-            "select id from Topics WHERE na IS NULL or na = '' LIMIT ?",
+            "SELECT id FROM Topics WHERE name IS NULL OR name = '' LIMIT ?",
             [$limit],
             true,
             PDO::FETCH_COLUMN

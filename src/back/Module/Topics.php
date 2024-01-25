@@ -22,7 +22,7 @@ final class Topics
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
             $topics = Db::query_database(
-                "SELECT hs, id topic_id FROM Topics WHERE hs IN ($search->keys)",
+                "SELECT info_hash, id topic_id FROM Topics WHERE info_hash IN ($search->keys)",
                 $search->values,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE

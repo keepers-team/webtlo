@@ -78,7 +78,10 @@ final class WebTLO
 
     public function getReleaseLink(): string
     {
-        return sprintf('Web-TLO <a href="%s" target="_blank">%s</a>', $this->versionUrl(), $this->version);
+        $pattern = /** @lang text */
+            'Web-TLO <a href="%s" target="_blank">%s</a>';
+
+        return sprintf($pattern, $this->versionUrl(), $this->version);
     }
 
     public function getCommitLink(): string
@@ -87,12 +90,18 @@ final class WebTLO
             return '';
         }
 
-        return sprintf('<a class="version-sha" href="%s" target="_blank">#%s</a>', $this->commitUrl(), $this->sha);
+        $pattern = /** @lang text */
+            '<a class="version-sha" href="%s" target="_blank">#%s</a>';
+
+        return sprintf($pattern, $this->commitUrl(), $this->sha);
     }
 
     public function getWikiLink(): string
     {
-        return sprintf('<a href="%s" target="_blank">Web-TLO wiki</a>', $this->wiki);
+        $pattern = /** @lang text */
+            '<a href="%s" target="_blank">Web-TLO wiki</a>';
+
+        return sprintf($pattern, $this->wiki);
     }
 
     public function getInstallation(): string

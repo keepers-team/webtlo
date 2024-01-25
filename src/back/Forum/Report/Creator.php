@@ -106,7 +106,6 @@ final class Creator
 
             unset($forumId, $forumValues, $topic_id);
         }
-        unset($stored);
 
         // формируем сводный отчёт
         $summary   = [];
@@ -426,11 +425,11 @@ final class Creator
                 FROM (
                     SELECT
                         kl.keeper_id, kl.keeper_name,
-                        kl.complete as done,
-                        tp.si AS topic_size
+                        kl.complete AS done,
+                        tp.size AS topic_size
                     FROM Topics tp
                     INNER JOIN KeepersLists kl ON kl.topic_id = tp.id
-                    WHERE tp.ss = ?
+                    WHERE tp.forum_id = ?
                 )
                 GROUP BY keeper_id, keeper_name
                 ORDER BY 3 DESC
@@ -482,9 +481,9 @@ final class Creator
                 SUM(CASE WHEN done < 1              THEN topic_size ELSE 0 END) dl_size
             FROM (
                 SELECT
-                    tp.ss forum_id,
-                    (tp.se * 1.0 / tp.qt) av,
-                    tp.si AS topic_size,
+                    tp.forum_id,
+                    (tp.seeders * 1.0 / tp.seeders_updates_today) av,
+                    tp.size topic_size,
                     tr.done
                 FROM Topics tp
                 INNER JOIN (
@@ -492,8 +491,8 @@ final class Creator
                     FROM Torrents
                     WHERE error = 0 AND client_id NOT IN ($client_exclude)
                     GROUP BY info_hash
-                ) tr ON tp.hs = tr.info_hash
-                WHERE tp.ss IN ($include_forums)
+                ) tr ON tp.info_hash = tr.info_hash
+                WHERE tp.forum_id IN ($include_forums)
             )
             GROUP BY forum_id",
             array_merge($this->excludeClientsIDs, $forumIds),
@@ -546,16 +545,16 @@ final class Creator
             "
                 SELECT
                     tp.id,
-                    tp.hs topic_hash,
-                    tp.ss forum_id,
-                    tp.na topic_name,
-                    tp.si topic_size,
-                    tp.st topic_status,
+                    tp.info_hash topic_hash,
+                    tp.forum_id,
+                    tp.name topic_name,
+                    tp.size topic_size,
+                    tp.status topic_status,
                     MAX(tr.done) AS done
                 FROM Topics tp
-                INNER JOIN Torrents tr ON tr.info_hash = tp.hs
-                WHERE tp.ss = ? AND tr.error = 0 AND tr.client_id NOT IN ($client_exclude)
-                GROUP BY tp.id, tp.hs, tp.ss, tp.na, tp.si, tp.st
+                INNER JOIN Torrents tr ON tr.info_hash = tp.info_hash
+                WHERE tp.forum_id = ? AND tr.error = 0 AND tr.client_id NOT IN ($client_exclude)
+                GROUP BY tp.id, tp.info_hash, tp.forum_id, tp.name, tp.size, tp.status
                 ORDER BY tp.id
             ",
             array_merge([$forum_id], $this->excludeClientsIDs),
