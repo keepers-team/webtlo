@@ -67,28 +67,16 @@ final class Helper
     /** Создать каталог по заданному пути. */
     public static function makeDirRecursive(string $path): bool
     {
-        $return = false;
+        // Не уверен, что эта конвертация нужна, но пусть пока будет.
         if (PHP_OS === 'WINNT') {
-            $winPath = mb_convert_encoding($path, 'Windows-1251', 'UTF-8');
-            if (is_writable($winPath) && is_dir($winPath)) {
-                return true;
-            }
+            $path = mb_convert_encoding($path, 'Windows-1251', 'UTF-8');
         }
-        if (is_writable($path) && is_dir($path)) {
+
+        if (is_dir($path) && is_writable($path)) {
             return true;
         }
 
-        $prevPath = dirname($path);
-        if ($path != $prevPath) {
-            $return = self::makeDirRecursive($prevPath);
-        }
-        if (PHP_OS === 'WINNT') {
-            $winPrevPath = mb_convert_encoding($prevPath, 'Windows-1251', 'UTF-8');
-
-            return $return && is_writable($winPrevPath) && !file_exists($winPath) && mkdir($winPath);
-        }
-
-        return $return && is_writable($prevPath) && !file_exists($path) && mkdir($path);
+        return !file_exists($path) && mkdir($path, 0o777, true);
     }
 
     /**
@@ -98,10 +86,8 @@ final class Helper
      */
     public static function checkDirRecursive(string $path): void
     {
-        if (!file_exists($path)) {
-            if (!self::makeDirRecursive($path)) {
-                throw new Exception('Не удалось создать каталог ' . $path);
-            }
+        if (!self::makeDirRecursive($path)) {
+            throw new Exception("Не удалось создать каталог '$path'");
         }
     }
 

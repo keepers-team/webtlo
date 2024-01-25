@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
+
 try {
     $starttime = microtime(true);
 
@@ -65,10 +67,7 @@ try {
     }
 
     // создание каталогов
-    if (!mkdir_recursive($torrent_files_path)) {
-        $result = "Не удалось создать каталог \"$torrent_files_path\": неверно указан путь или недостаточно прав";
-        throw new Exception();
-    }
+    Helper::makeDirRecursive($torrent_files_path);
 
     // шаблон для сохранения
     $torrent_files_path_pattern = "$torrent_files_path/[webtlo].h%s.torrent";

@@ -68,12 +68,9 @@ try {
     // полный путь до каталога для сохранения торрент-файлов
     $localPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
     // очищаем каталог от старых торрент-файлов
-    rmdir_recursive($localPath);
+    Helper::removeDirRecursive($localPath);
     // создаём каталог для торрент-файлов
-    if (!mkdir_recursive($localPath)) {
-        $result = 'Не удалось создать каталог "' . $localPath . '": неверно указан путь или недостаточно прав';
-        throw new Exception();
-    }
+    Helper::checkDirRecursive($localPath);
     // шаблон для сохранения
     $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent';
     if (PHP_OS == 'WINNT') {

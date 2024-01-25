@@ -32,13 +32,3 @@ function convert_seconds($seconds, $leadZeros = false): string
 {
     return Helper::convertSeconds((int)$seconds, $leadZeros);
 }
-
-function rmdir_recursive($path): bool
-{
-    return Helper::removeDirRecursive($path);
-}
-
-function mkdir_recursive($path): bool
-{
-    return Helper::makeDirRecursive($path);
-}
