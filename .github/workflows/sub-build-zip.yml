@@ -89,7 +89,7 @@ jobs:
           NGINX_VERSION: ${{ vars.NGINX_VERSION || '1.24.0' }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: releases
           path: release/*.zip
@@ -97,7 +97,7 @@ jobs:
 
       - name: Cache release
         if: ${{ github.ref_type == 'tag' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./release
           key: ${{ github.ref_type }}-${{ github.sha }}-release
