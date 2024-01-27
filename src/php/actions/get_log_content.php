@@ -2,7 +2,7 @@
 
 use KeepersTeam\Webtlo\Helper;
 
-include_once dirname(__FILE__) . '/../autoloader.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
 if (isset($_POST['log_file'])) {
     $log_file = $_POST['log_file'];

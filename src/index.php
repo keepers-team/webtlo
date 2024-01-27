@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Legacy\Db as DbLegacy;
 use KeepersTeam\Webtlo\WebTLO;
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
@@ -8,7 +9,10 @@ mb_internal_encoding("UTF-8");
 
 // 1. Подключаем общие настройки (запуск БД).
 try {
-    include_once dirname(__FILE__) . '/php/common.php';
+    include_once dirname(__FILE__) . '/vendor/autoload.php';
+
+    App::init();
+    DbLegacy::create();
 } catch (Exception $e) {
     $initError = $e->getMessage();
 }
