@@ -5,9 +5,11 @@ use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
+
+App::init();
 
 Timers::start('control');
 Log::append('Info: Начат процесс регулировки раздач в торрент-клиентах...');

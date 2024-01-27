@@ -7,11 +7,12 @@ use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 
-Timers::start('vacancies');
-
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
+App::init();
+
+Timers::start('vacancies');
 Log::append("Начат процесс формирования вакансий...");
 
 // получение настроек

@@ -1,6 +1,6 @@
 <?php
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
 use KeepersTeam\Webtlo\App;
@@ -13,6 +13,8 @@ if (!$countUnnamed) {
     Log::append('Notice: Обновление дополнительных сведений о раздачах не требуется.');
     return;
 }
+
+App::init();
 
 // получение настроек
 if (!isset($cfg)) {

@@ -9,8 +9,10 @@ use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Timers;
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
+
+App::init();
 
 // обновляем дерево подразделов
 include_once dirname(__FILE__) . '/forum_tree.php';
