@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Torrents;
@@ -34,7 +35,7 @@ try {
         throw new Exception('В настройках не найдены торрент-клиенты');
     }
     // получение настроек
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     Log::append(sprintf('Начато выполнение действия "%s" для выбранных раздач...', $actionType));
     Log::append('Получение хэшей раздач с привязкой к торрент-клиенту...');

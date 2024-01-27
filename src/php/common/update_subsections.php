@@ -3,6 +3,7 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Legacy\Db;
@@ -17,7 +18,7 @@ include_once dirname(__FILE__) . '/forum_tree.php';
 
 // получение настроек
 if (!isset($cfg)) {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 }
 
 if (isset($checkEnabledCronAction)) {

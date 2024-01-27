@@ -3,6 +3,7 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
@@ -20,7 +21,7 @@ if (!LastUpdate::checkUpdateAvailable(UpdateMark::FORUM_TREE->value)) {
 
 // получение настроек
 if (!isset($cfg)) {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 }
 
 // подключаемся к api

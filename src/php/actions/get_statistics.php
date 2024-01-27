@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
@@ -12,7 +13,7 @@ try {
     include_once dirname(__FILE__) . '/../common.php';
 
     // получение настроек
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     if (empty($cfg['subsections'])) {
         throw new Exception("Не выбраны хранимые подразделы");

@@ -1,12 +1,13 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
     include dirname(__FILE__) . '/../common.php';
 
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     $output = [];
 

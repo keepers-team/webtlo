@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
@@ -12,7 +13,7 @@ Timers::start('control');
 Log::append('Info: Начат процесс регулировки раздач в торрент-клиентах...');
 
 // получение настроек
-$cfg = get_settings();
+$cfg = App::getSettings();
 // проверка настроек
 if (empty($cfg['clients'])) {
     throw new Exception('Error: Не удалось получить список торрент-клиентов');

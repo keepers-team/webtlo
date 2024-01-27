@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -16,7 +17,7 @@ try {
     }
 
     // Получение настроек.
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     // Проверка настроек.
     $user = ConfigValidate::checkUser($cfg);

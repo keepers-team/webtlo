@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\WebTLO;
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
@@ -14,7 +15,7 @@ try {
 
 // 2. Загружаем конфиг и рисуем селекторы.
 try {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     // Callback для чекбоксов.
     $checkbox_check = cfg_checkbox($cfg);

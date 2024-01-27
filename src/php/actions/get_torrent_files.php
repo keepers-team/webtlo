@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
@@ -20,7 +21,7 @@ try {
     }
 
     // получение настроек
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     // проверка настроек
     if (empty($cfg['api_key'])) {

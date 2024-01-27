@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
@@ -21,7 +22,7 @@ try {
     }
 
     // получение настроек
-    $cfg  = get_settings();
+    $cfg  = App::getSettings();
     $user = ConfigValidate::checkUser($cfg);
 
     // проверка настроек

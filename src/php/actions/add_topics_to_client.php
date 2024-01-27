@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -19,7 +20,7 @@ try {
     }
     parse_str($_POST['topic_hashes'], $topicHashes);
     // получение настроек
-    $cfg = get_settings();
+    $cfg = App::getSettings();
     if (empty($cfg['subsections'])) {
         $result = 'В настройках не найдены хранимые подразделы';
         throw new Exception();

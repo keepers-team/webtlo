@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -28,7 +29,7 @@ if (empty($forums_ids)) {
 
 // получение настроек
 if (!isset($cfg)) {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 }
 
 // подключаемся к api

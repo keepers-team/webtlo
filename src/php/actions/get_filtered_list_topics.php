@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB as ModernDB;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\TopicList\Output;
@@ -37,7 +38,7 @@ try {
     $sorting = Validate::sortFilter($filter);
 
     // Получаем настройки.
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 
     $db = ModernDB::getInstance();
 

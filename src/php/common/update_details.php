@@ -3,6 +3,7 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\TopicDetails;
@@ -15,7 +16,7 @@ if (!$countUnnamed) {
 
 // получение настроек
 if (!isset($cfg)) {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 }
 
 // подключаемся к api

@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -18,7 +19,7 @@ Timers::start('update_keepers');
 
 // получение настроек
 if (!isset($cfg)) {
-    $cfg = get_settings();
+    $cfg = App::getSettings();
 }
 
 if (isset($checkEnabledCronAction)) {
