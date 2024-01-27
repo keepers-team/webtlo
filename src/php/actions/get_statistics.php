@@ -10,7 +10,7 @@ $statistics_result = [
     'tfoot' => '',
 ];
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
     // получение настроек
     $cfg = App::getSettings();

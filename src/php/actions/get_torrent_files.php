@@ -8,7 +8,7 @@ use KeepersTeam\Webtlo\Timers;
 try {
     Timers::start('download');
 
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../torrenteditor.php';
     include_once dirname(__FILE__) . '/../classes/download.php';
 

@@ -1,10 +1,13 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
+
+    App::init();
 
     //~  0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
     $torrentClient = $_POST['tor_client'];

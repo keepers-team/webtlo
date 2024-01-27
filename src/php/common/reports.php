@@ -10,9 +10,11 @@ use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Timers;
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
+
+App::init();
 
 Timers::start('send_reports');
 Log::append('Начат процесс отправки отчётов...');

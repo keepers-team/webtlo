@@ -20,7 +20,9 @@ $returnObject = [
 ];
 
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+
+    App::init();
 
     $forum_id = $_POST['forum_id'] ?? null;
     if (!is_numeric($forum_id)) {

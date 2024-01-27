@@ -5,7 +5,7 @@ use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    include dirname(__FILE__) . '/../common.php';
+    include dirname(__FILE__) . '/../../vendor/autoload.php';
 
     $cfg = App::getSettings();
 

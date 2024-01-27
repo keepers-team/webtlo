@@ -5,7 +5,7 @@ use KeepersTeam\Webtlo\WebTLO;
 
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
     $wbtApi = WebTLO::getVersion();
 

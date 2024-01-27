@@ -1,11 +1,14 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\TIniFileEx;
 
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+
+    App::init();
 
     $request = json_decode(file_get_contents('php://input'), true);
 

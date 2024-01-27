@@ -1,14 +1,17 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
 try {
     if (empty($_GET['term'])) {
         return false;
     }
+
+    App::init();
 
     $patterns = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
 

@@ -2,7 +2,7 @@
 
 use KeepersTeam\Webtlo\Legacy\Proxy;
 
-include_once dirname(__FILE__) . '/../common.php';
+include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
 // проверяемый url
 if (isset($_POST['url'])) {

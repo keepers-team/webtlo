@@ -1,11 +1,14 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Legacy\Proxy;
 
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/user_details.php';
+
+    App::init();
 
     parse_str($_POST['cfg'], $cfg);
 

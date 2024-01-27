@@ -12,7 +12,7 @@ $reports_result = [
     'report' => '',
 ];
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
     // идентификатор подраздела
     $forum_id = (int)$_POST['forum_id'] ?? -1;

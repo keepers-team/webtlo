@@ -6,7 +6,7 @@ use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/api.php';
     include_once dirname(__FILE__) . '/../classes/reports.php';
 

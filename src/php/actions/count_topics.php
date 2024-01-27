@@ -1,12 +1,15 @@
 <?php
 
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\TopicDetails;
 
 $result = [];
 try {
-    include_once dirname(__FILE__) . '/../common.php';
+    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+
+    App::init();
 
     // Посчитаем количество раздач без имени и их общее количество в БД.
     $result['unnamed'] = TopicDetails::countUnnamed();
