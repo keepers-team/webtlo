@@ -21,3 +21,18 @@ jobs:
         uses: docker://oskarstark/php-cs-fixer-ga
         with:
           args: -v --dry-run
+
+  phpstan:
+    name: code quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: php-actions/composer@v6
+        with:
+          working_dir: src
+          args: --ignore-platform-reqs
+      - name: PHPStan Static Analysis
+        uses: php-actions/phpstan@v3
+        with:
+          php_version: 8.1
+          memory_limit: 512M

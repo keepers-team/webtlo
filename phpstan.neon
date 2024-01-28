@@ -1,0 +1,10 @@
+parameters:
+  level: 1
+  paths:
+    - src/
+  excludePaths:
+    analyse:
+      - src/index.php
+      - src/vendor
+      - src/php/phpQuery
+      - src/php/classes/reports.php
