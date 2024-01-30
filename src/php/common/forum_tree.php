@@ -1,10 +1,10 @@
 <?php
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/api.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Legacy\Api;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;

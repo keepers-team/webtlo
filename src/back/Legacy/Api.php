@@ -1,10 +1,11 @@
 <?php
 
-use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Legacy\Proxy;
+namespace KeepersTeam\Webtlo\Legacy;
+
+use CurlHandle;
+use Exception;
 
 /**
- * Class Api
  * Класс для работы с API форума
  */
 class Api
@@ -31,6 +32,7 @@ class Api
 
     /**
      * default constructor
+     *
      * @param string $addressApi
      * @param string $userKeyApi
      */
@@ -39,10 +41,10 @@ class Api
         $this->ch = curl_init();
         curl_setopt_array($this->ch, [
             CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_ENCODING => 'gzip',
+            CURLOPT_ENCODING       => 'gzip',
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
         ]);
         curl_setopt_array($this->ch, Proxy::$proxy['api']);
         Log::append('Используется зеркало для API: ' . $addressApi);
@@ -52,7 +54,8 @@ class Api
 
     /**
      * выполнение запроса к API
-     * @param string $request
+     *
+     * @param string       $request
      * @param array|string $params
      * @return bool|mixed|array
      */
@@ -67,11 +70,11 @@ class Api
         $this->numberRequest++;
         // повторные попытки
         $connectionNumberTry = 1;
-        $responseNumberTry = 1;
-        $maxNumberTry = 3;
+        $responseNumberTry   = 1;
+        $maxNumberTry        = 3;
         // выполнение запроса
         $params = $this->implodeParams('&', $params);
-        $url = sprintf($this->formatURL, $request, $params);
+        $url    = sprintf($this->formatURL, $request, $params);
         curl_setopt($this->ch, CURLOPT_URL, $url);
         while (true) {
             $response = curl_exec($this->ch);
@@ -106,18 +109,21 @@ class Api
             }
             break;
         }
+
         return isset($response['result']) ? $response : false;
     }
 
     /**
      * "склеивание" параметров в строку
-     * @param string $glue
+     *
+     * @param string       $glue
      * @param array|string $params
      * @return string
      */
     private function implodeParams($glue, $params)
     {
         $params = is_array($params) ? $params : [$params];
+
         return $glue . implode($glue, $params);
     }
 
@@ -126,12 +132,13 @@ class Api
      */
     private function getLimitInRequest()
     {
-        $response = $this->makeRequest('get_limit');
+        $response             = $this->makeRequest('get_limit');
         $this->limitInRequest = $response === false ? 100 : (int)$response['result']['limit'];
     }
 
     /**
      * установка пользовательских параметров для cURL
+     *
      * @param array $options
      */
     public function setUserConnectionOptions($options)
@@ -141,6 +148,7 @@ class Api
 
     /**
      * соответствие ID статуса раздачи его названию
+     *
      * @return bool|array
      */
     public function getTorrentStatusTitles()
@@ -150,6 +158,7 @@ class Api
 
     /**
      * дерево разделов
+     *
      * @return bool|array
      */
     public function getCategoryForumTree()
@@ -159,6 +168,7 @@ class Api
 
     /**
      * количество и вес раздач по разделам
+     *
      * @return bool|array
      */
     public function getCategoryForumVolume()
@@ -168,6 +178,7 @@ class Api
 
     /**
      * данные о раздачах по ID раздела
+     *
      * @param int|string $forumID
      * @return bool|array
      */
@@ -176,12 +187,14 @@ class Api
         if (empty($forumID)) {
             return false;
         }
+
         return $this->makeRequest('static/pvc/f/' . $forumID);
     }
 
     /**
      * количество пиров по ID или HASH
-     * @param array $topicsValues
+     *
+     * @param array  $topicsValues
      * @param string $searchBy
      * @return bool|array
      */
@@ -190,12 +203,12 @@ class Api
         if (empty($topicsValues)) {
             return false;
         }
-        $topicsData = [];
+        $topicsData   = [];
         $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
         foreach ($topicsValues as $topicsValues) {
-            $params = [
+            $params   = [
                 'by=' . $searchBy,
-                'val=' . implode(',', $topicsValues)
+                'val=' . implode(',', $topicsValues),
             ];
             $response = $this->makeRequest('get_peer_stats', $params);
             if ($response === false) {
@@ -215,11 +228,13 @@ class Api
                 }
             }
         }
+
         return $topicsData;
     }
 
     /**
      * ID темы по HASH торрента
+     *
      * @param array $topicsHashes
      * @return bool|array
      */
@@ -228,12 +243,12 @@ class Api
         if (empty($topicsHashes)) {
             return false;
         }
-        $topicsData = [];
+        $topicsData   = [];
         $topicsHashes = array_chunk($topicsHashes, $this->limitInRequest);
         foreach ($topicsHashes as $topicsHashes) {
-            $params = [
+            $params   = [
                 'by=hash',
-                'val=' . implode(',', $topicsHashes)
+                'val=' . implode(',', $topicsHashes),
             ];
             $response = $this->makeRequest('get_topic_id', $params);
             if ($response === false) {
@@ -245,11 +260,13 @@ class Api
                 }
             }
         }
+
         return $topicsData;
     }
 
     /**
      * HASH торрента по ID темы
+     *
      * @param array $topicsIDs
      * @return bool|array
      */
@@ -258,12 +275,12 @@ class Api
         if (empty($topicsIDs)) {
             return false;
         }
-        $topicsData = [];
+        $topicsData          = [];
         $topicsHashesChunked = array_chunk($topicsIDs, $this->limitInRequest);
         foreach ($topicsHashesChunked as $topicsIDs) {
-            $params = [
+            $params   = [
                 'by=topic_id',
-                'val=' . implode(',', $topicsIDs)
+                'val=' . implode(',', $topicsIDs),
             ];
             $response = $this->makeRequest('get_tor_hash', $params);
             if ($response === false) {
@@ -275,11 +292,13 @@ class Api
                 }
             }
         }
+
         return $topicsData;
     }
 
     /**
      * данные о раздаче по ID темы
+     *
      * @param array $topicsValues
      * @return bool|array
      */
@@ -288,12 +307,12 @@ class Api
         if (empty($topicsValues)) {
             return false;
         }
-        $topicsData = [];
+        $topicsData   = [];
         $topicsValues = array_chunk($topicsValues, $this->limitInRequest);
         foreach ($topicsValues as $topicsValues) {
-            $params = [
+            $params   = [
                 'by=' . $searchBy,
-                'val=' . implode(',', $topicsValues)
+                'val=' . implode(',', $topicsValues),
             ];
             $response = $this->makeRequest('get_tor_topic_data', $params);
             if ($response === false) {
@@ -305,11 +324,13 @@ class Api
                 }
             }
         }
+
         return $topicsData;
     }
 
     /**
      * список ID раздач с высоким приоритетом хранения
+     *
      * @return bool|array
      */
     public function getTopicsIDsHighPriority()
@@ -319,6 +340,7 @@ class Api
 
     /**
      * данные о раздачах с высоким приоритетом хранения
+     *
      * @return bool|array
      */
     public function getTopicsHighPriority()
@@ -328,6 +350,7 @@ class Api
 
     /**
      * данные о хранителях
+     *
      * @return bool|array
      */
     public function getKeepersUserData()
@@ -345,11 +368,11 @@ class Api
             return false;
         }
         $userData = [];
-        $userIDs = array_chunk($userIDs, $this->limitInRequest);
+        $userIDs  = array_chunk($userIDs, $this->limitInRequest);
         foreach ($userIDs as $userIDChunk) {
-            $params = [
+            $params   = [
                 'by=user_id',
-                'val=' . implode(',', $userIDChunk)
+                'val=' . implode(',', $userIDChunk),
             ];
             $response = $this->makeRequest('get_user_name', $params);
             if ($response === false) {
@@ -359,6 +382,7 @@ class Api
                 $userData[$userID] = $userName;
             }
         }
+
         return $userData;
     }
 

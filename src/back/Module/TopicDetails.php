@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module;
 
-use Api;
-use Exception;
 use KeepersTeam\Webtlo\DTO\UpdateDetailsResultObject;
+use KeepersTeam\Webtlo\Legacy\Api;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Timers;
+use Exception;
 use PDO;
 
 /** Получение деталей о раздаче. */

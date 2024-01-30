@@ -4,7 +4,6 @@ use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/api.php';
 
 Timers::start('full_update');
 

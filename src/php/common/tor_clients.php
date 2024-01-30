@@ -2,7 +2,6 @@
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
-include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\App;
@@ -10,6 +9,7 @@ use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Api;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;

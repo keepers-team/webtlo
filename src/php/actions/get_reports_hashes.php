@@ -2,12 +2,12 @@
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Legacy\Api;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
     include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-    include_once dirname(__FILE__) . '/../classes/api.php';
     include_once dirname(__FILE__) . '/../classes/reports.php';
 
     // идентификатор подраздела
