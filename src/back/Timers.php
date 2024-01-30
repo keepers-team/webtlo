@@ -1,12 +1,14 @@
 <?php
 
-/**
- * Простой способ замера времени выполнения.
- */
-class Timers
+declare(strict_types=1);
+
+namespace KeepersTeam\Webtlo;
+
+/** Простой способ замера времени выполнения. */
+final class Timers
 {
     private static array $markers = [];
-    private static array $stash = [];
+    private static array $stash   = [];
 
     public static function start(string $marker = 'default'): void
     {
@@ -26,14 +28,16 @@ class Timers
     {
         self::stop($marker);
 
-        return floor(self::$markers[$marker]['exec']);
+        return (int)floor(self::$markers[$marker]['exec']);
     }
 
     public static function getExecTime(string $marker = 'default', bool $leadZeros = false): string
     {
         self::stop($marker);
 
-        return convert_seconds(self::$markers[$marker]['exec'] ?? 0, $leadZeros);
+        $time = self::$markers[$marker]['exec'] ?? 0;
+
+        return Helper::convertSeconds((int)$time, $leadZeros);
     }
 
     public static function printExecTime(string $marker = 'default'): void
@@ -49,6 +53,7 @@ class Timers
     public static function getStash(): array
     {
         $stash = self::$stash;
+
         self::$stash = [];
 
         return $stash;

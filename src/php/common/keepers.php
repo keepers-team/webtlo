@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;

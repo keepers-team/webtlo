@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
@@ -17,4 +19,4 @@ include_once dirname(__FILE__) . '/update_details.php';
 // обновляем списки раздач в торрент-клиентах
 include_once dirname(__FILE__) . '/tor_clients.php';
 
-Log::append("Обновление всех данных завершено за " . Timers::getExecTime('full_update'));
+Log::append(sprintf('Обновление всех данных завершено за %s', Timers::getExecTime('full_update')));

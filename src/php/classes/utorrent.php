@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Module\Torrents;
 

@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
+
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';

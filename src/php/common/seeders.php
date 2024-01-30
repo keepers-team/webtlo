@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;

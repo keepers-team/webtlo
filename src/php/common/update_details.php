@@ -3,6 +3,7 @@
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\TopicDetails;
 
 $countUnnamed = TopicDetails::countUnnamed();
@@ -32,7 +33,7 @@ $details = $detailsClass->getResult();
 if (null !== $details) {
     Log::append(sprintf(
         'Обновление дополнительных сведений о раздачах завершено за %s.',
-        convert_seconds($details->execFull)
+        Helper::convertSeconds($details->execFull)
     ));
     Log::append(sprintf(
         'Раздач обновлено %d из %d.',

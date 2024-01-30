@@ -6,6 +6,7 @@ include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;

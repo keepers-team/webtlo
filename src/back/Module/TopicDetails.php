@@ -7,8 +7,8 @@ namespace KeepersTeam\Webtlo\Module;
 use Db;
 use Api;
 use PDO;
-use Timers;
 use Exception;
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\DTO\UpdateDetailsResultObject;
 
 /** Получение деталей о раздаче. */

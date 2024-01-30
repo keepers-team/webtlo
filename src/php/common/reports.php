@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;

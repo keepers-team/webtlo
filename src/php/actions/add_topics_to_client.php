@@ -256,7 +256,7 @@ try {
     $totalTorrentClients = count($usedTorrentClientsIDs);
     $result = 'Задействовано торрент-клиентов — ' . $totalTorrentClients . ', добавлено раздач всего — ' . $totalTorrentFilesAdded . ' шт.';
     $endtime = microtime(true);
-    Log::append('Процесс добавления раздач в торрент-клиенты завершён за ' . convert_seconds($endtime - $starttime));
+    Log::append('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds($endtime - $starttime));
     // выводим на экран
     echo json_encode(
         [
