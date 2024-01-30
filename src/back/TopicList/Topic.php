@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
+use KeepersTeam\Webtlo\Helper as TloHelper;
 use DateTimeImmutable;
 
 final class Topic
@@ -64,7 +65,7 @@ final class Topic
     public function getUrl(string $forum_address): string
     {
         $url  = sprintf('%s/forum/viewtopic.php?t=%d', $forum_address, $this->id);
-        $size = convert_bytes($this->size);
+        $size = TloHelper::convertBytes($this->size);
 
         $pattern = /** @lang text */
             "<a href='%s' target='_blank'>%s</a> (%s)";

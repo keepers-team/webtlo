@@ -1,6 +1,5 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\TIniFileEx;
 
@@ -20,14 +19,4 @@ function get_settings($filename = ''): array
     $settings = new Settings($ini);
 
     return $settings->populate();
-}
-
-function convert_bytes($size): string
-{
-    return Helper::convertBytes($size);
-}
-
-function convert_seconds($seconds, $leadZeros = false): string
-{
-    return Helper::convertSeconds((int)$seconds, $leadZeros);
 }

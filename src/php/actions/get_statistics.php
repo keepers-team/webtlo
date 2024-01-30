@@ -136,26 +136,25 @@ try {
         $e['Size15'] = Helper::convertBytes((int)$e['Size15']);
         $e['size']   = Helper::convertBytes((int)$e['size']);
 
-        $e = implode("", array_map(function ($e) {
-            return "<td>$e</td>";
-        }, $e));
+        $e = implode('', array_map(fn($col) => "<td>$col</td>", $e));
 
         return "<tr class=\"$state\">$e</tr>";
     }, $statistics));
 
     // всего/всего (от нуля)
-    $tfoot = "<tr><th colspan=\"2\">Всего</th>" . implode("</tr><tr><th colspan=\"2\">Всего (от нуля)</th>", array_map(function ($e) {
-        // байты
-        $e[1] = convert_bytes($e[1]);
-        $e[3] = convert_bytes($e[3]);
-        $e[5] = convert_bytes($e[5]);
-        $e[7] = convert_bytes($e[7]);
-        $e[9] = convert_bytes($e[9]);
-        $e = implode("", array_map(function ($e) {
-            return "<th>$e</th>";
-        }, $e));
-        return $e;
-    }, $tfoot)) . "</tr>";
+    $tfoot = array_map(function ($row) {
+        foreach ([1,3,5,7,9] as $i) {
+            // байты
+            $row[$i] = Helper::convertBytes((int)$row[$i]);
+        }
+
+        return implode('', array_map(fn($col) => "<th>$col</th>", $row));
+    }, $tfoot);
+
+    $tfoot = sprintf(
+        '<tr><th colspan="2">Всего</th>%s</tr>',
+        implode('</tr><tr><th colspan="2">Всего (от нуля)</th>', $tfoot)
+    );
 
     $statistics_result = [
         'tbody' => $tbody,

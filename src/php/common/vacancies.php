@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 
 Timers::start('vacancies');
@@ -167,7 +168,7 @@ foreach ($ids as $forum_id => $tor_sizes) {
 }
 unset($forums, $ids);
 
-$total_size_vacant_topics = convert_bytes($total_size_vacant_topics);
+$total_size_vacant_topics = Helper::convertBytes((int)$total_size_vacant_topics);
 
 Log::append("Всего вакантных раздач: " . $total_count_vacant_topics . " шт.");
 Log::append("Объём вакантных раздач: " . $total_size_vacant_topics);
@@ -239,7 +240,7 @@ foreach ($topics as $forum => &$sub_forums) {
                     $color ?? '',
                     $subject,
                     $value['qt'],
-                    convert_bytes($value['si'])
+                    Helper::convertBytes((int)$value['si'])
                 );
             }
         }
@@ -252,7 +253,7 @@ foreach ($topics as $forum => &$sub_forums) {
             $forum_pattern,
             $forum,
             $qt,
-            convert_bytes($si),
+            Helper::convertBytes((int)$si),
             $forum_list
         );
     }
