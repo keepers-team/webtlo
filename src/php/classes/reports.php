@@ -21,6 +21,8 @@ class Reports
 
     protected string $blocking_reason;
 
+    private ?DateTimeImmutable $compareDate = null;
+
     private int $StatBotUserId = 46790908;
 
     private array $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -421,15 +423,18 @@ class Reports
                     // вытаскиваем дату отправки/редактирования сообщения
                     $postedDateTime = $this->getPostedDateTime($row, $post_id);
                     $keepers[$index]['posted'] = $postedDateTime->format('U');
-                    $days_diff = Date::now()->diff($postedDateTime)->format('%a');
-;
-                    // пропускаем сообщение, если оно старше $posted_days дней
-                    if (
-                        $posted_days != -1
-                        && $days_diff > $posted_days
-                    ) {
-                        continue;
+
+                    // Если задан фильтр по актуальности отчёта.
+                    if ($posted_days > -1) {
+                        // Насколько отчёт старый, в днях.
+                        $days_diff = $this->compareDates($postedDateTime);
+
+                        // Пропускаем сообщение, если оно старше $posted_days дней.
+                        if ($days_diff > $posted_days) {
+                            continue;
+                        }
                     }
+
                     // Skip topics links from user StatsBot
                     if ($user_id === $this->StatBotUserId) {
                         continue;
@@ -466,7 +471,7 @@ class Reports
      *
      * @throws Exception
      */
-    private function getPostedDateTime($row, int $post_id): DateTime
+    private function getPostedDateTime($row, int $post_id): DateTimeImmutable
     {
         $dates    = [];
         $postBody = $row->find('.post_body')->text();
@@ -475,7 +480,7 @@ class Reports
         $postedMessage = $row->find('.p-link')->text();
         $postedMessage = str_replace($this->months_ru, $this->months, $postedMessage);
 
-        $dates['posted'] = DateTime::createFromFormat('d-M-y H:i', $postedMessage);
+        $dates['posted'] = DateTimeImmutable::createFromFormat('d-M-y H:i', $postedMessage);
 
         // Дата редактирования поста.
         $editedMessage = $row->find('.posted_since')->text();
@@ -483,13 +488,13 @@ class Reports
         if (preg_match($editedPattern, $editedMessage, $matches) && !empty($matches)) {
             $editedMessage = str_replace($this->months_ru, $this->months, $matches[0]);
 
-            $dates['edited'] = DateTime::createFromFormat('d-M-y H:i', $editedMessage);
+            $dates['edited'] = DateTimeImmutable::createFromFormat('d-M-y H:i', $editedMessage);
         }
 
         // Дата актуальности списка.
         $actualPattern = '/^Актуально на.{0,100}(\d{2}\.\d{2}\.\d{4})/';
         if (preg_match($actualPattern, trim($postBody), $matches) && !empty($matches)) {
-            $parsed = DateTime::createFromFormat('d.m.Y', $matches[1]);
+            $parsed = DateTimeImmutable::createFromFormat('d.m.Y', $matches[1]);
             $parsed->setTime(1, 0);
 
             $dates['actual'] = $parsed;
@@ -587,5 +592,15 @@ class Reports
     public function __destruct()
     {
         curl_close($this->ch);
+    }
+
+    /** Получить разницу в днях между эталонной датой (текущей) и датой отчёта. */
+    private function compareDates(DateTimeImmutable $postDate): int
+    {
+        if (null === $this->compareDate) {
+            $this->compareDate = new DateTimeImmutable('now');
+        }
+
+        return (int)$this->compareDate->diff($postDate)->format('%a');
     }
 }

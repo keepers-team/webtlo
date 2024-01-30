@@ -119,6 +119,8 @@ final class WebTLO
         $about['max_input_time']     = ini_get('max_input_time');
         $about['max_input_vars']     = ini_get('max_input_vars');
 
+        $about['date_timezone'] = ini_get('date.timezone') ?: date_default_timezone_get();
+
         $about = array_map(fn($k) => sprintf('<li>%s: %s</li>', $k, $about[$k]), array_keys($about));
 
         return implode('', $about);
