@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\WebTLO;
 
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');

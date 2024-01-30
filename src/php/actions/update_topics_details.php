@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 $result = [];
 try {
     // Обновление раздач за раз. Меньшее число, для наглядности.

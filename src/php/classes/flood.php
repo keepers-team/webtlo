@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 /**
  * Class Flood
  * Supported by flood by jesec API

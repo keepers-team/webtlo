@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use Log;
+use KeepersTeam\Webtlo\Legacy\Log;
 
 class TIniFileEx
 {

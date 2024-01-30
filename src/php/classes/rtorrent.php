@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 /**
  * Class Rtorrent
  * Supported by rTorrent 0.9.7 and later

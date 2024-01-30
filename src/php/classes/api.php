@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 /**
  * Class Api
  * Класс для работы с API форума

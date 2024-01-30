@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 $update_result = [
     'result' => '',
 ];

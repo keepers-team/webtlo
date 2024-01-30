@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 
 include_once dirname(__FILE__) . '/../common.php';

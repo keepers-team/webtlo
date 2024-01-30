@@ -1,8 +1,9 @@
 <?php
 
-use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Module\Torrents;
+use KeepersTeam\Webtlo\Timers;
 
 /**
  * Class Utorrent

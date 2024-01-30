@@ -1,10 +1,11 @@
 <?php
 
-use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Timers;
 
 $reports_result = [
     'report' => '',

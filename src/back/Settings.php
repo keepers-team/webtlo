@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use Db;
-use PDO;
-use Log;
-use Proxy;
 use Exception;
+use KeepersTeam\Webtlo\Legacy\Log;
+use PDO;
+use Proxy;
 
 final class Settings
 {

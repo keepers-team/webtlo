@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 /**
  * Class Deluge
  * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later

@@ -5,14 +5,15 @@ include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Timers;
 
 // получение настроек
 if (!isset($cfg)) {

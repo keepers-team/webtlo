@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 try {
     include dirname(__FILE__) . '/../common.php';
 

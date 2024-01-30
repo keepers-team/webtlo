@@ -4,6 +4,7 @@ include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/api.php';
 
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\TopicDetails;
 
 $countUnnamed = TopicDetails::countUnnamed();

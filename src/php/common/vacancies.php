@@ -1,8 +1,9 @@
 <?php
 
-use KeepersTeam\Webtlo\Timers;
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Timers;
 
 Timers::start('vacancies');
 

@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use KeepersTeam\Webtlo\DB as ModernDB;
+use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
-use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 $returnObject = [

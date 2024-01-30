@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 
 try {

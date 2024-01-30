@@ -1,7 +1,8 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Log;
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
 

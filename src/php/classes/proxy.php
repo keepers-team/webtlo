@@ -1,6 +1,8 @@
 <?php
 
 // установка параметров прокси
+use KeepersTeam\Webtlo\Legacy\Log;
+
 class Proxy
 {
     public static $proxy = [

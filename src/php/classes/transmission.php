@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
+
 /**
  * Class Transmission
  * Supported by Transmission 2.80 and later

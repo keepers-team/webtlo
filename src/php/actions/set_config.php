@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\TIniFileEx;
 

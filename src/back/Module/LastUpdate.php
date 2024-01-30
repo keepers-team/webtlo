@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Module;
 
 use Db;
-use PDO;
-use Log;
 use Exception;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
+use KeepersTeam\Webtlo\Legacy\Log;
+use PDO;
 
 /** Работа с таблицей маркеров обновлений. */
 final class LastUpdate

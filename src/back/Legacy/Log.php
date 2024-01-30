@@ -1,8 +1,10 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Legacy;
+
 use KeepersTeam\Webtlo\Helper;
 
-class Log
+final class Log
 {
     private static array $log = [];
 
@@ -13,7 +15,7 @@ class Log
         }
     }
 
-    public static function get($break = '<br />'): string
+    public static function get(string $break = '<br />'): string
     {
         if (!empty(self::$log)) {
             return implode($break, self::$log) . $break;
@@ -22,7 +24,7 @@ class Log
         return '';
     }
 
-    public static function write($logFile): void
+    public static function write(string $logFile): void
     {
         $dir = Helper::getLogDir();
 

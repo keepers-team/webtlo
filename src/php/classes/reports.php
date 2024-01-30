@@ -2,6 +2,7 @@
 
 use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\Forum\AccessCheck;
+use KeepersTeam\Webtlo\Legacy\Log;
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';

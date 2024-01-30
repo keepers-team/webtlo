@@ -1,11 +1,12 @@
 <?php
 
-use KeepersTeam\Webtlo\Timers;
-use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Timers;
 
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
@@ -66,7 +67,7 @@ $editedTopicsIDs = [];
 $Timers = [];
 foreach ($forumReports->forums as $forum_id) {
     $forum = Forums::getForum($forum_id);
-    // Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($forum, JSON_UNESCAPED_UNICODE)));
+    // KeepersTeam\Webtlo\Legacy\Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($forum, JSON_UNESCAPED_UNICODE)));
     if (null === $forum->topic_id) {
         Log::append(sprintf('Notice: Отсутствует номер темы со списками для подраздела %d. Выполните обновление сведений.', $forum_id));
         continue;
@@ -108,7 +109,7 @@ foreach ($forumReports->forums as $forum_id) {
     if (count($messages) > count($postList)) {
         $count_post_reply = count($messages) - count($postList);
         for ($i = 1; $i <= $count_post_reply; $i++) {
-            // Log::append("Вставка дополнительного $i-ого сообщения...");
+            // KeepersTeam\Webtlo\Legacy\Log::append("Вставка дополнительного $i-ого сообщения...");
             $message = '[spoiler]' . $i . str_repeat('?', 119981 - mb_strlen($i)) . '[/spoiler]';
             $post_id = $reports->send_message(
                 'reply',
@@ -131,7 +132,7 @@ foreach ($forumReports->forums as $forum_id) {
     // редактирование сообщений
     foreach ($postList as $index => $postId) {
         $post_number = $index + 1;
-        // Log::append("Редактирование сообщения № $post_number...");
+        // KeepersTeam\Webtlo\Legacy\Log::append("Редактирование сообщения № $post_number...");
         $message = $messages[$index] ?? 'резерв';
         $reports->send_message(
             'editpost',
