@@ -190,10 +190,7 @@ if ($cfg['reports']['send_summary_report']) {
 }
 
 // отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме
-if (
-    $cfg['reports']['auto_clear_messages']
-    && !empty($editedTopicsIDs)
-) {
+if ($cfg['reports']['auto_clear_messages']) {
     $emptyMessages = [];
     $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $user->userId]);
     $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);

@@ -139,20 +139,20 @@ final class UserDetails
                         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
                         $captcha = $html->find('div.mrg_16 > table tr')->eq(2);
                         unset($html);
-                        if (!empty($captcha)) {
-                            $captcha = pq($captcha);
-                            $sourcePath = $captcha->find('img')->attr('src');
-                            if (!self::get_captcha($sourcePath)) {
-                                throw new Exception('Error: Не удалось получить изображение капчи, ' . $sourcePath);
-                            }
-                            self::$captcha_path = $sourcePath;
-                            foreach ($captcha->find('input') as $input) {
-                                $input = pq($input);
-                                self::$captcha[] = $input->attr('name');
-                                self::$captcha[] = $input->val();
-                            }
+
+                        $captcha = pq($captcha);
+                        $sourcePath = $captcha->find('img')->attr('src');
+                        if (!self::get_captcha($sourcePath)) {
+                            throw new Exception('Error: Не удалось получить изображение капчи, ' . $sourcePath);
+                        }
+                        self::$captcha_path = $sourcePath;
+                        foreach ($captcha->find('input') as $input) {
+                            $input = pq($input);
+                            self::$captcha[] = $input->attr('name');
+                            self::$captcha[] = $input->val();
                         }
                         unset($captcha);
+
                         Log::append('Error: ' . $title[1] . ' - ' . mb_convert_encoding($text[1], 'UTF-8', 'Windows-1251') . '.');
                         phpQuery::unloadDocuments();
                     }

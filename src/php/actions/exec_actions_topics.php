@@ -1,14 +1,19 @@
 <?php
 
+use KeepersTeam\Webtlo\Module\Torrents;
+
 try {
-    $result = '';
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
+
+    $result = '';
+
     // разбираем данные
-    $actionType = isset($_POST['action']) ? $_POST['action'] : '';
-    $labelName = isset($_POST['label']) ? $_POST['label'] : '';
-    $removeFiles = isset($_POST['remove_data']) ? $_POST['remove_data'] : '';
-    $forceStart = isset($_POST['force_start']) ? $_POST['force_start'] : '';
+    $actionType  = $_POST['action'] ?? '';
+    $labelName   = $_POST['label'] ?? '';
+    $removeFiles = $_POST['remove_data'] ?? '';
+    $forceStart  = $_POST['force_start'] ?? '';
+
     // поддерживаемые действия
     $supportedActions = [
         'set_label',
@@ -16,27 +21,29 @@ try {
         'stop',
         'remove',
     ];
+
     if (!in_array($actionType, $supportedActions)) {
-        $result = 'Попытка выполнить неизвестное действие';
-        throw new Exception();
+        throw new Exception('Попытка выполнить неизвестное действие');
     }
     if (empty($_POST['topic_hashes'])) {
-        $result = 'Выберите раздачи';
-        throw new Exception();
+        throw new Exception('Выберите раздачи');
     }
     if (empty($_POST['tor_clients'])) {
-        $result = 'В настройках не найдены торрент-клиенты';
-        throw new Exception();
+        throw new Exception('В настройках не найдены торрент-клиенты');
     }
     // получение настроек
     $cfg = get_settings();
-    $torrentClients = $_POST['tor_clients'];
-    Log::append('Начато выполнение действия "' . $actionType . '" для выбранных раздач...');
+
+    Log::append(sprintf('Начато выполнение действия "%s" для выбранных раздач...', $actionType));
     Log::append('Получение хэшей раздач с привязкой к торрент-клиенту...');
+
+    $torrentClients = $_POST['tor_clients'];
     parse_str($_POST['topic_hashes'], $topicHashes);
-    $topicHashes = array_chunk($topicHashes['topic_hashes'], 499);
-    foreach ($topicHashes as $topicHashes) {
+
+    $topicHashesChunks = array_chunk($topicHashes['topic_hashes'], 499);
+    foreach ($topicHashesChunks as $topicHashes) {
         $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
+
         $data = Db::query_database(
             'SELECT
                 client_id,
@@ -61,17 +68,17 @@ try {
         unset($data);
     }
     unset($topicHashes);
+
     if (empty($torrentHashesByClient)) {
-        $result = 'Не получены данные о выбранных раздачах';
-        throw new Exception();
+        throw new Exception('Не получены данные о выбранных раздачах');
     }
-    Log::append('Количество затрагиваемых торрент-клиентов: ' . count($torrentHashesByClient));
+    Log::append(sprintf('Количество затрагиваемых торрент-клиентов: %s', count($torrentHashesByClient)));
     foreach ($torrentHashesByClient as $clientID => $torrentHashes) {
         if (empty($torrentHashes)) {
             continue;
         }
         if (empty($torrentClients[$clientID])) {
-            Log::append('В настройках нет данных о торрент-клиенте с идентификатором "' . $clientID . '"');
+            Log::append(sprintf('В настройках нет данных о торрент-клиенте с идентификатором "%s"', $clientID));
             continue;
         }
         // данные текущего торрент-клиента
@@ -86,13 +93,16 @@ try {
             $torrentClient['login'],
             $torrentClient['password']
         );
+
         // проверка доступности торрент-клиента
         if (!$client->isOnline()) {
-            Log::append('Error: торрент-клиент "' . $torrentClient['comment'] . '" в данный момент недоступен');
+            Log::append(sprintf('Error: торрент-клиент "%s" в данный момент недоступен', $torrentClient['comment']));
             continue;
         }
         // применяем таймауты
         $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
+
+        $response = false;
         switch ($actionType) {
             case 'set_label':
                 $response = $client->setLabel($torrentHashes, $labelName);
@@ -107,40 +117,39 @@ try {
                 $response = $client->removeTorrents($torrentHashes, $removeFiles);
                 if ($response !== false) {
                     // помечаем в базе удаление
-                    $torrentHashesRemoving = array_chunk($torrentHashes, 500);
-                    foreach ($torrentHashesRemoving as $torrentHashesRemoving) {
-                        $placeholders = str_repeat('?,', count($torrentHashesRemoving)) . '?';
-                        Db::query_database(
-                            'DELETE FROM Torrents WHERE info_hash IN (' . $placeholders . ')',
-                            $torrentHashesRemoving
-                        );
-                        unset($placeholders);
-                    }
-                    unset($torrentHashesRemoving);
+                    Torrents::removeTorrents($torrentHashes);
                 }
                 break;
         }
         if ($response === false) {
-            Log::append('Error: Возникли проблемы при отправке запроса "' . $actionType . '" для торрент-клиента "' . $torrentClient['comment'] . '"');
+            Log::append(
+                sprintf(
+                    'Error: Возникли проблемы при отправке запроса "%s" для торрент-клиента "%s"',
+                    $actionType,
+                    $torrentClient['comment']
+                )
+            );
         } else {
-            Log::append('Действие "' . $actionType . '" для торрент-клиента "' . $torrentClient['comment'] . '" выполнено (' . count($torrentHashes) . ')');
+            Log::append(
+                sprintf(
+                    'Действие "%s" для торрент-клиента "%s" выполнено (%s)',
+                    $actionType,
+                    $torrentClient['comment'],
+                    count($torrentHashes)
+                )
+            );
         }
         unset($torrentClient);
     }
-    $result = 'Действие "' . $actionType . '" выполнено. За подробностями обратитесь к журналу';
-    Log::append('Выполнение действия "' . $actionType . '" завершено');
-    echo json_encode(
-        [
-            'log' => Log::get(),
-            'result' => $result,
-        ]
-    );
+    Log::append(sprintf('Выполнение действия "%s" завершено', $actionType));
+
+    $result = sprintf('Действие "%s" выполнено. За подробностями обратитесь к журналу', $actionType);
 } catch (Exception $e) {
-    Log::append($e->getMessage());
-    echo json_encode(
-        [
-            'log' => Log::get(),
-            'result' => $result,
-        ]
-    );
+    $result = $e->getMessage();
+    Log::append($result);
 }
+
+echo json_encode([
+    'log'    => Log::get(),
+    'result' => $result,
+]);

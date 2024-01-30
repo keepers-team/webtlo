@@ -8,14 +8,8 @@ try {
     include_once dirname(__FILE__) . '/../classes/reports.php';
 
     // идентификатор подраздела
-    if (isset($_POST['forum_id'])) {
-        $forum_id = (int) $_POST['forum_id'];
-    }
-
-    if (
-        !is_int($forum_id)
-        || $forum_id < 0
-    ) {
+    $forum_id = (int)($_POST['forum_id'] ?? -1);
+    if ($forum_id < 0) {
         throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");
     }
 
@@ -70,7 +64,7 @@ try {
         $keepers = $reports->scanning_viewtopic($topic_id);
         if ($keepers !== false) {
             // разбираем инфу, полученную из списков
-            foreach ($keepers as $index => $keeper) {
+            foreach ($keepers as $keeper) {
                 // array( 'post_id' => 4444444, 'nickname' => 'user', 'topics_ids' => array( 0,1,2 ) )
                 if (strcasecmp($cfg['tracker_login'], $keeper['nickname']) != 0) {
                     continue;
@@ -78,23 +72,22 @@ try {
                 if (empty($keeper['topics_ids'])) {
                     continue;
                 }
-                foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
+                foreach ($keeper['topics_ids'] as $keeperTopicsIDs) {
                     $keeperTopicsHashes = $api->getTorHash($keeperTopicsIDs);
+
                     $output = array_merge($output, $keeperTopicsHashes);
                 }
             }
             unset($keepers);
         }
     }
-
-    echo json_encode([
-        'hashes' => $output,
-        'log' => Log::get()
-    ]);
 } catch (Exception $e) {
+    $output =
+        "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />";
     Log::append($e->getMessage());
-    echo json_encode([
-        'log' => Log::get(),
-        'hashes' => "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки и выполните обновление сведений.</div><br />"
-    ]);
 }
+
+echo json_encode([
+    'hashes' => $output,
+    'log'    => Log::get(),
+]);

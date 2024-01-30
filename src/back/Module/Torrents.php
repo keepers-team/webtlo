@@ -31,6 +31,21 @@ final class Torrents
                 $result[] = $topics;
             }
         }
+
         return array_merge(...$result);
+    }
+
+    /** Удалить раздачи в БД по хешу */
+    public static function removeTorrents(array $hashes, int $chunkSize = 500): void
+    {
+        $hashes = array_chunk($hashes, $chunkSize);
+        foreach ($hashes as $chunk) {
+            $search = KeysObject::create($chunk);
+
+            Db::query_database(
+                "DELETE FROM Torrents WHERE info_hash IN ($search->keys)",
+                $search->values
+            );
+        }
     }
 }

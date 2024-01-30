@@ -46,6 +46,10 @@ $address = $schema . '://' . basename($url);
 if (isset($_POST['cfg'])) {
     parse_str($_POST['cfg'], $cfg);
 }
+// Нет конфига - нет проверки.
+if (empty($cfg)) {
+    return '0';
+}
 
 // параметры прокси
 $activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;

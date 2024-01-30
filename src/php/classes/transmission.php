@@ -200,13 +200,14 @@ class Transmission extends TorrentClient
         if ($response === false) {
             return false;
         }
+
         if (!empty($response['torrent-added'])) {
             $torrentHash = $response['torrent-added']['hashString'];
         } elseif (!empty($response['torrent-duplicate'])) {
             $torrentHash = $response['torrent-duplicate']['hashString'];
             Log::append('Notice: Эта раздача уже раздаётся в торрент-клиенте (' . $torrentHash . ')');
         }
-        return $torrentHash;
+        return $torrentHash ?? false;
     }
 
     public function setLabel($torrentHashes, $labelName = '')

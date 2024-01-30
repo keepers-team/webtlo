@@ -18,23 +18,16 @@ try {
         $torrentClient['password']
     );
 
-    $status = $client->isOnline()
-        ? '<i class="fa fa-circle text-success"></i>'
-        : '<i class="fa fa-circle text-danger"></i>';
-
-    echo json_encode(
-        [
-            'log' => Log::get(),
-            'status' => $status,
-        ]
+    $status = sprintf(
+        '<i class="fa fa-circle %s"></i>',
+        $client->isOnline() ? 'text-success' : 'text-danger'
     );
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    $status = 'Не удалось проверить доступность торрент-клиента "' . $torrentClient['comment'] . '"';
-    echo json_encode(
-        [
-            'log' => Log::get(),
-            'status' => $status,
-        ]
-    );
+    $status = sprintf('Не удалось проверить доступность торрент-клиента "%s"', $torrentClient['comment'] ?? 'unknown');
 }
+
+echo json_encode([
+    'log'    => Log::get(),
+    'status' => $status,
+]);

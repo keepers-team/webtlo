@@ -1,8 +1,9 @@
 <?php
 
+use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 
-$starttime = microtime(true);
+Timers::start('vacancies');
 
 include_once dirname(__FILE__) . '/../common.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
@@ -52,8 +53,8 @@ if ($vacancies['scan_reports']) {
                 }
                 $posted = $keeper['posted'];
                 foreach ($keeper['topics_ids'] as $index => $keeperTopicsIDs) {
-                    $topicsIDs = array_chunk($keeperTopicsIDs, 499);
-                    foreach ($topicsIDs as $topicsIDs) {
+                    $topicChunks = array_chunk($keeperTopicsIDs, 499);
+                    foreach ($topicChunks as $topicsIDs) {
                         $select = str_repeat('SELECT ?,' . $posted . ' UNION ALL ', count($topicsIDs) - 1) . 'SELECT ?,' . $posted;
                         Db::query_database(
                             "INSERT INTO temp.VacanciesKeepers (id,posted) $select",
@@ -134,13 +135,15 @@ $total_count_vacant_topics = 0;
 $total_size_vacant_topics = 0;
 
 // приводим данные к требуемому виду
+$topics = [];
 foreach ($ids as $forum_id => $tor_sizes) {
     if (!isset($forums[$forum_id])) {
         continue;
     }
     $title = $forums[$forum_id]['name'];
+
     $count_vacant_topics = count($tor_sizes);
-    $size_vacant_topics = array_sum($tor_sizes);
+    $size_vacant_topics  = array_sum($tor_sizes);
     switch (count($title)) {
         case 2:
             $topics[$title[0]][$title[1]]['root']['id'] = $forum_id;
@@ -158,12 +161,11 @@ foreach ($ids as $forum_id => $tor_sizes) {
             break;
     }
     $total_count_vacant_topics += $count_vacant_topics;
-    $total_size_vacant_topics += $size_vacant_topics;
-    unset($count_vacant_topics);
-    unset($size_vacant_topics);
+    $total_size_vacant_topics  += $size_vacant_topics;
+
+    unset($count_vacant_topics, $size_vacant_topics);
 }
-unset($forums);
-unset($ids);
+unset($forums, $ids);
 
 $total_size_vacant_topics = convert_bytes($total_size_vacant_topics);
 
@@ -234,7 +236,7 @@ foreach ($topics as $forum => &$sub_forums) {
                 $sub_forum_list .= sprintf(
                     $sub_forum_pattern,
                     $value['id'],
-                    $color,
+                    $color ?? '',
                     $subject,
                     $value['qt'],
                     convert_bytes($value['si'])
@@ -278,6 +280,4 @@ if (!empty($output)) {
     );
 }
 
-$endtime = microtime(true);
-
-Log::append("Формирование вакансий завершено за " . convert_seconds($endtime - $starttime));
+Log::append(sprintf('Формирование вакансий завершено за %s', Timers::getExecTime('vacancies')));

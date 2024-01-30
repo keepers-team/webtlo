@@ -80,6 +80,8 @@ abstract class TorrentClient
         $this->ch = curl_init();
     }
 
+    abstract protected function getSID();
+
     /**
      * проверка доступен торрент-клиент или нет
      * @return bool

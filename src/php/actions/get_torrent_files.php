@@ -1,9 +1,10 @@
 <?php
 
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Timers;
 
 try {
-    $starttime = microtime(true);
+    Timers::start('download');
 
     include_once dirname(__FILE__) . '/../common.php';
     include_once dirname(__FILE__) . '/../torrenteditor.php';
@@ -32,18 +33,16 @@ try {
     }
 
     // идентификатор подраздела
-    $forum_id = isset($_POST['forum_id']) ? $_POST['forum_id'] : 0;
+    $forum_id = $_POST['forum_id'] ?? 0;
 
     // нужна ли замена passkey
-    if (isset($_POST['replace_passkey'])) {
-        $replace_passkey = $_POST['replace_passkey'];
-    }
+    $replace_passkey = (bool)($_POST['replace_passkey'] ?? false);
 
     // парсим список выбранных раздач
     parse_str($_POST['topic_hashes'], $topicHashes);
 
     // выбор каталога
-    $torrent_files_path = empty($replace_passkey) ? $cfg['save_dir'] : $cfg['dir_torrents'];
+    $torrent_files_path = !$replace_passkey ? $cfg['save_dir'] : $cfg['dir_torrents'];
 
     if (empty($torrent_files_path)) {
         $result = "В настройках не указан каталог для скачивания торрент-файлов";
@@ -51,16 +50,13 @@ try {
     }
 
     // дополнительный слэш в конце каталога
-    if (
-        !empty($torrent_files_path)
-        && !in_array(substr($torrent_files_path, -1), ['\\', '/'])
-    ) {
-        $torrent_files_path .= strpos($torrent_files_path, '/') === false ? '\\' : '/';
+    if (!in_array(substr($torrent_files_path, -1), ['\\', '/'])) {
+        $torrent_files_path .= !str_contains($torrent_files_path, '/') ? '\\' : '/';
     }
 
     // создание подкаталога
     if (
-        empty($replace_passkey)
+        !$replace_passkey
         && $cfg['savesub_dir']
     ) {
         $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
@@ -98,6 +94,7 @@ try {
     // применяем таймауты
     $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
 
+    $torrent_files_downloaded = [];
     foreach ($topicHashes['topic_hashes'] as $topicHash) {
         $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicHash, $cfg['retracker']);
         if ($data === false) {
@@ -106,7 +103,7 @@ try {
         // меняем пасскей
         if ($replace_passkey) {
             $torrent = new Torrent();
-            if ($torrent->load($data) == false) {
+            if (!$torrent->load($data)) {
                 Log::append("Error: $torrent->error ($topicHash).");
                 break;
             }
@@ -144,20 +141,18 @@ try {
     }
     unset($topicHashes);
 
-    $torrent_files_downloaded = count($torrent_files_downloaded);
-
-    $endtime = microtime(true);
-
-    $result = "Сохранено в каталоге \"$torrent_files_path\": $torrent_files_downloaded шт. за " . convert_seconds($endtime - $starttime);
-
-    echo json_encode([
-        'log' => Log::get(),
-        'result' => $result,
-    ]);
+    $result = sprintf(
+        'Сохранено в каталоге "%s": %d шт. за %s.',
+        $torrent_files_path,
+        count($torrent_files_downloaded),
+        Timers::getExecTime('download')
+    );
 } catch (Exception $e) {
-    Log::append($e->getMessage());
-    echo json_encode([
-        'log' => Log::get(),
-        'result' => $result,
-    ]);
+    $result = $e->getMessage();
+    Log::append($result);
 }
+
+echo json_encode([
+    'log' => Log::get(),
+    'result' => $result,
+]);

@@ -1,5 +1,6 @@
 <?php
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 
 $statistics_result = [
@@ -78,7 +79,9 @@ try {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    $tbody = implode("", array_map(function ($e) use (&$tfoot) {
+    $size4 = (int)pow(1024, 4);
+
+    $tbody = implode("", array_map(function ($e) use ($size4, &$tfoot) {
         // всего
         $tfoot[0][0] += $e['Count0'];
         $tfoot[0][1] += $e['Size0'];
@@ -95,49 +98,48 @@ try {
         $tfoot[1][1] += $e['Size0'];
         $tfoot[1][2] += $e['Count5'] + $e['Count0'];
         $tfoot[1][3] += $e['Size5'] + $e['Size0'];
-        $tfoot[1][4] += $e['Count10'] + $e['Count0'] + $e['Count5'];
-        $tfoot[1][5] += $e['Size10'] + $e['Size0'] + $e['Size5'];
-        $tfoot[1][6] += $e['Count15'] + $e['Count0'] + $e['Count5'] + $e['Count10'];
-        $tfoot[1][7] += $e['Size15'] + $e['Size0'] + $e['Size5'] + $e['Size10'];
+        $tfoot[1][4] += $e['Count10'] + $e['Count5'] + $e['Count0'];
+        $tfoot[1][5] += $e['Size10'] + $e['Size5'] + $e['Size0'];
+        $tfoot[1][6] += $e['Count15'] + $e['Count10'] + $e['Count5'] + $e['Count0'];
+        $tfoot[1][7] += $e['Size15'] + $e['Size15'] + $e['Size10'] + $e['Size0'];
         $tfoot[1][8] += $e['quantity'];
         $tfoot[1][9] += $e['size'];
 
         // состояние раздела (цвет)
         $state = '';
+
+        $sizeSum50  = (int)($e['Size5'] + $e['Size0']);
+        $countSum50 = (int)($e['Count5'] + $e['Count0']);
         if (preg_match('/DVD|HD/', $e['forum_name'])) {
-            $size = pow(1024, 4);
-            if ($e['Size5'] + $e['Size0'] < $size) {
-                if ($e['Size5'] + $e['Size0'] >= $size * 3 / 4) {
+            if ($sizeSum50 < $size4) {
+                if ($sizeSum50 >= (int)($size4 * 3 / 4)) {
                     $state = 'ui-state-highlight';
                 }
             } else {
                 $state = 'ui-state-error';
             }
         } else {
-            $size = pow(1024, 4) / 2;
-            if (
-                $e['Count5'] + $e['Count0'] < 1000
-                && $e['Size5'] + $e['Size0'] < $size
-            ) {
-                if (
-                    $e['Count5'] + $e['Count0'] >= 500
-                    || $e['Size5'] + $e['Size0'] >= $size / 2
-                ) {
+            $size = $size4 / 2;
+            if ($countSum50 < 1000 && $sizeSum50 < $size) {
+                if ($countSum50 >= 500 || $sizeSum50 >= $size / 2) {
                     $state = 'ui-state-highlight';
                 }
             } else {
                 $state = 'ui-state-error';
             }
         }
+
         // байты
-        $e['Size0']  = convert_bytes($e['Size0']);
-        $e['Size5']  = convert_bytes($e['Size5']);
-        $e['Size10'] = convert_bytes($e['Size10']);
-        $e['Size15'] = convert_bytes($e['Size15']);
-        $e['size']   = convert_bytes($e['size']);
+        $e['Size0']  = Helper::convertBytes((int)$e['Size0']);
+        $e['Size5']  = Helper::convertBytes((int)$e['Size5']);
+        $e['Size10'] = Helper::convertBytes((int)$e['Size10']);
+        $e['Size15'] = Helper::convertBytes((int)$e['Size15']);
+        $e['size']   = Helper::convertBytes((int)$e['size']);
+
         $e = implode("", array_map(function ($e) {
             return "<td>$e</td>";
         }, $e));
+
         return "<tr class=\"$state\">$e</tr>";
     }, $statistics));
 
