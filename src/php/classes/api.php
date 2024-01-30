@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Legacy\Proxy;
 
 /**
  * Class Api

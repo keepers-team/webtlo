@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Proxy;
+
 include_once dirname(__FILE__) . '/../common.php';
 
 // проверяемый url
@@ -59,8 +61,8 @@ $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
 
 // устанавливаем прокси
 Proxy::options(
-    $activate_forum,
-    $activate_api,
+    (bool)$activate_forum,
+    (bool)$activate_api,
     $cfg['proxy_type'],
     $proxy_address,
     $proxy_auth

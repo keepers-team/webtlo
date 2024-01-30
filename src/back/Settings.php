@@ -7,8 +7,8 @@ namespace KeepersTeam\Webtlo;
 use Exception;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Legacy\Proxy;
 use PDO;
-use Proxy;
 
 final class Settings
 {
@@ -255,8 +255,8 @@ final class Settings
 
         // установка настроек прокси
         Proxy::options(
-            $config['proxy_activate_forum'],
-            $config['proxy_activate_api'],
+            (bool)$config['proxy_activate_forum'],
+            (bool)$config['proxy_activate_api'],
             $config['proxy_type'],
             $config['proxy_address'],
             $config['proxy_auth']

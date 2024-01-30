@@ -3,6 +3,7 @@
 use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\Forum\AccessCheck;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Legacy\Proxy;
 
 include_once dirname(__FILE__) . '/../phpQuery.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';

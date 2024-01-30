@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Legacy\Proxy;
 
 try {
     include_once dirname(__FILE__) . '/../common.php';
@@ -39,8 +40,8 @@ try {
 
     // устанавливаем прокси
     Proxy::options(
-        $activate_forum,
-        $activate_api,
+        (bool)$activate_forum,
+        (bool)$activate_api,
         $cfg['proxy_type'],
         $proxy_address,
         $proxy_auth
