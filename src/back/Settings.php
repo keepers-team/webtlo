@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use Db;
 use Exception;
+use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use PDO;
 use Proxy;

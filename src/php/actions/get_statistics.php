@@ -1,7 +1,8 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Db;
 
 $statistics_result = [
     'tbody' => '',

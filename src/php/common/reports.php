@@ -3,6 +3,7 @@
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
+use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;

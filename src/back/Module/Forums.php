@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module;
 
-use Db;
 use Exception;
 use KeepersTeam\Webtlo\DTO\ForumObject;
+use KeepersTeam\Webtlo\Legacy\Db;
 
 /**
  * Работа с хранимыми подразделами.

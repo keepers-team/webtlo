@@ -1,23 +1,29 @@
 <?php
 
+namespace KeepersTeam\Webtlo\Legacy;
+
 use KeepersTeam\Webtlo\DB as ModernDB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\TIniFileEx;
+use PDO;
+use Exception;
 
-class Db
+final class Db
 {
     public static ?ModernDB $db = null;
 
     public static function query_database($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
         $sth = self::prepare_query($sql, $param);
+
         return $fetch ? $sth->fetchAll($pdo) : true;
     }
 
     public static function query_database_row($sql, $param = [], $fetch = false, $pdo = PDO::FETCH_ASSOC)
     {
         $sth = self::prepare_query($sql, $param);
+
         return $fetch ? $sth->fetch($pdo) : true;
     }
 
@@ -78,9 +84,9 @@ class Db
      */
     public static function table_insert_dataset(
         string $table,
-        array $dataset,
+        array  $dataset,
         string $primaryKey = 'id',
-        array $keys = []
+        array  $keys = []
     ): void {
         $keys = count($keys) ? sprintf('(%s)', implode(',', $keys)) : '';
         $sql  = "INSERT INTO $table $keys " . self::combine_set($dataset, $primaryKey);
@@ -101,7 +107,7 @@ class Db
             $insKeys = sprintf('(%s)', $selKeys);
         }
 
-        $sql  = "INSERT INTO $table $insKeys SELECT $selKeys FROM $tempTable";
+        $sql = "INSERT INTO $table $insKeys SELECT $selKeys FROM $tempTable";
         self::query_database($sql);
     }
 
@@ -110,7 +116,7 @@ class Db
         self::checkConnect();
 
         foreach ($set as $id => &$value) {
-            $value = array_map(function ($e) {
+            $value = array_map(function($e) {
                 return is_numeric($e) ? $e : self::$db->db->quote($e ?? '');
             }, $value);
             $value = (empty($value[$primaryKey]) ? "$id," : "") . implode(',', $value);
@@ -121,6 +127,7 @@ class Db
 
     /**
      * объединение нескольких запросов на получение данных
+     *
      * @param array $source
      * @return string|bool
      */
@@ -131,14 +138,14 @@ class Db
         if (!is_array($source)) {
             return false;
         }
-        $query = '';
+        $query  = '';
         $values = [];
         foreach ($source as &$row) {
             if (!is_array($row)) {
                 return false;
             }
-            $row = array_map(
-                function ($e) {
+            $row      = array_map(
+                function($e) {
                     return is_numeric($e) ? $e : self::$db->db->quote($e ?? '');
                 },
                 $row
@@ -146,6 +153,7 @@ class Db
             $values[] = implode(',', $row);
         }
         $query = 'SELECT ' . implode(' UNION ALL SELECT ', $values);
+
         return $query;
     }
 
@@ -181,11 +189,13 @@ class Db
         );
 
         // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
-        self::query_database('
+        self::query_database(
+            '
             DELETE FROM Topics
             WHERE keeping_priority <> 2
                 AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-        ');
+        '
+        );
 
         // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
         $updatePriority = (bool)TIniFileEx::read('update', 'priority', 0);
@@ -193,11 +203,13 @@ class Db
             // Удалим устаревшие раздачи высокого приоритета.
             $lastHighUpdate = LastUpdate::getTime(UpdateMark::HIGH_PRIORITY->value);
             if ($lastHighUpdate < $outdatedTime) {
-                self::query_database('
+                self::query_database(
+                    '
                     DELETE FROM Topics
                     WHERE keeping_priority = 2
                         AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-                ');
+                '
+                );
             }
         }
     }

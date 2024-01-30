@@ -2,13 +2,13 @@
 
 namespace KeepersTeam\Webtlo\Forum\Report;
 
-use Db;
 use Exception;
 use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;

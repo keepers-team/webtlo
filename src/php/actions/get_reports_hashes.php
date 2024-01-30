@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {

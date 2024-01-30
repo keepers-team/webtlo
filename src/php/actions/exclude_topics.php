@@ -1,5 +1,7 @@
 <?php
 
+use KeepersTeam\Webtlo\Legacy\Db;
+
 try {
     include_once dirname(__FILE__) . '/../common.php';
 

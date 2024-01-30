@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module;
 
-use Db;
+use KeepersTeam\Webtlo\Legacy\Db;
 
 /**
  * Описание таблицы и её временной копии.

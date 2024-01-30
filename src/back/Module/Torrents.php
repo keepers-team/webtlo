@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module;
 
-use Db;
-use PDO;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Legacy\Db;
+use PDO;
 
 /** Методы для работы с раздачами в торрент-клиентах. */
 final class Torrents
