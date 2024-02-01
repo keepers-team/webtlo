@@ -1,5 +1,7 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
@@ -9,7 +11,6 @@ try {
     $result = '';
     $starttime = microtime(true);
 
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
     include_once dirname(__FILE__) . '/../classes/download.php';
 

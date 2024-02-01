@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB as ModernDB;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -20,7 +22,6 @@ $returnObject = [
 ];
 
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
     App::init();
 

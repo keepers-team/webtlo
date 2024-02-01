@@ -1,5 +1,7 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Helper;
@@ -10,8 +12,6 @@ $statistics_result = [
     'tfoot' => '',
 ];
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-
     // получение настроек
     $cfg = App::getSettings();
 

@@ -1,8 +1,8 @@
 <?php
 
-use KeepersTeam\Webtlo\Legacy\Proxy;
+require __DIR__ . '/../../vendor/autoload.php';
 
-include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+use KeepersTeam\Webtlo\Legacy\Proxy;
 
 // проверяемый url
 if (isset($_POST['url'])) {

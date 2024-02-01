@@ -1,12 +1,13 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Torrents;
 
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/clients.php';
 
     $result = '';

@@ -1,12 +1,12 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\WebTLO;
 
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-
     $wbtApi = WebTLO::getVersion();
 
     if (empty($wbtApi->releaseApi)) {

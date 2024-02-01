@@ -1,10 +1,10 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\Legacy\Db;
 
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-
     if (empty($_POST['topic_hashes'])) {
         $result = "Выберите раздачи";
         throw new Exception();

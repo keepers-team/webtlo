@@ -1,8 +1,8 @@
 <?php
 
-use KeepersTeam\Webtlo\Helper;
+require __DIR__ . '/../../vendor/autoload.php';
 
-include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+use KeepersTeam\Webtlo\Helper;
 
 if (isset($_POST['log_file'])) {
     $log_file = $_POST['log_file'];

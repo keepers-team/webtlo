@@ -1,11 +1,12 @@
 <?php
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Legacy\Proxy;
 
 try {
-    include_once dirname(__FILE__) . '/../../vendor/autoload.php';
     include_once dirname(__FILE__) . '/../classes/user_details.php';
 
     App::init();
