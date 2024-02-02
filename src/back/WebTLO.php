@@ -104,14 +104,16 @@ final class WebTLO
         return sprintf($pattern, $this->wiki);
     }
 
-    public function getInstallation(): string
+    public function getAbout(): array
     {
         $system = array_filter([
             $this->installation,
             $_SERVER['SERVER_SOFTWARE'] ?? '',
         ]);
 
-        $about['system']      = implode(' + ', $system);
+        $about['OS']     = PHP_OS;
+        $about['system'] = implode(' + ', $system);
+
         $about['php_version'] = phpversion();
 
         $about['memory_limit']       = ini_get('memory_limit');
@@ -120,6 +122,13 @@ final class WebTLO
         $about['max_input_vars']     = ini_get('max_input_vars');
 
         $about['date_timezone'] = ini_get('date.timezone') ?: date_default_timezone_get();
+
+        return $about;
+    }
+
+    public function getInstallation(): string
+    {
+        $about = $this->getAbout();
 
         $about = array_map(fn($k) => sprintf('<li>%s: %s</li>', $k, $about[$k]), array_keys($about));
 
