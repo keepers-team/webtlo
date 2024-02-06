@@ -6,6 +6,7 @@ use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\WebTLO;
 
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
+
 try {
     $wbtApi = WebTLO::getVersion();
 
@@ -15,12 +16,12 @@ try {
 
     $ch = curl_init();
     curl_setopt_array($ch, [
-        CURLOPT_URL => $wbtApi->releaseApi,
+        CURLOPT_URL            => $wbtApi->releaseApi,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_CONNECTTIMEOUT => 40,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_TIMEOUT => 40,
-        CURLOPT_USERAGENT => 'web-TLO'
+        CURLOPT_TIMEOUT        => 40,
+        CURLOPT_USERAGENT      => 'web-TLO',
     ]);
     $response = curl_exec($ch);
     if ($response === false) {
@@ -32,11 +33,13 @@ try {
     $infoFromGitHub = $responseHttpCode == 200 ? json_decode($response, true) : false;
 
     if (empty($infoFromGitHub)) {
-        throw new Exception('Что-то пошло не так при попытке получить актуальную версию с GitHub');
+        throw new Exception('Не удалось получить актуальную версию с GitHub');
     }
 
+    $link = getReleaseLink($wbtApi->installation, $infoFromGitHub);
+
     $result['newVersionNumber'] = $infoFromGitHub['name'];
-    $result['newVersionLink']   = $infoFromGitHub['zipball_url'];
+    $result['newVersionLink']   = $link;
     $result['whatsNew']         = $infoFromGitHub['body'];
 } catch (Exception $e) {
     Log::append($e->getMessage());
@@ -44,3 +47,30 @@ try {
 $result['log'] = Log::get();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
+
+function getReleaseLink(string $install, array $github): string
+{
+    // По-умолчанию ссылка на релиз.
+    $link = $github['html_url'];
+
+    $assets = $github['assets'] ?? [];
+    // Пробуем найти ссылку на конкретный zip.
+    if (count($assets)) {
+        if ('standalone' === $install) {
+            foreach ($assets as $asset) {
+                if (preg_match('/webtlo-win-.*\.zip/', $asset['name'])) {
+                    return $asset['browser_download_url'];
+                }
+            }
+        }
+        if ('zip' === $install) {
+            foreach ($assets as $asset) {
+                if ('webtlo.zip' === $asset['name']) {
+                    return $asset['browser_download_url'];
+                }
+            }
+        }
+    }
+
+    return $link;
+}
