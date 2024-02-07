@@ -8,19 +8,21 @@ use Exception;
 
 final class Helper
 {
+    /** Сортировка массива по заданному ключу, с учётом кирилицы. */
     public static function natsortField(array $input, string $field, int $direct = 1): array
     {
         uasort($input, function($a, $b) use ($field, $direct) {
-            if (
-                is_numeric($a[$field])
-                && is_numeric($b[$field])
-            ) {
-                return ($a[$field] != $b[$field] ? $a[$field] < $b[$field] ? -1 : 1 : 0) * $direct;
-            }
-            $a[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($a[$field], 'UTF-8'));
-            $b[$field] = mb_ereg_replace('ё', 'е', mb_strtolower($b[$field], 'UTF-8'));
+            $a = $a[$field] ?? 0;
+            $b = $b[$field] ?? 0;
 
-            return (strnatcasecmp($a[$field], $b[$field])) * $direct;
+            if (is_numeric($a) && is_numeric($b)) {
+                return ($a <=> $b) * $direct;
+            }
+
+            $a = mb_ereg_replace('ё', 'е', mb_strtolower($a, 'UTF-8'));
+            $b = mb_ereg_replace('ё', 'е', mb_strtolower($b, 'UTF-8'));
+
+            return (strnatcasecmp($a, $b)) * $direct;
         });
 
         return $input;
