@@ -12,7 +12,7 @@ final class KeysObject
 
     public static function create(array $data): self
     {
-        $values = count($data) ? $data : [''];
+        $values = count($data) ? array_values($data) : [''];
         $keys   = str_repeat('?,', count($values) - 1) . '?';
 
         return new self($keys, $values);

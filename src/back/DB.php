@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use Exception;
 use KeepersTeam\Webtlo\Legacy\Log;
 use PDO;
 use PDOException;
 use PDOStatement;
+use RuntimeException;
 use Throwable;
 
 final class DB
@@ -28,9 +28,6 @@ final class DB
     {
     }
 
-    /**
-     * @throws Exception
-     */
     public static function create(): DB
     {
         $databasePath = self::getDatabasePath();
@@ -49,16 +46,15 @@ final class DB
 
                 self::$instance = $db;
             } catch (PDOException $e) {
-                throw new Exception(sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e));
+                throw new RuntimeException(
+                    sprintf('Не удалось подключиться к БД в "%s", причина: %s', $databasePath, $e)
+                );
             }
         }
 
         return self::$instance;
     }
 
-    /**
-     * @throws Exception
-     */
     public static function getInstance(): self
     {
         if (null === self::$instance) {
@@ -68,9 +64,25 @@ final class DB
         return self::$instance;
     }
 
-    /**
-     * @throws Exception
-     */
+    /** Подготовить запрос и выполнить с параметрами. */
+    public function executeStatement(string $sql, array $param = []): PDOStatement
+    {
+        try {
+            $sth = $this->db->prepare($sql);
+            if (false === $sth) {
+                throw new PDOException('Cant create PDOStatement');
+            }
+
+            $sth->execute($param);
+
+            return $sth;
+        } catch (Throwable $e) {
+            Log::append($sql);
+            throw new RuntimeException($e->getMessage(), (int)$e->getCode(), $e);
+        }
+    }
+
+    /** Запрос набора строк. */
     public function query(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): array
     {
         $sth = $this->executeStatement($sql, $param);
@@ -78,9 +90,7 @@ final class DB
         return (array)$sth->fetchAll($pdo);
     }
 
-    /**
-     * @throws Exception
-     */
+    /** Запрос одной строки. */
     public function queryRow(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): mixed
     {
         $sth = $this->executeStatement($sql, $param);
@@ -88,71 +98,35 @@ final class DB
         return $sth->fetch($pdo);
     }
 
-    /**
-     * @throws Exception
-     */
+    /** Запрос одной ячейки. */
     public function queryColumn(string $sql, array $param = []): mixed
     {
-        return self::queryRow($sql, $param, PDO::FETCH_COLUMN);
+        return $this->queryRow($sql, $param, PDO::FETCH_COLUMN);
     }
 
-    /**
-     * Выполнить запрос подсчёта количества записей в таблице.
-     *
-     * @throws Exception
-     */
+    /** Запрос count счётчика. */
     public function queryCount(string $sql, array $param = []): int
     {
-        return (int)(self::queryColumn($sql, $param) ?? 0);
+        return (int)($this->queryColumn($sql, $param) ?? 0);
     }
 
-    /**
-     * Посчитать количество записей в таблице.
-     *
-     * @throws Exception
-     */
+    /** Запрос количество строк в таблице. */
     public function selectRowsCount(string $table): int
     {
         return $this->queryCount("SELECT COUNT() FROM $table") ?? 0;
     }
 
-    /**
-     * Подготовить запрос и выполнить с параметрами.
-     *
-     * @throws Exception
-     */
-    public function executeStatement(string $sql, array $param = []): PDOStatement
-    {
-        try {
-            $sth = $this->db->prepare($sql);
-            $sth->execute($param);
-
-            return $sth;
-        } catch (Throwable $e) {
-            Log::append($sql);
-            throw new Exception($e->getMessage(), (int)$e->getCode(), $e);
-        }
-    }
-
-
-    /**
-     * Выполнить готовый запрос к БД.
-     *
-     * @throws Exception
-     */
+    /** Выполнить готовый запрос к БД. */
     private function executeQuery(string $sql): void
     {
         try {
             $this->db->exec($sql);
         } catch (Throwable $e) {
             Log::append($sql);
-            throw new Exception($e->getMessage(), (int)$e->getCode(), $e);
+            throw new RuntimeException($e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
-    /**
-     * @throws Exception
-     */
     private static function getDatabasePath(): string
     {
         $databaseDirName = Helper::getStorageDir();
@@ -163,8 +137,6 @@ final class DB
 
     /**
      * Проверить текущую версию БД и, при необходимости, выполнить инициализацию/миграцию.
-     *
-     * @throws Exception
      */
     private function checkDatabaseVersion(string $databasePath): void
     {
@@ -176,7 +148,7 @@ final class DB
             return;
         } elseif ($currentVersion > self::DATABASE_VERSION) {
             // Странный случай, вероятно, откат версии ТЛО.
-            throw new Exception(
+            throw new RuntimeException(
                 sprintf(
                     'Ваша версия БД (#%d), опережает указанную в настройках web-TLO. Вероятно, вы откатились на прошлую версию программы. Удалите файл БД и запустите обновление сведений.',
                     $currentVersion
@@ -196,8 +168,6 @@ final class DB
 
     /**
      * Инициализация таблиц актуальной версии с нуля.
-     *
-     * @throws Exception
      */
     private function initTables(): void
     {
@@ -205,7 +175,7 @@ final class DB
 
         $query = file_get_contents($filePath);
         if (empty($query)) {
-            throw new Exception('Не удалось загрузить файл инициализации таблиц БД.');
+            throw new RuntimeException('Не удалось загрузить файл инициализации таблиц БД.');
         }
 
         $this->executeQuery($query);
@@ -215,7 +185,6 @@ final class DB
      * Совместимость со старыми версиями базы данных.
      *
      * @param int $version Текущая версия БД
-     * @throws Exception
      */
     private function migrateTables(int $version): void
     {
@@ -233,7 +202,7 @@ final class DB
             if ($currentVersion < $pragmaVersion) {
                 $query = file_get_contents($dir . DIRECTORY_SEPARATOR . $file);
                 if (empty($query)) {
-                    throw new Exception(sprintf('Пустой файл миграции %s', $file));
+                    throw new RuntimeException(sprintf('Пустой файл миграции %s', $file));
                 }
 
                 $currentVersion++;
@@ -266,5 +235,11 @@ final class DB
         $mask = "/^$mask$/ui";
 
         return preg_match($mask, (string)$value);
+    }
+
+    public function __destruct()
+    {
+        $this->query('PRAGMA analysis_limit=400;');
+        $this->query('PRAGMA optimize;');
     }
 }

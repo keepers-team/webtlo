@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use Exception;
+use RuntimeException;
 
 final class Helper
 {
@@ -83,13 +83,11 @@ final class Helper
 
     /**
      * Проверить наличие каталога и попробовать его создать.
-     *
-     * @throws Exception
      */
     public static function checkDirRecursive(string $path): void
     {
         if (!self::makeDirRecursive($path)) {
-            throw new Exception("Не удалось создать каталог '$path'");
+            throw new RuntimeException("Не удалось создать каталог '$path'");
         }
     }
 
