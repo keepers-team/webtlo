@@ -36,15 +36,16 @@ function downloadTorrents(replace_passkey) {
 
 // скачивание т.-файлов хранимых раздач по спискам с форума
 function downloadTorrentsByKeepersList(replace_passkey) {
-    var forum_id = $("#main-subsections").val();
-    var config = $("#config").serialize();
-    if ($.isEmptyObject(forum_id)) {
+    const forum_id = $('#main-subsections').val();
+    if ($.isEmptyObject(forum_id) || forum_id < 0) {
         return false;
     }
-    processStatus.set("Получение списка раздач...");
+
+    let config = $('#config').serialize();
+    processStatus.set('Получение списка раздач...');
     $.ajax({
-        type: "POST",
-        url: "php/actions/get_reports_hashes.php",
+        type: 'POST',
+        url: 'php/actions/get_reports_hashes.php',
         data: {
             forum_id: forum_id
         },
@@ -57,13 +58,18 @@ function downloadTorrentsByKeepersList(replace_passkey) {
         success: function (response) {
             response = $.parseJSON(response);
             $("#log").append(response.log);
-
-            // скачивание т.-файлов
-            var topic_hashes = $.param(response.hashes.map( s => ({name:"topic_hashes[]", value:s}) ));
-            if ($.isEmptyObject(topic_hashes)) {
-                showResultTopics("Не удалось получить список раздач для загрузки");
+            if (response.error) {
+                showResultTopics(response.error);
                 return false;
             }
+
+            // Обрабатываем список хешей раздач.
+            let topic_hashes = $.param(response.hashes.map(s => ({name: "topic_hashes[]", value: s})));
+            if ($.isEmptyObject(topic_hashes)) {
+                showResultTopics('Не удалось получить список раздач для загрузки');
+                return false;
+            }
+
             processStatus.set("Скачивание торрент-файлов...");
             $.ajax({
                 type: "POST",
