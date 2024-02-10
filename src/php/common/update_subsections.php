@@ -12,7 +12,6 @@ use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Timers;
-use KeepersTeam\Webtlo\Update\ForumTree;
 
 $app = AppContainer::create('update.log');
 
@@ -27,10 +26,6 @@ if (isset($checkEnabledCronAction)) {
         );
     }
 }
-
-/** @var ForumTree $forumTree Обновляем дерево подразделов. */
-$forumTree = $app->get(ForumTree::class);
-$forumTree->update();
 
 $logger = $app->getLogger();
 
