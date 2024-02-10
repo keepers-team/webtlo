@@ -4,35 +4,35 @@ include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Api;
 use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Timers;
 
-App::init();
+$app = AppContainer::create();
 
 // получение настроек
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
+$cfg = $app->getLegacyConfig();
+
+$logger = $app->getLogger();
 
 // Если нет настроенных торрент-клиентов, удалим все раздачи и отметку.
 if (empty($cfg['clients'])) {
-    Log::append('Notice: Торрент-клиенты не найдены.');
+    $logger->notice('Торрент-клиенты не найдены.');
 
     LastUpdate::setTime(UpdateMark::CLIENTS->value, 0);
     Db::query_database('DELETE FROM Torrents WHERE true');
     return;
 }
-Log::append(sprintf('Сканирование торрент-клиентов... Найдено %d шт.', count($cfg['clients'])));
+$logger->info(sprintf('Сканирование торрент-клиентов... Найдено %d шт.', count($cfg['clients'])));
 
 // Таблица хранимых раздач в торрент-клиентах.
 $tabTorrents = CloneTable::create(
@@ -94,7 +94,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 
     // доступность торрент-клиента
     if ($client->isOnline() === false) {
-        Log::append("Notice: Клиент $clientTag в данный момент недоступен");
+        $logger->notice("Клиент $clientTag в данный момент недоступен");
         $failedClients[] = $torrentClientID;
         continue;
     }
@@ -105,7 +105,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     // получаем список раздач
     $torrents = $client->getAllTorrents();
     if ($torrents === false) {
-        Log::append("Error: Не удалось получить данные о раздачах от торрент-клиента $clientTag");
+        $logger->warning("Не удалось получить данные о раздачах от торрент-клиента $clientTag");
         $failedClients[] = $torrentClientID;
         continue;
     }
@@ -137,7 +137,7 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $tabTorrents->cloneFillChunk($insertedTorrents);
     unset($insertedTorrents);
 
-    Log::append(sprintf(
+    $logger->info(sprintf(
         '%s получено раздач: %d шт за %s',
         $clientTag,
         $countTorrents,
@@ -195,38 +195,36 @@ if ($cfg['update']['untracked']) {
     );
 
     if (!empty($untrackedTorrentHashes)) {
-        Log::append('Найдено уникальных сторонних раздач в клиентах: ' . count($untrackedTorrentHashes) . ' шт.');
+        $logger->info('Найдено уникальных сторонних раздач в клиентах: ' . count($untrackedTorrentHashes) . ' шт.');
         // подключаемся к api
-        if (!isset($api)) {
-            $api = new Api($cfg['api_address'], $cfg['api_key']);
-            // применяем таймауты
-            $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
-        }
+        $apiClient = $app->getApiClient();
 
         // Пробуем найти на форуме раздачи по их хешам из клиента.
-        $untrackedTopics = $api->getTorrentTopicData($untrackedTorrentHashes, 'hash');
+        $response = $apiClient->getTopicsDetails($untrackedTorrentHashes, TopicSearchMode::HASH);
+        if ($response instanceof ApiError) {
+            $logger->error(sprintf('%d %s', $response->code, $response->text));
+            throw new RuntimeException('Error: Не получены дополнительные данные о раздачах');
+        }
+
         unset($untrackedTorrentHashes);
-        if (!empty($untrackedTopics)) {
-            foreach ($untrackedTopics as $topicID => $topicData) {
-                if (empty($topicData)) {
-                    continue;
-                }
+        if (!empty($response->topics)) {
+            foreach ($response->topics as $topicData) {
                 // Пропускаем раздачи в невалидных статусах.
-                if (!in_array($topicData['tor_status'], Topics::VALID_STATUSES)) {
+                if (!in_array($topicData->status->value, Topics::VALID_STATUSES)) {
                     continue;
                 }
 
                 $insertedUntrackedTopics[] = array_combine(
                     $tabUntracked->keys,
                     [
-                        $topicID,
-                        $topicData['forum_id'],
-                        $topicData['topic_title'],
-                        $topicData['info_hash'],
-                        $topicData['seeders'],
-                        $topicData['size'],
-                        $topicData['tor_status'],
-                        $topicData['reg_time'],
+                        $topicData->id,
+                        $topicData->forumId,
+                        $topicData->title,
+                        $topicData->hash,
+                        $topicData->seeders,
+                        $topicData->size,
+                        $topicData->status->value,
+                        (int)$topicData->registered->format('U'),
                     ]
                 );
             }
@@ -234,7 +232,7 @@ if ($cfg['update']['untracked']) {
 
             // Если нашлись существующие на форуме раздачи, то записываем их в БД.
             if (!empty($insertedUntrackedTopics)) {
-                Log::append(sprintf('Записано уникальных сторонних раздач: %d шт.', count($insertedUntrackedTopics)));
+                $logger->info(sprintf('Записано уникальных сторонних раздач: %d шт.', count($insertedUntrackedTopics)));
 
                 $tabUntracked->cloneFillChunk($insertedUntrackedTopics);
                 unset($insertedUntrackedTopics);
@@ -244,6 +242,7 @@ if ($cfg['update']['untracked']) {
                 }
             }
         }
+        unset($response);
     }
 
     $timers['search_untracked'] = Timers::getExecTime('search_untracked');
@@ -305,7 +304,7 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 
         $countUnregistered = $tabUnregistered->cloneCount();
         if ($countUnregistered > 0) {
-            Log::append(sprintf('Найдено разрегистрированных или обновлённых раздач: %d шт.', $countUnregistered));
+            $logger->info(sprintf('Найдено разрегистрированных или обновлённых раздач: %d шт.', $countUnregistered));
             $tabUnregistered->moveToOrigin();
         }
     }
@@ -315,4 +314,4 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 // Удалим лишние раздачи из БД разрегов.
 $tabUnregistered->clearUnusedRows();
 
-Log::append(json_encode($timers));
+$logger->debug(json_encode($timers));
