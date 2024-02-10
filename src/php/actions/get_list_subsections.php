@@ -2,21 +2,23 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Db;
+use KeepersTeam\Webtlo\Update\ForumTree;
 
 try {
     if (empty($_GET['term'])) {
         return false;
     }
 
-    App::init();
+    $app = AppContainer::create();
 
     $patterns = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
 
     if (empty(Db::select_count('Forums'))) {
-        // дёргаем скрипт
-        include_once dirname(__FILE__) . '/../common/forum_tree.php';
+        /** @var ForumTree $forumTree Обновляем дерево подразделов. */
+        $forumTree = $app->get(ForumTree::class);
+        $forumTree->update();
     }
 
     $forums = [];
