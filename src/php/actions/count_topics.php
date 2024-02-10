@@ -2,22 +2,28 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Db;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Module\TopicDetails;
+use KeepersTeam\Webtlo\Tables\Topics;
 
 $result = [];
 try {
-    App::init();
+    $app = AppContainer::create();
+
+    $logger = $app->getLogger();
+
+    /** @var Topics $topics */
+    $topics = $app->get(Topics::class);
 
     // Посчитаем количество раздач без имени и их общее количество в БД.
-    $result['unnamed'] = TopicDetails::countUnnamed();
-    $result['total']   = Db::select_count('Topics');
+    $result['unnamed'] = $topics->countUnnamed();
+    $result['total']   = $topics->countTotal();
 
     $result['current'] = $result['total'] - $result['unnamed'];
 } catch (Exception $e) {
-    Log::append($e->getMessage());
+    if (isset($logger)) {
+        $logger->error($e->getMessage());
+    }
 }
 
 $result['log'] = Log::get();
