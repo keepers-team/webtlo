@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
@@ -46,6 +48,23 @@ final class AppContainer
         // Добавляем логгер.
         $container->add(LoggerInterface::class, fn() => AppLogger::create($logFile));
 
+        // Получаем настройки прокси.
+        $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));
+
+        // Добавляем клиент для работы с API.
+        $container->add(ApiClient::class, function() use ($container) {
+            $logger = $container->get(LoggerInterface::class);
+
+            $proxy  = $container->get(Proxy::class);
+            $config = $container->get('config');
+
+            return new ApiClient(
+                ApiClient::getDefaultParams($config),
+                ApiClient::apiClientFromLegacy($config, $logger, $proxy),
+                $logger
+            );
+        });
+
         // Подключаем БД.
         $container->add(DB::class, fn() => DB::create());
 
@@ -65,6 +84,12 @@ final class AppContainer
     {
         return $this->get('config');
     }
+
+    public function getApiClient(): ApiClient
+    {
+        return $this->get(ApiClient::class);
+    }
+
     public function getSettings(): Settings
     {
         return $this->get(Settings::class);
