@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Module;
+namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\DTO\UpdateDetailsResultObject;
-use KeepersTeam\Webtlo\Legacy\Api;
-use KeepersTeam\Webtlo\Legacy\Db;
+use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Tables\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Exception;
-use PDO;
+use Psr\Log\LoggerInterface;
 
 /** Получение деталей о раздаче. */
 final class TopicDetails
@@ -24,8 +26,11 @@ final class TopicDetails
 
     private ?UpdateDetailsResultObject $result = null;
 
-    public function __construct(private readonly Api $api)
-    {
+    public function __construct(
+        private readonly ApiClient       $apiClient,
+        private readonly Topics          $topics,
+        private readonly LoggerInterface $logger
+    ) {
     }
 
     /**
@@ -38,11 +43,18 @@ final class TopicDetails
 
         $runs = (int)ceil($beforeUpdate / $perRun);
 
+        $len    = strlen((string)$beforeUpdate);
+        $runLog = "Обновление раздач [%{$len}d/%d]";
+
         $exec = [];
+        $this->logger->debug(
+            'Начинаем обновление сведений о раздачах',
+            ['topics' => $beforeUpdate, 'perRun' => $perRun, 'runs' => $runs]
+        );
         for ($run = 1; $run <= $runs; $run++) {
             Timers::start("chunk_$run");
 
-            $topics = $this->getUnnamedTopics($perRun);
+            $topics = $this->topics->getUnnamedTopics($perRun);
             if (count($topics)) {
                 $details = $this->getDetails($topics);
                 if (count($details)) {
@@ -54,12 +66,13 @@ final class TopicDetails
                 $tab->clearClone();
             }
 
+            $this->logger->debug(sprintf($runLog, min($run * $perRun, $beforeUpdate), $beforeUpdate));
             $exec[] = Timers::getExec("chunk_$run");
         }
 
         $this->result = new UpdateDetailsResultObject(
             $beforeUpdate,
-            self::countUnnamed(),
+            $this->topics->countUnnamed(),
             $perRun,
             $runs,
             Timers::getExec('full'),
@@ -79,41 +92,24 @@ final class TopicDetails
      */
     public function getDetails(array $topics): array
     {
-        $topicsDetails = $this->api->getTorrentTopicData($topics);
-        if (empty($topicsDetails)) {
-            throw new Exception("Error: Не получены дополнительные данные о раздачах");
+        $response = $this->apiClient->getTopicsDetails($topics);
+        if ($response instanceof ApiError) {
+            $this->logger->error(sprintf('%d %s', $response->code, $response->text));
+            throw new Exception('Error: Не получены дополнительные данные о раздачах');
         }
+
         $details = [];
-        foreach ($topicsDetails as $topicId => $topicDetails) {
-            if (empty($topicDetails)) {
-                continue;
-            }
-            $details[$topicId] = array_combine(self::TOPIC_KEYS, [
-                $topicId,
-                $topicDetails['info_hash'],
-                $topicDetails['topic_title'],
-                $topicDetails['poster_id'],
-                $topicDetails['seeder_last_seen'],
+
+        foreach ($response->topics as $topic) {
+            $details[$topic->id] = array_combine(self::TOPIC_KEYS, [
+                $topic->id,
+                $topic->hash,
+                $topic->title,
+                $topic->poster,
+                (int)$topic->lastSeeded->format('U'),
             ]);
         }
 
         return $details;
-    }
-
-    /** Количество раздач без названия. */
-    public static function countUnnamed(): int
-    {
-        return Db::query_count("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
-    }
-
-    /** Получить N раздач без названия. */
-    public static function getUnnamedTopics(int $limit = 5000): array
-    {
-        return Db::query_database(
-            "SELECT id FROM Topics WHERE name IS NULL OR name = '' LIMIT ?",
-            [$limit],
-            true,
-            PDO::FETCH_COLUMN
-        );
     }
 }

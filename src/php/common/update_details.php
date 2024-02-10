@@ -2,46 +2,38 @@
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Api;
-use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Module\TopicDetails;
+use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Update\TopicDetails;
 
-$countUnnamed = TopicDetails::countUnnamed();
+$app = AppContainer::create();
+
+$logger = $app->getLogger();
+
+/** @var Topics $topics */
+$topics = $app->get(Topics::class);
+
+$countUnnamed = $topics->countUnnamed();
 if (!$countUnnamed) {
-    Log::append('Notice: Обновление дополнительных сведений о раздачах не требуется.');
+    $logger->notice('Обновление дополнительных сведений о раздачах не требуется.');
     return;
 }
 
-App::init();
-
-// получение настроек
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
-
-// подключаемся к api
-if (!isset($api)) {
-    $api = new Api($cfg['api_address'], $cfg['api_key']);
-    // применяем таймауты
-    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
-}
-
-$detailsClass = new TopicDetails($api);
+/** @var TopicDetails $detailsClass */
+$detailsClass = $app->get(TopicDetails::class);
 $detailsClass->fillDetails($countUnnamed, $updateDetailsPerRun ?? 5000);
 $details = $detailsClass->getResult();
 
-
-
 if (null !== $details) {
-    Log::append(sprintf(
+    $logger->info(sprintf(
         'Обновление дополнительных сведений о раздачах завершено за %s.',
         Helper::convertSeconds($details->execFull)
     ));
-    Log::append(sprintf(
+    $logger->info(sprintf(
         'Раздач обновлено %d из %d.',
         $details->before - $details->after,
         $details->before
     ));
+    $logger->debug('detailsResult', (array)$details);
 }
