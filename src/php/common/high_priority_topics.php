@@ -1,30 +1,32 @@
 <?php
 
+error_reporting(E_ALL);
+
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Legacy\Api;
+use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopic;
 use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Timers;
 
-App::init();
+$app = AppContainer::create();
+
+$logger = $app->getLogger();
 
 // получение настроек
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
+$cfg = $app->getLegacyConfig();
 
 // Хранимые подразделы.
 $subsections = array_keys($cfg['subsections'] ?? []);
 
 if ($cfg['update']['priority'] == 0) {
-    Log::append('Notice: Обновление списка раздач с высоким приоритетом отключено в настройках.');
+    $logger->notice('Обновление списка раздач с высоким приоритетом отключено в настройках.');
     LastUpdate::setTime(UpdateMark::HIGH_PRIORITY->value, 0);
 
     // Если обновление списка высокоприоритетных раздач отключено, то удалим лишние записи в БД.
@@ -35,32 +37,29 @@ if ($cfg['update']['priority'] == 0) {
             $sub->values
         );
     }
+
     return;
 }
 
 Timers::start('hp_topics');
-
-Log::append('Info: Начато обновление списка высокоприоритетных раздач...');
+$logger->info('Начато обновление списка высокоприоритетных раздач...');
 // получаем дату предыдущего обновления
 $updateTime = LastUpdate::getTime(UpdateMark::HIGH_PRIORITY->value);
 // если не прошло два часа
 if (time() - $updateTime < 7200) {
-    Log::append("Notice: Не требуется обновление списка высокоприоритетных раздач");
+    $logger->notice('Не требуется обновление списка высокоприоритетных раздач');
+
     return;
 }
 
 // подключаемся к api
-if (!isset($api)) {
-    $api = new Api($cfg['api_address'], $cfg['api_key']);
-    // применяем таймауты
-    $api->setUserConnectionOptions($cfg['curl_setopt']['api']);
-}
+$apiClient = $app->getApiClient();
 
 // получаем данные о раздачах
-$topicsHighPriorityData = $api->getTopicsHighPriority();
-if (empty($topicsHighPriorityData['result'])) {
-    Log::append("Error: Не получены данные о высокоприоритетных раздачах");
-    return;
+$response = $apiClient->getTopicsHighPriority();
+if ($response instanceof ApiError) {
+    $logger->error(sprintf('%d %s', $response->code, $response->text));
+    throw new RuntimeException('Error: Не получены данные о высокоприоритетных раздачах');
 }
 
 // Обновляемые раздачи.
@@ -104,43 +103,39 @@ $tabHighRenew = CloneTable::create(
 
 
 // время текущего и предыдущего обновления
-$currentUpdateTime  = new DateTime();
-$previousUpdateTime = new DateTime();
+$currentUpdateTime = $response->updateTime;
 
 // время последнего обновления данных на api
-$topicsHighPriorityUpdateTime = $topicsHighPriorityData['update_time'];
+$topicsHighPriorityUpdateTime = (int)$currentUpdateTime->format('U');
 // количество раздач
 $topicsHighPriorityTotalCount = 0;
-// текущее обновление в DateTime
-$currentUpdateTime->setTimestamp($topicsHighPriorityData['update_time']);
 // предыдущее обновление в DateTime
-$previousUpdateTime->setTimestamp($updateTime)->setTime(0, 0);
+$previousUpdateTime = (new DateTimeImmutable())->setTimestamp($updateTime)->setTime(0, 0);
 // разница в днях между обновлениями сведений
 $daysDiffAdjusted = $currentUpdateTime->diff($previousUpdateTime)->format('%d');
 
-$topicsKeys = $topicsHighPriorityData['format']['topic_id'];
-$flipKeys   = array_flip($topicsKeys);
 
 // Убираем раздачи, из разделов, которые храним.
-$topicsHighPriority = array_filter($topicsHighPriorityData['result'], function ($el) use ($flipKeys, $subsections) {
-    return !in_array($el[$flipKeys['forum_id']], $subsections);
+$topicsHighPriority = array_filter($response->topics, function($el) use ($subsections) {
+    return !in_array($el->forumId, $subsections);
 });
 
 // Разбиваем список раздач по 500 шт.
-$topicsHighPriority = array_chunk($topicsHighPriority, 500, true);
-
-unset($topicsHighPriorityData);
+/** @var HighPriorityTopic[][] $topicsChunks */
+$topicsChunks = array_chunk($topicsHighPriority, 500, true);
+unset($topicsHighPriority);
 
 // Приоритетт хранения раздач.
 $keepingPriority = 2;
 
 // проходим по всем раздачам
-foreach ($topicsHighPriority as $topicsHighPriorityResult) {
+foreach ($topicsChunks as $topicsChunk) {
     // получаем данные о раздачах за предыдущее обновление
-    $selectTopics = KeysObject::create(array_keys($topicsHighPriorityResult));
+    $selectTopics = KeysObject::create(array_map(fn($tp) => $tp->id, $topicsChunk));
+
     $previousTopicsData = Db::query_database(
         "
-            SELECT id, seeders, reg_time, seeders_updates_today, seeders_updates_days, poster, length(name) as lgth
+            SELECT id, seeders, reg_time, seeders_updates_today, seeders_updates_days, poster, length(name) AS lgth
             FROM Topics
             WHERE id IN ($selectTopics->keys)
         ",
@@ -150,38 +145,34 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
     );
     unset($selectTopics);
 
+    $db_topics_renew = $db_topics_update = [];
     // разбираем раздачи
-    // topic_id => array( tor_status, seeders, reg_time, tor_size_bytes, forum_id )
-    foreach ($topicsHighPriorityResult as $topicID => $topicRaw) {
-        if (empty($topicRaw)) {
-            continue;
-        }
-        if (count($topicRaw) < 5) {
-            throw new Exception("Error: Недостаточно элементов в ответе");
-        }
-        $topicData = array_combine($topicsKeys, $topicRaw);
-        if (!in_array($topicData['tor_status'], Topics::VALID_STATUSES)) {
+    foreach ($topicsChunk as $topic) {
+        if (!in_array($topic->status->value, Topics::VALID_STATUSES)) {
             continue;
         }
 
         $daysUpdate = 0;
         $sumUpdates = 1;
-        $sumSeeders = $topicData['seeders'];
+        $sumSeeders = $topic->seeders;
         // запоминаем имеющиеся данные о раздаче в локальной базе
-        if (isset($previousTopicsData[$topicID])) {
-            $previousTopicData = $previousTopicsData[$topicID];
+        if (isset($previousTopicsData[$topic->id])) {
+            $previousTopicData = $previousTopicsData[$topic->id];
         }
-        // удалить перерегистрированную раздачу
+
+        $topicRegistered = (int)$topic->registered->format('U');
+        // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
         // в том числе, чтобы очистить значения сидов для старой раздачи
         if (
-            isset($previousTopicData['reg_time'])
-            && $previousTopicData['reg_time'] != $topicData['reg_time']
+            isset($previous_data['reg_time'])
+            && (int)$previous_data['reg_time'] !== $topicRegistered
         ) {
-            $topicsDelete[]    = $topicID;
+            $topics_delete[]   = $topic->id;
             $isTopicDataDelete = true;
         } else {
             $isTopicDataDelete = false;
         }
+
         // получить для раздачи info_hash, topic_title, poster_id, seeder_last_seen
         if (
             empty($previousTopicData)
@@ -189,17 +180,17 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
             || $previousTopicData['lgth'] == 0 // Пустое название
             || $previousTopicData['poster'] === 0  // Нет автора раздачи
         ) {
-            $insertTopicsRenew[$topicID] = array_combine(
+            $db_topics_renew[$topic->id] = array_combine(
                 $tabHighRenew->keys,
                 [
-                    $topicID,
-                    $topicData['forum_id'],
+                    $topic->id,
+                    $topic->forumId,
                     '',
                     '',
                     $sumSeeders,
-                    $topicData['tor_size_bytes'],
-                    $topicData['tor_status'],
-                    $topicData['reg_time'],
+                    $topic->size,
+                    $topic->status->value,
+                    $topicRegistered,
                     $sumUpdates,
                     $daysUpdate,
                     $keepingPriority,
@@ -223,13 +214,13 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
             }
         }
 
-        $insertTopicsUpdate[$topicID] = array_combine(
+        $db_topics_update[$topic->id] = array_combine(
             $tabHighUpdate->keys,
             [
-                $topicID,
-                $topicData['forum_id'],
+                $topic->id,
+                $topic->forumId,
                 $sumSeeders,
-                $topicData['tor_status'],
+                $topic->status->value,
                 $sumUpdates,
                 $daysUpdate,
                 $keepingPriority,
@@ -238,41 +229,36 @@ foreach ($topicsHighPriority as $topicsHighPriorityResult) {
         );
         unset($previousTopicData);
     }
-    unset($previousTopicsData, $topicsHighPriorityResult);
+    unset($previousTopicsData, $topicsChunk);
 
     // вставка данных в базу о новых раздачах
-    if (isset($insertTopicsRenew)) {
-        $topicsIDsRenew = array_keys($insertTopicsRenew);
-        $in = str_repeat('?,', count($topicsIDsRenew) - 1) . '?';
-
-        $topicsHighPriorityData = $api->getTorrentTopicData($topicsIDsRenew);
-        unset($topicsIDsRenew);
-        if (empty($topicsHighPriorityData)) {
-            throw new Exception("Error: Не получены дополнительные данные о раздачах");
+    if (count($db_topics_renew)) {
+        // Получить описание новых раздач.
+        $response = $apiClient->getTopicsDetails(array_keys($db_topics_renew));
+        if ($response instanceof ApiError) {
+            $logger->error(sprintf('%d %s', $response->code, $response->text));
+            throw new RuntimeException('Error: Не получены дополнительные данные о раздачах');
         }
-        foreach ($topicsHighPriorityData as $topicID => $topicData) {
-            if (empty($topicData)) {
-                continue;
-            }
-            if (isset($insertTopicsRenew[$topicID])) {
-                $insertTopicsRenew[$topicID]['info_hash']        = $topicData['info_hash'];
-                $insertTopicsRenew[$topicID]['name']             = $topicData['topic_title'];
-                $insertTopicsRenew[$topicID]['poster']           = $topicData['poster_id'];
-                $insertTopicsRenew[$topicID]['seeder_last_seen'] = $topicData['seeder_last_seen'];
+
+        foreach ($response->topics as $topic) {
+            if (isset($db_topics_renew[$topic->id])) {
+                $db_topics_renew[$topic->id]['info_hash']        = $topic->hash;
+                $db_topics_renew[$topic->id]['name']             = $topic->title;
+                $db_topics_renew[$topic->id]['poster']           = $topic->poster;
+                $db_topics_renew[$topic->id]['seeder_last_seen'] = (int)$topic->lastSeeded->format('U');
             }
         }
-        unset($topicsHighPriorityData);
 
-        $tabHighRenew->cloneFill($insertTopicsRenew);
-        unset($insertTopicsRenew);
+        $tabHighRenew->cloneFill($db_topics_renew);
+        unset($db_topics_renew);
     }
 
     // обновление данных в базе о существующих раздачах
-    if (isset($insertTopicsUpdate)) {
-        $tabHighUpdate->cloneFill($insertTopicsUpdate);
-        unset($insertTopicsUpdate);
+    if (count($db_topics_update)) {
+        $tabHighUpdate->cloneFill($db_topics_update);
+        unset($db_topics_update);
     }
-    unset($insertTopicsUpdate);
+    unset($db_topics_update);
 }
 unset($topicsHighPriority);
 
@@ -310,9 +296,11 @@ if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
     // Записываем время обновления.
     LastUpdate::setTime(UpdateMark::HIGH_PRIORITY->value, $topicsHighPriorityUpdateTime);
 
-    Log::append(sprintf(
-        'Info: Обновление высокоприоритетных раздач завершено за %s, обработано раздач: %d шт',
-        Timers::getExecTime('hp_topics'),
-        $countTopicsUpdate + $countTopicsRenew
-    ));
+    $logger->info(
+        sprintf(
+            'Обновление высокоприоритетных раздач завершено за %s, обработано раздач: %d шт',
+            Timers::getExecTime('hp_topics'),
+            $countTopicsUpdate + $countTopicsRenew
+        )
+    );
 }
