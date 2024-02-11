@@ -145,7 +145,7 @@ function setSettings() {
             $(this).addClass("ui-state-disabled").prop("disabled", true);
         },
         success: function (response) {
-            $("#log").append(response);
+            $("#log").append(response.log ?? '');
         },
         complete: function () {
             $(this).removeClass("ui-state-disabled").prop("disabled", false);

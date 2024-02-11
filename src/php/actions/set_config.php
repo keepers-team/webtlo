@@ -2,13 +2,12 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Settings;
-use KeepersTeam\Webtlo\TIniFileEx;
 
 try {
-    App::init();
+    $app = AppContainer::create();
+    $log = $app->getLogger();
 
     $request = json_decode(file_get_contents('php://input'), true);
 
@@ -17,39 +16,38 @@ try {
     if (isset($request['cfg'])) {
         parse_str($request['cfg'], $cfg);
     }
+    if (empty($cfg)) {
+        throw new RuntimeException('Настройки не переданы. Нечего сохранять.');
+    }
+
+    $settings = $app->getSettings();
 
     $forums  = $request['forums'] ?? [];
     $clients = $request['tor_clients'] ?? [];
 
-
-    // TODO container auto-wire.
-    $ini      = new TIniFileEx();
-    $settings = new Settings($ini);
-
     // Записываем настройки.
-    $settings->update($cfg, $forums, $clients);
-
-    // Сделаем копию конфига, убрав приватные данные.
-    $ini->copyFile('config_public.ini');
-    $private_options = [
-        'torrent-tracker' => [
-            'login',
-            'password',
-            'user_id',
-            'user_session',
-            'bt_key',
-            'api_key',
-        ],
-    ];
-    foreach ($private_options as $section => $keys) {
-        foreach ($keys as $key) {
-            $ini->write($section, $key, '');
-        }
+    $saveResult = $settings->update($cfg, $forums, $clients);
+    if ($saveResult) {
+        $log->info('Настройки успешно сохранены в файл.');
+    } else {
+        $log->warning('Не удалось сохранить настройки в файл.');
     }
-    $ini->updateFile();
 
-    echo Log::get();
-} catch (Exception $e) {
-    Log::append($e->getMessage());
-    echo Log::get();
+    // Сделаем копию настроек, убрав приватные данные.
+    $cloneResult = $settings->makePublicCopy('config_public.ini');
+    if ($cloneResult) {
+        $log->info('Публичная копия настроек сохранена успешно.');
+    } else {
+        $log->warning('Не удалось сохранить публичную копию настроек.');
+    }
+
+    $log->info('-- DONE --');
+} catch (Throwable $e) {
+    if (isset($log)) {
+        $log->error($e->getMessage());
+    } else {
+        Log::append($e->getMessage());
+    }
 }
+
+echo json_encode(['log' => Log::get()], JSON_UNESCAPED_UNICODE);

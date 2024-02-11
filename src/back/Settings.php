@@ -112,11 +112,17 @@ final class Settings
 
         $api_schema   = $config['api_ssl'] ? 'https' : 'http';
         $forum_schema = $config['forum_ssl'] ? 'https' : 'http';
-        $api_url      = $config['api_url'] == 'custom' ? $config['api_url_custom'] : $config['api_url'];
-        $forum_url    = $config['forum_url'] == 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
 
+        $api_url   = $config['api_url'] === 'custom' ? $config['api_url_custom'] : $config['api_url'];
+        $forum_url = $config['forum_url'] === 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
+
+        $config['api_base_url']  = $api_url;
         $config['api_address']   = $api_schema . '://' . $api_url;
         $config['forum_address'] = $forum_schema . '://' . $forum_url;
+
+
+        $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
+        $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
 
         // загрузки
         $config['save_dir']    = $ini->read('download', 'savedir', 'C:\Temp\\');
@@ -204,7 +210,7 @@ final class Settings
                 }
             }
             $ini->write("other", "user_version", 1);
-            $ini->updateFile();
+            $ini->writeFile();
         }
 
         if ($user_version < 2) {
@@ -213,7 +219,7 @@ final class Settings
             $config['proxy_activate_forum'] = $proxy_activate;
             $ini->write("proxy", "activate_forum", $proxy_activate);
             $ini->write("other", "user_version", 2);
-            $ini->updateFile();
+            $ini->writeFile();
         }
 
         if ($user_version < 3) {
@@ -250,7 +256,7 @@ final class Settings
             }
 
             $ini->write("other", "user_version", 3);
-            $ini->updateFile();
+            $ini->writeFile();
         }
 
         // установка настроек прокси
@@ -265,7 +271,70 @@ final class Settings
         return $config;
     }
 
-    public function update(array $cfg, array $forums, array $torrentClients): void
+    public function update(array $cfg, array $forums, array $torrentClients): bool
+    {
+        // Форум / api.
+        $this->setForum($cfg);
+
+        // Прокси.
+        $this->setProxy($cfg);
+
+        // Кураторы.
+        $this->setCurators($cfg);
+
+        // Загрузка торрент-файлов.
+        $this->setDownload($cfg);
+
+        // Регулировка раздач.
+        $this->setTopicControl($cfg);
+
+        // Обновление списков раздач.
+        $this->setUpdate($cfg);
+
+        // Фильтрация раздач.
+        $this->setTopicFiltration($cfg);
+
+        // Торрент-клиенты.
+        $excludeClientsIDs = $this->setTorrentClients($torrentClients);
+        // Подразделы.
+        $excludeForumsIDs = $this->setSubsections($forums);
+
+        // Отправка отчётов.
+        $this->setReports($cfg, $excludeClientsIDs, $excludeForumsIDs);
+
+        // Автоматизация.
+        $this->setAutomation($cfg);
+
+        // Запись файла с настройками.
+        return $this->ini->writeFile();
+    }
+
+    public function makePublicCopy(string $cloneName): bool
+    {
+        $iniClone = $this->ini;
+        $iniClone->cloneFile($cloneName);
+
+        $private_options = [
+            'torrent-tracker' => [
+                'login',
+                'password',
+                'user_id',
+                'user_session',
+                'bt_key',
+                'api_key',
+            ],
+        ];
+
+        foreach ($private_options as $section => $keys) {
+            foreach ($keys as $key) {
+                $iniClone->write($section, $key, '');
+            }
+        }
+
+        return $iniClone->writeFile();
+    }
+
+    private function setTorrentClients(array $torrentClients = []): array
     {
         $ini = $this->ini;
 
@@ -307,41 +376,15 @@ final class Settings
                 }
             }
         }
-        $ini->write('other', 'qt', $torrentClientNumber); // кол-во торрент-клиентов
+        $ini->write('other', 'qt', $torrentClientNumber);
 
-        // регулировка раздач
-        if (
-            isset($cfg['peers'])
-            && is_numeric($cfg['peers'])
-        ) {
-            $ini->write('topics_control', 'peers', $cfg['peers']);
-        }
+        return $excludeClientsIDs; // кол-во торрент-клиентов
+    }
 
-        $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
-        $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
-        $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
-        $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
+    private function setSubsections(array $forums = []): array
+    {
+        $ini = $this->ini;
 
-        // прокси
-        $ini->write('proxy', 'activate_forum', isset($cfg['proxy_activate_forum']) ? 1 : 0);
-        $ini->write('proxy', 'activate_api', isset($cfg['proxy_activate_api']) ? 1 : 0);
-        if (isset($cfg['proxy_type'])) {
-            $ini->write('proxy', 'type', $cfg['proxy_type']);
-        }
-        if (isset($cfg['proxy_hostname'])) {
-            $ini->write('proxy', 'hostname', trim($cfg['proxy_hostname']));
-        }
-        if (isset($cfg['proxy_port'])) {
-            $ini->write('proxy', 'port', trim($cfg['proxy_port']));
-        }
-        if (isset($cfg['proxy_login'])) {
-            $ini->write('proxy', 'login', trim($cfg['proxy_login']));
-        }
-        if (isset($cfg['proxy_paswd'])) {
-            $ini->write('proxy', 'password', trim($cfg['proxy_paswd']));
-        }
-
-        // подразделы
         $ini->write('sections', 'subsections', '');
         $excludeForumsIDs = [];
         if (count($forums)) {
@@ -378,7 +421,50 @@ final class Settings
             $ini->write('sections', 'subsections', $forumsIDs);
         }
 
-        // кураторы
+        return $excludeForumsIDs;
+    }
+
+    private function setTopicControl(array $cfg): void
+    {
+        $ini = $this->ini;
+
+        if (isset($cfg['peers']) && is_numeric($cfg['peers'])) {
+            $ini->write('topics_control', 'peers', $cfg['peers']);
+        }
+
+        $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
+        $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
+        $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
+        $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
+    }
+
+    private function setProxy(array $cfg): void
+    {
+        $ini = $this->ini;
+
+        $ini->write('proxy', 'activate_forum', isset($cfg['proxy_activate_forum']) ? 1 : 0);
+        $ini->write('proxy', 'activate_api', isset($cfg['proxy_activate_api']) ? 1 : 0);
+        if (isset($cfg['proxy_type'])) {
+            $ini->write('proxy', 'type', $cfg['proxy_type']);
+        }
+        if (isset($cfg['proxy_hostname'])) {
+            $ini->write('proxy', 'hostname', trim($cfg['proxy_hostname']));
+        }
+        if (isset($cfg['proxy_port'])) {
+            $ini->write('proxy', 'port', trim($cfg['proxy_port']));
+        }
+        if (isset($cfg['proxy_login'])) {
+            $ini->write('proxy', 'login', trim($cfg['proxy_login']));
+        }
+        if (isset($cfg['proxy_paswd'])) {
+            $ini->write('proxy', 'password', trim($cfg['proxy_paswd']));
+        }
+    }
+
+    private function setCurators(array $cfg): void
+    {
+        $ini = $this->ini;
+
         if (isset($cfg['dir_torrents'])) {
             $ini->write('curators', 'dir_torrents', trim($cfg['dir_torrents']));
         }
@@ -386,8 +472,12 @@ final class Settings
             $ini->write('curators', 'user_passkey', trim($cfg['passkey']));
         }
         $ini->write('curators', 'tor_for_user', isset($cfg['tor_for_user']) ? 1 : 0);
+    }
 
-        // форум / api
+    private function setForum(array $cfg): void
+    {
+        $ini = $this->ini;
+
         if (isset($cfg['api_url'])) {
             $ini->write('torrent-tracker', 'api_url', trim($cfg['api_url']));
         }
@@ -420,15 +510,23 @@ final class Settings
         }
         $ini->write('torrent-tracker', 'api_ssl', isset($cfg['api_ssl']) ? 1 : 0);
         $ini->write('torrent-tracker', 'forum_ssl', isset($cfg['forum_ssl']) ? 1 : 0);
+    }
 
-        // загрузка торрент-файлов
+    private function setDownload(array $cfg): void
+    {
+        $ini = $this->ini;
+
         if (isset($cfg['savedir'])) {
             $ini->write('download', 'savedir', trim($cfg['savedir']));
         }
         $ini->write('download', 'savesubdir', isset($cfg['savesubdir']) ? 1 : 0);
         $ini->write('download', 'retracker', isset($cfg['retracker']) ? 1 : 0);
+    }
 
-        // фильтрация раздач
+    private function setTopicFiltration(array $cfg): void
+    {
+        $ini = $this->ini;
+
         if (
             isset($cfg['rule_topics'])
             && is_numeric($cfg['rule_topics'])
@@ -456,7 +554,11 @@ final class Settings
         $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
         $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
         $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
+    }
 
+    private function setReports(array $cfg, array $excludeClientsIDs, array $excludeForumsIDs): void
+    {
+        $ini = $this->ini;
 
         // Отправка сводных отчётов на форум
         $ini->write('reports', 'send_summary_report', isset($cfg['send_summary_report']) ? 1 : 0);
@@ -467,23 +569,29 @@ final class Settings
         $excludeClientsIDs = array_unique($excludeClientsIDs);
         sort($excludeClientsIDs);
         $ini->write('reports', 'exclude_clients_ids', implode(',', $excludeClientsIDs));
+
         // Исключаемые из отчётов подразделы
         $excludeForumsIDs = array_unique($excludeForumsIDs);
         sort($excludeForumsIDs);
         $ini->write('reports', 'exclude_forums_ids', implode(',', $excludeForumsIDs));
+    }
 
-        // автоматизация
+    private function setAutomation(array $cfg): void
+    {
+        $ini = $this->ini;
+
         $ini->write('automation', 'update', isset($cfg['automation_update']) ? 1 : 0);
         $ini->write('automation', 'reports', isset($cfg['automation_reports']) ? 1 : 0);
         $ini->write('automation', 'control', isset($cfg['automation_control']) ? 1 : 0);
+    }
 
-        // Обновление список раздач
+    private function setUpdate(array $cfg): void
+    {
+        $ini = $this->ini;
+
         $ini->write('update', 'priority', isset($cfg['update_priority']) ? 1 : 0);
         $ini->write('update', 'untracked', isset($cfg['update_untracked']) ? 1 : 0);
         $ini->write('update', 'unregistered', isset($cfg['update_unregistered']) ? 1 : 0);
-
-        // обновление файла с настройками
-        $ini->updateFile();
     }
 
     /** Пробуем найти наименования подразделов в БД. */

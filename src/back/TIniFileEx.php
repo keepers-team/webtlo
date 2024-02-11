@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use KeepersTeam\Webtlo\Legacy\Log;
-
-class TIniFileEx
+final class TIniFileEx
 {
     private const DEFAULT = 'config.ini';
 
-    protected static array $rcfg;
-    protected static array $wcfg;
+    private static array $rcfg;
+    private static array $wcfg;
 
-    public static string $filename;
+    private static string $filename;
 
     public function __construct($filename = '')
     {
@@ -57,7 +55,7 @@ class TIniFileEx
         self::$wcfg[$section][$key] = $value;
     }
 
-    public static function writeFile(): bool|int
+    public static function writeFile(): bool
     {
         if (empty(self::$wcfg)) {
             return false;
@@ -87,18 +85,10 @@ class TIniFileEx
         if ($r === false) {
             return false;
         }
-        return $wRes;
+        return (bool)$wRes;
     }
 
-    public static function updateFile(): void
-    {
-        $result = self::writeFile();
-        Log::append($result
-            ? 'Настройки успешно сохранены в файл.'
-            : 'Не удалось записать настройки в файл.');
-    }
-
-    public static function copyFile(string $filename): void
+    public static function cloneFile(string $filename): void
     {
         self::$wcfg = self::$rcfg;
         self::setFile($filename);
