@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Tables\KeepersSeeders;
 
 $app = AppContainer::create('update.log');
 
@@ -81,18 +82,21 @@ $tabTopicsRenew = CloneTable::create(
     'id',
     'Renew'
 );
-// Сиды-Хранители раздач.
-$tabKeepers = CloneTable::create('KeepersSeeders', [], 'topic_id');
 
 $forumsUpdateTime = [];
 $noUpdateForums   = [];
 
-// получим список всех хранителей
-$keepersUserData = $apiClient->getKeepersList();
-$keepersUserData = array_combine(
-    array_map(fn($k) => $k->keeperId, $keepersUserData->keepers),
-    array_map(fn($k) => $k->keeperName, $keepersUserData->keepers)
-);
+// Загружаем список всех хранителей.
+$response = $apiClient->getKeepersList();
+if ($response instanceof ApiError) {
+    $logger->error(sprintf('%d %s', $response->code, $response->text));
+    throw new RuntimeException('Error: Не получены данные о хранителях.');
+}
+
+/** @var KeepersSeeders $tabKeepers Сиды-Хранители раздач. */
+$tabKeepers = $app->get(KeepersSeeders::class);
+$tabKeepers->addKeepersInfo($response->keepers);
+
 
 // обновим каждый хранимый подраздел
 sort($subsections);
@@ -155,9 +159,6 @@ foreach ($subsections as $forum_id) {
         );
         unset($selectTopics);
 
-        $topicsKeepersFromForum = [];
-
-        $dbTopicsKeepers = [];
         $db_topics_renew = $db_topics_update = [];
         // Перебираем раздачи.
         foreach ($topicsChunk as $topic) {
@@ -166,9 +167,9 @@ foreach ($subsections as $forum_id) {
                 continue;
             }
 
-            // Хранители раздачи
+            // Записываем хранителей раздачи.
             if (!empty($topic->keepers)) {
-                $topicsKeepersFromForum[$topic->id] = $topic->keepers;
+                $tabKeepers->addKeptTopic($topic->id, $topic->keepers);
             }
 
             $days_update = 0;
@@ -248,27 +249,10 @@ foreach ($subsections as $forum_id) {
 
             unset($topic, $topicRegistered);
         }
-        unset($topicsChunk);
+        unset($topicsChunk, $topics_data_previous);
 
-        if (!empty($topicsKeepersFromForum)) {
-            foreach ($topicsKeepersFromForum as $keeperTopicID => $keepersIDs) {
-                foreach ($keepersIDs as $keeperID) {
-                    if (isset($keepersUserData[$keeperID])) {
-                        $dbTopicsKeepers[] = [
-                            'topic_id'    => $keeperTopicID,
-                            'keeper_id'   => $keeperID,
-                            'keeper_name' => $keepersUserData[$keeperID],
-                        ];
-                    }
-                }
-            }
-
-            // обновление данных в базе о сидах-хранителях
-            $tabKeepers->cloneFillChunk($dbTopicsKeepers, 250);
-            unset($dbTopicsKeepers);
-        }
-
-        unset($topics_data_previous);
+        // Запись сидов-хранителей во временную таблицу.
+        $tabKeepers->fillTempTable();
 
         // вставка данных в базу о новых раздачах
         if (count($db_topics_renew)) {
@@ -286,10 +270,10 @@ foreach ($subsections as $forum_id) {
 
     $logger->debug(
         sprintf(
-            'Спискок раздач подраздела № %-4d обновлён за %2s, %4d шт',
+            'Спискок раздач подраздела № %-4d (%d шт.) обновлён за %2s.',
             $forum_id,
-            Timers::getExecTime("update_forum_$forum_id"),
-            $topics_count
+            $topics_count,
+            Timers::getExecTime("update_forum_$forum_id")
         )
     );
 }
@@ -308,23 +292,8 @@ if (isset($topics_delete)) {
     unset($topics_delete);
 }
 
-$keepersSeedersCount = $tabKeepers->cloneCount();
-if ($keepersSeedersCount > 0) {
-    $logger->info('Запись в базу данных списка сидов-хранителей...');
-    $tabKeepers->moveToOrigin();
-
-    // Удалить ненужные записи.
-    Db::query_database(
-        "DELETE FROM $tabKeepers->origin WHERE topic_id || keeper_id NOT IN (
-            SELECT ks.topic_id || ks.keeper_id
-            FROM $tabKeepers->clone tmp
-            LEFT JOIN $tabKeepers->origin ks ON tmp.topic_id = ks.topic_id AND tmp.keeper_id = ks.keeper_id
-            WHERE ks.topic_id IS NOT NULL
-        )"
-    );
-
-    $logger->info(sprintf('Записано %d хранимых раздач.', $keepersSeedersCount));
-}
+// Записываем данные о сидах-хранителях в БД.
+$tabKeepers->moveToOrigin();
 
 $countTopicsUpdate = $tabTopicsUpdate->cloneCount();
 $countTopicsRenew  = $tabTopicsRenew->cloneCount();
