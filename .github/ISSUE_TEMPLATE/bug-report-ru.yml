@@ -1,0 +1,90 @@
+name: Сообщить о проблеме
+description: Сообщите нам о проблеме, неожиданном сбое или другой проблеме
+title: "Bug:"
+labels: [ "T: Bug", "R: Triage" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо, что нашли время заполнить этот отчет об ошибке!
+        
+        Чтобы предоставить вам быструю и качественную поддержку, пожалуйста, заполните обязательные поля ниже.
+
+  - type: markdown
+    attributes:
+      value: "### Среда выполнения и используемое ПО"
+
+  - type: dropdown
+    id: version
+    attributes:
+      label: Версия
+      description: Какую версию webTLO вы используете?
+      options:
+        - x.x.x (alpha)
+        - x.x.x (beta)
+        - 2.5.x (Stable)
+        - <2.5.x (Legacy)
+        - Не знаю
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: Среда выполнения
+      description: Как произведена установка
+      options:
+        - «Standalone» для  Windows
+        - OpenServer для Windows
+        - Apache/php-fpm
+        - Docker или Kubernetes
+        - Не знаю
+        - Другое
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Операционная система
+      description: Если вы не уверены, выбирайте «Другое»
+      options:
+        - Windows 10+
+        - Windows 7
+        - Linux (deb-based)
+        - Linux (rpm-based)
+        - "*BSD"
+        - MacOS
+        - Другое
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: "### Сведения о проблемах, логи и прочее"
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Что случилось?
+      description: Также расскажите, какое поведение вы ожидали?
+      placeholder: Расскажите нам, что вы видите!
+    validations:
+      required: true
+
+  - type: input
+    id: probe
+    attributes:
+      label: probe.php logs
+      description: Было бы полезно предоставить логи выполнения probe.php
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Соответствующие логи из apache/php-fpm/webTLO
+      description: |
+        Пожалуйста, скопируйте и вставьте все соответствующие данные логов. 
+        Данные будут автоматически отформатированы в код, поэтому нет необходимости в обратных кавычках.
+      render: shell

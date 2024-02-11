@@ -9,8 +9,6 @@ body:
         Thanks for taking the time to fill out this bug report!
         
         To provide you with fast and high-quality support, please fill in the required fields below.
-        
-        Check out **[our helpdesk](https://webtlo.keepers.tech/troubleshooting/probe/)** for instructions how to get `probe.php` logs
 
   - type: markdown
     attributes:
@@ -22,9 +20,10 @@ body:
       label: Version
       description: Which webTLO version do you run?
       options:
-        - 2.9.x (Nightly)
-        - 2.4.1 (Stable)
-        - <2.4.x (Legacy)
+        - x.x.x (alpha)
+        - x.x.x (beta)
+        - 2.5.x (Stable)
+        - <2.5.x (Legacy)
         - I don't know
     validations:
       required: true
@@ -78,7 +77,6 @@ body:
     attributes:
       label: probe.php logs
       description: It would be helpful to provide logs from probe.php
-      placeholder: https://bin.keepers.tech/pasta/snail-ape-jaguar
     validations:
       required: false
 
