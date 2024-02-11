@@ -15,10 +15,32 @@ final class Log
         }
     }
 
+    public static function formatRows(array $rows, string $break = '<br />'): string
+    {
+        $splitWord = '-- DONE --';
+
+        $output   = [];
+        $blockNum = 0;
+        foreach ($rows as $row) {
+            $isSplit = str_contains($row, $splitWord);
+
+            $output[$blockNum][] = $isSplit ? $splitWord : $row;
+            if ($isSplit) {
+                $output[$blockNum][] = '';
+                $blockNum++;
+            }
+        }
+
+        // Переворачиваем порядок процессов. Последний - вверху.
+        $output = array_merge(...array_reverse($output));
+
+        return implode($break, $output) . $break;
+    }
+
     public static function get(string $break = '<br />'): string
     {
         if (!empty(self::$log)) {
-            return implode($break, self::$log) . $break;
+            return self::formatRows(self::$log, $break);
         }
 
         return '';
