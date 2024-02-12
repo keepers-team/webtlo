@@ -1,15 +1,19 @@
 <?php
 
+require __DIR__ . '/../vendor/autoload.php';
+
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    // файл лога
-    $logFile = "seeders.log";
+    // Инициализируем контейнер, без имени лога, чтобы записи не двоились от legacy/di.
+    AppContainer::create();
+
     // дёргаем скрипт
     include_once dirname(__FILE__) . '/../php/common/seeders.php';
-    // записываем в лог
-    Log::write($logFile);
 } catch (Exception $e) {
     Log::append($e->getMessage());
-    Log::write($logFile);
 }
+
+// записываем в лог
+Log::write('seeders.log');
