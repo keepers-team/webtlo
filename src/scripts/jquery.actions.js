@@ -15,6 +15,9 @@ $(document).ready(function () {
                     filter_hold = true;
                     block_actions();
                     processStatus.set(button.prop('title') + "...");
+
+                    // Остановить слежение за кол-вом требующих обновления раздач.
+                    clearRefreshTopicsInterval();
                 },
                 success: function (response) {
                     filter_hold = false;
