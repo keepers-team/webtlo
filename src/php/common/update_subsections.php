@@ -3,16 +3,16 @@
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
-use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
-use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\LastUpdate;
-use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Tables\Seeders;
+use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Tables\KeepersSeeders;
+use KeepersTeam\Webtlo\Update\Subsections;
 
 $app = AppContainer::create('update.log');
 
@@ -42,49 +42,7 @@ $apiClient = $app->getApiClient();
 Timers::start('topics_update');
 $logger->info('Начато обновление сведений о раздачах в хранимых подразделах...');
 
-// Параметры таблиц.
-$tabTime = CloneTable::create('UpdateTime');
-// Обновляемые раздачи.
-$tabTopicsUpdate = CloneTable::create(
-    'Topics',
-    [
-        'id',
-        'forum_id',
-        'seeders',
-        'status',
-        'seeders_updates_today',
-        'seeders_updates_days',
-        'keeping_priority',
-        'poster',
-        'seeder_last_seen',
-    ],
-    'id',
-    'Update'
-);
-// Новые раздачи.
-$tabTopicsRenew = CloneTable::create(
-    'Topics',
-    [
-        'id',
-        'forum_id',
-        'name',
-        'info_hash',
-        'seeders',
-        'size',
-        'status',
-        'reg_time',
-        'seeders_updates_today',
-        'seeders_updates_days',
-        'keeping_priority',
-        'poster',
-        'seeder_last_seen',
-    ],
-    'id',
-    'Renew'
-);
-
-$forumsUpdateTime = [];
-$noUpdateForums   = [];
+$skipUpdateForums = [];
 
 // Загружаем список всех хранителей.
 $response = $apiClient->getKeepersList();
@@ -93,28 +51,38 @@ if ($response instanceof ApiError) {
     throw new RuntimeException('Error: Не получены данные о хранителях.');
 }
 
+/** @var UpdateTime $tabUpdateTime */
+$tabUpdateTime = $app->get(UpdateTime::class);
+
 /** @var KeepersSeeders $tabKeepers Сиды-Хранители раздач. */
 $tabKeepers = $app->get(KeepersSeeders::class);
 $tabKeepers->addKeepersInfo($response->keepers);
 
+/** @var Topics $tableTopics */
+$tableTopics = $app->get(Topics::class);
+
+/** @var Subsections $subUpdate Подразделы. */
+$subUpdate = $app->get(Subsections::class);
 
 // обновим каждый хранимый подраздел
 sort($subsections);
 foreach ($subsections as $forum_id) {
     $forum_id = (int)$forum_id;
-    // получаем дату предыдущего обновления
-    $update_time = LastUpdate::getTime($forum_id);
 
-    // если не прошёл час
-    if (time() - $update_time < 3600) {
-        $noUpdateForums[] = $forum_id;
+    // Получаем дату предыдущего обновления подраздела.
+    $forumLastUpdated = $tabUpdateTime->getMarkerTime($forum_id);
+
+    // Если не прошёл час с прошлого обновления - пропускаем подраздел.
+    if (time() - $forumLastUpdated->getTimestamp() < 3600) {
+        $skipUpdateForums[] = $forum_id;
         continue;
     }
 
+    // Получаем данные о раздачах.
     Timers::start("update_forum_$forum_id");
-    // получаем данные о раздачах
     $topicResponse = $apiClient->getForumTopicsData($forum_id);
     if ($topicResponse instanceof ApiError) {
+        $skipUpdateForums[] = $forum_id;
         $logger->error(
             sprintf(
                 'Не получены данные о подразделе №%d (%d %s)',
@@ -126,44 +94,31 @@ foreach ($subsections as $forum_id) {
         continue;
     }
 
-    // количество и вес раздач
-    $topics_count = count($topicResponse->topics);
-    $topics_size  = $topicResponse->totalSize;
-
     // запоминаем время обновления каждого подраздела
-    $forumsUpdateTime[$forum_id]['ud'] = (int)$topicResponse->updateTime->format('U');
+    $tabUpdateTime->addMarkerUpdate($forum_id, $topicResponse->updateTime);
 
-    // День предыдущего обновления сведений.
-    $previousUpdateTime = (new DateTimeImmutable())->setTimestamp($update_time)->setTime(0, 0);
+    // Получение данных о сидах, в зависимости от дат обновления.
+    $avgProcessor = Seeders::AverageProcessor(
+        (bool)$cfg['avg_seeders'],
+        $forumLastUpdated,
+        $topicResponse->updateTime
+    );
 
-    // разница в днях между текущим и прошлым обновлениями сведений
-    $daysDiffAdjusted = (int)$topicResponse->updateTime->diff($previousUpdateTime)->format('%d');
-
-    // разбиваем result по 500 раздач
-    /** @var ForumTopic[][] $topicsChunks */
+    /**
+     * Разбиваем result по 500 раздач.
+     *
+     * @var ForumTopic[][] $topicsChunks
+     */
     $topicsChunks = array_chunk($topicResponse->topics, 500);
 
     foreach ($topicsChunks as $topicsChunk) {
-        // получаем данные о раздачах за предыдущее обновление
-        $selectTopics = KeysObject::create(array_map(fn($tp) => $tp->id, $topicsChunk));
+        // Получаем прошлые данные о раздачах.
+        $previousTopicsData = $tableTopics->searchPrevious(array_map(fn($tp) => $tp->id, $topicsChunk));
 
-        $topics_data_previous = Db::query_database(
-            "
-                    SELECT id, seeders, reg_time, seeders_updates_today, seeders_updates_days
-                    FROM Topics
-                    WHERE id IN ($selectTopics->keys)
-                ",
-            $selectTopics->values,
-            true,
-            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
-        );
-        unset($selectTopics);
-
-        $db_topics_renew = $db_topics_update = [];
         // Перебираем раздачи.
         foreach ($topicsChunk as $topic) {
             // Пропускаем раздачи в невалидных статусах.
-            if (!in_array($topic->status->value, Topics::VALID_STATUSES)) {
+            if (!$tableTopics->isValidTopic($topic->status)) {
                 continue;
             }
 
@@ -172,164 +127,103 @@ foreach ($subsections as $forum_id) {
                 $tabKeepers->addKeptTopic($topic->id, $topic->keepers);
             }
 
-            $days_update = 0;
-            $sum_updates = 1;
-            $sum_seeders = $topic->seeders;
-
             // запоминаем имеющиеся данные о раздаче в локальной базе
-            $previous_data = $topics_data_previous[$topic->id] ?? [];
+            $previousTopic = $previousTopicsData[$topic->id] ?? [];
 
-            $topicRegistered = (int)$topic->registered->format('U');
-            // удалить перерегистрированную раздачу и раздачу с устаревшими сидами
-            // в том числе, чтобы очистить значения сидов для старой раздачи
-            if (
-                isset($previous_data['reg_time'])
-                && (int)$previous_data['reg_time'] !== $topicRegistered
-            ) {
-                $topics_delete[]   = $topic->id;
-                $isTopicDataDelete = true;
+            // Алгоритм нахождения среднего значения сидов.
+            $average = $avgProcessor($topic->seeders, $previousTopic);
+
+            $topicRegistered = $topic->registered->getTimestamp();
+
+            // Обновление данных или запись с нуля?
+            $isTopicUpdate = $topicRegistered === (int)($previousTopic['reg_time'] ?? 0);
+
+            if ($isTopicUpdate) {
+                // Обновление существующей в БД раздачи.
+                $subUpdate->addTopicForUpdate(
+                    [
+                        $topic->id,
+                        $forum_id,
+                        $average->sumSeeders,
+                        $topic->status->value,
+                        $average->sumUpdates,
+                        $average->daysUpdate,
+                        $topic->priority->value,
+                        $topic->poster,
+                        $topic->lastSeeded->getTimestamp(),
+                    ]
+                );
             } else {
-                $isTopicDataDelete = false;
-            }
+                // Удаляем прошлый вариант раздачи, если он есть.
+                if (!empty($previousTopic)) {
+                    $subUpdate->markTopicDelete($topic->id);
+                }
 
-            // Новая или обновлённая раздача
-            if (
-                empty($previous_data)
-                || $isTopicDataDelete
-            ) {
-                $db_topics_renew[$topic->id] = array_combine(
-                    $tabTopicsRenew->keys,
+                // Новая или обновлённая раздача.
+                $subUpdate->addTopicForInsert(
                     [
                         $topic->id,
                         $forum_id,
                         '',
                         $topic->hash,
-                        $sum_seeders,
+                        $topic->seeders,
                         $topic->size,
                         $topic->status->value,
                         $topicRegistered,
-                        $sum_updates,
-                        $days_update,
+                        $average->sumUpdates,
+                        $average->daysUpdate,
                         $topic->priority->value,
                         $topic->poster,
-                        (int)$topic->lastSeeded->format('U'),
+                        $topic->lastSeeded->getTimestamp(),
                     ]
                 );
-                unset($previous_data);
-                continue;
             }
 
-            // алгоритм нахождения среднего значения сидов
-            if ($cfg['avg_seeders']) {
-                $days_update = $previous_data['seeders_updates_days'];
-                // по прошествии дня
-                if ($daysDiffAdjusted > 0) {
-                    $days_update++;
-                } else {
-                    $sum_updates += $previous_data['seeders_updates_today'];
-                    $sum_seeders += $previous_data['seeders'];
-                }
-            }
-            unset($previous_data);
-
-            $db_topics_update[$topic->id] = array_combine(
-                $tabTopicsUpdate->keys,
-                [
-                    $topic->id,
-                    $forum_id,
-                    $sum_seeders,
-                    $topic->status->value,
-                    $sum_updates,
-                    $days_update,
-                    $topic->priority->value,
-                    $topic->poster,
-                    (int)$topic->lastSeeded->format('U'),
-                ]
-            );
-
-            unset($topic, $topicRegistered);
+            unset($topic, $previousTopic, $topicRegistered);
         }
-        unset($topicsChunk, $topics_data_previous);
+        unset($topicsChunk, $previousTopicsData);
 
         // Запись сидов-хранителей во временную таблицу.
         $tabKeepers->fillTempTable();
 
-        // вставка данных в базу о новых раздачах
-        if (count($db_topics_renew)) {
-            $tabTopicsRenew->cloneFill($db_topics_renew);
-        }
-        unset($db_topics_renew);
-
-        // обновление данных в базе о существующих раздачах
-        if (count($db_topics_update)) {
-            $tabTopicsUpdate->cloneFill($db_topics_update);
-        }
-        unset($db_topics_update);
+        // Запись раздач во временную таблицу.
+        $subUpdate->fillTempTables();
     }
-    unset($topics_data);
 
     $logger->debug(
         sprintf(
-            'Спискок раздач подраздела № %-4d (%d шт.) обновлён за %2s.',
+            'Спискок раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
             $forum_id,
-            $topics_count,
+            count($topicResponse->topics),
+            Helper::convertBytes($topicResponse->totalSize, 9),
             Timers::getExecTime("update_forum_$forum_id")
         )
     );
 }
 
-if (count($noUpdateForums)) {
+if (count($skipUpdateForums)) {
     $logger->notice(
-        sprintf("Обновление списков раздач не требуется для подразделов №№ %s", implode(', ', $noUpdateForums))
+        sprintf("Обновление списков раздач не требуется для подразделов №№ %s", implode(', ', $skipUpdateForums))
     );
 }
 
-// удаляем перерегистрированные раздачи
-// чтобы очистить значения сидов для старой раздачи
-if (isset($topics_delete)) {
-    $logger->debug(sprintf('Удалено перезалитых раздач %d', count($topics_delete)));
-    Topics::deleteTopicsByIds($topics_delete);
-    unset($topics_delete);
+// Успешно обновлённые подразделы.
+$updatedSubsections = array_diff($subsections, $skipUpdateForums);
+if (count($updatedSubsections)) {
+    // Удаляем перерегистрированные раздачи, чтобы очистить значения сидов для старой раздачи.
+    $subUpdate->deleteTopics();
+
+    // Записываем раздачи в БД.
+    $subUpdate->moveToOrigin($updatedSubsections);
+
+    // Записываем данные о сидах-хранителях в БД.
+    $tabKeepers->moveToOrigin();
+
+    // Записываем время обновления подразделов.
+    $tabUpdateTime->addMarkerUpdate(UpdateMark::SUBSECTIONS->value);
+    $tabUpdateTime->fillTable();
 }
 
-// Записываем данные о сидах-хранителях в БД.
-$tabKeepers->moveToOrigin();
-
-$countTopicsUpdate = $tabTopicsUpdate->cloneCount();
-$countTopicsRenew  = $tabTopicsRenew->cloneCount();
-if ($countTopicsUpdate > 0 || $countTopicsRenew > 0) {
-    // переносим данные в основную таблицу
-    $tabTopicsUpdate->moveToOrigin();
-    $tabTopicsRenew->moveToOrigin();
-
-    $in = implode(',', array_keys($forumsUpdateTime));
-    Db::query_database(
-        "
-        DELETE FROM Topics
-        WHERE id IN (
-            SELECT Topics.id
-            FROM Topics
-            LEFT JOIN $tabTopicsUpdate->clone tpu ON Topics.id = tpu.id
-            LEFT JOIN $tabTopicsRenew->clone tpr ON Topics.id = tpr.id
-            WHERE tpu.id IS NULL AND tpr.id IS NULL AND Topics.forum_id IN ($in)
-        )
-    "
-    );
-
-    // время последнего обновления для каждого подраздела
-    $tabTime->cloneFillChunk($forumsUpdateTime);
-    $tabTime->moveToOrigin();
-    // Записываем время обновления.
-    LastUpdate::setTime(UpdateMark::SUBSECTIONS->value);
-
-    $logger->info(
-        sprintf(
-            'Обработано хранимых подразделов: %d шт, раздач в них %d',
-            count($forumsUpdateTime),
-            $countTopicsUpdate + $countTopicsRenew
-        )
-    );
-}
 $logger->info(
     sprintf(
         'Завершено обновление сведений о раздачах в хранимых подразделах за %s',
