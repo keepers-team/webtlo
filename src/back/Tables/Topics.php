@@ -5,12 +5,42 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Tables;
 
 use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use PDO;
 
+/** Таблица с данным о раздачах. */
 final class Topics
 {
+    // Параметры таблицы.
+    public const TABLE   = 'Topics';
+    public const PRIMARY = 'id';
+    public const KEYS    = [
+        self::PRIMARY,
+        'forum_id',
+        'name',
+        'info_hash',
+        'seeders',
+        'size',
+        'status',
+        'reg_time',
+        'seeders_updates_today',
+        'seeders_updates_days',
+        'keeping_priority',
+        'poster',
+        'seeder_last_seen',
+    ];
+
+    /** Допустимые статусы раздач. */
+    public const VALID_STATUSES = [0, 2, 3, 8, 10];
+
     public function __construct(private readonly DB $db)
     {
+    }
+
+    public function isValidTopic(TorrentStatus $topicStatus): bool
+    {
+        return in_array($topicStatus->value, self::VALID_STATUSES);
     }
 
     /** Сколько раздач без названия. */
@@ -33,5 +63,35 @@ final class Topics
     public function countTotal(): int
     {
         return $this->db->selectRowsCount('Topics');
+    }
+
+    /** Поиск существующих сведений о раздачах. */
+    public function searchPrevious(array $topicIds): array
+    {
+        $selectTopics = KeysObject::create($topicIds);
+
+        return $this->db->query(
+            "
+                SELECT id, reg_time, seeders, seeders_updates_today, seeders_updates_days, poster, name
+                FROM Topics
+                WHERE id IN ($selectTopics->keys)
+            ",
+            $selectTopics->values,
+            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
+        );
+    }
+
+    /** Удаление раздач по списку их ИД */
+    public function deleteTopicsByIds(array $topics): void
+    {
+        $chunks = array_chunk(array_unique($topics), 500);
+        foreach ($chunks as $chunk) {
+            $delete = KeysObject::create($chunk);
+
+            $this->db->executeStatement(
+                "DELETE FROM Topics WHERE id IN ($delete->keys)",
+                $delete->values
+            );
+        }
     }
 }
