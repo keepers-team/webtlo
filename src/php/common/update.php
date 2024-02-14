@@ -1,9 +1,15 @@
 <?php
 
-use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Timers;
+declare(strict_types=1);
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
+
+use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Update\TopicsDetails;
+
+$app = AppContainer::create('update.log');
 
 Timers::start('full_update');
 
@@ -14,7 +20,9 @@ include_once dirname(__FILE__) . '/update_subsections.php';
 include_once dirname(__FILE__) . '/high_priority_topics.php';
 
 // обновляем дополнительные сведения о раздачах (названия раздач)
-include_once dirname(__FILE__) . '/update_details.php';
+/** @var TopicsDetails $detailsClass */
+$detailsClass = $app->get(TopicsDetails::class);
+$detailsClass->update();
 
 // обновляем списки раздач в торрент-клиентах
 include_once dirname(__FILE__) . '/tor_clients.php';
