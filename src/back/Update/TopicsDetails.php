@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
-use KeepersTeam\Webtlo\DTO\UpdateDetailsResultObject;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Tables\Topics;
 use KeepersTeam\Webtlo\Timers;
-use Exception;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /** Получение деталей о раздаче. */
-final class TopicDetails
+final class TopicsDetails
 {
     private const TOPIC_KEYS = [
         'id', // topic_id
@@ -24,8 +23,6 @@ final class TopicDetails
         'seeder_last_seen',
     ];
 
-    private ?UpdateDetailsResultObject $result = null;
-
     public function __construct(
         private readonly ApiClient       $apiClient,
         private readonly Topics          $topics,
@@ -33,12 +30,23 @@ final class TopicDetails
     ) {
     }
 
-    /**
-     * @throws Exception
-     */
-    public function fillDetails(int $beforeUpdate, int $perRun = 5000): void
+    /** Выполнить обновление дополнительных сведений о раздачах. */
+    public function update(int $topicsPerRun = 5000): void
     {
-        Timers::start('full');
+        // Проверяем наличие раздач, данные которых нужно загрузить.
+        $countUnnamed = $this->topics->countUnnamed();
+        if (!$countUnnamed) {
+            $this->logger->notice('Обновление дополнительных сведений о раздачах не требуется.');
+
+            return;
+        }
+
+        Timers::start('detailsUpdate');
+        $this->fillDetails($countUnnamed, $topicsPerRun);
+    }
+
+    private function fillDetails(int $beforeUpdate, int $perRun): void
+    {
         $tab = CloneTable::create('Topics', self::TOPIC_KEYS);
 
         $runs = (int)ceil($beforeUpdate / $perRun);
@@ -51,6 +59,7 @@ final class TopicDetails
             'Начинаем обновление сведений о раздачах',
             ['topics' => $beforeUpdate, 'perRun' => $perRun, 'runs' => $runs]
         );
+
         for ($run = 1; $run <= $runs; $run++) {
             Timers::start("chunk_$run");
 
@@ -70,46 +79,48 @@ final class TopicDetails
             $exec[] = Timers::getExec("chunk_$run");
         }
 
-        $this->result = new UpdateDetailsResultObject(
-            $beforeUpdate,
-            $this->topics->countUnnamed(),
-            $perRun,
-            $runs,
-            Timers::getExec('full'),
-            array_sum($exec) / count($exec),
-        );
+        $this->logResult($beforeUpdate, array_sum($exec) / count($exec));
     }
 
-    public function getResult(): ?UpdateDetailsResultObject
-    {
-        return $this->result ?? null;
-    }
-
-    /**
-     * Запросить детали о списке раздач.
-     *
-     * @throws Exception
-     */
-    public function getDetails(array $topics): array
+    /** Запросить детали о списке раздач. */
+    private function getDetails(array $topics): array
     {
         $response = $this->apiClient->getTopicsDetails($topics);
         if ($response instanceof ApiError) {
-            $this->logger->error(sprintf('%d %s', $response->code, $response->text));
-            throw new Exception('Error: Не получены дополнительные данные о раздачах');
+            throw new RuntimeException(sprintf('Ошибка получения данных (%s).', $response->text), $response->code);
         }
 
         $details = [];
-
         foreach ($response->topics as $topic) {
-            $details[$topic->id] = array_combine(self::TOPIC_KEYS, [
+            $details[] = array_combine(self::TOPIC_KEYS, [
                 $topic->id,
                 $topic->hash,
                 $topic->title,
                 $topic->poster,
-                (int)$topic->lastSeeded->format('U'),
+                $topic->lastSeeded->getTimestamp(),
             ]);
         }
 
         return $details;
+    }
+
+    private function logResult(int $before, int|float $averageExec): void
+    {
+        $this->logger->info(
+            sprintf(
+                'Обновление дополнительных сведений о раздачах завершено за %s.',
+                Timers::getExecTime('detailsUpdate')
+            )
+        );
+
+        $after = $this->topics->countUnnamed();
+        $this->logger->debug(
+            sprintf(
+                'Раздач обновлено %d из %d. Среднее время выполнения %0.2fs.',
+                $before - $after,
+                $before,
+                $averageExec
+            )
+        );
     }
 }

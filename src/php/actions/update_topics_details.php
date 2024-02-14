@@ -1,15 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
+require __DIR__ . '/../../vendor/autoload.php';
+
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 $result = [];
 try {
+    $app = AppContainer::create('update.log');
+    $log = $app->getLogger();
+
     // Обновление раздач за раз. Меньшее число, для наглядности.
     $updateDetailsPerRun = 1500;
 
-    include_once dirname(__FILE__) . '/../common/update_details.php';
-} catch (Exception $e) {
-    Log::append($e->getMessage());
+    /** @var TopicsDetails $detailsClass */
+    $detailsClass = $app->get(TopicsDetails::class);
+
+    // Заполняем данные о раздачах.
+    $detailsClass->update($updateDetailsPerRun);
+
+    $log->info('-- DONE --');
+} catch (Throwable $e) {
+    if (isset($log)) {
+        $log->error($e->getMessage());
+    } else {
+        Log::append($e->getMessage());
+    }
 }
 
 $result['log'] = Log::get();

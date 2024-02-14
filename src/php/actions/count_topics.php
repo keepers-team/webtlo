@@ -9,8 +9,7 @@ use KeepersTeam\Webtlo\Tables\Topics;
 $result = [];
 try {
     $app = AppContainer::create();
-
-    $logger = $app->getLogger();
+    $log = $app->getLogger();
 
     /** @var Topics $topics */
     $topics = $app->get(Topics::class);
@@ -21,8 +20,10 @@ try {
 
     $result['current'] = $result['total'] - $result['unnamed'];
 } catch (Exception $e) {
-    if (isset($logger)) {
-        $logger->error($e->getMessage());
+    if (isset($log)) {
+        $log->error($e->getMessage());
+    } else {
+        Log::append($e->getMessage());
     }
 }
 
