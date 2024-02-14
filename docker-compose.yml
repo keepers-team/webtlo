@@ -3,8 +3,8 @@ version: "3.9"
 services:
   # Рабочая версия WebTLO
   webtlo:
-    image: berkut174/webtlo:master
-    container_name: webtlo-master
+    image: berkut174/webtlo:latest
+    container_name: webtlo-latest
     environment:
       # Часовой пояс
       - TZ=Europe/Moscow
