@@ -19,7 +19,7 @@
 
 ### Установка
 Перейдите на вкладку с последним [релизом](https://github.com/keepers-team/webtlo/releases/latest) и скачайте подходящий архив:
-- `webtlo-win.zip` - [standalone](https://github.com/keepers-team/webtlo/tree/readme/win) архив для windows без необходимости устаналивать веб-сервер
+- `webtlo-win.zip` - [standalone](https://github.com/keepers-team/webtlo/blob/master/win/README.md) архив для windows без необходимости устаналивать веб-сервер
 - `webtlo.zip` - для самостоятельной установки в любой подходящий веб-сервер
 
 Или используйте docker образ, например:  
