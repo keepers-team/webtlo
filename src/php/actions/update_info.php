@@ -7,6 +7,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\ForumTree;
+use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\Subsections;
 
 /**
@@ -27,7 +28,7 @@ try {
         // списки раздач в хранимых подразделах
         'subsections' => 'runClass',
         // список высокоприоритетных раздач
-        'priority'    => 'high_priority_topics',
+        'priority'    => 'runClass',
         // раздачи других хранителей
         'keepers'     => 'keepers',
         // раздачи в торрент-клиентах
@@ -58,12 +59,11 @@ try {
         $forumTree->update();
     }
 
+    $config = $app->getLegacyConfig();
     // Запускаем задачи по очереди.
     foreach ($pairs as $process => $fileName) {
         // Новые классы вызываем через контейнер.
         if ($process === 'subsections') {
-            $config = $app->getLegacyConfig();
-
             /**
              * Обновляем раздачи в хранимых подразделах.
              *
@@ -71,6 +71,14 @@ try {
              */
             $updateSubsections = $app->get(Subsections::class);
             $updateSubsections->update(config: $config, schedule: true);
+        } elseif ($process === 'priority') {
+            /**
+             * Обновляем список высокоприоритетных раздач.
+             *
+             * @var HighPriority $highPriority
+             */
+            $highPriority = $app->get(HighPriority::class);
+            $highPriority->update(config: $config);
         } else {
             include_once sprintf('%s/../common/%s.php', dirname(__FILE__), $fileName);
         }

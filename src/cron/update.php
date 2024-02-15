@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Update\ForumTree;
+use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\Subsections;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 
@@ -35,8 +36,13 @@ try {
     $updateSubsections = $app->get(Subsections::class);
     $updateSubsections->update(config: $config, schedule: true);
 
-    // обновляем список высокоприоритетных раздач
-    include_once dirname(__FILE__) . '/../php/common/high_priority_topics.php';
+    /**
+     * Обновляем список высокоприоритетных раздач.
+     *
+     * @var HighPriority $highPriority
+     */
+    $highPriority = $app->get(HighPriority::class);
+    $highPriority->update(config: $config);
 
     // обновляем дополнительные сведения о раздачах (названия раздач)
     /** @var TopicsDetails $detailsClass */
