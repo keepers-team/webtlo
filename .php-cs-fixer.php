@@ -5,18 +5,18 @@ $finder = PhpCsFixer\Finder::create()
 ;
 
 $config = new PhpCsFixer\Config();
-
-return $config->setRules([
+$rules  = [
     '@PSR12'          => true,
     '@PHP83Migration' => true,
 
-    'no_empty_statement'       => true,
-    'single_blank_line_at_eof' => false,
-    'array_indentation'        => true,
-    'standardize_not_equals'   => true,
+    'no_empty_statement'     => true,
+    'array_indentation'      => true,
+    'standardize_not_equals' => true,
 
     'function_declaration' => [
         'closure_function_spacing' => 'none',
         'closure_fn_spacing'       => 'none',
     ],
-])->setFinder($finder);
+];
+
+return $config->setRules($rules)->setFinder($finder);
