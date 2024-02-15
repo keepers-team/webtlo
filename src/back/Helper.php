@@ -187,4 +187,10 @@ final class Helper
 
         return null;
     }
+
+    /** Проверить включена ли опция автоматического запуска действия. */
+    public static function isScheduleActionEnabled(array $config, string $action): bool
+    {
+        return (bool)($config['automation'][$action] ?? 0);
+    }
 }

@@ -8,18 +8,29 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Update\ForumTree;
+use KeepersTeam\Webtlo\Update\Subsections;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 $app = AppContainer::create('update.log');
 
 Timers::start('full_update');
+$config = $app->getLegacyConfig();
 
-/** @var ForumTree $forumTree Обновляем дерево подразделов. */
+/**
+ * Обновляем дерево подразделов.
+ *
+ * @var ForumTree $forumTree
+ */
 $forumTree = $app->get(ForumTree::class);
 $forumTree->update();
 
-// обновляем списоки раздач в хранимых подразделах
-include_once dirname(__FILE__) . '/update_subsections.php';
+/**
+ * Обновляем раздачи в хранимых подразделах.
+ *
+ * @var Subsections $updateSubsections
+ */
+$updateSubsections = $app->get(Subsections::class);
+$updateSubsections->update(config: $config, schedule: true);
 
 // обновляем список высокоприоритетных раздач
 include_once dirname(__FILE__) . '/high_priority_topics.php';
