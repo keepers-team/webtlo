@@ -5,9 +5,19 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopic;
+use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
+use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Tables\Seeders;
 use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 final class HighPriority
 {
@@ -24,7 +34,7 @@ final class HighPriority
         'keeping_priority',
         'poster',
     ];
-    public const  KEYS_INSERT = [
+    private const KEYS_INSERT = [
         'id',
         'forum_id',
         'name',
@@ -44,29 +54,245 @@ final class HighPriority
     private array $topicsInsert = [];
     private array $topicsDelete = [];
 
+    /** @var int[] Хранимые подразделы */
+    private array $subsections = [];
+
     public function __construct(
-        private readonly Topics          $topics,
+        private readonly ApiClient       $apiClient,
         private readonly DB              $db,
+        private readonly Topics          $topics,
+        private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger
     ) {
     }
 
-    public function addTopicForUpdate(array $topic): void
+    /**
+     * Выполнить обновление раздач с высоким приоритетом всего форума.
+     */
+    public function update(array $config): void
+    {
+        // Хранимые подразделы.
+        $this->subsections = array_keys($config['subsections'] ?? []);
+
+        // Проверяем возможность запуска обновления.
+        if (!Helper::isUpdatePropertyEnabled($config, 'priority')) {
+            $this->logger->notice(
+                'Обновление списка раздач с высоким приоритетом отключено в настройках.'
+            );
+
+            $this->updateTime->setMarkerTime(UpdateMark::HIGH_PRIORITY->value, 0);
+
+            // Если обновление списка высокоприоритетных раздач отключено, то удалим лишние записи в БД.
+            $this->clearHighPriority();
+
+            return;
+        }
+
+        // получаем дату предыдущего обновления
+        $lastUpdated = $this->updateTime->getMarkerTime(UpdateMark::HIGH_PRIORITY->value);
+        // если не прошло два часа
+        if (time() - $lastUpdated->getTimestamp() < 7200) {
+            $this->logger->notice('Не требуется обновление списка высокоприоритетных раздач.');
+
+            return;
+        }
+
+        Timers::start('hp_topics');
+        $this->logger->info('Начато обновление списка высокоприоритетных раздач...');
+
+        // получаем данные о раздачах
+        $priorityResponse = $this->apiClient->getTopicsHighPriority();
+        if ($priorityResponse instanceof ApiError) {
+            $this->logger->error(sprintf('%d %s', $priorityResponse->code, $priorityResponse->text));
+            throw new RuntimeException('Error: Не получены данные о высокоприоритетных раздачах');
+        }
+
+        // Получение данных о сидах, в зависимости от дат обновления.
+        $avgProcessor = Seeders::AverageProcessor(
+            (bool)$config['avg_seeders'],
+            $lastUpdated,
+            $priorityResponse->updateTime
+        );
+
+        // Обрабатываем полученные раздачи, и записываем во временную таблицу.
+        $this->processSubsectionTopics($priorityResponse->topics, $avgProcessor);
+
+        // Удаляем перерегистрированные раздачи, чтобы очистить значения сидов для старой раздачи.
+        $this->deleteTopics();
+
+        // Записываем раздачи в БД.
+        $topicsUpdated = $this->moveToOrigin();
+        if ($topicsUpdated > 0) {
+            // Записываем время обновления.
+            $this->updateTime->setMarkerTime(
+                UpdateMark::HIGH_PRIORITY->value,
+                $priorityResponse->updateTime->getTimestamp()
+            );
+
+            $this->logger->info(
+                sprintf(
+                    'Спискок раздач с высоким приоритетом (%d шт. %s) обновлён за %2s.',
+                    $topicsUpdated,
+                    Helper::convertBytes($priorityResponse->totalSize, 9),
+                    Timers::getExecTime('hp_topics')
+                )
+            );
+        }
+    }
+
+    /**
+     * Обработать все раздачи.
+     *
+     * @param HighPriorityTopic[] $topics       Раздачи.
+     * @param callable            $avgProcessor Расчёт средних сидов.
+     */
+    private function processSubsectionTopics(array $topics, callable $avgProcessor): void
+    {
+        $topics = $this->chunkTopics($topics);
+
+        // Перебираем группы раздач.
+        foreach ($topics as $topicsChunk) {
+            // Получаем прошлые данные о раздачах.
+            $previousTopicsData = $this->getPrevious($topicsChunk);
+
+            $topicsInsert = [];
+            // Перебираем раздачи.
+            foreach ($topicsChunk as $topic) {
+                // Пропускаем раздачи в невалидных статусах.
+                if (!$this->topics->isValidTopic($topic->status)) {
+                    continue;
+                }
+
+                // Запоминаем имеющиеся данные о раздаче в локальной базе.
+                $previousTopic = $previousTopicsData[$topic->id] ?? [];
+
+                // Алгоритм нахождения среднего значения сидов.
+                $average = $avgProcessor($topic->seeders, $previousTopic);
+
+                $topicRegistered = $topic->registered->getTimestamp();
+
+                // Обновление данных или запись с нуля?
+                $isTopicInsert = empty($previousTopic) // Нет данных о раздаче.
+                    || $topicRegistered !== (int)($previousTopic['reg_time'] ?? 0) // Изменилась дата регистрации.
+                    || empty($previousTopic['name']) // Пустое название.
+                    || (int)$previousTopic['poster'] === 0; // Нет автора раздачи/
+
+                if (!$isTopicInsert) {
+                    // Обновление существующей в БД раздачи.
+                    $this->addTopicForUpdate(
+                        [
+                            $topic->id,
+                            $topic->forumId,
+                            $average->sumSeeders,
+                            $topic->status->value,
+                            $average->sumUpdates,
+                            $average->daysUpdate,
+                            KeepingPriority::High->value,
+                            $previousTopic['poster'],
+                        ]
+                    );
+                } else {
+                    // Удаляем прошлый вариант раздачи, если он есть.
+                    if (!empty($previousTopic)) {
+                        $this->markTopicDelete($topic->id);
+                    }
+
+                    // Новая или обновлённая раздача.
+                    $topicsInsert[$topic->id] = array_combine(
+                        $this::KEYS_INSERT,
+                        [
+                            $topic->id,
+                            $topic->forumId,
+                            '',
+                            '',
+                            $average->sumSeeders,
+                            $topic->size,
+                            $topic->status->value,
+                            $topicRegistered,
+                            $average->sumUpdates,
+                            $average->daysUpdate,
+                            KeepingPriority::High->value,
+                            0,
+                            0,
+                        ]
+                    );
+                }
+            }
+            unset($previousTopicsData, $topicsChunk);
+
+            // Поиск нужных данных о новых раздачах.
+            if (count($topicsInsert)) {
+                // Получить описание новых раздач.
+                $response = $this->apiClient->getTopicsDetails(array_keys($topicsInsert));
+                if ($response instanceof ApiError) {
+                    $this->logger->error(sprintf('%d %s', $response->code, $response->text));
+                    throw new RuntimeException('Error: Не получены дополнительные данные о раздачах');
+                }
+
+                foreach ($response->topics as $topic) {
+                    if (isset($topicsInsert[$topic->id])) {
+                        $topicsInsert[$topic->id]['info_hash']        = $topic->hash;
+                        $topicsInsert[$topic->id]['name']             = $topic->title;
+                        $topicsInsert[$topic->id]['poster']           = $topic->poster;
+                        $topicsInsert[$topic->id]['seeder_last_seen'] = $topic->lastSeeded->getTimestamp();
+                    }
+                }
+
+                // Добавить раздачи в буффер.
+                $this->addTopicsForInsert($topicsInsert);
+
+                unset($topicsInsert, $response);
+            }
+
+            // Запись раздач во временную таблицу.
+            $this->fillTempTables();
+        }
+    }
+
+    /**
+     * @param HighPriorityTopic[] $topics
+     * @return HighPriorityTopic[][]
+     */
+    private function chunkTopics(array $topics): array
+    {
+        $subsections = $this->subsections;
+        // Убираем раздачи, из разделов, которые храним.
+        $topics = array_filter($topics, function($el) use ($subsections) {
+            return !in_array($el->forumId, $subsections);
+        });
+
+        // Разбиваем список раздач по 500 шт.
+        /** @var HighPriorityTopic[][] $topicsChunks */
+        $topicsChunks = array_chunk($topics, 500);
+
+        return $topicsChunks;
+    }
+
+    /**
+     * @param HighPriorityTopic[] $topicsChunk
+     * @return array
+     */
+    private function getPrevious(array $topicsChunk): array
+    {
+        return $this->topics->searchPrevious(array_map(fn($tp) => $tp->id, $topicsChunk));
+    }
+
+    private function addTopicForUpdate(array $topic): void
     {
         $this->topicsUpdate[] = array_combine(self::KEYS_UPDATE, $topic);
     }
 
-    public function addTopicsForInsert(array $topics): void
+    private function addTopicsForInsert(array $topics): void
     {
         $this->topicsInsert = $topics;
     }
 
-    public function markTopicDelete(int $topicId): void
+    private function markTopicDelete(int $topicId): void
     {
         $this->topicsDelete[] = $topicId;
     }
 
-    public function moveToOrigin(array $updatedSubsections): int
+    private function moveToOrigin(): int
     {
         $this->initTempTables();
 
@@ -75,7 +301,7 @@ final class HighPriority
         $countTopicsInsert = $this->moveRowsInTable($this->tableInsert);
 
         // Удаляем ненужные раздачи.
-        $this->clearUnusedTopics($updatedSubsections);
+        $this->clearUnusedTopics();
 
         return $countTopicsUpdate + $countTopicsInsert;
     }
@@ -90,7 +316,7 @@ final class HighPriority
         return $count;
     }
 
-    public function fillTempTables(): void
+    private function fillTempTables(): void
     {
         $this->initTempTables();
 
@@ -105,7 +331,6 @@ final class HighPriority
         }
     }
 
-
     private function initTempTables(): void
     {
         if (null === $this->tableUpdate) {
@@ -116,7 +341,7 @@ final class HighPriority
         }
     }
 
-    public function deleteTopics(): void
+    private function deleteTopics(): void
     {
         if (count($this->topicsDelete)) {
             $topics = array_unique($this->topicsDelete);
@@ -126,9 +351,9 @@ final class HighPriority
         }
     }
 
-    private function clearUnusedTopics(array $keptSubsections): void
+    private function clearUnusedTopics(): void
     {
-        $in = implode(',', $keptSubsections);
+        $in = implode(',', $this->subsections);
 
         $query = "
             DELETE
@@ -149,13 +374,13 @@ final class HighPriority
         }
     }
 
-    public function clearHighPriority(array $keptSubsections): void
+    private function clearHighPriority(): void
     {
-        if (!count($keptSubsections)) {
+        if (!count($this->subsections)) {
             return;
         }
 
-        $in = implode(',', $keptSubsections);
+        $in = implode(',', $this->subsections);
 
         $this->db->executeStatement(
             "DELETE FROM Topics WHERE keeping_priority = 2 AND Topics.forum_id NOT IN ($in)"

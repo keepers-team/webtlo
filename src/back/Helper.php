@@ -193,4 +193,10 @@ final class Helper
     {
         return (bool)($config['automation'][$action] ?? 0);
     }
+
+    /** Проверить включена ли дополнительная опция обновления раздач. */
+    public static function isUpdatePropertyEnabled(array $config, string $property): bool
+    {
+        return (bool)($config['update'][$property] ?? 0);
+    }
 }
