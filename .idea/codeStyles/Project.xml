@@ -13,6 +13,7 @@
       <option name="ALIGN_PHPDOC_COMMENTS" value="true" />
       <option name="ALIGN_ASSIGNMENTS" value="true" />
       <option name="ALIGN_INLINE_COMMENTS" value="true" />
+      <option name="ALIGN_NAMED_ARGUMENTS" value="true" />
       <option name="ALIGN_MATCH_ARM_BODIES" value="true" />
       <option name="COMMA_AFTER_LAST_ARRAY_ELEMENT" value="true" />
       <option name="COMMA_AFTER_LAST_MATCH_ARM" value="true" />
@@ -48,7 +49,6 @@
       <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
       <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="0" />
       <option name="BLANK_LINES_AFTER_PACKAGE" value="1" />
-      <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
       <option name="ALIGN_MULTILINE_EXTENDS_LIST" value="true" />
       <option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true" />
       <option name="ALIGN_GROUP_FIELD_DECLARATIONS" value="true" />
