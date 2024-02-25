@@ -236,7 +236,8 @@ function cfg_checkbox($cfg): Closure
             <li id="menu_manual"     class="menu"><a href="#manual"     class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
-            <p id="new_version_description"><?= "v$webtlo->version" ?? '' ?></p>
+            <span id="current_version"><?= "v$webtlo->version" ?? '' ?></span>
+            <span id="new_version_description"></span>
         </div>
         <div id="content">
             <div id="main" class="content">

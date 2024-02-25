@@ -317,10 +317,7 @@ function setUITheme(){
 function showNewVersion(newVersionNumber, newVersionLink, whatsNew) {
     $("#new_version_description")
         .attr("title", whatsNew)
-        .text("Доступна новая версия: ")
-        .append(`<a id="new_version_link" target="_blank" href="${newVersionLink}">v${newVersionNumber}</a>`);
-
-    $("#new_version_available").show();
+        .append(`(Доступно обновление: <a id="new_version_link" target="_blank" href="${newVersionLink}">v${newVersionNumber}</a>)`);
 }
 
 // http://stackoverflow.com/a/6832721/50079

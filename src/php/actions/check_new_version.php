@@ -40,7 +40,7 @@ try {
 
     $result['newVersionNumber'] = $infoFromGitHub['name'];
     $result['newVersionLink']   = $link;
-    $result['whatsNew']         = $infoFromGitHub['body'];
+    $result['whatsNew']         = getReleaseDescription((string)$infoFromGitHub['body']);
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }
@@ -73,4 +73,16 @@ function getReleaseLink(string $install, array $github): string
     }
 
     return $link;
+}
+
+function getReleaseDescription(string $desc): string
+{
+    // Ищем важное в описании релиза.
+    preg_match('/(?<=### Список изменений)(.*)(?=---)/s', $desc, $matches);
+    if (!empty($matches[0])) {
+        $desc = trim($matches[0]);
+    }
+
+    // Возвращаем первые 1024 символа или около того.
+    return mb_strlen($desc) > 1024 ? mb_substr($desc, 0, 1000) . '...' : $desc;
 }
