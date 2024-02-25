@@ -76,6 +76,9 @@ jobs:
           wget -nv -O php.zip "$PHP_RELEASES/$PHP_RELEASE"
           unzip -d $zip_dir/php php.zip
 
+          # CA certificates https://curl.se/docs/caextract.html
+          wget -nv -O win/artifacts/php/ssl/cacert.pem https://curl.se/ca/cacert.pem
+
           # Apply overlays
           cp -vr win/artifacts/* $zip_dir/
           cp -vr win/overlay/* $zip_dir/
