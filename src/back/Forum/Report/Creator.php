@@ -536,7 +536,7 @@ final class Creator
      *
      * @throws Exception
      */
-    private function getStoredForumTopics(int $forum_id): array
+    public function getStoredForumTopics(int $forum_id): array
     {
         // Получение данных о раздачах подраздела.
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
