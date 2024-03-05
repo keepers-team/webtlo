@@ -70,13 +70,6 @@ $forumReports->fillStoredValues();
 
 $apiReportClient = new ApiReportClient($cfg);
 
-$KEEPING_STATUSES = [
-    'reported_by_api'     => 0b00000000_00000000_00000000_00000001,
-    'downloading'         => 0b00000000_00000000_00000000_00000010,
-    'keeping_prio_mask'   => 0b00000000_00000000_11111111_00000000,
-    'imported_from_forum' => 0b00000000_00000001_00000000_00000000,
-];
-
 $editedTopicsIDs = [];
 $Timers = [];
 foreach ($forumReports->forums as $forum_id) {
@@ -95,12 +88,16 @@ foreach ($forumReports->forums as $forum_id) {
     Timers::start("send_$forum_id");
 
     $response = $apiReportClient->report_releases(
-        $forum_id, $done_topic_ids, $KEEPING_STATUSES['reported_by_api'], true);
+        $forum_id, $done_topic_ids, $apiReportClient->KEEPING_STATUSES['reported_by_api'], true);
     Log::append("Reporting seeding: {$response}");
 
     if (count($downloading_topic_ids)) {
         $response = $apiReportClient->report_releases(
-            $forum_id, $downloading_topic_ids, $KEEPING_STATUSES['reported_by_api'] | $KEEPING_STATUSES['downloading'], false);
+            $forum_id,
+            $downloading_topic_ids,
+            $apiReportClient->KEEPING_STATUSES['reported_by_api'] | $apiReportClient->KEEPING_STATUSES['downloading'],
+            false,
+        );
         Log::append("Reporting downloading: {$response}");
     }
 

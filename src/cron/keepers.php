@@ -11,7 +11,7 @@ try {
 
     // дёргаем скрипт
     $checkEnabledCronAction = 'update';
-    include_once dirname(__FILE__) . '/../php/common/keepers.php';
+    include_once dirname(__FILE__) . '/../php/common/keepers_via_api.php';
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }
