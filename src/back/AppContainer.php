@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Static\AppLogger;
@@ -98,5 +99,10 @@ final class AppContainer
     public function getLogger(): LoggerInterface
     {
         return $this->get(LoggerInterface::class);
+    }
+
+    public function getClientFactory(): ClientFactory
+    {
+        return $this->get(ClientFactory::class);
     }
 }
