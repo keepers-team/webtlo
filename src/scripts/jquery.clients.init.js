@@ -212,61 +212,70 @@ $(document).ready(function () {
 
     });
 
-    // обновление списка торрент-клиентов настройках подразделов
-    $("#add-torrent-client, #remove-torrent-client").on("click", refreshListTorrentClients);
-    $("#torrent-client-props").on("input selectmenuchange", functionDelay(refreshListTorrentClients, 400));
+    // Обновление списка торрент-клиентов в настройках подразделов
+    $('#add-torrent-client, #remove-torrent-client').on('click', refreshListTorrentClients);
+    let clientProps = $(`#torrent-client-props`);
+    clientProps.on('input selectmenuchange', functionDelay(refreshListTorrentClients, 400));
 
     // проверка доступности торрент-клиентов
-    $("#connect-torrent-client").on("click", function () {
-        var button = this;
-        var numberTorrentClients = $("#list-torrent-clients li.ui-selected").size();
+    $('#connect-torrent-client').on('click', function () {
+        let button = this;
+
+        let selectedClients = $('#list-torrent-clients li.ui-selected');
+        let numberTorrentClients = selectedClients.size();
+
         $("#list-torrent-clients i").remove();
-        $("#list-torrent-clients li.ui-selected").each(function () {
-            var torrentClientData = this.dataset;
+        selectedClients.each(function () {
+            let torrentClientData = this.dataset;
+
             $.ajax({
-                type: "POST",
-                url: "php/actions/tor_client_is_online.php",
+                type: 'POST',
+                url: 'php/actions/tor_client_is_online.php',
                 context: this,
                 data: { tor_client: torrentClientData },
                 beforeSend: function () {
-                    $("#torrent-client-response").text("");
-                    $(button).children("i").css("display", "inline-block");
-                    $(button).addClass("ui-state-disabled").prop("disabled", true);
+                    // Очистка результата проверки торрент-клиентов.
+                    $('#torrent-client-response').text('');
+
+                    // Прожимаем кнопку.
+                    $(button).toggleDisable(true).children('i').css('display', 'inline-block');
+
                     $(this).append('<i class="fa fa-spinner fa-spin"></i>');
-                    $(this).addClass("ui-connection");
+                    $(this).addClass('ui-connection');
                 },
                 success: function (response) {
                     response = $.parseJSON(response);
-                    $("#log").append(response.log);
-                    $(this).children("i").remove();
+                    $('#log').append(response.log);
+
+                    $(this).children('i').remove();
                     $(this).append(response.status);
-                    $(this).removeClass("ui-connection");
+                    $(this).removeClass('ui-connection');
                 },
                 complete: function () {
-                    numberTorrentClients--
+                    numberTorrentClients--;
                     if (numberTorrentClients === 0) {
-                        var numberCheckedTorrentClients = $("#list-torrent-clients i").size();
+                        const numberCheckedTorrentClients = $("#list-torrent-clients i").size();
                         if (numberCheckedTorrentClients > 1) {
-                            var numberErrors = $("#list-torrent-clients i.text-danger").size();
+                            const numberErrors = $("#list-torrent-clients i.text-danger").size();
                             if (numberErrors > 0) {
-                                $("#torrent-client-response").html('<i class="fa fa-circle text-danger"></i> некоторые торрент-клиенты сейчас недоступны');
+                                $("#torrent-client-response").html('<i class="fa fa-circle text-danger"></i> Некоторые торрент-клиенты сейчас недоступны');
                             } else {
-                                $("#torrent-client-response").html('<i class="fa fa-circle text-success"></i> все торрент-клиенты сейчас доступны');
+                                $("#torrent-client-response").html('<i class="fa fa-circle text-success"></i> Все торрент-клиенты сейчас доступны');
                             }
                         }
-                        $(button).removeClass("ui-state-disabled").prop("disabled", false);
-                        $(button).children("i").hide();
+                        // Отжимаем кнопку.
+                        $(button).toggleDisable(false).children('i').hide();
                     }
                 },
             });
         });
     });
 
-    // при загрузке выбрать первый торрент-клиент в списке
-    if ($("#list-torrent-clients li").size() > 0) {
-        $("#list-torrent-clients li:nth-child(1)").addClass("ui-selected").trigger("selectablestop");
+    // При загрузке - выбрать первый торрент-клиент в списке
+    if ($('#list-torrent-clients li').size() > 0) {
+        $('#list-torrent-clients li:nth-child(1)').addClass('ui-selected').trigger('selectablestop');
     } else {
-        $(".torrent-client-props").addClass("ui-state-disabled").prop("disabled", true);
+        clientProps.addClass("ui-state-disabled").prop("disabled", true);
     }
 
 });
