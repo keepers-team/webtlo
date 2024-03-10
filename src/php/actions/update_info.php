@@ -30,7 +30,7 @@ try {
         // список высокоприоритетных раздач
         'priority'    => 'runClass',
         // раздачи других хранителей
-        'keepers'     => 'keepers',
+        'keepers'     => 'keepers_via_api',
         // раздачи в торрент-клиентах
         'clients'     => 'tor_clients',
     ];
