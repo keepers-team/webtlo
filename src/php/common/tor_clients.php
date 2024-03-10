@@ -1,10 +1,10 @@
 <?php
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/clients.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -58,7 +58,7 @@ $tabUntracked = CloneTable::create(
     ['id','forum_id','name','info_hash','seeders','size','status','reg_time'],
 );
 
-// Таблица хранимых раздач, более не зарегистрированных на трекере.
+// Таблица хранимых раздач, более не зарегистрированных на форуме.
 $tabUnregistered = CloneTable::create(
     'TopicsUnregistered',
     ['info_hash','name','status','priority','transferred_from','transferred_to','transferred_by_whom'],
@@ -68,45 +68,47 @@ $tabUnregistered = CloneTable::create(
 
 $timers = [];
 
+$forumDomain = Helper::getForumDomain($cfg);
+
 /** Клиенты, данные от которых получить не удалось */
 $failedClients = [];
 /** Клиенты исключённые из формирования отчётов и для успешного обновления - не обязательны. */
 $excludedClients = [];
 Timers::start('update_clients');
+
+/** @var ClientFactory $clientFactory */
+$clientFactory = $app->get(ClientFactory::class);
+
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     Timers::start("update_client_$torrentClientID");
     $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
 
-    /**
-     * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
-     */
-    $client = new $torrentClientData['cl'](
-        $torrentClientData['ssl'],
-        $torrentClientData['ht'],
-        $torrentClientData['pt'],
-        $torrentClientData['lg'],
-        $torrentClientData['pw']
-    );
+    // Подключаемся к торрент-клиенту.
+    $client = $clientFactory->fromConfigProperties($torrentClientData);
+
     // Признак исключения раздач клиента из формируемых отчётов.
     if ($torrentClientData['exclude'] ?? false) {
         $excludedClients[] = $torrentClientID;
     }
 
-    // доступность торрент-клиента
-    if ($client->isOnline() === false) {
+    // Проверяем доступность торрент-клиента.
+    if (!$client->isOnline()) {
         $logger->notice("Клиент $clientTag в данный момент недоступен");
         $failedClients[] = $torrentClientID;
+
         continue;
     }
-    // применяем таймауты
-    $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
-    $client->setDomain(Helper::getForumDomain($cfg));
+
+    // Меняем домен трекера, для корректного поиска раздач.
+    $client->setDomain($forumDomain);
 
     // получаем список раздач
-    $torrents = $client->getAllTorrents();
-    if ($torrents === false) {
-        $logger->warning("Не удалось получить данные о раздачах от торрент-клиента $clientTag");
+    try {
+        $torrents = $client->getTorrents();
+    } catch (RuntimeException $e) {
+        $logger->warning("Не удалось получить данные о раздачах от торрент-клиента $clientTag", [$e->getMessage()]);
         $failedClients[] = $torrentClientID;
+
         continue;
     }
 
@@ -175,7 +177,7 @@ Db::query_database("
 ", $failedClients->values);
 
 
-// Найдём раздачи из нехранимых подразделов.
+// Найдём раздачи из не хранимых подразделов.
 if ($cfg['update']['untracked']) {
     Timers::start('search_untracked');
     $subsections = KeysObject::create(array_keys($cfg['subsections'] ?? []));
@@ -224,7 +226,7 @@ if ($cfg['update']['untracked']) {
                         $topicData->seeders,
                         $topicData->size,
                         $topicData->status->value,
-                        (int)$topicData->registered->format('U'),
+                        $topicData->registered->getTimestamp(),
                     ]
                 );
             }
@@ -247,7 +249,7 @@ if ($cfg['update']['untracked']) {
 
     $timers['search_untracked'] = Timers::getExecTime('search_untracked');
 }
-// Удалим лишние раздачи из БД нехранимых.
+// Удалим лишние раздачи из БД прочих.
 $tabUntracked->clearUnusedRows();
 
 
@@ -275,9 +277,10 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
         if (!isset($reports)) {
             $user = ConfigValidate::checkUser($cfg);
 
-            $reports = new Reports($cfg['forum_address'], $user);
+            $reports = new Reports($forumDomain, $user);
             $reports->curl_setopts($cfg['curl_setopt']['forum']);
         }
+
         $insertedUnregisteredTopics = [];
         foreach ($topicsUnregistered as $infoHash => $topicID) {
             $topicData = $reports->getDataUnregisteredTopic($topicID);
@@ -311,7 +314,7 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 
     $timers['search_unregistered'] = Timers::getExecTime('search_unregistered');
 }
-// Удалим лишние раздачи из БД разрегов.
+// Удалим лишние раздачи из таблицы разрегистрированных.
 $tabUnregistered->clearUnusedRows();
 
 $logger->debug(json_encode($timers));
