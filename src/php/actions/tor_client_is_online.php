@@ -1,36 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    include_once dirname(__FILE__) . '/../classes/clients.php';
+    // Подключаем контейнер.
+    $app = AppContainer::create();
+    $log = $app->getLogger();
 
-    App::init();
+    // 0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
+    $params = $_POST['tor_client'];
 
-    //~  0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
-    $torrentClient = $_POST['tor_client'];
+    $clientFactory = $app->getClientFactory();
 
-    /**
-     * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
-     */
-    $client = new $torrentClient['type'](
-        $torrentClient['ssl'],
-        $torrentClient['hostname'],
-        $torrentClient['port'],
-        $torrentClient['login'],
-        $torrentClient['password']
-    );
+    $isOnline = false;
+    try {
+        $client   = $clientFactory->fromFrontProperties($params);
+        $isOnline = $client->isOnline();
+    } catch (RuntimeException $e) {
+        $log->warning($e->getMessage());
+    }
 
     $status = sprintf(
         '<i class="fa fa-circle %s"></i>',
-        $client->isOnline() ? 'text-success' : 'text-danger'
+        $isOnline ? 'text-success' : 'text-danger'
     );
 } catch (Exception $e) {
-    Log::append($e->getMessage());
-    $status = sprintf('Не удалось проверить доступность торрент-клиента "%s"', $torrentClient['comment'] ?? 'unknown');
+    $status = sprintf('Не удалось проверить доступность торрент-клиента "%s"', $params['comment'] ?? 'unknown');
 }
 
 echo json_encode([
