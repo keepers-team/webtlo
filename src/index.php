@@ -803,7 +803,6 @@ function cfg_checkbox($cfg): Closure
                                         <select name="torrent-client-type" id="torrent-client-type" class="torrent-client-props">
                                             <option value="utorrent">uTorrent</option>
                                             <option value="transmission">Transmission</option>
-                                            <option value="vuze" title="Web Remote plugin">Vuze</option>
                                             <option value="deluge" title="WebUi plugin">Deluge</option>
                                             <option value="qbittorrent">qBittorrent</option>
                                             <option value="flood">Flood</option>
