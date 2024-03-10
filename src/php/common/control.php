@@ -1,7 +1,6 @@
 <?php
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/clients.php';
 
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
@@ -42,6 +41,8 @@ $placeholdersForumsIDs = str_repeat('?,', count($forumsIDs) - 1) . '?';
 // Количество исключаемых из регулировки хранителей на раздаче.
 $keepersExclude = (int)$cfg['topics_control']['keepers'];
 
+$clientFactory = $app->getClientFactory();
+
 $excludedForums = [];
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
@@ -53,32 +54,28 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
 
     Timers::start("control_client_$torrentClientID");
-    /**
-     * * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
-     * */
-    $client = new $torrentClientData['cl'](
-        $torrentClientData['ssl'],
-        $torrentClientData['ht'],
-        $torrentClientData['pt'],
-        $torrentClientData['lg'],
-        $torrentClientData['pw']
-    );
-    // проверка доступности торрент-клиента
-    if ($client->isOnline() === false) {
-        $logger->notice("Клиент $clientTag в данный момент недоступен.");
+    try {
+        $client = $clientFactory->fromConfigProperties($torrentClientData);
+        // проверка доступности торрент-клиента
+        if ($client->isOnline() === false) {
+            $logger->notice("Клиент $clientTag в данный момент недоступен.");
+            continue;
+        }
+    } catch (Exception $e) {
+        $logger->warning("Клиент $clientTag в данный момент недоступен. ". $e->getMessage());
         continue;
     }
-    // применяем таймауты
-    $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
 
     // получение данных от торрент-клиента
     $logger->info("Получаем раздачи торрент-клиента $clientTag");
     Timers::start("get_client_$torrentClientID");
-    $torrents = $client->getAllTorrents(['simple' => true]);
-    if ($torrents === false) {
-        $logger->error("Не удалось получить данные о раздачах от торрент-клиента $clientTag");
+    try {
+        $torrents = $client->getTorrents(['simple' => true]);
+    } catch (Exception $e) {
+        $logger->error(sprintf('Не удалось получить данные о раздачах от торрент-клиента %s, %s', $clientTag, $e->getMessage()));
         continue;
     }
+
     $logger->info(sprintf(
         '%s получено раздач: %d шт за %s',
         $clientTag,

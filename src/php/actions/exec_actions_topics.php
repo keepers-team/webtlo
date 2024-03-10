@@ -2,14 +2,12 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Torrents;
 
 try {
-    include_once dirname(__FILE__) . '/../classes/clients.php';
-
     $result = '';
 
     // разбираем данные
@@ -35,8 +33,13 @@ try {
     if (empty($_POST['tor_clients'])) {
         throw new Exception('В настройках не найдены торрент-клиенты');
     }
+
+    $app = AppContainer::create();
+
     // получение настроек
-    $cfg = App::getSettings();
+    $cfg = $app->getLegacyConfig();
+
+    $clientFactory = $app->getClientFactory();
 
     Log::append(sprintf('Начато выполнение действия "%s" для выбранных раздач...', $actionType));
     Log::append('Получение хэшей раздач с привязкой к торрент-клиенту...');
@@ -76,6 +79,7 @@ try {
     if (empty($torrentHashesByClient)) {
         throw new Exception('Не получены данные о выбранных раздачах');
     }
+
     Log::append(sprintf('Количество затрагиваемых торрент-клиентов: %s', count($torrentHashesByClient)));
     foreach ($torrentHashesByClient as $clientID => $torrentHashes) {
         if (empty($torrentHashes)) {
@@ -87,24 +91,22 @@ try {
         }
         // данные текущего торрент-клиента
         $torrentClient = $torrentClients[$clientID];
-        /**
-         * @var utorrent|transmission|vuze|deluge|rtorrent|qbittorrent|flood $client
-         */
-        $client = new $torrentClient['type'](
-            $torrentClient['ssl'],
-            $torrentClient['hostname'],
-            $torrentClient['port'],
-            $torrentClient['login'],
-            $torrentClient['password']
-        );
 
-        // проверка доступности торрент-клиента
-        if (!$client->isOnline()) {
-            Log::append(sprintf('Error: торрент-клиент "%s" в данный момент недоступен', $torrentClient['comment']));
+        try {
+            $client = $clientFactory->fromFrontProperties($torrentClient);
+            // проверка доступности торрент-клиента
+            if (!$client->isOnline()) {
+                Log::append(
+                    sprintf('Error: торрент-клиент "%s" в данный момент недоступен', $torrentClient['comment'])
+                );
+                continue;
+            }
+        } catch (Exception $e) {
+            Log::append(
+                sprintf('Error: торрент-клиент "%s" в данный момент недоступен. %s', $torrentClient['comment'], $e->getMessage())
+            );
             continue;
         }
-        // применяем таймауты
-        $client->setUserConnectionOptions($cfg['curl_setopt']['torrent_client']);
 
         $response = false;
         switch ($actionType) {
