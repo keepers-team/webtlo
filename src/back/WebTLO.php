@@ -123,6 +123,12 @@ final class WebTLO
 
         $about['date_timezone'] = ini_get('date.timezone') ?: date_default_timezone_get();
 
+        if (\SQLite3::version()['versionNumber'] < 3038000) {
+            $about['SQLite_version'] = '<span class="text-danger">' . \SQLite3::version()["versionString"] . '<span>';
+        } else {
+            $about['SQLite_version'] = '<span class="text-success">' . \SQLite3::version()["versionString"] . '<span>';
+        }
+
         return $about;
     }
 
