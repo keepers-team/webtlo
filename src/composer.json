@@ -16,7 +16,8 @@
         "ext-curl": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
-        "ext-xml": "*"
+        "ext-xml": "*",
+        "ext-sqlite3": "*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
