@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use SQLite3;
+
 final class WebTLO
 {
+    private const REQUIREMENTS = [
+        'php_version'    => '8.1.0',
+        'sqlite_version' => '3.38.0',
+    ];
+
     public function __construct(
         public readonly string $version,
         public readonly string $github,
@@ -114,7 +121,8 @@ final class WebTLO
         $about['OS']     = PHP_OS;
         $about['system'] = implode(' + ', $system);
 
-        $about['php_version'] = phpversion();
+        $about['php_version']    = phpversion();
+        $about['sqlite_version'] = SQLite3::version()['versionString'];
 
         $about['memory_limit']       = ini_get('memory_limit');
         $about['max_execution_time'] = ini_get('max_execution_time');
@@ -123,11 +131,6 @@ final class WebTLO
 
         $about['date_timezone'] = ini_get('date.timezone') ?: date_default_timezone_get();
 
-        if (\SQLite3::version()['versionNumber'] < 3038000) {
-            $about['SQLite_version'] = '<span class="text-danger">' . \SQLite3::version()["versionString"] . '<span>';
-        } else {
-            $about['SQLite_version'] = '<span class="text-success">' . \SQLite3::version()["versionString"] . '<span>';
-        }
 
         return $about;
     }
@@ -136,8 +139,17 @@ final class WebTLO
     {
         $about = $this->getAbout();
 
-        $about = array_map(fn($k) => sprintf('<li>%s: %s</li>', $k, $about[$k]), array_keys($about));
+        $result = [];
+        foreach ($about as $key => $value) {
+            $requirement = self::REQUIREMENTS[$key] ?? null;
+            if (!empty($requirement)) {
+                $isVersionValid = version_compare($value, $requirement, '>=');
 
-        return implode('', $about);
+                $value = sprintf('<span class="%s">%s<span>', $isVersionValid ? 'text-success' : 'text-danger', $value);
+            }
+            $result[] = sprintf('<li>%s: %s</li>', $key, $value);
+        }
+
+        return implode('', $result);
     }
 }
