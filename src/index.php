@@ -1,7 +1,8 @@
 <?php
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Db as DbLegacy;
+use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\WebTLO;
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
@@ -11,7 +12,7 @@ mb_internal_encoding("UTF-8");
 try {
     include_once dirname(__FILE__) . '/vendor/autoload.php';
 
-    App::init();
+    AppContainer::create();
     DbLegacy::create();
 } catch (Exception $e) {
     $initError = $e->getMessage();
@@ -19,7 +20,8 @@ try {
 
 // 2. Загружаем конфиг и рисуем селекторы.
 try {
-    $cfg = App::getSettings();
+    $app = AppContainer::create();
+    $cfg = $app->getLegacyConfig();
 
     // Callback для чекбоксов.
     $checkbox_check = cfg_checkbox($cfg);
@@ -188,6 +190,9 @@ try {
             );
         }
     }
+
+    // Уровни ведения журнала.
+    $selectLogLevel = AppLogger::getSelectOptions($optionFormat, $cfg['log_level'] ?? '');
 
     $webtlo = WebTLO::getVersion();
 } catch (Exception $e) {
@@ -917,7 +922,7 @@ function cfg_checkbox($cfg): Closure
                                 </label>
                             </fieldset>
                         </div>
-                        <h2>Фильтрация раздач и внешний вид</h2>
+                        <h2>Фильтрация раздач</h2>
                         <div>
                             <label class="label" title="Укажите числовое значение количества сидов (по умолчанию: 3)">
                                 Предлагать для хранения раздачи с количеством сидов не более:
@@ -956,36 +961,6 @@ function cfg_checkbox($cfg): Closure
                                 <input name="exclude_self_keep" type="checkbox"
                                        size="24" <?= $exclude_self_keep ?? '' ?> />
                                 не показывать себя, как хранителя, в списке раздач на главной
-                            </label>
-                            <hr>
-                            <label class="label">
-                                Цветовая схема интерфейса:
-                                <select id="theme-selector" class="myinput ignore-save-change">
-                                    <option value="black-tie">Black Tie</option>
-                                    <option value="blitzer">Blitzer</option>
-                                    <option value="cupertino">Cupertino</option>
-                                    <option value="dark-hive">Dark Hive</option>
-                                    <option value="dot-luv">Dot Luv</option>
-                                    <option value="eggplant">Eggplant</option>
-                                    <option value="excite-bike">Excite Bike</option>
-                                    <option value="flick">Flick</option>
-                                    <option value="hot-sneaks">Hot Sneaks</option>
-                                    <option value="humanity">Humanity</option>
-                                    <option value="le-frog">Le Frog</option>
-                                    <option value="mint-choc">Mint Choc</option>
-                                    <option value="overcast">Overcast</option>
-                                    <option value="pepper-grinder">Pepper Grinder</option>
-                                    <option value="redmond">Redmond</option>
-                                    <option value="smoothness">Smoothness</option>
-                                    <option value="south-street">South Street</option>
-                                    <option value="start">Start</option>
-                                    <option value="sunny">Sunny</option>
-                                    <option value="swanky-purse">Swanky Purse</option>
-                                    <option value="trontastic">Trontastic</option>
-                                    <option value="ui-darkness">UI Darkness</option>
-                                    <option value="ui-lightness">UI Lightness</option>
-                                    <option value="vader">Vader</option>
-                                </select>
                             </label>
                         </div>
                         <h2>Скачивание торрент-файлов</h2>
@@ -1107,6 +1082,45 @@ function cfg_checkbox($cfg): Closure
                                     За подробностями обратитесь к <a target="_blank" href="<?= $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
+                        </div>
+                        <h2>Журнал и внешний вид</h2>
+                        <div>
+                            <label class="label">
+                                Цветовая схема интерфейса:
+                                <select id="theme-selector" class="myinput ignore-save-change">
+                                    <option value="black-tie">Black Tie</option>
+                                    <option value="blitzer">Blitzer</option>
+                                    <option value="cupertino">Cupertino</option>
+                                    <option value="dark-hive">Dark Hive</option>
+                                    <option value="dot-luv">Dot Luv</option>
+                                    <option value="eggplant">Eggplant</option>
+                                    <option value="excite-bike">Excite Bike</option>
+                                    <option value="flick">Flick</option>
+                                    <option value="hot-sneaks">Hot Sneaks</option>
+                                    <option value="humanity">Humanity</option>
+                                    <option value="le-frog">Le Frog</option>
+                                    <option value="mint-choc">Mint Choc</option>
+                                    <option value="overcast">Overcast</option>
+                                    <option value="pepper-grinder">Pepper Grinder</option>
+                                    <option value="redmond">Redmond</option>
+                                    <option value="smoothness">Smoothness</option>
+                                    <option value="south-street">South Street</option>
+                                    <option value="start">Start</option>
+                                    <option value="sunny">Sunny</option>
+                                    <option value="swanky-purse">Swanky Purse</option>
+                                    <option value="trontastic">Trontastic</option>
+                                    <option value="ui-darkness">UI Darkness</option>
+                                    <option value="ui-lightness">UI Lightness</option>
+                                    <option value="vader">Vader</option>
+                                </select>
+                            </label>
+                            <hr>
+                            <label class="label">
+                                Уровень ведения журнала:
+                                <select name="log_level" id="log_level" class="myinput" title="Записи с выбранным уровнем и ниже - попадут в журнал. Не все записи в журнале имеют указание уровня.">
+                                    <?= $selectLogLevel ?>
+                                </select>
+                            </label>
                         </div>
                     </div>
                 </form>

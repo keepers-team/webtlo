@@ -43,6 +43,9 @@ final class Settings
             $config['clients'] = Helper::natsortField($config['clients'], 'cm');
         }
 
+        // Уровень записи логов.
+        $config['log_level'] = $ini->read('other', 'log_level', 'Info');
+
         // подразделы
         $subsections = $ini->read("sections", "subsections");
         if (!empty($subsections)) {
@@ -273,6 +276,9 @@ final class Settings
 
     public function update(array $cfg, array $forums, array $torrentClients): bool
     {
+        // Уровень ведения журнала.
+        $this->ini->write('other', 'log_level', trim($cfg['log_level']));
+
         // Форум / api.
         $this->setForum($cfg);
 
