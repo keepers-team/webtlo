@@ -46,8 +46,13 @@ final class AppContainer
             return (new Settings(new TIniFileEx()))->populate();
         });
 
-        // Добавляем логгер.
-        $container->add(LoggerInterface::class, fn() => AppLogger::create($logFile));
+        // Добавляем интерфейс для записи логов.
+        $container->add(LoggerInterface::class, function() use ($container, $logFile) {
+            $config = $container->get('config');
+            $level  = AppLogger::getLogLevel($config['log_level'] ?? '');
+
+            return AppLogger::create($logFile, $level);
+        });
 
         // Получаем настройки прокси.
         $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));
