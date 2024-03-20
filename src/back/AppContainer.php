@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
@@ -71,6 +72,22 @@ final class AppContainer
             );
         });
 
+        // Добавляем клиент для работы с API отчётов.
+        $container->add(ApiReportClient::class, function() use ($container) {
+            $logger = $container->get(LoggerInterface::class);
+
+            $proxy  = $container->get(Proxy::class);
+            $config = $container->get('config');
+
+            $cred = ApiReportClient::apiCredentials($config);
+
+            return new ApiReportClient(
+                ApiReportClient::apiClientFromLegacy($config, $cred, $logger, $proxy),
+                $cred,
+                $logger
+            );
+        });
+
         // Подключаем БД.
         $container->add(DB::class, fn() => DB::create());
 
@@ -94,6 +111,11 @@ final class AppContainer
     public function getApiClient(): ApiClient
     {
         return $this->get(ApiClient::class);
+    }
+
+    public function getApiReportClient(): ApiReportClient
+    {
+        return $this->get(ApiReportClient::class);
     }
 
     public function getSettings(): Settings
