@@ -7,8 +7,7 @@ $reports_result = [
 ];
 try {
     // дёргаем скрипт
-    // include_once dirname(__FILE__) . '/../common/reports.php';
-    include_once dirname(__FILE__) . '/../common/reports_via_api.php';
+    include_once dirname(__FILE__) . '/../common/reports.php';
 } catch (Exception $e) {
     Log::append($e->getMessage());
     $reports_result['result'] = 'В процессе отправки отчётов были ошибки. ' .
