@@ -120,6 +120,11 @@ final class Creator
         return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
     }
 
+    public function isForumExcluded(int $forumId): bool
+    {
+        return in_array($forumId, $this->excludeForumsIDs);
+    }
+
     /**
      * Собрать отчёт по заданному разделу.
      *
@@ -128,7 +133,7 @@ final class Creator
     public function getForumReport(ForumObject $forum): array
     {
         // исключаем подразделы
-        if (in_array($forum->id, $this->excludeForumsIDs)) {
+        if ($this->isForumExcluded($forum->id)) {
             throw new Exception("Из отчёта исключен подраздел № $forum->id");
         }
 
