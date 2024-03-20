@@ -87,6 +87,43 @@ final class ApiReportClient
         return json_decode($body, true);
     }
 
+    /**
+     * @param int $forumId
+     * @param int $status
+     * @return ?array
+     */
+    public function setForumStatus(int $forumId, int $status): ?array
+    {
+        $params = [
+            'query' => [
+                'keeper_id'   => $this->cred->userId,
+                'status'      => $status,
+                'subforum_id' => $forumId,
+            ],
+        ];
+
+        $this->logger->debug('Fetching page', $params);
+        try {
+            $response = $this->client->post('subforum/set_status', $params);
+        } catch (GuzzleException $e) {
+            $this->logger->error('Failed to fetch page', [$e->getCode(), $e->getMessage(), ...$params]);
+
+            return null;
+        }
+
+        $statusCode = $response->getStatusCode();
+        if ($statusCode !== 200) {
+            $this->logger->warning('Unexpected http code', [$statusCode, ...$params]);
+
+            return null;
+        }
+
+        $body = $response->getBody()->getContents();
+        $this->logger->debug('Response body', [$body]);
+
+        return json_decode($body, true);
+    }
+
     public function getForumReports(int $forumId, array $columns = []): ?array
     {
         $params = ['columns' => implode(',', $columns)];

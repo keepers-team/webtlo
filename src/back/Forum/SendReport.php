@@ -62,6 +62,15 @@ final class SendReport
             }
         }
 
+        // Устанавливаем статус подраздела.
+        $response = $this->apiReport->setForumStatus(
+            $forumId,
+            KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+        );
+        if (null !== $response) {
+            $this->logger->debug('Setting forum status', $response);
+        }
+
         return [
             'api'    => $forumId,
             'create' => $createTime,
