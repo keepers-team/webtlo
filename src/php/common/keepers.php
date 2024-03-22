@@ -1,6 +1,6 @@
 <?php
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -11,24 +11,33 @@ use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Update\KeepersReports;
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-App::init();
+$app = AppContainer::create('keepers.log');
+$log = $app->getLogger();
 
 Timers::start('update_keepers');
 
-// получение настроек
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
+// Получение настроек.
+$cfg = $app->getLegacyConfig();
 
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
     if ($checkEnabledCronAction == 0) {
         throw new Exception('Notice: Автоматическое обновление списков других хранителей отключено в настройках.');
     }
+}
+
+// Тут решаем, обновляем отчёты через API или сканируем форум.
+if (!empty($cfg['reports']['keepers_load_api']) && !empty($cfg['report_base_url'])) {
+    /** @var KeepersReports $keepersReports */
+    $keepersReports = $app->get(KeepersReports::class);
+    $keepersReports->update($cfg);
+
+    return;
 }
 
 $user = ConfigValidate::checkUser($cfg);
@@ -62,10 +71,11 @@ if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
 }
 // Проверим минимальную дату обновления данных других хранителей.
 if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
-    Log::append(sprintf(
+    $log->info(sprintf(
         'Notice: Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
         date("d.m.y H:i", $updateStatus->getLastCheckUpdateTime())
     ));
+
     return;
 }
 
@@ -81,7 +91,7 @@ if (!isset($reports)) {
 
 if ($unavailable = $reports->check_access()) {
     if (in_array($unavailable, [AccessCheck::NOT_AUTHORIZED, AccessCheck::USER_CANDIDATE])) {
-        Log::append($unavailable->value);
+        $log->info($unavailable->value);
         return;
     }
 }
@@ -96,8 +106,8 @@ if (isset($cfg['subsections'])) {
         $forum_topic_id = $reports->search_topic_id($subsection['na']);
 
         if (empty($forum_topic_id)) {
-            Log::append(sprintf(
-                'Error: Не удалось найти тему со списками для подраздела № %d (%s).',
+            $log->error(sprintf(
+                'Не удалось найти тему со списками для подраздела № %d (%s).',
                 $forum_id,
                 $subsection['na']
             ));
@@ -169,13 +179,13 @@ if (count($forumsParams)) {
 // записываем изменения в локальную базу
 $count_kept_topics = $tabKeepersList->cloneCount();
 if ($count_kept_topics > 0) {
-    Log::append(sprintf(
+    $log->info(sprintf(
         'Просканировано подразделов: %d шт, хранителей: %d, хранимых раздач: %d шт.',
         $forumsScanned,
         count(array_unique($keeperIds)),
         $count_kept_topics
     ));
-    Log::append('Запись в базу данных списков раздач хранителей...');
+    $log->info('Запись в базу данных списков раздач хранителей...');
 
     // Переносим данные из временной таблицы в основную.
     $tabKeepersList->moveToOrigin();
@@ -190,4 +200,4 @@ if ($count_kept_topics > 0) {
         )"
     );
 }
-Log::append('Info: Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
+$log->info('Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
