@@ -131,7 +131,7 @@ final class HighPriority
 
             $this->logger->info(
                 sprintf(
-                    'Спискок раздач с высоким приоритетом (%d шт. %s) обновлён за %2s.',
+                    'Список раздач с высоким приоритетом (%d шт. %s) обновлён за %2s.',
                     $topicsUpdated,
                     Helper::convertBytes($priorityResponse->totalSize, 9),
                     Timers::getExecTime('hp_topics')

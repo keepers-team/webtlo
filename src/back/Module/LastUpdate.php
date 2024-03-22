@@ -94,7 +94,7 @@ final class LastUpdate
                 return $mark ? $mark->label() : "Раздачи подраздела №$markId";
             }, $missed);
 
-            Log::append(sprintf('Notice: Отсутствут маркеры обновления для: %s.', implode(', ', $missed)));
+            Log::append(sprintf('Notice: Отсутствуют маркеры обновления для: %s.', implode(', ', $missed)));
         }
         // TODO loglevel debug
         Log::append(json_encode($log));

@@ -143,7 +143,7 @@ final class Subsections
 
             $this->logger->debug(
                 sprintf(
-                    'Спискок раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
+                    'Список раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
                     $forumId,
                     count($topicResponse->topics),
                     Helper::convertBytes($topicResponse->totalSize, 9),
