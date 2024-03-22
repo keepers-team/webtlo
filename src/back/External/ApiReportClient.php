@@ -8,12 +8,14 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\External\ApiReport\Actions\KeepersReports;
 use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
 use Psr\Log\LoggerInterface;
 
 final class ApiReportClient
 {
     use StaticHelper;
+    use KeepersReports;
 
     protected static int $concurrency = 4;
 
@@ -74,13 +76,6 @@ final class ApiReportClient
             return null;
         }
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            $this->logger->warning('Unexpected http code', [$statusCode, ...$params]);
-
-            return null;
-        }
-
         $body = $response->getBody()->getContents();
         $this->logger->debug('Response body', [$body]);
 
@@ -111,13 +106,6 @@ final class ApiReportClient
             return null;
         }
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            $this->logger->warning('Unexpected http code', [$statusCode, ...$params]);
-
-            return null;
-        }
-
         $body = $response->getBody()->getContents();
         $this->logger->debug('Response body', [$body]);
 
@@ -126,20 +114,14 @@ final class ApiReportClient
 
     public function getForumReports(int $forumId, array $columns = []): ?array
     {
+        $path   = "subforum/$forumId/reports";
         $params = ['columns' => implode(',', $columns)];
 
-        $this->logger->debug('Fetching page', [$forumId, ...$params]);
+        $this->logger->debug('Fetching page', ['path' => $path, ...$params]);
         try {
-            $response = $this->client->get("subforum/$forumId/reports", ['query' => $params]);
+            $response = $this->client->get($path, ['query' => $params]);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to fetch page', [$e->getCode(), $e->getMessage(), ...$params]);
-
-            return null;
-        }
-
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            $this->logger->warning('Unexpected http code', [$statusCode, ...$params]);
 
             return null;
         }
