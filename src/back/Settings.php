@@ -102,9 +102,15 @@ final class Settings
         $config['bt_key']  = $ini->read('torrent-tracker', 'bt_key');
         $config['api_key'] = $ini->read('torrent-tracker', 'api_key');
 
+        // Апи для получения сведений о раздачах
         $config['api_url']        = basename($ini->read('torrent-tracker', 'api_url', 'api.rutracker.cc'));
         $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
+
+        // Апи для отправки отчётов.
+        $config['report_url']        = basename($ini->read('torrent-tracker', 'report_url', 'report.rutracker.cc'));
+        $config['report_url_custom'] = basename($ini->read('torrent-tracker', 'report_url_custom'));
+        $config['report_ssl']        = $ini->read('torrent-tracker', 'report_ssl', 1);
 
         $config['user_id']      = $ini->read('torrent-tracker', 'user_id');
         $config['user_session'] = $ini->read('torrent-tracker', 'user_session');
@@ -123,6 +129,7 @@ final class Settings
         $config['api_address']   = $api_schema . '://' . $api_url;
         $config['forum_address'] = $forum_schema . '://' . $forum_url;
 
+        $config['report_base_url']   = $config['report_url'] === 'custom' ? $config['report_url_custom'] : $config['report_url'];
 
         $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
         $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
@@ -152,6 +159,7 @@ final class Settings
 
         // отчёты
         $config['reports'] = [
+            'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
