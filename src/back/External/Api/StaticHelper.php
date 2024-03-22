@@ -8,11 +8,14 @@ use GuzzleHttp\Client;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 
 trait StaticHelper
 {
+    use RetryMiddleware;
+
     public static function createApiClient(
         LoggerInterface $logger,
         string          $baseUrl,
@@ -20,21 +23,6 @@ trait StaticHelper
         ?Proxy          $proxy,
         Timeout         $timeout = new Timeout(),
     ): Client {
-        $retryCallback = function(
-            int              $attemptNumber,
-            float            $delay,
-            RequestInterface $request,
-        ) use ($logger): void {
-            $logger->warning(
-                'Retrying request',
-                [
-                    'url'     => $request->getUri()->__toString(),
-                    'delay'   => number_format($delay, 2),
-                    'attempt' => $attemptNumber,
-                ]
-            );
-        };
-
         $clientHeaders = [
             'User-Agent' => Defaults::userAgent,
             'X-WebTLO'   => 'experimental',
@@ -55,12 +43,10 @@ trait StaticHelper
             'timeout'            => $timeout->request,
             'connect_timeout'    => $timeout->connection,
             'allow_redirects'    => true,
+            // RetryMiddleware
+            'handler'         => self::getDefaultHandler($logger),
             // Proxy options
             ...$proxyConfig,
-            // Retry options
-            'max_retry_attempts' => 3,
-            'retry_on_timeout'   => true,
-            'on_retry_callback'  => $retryCallback,
         ];
 
         $client = new Client($clientProperties);
@@ -76,7 +62,6 @@ trait StaticHelper
     public static function apiClientFromLegacy(array $cfg, LoggerInterface $logger, Proxy $proxy): Client
     {
         $useProxy = (bool)$cfg['proxy_activate_api'];
-
 
         return self::createApiClient(
             $logger,
