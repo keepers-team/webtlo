@@ -1,101 +1,123 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\External\ApiReport\Actions\KeepersReports;
+use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
+use Psr\Log\LoggerInterface;
 
 final class ApiReportClient
 {
-    public $clientProperties = [
-        'base_uri'        => "https://DOMAIN/krs/api/v1/",
-        'allow_redirects' => true,
-    ];
+    use StaticHelper;
+    use KeepersReports;
 
-    public $KEEPING_STATUSES = [
-        'reported_by_api'     => 0b00000000_00000000_00000000_00000001,
-        'downloading'         => 0b00000000_00000000_00000000_00000010,
-        'keeping_prio_mask'   => 0b00000000_00000000_11111111_00000000,
-        'imported_from_forum' => 0b00000000_00000001_00000000_00000000,
-    ];
-
-    protected $client;
+    protected static int $concurrency = 4;
 
     public function __construct(
-        private readonly array $config,
+        private readonly Client          $client,
+        private readonly Credentials     $cred,
+        private readonly LoggerInterface $logger,
     ) {
-        $this->client = new Client($this->clientProperties);
     }
 
-    public function report_releases(
-        int $forum_id,
-        array $topic_ids,
-        int $status,
-        bool $unreport_other_releases_in_subforum,
-    ): ?string
+    public function checkAccess(): bool
     {
+        try {
+            $response = $this->client->get('info/statuses');
+            $statuses = json_decode($response->getBody()->getContents(), true);
+
+            return !empty($statuses);
+        } catch (ClientException $e) {
+            $response = $e->getResponse();
+            $this->logger->error(
+                'Не удалось авторизоваться в report-api. Проверьте ключи доступа.',
+                [$response->getStatusCode(), $response->getReasonPhrase()]
+            );
+        } catch (GuzzleException $e) {
+            $this->logger->error('Ошибка при попытке авторизации в report-api.', [$e->getCode(), $e->getMessage()]);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param int   $forumId
+     * @param int[] $topicIds
+     * @param int   $status
+     * @param bool  $excludeOtherReleases
+     * @return ?array
+     */
+    public function reportKeptReleases(
+        int   $forumId,
+        array $topicIds,
+        int   $status,
+        bool  $excludeOtherReleases = false,
+    ): ?array {
         $params = [
-            "user_id"                             => $this->config['user_id'],
-            "topic_ids"                           => $topic_ids,
-            "status"                              => $status,
-            "reported_subforum_id"                => $forum_id,
-            "unreport_other_releases_in_subforum" => $unreport_other_releases_in_subforum,
+            'keeper_id'                           => $this->cred->userId,
+            'topic_ids'                           => $topicIds,
+            'status'                              => $status,
+            'reported_subforum_id'                => $forumId,
+            'unreport_other_releases_in_subforum' => $excludeOtherReleases,
         ];
 
-        Log::append("Fetching page {$params}", );
         try {
-            $response = $this->client->post('releases/set_status', [
-                'json' => $params,
-                'auth' => [$this->config['user_id'], $this->config['api_key']],
-            ]);
+            $response = $this->client->post('releases/set_status', ['json' => $params]);
         } catch (GuzzleException $e) {
-            Log::append("Failed to fetch page {[...$params, 'error' => $e]}");
+            $this->logger->error('Failed to fetch page', [$e->getCode(), $e->getMessage(), ...$params]);
 
             return null;
         }
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            Log::append('Unexpected code', [...$params, 'code' => $statusCode]);
+        $body = $response->getBody()->getContents();
 
-            return null;
-        }
-        Log::append($response->getBody()->getContents());
-
-        return $response->getBody()->getContents();
+        return json_decode($body, true);
     }
 
-    public function get_forum_reports(int $forum_id, string $columns): ?array
+    /**
+     * Задать статус хранения подраздела.
+     */
+    public function setForumStatus(int $forumId, int $status): bool
     {
-        $params = ["columns" => $columns];
+        $params = [
+            'keeper_id'   => $this->cred->userId,
+            'status'      => $status,
+            'subforum_id' => $forumId,
+        ];
 
-        Log::append("Fetching page {[$forum_id, ...$params]}", );
         try {
-            $response = $this->client->get("subforum/{$forum_id}/reports", [
-                'query' => $params,
-                'headers' => [
-                    'Authorization' => 'Basic ' . base64_encode($this->config['user_id'] . ":" . $this->config['api_key']),
-                ],
-            ]);
+            $response = $this->client->post('subforum/set_status', ['query' => $params]);
         } catch (GuzzleException $e) {
-            Log::append("Failed to fetch page {[...$params, 'error' => $e]}");
+            $this->logger->error('Failed to fetch page', [$e->getCode(), $e->getMessage(), ...$params]);
+
+            return false;
+        }
+
+        $body = json_decode($response->getBody()->getContents(), true);
+
+        return (bool)($body['result'] ?? false);
+    }
+
+    public function getForumReports(int $forumId, array $columns = []): ?array
+    {
+        $params = ['columns' => implode(',', $columns)];
+
+        try {
+            $response = $this->client->get("subforum/$forumId/reports", ['query' => $params]);
+        } catch (GuzzleException $e) {
+            $this->logger->error('Failed to fetch page', [$e->getCode(), $e->getMessage(), ...$params]);
 
             return null;
         }
 
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== 200) {
-            Log::append('Unexpected code', [...$params, 'code' => $statusCode]);
+        $body = $response->getBody()->getContents();
 
-            return null;
-        }
-        $body_length = strlen($response->getBody()->getContents());
-        Log::append("Got reports, strlen: {$body_length}");
-
-        $raw_response = $response->getBody();
-        $result = json_decode($raw_response, true, flags: JSON_THROW_ON_ERROR);
-
-        return $result;
+        return json_decode($body, true);
     }
 }
