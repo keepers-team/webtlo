@@ -73,4 +73,9 @@ interface ClientInterface
      * Может ли торрент-клиент присваивать метки при добавлении раздачи.
      */
     public function isLabelAddingAllowed(): bool;
+
+    /**
+     * Установка своего домена трекера.
+     */
+    public function setDomain(?string $domain): void;
 }
