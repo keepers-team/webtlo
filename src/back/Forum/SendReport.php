@@ -7,13 +7,15 @@ namespace KeepersTeam\Webtlo\Forum;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\WebTLO;
 use Psr\Log\LoggerInterface;
 
 final class SendReport
 {
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly ApiReportClient $apiReport
+        private readonly ApiReportClient $apiReport,
+        private readonly WebTLO          $webtlo,
     ) {
     }
 
@@ -28,6 +30,7 @@ final class SendReport
         $this->apiReport->setForumStatus(
             $forumId,
             KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            $this->webtlo->appVersionLine(),
         );
 
 

@@ -83,12 +83,13 @@ final class ApiReportClient
     /**
      * Задать статус хранения подраздела.
      */
-    public function setForumStatus(int $forumId, int $status): bool
+    public function setForumStatus(int $forumId, int $status, string $appVersion = ''): bool
     {
         $params = [
             'keeper_id'   => $this->cred->userId,
             'status'      => $status,
             'subforum_id' => $forumId,
+            'comment'     => $appVersion,
         ];
 
         try {
