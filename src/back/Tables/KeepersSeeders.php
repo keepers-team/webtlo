@@ -103,7 +103,7 @@ final class KeepersSeeders
         return $this->table;
     }
 
-    private function getKeeperInfo(int $keeperId): ?KeeperData
+    public function getKeeperInfo(int $keeperId): ?KeeperData
     {
         return $this->keepers[$keeperId] ?? null;
     }
