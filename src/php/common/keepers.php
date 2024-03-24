@@ -37,6 +37,8 @@ if (!empty($cfg['reports']['keepers_load_api']) && !empty($cfg['report_base_url'
     $keepersReports = $app->get(KeepersReports::class);
     $keepersReports->update($cfg);
 
+    LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
+
     return;
 }
 
