@@ -108,7 +108,7 @@ final class Settings
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
 
         // Апи для отправки отчётов.
-        $config['report_url']        = basename($ini->read('torrent-tracker', 'report_url', 'report.rutracker.cc'));
+        $config['report_url']        = basename($ini->read('torrent-tracker', 'report_url', 'rep.rutracker.cc'));
         $config['report_url_custom'] = basename($ini->read('torrent-tracker', 'report_url_custom'));
         $config['report_ssl']        = $ini->read('torrent-tracker', 'report_ssl', 1);
 
@@ -159,6 +159,7 @@ final class Settings
 
         // отчёты
         $config['reports'] = [
+            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 1),
             'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
