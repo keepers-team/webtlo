@@ -13,6 +13,7 @@ use KeepersTeam\Webtlo\Legacy\Db;
  */
 final class Forums
 {
+    /** @var ForumObject[]  */
     private static array $forums = [];
 
     /**
