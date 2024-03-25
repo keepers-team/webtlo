@@ -9,7 +9,6 @@ use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
-use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 
 trait StaticHelper
@@ -68,7 +67,7 @@ trait StaticHelper
             (string)$cfg['api_base_url'],
             (bool)$cfg['api_ssl'],
             $useProxy ? $proxy : null,
-            new Timeout($cfg['api_timeout'], $cfg['api_connect_timeout']),
+            new Timeout((int)$cfg['api_timeout'], (int)$cfg['api_connect_timeout']),
         );
     }
 

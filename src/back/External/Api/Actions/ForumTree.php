@@ -74,31 +74,38 @@ trait ForumTree
         /** @var string[] $forumNames */
         $forumNames = $trees['result']['f'];
 
+        $hierarchyProcessor = function(int $forumId, array $parts) use (&$forums, $forumNames, $sizes): array {
+            $parts[] = $forumNames[$forumId];
+
+            if (isset($sizes['result'][$forumId])) {
+                [$count, $size] = $sizes['result'][$forumId];
+
+                $forums[] = new ForumDetails(
+                    id   : $forumId,
+                    name : implode(' » ', $parts),
+                    count: $count,
+                    size : $size
+                );
+            }
+
+            return $parts;
+        };
+
         foreach ($categoriesHierarchy as $categoryId => $forumsHierarchy) {
             $categoryName = $categoryNames[$categoryId];
 
             foreach ($forumsHierarchy as $forumId => $subForumsHierarchy) {
-                $forumName = $forumNames[$forumId];
+                $nameParts = $hierarchyProcessor($forumId, [$categoryName]);
 
                 foreach ($subForumsHierarchy as $subForumId) {
-                    if (isset($sizes['result'][$subForumId])) {
-                        [$count, $size] = $sizes['result'][$subForumId];
-                        $subForumName = $forumNames[$subForumId];
-
-                        $forums[] = new ForumDetails(
-                            id:    $subForumId,
-                            name:  sprintf('%s » %s » %s', $categoryName, $forumName, $subForumName),
-                            count: $count,
-                            size:  $size
-                        );
-                    }
+                    $hierarchyProcessor($subForumId, $nameParts);
                 }
             }
         }
 
         return new ForumsResponse(
             updateTime: $updateTime,
-            forums:     $forums
+            forums    : $forums
         );
     }
 }
