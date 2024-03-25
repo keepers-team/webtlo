@@ -83,7 +83,7 @@ trait StaticHelper
             (bool)$cfg['report_ssl'],
             $cred,
             $useProxy ? $proxy : null,
-            new Timeout($cfg['api_timeout'], $cfg['api_connect_timeout']),
+            new Timeout((int)$cfg['api_timeout'], (int)$cfg['api_connect_timeout']),
         );
     }
 
