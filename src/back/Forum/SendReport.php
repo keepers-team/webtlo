@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Forum;
 
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
-use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\WebTLO;
 use Psr\Log\LoggerInterface;
 
@@ -33,11 +32,9 @@ final class SendReport
             $this->webtlo->appVersionLine(),
         );
 
-
         $result = [
             'forumId' => $forumId,
             'topics'  => count($topicsToReport),
-
         ];
 
         // Разделяем раздачи на скачанные и качаемые.
@@ -50,8 +47,6 @@ final class SendReport
             }
         }
         unset($topicsToReport);
-
-        Timers::start("send_api_$forumId");
 
         // Отправляем отчёт о скачанных раздачах.
         $completeReport = $this->apiReport->reportKeptReleases(
@@ -75,11 +70,7 @@ final class SendReport
                 $result['reportDownloading'] = $downloadingReport;
             }
         }
-        $this->logger->debug('API. Отчёт отправлен', $result);
 
-        return [
-            'api'  => $forumId,
-            'send' => Timers::getExecTime("send_api_$forumId"),
-        ];
+        return $result;
     }
 }

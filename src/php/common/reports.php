@@ -41,8 +41,9 @@ if (empty($cfg['subsections'])) {
 // Проверим полное обновление.
 LastUpdate::checkReportsSendAvailable($cfg);
 
+Timers::start('init_report');
 // Возможность отправить отчёт постом на форум.
-$forumReportAvailable = (bool)($cfg['reports']['send_report_forum']);
+$forumReportAvailable = (bool)($cfg['reports']['send_report_forum'] ?? true);
 // Проверим заполненность таблиц.
 if ($forumReportAvailable && Db::select_count('ForumsOptions') === 0) {
     $log->error(
@@ -67,36 +68,62 @@ if ($forumReportAvailable) {
         $forumReportAvailable = false;
     }
 }
+$log->debug(sprintf('init report %s', Timers::getExecTime('init_report')));
 
+Timers::start('create_report');
 // Создание отчётов.
 $forumReports = new ReportCreator(
     $cfg,
     $user
 );
 $forumReports->initConfig();
-$forumReports->fillStoredValues();
+if ($forumReportAvailable) {
+    $forumReports->fillStoredValues();
+}
 
+$log->debug(sprintf('create report %s', Timers::getExecTime('create_report')));
+
+Timers::start('create_api');
 /** @var SendReport $sendReport */
 $sendReport = $app->get(SendReport::class);
 
 // Возможность отправить отчёт через API.
 $apiReportAvailable = $sendReport->checkAccess();
 
-$apiReportCount  = 0;
+$log->debug(sprintf('create api %s', Timers::getExecTime('create_api')));
+
+$forumReportCount = 0;
+$apiReportCount   = 0;
+
 $editedTopicsIDs = [];
 $editedPosts     = [];
 
 $Timers = [];
+
+$forumCount = count($forumReports->forums);
 foreach ($forumReports->forums as $forum_id) {
+    $timer = [];
     // Пробуем отправить отчёт по API.
     if ($apiReportAvailable && !$forumReports->isForumExcluded($forum_id)) {
+        Timers::start("send_api_$forum_id");
         try {
+            Timers::start("search_db_$forum_id");
+
             // Получаем раздачи, которые нужно отправить.
             $topicsToReport = $forumReports->getStoredForumTopics($forum_id);
 
+            $timer['search_db'] = Timers::getExecTime("search_db_$forum_id");
+
             // Пробуем отправить отчёт по API.
-            $Timers[] = $sendReport->sendForumTopics((int)$forum_id, $topicsToReport);
+            $apiResult = $sendReport->sendForumTopics((int)$forum_id, $topicsToReport);
+
             $apiReportCount++;
+            $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
+
+            $log->debug(
+                sprintf("API. Отчёт отправлен [%d/%d] %s", $apiReportCount, $forumCount, $timer['send_api']),
+                $apiResult
+            );
         } catch (Exception $e) {
             $log->notice(
                 sprintf(
@@ -109,6 +136,7 @@ foreach ($forumReports->forums as $forum_id) {
     }
 
     if ($forumReportAvailable && isset($reports)) {
+        Timers::start("report_forum_$forum_id");
         try {
             $forum = Forums::getForum($forum_id);
             if (null === $forum->topic_id) {
@@ -137,7 +165,7 @@ foreach ($forumReports->forums as $forum_id) {
         $createTime = Timers::getExecTime("create_$forum_id");
 
         Timers::start("send_$forum_id");
-        $topicId  = $forum->topic_id;
+        $topicId = $forum->topic_id;
         $messages = $forumReport['messages'];// Редактируем шапку темы, если её автор - пользователь.
         if ($user->userId === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
             $log->info(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
@@ -193,13 +221,15 @@ foreach ($forumReports->forums as $forum_id) {
 
         $editedTopicsIDs[] = $topicId;
 
-        $Timers[] = [
-            'forum'    => $forum_id,
-            'create'   => $createTime,
-            'send'     => Timers::getExecTime("send_$forum_id"),
-            'messages' => count($postList),
-        ];
+        $timer['send_forum'] = Timers::getExecTime("send_forum_$forum_id");
+
+        $log->debug(
+            sprintf('Forum. Отчёт отправлен [%d/%d] %s', $forumReportCount++, $forumCount, $timer['send_forum'])
+        );
     }
+
+    $forumReports->clearCache($forum_id);
+    $Timers[] = ['forum' => $forum_id, ...$timer];
 }
 
 if (!empty($Timers)) {
@@ -215,12 +245,14 @@ if (count($editedTopicsIDs)) {
     $log->debug(json_encode($editedPosts));
 }
 
-// Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
-if (!count($editedTopicsIDs)) {
-    return;
-}
 
-if ($forumReportAvailable && isset($reports)) { // работаем со сводным отчётом
+if ($forumReportAvailable && isset($reports)) {
+    // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
+    if (!count($editedTopicsIDs)) {
+        return;
+    }
+
+    // работаем со сводным отчётом
     if ($cfg['reports']['send_summary_report']) {
         Timers::start('send_summary');
         // формируем сводный отчёт

@@ -50,7 +50,11 @@ final class Creator
         'dl_size',    // Вес скачиваемых раздач
     ];
 
+    /** @var ?array Суммарные значения по каждому подразделу. Для заголовков. */
     private ?array $stored = null;
+
+    /** @var array Хранимые раздачи по каждому подразделу. */
+    private array  $cache  = [];
 
     public function __construct(
         array       $config,
@@ -543,6 +547,10 @@ final class Creator
      */
     public function getStoredForumTopics(int $forum_id): array
     {
+        if (!empty($this->cache[$forum_id])) {
+            return $this->cache[$forum_id];
+        }
+
         // Получение данных о раздачах подраздела.
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
 
@@ -570,7 +578,14 @@ final class Creator
             throw new Exception("Error: Не получены данные о хранимых раздачах для подраздела № $forum_id");
         }
 
+        $this->cache[$forum_id] = $topics;
+
         return $topics;
+    }
+
+    public function clearCache(int $forumId): void
+    {
+        $this->cache[$forumId] = null;
     }
 
     /**
