@@ -188,6 +188,18 @@ final class Helper
         return null;
     }
 
+    /**
+     * Разбиение строки по символу с приведением значений к int.
+     *
+     * @param string $string
+     * @param string $separator
+     * @return int[]
+     */
+    public static function explodeInt(string $string, string $separator = ','): array
+    {
+        return array_map('intval', explode($separator, $string));
+    }
+
     /** Проверить включена ли опция автоматического запуска действия. */
     public static function isScheduleActionEnabled(array $config, string $action): bool
     {

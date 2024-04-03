@@ -50,7 +50,11 @@ final class Creator
         'dl_size',    // Вес скачиваемых раздач
     ];
 
+    /** @var ?array Суммарные значения по каждому подразделу. Для заголовков. */
     private ?array $stored = null;
+
+    /** @var array Хранимые раздачи по каждому подразделу. */
+    private array  $cache  = [];
 
     public function __construct(
         array       $config,
@@ -120,6 +124,11 @@ final class Creator
         return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
     }
 
+    public function isForumExcluded(int $forumId): bool
+    {
+        return in_array($forumId, $this->excludeForumsIDs);
+    }
+
     /**
      * Собрать отчёт по заданному разделу.
      *
@@ -128,7 +137,7 @@ final class Creator
     public function getForumReport(ForumObject $forum): array
     {
         // исключаем подразделы
-        if (in_array($forum->id, $this->excludeForumsIDs)) {
+        if ($this->isForumExcluded($forum->id)) {
             throw new Exception("Из отчёта исключен подраздел № $forum->id");
         }
 
@@ -368,24 +377,22 @@ final class Creator
         $header = $keepers = [];
 
         $keepers[] = '[list=1]';
-        if (count($keepersStored)) {
-            uasort($keepersStored, fn($a, $b) => $b['keep_count'] <=> $a['keep_count']);
+        uasort($keepersStored, fn($a, $b) => $b['keep_count'] <=> $a['keep_count']);
 
-            $pattern_keeper = '[*][url=profile.php?mode=viewprofile&u=%d][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s';
-            foreach ($keepersStored as $keeper_id => $values) {
-                if (!$values['keep_count']) {
-                    continue;
-                }
-
-                $count_keepers++;
-                $keepers[] = sprintf(
-                    $pattern_keeper,
-                    $keeper_id,
-                    $values['keeper_name'],
-                    $values['keep_count'],
-                    $this->bytes($values['keep_size'])
-                );
+        $pattern_keeper = '[*][url=profile.php?mode=viewprofile&u=%d][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s';
+        foreach ($keepersStored as $keeper_id => $values) {
+            if (!$values['keep_count']) {
+                continue;
             }
+
+            $count_keepers++;
+            $keepers[] = sprintf(
+                $pattern_keeper,
+                $keeper_id,
+                $values['keeper_name'],
+                $values['keep_count'],
+                $this->bytes($values['keep_size'])
+            );
         }
         unset($keepersStored);
         $keepers[] = '[/list]';
@@ -534,10 +541,16 @@ final class Creator
     /**
      * Найти в БД список хранимых раздач подраздела.
      *
+     * @param int $forum_id
+     * @return array<string, mixed>[]
      * @throws Exception
      */
     public function getStoredForumTopics(int $forum_id): array
     {
+        if (!empty($this->cache[$forum_id])) {
+            return $this->cache[$forum_id];
+        }
+
         // Получение данных о раздачах подраздела.
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
 
@@ -565,7 +578,14 @@ final class Creator
             throw new Exception("Error: Не получены данные о хранимых раздачах для подраздела № $forum_id");
         }
 
+        $this->cache[$forum_id] = $topics;
+
         return $topics;
+    }
+
+    public function clearCache(int $forumId): void
+    {
+        $this->cache[$forumId] = null;
     }
 
     /**
@@ -624,8 +644,8 @@ final class Creator
             Log::append("Notice: Из отчётов исключены подразделы: {$cfg_reports['exclude_forums_ids']}");
         }
 
-        $this->excludeForumsIDs  = explode(',', $cfg_reports['exclude_forums_ids']);
-        $this->excludeClientsIDs = explode(',', $cfg_reports['exclude_clients_ids']);
+        $this->excludeForumsIDs  = Helper::explodeInt($cfg_reports['exclude_forums_ids']);
+        $this->excludeClientsIDs = Helper::explodeInt($cfg_reports['exclude_clients_ids']);
     }
 
     /**
