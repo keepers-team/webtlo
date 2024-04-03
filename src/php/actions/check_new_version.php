@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
+use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\WebTLO;
 
@@ -14,33 +17,28 @@ try {
         throw new Exception('Невозможно проверить наличие новой версии.');
     }
 
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $wbtApi->releaseApi,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_CONNECTTIMEOUT => 40,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_TIMEOUT        => 40,
-        CURLOPT_USERAGENT      => 'web-TLO',
-    ]);
-    $response = curl_exec($ch);
-    if ($response === false) {
-        Log::append('CURL ошибка: ' . curl_error($ch));
+    try {
+        $client   = new GuzzleHttp\Client();
+        $response = $client->get($wbtApi->releaseApi, [
+            'timeout'         => 40,
+            'connect_timeout' => 40,
+        ]);
+    } catch (GuzzleException $e) {
+        Log::append('CURL ошибка: ' . $e->getMessage());
         throw new Exception('Невозможно связаться с api.github.com');
     }
-    $responseHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    $infoFromGitHub = $responseHttpCode == 200 ? json_decode($response, true) : false;
 
-    if (empty($infoFromGitHub)) {
+    $latestRelease = json_decode($response->getBody()->getContents(), true);
+
+    if (empty($latestRelease)) {
         throw new Exception('Не удалось получить актуальную версию с GitHub');
     }
 
-    $link = getReleaseLink($wbtApi->installation, $infoFromGitHub);
+    $link = getReleaseLink($wbtApi->installation, $latestRelease);
 
-    $result['newVersionNumber'] = $infoFromGitHub['name'];
+    $result['newVersionNumber'] = $latestRelease['name'];
     $result['newVersionLink']   = $link;
-    $result['whatsNew']         = getReleaseDescription((string)$infoFromGitHub['body']);
+    $result['whatsNew']         = getReleaseDescription((string)$latestRelease['body']);
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }
@@ -48,12 +46,17 @@ $result['log'] = Log::get();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
 
-function getReleaseLink(string $install, array $github): string
+/**
+ * @param string               $install
+ * @param array<string, mixed> $release
+ * @return string
+ */
+function getReleaseLink(string $install, array $release): string
 {
     // По-умолчанию ссылка на релиз.
-    $link = $github['html_url'];
+    $link = $release['html_url'];
 
-    $assets = $github['assets'] ?? [];
+    $assets = $release['assets'] ?? [];
     // Пробуем найти ссылку на конкретный zip.
     if (count($assets)) {
         if ('standalone' === $install) {
