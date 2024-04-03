@@ -18,6 +18,10 @@ final class ApiError
         return new ApiError(code: $code, text: 'Network error');
     }
 
+    /**
+     * @param ?array<string, mixed> $legacyError
+     * @return ApiError
+     */
     public static function fromLegacyError(?array $legacyError): ApiError
     {
         $error = $legacyError ?? [];

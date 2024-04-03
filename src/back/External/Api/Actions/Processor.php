@@ -65,7 +65,9 @@ trait Processor
         }
 
         if (array_key_exists('error', $result) || !array_key_exists('result', $result)) {
-            return ApiError::fromLegacyError(legacyError: $result['error']);
+            $logger->warning('Invalid result', ['json' => $rawResponse]);
+
+            return ApiError::fromLegacyError(legacyError: $result['error'] ?? null);
         } else {
             return $result;
         }

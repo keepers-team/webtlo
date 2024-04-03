@@ -21,7 +21,11 @@ trait TopicsDetails
     use Processor;
 
     /**
-     * @param string[] $topics
+     * Получить сведения о раздачах по списку ид/хешей.
+     *
+     * @param (int|string)[]  $topics
+     * @param TopicSearchMode $searchMode
+     * @return ApiError|TopicsDetailsResponse
      */
     public function getTopicsDetails(
         array           $topics,
@@ -45,7 +49,7 @@ trait TopicsDetails
             foreach ($optionsChunks as $chunk) {
                 yield function(array $options) use (&$client, &$chunk) {
                     return $client->getAsync(
-                        uri:     'get_tor_topic_data',
+                        uri    : 'get_tor_topic_data',
                         options: ['query' => ['val' => implode(',', $chunk), ...$options]]
                     );
                 };
@@ -61,9 +65,9 @@ trait TopicsDetails
         ];
 
         $pool = new Pool(
-            client:   $client,
+            client  : $client,
             requests: $requests(array_chunk($topics, $requestLimit)),
-            config:   $requestConfig,
+            config  : $requestConfig,
         );
 
         try {
@@ -75,6 +79,12 @@ trait TopicsDetails
         }
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @param TopicDetails[]  $knownTopics
+     * @param int[]           $missingTopics
+     * @return callable
+     */
     private static function getTopicDetailsProcessor(
         LoggerInterface $logger,
         array           &$knownTopics,
@@ -103,20 +113,25 @@ trait TopicsDetails
         };
     }
 
+    /**
+     * @param int                       $topicId
+     * @param array<string, int|string> $payload
+     * @return TopicDetails
+     */
     private static function parseDynamicTopicDetails(int $topicId, array $payload): TopicDetails
     {
         return new TopicDetails(
-            id:         $topicId,
-            hash:       $payload['info_hash'],
-            forumId:    $payload['forum_id'],
-            poster:     $payload['poster_id'],
-            size:       (int)$payload['size'],
+            id        : $topicId,
+            hash      : $payload['info_hash'],
+            forumId   : $payload['forum_id'],
+            poster    : $payload['poster_id'],
+            size      : (int)$payload['size'],
             registered: self::dateTimeFromTimestamp($payload['reg_time']),
-            status:     TorrentStatus::from($payload['tor_status']),
-            seeders:    $payload['seeders'],
-            title:      $payload['topic_title'],
+            status    : TorrentStatus::from($payload['tor_status']),
+            seeders   : $payload['seeders'],
+            title     : $payload['topic_title'],
             lastSeeded: self::dateTimeFromTimestamp($payload['seeder_last_seen']),
-            downloads:  $payload['dl_count']
+            downloads : $payload['dl_count']
         );
     }
 }

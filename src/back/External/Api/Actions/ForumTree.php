@@ -32,8 +32,12 @@ trait ForumTree
         } catch (GuzzleException $error) {
             $code = $error->getCode();
 
+            $this->logger->warning('ForumTree. Ошибка получения данных', [$error->getMessage()]);
+
             return ApiError::fromHttpCode($code);
-        } catch (Throwable) {
+        } catch (Throwable $error) {
+            $this->logger->warning('ForumTree. Неизвестная ошибка получения данных', [$error->getMessage()]);
+
             // Just in case
             return ApiError::fromLegacyError(legacyError: null);
         }
@@ -61,6 +65,11 @@ trait ForumTree
         };
     }
 
+    /**
+     * @param array<string, mixed> $trees
+     * @param array<string, mixed> $sizes
+     * @return ForumsResponse
+     */
     private static function parseStaticForumTree(array $trees, array $sizes): ForumsResponse
     {
         $updateTime = self::dateTimeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
@@ -74,31 +83,38 @@ trait ForumTree
         /** @var string[] $forumNames */
         $forumNames = $trees['result']['f'];
 
+        $hierarchyProcessor = function(int $forumId, array $parts) use (&$forums, $forumNames, $sizes): array {
+            $parts[] = $forumNames[$forumId];
+
+            if (isset($sizes['result'][$forumId])) {
+                [$count, $size] = $sizes['result'][$forumId];
+
+                $forums[] = new ForumDetails(
+                    id   : $forumId,
+                    name : implode(' » ', $parts),
+                    count: $count,
+                    size : $size
+                );
+            }
+
+            return $parts;
+        };
+
         foreach ($categoriesHierarchy as $categoryId => $forumsHierarchy) {
             $categoryName = $categoryNames[$categoryId];
 
             foreach ($forumsHierarchy as $forumId => $subForumsHierarchy) {
-                $forumName = $forumNames[$forumId];
+                $nameParts = $hierarchyProcessor($forumId, [$categoryName]);
 
                 foreach ($subForumsHierarchy as $subForumId) {
-                    if (isset($sizes['result'][$subForumId])) {
-                        [$count, $size] = $sizes['result'][$subForumId];
-                        $subForumName = $forumNames[$subForumId];
-
-                        $forums[] = new ForumDetails(
-                            id:    $subForumId,
-                            name:  sprintf('%s » %s » %s', $categoryName, $forumName, $subForumName),
-                            count: $count,
-                            size:  $size
-                        );
-                    }
+                    $hierarchyProcessor($subForumId, $nameParts);
                 }
             }
         }
 
         return new ForumsResponse(
             updateTime: $updateTime,
-            forums:     $forums
+            forums    : $forums
         );
     }
 }

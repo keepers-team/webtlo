@@ -19,8 +19,17 @@ trait TopicsPeers
 {
     use Processor;
 
-    public function getPeerStats(array $topics, TopicSearchMode $searchMode = TopicSearchMode::HASH): ApiError|TopicsPeersResponse
-    {
+    /**
+     * Получить данные о пирах раздач по списку ид/хешей.
+     *
+     * @param (int|string)[]  $topics
+     * @param TopicSearchMode $searchMode
+     * @return ApiError|TopicsPeersResponse
+     */
+    public function getPeerStats(
+        array           $topics,
+        TopicSearchMode $searchMode = TopicSearchMode::HASH
+    ): ApiError|TopicsPeersResponse {
         /** @var int[] $missingTopics */
         $missingTopics = [];
         /** @var TopicPeers[] $knownPeers */
@@ -39,7 +48,7 @@ trait TopicsPeers
             foreach ($optionsChunks as $chunk) {
                 yield function(array $options) use (&$client, &$chunk) {
                     return $client->getAsync(
-                        uri:     'get_peer_stats',
+                        uri    : 'get_peer_stats',
                         options: ['query' => ['val' => implode(',', $chunk), ...$options]]
                     );
                 };
@@ -55,9 +64,9 @@ trait TopicsPeers
         ];
 
         $pool = new Pool(
-            client:   $client,
+            client  : $client,
             requests: $requests(array_chunk($topics, $requestLimit)),
-            config:   $requestConfig,
+            config  : $requestConfig,
         );
 
         try {
@@ -69,6 +78,12 @@ trait TopicsPeers
         }
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @param TopicPeers[]    $knownPeers
+     * @param (int|string)[]  $missingTopics
+     * @return callable
+     */
     private static function getDynamicPeerProcessor(
         LoggerInterface $logger,
         array           &$knownPeers,
@@ -96,14 +111,19 @@ trait TopicsPeers
         };
     }
 
+    /**
+     * @param int|string        $identifier
+     * @param array<int, mixed> $payload
+     * @return TopicPeers
+     */
     private static function parseDynamicPeer(int|string $identifier, array $payload): TopicPeers
     {
         return new TopicPeers(
             identifier: $identifier,
-            seeders:    $payload[0],
-            leechers:   $payload[1],
+            seeders   : $payload[0],
+            leechers  : $payload[1],
             lastSeeded: self::dateTimeFromTimestamp($payload[2]),
-            keepers:    $payload[3] ?? null,
+            keepers   : $payload[3] ?? null,
         );
     }
 }

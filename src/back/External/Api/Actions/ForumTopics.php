@@ -17,6 +17,9 @@ trait ForumTopics
 {
     use Processor;
 
+    /**
+     * Получить список раздач подраздела.
+     */
     public function getForumTopicsData(int $forumId): ForumTopicsResponse|ApiError
     {
         $dataProcessor = self::getForumTopicsProcessor($this->logger, $forumId);
@@ -51,25 +54,31 @@ trait ForumTopics
 
             return new ForumTopicsResponse(
                 updateTime: self::dateTimeFromTimestamp($result['update_time']),
-                totalSize:  $result['total_size_bytes'],
-                topics:     $topics
+                totalSize : $result['total_size_bytes'],
+                topics    : $topics
             );
         };
     }
 
+    /**
+     * @param int                  $forumId
+     * @param int                  $topicId
+     * @param array<string, mixed> $payload
+     * @return ForumTopic
+     */
     private static function parseStaticForumTopics(int $forumId, int $topicId, array $payload): ForumTopic
     {
         return new ForumTopic(
-            id:         $topicId,
-            hash:       $payload['info_hash'],
-            status:     TorrentStatus::from($payload['tor_status']),
-            forumId:    $forumId,
+            id        : $topicId,
+            hash      : $payload['info_hash'],
+            status    : TorrentStatus::from($payload['tor_status']),
+            forumId   : $forumId,
             registered: self::dateTimeFromTimestamp($payload['reg_time']),
-            priority:   KeepingPriority::from($payload['keeping_priority']),
-            size:       (int)$payload['tor_size_bytes'],
-            poster:     $payload['topic_poster'],
-            seeders:    $payload['seeders'],
-            keepers:    $payload['keepers'],
+            priority  : KeepingPriority::from($payload['keeping_priority']),
+            size      : (int)$payload['tor_size_bytes'],
+            poster    : $payload['topic_poster'],
+            seeders   : $payload['seeders'],
+            keepers   : $payload['keepers'],
             lastSeeded: self::dateTimeFromTimestamp($payload['seeder_last_seen']),
         );
     }

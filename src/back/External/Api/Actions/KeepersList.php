@@ -42,6 +42,10 @@ trait KeepersList
         };
     }
 
+    /**
+     * @param array<string, mixed> $result
+     * @return KeepersResponse
+     */
     private static function parseStaticKeepersList(array $result): KeepersResponse
     {
         $format = array_flip($result['format']['user_id']);
@@ -49,15 +53,15 @@ trait KeepersList
         $keepers = [];
         foreach ($result['result'] as $keeperId => $keeper) {
             $keepers[] = new KeeperData(
-                keeperId:    $keeperId,
-                keeperName:  $keeper[$format['username']],
+                keeperId   : $keeperId,
+                keeperName : $keeper[$format['username']],
                 isCandidate: (bool)$keeper[$format['is_candidate']],
             );
         }
 
         return new KeepersResponse(
             updateTime: self::dateTimeFromTimestamp($result['update_time']),
-            keepers:    $keepers
+            keepers   : $keepers
         );
     }
 }

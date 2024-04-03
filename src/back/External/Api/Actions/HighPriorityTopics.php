@@ -16,6 +16,9 @@ trait HighPriorityTopics
 {
     use Processor;
 
+    /**
+     * Получить список раздач, с высоким приоритетом.
+     */
     public function getTopicsHighPriority(): HighPriorityTopicsResponse|ApiError
     {
         $dataProcessor = self::getHighPriorityTopicProcessor($this->logger);
@@ -48,21 +51,26 @@ trait HighPriorityTopics
 
             return new HighPriorityTopicsResponse(
                 updateTime: self::dateTimeFromTimestamp($result['update_time']),
-                totalSize:  array_sum(array_column($topics, 'size')),
-                topics:     $topics,
+                totalSize : array_sum(array_column($topics, 'size')),
+                topics    : $topics,
             );
         };
     }
 
+    /**
+     * @param string                    $topicId
+     * @param array<string, int|string> $payload
+     * @return HighPriorityTopic
+     */
     private static function parseStaticHighPriorityTopic(string $topicId, array $payload): HighPriorityTopic
     {
         return new HighPriorityTopic(
-            id:         (int)$topicId,
-            status:     TorrentStatus::from($payload['tor_status']),
-            seeders:    $payload['seeders'],
-            registered: self::dateTimeFromTimestamp($payload['reg_time']),
-            size:       $payload['tor_size_bytes'],
-            forumId:    $payload['forum_id']
+            id        : (int)$topicId,
+            status    : TorrentStatus::from((int)$payload['tor_status']),
+            seeders   : (int)$payload['seeders'],
+            registered: self::dateTimeFromTimestamp((int)$payload['reg_time']),
+            size      : (int)$payload['tor_size_bytes'],
+            forumId   : (int)$payload['forum_id']
         );
     }
 }
