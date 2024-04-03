@@ -1,54 +1,93 @@
 <?php
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Forum\AccessCheck;
 use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Tables\KeepersLists;
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\Update\KeepersReports;
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 
-App::init();
+$app = AppContainer::create('keepers.log');
+$log = $app->getLogger();
 
 Timers::start('update_keepers');
 
-// получение настроек
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
+// Получение настроек.
+$cfg = $app->getLegacyConfig();
 
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
     if ($checkEnabledCronAction == 0) {
-        throw new Exception('Notice: Автоматическое обновление списков других хранителей отключено в настройках.');
+        $log->notice('KeepersLists. Автоматическое обновление списков других хранителей отключено в настройках.');
+
+        return;
     }
+}
+
+// Список ид хранимых подразделов.
+$keptForums = array_keys($cfg['subsections'] ?? []);
+
+// Отправляем ли отчёты на форум.
+$sendForumReport = (bool)($cfg['reports']['send_report_forum'] ?? true);
+$forceReadForums = false;
+
+// TODO Убрать, когда откажемся от отчётов на форуме.
+// Если включена отправка отчётов на форум, то нужно иметь данные о своих постах на этом форуме.
+if ($sendForumReport) {
+    $countForumOptions = Db::select_count('ForumsOptions');
+
+    // Если количество хранимых подразделов не совпадает с количеством сканированных подразделов - нужно сканировать.
+    if ($countForumOptions !== count($keptForums)) {
+        $forceReadForums = true;
+    }
+}
+
+$keepersUpdatedByApi = false;
+// Тут решаем, обновляем отчёты через API или сканируем форум.
+if (!empty($cfg['reports']['keepers_load_api'])) {
+    /** @var KeepersReports $keepersReports */
+    $keepersReports = $app->get(KeepersReports::class);
+
+    $keepersUpdatedByApi = $keepersReports->update($cfg);
+    if ($keepersUpdatedByApi) {
+        LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
+    }
+}
+
+if (!$forceReadForums && $keepersUpdatedByApi) {
+    $log->debug('KeepersLists. Списки получены из API. Сканирование форума не требуется.');
+
+    return;
 }
 
 $user = ConfigValidate::checkUser($cfg);
 
-Log::append('Info: Начато обновление списков раздач хранителей...');
+$log->info('Начато сканирование списков раздач хранителей...');
 
 // Параметры таблиц.
 $tabForumsOptions = CloneTable::create('ForumsOptions', [], 'forum_id');
-$tabKeepersList   = CloneTable::create(
-    'KeepersLists',
-    ['topic_id', 'keeper_id', 'keeper_name', 'posted', 'complete'],
-    'topic_id'
-);
 
-// Список ид хранимых подразделов.
-$keptForums = array_keys($cfg['subsections'] ?? []);
-$forumKeys  = KeysObject::create($keptForums);
+/** @var KeepersLists $tableKeepers */
+$tableKeepers = $app->get(KeepersLists::class);
 
-// Удалим данные о нехранимых более подразделах.
-Db::query_database("DELETE FROM $tabForumsOptions->origin WHERE $tabForumsOptions->primary NOT IN ($forumKeys->keys)", $forumKeys->values);
+if (!$keepersUpdatedByApi) {
+    $forumKeys = KeysObject::create($keptForums);
+
+    // Удалим данные о нехранимых более подразделах.
+    Db::query_database(
+        "DELETE FROM $tabForumsOptions->origin WHERE $tabForumsOptions->primary NOT IN ($forumKeys->keys)",
+        $forumKeys->values
+    );
+}
 
 
 // Список ид обновлений подразделов.
@@ -58,14 +97,16 @@ $updateStatus->checkMarkersLess(7200);
 
 // Если количество маркеров не совпадает, обнулим имеющиеся.
 if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
-    Db::query_database("DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000");
+    $tableKeepers->clearLists();
 }
+
 // Проверим минимальную дату обновления данных других хранителей.
-if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
-    Log::append(sprintf(
-        'Notice: Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
+if (!$forceReadForums && $updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
+    $log->notice(sprintf(
+        'Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
         date("d.m.y H:i", $updateStatus->getLastCheckUpdateTime())
     ));
+
     return;
 }
 
@@ -81,7 +122,8 @@ if (!isset($reports)) {
 
 if ($unavailable = $reports->check_access()) {
     if (in_array($unavailable, [AccessCheck::NOT_AUTHORIZED, AccessCheck::USER_CANDIDATE])) {
-        Log::append($unavailable->value);
+        $log->info($unavailable->value);
+
         return;
     }
 }
@@ -89,15 +131,15 @@ if ($unavailable = $reports->check_access()) {
 $forumsScanned = 0;
 $keeperIds     = [];
 $forumsParams  = [];
-if (isset($cfg['subsections'])) {
+if (!empty($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
         // ид темы со списками хранителей.
         $forum_topic_id = $reports->search_topic_id($subsection['na']);
 
         if (empty($forum_topic_id)) {
-            Log::append(sprintf(
-                'Error: Не удалось найти тему со списками для подраздела № %d (%s).',
+            $log->error(sprintf(
+                'Не удалось найти тему со списками для подраздела № %d (%s).',
                 $forum_id,
                 $subsection['na']
             ));
@@ -121,24 +163,30 @@ if (isset($cfg['subsections'])) {
                 }
                 $keeperIds[] = $keeper['user_id'];
 
-                $preparedTopics = [];
-                foreach ($keeper['topics_ids'] as $complete => $keeperTopicsIDs) {
-                    foreach ($keeperTopicsIDs as $topic_id) {
-                        $preparedTopics[] = array_combine($tabKeepersList->keys, [
-                            $topic_id,
-                            $keeper['user_id'],
-                            $keeper['nickname'],
-                            $keeper['posted'],
-                            $complete,
-                        ]);
+                // Если уже обновили списки через API, то нет смысла записывать их ещё раз.
+                if (!$keepersUpdatedByApi) {
+                    foreach ($keeper['topics_ids'] as $complete => $keeperTopicsIDs) {
+                        foreach ($keeperTopicsIDs as $topic_id) {
+                            $tableKeepers->addKeptTopic(
+                                (int)$topic_id,
+                                (int)$keeper['user_id'],
+                                $keeper['nickname'],
+                                (int)$keeper['posted'],
+                                (int)$complete,
+                            );
 
-                        unset($topic_id);
+                            unset($topic_id);
+                        }
+                        unset($complete, $keeperTopicsIDs);
                     }
-                    unset($complete, $keeperTopicsIDs);
-                }
-                $tabKeepersList->cloneFillChunk($preparedTopics, 200);
 
-                unset($keeper, $preparedTopics);
+                    $tableKeepers->fillTempTable();
+                }
+                unset($keeper);
+            }
+
+            if (!$keepersUpdatedByApi) {
+                LastUpdate::setTime(100000 + $forum_id);
             }
 
             // Сохраним данных о своих постах в теме по подразделу.
@@ -151,7 +199,6 @@ if (isset($cfg['subsections'])) {
                 'post_ids'       => json_encode($userPosts),
             ];
 
-            LastUpdate::setTime(100000 + $forum_id);
             unset($keepers);
         }
     }
@@ -162,32 +209,12 @@ if (count($forumsParams)) {
     $tabForumsOptions->cloneFillChunk($forumsParams, 200);
     // Переносим данные из временной таблицы в основную.
     $tabForumsOptions->moveToOrigin();
+    $tabForumsOptions->clearUnusedRows();
 
     LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
 }
 
-// записываем изменения в локальную базу
-$count_kept_topics = $tabKeepersList->cloneCount();
-if ($count_kept_topics > 0) {
-    Log::append(sprintf(
-        'Просканировано подразделов: %d шт, хранителей: %d, хранимых раздач: %d шт.',
-        $forumsScanned,
-        count(array_unique($keeperIds)),
-        $count_kept_topics
-    ));
-    Log::append('Запись в базу данных списков раздач хранителей...');
+// Записываем данные о хранимых раздачах в основную таблицу БД.
+$tableKeepers->moveToOrigin($forumsScanned, count(array_unique($keeperIds)));
 
-    // Переносим данные из временной таблицы в основную.
-    $tabKeepersList->moveToOrigin();
-
-    // Удаляем неактуальные записи списков.
-    Db::query_database(
-        "DELETE FROM $tabKeepersList->origin WHERE topic_id || keeper_id NOT IN (
-            SELECT upd.topic_id || upd.keeper_id
-            FROM $tabKeepersList->clone AS tmp
-            LEFT JOIN $tabKeepersList->origin AS upd ON tmp.topic_id = upd.topic_id AND tmp.keeper_id = upd.keeper_id
-            WHERE upd.topic_id IS NOT NULL
-        )"
-    );
-}
-Log::append('Info: Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
+$log->info('KeepersLists. Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers'));
