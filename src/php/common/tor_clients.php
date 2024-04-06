@@ -83,17 +83,16 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     Timers::start("update_client_$torrentClientID");
     $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
 
-    // Подключаемся к торрент-клиенту.
-    $client = $clientFactory->fromConfigProperties($torrentClientData);
-
     // Признак исключения раздач клиента из формируемых отчётов.
     if ($torrentClientData['exclude'] ?? false) {
         $excludedClients[] = $torrentClientID;
     }
 
-    // Проверяем доступность торрент-клиента.
-    if (!$client->isOnline()) {
-        $logger->notice("Клиент $clientTag в данный момент недоступен");
+    try {
+        // Подключаемся к торрент-клиенту.
+        $client = $clientFactory->fromConfigProperties($torrentClientData);
+    } catch (RuntimeException $e) {
+        $logger->notice("Клиент $clientTag в данный момент недоступен", [$e->getMessage()]);
         $failedClients[] = $torrentClientID;
 
         continue;
