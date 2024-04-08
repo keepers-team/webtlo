@@ -677,7 +677,7 @@ function cfg_checkbox($cfg): Closure
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
-                                    <input name="proxy_activate_forum" class="check_access_forum" type="checkbox"
+                                    <input id="proxy_activate_forum" name="proxy_activate_forum" class="check_access_forum" type="checkbox"
                                            size="24" <?= $proxy_activate_forum ?? '' ?> />
                                     Через прокси
                                 </label>
@@ -696,7 +696,7 @@ function cfg_checkbox($cfg): Closure
                                     HTTPS
                                 </label>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-                                    <input name="proxy_activate_api" class="check_access_api" type="checkbox"
+                                    <input id="proxy_activate_api" name="proxy_activate_api" class="check_access_api" type="checkbox"
                                            size="24" <?= $proxy_activate_api ?? '' ?> />
                                     Через прокси
                                 </label>

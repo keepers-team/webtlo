@@ -1,113 +1,63 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\Legacy\Proxy;
+use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\External\CheckMirrorAccess;
+use KeepersTeam\Webtlo\Legacy\Log;
 
-// проверяемый url
-if (isset($_POST['url'])) {
-    $url = $_POST['url'];
-}
+// Получаем контейнер.
+$app = AppContainer::create();
+$log = $app->getLogger();
 
-// свой проверяемый url
-if (isset($_POST['url_custom'])) {
-    $url_custom = $_POST['url_custom'];
-}
-
-// тип url
-if (isset($_POST['url_type'])) {
-    $url_type = $_POST['url_type'];
-}
-
-if (
-    empty($url)
-    || empty($url_type)
-) {
-    return false;
-}
-
-if ($url == 'custom') {
-    if (empty($url_custom)) {
-        return false;
+$result = false;
+try {
+    // Получаем настройки.
+    if (isset($_POST['cfg'])) {
+        parse_str($_POST['cfg'], $cfg);
     }
-    $url = $url_custom;
-}
 
-if (!isset($_POST['ssl'])) {
-    $schema = 'http';
-} else {
-    if ($_POST['ssl'] === "true") {
-        $schema = 'https';
-    } else {
-        $schema = 'http';
+    // Нет конфига - нет проверки.
+    if (empty($cfg)) {
+        throw new Exception('Пустой конфиг');
     }
-}
-$address = $schema . '://' . basename($url);
 
-// парсим настройки
-if (isset($_POST['cfg'])) {
-    parse_str($_POST['cfg'], $cfg);
-}
-// Нет конфига - нет проверки.
-if (empty($cfg)) {
-    return '0';
-}
+    // Проверяемый url.
+    $url = $_POST['url'] ?? null;
 
-// параметры прокси
-$activate_forum = isset($cfg['proxy_activate_forum']) ? 1 : 0;
-$activate_api = isset($cfg['proxy_activate_api']) ? 1 : 0;
-$proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
-$proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+    // Свой проверяемый url.
+    $url_custom = $_POST['url_custom'] ?? null;
 
-// устанавливаем прокси
-Proxy::options(
-    (bool)$activate_forum,
-    (bool)$activate_api,
-    $cfg['proxy_type'],
-    $proxy_address,
-    $proxy_auth
-);
-
-$ch = curl_init();
-
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_SSL_VERIFYHOST => 2,
-    CURLOPT_HEADER => true,
-    CURLOPT_NOBODY => true,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS => 2,
-    CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-    CURLOPT_CONNECTTIMEOUT => 5,
-    CURLOPT_TIMEOUT => 5,
-    CURLOPT_URL => $address,
-]);
-
-curl_setopt_array($ch, Proxy::$proxy[$url_type]);
-
-// номер попытки
-$try_number = 1;
-
-// выполняем запрос
-while (true) {
-    $data = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if (
-        $try_number <= 3
-        && (
-            $data === false
-            || $http_code != 200
-        )
-    ) {
-        $try_number++;
-        sleep(1);
-        continue;
+    // Тип url.
+    $url_type = $_POST['url_type'] ?? null;
+    if (empty($url) || empty($url_type)) {
+        throw new Exception('Не удалось определить тип проверки.');
     }
-    break;
+
+    if ($url === 'custom') {
+        if (empty($url_custom)) {
+            throw new Exception('Не удалось определить проверяемый адрес.');
+        }
+        $url = $url_custom;
+    }
+
+    $proxy = null;
+    if ('true' === ($_POST['proxy'] ?? null)) {
+        $proxy = Proxy::fromLegacy($cfg);
+    }
+
+    /** @var CheckMirrorAccess $check */
+    $check = $app->get(CheckMirrorAccess::class);
+
+    $result = $check->checkAddress($url_type, basename($url), $_POST['ssl'] === "true", $proxy);
+} catch (Throwable $e) {
+    $log->error($e->getMessage());
 }
 
-curl_close($ch);
-
-// отправляем ответ
-echo stripos($data, "location: " . $address) === false ? '0' : '1';
+echo json_encode([
+    'result' => $result ? '1' : '0',
+    'log'    => Log::get(),
+], JSON_UNESCAPED_UNICODE);

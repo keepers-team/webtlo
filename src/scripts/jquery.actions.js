@@ -125,33 +125,36 @@ $(document).ready(function () {
     });
 
     // произвольные адреса для форума и api
-    $("#forum_url, #api_url").on("selectmenucreate selectmenuchange", function (event, ui) {
-        var value = $(this).val();
-        var name = $(this).attr("name");
-        if (value == 'custom') {
-            $("#" + name + "_custom").attr("type", "text");
+    $('#forum_url, #api_url, #report_url').on("selectmenucreate selectmenuchange", function() {
+        const value = $(this).val();
+        const name = $(this).attr("name");
+        if (value === 'custom') {
+            $(`#${name}_custom`).attr("type", "text");
         } else {
-            $("#" + name + "_custom").attr("type", "hidden");
+            $(`#${name}_custom`).attr("type", "hidden");
         }
     });
 
     // проверка доступности форума и API
-    $("#check_mirrors_access").on("click", function () {
+    $('#check_mirrors_access').on('click', function () {
         const $data = $("#config").serialize();
-        const check_list = ['forum', 'api'];
+
+        // Проверяемые адреса.
+        const check_list = ['forum', 'api', 'report'];
         const result_list = ['text-danger', 'text-success'];
+
         let forumButtons = $('#forum_auth, #check_mirrors_access').toggleDisable(true);
         let check_count = check_list.length;
 
         $.each(check_list, function (index, value) {
-            let element = "#" + value + "_url";
+            let element = `#${value}_url`;
             let url = $(element).val();
-            let url_custom = $(element + "_custom").val();
-            let ssl = $("#" + value + "_ssl").is(":checked");
+
+            let elemParam = $(`${element}_params i`);
 
             let lockElems = $(`.check_access_${value}`)
                 .add(element)
-                .add(element + "_custom")
+                .add(`${element}_custom`)
                 .toggleDisable(true);
 
             if (typeof url === "undefined" || $.isEmptyObject(url)) {
@@ -160,32 +163,39 @@ $(document).ready(function () {
                     forumButtons.toggleDisable(false);
                 }
 
-                $(element + "_params i").removeAttr("class");
+                elemParam.removeAttr('class');
                 lockElems.toggleDisable(false);
                 return true;
             }
+
             $.ajax({
-                type: "POST",
-                url: "php/actions/check_mirror_access.php",
+                type: 'POST',
+                url: 'php/actions/check_mirror_access.php',
                 data: {
-                    cfg: $data,
-                    url: url,
-                    url_custom: url_custom,
-                    ssl: ssl,
-                    url_type: value
+                    url_type  : value,
+                    cfg       : $data,
+                    url       : url,
+                    url_custom: $(`${element}_custom`).val(),
+                    ssl       : $(`#${value}_ssl`).is(':checked'),
+                    proxy     : $(`#proxy_activate_${value}`).is(':checked')
                 },
                 success: function (response) {
-                    $(element + "_params i").removeAttr("class");
-                    lockElems.toggleDisable(false);
+                    response = $.parseJSON(response);
 
-                    const result = result_list[response];
-                    if (typeof result !== "undefined") {
-                        $(element + "_params i").addClass("fa fa-circle " + result);
+                    lockElems.toggleDisable(false);
+                    elemParam.removeAttr('class');
+
+                    const result = result_list[response.result];
+                    if (typeof result !== 'undefined') {
+                        elemParam.addClass(`fa fa-circle ${result}`);
+                    }
+
+                    if (response.log) {
+                        $('#log').append(response.log);
                     }
                 },
                 beforeSend: function () {
-                    $(element + "_params i").removeAttr("class");
-                    $(element + "_params i").addClass("fa fa-spinner fa-spin");
+                    elemParam.removeAttr('class').addClass('fa fa-spinner fa-spin');
                 },
                 complete: function () {
                     check_count--;
@@ -203,6 +213,10 @@ $(document).ready(function () {
 
     $("#api_url_params").on("change", function () {
         $("#api_url_result").removeAttr("class");
+    });
+
+    $("#report_url_params").on("change", function () {
+        $("#report_url_result").removeAttr("class");
     });
 
     // получение bt_key, api_key, user_id
@@ -301,16 +315,17 @@ $(document).ready(function () {
         });
     });
 
-    $("#forum_auth_params, #api_auth_params").on("input", function () {
-        $("#forum_auth_result").removeAttr("class");
-    });
-
-    $("#forum_auth_params, #api_auth_params").on("keypress", function () {
-        let disabled = $("#forum_auth").prop("disabled");
-        if (disabled !== false) {
-            return false;
-        }
-    });
+    // Данные для авторизации.
+    $('#forum_auth_params, #api_auth_params')
+        .on('input', function() {
+            $('#forum_auth_result').removeAttr('class');
+        })
+        .on('keypress', function() {
+            let disabled = $('#forum_auth').prop('disabled');
+            if (disabled !== false) {
+                return false;
+            }
+        });
 
 
     // проверка закрывающего слеша
