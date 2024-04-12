@@ -18,6 +18,7 @@ final class TorrentClientOptions
         public readonly bool       $secure = false,
         public readonly ?BasicAuth $credentials = null,
         public readonly Timeout    $timeout = new Timeout(),
+        /** @var array<string ,mixed> $extra */
         public readonly array      $extra = [],
     ) {
     }
@@ -52,6 +53,9 @@ final class TorrentClientOptions
 
     /**
      * Параметры клиента из данных в конфиге.
+     *
+     * @param array<string, mixed> $options
+     * @return TorrentClientOptions
      */
     public static function fromConfigProperties(array $options): self
     {
@@ -60,17 +64,26 @@ final class TorrentClientOptions
             $auth = new BasicAuth((string)$options['lg'], (string)$options['pw']);
         }
 
+        $timeout = new Timeout(
+            (int)($options['request_timeout'] ?? Defaults::timeout),
+            (int)($options['connect_timeout'] ?? Defaults::timeout),
+        );
+
         return new self(
             ClientType::from((string)$options['cl']),
             (string)$options['ht'],
             (int)$options['pt'],
             (bool)$options['ssl'],
-            $auth
+            $auth,
+            $timeout
         );
     }
 
     /**
      * Параметры клиента из данных в конфиге.
+     *
+     * @param array<string, mixed> $options
+     * @return TorrentClientOptions
      */
     public static function fromFrontProperties(array $options): self
     {

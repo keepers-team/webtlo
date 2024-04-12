@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use Exception;
+use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Legacy\Proxy;
@@ -27,19 +28,30 @@ final class Settings
 
         $config['clients'] = [];
         for ($i = 1; $i <= $qt; $i++) {
-            $id = $ini->read("torrent-client-$i", "id", $i);
-            $cm = $ini->read("torrent-client-$i", "comment");
+            $sectionName = "torrent-client-$i";
 
-            $config['clients'][$id]['cm']  = $cm != "" ? $cm : $id;
-            $config['clients'][$id]['cl']  = $ini->read("torrent-client-$i", "client", "utorrent");
-            $config['clients'][$id]['ht']  = $ini->read("torrent-client-$i", "hostname");
-            $config['clients'][$id]['pt']  = $ini->read("torrent-client-$i", "port");
-            $config['clients'][$id]['lg']  = $ini->read("torrent-client-$i", "login");
-            $config['clients'][$id]['pw']  = $ini->read("torrent-client-$i", "password");
-            $config['clients'][$id]['ssl'] = $ini->read("torrent-client-$i", "ssl", 0);
+            $id = $ini->read($sectionName, 'id', $i);
+            $cm = $ini->read($sectionName, 'comment');
 
-            $config['clients'][$id]['control_peers'] = $ini->read("torrent-client-$i", "control_peers");
-            $config['clients'][$id]['exclude']       = $ini->read("torrent-client-$i", "exclude", 0);
+            $torrentClient = [];
+
+            $torrentClient['cm']  = $cm ?: $id;
+            $torrentClient['cl']  = $ini->read($sectionName, 'client', 'utorrent');
+            $torrentClient['ht']  = $ini->read($sectionName, 'hostname');
+            $torrentClient['pt']  = $ini->read($sectionName, 'port');
+            $torrentClient['lg']  = $ini->read($sectionName, 'login');
+            $torrentClient['pw']  = $ini->read($sectionName, 'password');
+            $torrentClient['ssl'] = $ini->read($sectionName, 'ssl', 0);
+
+            $torrentClient['control_peers'] = $ini->read($sectionName, 'control_peers');
+            $torrentClient['exclude']       = $ini->read($sectionName, 'exclude', 0);
+
+            $torrentClient['request_timeout'] = $ini->read($sectionName, 'request_timeout', Defaults::timeout);
+            $torrentClient['connect_timeout'] = $ini->read($sectionName, 'connect_timeout', Defaults::timeout);
+
+            $config['clients'][$id] = $torrentClient;
+
+            unset($id, $cm, $torrentClient);
         }
 
         // Сортируем торрент-клиенты по введённому названию.
@@ -397,9 +409,11 @@ final class Settings
                 }
             }
         }
+
+        // Количество добавленных торрент-клиентов.
         $ini->write('other', 'qt', $torrentClientNumber);
 
-        return $excludeClientsIDs; // кол-во торрент-клиентов
+        return $excludeClientsIDs;
     }
 
     private function setSubsections(array $forums = []): array
