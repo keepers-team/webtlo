@@ -1,0 +1,14 @@
+#!/bin/bash
+
+user="${WEBTLO_UID:=1000}"
+group="${WEBTLO_GID:=1000}"
+account="$user:$group"
+
+uid=$(s6-envuidgid -nB $account importas UID UID s6-echo '$UID')
+gid=$(s6-envuidgid -nB $account importas GID GID s6-echo '$GID')
+
+s6-chown -u "$uid" -g "$gid" "$WEBTLO_DIR"
+find "$WEBTLO_DIR" -exec s6-chown -u "$uid" -g "$gid" {} \;
+s6-chmod 02755 "$WEBTLO_DIR"
+
+exec sleep $(shuf -i 30-120 -n 1)

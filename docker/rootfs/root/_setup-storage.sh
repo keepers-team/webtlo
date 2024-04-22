@@ -1,7 +1,7 @@
 #!/bin/bash
 
-user="${WEBTLO_UID:=nobody}"
-group="${WEBTLO_GID:=nobody}"
+user="${WEBTLO_UID:=1000}"
+group="${WEBTLO_GID:=1000}"
 account="$user:$group"
 
 echo "Running container with UID=${user}, GID=${group}"
@@ -22,7 +22,3 @@ for name in "${legacy[@]}"; do
     mv "$old" "$new"
   fi
 done
-s6-echo "Fixing permissions inside storage directory to $account"
-s6-chown -u "$uid" -g "$gid" "$WEBTLO_DIR"
-find "$WEBTLO_DIR" -exec s6-chown -u "$uid" -g "$gid" {} \;
-s6-chmod 02755 "$WEBTLO_DIR"
