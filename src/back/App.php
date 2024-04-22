@@ -18,6 +18,9 @@ final class App
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public static function getSettings(string $filename = ''): array
     {
         self::init();

@@ -77,7 +77,7 @@ final class AppContainer
         return self::$appContainer = new self($container);
     }
 
-    public function get(string $id)
+    public function get(string $id): mixed
     {
         try {
             return $this->container->get($id);
@@ -86,6 +86,9 @@ final class AppContainer
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getLegacyConfig(): array
     {
         return $this->get('config');
