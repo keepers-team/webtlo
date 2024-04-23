@@ -35,15 +35,19 @@ if (isset($checkEnabledCronAction)) {
 
 // Список ид хранимых подразделов.
 $keptForums = array_keys($cfg['subsections'] ?? []);
+$forumKeys = KeysObject::create($keptForums);
 
 // Отправляем ли отчёты на форум.
 $sendForumReport = (bool)($cfg['reports']['send_report_forum'] ?? true);
 $forceReadForums = false;
 
 // TODO Убрать, когда откажемся от отчётов на форуме.
-// Если включена отправка отчётов на форум, то нужно иметь данные о своих постах на этом форуме.
+// Если включена отправка отчётов на форум, то нужно иметь данные о своих постах в теме хранимых подразделов.
 if ($sendForumReport) {
-    $countForumOptions = Db::select_count('ForumsOptions');
+    $countForumOptions = Db::query_count(
+        "SELECT COUNT(1) FROM ForumsOptions WHERE forum_id IN ($forumKeys->keys)",
+        $forumKeys->values
+    );
 
     // Если количество хранимых подразделов не совпадает с количеством сканированных подразделов - нужно сканировать.
     if ($countForumOptions !== count($keptForums)) {
@@ -51,8 +55,11 @@ if ($sendForumReport) {
     }
 }
 
+/** Список тем с отчётами на форуме. */
+$reportTopics = null;
+
 $keepersUpdatedByApi = false;
-// Тут решаем, обновляем отчёты через API или сканируем форум.
+// Тут решаем, использовать API отчётов или работать только через форум.
 if (!empty($cfg['reports']['keepers_load_api'])) {
     /** @var KeepersReports $keepersReports */
     $keepersReports = $app->get(KeepersReports::class);
@@ -61,6 +68,8 @@ if (!empty($cfg['reports']['keepers_load_api'])) {
     if ($keepersUpdatedByApi) {
         LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
     }
+
+    $reportTopics = $keepersReports->getReportTopics();
 }
 
 if (!$forceReadForums && $keepersUpdatedByApi) {
@@ -71,7 +80,7 @@ if (!$forceReadForums && $keepersUpdatedByApi) {
 
 $user = ConfigValidate::checkUser($cfg);
 
-$log->info('Начато сканирование списков раздач хранителей...');
+$log->info('Forum. Начато сканирование списков раздач хранителей...');
 
 // Параметры таблиц.
 $tabForumsOptions = CloneTable::create('ForumsOptions', [], 'forum_id');
@@ -80,8 +89,6 @@ $tabForumsOptions = CloneTable::create('ForumsOptions', [], 'forum_id');
 $tableKeepers = $app->get(KeepersLists::class);
 
 if (!$keepersUpdatedByApi) {
-    $forumKeys = KeysObject::create($keptForums);
-
     // Удалим данные о нехранимых более подразделах.
     Db::query_database(
         "DELETE FROM $tabForumsOptions->origin WHERE $tabForumsOptions->primary NOT IN ($forumKeys->keys)",
@@ -103,8 +110,8 @@ if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
 // Проверим минимальную дату обновления данных других хранителей.
 if (!$forceReadForums && $updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
     $log->notice(sprintf(
-        'Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
-        date("d.m.y H:i", $updateStatus->getLastCheckUpdateTime())
+        'Forum. Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
+        date('d.m.y H:i', $updateStatus->getLastCheckUpdateTime())
     ));
 
     return;
@@ -134,11 +141,21 @@ $forumsParams  = [];
 if (!empty($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
-        // ид темы со списками хранителей.
-        $forum_topic_id = $reports->search_topic_id($subsection['na']);
+        // Ищем ид темы со списками в данных полученных из API отчётов (если они есть).
+        if (null !== $reportTopics) {
+            $forumReportTopicId = $reportTopics->getReportTopicId((int)$forum_id);
+            if (null === $forumReportTopicId) {
+                $log->debug('Missing reportForumTopicId', ['forumId' => $forum_id]);
+            }
+        }
 
-        if (empty($forum_topic_id)) {
-            $log->error(sprintf(
+        // Ищем ид темы со списками на форуме.
+        if (empty($forumReportTopicId)) {
+            $forumReportTopicId = $reports->search_topic_id($subsection['na']);
+        }
+
+        if (empty($forumReportTopicId)) {
+            $log->warning(sprintf(
                 'Не удалось найти тему со списками для подраздела № %d (%s).',
                 $forum_id,
                 $subsection['na']
@@ -149,7 +166,7 @@ if (!empty($cfg['subsections'])) {
         }
 
         // Ищем списки хранимого другими хранителями.
-        $keepers = $reports->scanning_viewtopic($forum_topic_id);
+        $keepers = $reports->scanning_viewtopic($forumReportTopicId);
         if (!empty($keepers)) {
             $userPosts = [];
             foreach ($keepers as $keeper) {
@@ -192,7 +209,7 @@ if (!empty($cfg['subsections'])) {
             // Сохраним данных о своих постах в теме по подразделу.
             $forumsParams[$forum_id] = [
                 'forum_id'       => $forum_id,
-                'topic_id'       => $forum_topic_id,
+                'topic_id'       => $forumReportTopicId,
                 'author_id'      => $keepers[0]['user_id'] ?? 0,
                 'author_name'    => $keepers[0]['nickname'] ?? '',
                 'author_post_id' => $keepers[0]['post_id'] ?? 0,

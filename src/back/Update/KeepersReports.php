@@ -7,8 +7,8 @@ namespace KeepersTeam\Webtlo\Update;
 use Exception;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
-use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Tables\KeepersLists;
@@ -33,7 +33,7 @@ final class KeepersReports
      */
     public function update(array $cfg): bool
     {
-        $this->logger->info('Начато обновление списков раздач хранителей...');
+        $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид хранимых подразделов.
         $keptForums = array_keys($cfg['subsections'] ?? []);
@@ -53,7 +53,7 @@ final class KeepersReports
         if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
             $this->logger->notice(
                 sprintf(
-                    'Обновление списков других хранителей и сканирование форума не требуется. Дата последнего выполнения %s',
+                    'ApiReport. Обновление отчётов хранителей не требуется. Дата последнего выполнения %s',
                     date('d.m.y H:i', $updateStatus->getLastCheckUpdateTime())
                 )
             );
@@ -118,10 +118,25 @@ final class KeepersReports
         $this->keepersLists->moveToOrigin($forumsScanned, count(array_unique($keeperIds)));
 
         $this->logger->info(
-            'Обновление списков раздач хранителей завершено за ' . Timers::getExecTime('update_keepers')
+            'ApiReport. Обновление отчётов хранителей завершено за ' . Timers::getExecTime('update_keepers')
         );
 
         return true;
+    }
+
+    public function getReportTopics(): ?ReportForumResponse
+    {
+        $response = $this->apiReport->getForumsReportTopics();
+        if ($response instanceof ApiError) {
+            $this->logger->error(
+                'Не удалось получить список тем с отчётами',
+                ['code' => $response->code, 'text' => $response->text]
+            );
+
+            return null;
+        }
+
+        return $response;
     }
 
     /**
@@ -132,7 +147,8 @@ final class KeepersReports
         $response = $this->apiClient->getKeepersList();
         if ($response instanceof ApiError) {
             $this->logger->error(
-                sprintf('Не получены данные о хранителях (%d: %s).', $response->code, $response->text)
+                'Не получены данные о хранителях',
+                ['code' => $response->code, 'text' => $response->text]
             );
 
             return false;
