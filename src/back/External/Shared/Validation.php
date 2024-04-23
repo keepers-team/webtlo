@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External;
+namespace KeepersTeam\Webtlo\External\Shared;
 
 use GuzzleHttp\Psr7\Header;
 use Psr\Http\Message\ResponseInterface;

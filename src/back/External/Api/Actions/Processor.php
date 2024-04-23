@@ -10,7 +10,7 @@ use GuzzleHttp\Promise\Promise;
 use JsonException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
-use KeepersTeam\Webtlo\External\Validation;
+use KeepersTeam\Webtlo\External\Shared\Validation;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -49,6 +49,11 @@ trait Processor
         };
     }
 
+    /**
+     * @param LoggerInterface   $logger
+     * @param ResponseInterface $response
+     * @return array<int|string, mixed>|ApiError
+     */
     protected static function decodeResponse(LoggerInterface $logger, ResponseInterface $response): array|ApiError
     {
         if (!self::isValidMime($logger, $response, self::$jsonMime)) {
