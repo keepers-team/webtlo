@@ -8,7 +8,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\Credentials;
-use KeepersTeam\Webtlo\External\ApiReport\Actions\KeepersReports;
+use KeepersTeam\Webtlo\External\ApiReport\Actions;
 use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
 use Psr\Log\LoggerInterface;
 
@@ -18,7 +18,9 @@ use Psr\Log\LoggerInterface;
 final class ApiReportClient
 {
     use StaticHelper;
-    use KeepersReports;
+    use Actions\KeepersReports;
+    use Actions\Processor;
+    use Actions\ReportForumTopics;
 
     protected static int $concurrency = 4;
 
