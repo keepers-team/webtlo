@@ -9,7 +9,7 @@ final class TopicsDetailsResponse
 {
     /**
      * @param TopicDetails[] $topics
-     * @param int[]          $missingTopics
+     * @param (int|string)[] $missingTopics
      */
     public function __construct(
         public readonly array $topics,

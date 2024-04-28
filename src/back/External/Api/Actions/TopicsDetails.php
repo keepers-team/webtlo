@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\External\Api\Actions;
 
 use Generator;
 use GuzzleHttp\Pool;
-use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\RejectionException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
@@ -31,15 +30,13 @@ trait TopicsDetails
         array           $topics,
         TopicSearchMode $searchMode = TopicSearchMode::ID
     ): ApiError|TopicsDetailsResponse {
-        /** @var int[] $missingTopics */
-        $missingTopics = [];
         /** @var TopicDetails[] $knownTopics */
         $knownTopics = [];
 
         $client = $this->client;
 
         $chunkErrorHandler = self::getChunkErrorHandler($this->logger);
-        $topicProcessor    = self::getTopicDetailsProcessor($this->logger, $knownTopics, $missingTopics);
+        $topicProcessor    = self::getTopicDetailsProcessor($this->logger, $knownTopics);
 
         /**
          * @param array[][] $optionsChunks
@@ -73,6 +70,16 @@ trait TopicsDetails
         try {
             $pool->promise()->wait();
 
+            $identifiers = array_map(function($el) use ($searchMode) {
+                return match ($searchMode) {
+                    TopicSearchMode::ID   => $el->id,
+                    TopicSearchMode::HASH => $el->hash,
+                };
+            }, $knownTopics);
+
+            /** @var (int|string)[] $missingTopics */
+            $missingTopics = array_values(array_diff($topics, $identifiers));
+
             return new TopicsDetailsResponse(topics: $knownTopics, missingTopics: $missingTopics);
         } catch (RejectionException $rejectionException) {
             return $rejectionException->getReason();
@@ -82,31 +89,26 @@ trait TopicsDetails
     /**
      * @param LoggerInterface $logger
      * @param TopicDetails[]  $knownTopics
-     * @param int[]           $missingTopics
      * @return callable
      */
     private static function getTopicDetailsProcessor(
         LoggerInterface $logger,
         array           &$knownTopics,
-        array           &$missingTopics
     ): callable {
-        return function(ResponseInterface $response, int $index, Promise $aggregatePromise) use (
+        return function(ResponseInterface $response, int $index) use (
             &$logger,
             &$knownTopics,
-            &$missingTopics
         ): void {
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
-                $aggregatePromise->reject($result);
+                $logger->debug('Failed chunk request', ['index' => $index, 'reason' => (array)$result]);
 
                 return;
             }
 
             foreach ($result['result'] as $id => $payload) {
                 $topicId = (int)$id;
-                if (null === $payload) {
-                    $missingTopics[] = $topicId;
-                } else {
+                if (null !== $payload) {
                     $knownTopics[] = self::parseDynamicTopicDetails($topicId, $payload);
                 }
             }

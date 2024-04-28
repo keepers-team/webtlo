@@ -41,4 +41,9 @@ final class ApiError
     {
         return new ApiError(code: -3, text: 'Malformed JSON');
     }
+
+    public static function emptyResponse(): ApiError
+    {
+        return new ApiError(code: -4, text: 'Empty JSON');
+    }
 }

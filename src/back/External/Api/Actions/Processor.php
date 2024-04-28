@@ -64,6 +64,10 @@ trait Processor
             return ApiError::malformedJson();
         }
 
+        if (empty($result) || !count($result)) {
+            return ApiError::emptyResponse();
+        }
+
         if (array_key_exists('error', $result) || !array_key_exists('result', $result)) {
             $logger->warning('Invalid result', ['json' => $rawResponse]);
 
