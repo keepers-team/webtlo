@@ -753,3 +753,18 @@ ul.about-installation
         transform: rotate(360deg);
     }
 }
+
+/*Диалог авторизации*/
+#auth_dialog {
+    display: none;
+    width: 400px;
+}
+
+#auth_dialog label.param-name {
+    width: 80px;
+}
+
+#auth_dialog img.captcha-image {
+    font-size: 0.7em;
+    font-style: italic;
+}

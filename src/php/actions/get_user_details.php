@@ -22,9 +22,10 @@ try {
     }
 
     // капча
+    $cap_fields = [];
     if (
-        isset($_POST['cap_code'])
-        && isset($_POST['cap_fields'])
+        !empty($_POST['cap_code'])
+        && !empty($_POST['cap_fields'])
     ) {
         $cap_code = $_POST['cap_code'];
         $cap_fields = explode(',', $_POST['cap_fields']);
@@ -32,9 +33,7 @@ try {
             $cap_fields[0] => $cap_fields[1],
             $cap_fields[2] => $cap_code,
         ];
-    } else {
-        $cap_fields = [];
-    }
+    };
 
     // параметры прокси
     $activate_forum = !empty($cfg['proxy_activate_forum']) ? 1 : 0;

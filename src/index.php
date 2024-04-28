@@ -1217,7 +1217,29 @@ function cfg_checkbox($cfg): Closure
             </div>
         </div>
     </div>
+
     <div id="dialog" title="Сообщение"></div>
+    <div id="auth_dialog" title="Авторизация на форуме">
+        <span class="text-danger">
+            Вы видите это сообщение, потому что ввели неправильное имя пользователя или пароль
+        </span>
+        <hr/>
+        Введите правильные данные для авторизации и нажмите "ОК"
+        <br/><br/>
+        <label class="param-name" for="tracker_username_correct">Логин:</label>
+        <input type="text" class="myinput" id="tracker_username_correct"/>
+        <br/>
+        <label class="param-name" for="tracker_password_correct">Пароль:</label>
+        <input type="text" class="myinput" id="tracker_password_correct" />
+        <br/><br/>
+        <div>
+            <input class="myinput" type="hidden" id="cap_fields" />
+            Введите текст с картинки (латиницей):
+            <img class="captcha-image" src="" alt="Если вы видите данный текст, то загрузить изображение капчи не удалось"/>
+        </div>
+        <input id="cap_code" size="10" title="Введите текст с картинки (латиницей)" />
+    </div>
+
     <!-- скрипты webtlo -->
     <script type="text/javascript" src="scripts/jquery.common.js"></script>
     <script type="text/javascript" src="scripts/jquery.topics.func.js"></script>

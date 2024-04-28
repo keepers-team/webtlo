@@ -218,7 +218,7 @@ $(document).ready(function () {
         const cap_code = $("#cap_code").val();
         const cap_fields = $("#cap_fields").val();
 
-        let dialog = $('#dialog');
+        let dialog = $('#auth_dialog');
         let authResult = $('#forum_auth_result');
         $.ajax({
             type: "POST",
@@ -235,16 +235,27 @@ $(document).ready(function () {
                 if (!$.isEmptyObject(response.captcha)) {
                     authResult.removeAttr("class").addClass("fa fa-circle text-danger");
 
-                    let capFields = response.captcha.join(',');
-                    let curLogin = $("#tracker_username").val();
-                    let curPass  = $("#tracker_password").val();
+                    let currentLogin = $('#tracker_username').val();
+                    let currentPass  = $('#tracker_password').val();
+                    dialog.find('#tracker_username_correct').val(currentLogin);
+                    dialog.find('#tracker_password_correct').val(currentPass);
+
+                    dialog.find('#cap_fields').val(response.captcha.join(','));
+                    dialog.find('img.captcha-image').prop('src', response.captcha_path);
 
                     dialog.dialog(
                         {
+                            width: 500,
                             buttons: [
                                 {
                                     text: "OK",
                                     click: function () {
+                                        let capCode = $('#cap_code');
+                                        if (!capCode.val().length) {
+                                            capCode.highlight();
+                                            return;
+                                        }
+
                                         let username_correct = $("#tracker_username_correct").val();
                                         let password_correct = $("#tracker_password_correct").val();
                                         $("#tracker_username").val(username_correct);
@@ -257,13 +268,7 @@ $(document).ready(function () {
                             modal: true,
                             resizable: false,
                         }
-                    ).html('<span class="text-danger">Вы видите это сообщение, потому что ввели неверные логин и/или пароль</span><br /><br />' +
-                        'Введите правильные данные для авторизации на форуме RuTracker.org ниже и нажмите "ОК"<br /><br />' +
-                        `Логин: <input type="text" class="myinput" id="tracker_username_correct" value="${curLogin}"/><br />` +
-                        `Пароль: <input class="myinput" type="text" id="tracker_password_correct" value="${curPass}"/><br /><br />` +
-                        `Введите текст с картинки: <input class="myinput" type="hidden" id="cap_fields" value="${capFields}" />` +
-                        `<div><img src="${response.captcha_path}" /></div>` +
-                        '<input id="cap_code" size="27" />');
+                    );
                     dialog.dialog("open");
                 } else {
                     authResult.removeAttr("class");

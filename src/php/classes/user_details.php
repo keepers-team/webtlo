@@ -144,10 +144,11 @@ final class UserDetails
 
                         $captcha = pq($captcha);
                         $sourcePath = $captcha->find('img')->attr('src');
-                        if (!self::get_captcha($sourcePath)) {
+                        if (!$base64Image = self::getCaptchaEncodedImage($sourcePath)) {
                             throw new Exception('Error: Не удалось получить изображение капчи, ' . $sourcePath);
                         }
-                        self::$captcha_path = $sourcePath;
+
+                        self::$captcha_path = $base64Image;
                         foreach ($captcha->find('input') as $input) {
                             $input = pq($input);
                             self::$captcha[] = $input->attr('name');
@@ -218,33 +219,38 @@ final class UserDetails
     }
 
     /**
+     * Получить base64-строку с картинкой авторизации.
+     *
      * @throws Exception
      */
-    public static function get_captcha($url): bool
+    public static function getCaptchaEncodedImage(string $url): ?string
     {
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
+            CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_USERAGENT      => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
             CURLOPT_CONNECTTIMEOUT => 2,
         ]);
+
         $sourceData = curl_exec($ch);
+
+        // Если не удалось получить изображение, пробуем включить прокси.
+        if (empty($sourceData)) {
+            curl_setopt_array($ch, Proxy::$proxy['forum']);
+
+            $sourceData = curl_exec($ch);
+        }
         curl_close($ch);
 
         if (!$sourceData || !strlen($sourceData)) {
-            return false;
-        }
-        $targetPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'captcha.jpg';
-
-        $targetData = file_put_contents($targetPath, $sourceData);
-        if ($targetData === false) {
-            throw new Exception('Error: Не удалось сохранить изображение капчи');
+            return null;
         }
 
-        return true;
+        // Кодируем изображение в base64 и отправляем в форму авторизации.
+        return sprintf('data:image/jpg;base64, %s', base64_encode($sourceData));
     }
 }
