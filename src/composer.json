@@ -16,6 +16,7 @@
         "league/container": "^4.2",
         "psr/log": "^3.0",
         "monolog/monolog": "^3.5",
+        "cesargb/php-log-rotation": "^2.7",
         "guzzlehttp/guzzle": "^7.8",
         "caseyamcl/guzzle_retry_middleware": "^2.9",
         "ext-curl": "*",
@@ -26,6 +27,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
-        "phpstan/phpstan": "^1.10"
+        "phpstan/phpstan": "^1.10",
+        "symfony/var-dumper": "^6.4"
     }
 }

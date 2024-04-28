@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Static;
 
+use Cesargb\Log\Rotation;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\LogHandler;
 use Monolog\Formatter\LineFormatter;
@@ -34,7 +35,7 @@ final class AppLogger
         $logger = new Logger('webtlo');
 
         // Запись в единый файл всего webtlo.
-        $logger->pushHandler(new StreamHandler(self::getLogFile('webtlo.log'), $logLevel));
+        $logger->pushHandler(new StreamHandler(self::getLogFile('webtlo.log')));
 
         // Запись в error_log.
         $logger->pushHandler(new ErrorLogHandler(0, Level::Error));
@@ -85,10 +86,12 @@ final class AppLogger
 
     private static function logRotate(string $file): void
     {
-        // TODO Удалять лишние файлы.
-        if (file_exists($file) && filesize($file) >= self::$logMaxSize) {
-            rename($file, preg_replace('|.log$|', '.1.log', $file));
-        }
+        $rotation = new Rotation([
+            'files'    => self::$logMaxCount,
+            'min-size' => self::$logMaxSize,
+        ]);
+
+        $rotation->rotate($file);
     }
 
     public static function getLogLevel(string $logLevel): Level
