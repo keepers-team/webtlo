@@ -23,9 +23,10 @@ final class KeepersSeeders
 
     private ?CloneTable $table = null;
 
+    /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
-    /* @var KeeperData[] Данные о хранителях. */
+    /** @var KeeperData[] Данные о хранителях. */
     private array $keepers;
 
     public function __construct(private readonly LoggerInterface $logger)
@@ -45,10 +46,15 @@ final class KeepersSeeders
         );
     }
 
+    /**
+     * @param int   $topicId
+     * @param int[] $keepers
+     * @return void
+     */
     public function addKeptTopic(int $topicId, array $keepers): void
     {
         foreach ($keepers as $keeperId) {
-            $keeper = $this->getKeeperInfo((int)$keeperId);
+            $keeper = $this->getKeeperInfo($keeperId);
             if (null !== $keeper) {
                 $this->keptTopics[] = [$topicId, $keeper->keeperId, $keeper->keeperName];
             }
@@ -90,7 +96,9 @@ final class KeepersSeeders
                 )"
             );
 
-            $this->logger->info(sprintf('KeepersSeeders. Записано %d хранимых раздач.', $keepersSeedersCount));
+            $this->logger->info(
+                sprintf('KeepersSeeders. Хранителями раздаётся %d неуникальных раздач.', $keepersSeedersCount)
+            );
         }
     }
 
@@ -103,7 +111,7 @@ final class KeepersSeeders
         return $this->table;
     }
 
-    private function getKeeperInfo(int $keeperId): ?KeeperData
+    public function getKeeperInfo(int $keeperId): ?KeeperData
     {
         return $this->keepers[$keeperId] ?? null;
     }
