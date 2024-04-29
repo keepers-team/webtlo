@@ -40,14 +40,14 @@ final class UserDetails
             $user = new Credentials(
                 $user->userName,
                 $user->password,
-                self::$uid,
+                (int)self::$uid,
                 self::$bt,
                 self::$api,
                 self::$cookie
             );
         } else {
             self::$forum_url = $forum_url;
-            self::$uid       = $user->userId;
+            self::$uid       = (string)$user->userId;
             self::$api       = $user->apiKey;
             self::$bt        = $user->btKey;
             self::$cookie    = $user->session;

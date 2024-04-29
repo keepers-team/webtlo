@@ -29,8 +29,6 @@ try {
     // чекбоксы
     $savesub_dir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
-    $proxy_activate_forum = $cfg['proxy_activate_forum'] == 1 ? "checked" : "";
-    $proxy_activate_api = $cfg['proxy_activate_api'] == 1 ? "checked" : "";
     $avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
     $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
     $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
@@ -76,38 +74,55 @@ try {
         'exclude',
     ]);
 
-    // стандартные адреса
-    $forumAddressList = [
-        'rutracker.org',
-        'rutracker.net',
-        'rutracker.nl',
-        'custom'
-    ];
+    /**
+     * Обёртка для функции создания выбора адресов.
+     *
+     * @param array  $cfg
+     * @param string $pattern
+     * @return Closure
+     */
+    $makeUrlParams = function(array $cfg, string $pattern): Closure {
+        static $defaults = [
+            'forum'  => [
+                'rutracker.org',
+                'rutracker.net',
+                'rutracker.nl',
+            ],
+            'api'    => [
+                'api.rutracker.cc',
+            ],
+            'report' => [
+                'rep.rutracker.cc',
+            ],
+        ];
 
-    $apiAddressList = [
-        'api.rutracker.cc',
-        'custom'
-    ];
+        return static function (string $key) use ($cfg, $pattern, $defaults) {
+            $currentUrl = $cfg["{$key}_url"] ?? '';
 
-    // адреса форума
-    $optionForumAddress = '';
-    foreach ($forumAddressList as $value) {
-        $selected = $value == $cfg['forum_url'] ? 'selected' : '';
-        $text     = $value == 'custom' ? 'другой' : $value;
+            $values = $defaults[$key] ?? [];
+            $values[] = 'custom';
 
-        $optionForumAddress .= sprintf($optionFormat, $value, $selected, $text);
-    }
-    $forumVerifySSL = $cfg['forum_ssl'] ? 'checked' : '';
+            $options = [];
+            foreach ($values as $value) {
+                $selected = $value === $currentUrl ? 'selected' : '';
+                $text     = $value === 'custom' ? 'другой' : $value;
 
-    // адреса api
-    $optionApiAddress = '';
-    foreach ($apiAddressList as $value) {
-        $selected = $value == $cfg['api_url'] ? 'selected' : '';
-        $text     = $value == 'custom' ? 'другой' : $value;
+                $options[] = sprintf($pattern, $value, $selected, $text);
+            }
 
-        $optionApiAddress .= sprintf($optionFormat, $value, $selected, $text);
-    }
-    $apiVerifySSL = $cfg['api_ssl'] ? 'checked' : '';
+            $ssl   = !empty($cfg["{$key}_ssl"]) ? 'checked' : '';
+            $proxy = !empty($cfg["proxy_activate_{$key}"]) ? 'checked' : '';
+
+            return [implode('', $options), $ssl, $proxy];
+        };
+    };
+
+    $urlMaker = $makeUrlParams($cfg, $optionFormat);
+
+    // Выбор адреса и галки выбора SSL, прокси.
+    [$optionForumAddress, $forumVerifySSL, $proxy_activate_forum] = $urlMaker('forum');
+    [$optionApiAddress, $apiVerifySSL, $proxy_activate_api] = $urlMaker('api');
+    [$optionReportAddress, $reportVerifySSL, $proxy_activate_report] = $urlMaker('report');
 
     // торрент-клиенты
     $optionTorrentClients = '';
@@ -669,7 +684,7 @@ function cfg_checkbox($cfg): Closure
                                 <i id="forum_url_result" class=""></i>
                             </div>
                             <div id="api_url_params">
-                                <label for="api_url" class="param-name">Адрес API:</label>
+                                <label for="api_url" class="param-name">API форума:</label>
                                 <select name="api_url" id="api_url" class="myinput">
                                     <?= $optionApiAddress ?? '' ?>
                                 </select>
@@ -683,6 +698,25 @@ function cfg_checkbox($cfg): Closure
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
                                     <input name="proxy_activate_api" class="check_access_api" type="checkbox"
                                            size="24" <?= $proxy_activate_api ?? '' ?> />
+                                    Через прокси
+                                </label>
+                                <i id="api_url_result" class=""></i>
+                            </div>
+                            <div id="report_url_params">
+                                <label for="report_url" class="param-name">API отчётов:</label>
+                                <select name="report_url" id="report_url" class="myinput">
+                                    <?= $optionReportAddress ?? '' ?>
+                                </select>
+                                <input id="report_url_custom" name="report_url_custom" class="myinput" type="text" size="14"
+                                       value="<?= $cfg['report_url_custom'] ?? '' ?>"/>
+                                <label>
+                                    <input id="report_ssl" name="report_ssl" class="check_access_api"
+                                           type="checkbox" <?= $reportVerifySSL ?? 'checked' ?> />
+                                    HTTPS
+                                </label>
+                                <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
+                                    <input id="proxy_activate_report" name="proxy_activate_report" class="check_access_report" type="checkbox"
+                                           size="24" <?= $proxy_activate_report ?? '' ?> />
                                     Через прокси
                                 </label>
                                 <i id="api_url_result" class=""></i>

@@ -24,6 +24,8 @@ final class Settings
 
         // торрент-клиенты
         $qt = $ini->read("other", "qt", "0");
+
+        $config['clients'] = [];
         for ($i = 1; $i <= $qt; $i++) {
             $id = $ini->read("torrent-client-$i", "id", $i);
             $cm = $ini->read("torrent-client-$i", "comment");
@@ -39,9 +41,9 @@ final class Settings
             $config['clients'][$id]['control_peers'] = $ini->read("torrent-client-$i", "control_peers");
             $config['clients'][$id]['exclude']       = $ini->read("torrent-client-$i", "exclude", 0);
         }
-        if (isset($config['clients']) && is_array($config['clients'])) {
-            $config['clients'] = Helper::natsortField($config['clients'], 'cm');
-        }
+
+        // Сортируем торрент-клиенты по введённому названию.
+        $config['clients'] = Helper::natsortField($config['clients'], 'cm');
 
         // Уровень записи логов.
         $config['log_level'] = $ini->read('other', 'log_level', 'Info');
@@ -85,15 +87,18 @@ final class Settings
         $config['topics_control']['no_leechers']         = $ini->read('topics_control', 'no_leechers', 1);
 
         // прокси
-        $config['proxy_activate_forum'] = $ini->read('proxy', 'activate_forum', 0);
-        $config['proxy_activate_api']   = $ini->read('proxy', 'activate_api', 0);
-        $config['proxy_type']           = $ini->read('proxy', 'type', 'socks5h');
-        $config['proxy_hostname']       = $ini->read('proxy', 'hostname', 'gateway.keepers.tech');
-        $config['proxy_port']           = $ini->read('proxy', 'port', 60789);
-        $config['proxy_login']          = $ini->read('proxy', 'login');
-        $config['proxy_paswd']          = $ini->read('proxy', 'password');
-        $config['proxy_address']        = $config['proxy_hostname'] . ':' . $config['proxy_port'];
-        $config['proxy_auth']           = $config['proxy_login'] . ':' . $config['proxy_paswd'];
+        $config['proxy_activate_forum']  = $ini->read('proxy', 'activate_forum', 1);
+        $config['proxy_activate_api']    = $ini->read('proxy', 'activate_api', 0);
+        $config['proxy_activate_report'] = $ini->read('proxy', 'activate_report', 0);
+
+        $config['proxy_type']     = $ini->read('proxy', 'type', 'socks5h');
+        $config['proxy_hostname'] = $ini->read('proxy', 'hostname', 'gateway.keepers.tech');
+        $config['proxy_port']     = $ini->read('proxy', 'port', 60789);
+        $config['proxy_login']    = $ini->read('proxy', 'login');
+        $config['proxy_paswd']    = $ini->read('proxy', 'password');
+
+        $config['proxy_address'] = $config['proxy_hostname'] . ':' . $config['proxy_port'];
+        $config['proxy_auth']    = $config['proxy_login'] . ':' . $config['proxy_paswd'];
 
         // авторизация
         $config['tracker_login'] = $ini->read('torrent-tracker', 'login');
@@ -102,9 +107,15 @@ final class Settings
         $config['bt_key']  = $ini->read('torrent-tracker', 'bt_key');
         $config['api_key'] = $ini->read('torrent-tracker', 'api_key');
 
+        // Апи для получения сведений о раздачах
         $config['api_url']        = basename($ini->read('torrent-tracker', 'api_url', 'api.rutracker.cc'));
         $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
+
+        // Апи для отправки отчётов.
+        $config['report_url']        = basename($ini->read('torrent-tracker', 'report_url', 'rep.rutracker.cc'));
+        $config['report_url_custom'] = basename($ini->read('torrent-tracker', 'report_url_custom'));
+        $config['report_ssl']        = $ini->read('torrent-tracker', 'report_ssl', 1);
 
         $config['user_id']      = $ini->read('torrent-tracker', 'user_id');
         $config['user_session'] = $ini->read('torrent-tracker', 'user_session');
@@ -123,6 +134,7 @@ final class Settings
         $config['api_address']   = $api_schema . '://' . $api_url;
         $config['forum_address'] = $forum_schema . '://' . $forum_url;
 
+        $config['report_base_url']   = $config['report_url'] === 'custom' ? $config['report_url_custom'] : $config['report_url'];
 
         $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
         $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
@@ -152,6 +164,9 @@ final class Settings
 
         // отчёты
         $config['reports'] = [
+            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 1),
+            'send_report_api'     => $ini->read('reports', 'send_report_api', 1),
+            'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
@@ -450,6 +465,8 @@ final class Settings
 
         $ini->write('proxy', 'activate_forum', isset($cfg['proxy_activate_forum']) ? 1 : 0);
         $ini->write('proxy', 'activate_api', isset($cfg['proxy_activate_api']) ? 1 : 0);
+        $ini->write('proxy', 'activate_report', isset($cfg['proxy_activate_report']) ? 1 : 0);
+
         if (isset($cfg['proxy_type'])) {
             $ini->write('proxy', 'type', $cfg['proxy_type']);
         }
@@ -484,18 +501,19 @@ final class Settings
     {
         $ini = $this->ini;
 
-        if (isset($cfg['api_url'])) {
-            $ini->write('torrent-tracker', 'api_url', trim($cfg['api_url']));
+        // Перебираем три набора полей с адресами.
+        foreach (['forum', 'api', 'report'] as $key) {
+            $url    = "{$key}_url";
+            $custom = "{$key}_url_custom";
+            $ssl    = "{$key}_ssl";
+
+            $ini->write('torrent-tracker', $url, trim($cfg[$url] ?? ''));
+            $ini->write('torrent-tracker', $custom, trim($cfg[$custom] ?? ''));
+            $ini->write('torrent-tracker', $ssl, isset($cfg[$ssl]) ? 1 : 0);
+
+            unset($key, $url, $custom, $ssl);
         }
-        if (isset($cfg['api_url_custom'])) {
-            $ini->write('torrent-tracker', 'api_url_custom', trim($cfg['api_url_custom']));
-        }
-        if (isset($cfg['forum_url'])) {
-            $ini->write('torrent-tracker', 'forum_url', trim($cfg['forum_url']));
-        }
-        if (isset($cfg['forum_url_custom'])) {
-            $ini->write('torrent-tracker', 'forum_url_custom', trim($cfg['forum_url_custom']));
-        }
+
         if (isset($cfg['tracker_username'])) {
             $ini->write('torrent-tracker', 'login', trim($cfg['tracker_username']));
         }
@@ -514,8 +532,6 @@ final class Settings
         if (isset($cfg['api_key'])) {
             $ini->write('torrent-tracker', 'api_key', trim($cfg['api_key']));
         }
-        $ini->write('torrent-tracker', 'api_ssl', isset($cfg['api_ssl']) ? 1 : 0);
-        $ini->write('torrent-tracker', 'forum_ssl', isset($cfg['forum_ssl']) ? 1 : 0);
     }
 
     private function setDownload(array $cfg): void
