@@ -8,6 +8,8 @@ use SQLite3;
 
 final class WebTLO
 {
+    private const AppName = 'Web-TLO';
+
     private const REQUIREMENTS = [
         'php_version'    => '8.1.0',
         'sqlite_version' => '3.38.0',
@@ -75,12 +77,17 @@ final class WebTLO
 
     public function versionLine(): string
     {
-        return sprintf('Версия TLO: [b]Web-TLO-%s[/b]', $this->version);
+        return sprintf('Версия TLO: [b]%s-%s[/b]', self::AppName, $this->version);
     }
 
     public function versionLineUrl(): string
     {
-        return sprintf('Версия TLO: [b]Web-TLO-[url=%s]%s[/url][/b]', $this->versionUrl(), $this->version);
+        return sprintf(
+            'Версия TLO: [b]%s-[url=%s]%s[/url][/b]',
+            self::AppName,
+            $this->versionUrl(),
+            $this->version
+        );
     }
 
     public function getReleaseLink(): string
@@ -111,6 +118,21 @@ final class WebTLO
         return sprintf($pattern, $this->wiki);
     }
 
+    public function appVersionLine(): string
+    {
+        $info = [
+            self::AppName,
+            $this->version,
+            "[$this->installation]",
+            $this->sha ? '#' . $this->sha : '',
+        ];
+
+        return implode(' ', array_filter($info));
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function getAbout(): array
     {
         $system = array_filter([
@@ -130,7 +152,6 @@ final class WebTLO
         $about['max_input_vars']     = ini_get('max_input_vars');
 
         $about['date_timezone'] = ini_get('date.timezone') ?: date_default_timezone_get();
-
 
         return $about;
     }
