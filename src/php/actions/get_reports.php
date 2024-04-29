@@ -15,7 +15,7 @@ $reports_result = [
 ];
 try {
     // идентификатор подраздела
-    $forum_id = (int)$_POST['forum_id'] ?? -1;
+    $forum_id = (int)($_POST['forum_id'] ?? -1);
 
     if ($forum_id < 0) {
         throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");

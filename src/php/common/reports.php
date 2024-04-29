@@ -1,11 +1,11 @@
 <?php
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
+use KeepersTeam\Webtlo\Forum\SendReport;
 use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Timers;
@@ -14,15 +14,14 @@ include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 include_once dirname(__FILE__) . '/../classes/reports.php';
 include_once dirname(__FILE__) . '/../classes/user_details.php';
 
-App::init();
+$app = AppContainer::create('reports.log');
+$log = $app->getLogger();
 
 Timers::start('send_reports');
-Log::append('Начат процесс отправки отчётов...');
+$log->info('Начат процесс отправки отчётов...');
 
 // Получение настроек.
-if (!isset($cfg)) {
-    $cfg = App::getSettings();
-}
+$cfg = $app->getLegacyConfig();
 
 if (isset($checkEnabledCronAction)) {
     $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
@@ -34,198 +33,299 @@ if (isset($checkEnabledCronAction)) {
 // Проверка настроек.
 $user = ConfigValidate::checkUser($cfg);
 if (empty($cfg['subsections'])) {
-    throw new Exception('Error: Не выбраны хранимые подразделы');
+    $log->error('Не выбраны хранимые подразделы');
+
+    return;
 }
 
 // Проверим полное обновление.
 LastUpdate::checkReportsSendAvailable($cfg);
 
+Timers::start('init_report');
+// Возможность отправить отчёт постом на форум.
+$forumReportAvailable = (bool)($cfg['reports']['send_report_forum'] ?? true);
 // Проверим заполненность таблиц.
-if (Db::select_count('ForumsOptions') === 0) {
-    throw new Exception('Error: Отправка отчётов невозможна. Отсутствуют сведеения о сканировании подразделов. Выполните полное обновление сведений.');
-}
-
-// Подключаемся к форуму.
-if (!isset($reports)) {
-    $reports = new Reports(
-        $cfg['forum_address'],
-        $user,
+if ($forumReportAvailable && Db::select_count('ForumsOptions') === 0) {
+    $log->error(
+        'Отправка отчётов невозможна. Отсутствуют сведения о сканировании подразделов. Выполните полное обновление сведений.'
     );
-    // применяем таймауты
-    $reports->curl_setopts($cfg['curl_setopt']['forum']);
+    $forumReportAvailable = false;
 }
 
-if ($unavailable = $reports->check_access()) {
-    throw new Exception($unavailable->value);
-}
+if ($forumReportAvailable) {
+    // Подключаемся к форуму.
+    if (!isset($reports)) {
+        $reports = new Reports(
+            $cfg['forum_address'],
+            $user,
+        );
+        // применяем таймауты
+        $reports->curl_setopts($cfg['curl_setopt']['forum']);
+    }
 
+    if ($unavailable = $reports->check_access()) {
+        $log->error($unavailable->value);
+        $forumReportAvailable = false;
+    }
+}
+$log->debug(sprintf('init report %s', Timers::getExecTime('init_report')));
+
+Timers::start('create_report');
 // Создание отчётов.
 $forumReports = new ReportCreator(
     $cfg,
     $user
 );
 $forumReports->initConfig();
-$forumReports->fillStoredValues();
+if ($forumReportAvailable) {
+    $forumReports->fillStoredValues();
+}
+
+$log->debug(sprintf('create report %s', Timers::getExecTime('create_report')));
+
+Timers::start('create_api');
+
+/** @var SendReport $sendReport */
+$sendReport = $app->get(SendReport::class);
+
+// Желание отправить отчёт через API.
+$sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
+
+// Проверяем доступность API.
+if ($sendReport->isEnable()) {
+    $sendReport->checkAccess();
+
+    $log->debug(sprintf('create api %s', Timers::getExecTime('create_api')));
+}
+
+if (!$sendReport->isEnable()) {
+    $log->info('Отправка отчёта в API невозможна или отключена');
+}
+
+$forumReportCount = 0;
+$apiReportCount   = 0;
 
 $editedTopicsIDs = [];
+$editedPosts     = [];
+
 $Timers = [];
+
+$forumCount = count($forumReports->forums);
 foreach ($forumReports->forums as $forum_id) {
-    $forum = Forums::getForum($forum_id);
-    // KeepersTeam\Webtlo\Legacy\Log::append(sprintf('forum_id: %d => %s', $forum_id, json_encode($forum, JSON_UNESCAPED_UNICODE)));
-    if (null === $forum->topic_id) {
-        Log::append(sprintf('Notice: Отсутствует номер темы со списками для подраздела %d. Выполните обновление сведений.', $forum_id));
-        continue;
-    }
+    $timer = [];
+    // Пробуем отправить отчёт по API.
+    if ($sendReport->isEnable() && !$forumReports->isForumExcluded($forum_id)) {
+        Timers::start("send_api_$forum_id");
+        try {
+            Timers::start("search_db_$forum_id");
 
-    Timers::start("create_$forum_id");
-    try {
-        $forumReport = $forumReports->getForumReport($forum);
-    } catch (Exception $e) {
-        Log::append(sprintf(
-            'Notice: Формирование отчёта для подраздела %d пропущено. Причина %s',
-            $forum_id,
-            $e->getMessage()
-        ));
-        continue;
-    }
-    $createTime  = Timers::getExecTime("create_$forum_id");
+            // Получаем раздачи, которые нужно отправить.
+            $topicsToReport = $forumReports->getStoredForumTopics($forum_id);
 
-    Timers::start("send_$forum_id");
+            $timer['search_db'] = Timers::getExecTime("search_db_$forum_id");
 
-    $topicId  = $forum->topic_id;
-    $messages = $forumReport['messages'];
-    // Редактируем шапку темы, если её автор - пользователь.
-    if ($user->userId === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
-        Log::append(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
-        // отправка сообщения с шапкой
-        $reports->send_message(
-            'editpost',
-            $forumReport['header'],
-            $topicId,
-            $forum->author_post_id,
-            '[Список] ' . $forum->name
-        );
-        usleep(500);
-    }
+            // Пробуем отправить отчёт по API.
+            $apiResult = $sendReport->sendForumTopics((int)$forum_id, $topicsToReport);
 
-    // вставка доп. сообщений
-    $postList = $forum->post_ids ?? [];
-    if (count($messages) > count($postList)) {
-        $count_post_reply = count($messages) - count($postList);
-        for ($i = 1; $i <= $count_post_reply; $i++) {
-            // KeepersTeam\Webtlo\Legacy\Log::append("Вставка дополнительного $i-ого сообщения...");
-            $message = '[spoiler]' . $i . str_repeat('?', 119981 - mb_strlen($i)) . '[/spoiler]';
-            $post_id = $reports->send_message(
-                'reply',
-                $message,
-                $topicId
+            $apiReportCount++;
+            $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
+
+            $log->debug(
+                sprintf("API. Отчёт отправлен [%d/%d] %s", $apiReportCount, $forumCount, $timer['send_api']),
+                $apiResult
             );
-            if ($post_id > 0) {
-                $postList[] = (int)$post_id;
-            }
-            usleep(500);
-
-            unset($message, $post_id);
+        } catch (Exception $e) {
+            $log->notice(
+                sprintf(
+                    'Попытка отправки отчёта через API для подраздела %d не удалась. Причина %s',
+                    $forum_id,
+                    $e->getMessage()
+                )
+            );
         }
-        if ($count_post_reply > 0) {
-            Forums::updatePostList($forum_id, $postList);
-        }
-        unset($count_post_reply);
     }
 
-    // редактирование сообщений
-    foreach ($postList as $index => $postId) {
-        $post_number = $index + 1;
-        // KeepersTeam\Webtlo\Legacy\Log::append("Редактирование сообщения № $post_number...");
-        $message = $messages[$index] ?? 'резерв';
-        $reports->send_message(
-            'editpost',
-            $message,
-            $topicId,
-            $postId
-        );
-
-        unset($index, $postId, $post_number, $message);
-    }
-
-    $editedTopicsIDs[] = $topicId;
-
-    $Timers[] = [
-        'forum'    => $forum_id,
-        'create'   => $createTime,
-        'send'     => Timers::getExecTime("send_$forum_id"),
-        'messages' => count($postList),
-    ];
-}
-
-// Если ни одного отчёта по разделу не отправлено, то тормозим выполнение.
-if (!count($editedTopicsIDs)) {
-    Log::append('Не удалось отправить отчёты, см. журнал выше.');
-    return;
-}
-
-Log::append("Обработано подразделов: " . count($editedTopicsIDs) . " шт.");
-Log::append(json_encode($Timers));
-
-// работаем со сводным отчётом
-if ($cfg['reports']['send_summary_report']) {
-    Timers::start('send_summary');
-    // формируем сводный отчёт
-    $summaryReport = $forumReports->getSummaryReport();
-
-    // ищем сообщение со сводным
-    $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
-
-    $summaryPostMode = empty($summaryPostId) ? 'reply' : 'editpost';
-    // отправляем сводный отчёт
-    $reports->send_message(
-        $summaryPostMode,
-        $summaryReport,
-        ReportCreator::SUMMARY_FORUM,
-        $summaryPostId
-    );
-
-    // Запишем ид темы со сводными, чтобы очистка сообщений не задела.
-    $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
-
-    // Запишем время отправки отчётов.
-    LastUpdate::setTime(UpdateMark::FULL_UPDATE->value);
-
-    Log::append(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
-}
-
-// отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме
-if ($cfg['reports']['auto_clear_messages']) {
-    $emptyMessages = [];
-    $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $user->userId]);
-    $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
-    if (!empty($uneditedTopicsIDs)) {
-        foreach ($uneditedTopicsIDs as $topicID) {
-            $messages = $reports->scanning_viewtopic($topicID);
-            if ($messages === false) {
+    if ($forumReportAvailable && isset($reports)) {
+        Timers::start("report_forum_$forum_id");
+        try {
+            $forum = Forums::getForum($forum_id);
+            if (null === $forum->topic_id) {
+                $log->notice(
+                    sprintf(
+                        'Отсутствует номер темы со списками для подраздела %d. Выполните обновление сведений.',
+                        $forum_id
+                    )
+                );
                 continue;
             }
-            foreach ($messages as $index => $message) {
-                // пропускаем шапку
-                if ($index == 0) {
+
+            Timers::start("create_$forum_id");
+            $forumReport = $forumReports->getForumReport($forum);
+        } catch (Exception $e) {
+            $log->warning(
+                sprintf(
+                    'Формирование отчёта для подраздела %d пропущено. Причина %s',
+                    $forum_id,
+                    $e->getMessage()
+                )
+            );
+            continue;
+        }
+
+        $createTime = Timers::getExecTime("create_$forum_id");
+
+        Timers::start("send_$forum_id");
+        $topicId = $forum->topic_id;
+        $messages = $forumReport['messages'];// Редактируем шапку темы, если её автор - пользователь.
+        if ($user->userId === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
+            $log->info(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
+            // отправка сообщения с шапкой
+            $reports->send_message(
+                'editpost',
+                $forumReport['header'],
+                $topicId,
+                $forum->author_post_id,
+                '[Список] ' . $forum->name
+            );
+            usleep(500);
+        }
+
+        // Вставка дополнительных сообщений в тему.
+        $postList = $forum->post_ids ?? [];
+        if (count($messages) > count($postList)) {
+            $count_post_reply = count($messages) - count($postList);
+            for ($i = 1; $i <= $count_post_reply; $i++) {
+                $message = '[spoiler]' . $i . str_repeat('?', 119981 - mb_strlen((string)$i)) . '[/spoiler]';
+                $post_id = $reports->send_message(
+                    'reply',
+                    $message,
+                    $topicId
+                );
+                if ($post_id > 0) {
+                    $postList[] = (int)$post_id;
+                }
+                usleep(500);
+
+                unset($message, $post_id);
+            }
+            if ($count_post_reply > 0) {
+                Forums::updatePostList($forum_id, $postList);
+            }
+            unset($count_post_reply);
+        }
+
+        // редактирование сообщений
+        foreach ($postList as $index => $postId) {
+            $post_number = $index + 1;
+            $message     = $messages[$index] ?? 'резерв';
+            $reports->send_message(
+                'editpost',
+                $message,
+                $topicId,
+                $postId
+            );
+            $editedPosts[$topicId][] = $postId;
+
+            unset($index, $postId, $post_number, $message);
+        }
+
+        $editedTopicsIDs[] = $topicId;
+
+        $timer['send_forum'] = Timers::getExecTime("send_forum_$forum_id");
+
+        $log->debug(
+            sprintf('Forum. Отчёт отправлен [%d/%d] %s', $forumReportCount++, $forumCount, $timer['send_forum'])
+        );
+    }
+
+    $forumReports->clearCache($forum_id);
+    $Timers[] = ['forum' => $forum_id, ...$timer];
+}
+
+if (!empty($Timers)) {
+    $log->debug(json_encode($Timers));
+}
+
+if ($apiReportCount > 0) {
+    $log->info(sprintf('Отчётов отправлено в API: %d шт.', $apiReportCount));
+}
+
+if (count($editedTopicsIDs)) {
+    $log->info(sprintf('Отчётов отправлено на форум: %d шт.', count($editedTopicsIDs)));
+    $log->debug(json_encode($editedPosts));
+}
+
+
+if ($forumReportAvailable && isset($reports)) {
+    // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
+    if (!count($editedTopicsIDs)) {
+        return;
+    }
+
+    // работаем со сводным отчётом
+    if ($cfg['reports']['send_summary_report']) {
+        Timers::start('send_summary');
+        // формируем сводный отчёт
+        $summaryReport = $forumReports->getSummaryReport();
+
+        // ищем сообщение со сводным
+        $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
+
+        $summaryPostMode = empty($summaryPostId) ? 'reply' : 'editpost';
+        // отправляем сводный отчёт
+        $reports->send_message(
+            $summaryPostMode,
+            $summaryReport,
+            ReportCreator::SUMMARY_FORUM,
+            $summaryPostId
+        );
+
+        // Запишем ид темы со сводными, чтобы очистка сообщений не задела.
+        $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
+
+        // Запишем время отправки отчётов.
+        LastUpdate::setTime(UpdateMark::FULL_UPDATE->value);
+
+        $log->info(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
+    }
+
+    // отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме
+    if ($cfg['reports']['auto_clear_messages']) {
+        $emptyMessages = [];
+
+        $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $user->userId]);
+
+        $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
+        if (!empty($uneditedTopicsIDs)) {
+            foreach ($uneditedTopicsIDs as $topicID) {
+                $messages = $reports->scanning_viewtopic($topicID);
+                if ($messages === false) {
                     continue;
                 }
-                // только свои сообщения
-                if ($user->userId === $message['user_id']) {
-                    $emptyMessages[] = $message['post_id'];
-                    $reports->send_message('editpost', ':!: не актуально', $topicID, $message['post_id']);
+                foreach ($messages as $index => $message) {
+                    // пропускаем шапку
+                    if ($index == 0) {
+                        continue;
+                    }
+                    // только свои сообщения
+                    if ($user->userId === $message['user_id']) {
+                        $emptyMessages[] = $message['post_id'];
+                        $reports->send_message('editpost', ':!: не актуально', $topicID, $message['post_id']);
+                    }
                 }
             }
         }
-    }
 
-    if (count($emptyMessages)) {
-        Log::append(sprintf(
-            'Помечено неактуальных сообщений: %d => %s',
-            count($emptyMessages),
-            implode(',', $emptyMessages)
-        ));
+        if (count($emptyMessages)) {
+            $log->info(
+                sprintf(
+                    'Помечено неактуальных сообщений: %d => %s',
+                    count($emptyMessages),
+                    implode(',', $emptyMessages)
+                )
+            );
+        }
     }
 }
 
-Log::append(sprintf('Процесс отправки отчётов завершён за %s', Timers::getExecTime('send_reports')));
+$log->info(sprintf('Процесс отправки отчётов завершён за %s', Timers::getExecTime('send_reports')));

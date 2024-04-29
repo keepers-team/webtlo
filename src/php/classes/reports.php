@@ -42,7 +42,11 @@ class Reports
         $this->forum_url = $forum_url;
 
         $this->ch = curl_init();
-        Log::append('Используется зеркало для форума: ' . $forum_url);
+
+        Log::append(sprintf('Используется зеркало для форума: %s. %s',
+            $forum_url,
+            !empty(Proxy::$proxy['forum']) ? Proxy::getInfo() : 'Без прокси.'
+        ));
     }
 
     public function curl_setopts($options)
@@ -50,7 +54,7 @@ class Reports
         curl_setopt_array($this->ch, $options);
     }
 
-    private function make_request($url, $fields = [], $options = [])
+    private function make_request($url, $fields = [])
     {
         curl_setopt_array($this->ch, [
             CURLOPT_RETURNTRANSFER => 1,
@@ -65,7 +69,7 @@ class Reports
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
         ]);
         curl_setopt_array($this->ch, Proxy::$proxy['forum']);
-        curl_setopt_array($this->ch, $options);
+
         $try_number = 1; // номер попытки
         $try = 3; // кол-во попыток
         while (true) {
