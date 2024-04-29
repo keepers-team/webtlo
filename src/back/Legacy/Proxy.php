@@ -2,6 +2,8 @@
 
 namespace KeepersTeam\Webtlo\Legacy;
 
+use KeepersTeam\Webtlo\Config\ProxyType;
+
 /** Установка параметров прокси. */
 final class Proxy
 {
@@ -27,23 +29,8 @@ final class Proxy
         self::$address = in_array(null, explode(':', $address)) ? null : $address;
         self::$auth    = in_array(null, explode(':', $auth)) ? null : $auth;
 
-        if (
-            $activate_forum
-            || $activate_api
-        ) {
+        if ($activate_forum || $activate_api) {
             self::$proxy = self::set_proxy($activate_forum, $activate_api);
-
-            Log::append(
-                sprintf(
-                    'Используется %s-прокси: "%s" для форума(%d) и API(%d)',
-                    mb_strtoupper($type),
-                    $address,
-                    $activate_forum,
-                    $activate_api
-                )
-            );
-        } else {
-            Log::append('Прокси-сервер не используется.');
         }
     }
 
@@ -62,5 +49,14 @@ final class Proxy
             'forum' => $param_forum,
             'api'   => $param_api,
         ];
+    }
+
+    public static function getInfo(): string
+    {
+        return sprintf(
+            'Используется %s-прокси: "%s".',
+            mb_strtoupper(ProxyType::from((int)self::$type)->name),
+            self::$address
+        );
     }
 }

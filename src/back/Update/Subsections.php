@@ -143,7 +143,7 @@ final class Subsections
 
             $this->logger->debug(
                 sprintf(
-                    'Спискок раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
+                    'Список раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
                     $forumId,
                     count($topicResponse->topics),
                     Helper::convertBytes($topicResponse->totalSize, 9),
@@ -373,7 +373,7 @@ final class Subsections
 
         $this->logger->info(
             sprintf(
-                'Обработано хранимых подразделов: %d шт, раздач в них %d шт.',
+                'Обработано хранимых подразделов: %d шт, уникальных раздач в них %d шт.',
                 count($updatedSubsections),
                 $countTopicsUpdate + $countTopicsInsert
             )

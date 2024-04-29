@@ -13,6 +13,7 @@ use KeepersTeam\Webtlo\Legacy\Db;
  */
 final class Forums
 {
+    /** @var ForumObject[] */
     private static array $forums = [];
 
     /**
@@ -66,6 +67,9 @@ final class Forums
 
     /**
      * Обновить список ид сообщений заданного подраздела.
+     *
+     * @param int   $forumId
+     * @param int[] $postList
      */
     public static function updatePostList(int $forumId, array $postList): void
     {

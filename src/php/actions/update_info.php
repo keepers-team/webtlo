@@ -11,7 +11,7 @@ use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\Subsections;
 
 /**
- * Выполнение обновления сведений из разных истоничков.
+ * Выполнение обновления сведений из разных источников.
  * Либо полное обновление всего, либо конкретный модуль.
  */
 
@@ -85,6 +85,8 @@ try {
     }
     $log->info('-- DONE --');
 } catch (Throwable $e) {
+    $update_result['result'] = 'В процессе обновления сведений были ошибки. '
+        . 'Для получения подробностей обратитесь к журналу событий.';
     $log->error($e->getMessage());
 }
 

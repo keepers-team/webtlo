@@ -254,7 +254,7 @@ foreach ($forums_ids as $forum_id) {
 
     $logger->debug(
         sprintf(
-            'Спискок раздач подраздела № %-4d обновлён за %2s, %4d шт',
+            'Список раздач подраздела № %-4d обновлён за %2s, %4d шт',
             $forum_id,
             Timers::getExecTime("update_forum_$forum_id"),
             $topics_count

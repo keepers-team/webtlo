@@ -74,11 +74,11 @@ final class State
             // Скачивается.
             $topicState = 'arrow-circle-o-down';
         }
-        if (1 == $topic['paused'] ?? null) {
+        if (1 === (int)($topic['paused'] ?? 0)) {
             // Приостановлена.
             $topicState = 'pause-circle-o';
         }
-        if (1 == $topic['error'] ?? null) {
+        if (1 === (int)($topic['error'] ?? 0)) {
             // С ошибкой в клиенте.
             $topicState = 'times-circle-o';
         }

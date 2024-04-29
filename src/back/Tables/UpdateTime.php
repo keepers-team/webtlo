@@ -21,6 +21,7 @@ final class UpdateTime
 
     private ?CloneTable $table = null;
 
+    /** @var array<int, int>[] */
     private array $updatedMarkers = [];
 
     public function __construct(private readonly DB $db)

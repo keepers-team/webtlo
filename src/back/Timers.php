@@ -7,8 +7,10 @@ namespace KeepersTeam\Webtlo;
 /** Простой способ замера времени выполнения. */
 final class Timers
 {
+    /** @var array<string, array<string, mixed>> */
     private static array $markers = [];
-    private static array $stash   = [];
+    /** @var array<string, string> */
+    private static array $stash = [];
 
     public static function start(string $marker = 'default'): void
     {
@@ -50,6 +52,9 @@ final class Timers
         self::$stash[$marker] = self::getExecTime($marker);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public static function getStash(): array
     {
         $stash = self::$stash;

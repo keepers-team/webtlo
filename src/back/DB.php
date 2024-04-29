@@ -113,7 +113,7 @@ final class DB
     /** Запрос количество строк в таблице. */
     public function selectRowsCount(string $table): int
     {
-        return $this->queryCount("SELECT COUNT() FROM $table") ?? 0;
+        return $this->queryCount("SELECT COUNT() FROM $table");
     }
 
     /** Выполнить готовый запрос к БД. */

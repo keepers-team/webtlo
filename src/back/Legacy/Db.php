@@ -47,7 +47,7 @@ final class Db
      */
     public static function select_count(string $table): int
     {
-        return self::query_count("SELECT COUNT() FROM $table") ?? 0;
+        return self::query_count("SELECT COUNT() FROM $table");
     }
 
     /**

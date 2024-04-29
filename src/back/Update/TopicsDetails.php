@@ -82,7 +82,12 @@ final class TopicsDetails
         $this->logResult($beforeUpdate, array_sum($exec) / count($exec));
     }
 
-    /** Запросить детали о списке раздач. */
+    /**
+     * Запросить дополнительные сведения по списку ид раздач.
+     *
+     * @param int[] $topics
+     * @return array<string, mixed>[]
+     */
     private function getDetails(array $topics): array
     {
         $response = $this->apiClient->getTopicsDetails($topics);

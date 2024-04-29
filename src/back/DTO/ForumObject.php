@@ -15,6 +15,7 @@ final class ForumObject
         public ?int    $author_id,
         public ?string $author_name,
         public ?int    $author_post_id,
+        /** @var ?int[] */
         public ?array  $post_ids
     ) {
     }

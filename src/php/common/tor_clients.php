@@ -201,15 +201,15 @@ if ($cfg['update']['untracked']) {
         // подключаемся к api
         $apiClient = $app->getApiClient();
 
-        // Пробуем найти на форуме раздачи по их хешам из клиента.
+        // Пробуем найти в API раздачи по их хешам из клиента.
         $response = $apiClient->getTopicsDetails($untrackedTorrentHashes, TopicSearchMode::HASH);
-        if ($response instanceof ApiError) {
-            $logger->error(sprintf('%d %s', $response->code, $response->text));
-            throw new RuntimeException('Error: Не получены дополнительные данные о раздачах');
-        }
 
-        unset($untrackedTorrentHashes);
-        if (!empty($response->topics)) {
+        if ($response instanceof ApiError) {
+            $logger->debug(
+                sprintf('Не удалось найти данные о раздачах в API. %d %s', $response->code, $response->text)
+            );
+            $logger->debug('hashes', $untrackedTorrentHashes);
+        } elseif (!empty($response->topics)) {
             foreach ($response->topics as $topicData) {
                 // Пропускаем раздачи в невалидных статусах.
                 if (!in_array($topicData->status->value, Topics::VALID_STATUSES)) {
@@ -244,7 +244,7 @@ if ($cfg['update']['untracked']) {
                 }
             }
         }
-        unset($response);
+        unset($untrackedTorrentHashes, $response);
     }
 
     $timers['search_untracked'] = Timers::getExecTime('search_untracked');
