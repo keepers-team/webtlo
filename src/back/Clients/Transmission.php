@@ -30,8 +30,14 @@ final class Transmission implements ClientInterface
 
     private const TOKEN = 'X-Transmission-Session-Id';
 
-    private bool  $authenticated = false;
-    private array $headers       = [];
+    private bool $authenticated = false;
+
+    /**
+     * Заголовки для хранения ключа авторизации.
+     *
+     * @var array<string, string>
+     */
+    private array $headers = [];
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
     protected bool $categoryAddingAllowed = true;
@@ -122,7 +128,7 @@ final class Transmission implements ClientInterface
     {
         $content = file_get_contents($torrentFilePath);
         if ($content === false) {
-            $this->logger->error("Failed to upload file", ['filename' => basename($torrentFilePath)]);
+            $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
         }
@@ -254,27 +260,9 @@ final class Transmission implements ClientInterface
     }
 
     /**
-     * Завершить сессию.
-     */
-    private function logout(): bool
-    {
-        if ($this->authenticated) {
-            try {
-                $response = $this->request('session-close');
-
-                $this->authenticated = !($response->getStatusCode() === 200);
-
-                return !$this->authenticated;
-            } catch (Throwable) {
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
+     * @param string               $method
+     * @param array<string, mixed> $options
+     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $method, array $options = []): ResponseInterface
@@ -292,18 +280,28 @@ final class Transmission implements ClientInterface
         return $this->client->post('', $options);
     }
 
+    /**
+     * @param string               $method
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     private function makeRequest(string $method, array $params = []): array
     {
         try {
             $response = $this->request($method, $params);
         } catch (GuzzleException $e) {
-            $this->logger->error('Failed to make request', ['error' => $e->getCode(), 'message' => $e->getMessage()]);
+            $this->logger->error('Failed to make request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
             throw new RuntimeException('Failed to make request');
         }
 
         return $this->validateResponse($response);
     }
 
+    /**
+     * @param string               $method
+     * @param array<string, mixed> $params
+     * @return bool
+     */
     private function sendRequest(string $method, array $params = []): bool
     {
         try {
@@ -317,9 +315,20 @@ final class Transmission implements ClientInterface
         return false;
     }
 
+    /**
+     * @param ResponseInterface $response
+     * @return array<string, mixed>
+     */
     private function validateResponse(ResponseInterface $response): array
     {
-        $array = json_decode($response->getBody()->getContents(), true);
+        $body  = $response->getBody()->getContents();
+        $array = json_decode($body, true);
+
+        if (null === $array) {
+            $this->logger->error('Fail to decode api response', [htmlspecialchars(trim($body))]);
+
+            throw new RuntimeException('Unsuccessful api request');
+        }
 
         if ('success' !== $array['result']) {
             $this->logger->error('Unsuccessful api request', $array);
@@ -329,6 +338,10 @@ final class Transmission implements ClientInterface
         return (array)$array['arguments'];
     }
 
+    /**
+     * @param array<string, mixed> $headers
+     * @return callable
+     */
     private function getLoginHandler(array &$headers): callable
     {
         $logger    = $this->logger;
@@ -346,9 +359,10 @@ final class Transmission implements ClientInterface
 
                 // Дописываем токен авторизации в текущий запрос.
                 $request = $request->withAddedHeader($tokenName, $sid);
+
                 // Записываем токен авторизации в заголовки.
-                $logger->debug('Got transmission auth token', [$sid]);
                 $headers[$tokenName] = $sid;
+                $logger->debug('Got transmission auth token', [$sid]);
             }
         };
     }
@@ -356,12 +370,5 @@ final class Transmission implements ClientInterface
     private function prepareLabel(string $label): string
     {
         return (string)str_replace(',', '', $label);
-    }
-
-    public function __destruct()
-    {
-        if (!$this->logout()) {
-            $this->logger->warning('Unable to logout of transmission api');
-        }
     }
 }

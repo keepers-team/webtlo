@@ -180,7 +180,7 @@ final class Rtorrent implements ClientInterface
         foreach ($torrentHashes as $torrentHash) {
             $executeDeleteFiles = ['', 'true'];
             if ($deleteFiles) {
-                $dataPath = $this->makeRequest('d.data_path', $torrentHash);
+                $dataPath = $this->makeRequest('d.data_path', [$torrentHash]);
                 if (!empty($dataPath)) {
                     $executeDeleteFiles = ['', 'rm', '-rf', '--', $dataPath];
                 }
@@ -266,16 +266,23 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
+     * @param string            $command
+     * @param array<int, mixed> $params
+     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $command, array $params = []): ResponseInterface
     {
         $options = ['body' => $this->xmpRequestEncode($command, $params)];
 
-
         return $this->client->post(uri: '', options: $options);
     }
 
+    /**
+     * @param string            $command
+     * @param array<int, mixed> $params
+     * @return array<int, mixed>
+     */
     private function makeRequest(string $command, array $params = []): array
     {
         try {
@@ -291,6 +298,11 @@ final class Rtorrent implements ClientInterface
         return (array)$this->xmlResponseDecode($content);
     }
 
+    /**
+     * @param string            $command
+     * @param array<int, mixed> $params
+     * @return bool
+     */
     private function sendRequest(string $command, array $params = []): bool
     {
         try {
@@ -313,24 +325,40 @@ final class Rtorrent implements ClientInterface
 
     /**
      * Высов списка команд по очереди.
+     *
+     * @param array<string, mixed>[] $callsChain
+     * @return bool
      */
     private function makeMultiCall(array $callsChain): bool
     {
         return $this->sendRequest('system.multicall', [$callsChain]);
     }
 
+    /**
+     * @param string            $method
+     * @param string[]          $torrentHashes
+     * @param array<int, mixed> $params
+     * @return array<array<string, mixed>>
+     */
     private function prepareHashesCalls(string $method, array $torrentHashes, array $params = []): array
     {
         $callback = fn($hash) => ['methodName' => $method, 'params' => [$hash, ...$params]];
 
-        return array_chunk(
-            array_map($callback, $torrentHashes),
-            self::MultiCallCount
-        );
+        return array_map($callback, $torrentHashes);
     }
 
-    private function actionTorrents(array $callsChunks): bool
+    /**
+     * @param array<array<string, mixed>> $calls
+     * @return bool
+     */
+    private function actionTorrents(array $calls): bool
     {
+        // Разделяем необходимые запросы на группы.
+        $callsChunks = array_chunk(
+            $calls,
+            self::MultiCallCount
+        );
+
         $result = true;
         foreach ($callsChunks as $callsChain) {
             $response = $this->makeMultiCall($callsChain);
@@ -342,6 +370,11 @@ final class Rtorrent implements ClientInterface
         return $result;
     }
 
+    /**
+     * @param string            $command
+     * @param array<int, mixed> $params
+     * @return string
+     */
     private function xmpRequestEncode(string $command, array $params = []): string
     {
         return xmlrpc_encode_request($command, $params, ['escaping' => 'markup', 'encoding' => 'UTF-8']);

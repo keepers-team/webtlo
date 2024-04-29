@@ -28,6 +28,8 @@ final class Utorrent implements ClientInterface
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
 
+    private const HashesPerRequest = 32;
+
     private bool $authenticated = false;
 
     private string $token;
@@ -250,6 +252,10 @@ final class Utorrent implements ClientInterface
     }
 
     /**
+     * @param string               $action
+     * @param array<string, mixed> $params
+     * @param string               $method
+     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $action, array $params = [], string $method = 'action'): ResponseInterface
@@ -268,6 +274,12 @@ final class Utorrent implements ClientInterface
         return $this->client->get('', ['query' => $query]);
     }
 
+    /**
+     * @param string               $action
+     * @param array<string, mixed> $params
+     * @param string               $method
+     * @return array<string, mixed>
+     */
     private function makeRequest(string $action, array $params = [], string $method = 'action'): array
     {
         try {
@@ -281,6 +293,12 @@ final class Utorrent implements ClientInterface
         return json_decode($response->getBody()->getContents(), true);
     }
 
+    /**
+     * @param string               $action
+     * @param array<string, mixed> $params
+     * @param string               $method
+     * @return bool
+     */
     private function sendRequest(string $action, array $params = [], string $method = 'action'): bool
     {
         try {
@@ -296,6 +314,11 @@ final class Utorrent implements ClientInterface
 
     /**
      * Кодируем выполняемое действие + токен авторизации.
+     *
+     * @param string               $method
+     * @param string               $action
+     * @param array<string, mixed> $params
+     * @return string
      */
     private function buildHttpQuery(string $method, string $action, array $params = []): string
     {
@@ -308,12 +331,31 @@ final class Utorrent implements ClientInterface
 
     /**
      * Изменение параметров торрента.
+     *
+     * @param string[] $hashes
+     * @param string   $property
+     * @param string   $value
+     * @return bool
      */
     private function setProperties(array $hashes, string $property, string $value): bool
     {
+        // Экранируем значение, т.к. передавать будем GET-ом.
+        $value = urlencode($value);
+        // Создаём строки присвоение значения каждому хешу.
         $hashes = array_map(fn($hash) => sprintf('%s&s=%s&v=%s', $hash, $property, $value), $hashes);
 
-        return $this->sendRequest('setprops', ['hashes' => $hashes]);
+        // Делим итоговый список на части.
+        $hashesChunks = array_chunk($hashes, self::HashesPerRequest);
+
+        $result = true;
+        foreach ($hashesChunks as $hashesChunk) {
+            $response = $this->sendRequest(action: 'setprops', params: ['hashes' => $hashesChunk]);
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -321,6 +363,6 @@ final class Utorrent implements ClientInterface
      */
     private function setSetting(string $setting, string $value): bool
     {
-        return $this->sendRequest('setsetting', ['s' => $setting, 'v' => $value]);
+        return $this->sendRequest(action: 'setsetting', params: ['s' => $setting, 'v' => $value]);
     }
 }

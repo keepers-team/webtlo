@@ -29,7 +29,7 @@ final class Flood implements ClientInterface
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
     private bool $categoryAddingAllowed = true;
 
-    private int   $responseHttpCode;
+    /** @var string[] */
     private array $errorStates = [
         '/.*Couldn\'t connect.*/',
         '/.*error.*/',
@@ -65,7 +65,7 @@ final class Flood implements ClientInterface
 
     public function getTorrents(array $filter = []): array
     {
-        $response = $this->makeRequest('torrents');
+        $response = $this->makeRequest(uri: 'torrents');
 
         $torrents = [];
         foreach ($response['torrents'] as $torrent) {
@@ -208,6 +208,10 @@ final class Flood implements ClientInterface
     }
 
     /**
+     * @param string               $uri
+     * @param string               $method
+     * @param array<string, mixed> $params
+     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $uri, string $method = 'GET', array $params = []): ResponseInterface
@@ -220,6 +224,12 @@ final class Flood implements ClientInterface
         return $this->client->request(method: $method, uri: $uri, options: $options);
     }
 
+    /**
+     * @param string               $uri
+     * @param string               $method
+     * @param array<string, mixed> $params
+     * @return array<string, mixed>
+     */
     private function makeRequest(string $uri, string $method = 'GET', array $params = []): array
     {
         try {
@@ -233,6 +243,12 @@ final class Flood implements ClientInterface
         return json_decode($response->getBody()->getContents(), true);
     }
 
+    /**
+     * @param string               $uri
+     * @param string               $method
+     * @param array<string, mixed> $params
+     * @return bool
+     */
     private function sendRequest(string $uri, string $method = 'GET', array $params = []): bool
     {
         try {
@@ -278,6 +294,9 @@ final class Flood implements ClientInterface
 
     /**
      * Проверить наличие ошибки в статусе торрента.
+     *
+     * @param array<string, mixed> $torrent
+     * @return array{int, string}
      */
     private function checkTorrentError(array $torrent): array
     {

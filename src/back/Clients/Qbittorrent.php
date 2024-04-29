@@ -33,8 +33,19 @@ final class Qbittorrent implements ClientInterface
     /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
     private int $torrentAddingSleep = 100;
 
-    private ?array $categories  = null;
-    private array  $errorStates = ['error', 'missingFiles', 'unknown'];
+    /**
+     * Категории раздач в клиенте.
+     *
+     * @var ?string[]
+     */
+    private ?array $categories = null;
+
+    /**
+     * Статусы ошибок.
+     *
+     * @var string[]
+     */
+    private array $errorStates = ['error', 'missingFiles', 'unknown'];
 
     private Client    $client;
     private CookieJar $jar;
@@ -67,7 +78,7 @@ final class Qbittorrent implements ClientInterface
         $simpleRun = $filter['simple'] ?? false;
 
         Timers::start('torrents_info');
-        $response = $this->makeRequest('torrents/info');
+        $response = $this->makeRequest(url: 'torrents/info');
         Timers::stash('torrents_info');
 
         $torrents = [];
@@ -98,7 +109,7 @@ final class Qbittorrent implements ClientInterface
                     $torrentTrackers = $this->getTrackers($clientHash);
                     if (!empty($torrentTrackers)) {
                         foreach ($torrentTrackers as $torrentTracker) {
-                            if ($torrentTracker['status'] == 4) {
+                            if ((int)$torrentTracker['status'] === 4) {
                                 $torrents[$torrentHash]['tracker_error'] = $torrentTracker['msg'];
                                 break;
                             }
@@ -202,7 +213,7 @@ final class Qbittorrent implements ClientInterface
         ];
 
         try {
-            $response = $this->request('torrents/setCategory', $fields);
+            $response = $this->request(url: 'torrents/setCategory', params: $fields);
 
             return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
@@ -227,7 +238,7 @@ final class Qbittorrent implements ClientInterface
         ];
 
         try {
-            $this->request('torrents/createCategory', $fields);
+            $this->request(url: 'torrents/createCategory', params: $fields);
         } catch (GuzzleException $e) {
             $statusCode = $e->getCode();
             if ($statusCode === 400) {
@@ -242,14 +253,14 @@ final class Qbittorrent implements ClientInterface
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest('torrents/resume', $fields);
+        return $this->sendRequest(url: 'torrents/resume', params: $fields);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest('torrents/pause', $fields);
+        return $this->sendRequest(url: 'torrents/pause', params: $fields);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
@@ -259,14 +270,14 @@ final class Qbittorrent implements ClientInterface
             'deleteFiles' => $deleteFiles ? 'true' : 'false',
         ];
 
-        return $this->sendRequest('torrents/delete', $fields);
+        return $this->sendRequest(url: 'torrents/delete', params: $fields);
     }
 
     public function recheckTorrents(array $torrentHashes): bool
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest('torrents/recheck', $fields);
+        return $this->sendRequest(url: 'torrents/recheck', params: $fields);
     }
 
     /**
@@ -295,13 +306,13 @@ final class Qbittorrent implements ClientInterface
                 } else {
                     $this->logger->warning(
                         'Failed to make request',
-                        ['code' => $e->getCode(), 'message' => $e->getMessage()]
+                        ['code' => $e->getCode(), 'message' => htmlspecialchars(trim($e->getMessage()))]
                     );
                 }
             } catch (Throwable $e) {
                 $this->logger->warning(
                     'Failed to make request',
-                    ['code' => $e->getCode(), 'message' => $e->getMessage()]
+                    ['code' => $e->getCode(), 'message' => htmlspecialchars(trim($e->getMessage()))]
                 );
             }
 
@@ -348,6 +359,9 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
+     * @param string               $url
+     * @param array<string, mixed> $params
+     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $url, array $params = []): ResponseInterface
@@ -355,10 +369,15 @@ final class Qbittorrent implements ClientInterface
         return $this->client->post($url, ['form_params' => $params]);
     }
 
+    /**
+     * @param string               $url
+     * @param array<string, mixed> $params
+     * @return array<int|string, mixed>
+     */
     private function makeRequest(string $url, array $params = []): array
     {
         try {
-            $response = $this->request($url, $params);
+            $response = $this->request(url: $url, params: $params);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to make request', ['error' => $e->getCode(), 'message' => $e->getMessage()]);
 
@@ -368,10 +387,15 @@ final class Qbittorrent implements ClientInterface
         return json_decode($response->getBody()->getContents(), true);
     }
 
+    /**
+     * @param string               $url
+     * @param array<string, mixed> $params
+     * @return bool
+     */
     private function sendRequest(string $url, array $params = []): bool
     {
         try {
-            $response = $this->request($url, $params);
+            $response = $this->request(url: $url, params: $params);
 
             return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
@@ -381,21 +405,29 @@ final class Qbittorrent implements ClientInterface
         return false;
     }
 
+    /**
+     * @param string $torrentHash
+     * @return array<string, mixed>
+     */
     private function getProperties(string $torrentHash): array
     {
         return $this->makeRequest(
-            'torrents/properties',
-            ['hash' => strtolower($torrentHash)]
+            url   : 'torrents/properties',
+            params: ['hash' => strtolower($torrentHash)]
         );
     }
 
+    /**
+     * @param string $torrentHash
+     * @return array<string, mixed>[]
+     */
     private function getTrackers(string $torrentHash): array
     {
         $torrent_trackers = [];
 
         $trackers = $this->makeRequest(
-            'torrents/trackers',
-            ['hash' => strtolower($torrentHash)]
+            url   : 'torrents/trackers',
+            params: ['hash' => strtolower($torrentHash)]
         );
         foreach ($trackers as $tracker) {
             if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
@@ -413,7 +445,7 @@ final class Qbittorrent implements ClientInterface
         }
 
         if (null === $this->categories) {
-            $this->categories = $this->makeRequest('torrents/categories');
+            $this->categories = $this->makeRequest(url: 'torrents/categories');
         }
 
         if (!array_key_exists($labelName, $this->categories)) {
