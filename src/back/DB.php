@@ -77,6 +77,8 @@ final class DB
 
             return $sth;
         } catch (Throwable $e) {
+            $this->rollbackTransaction();
+
             Log::append($sql);
             throw new RuntimeException($e->getMessage(), (int)$e->getCode(), $e);
         }
@@ -114,6 +116,25 @@ final class DB
     public function selectRowsCount(string $table): int
     {
         return $this->queryCount("SELECT COUNT() FROM $table");
+    }
+
+    public function beginTransaction(): void
+    {
+        $this->db->beginTransaction();
+    }
+
+    public function commitTransaction(): void
+    {
+        if ($this->db->inTransaction()) {
+            $this->db->commit();
+        }
+    }
+
+    public function rollbackTransaction(): void
+    {
+        if ($this->db->inTransaction()) {
+            $this->db->rollBack();
+        }
     }
 
     /** Выполнить готовый запрос к БД. */

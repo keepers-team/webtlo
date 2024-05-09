@@ -24,6 +24,15 @@ trait DbHelperTrait
         }
     }
 
+    public function queryStatement(string $statement, array $params = []): array
+    {
+        try {
+            return $this->db->query($statement, $params);
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
+        }
+    }
+
     public function queryStatementRow(string $statement, array $params = []): array
     {
         try {
