@@ -210,7 +210,8 @@ final class DefaultTopics implements ListInterface
 
         // Создаём временные таблицы.
         $this->createTempTopics($forum, $status, $priority, $dateRelease);
-        $this->createTempKeepers($excludeSelfKeep);
+        $this->createTempKeepers();
+        $this->createTempKeepersFilter($excludeSelfKeep);
 
         // Хранители всех раздач из искомых подразделов.
         $this->fillKeepersByForumList($forum->values);
@@ -274,7 +275,25 @@ final class DefaultTopics implements ListInterface
         $this->queryStatement('CREATE INDEX temp.DefaultRuleTopicsIX_id ON DefaultRuleTopics(id)');
     }
 
-    private function createTempKeepers(bool $excludeSelf): void
+    private function createTempKeepers(): void
+    {
+        $sql = /** @lang SQLite */
+            '
+            CREATE TEMP TABLE DefaultRuleKeepers AS
+            SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
+            FROM KeepersLists kl
+            INNER JOIN temp.DefaultRuleTopics t ON t.id = kl.topic_id
+            WHERE kl.posted > t.reg_time
+            UNION ALL
+            SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, NULL AS posted, 1 AS seeding
+            FROM KeepersSeeders AS ks
+            INNER JOIN temp.DefaultRuleTopics t ON t.id = ks.topic_id
+        ';
+
+        $this->queryStatement($sql);
+    }
+
+    private function createTempKeepersFilter(bool $excludeSelf): void
     {
         $selfFilter = $excludeSelf ? "WHERE keeper_id != '$this->userId'" : '';
 
@@ -293,16 +312,7 @@ final class DefaultTopics implements ListInterface
                 MAX(seeding) AS has_seeding
             FROM (
                 SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
-                FROM (
-                    SELECT kl.topic_id, kl.keeper_id, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                    FROM KeepersLists kl
-                    INNER JOIN DefaultRuleTopics t ON t.id = kl.topic_id
-                    WHERE kl.posted > t.reg_time
-                    UNION ALL
-                    SELECT ks.topic_id, ks.keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
-                    FROM KeepersSeeders AS ks
-                    INNER JOIN DefaultRuleTopics t ON t.id = ks.topic_id
-                )
+                FROM temp.DefaultRuleKeepers AS tmp
                 $selfFilter
                 GROUP BY topic_id, keeper_id
             )
@@ -389,20 +399,15 @@ final class DefaultTopics implements ListInterface
     {
         $keepers = [];
         foreach (array_chunk($forumList, 499) as $forumsChunk) {
-            $keys = KeysObject::create($forumsChunk);
+            $chunk = KeysObject::create($forumsChunk);
 
             $statement = "
                 SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
                 FROM (
                     SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                    FROM DefaultRuleTopics AS tp
-                    LEFT JOIN KeepersLists AS kl ON tp.id = kl.topic_id
-                    WHERE tp.forum_id IN ($keys->keys) AND tp.reg_time < posted AND kl.topic_id IS NOT NULL
-                    UNION ALL
-                    SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, 0 AS posted, 1 AS seeding
-                    FROM DefaultRuleTopics AS tp
-                    LEFT JOIN KeepersSeeders AS ks ON tp.id = ks.topic_id
-                    WHERE tp.forum_id IN ($keys->keys) AND ks.topic_id IS NOT NULL
+                    FROM temp.DefaultRuleTopics AS tp
+                    INNER JOIN temp.DefaultRuleKeepers AS kl ON tp.id = kl.topic_id
+                    WHERE tp.forum_id IN ($chunk->keys) AND (kl.posted IS NULL OR kl.posted > tp.reg_time)
                 ) AS k
                 GROUP BY k.topic_id, k.keeper_id, k.keeper_name
                 ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
@@ -410,7 +415,7 @@ final class DefaultTopics implements ListInterface
 
             $keepers += $this->queryStatementGroup(
                 $statement,
-                [...$keys->values, ...$keys->values, $this->userId]
+                [...$chunk->values, $this->userId]
             );
         }
 
