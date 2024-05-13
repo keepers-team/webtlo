@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use DateTimeImmutable;
+use Generator;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
@@ -24,6 +25,9 @@ final class DefaultTopics implements ListInterface
 {
     use FilterTrait;
     use DbHelperTrait;
+
+    private int   $userId;
+    private array $keepers = [];
 
     public function __construct(
         private readonly DB     $db,
@@ -71,34 +75,23 @@ final class DefaultTopics implements ListInterface
         // Текущий пользователь.
         $userId = (int)$this->cfg['user_id'];
 
+        $this->userId = $userId;
+
         // Хранимые подразделы.
-        $forumsIDs = $this->getForumIdList();
-        $forum     = KeysObject::create($forumsIDs);
+        $forum = $this->getForumIdList();
 
-        // Открываем транзакцию выполнения запроса к БД.
-        $this->db->beginTransaction();
-        // Создаём временные таблицы.
-        $this->createTempTopics($forum, $status, $priority, $dateRelease);
-        $this->createTempKeepers($userId, $excludeSelfKeep);
-
-        // Хранители всех раздач из искомых подразделов.
-        $keepers = $this->getKeepersByForumList($forumsIDs, $userId);
-
-        // Собрать общий запрос к базе.
-        $statement = $this->getStatement(
+        // Ищем раздачи по фильтрам.
+        $topics = $this->queryTopics(
             $filter,
             $filterKeepers,
             $filterAverageSeed,
-        );
-
-        // Получаем раздачи из базы.
-        $topics = $this->selectSortedTopics(
+            $forum,
+            $status,
+            $priority,
+            $dateRelease,
+            $excludeSelfKeep,
             $sort,
-            $statement,
         );
-
-        // Закрываем транзакцию к БД.
-        $this->db->commitTransaction();
 
         $topicRows  = [];
         $totalCount = $totalSize = 0;
@@ -118,7 +111,7 @@ final class DefaultTopics implements ListInterface
             unset($topicData);
 
             // Список хранителей раздачи.
-            $topicKeepers = $keepers[$topic->id] ?? [];
+            $topicKeepers = $this->getTopicKeepers($topic->id);
 
             // Фильтрация по количеству сидов.
             if (!FilterApply::isSeedCountInRange($filterSeed, (float)$topic->averageSeed)) {
@@ -173,7 +166,7 @@ final class DefaultTopics implements ListInterface
     }
 
     /** Список ид подразделов. */
-    private function getForumIdList(): array
+    private function getForumIdList(): KeysObject
     {
         if ($this->forumId > 0) {
             $forumsIDs = [$this->forumId];
@@ -195,7 +188,52 @@ final class DefaultTopics implements ListInterface
             $forumsIDs = [0];
         }
 
-        return $forumsIDs;
+        return KeysObject::create($forumsIDs);
+    }
+
+    /**
+     * Создать временные таблицы, сформировать запрос поиска раздач, выполнить запрос к БД, обернув в транзакцию.
+     */
+    private function queryTopics(
+        array             $filter,
+        Keepers           $filterKeepers,
+        AverageSeed       $filterAverageSeed,
+        KeysObject        $forum,
+        KeysObject        $status,
+        KeysObject        $priority,
+        DateTimeImmutable $dateRelease,
+        bool              $excludeSelfKeep,
+        Sort              $sort
+    ): Generator {
+        // Открываем транзакцию выполнения запроса к БД.
+        $this->db->beginTransaction();
+
+        // Создаём временные таблицы.
+        $this->createTempTopics($forum, $status, $priority, $dateRelease);
+        $this->createTempKeepers($excludeSelfKeep);
+
+        // Хранители всех раздач из искомых подразделов.
+        $this->fillKeepersByForumList($forum->values);
+
+        // Собрать общий запрос к базе.
+        $statement = $this->getStatement(
+            $filter,
+            $filterKeepers,
+            $filterAverageSeed,
+        );
+
+        // Получаем раздачи из базы.
+        $topics = $this->selectSortedTopics(
+            $sort,
+            $statement,
+        );
+
+        // Закрываем транзакцию к БД.
+        $this->db->commitTransaction();
+
+        foreach ($topics as $topic) {
+            yield $topic;
+        }
     }
 
     /**
@@ -236,9 +274,9 @@ final class DefaultTopics implements ListInterface
         $this->queryStatement('CREATE INDEX temp.DefaultRuleTopicsIX_id ON DefaultRuleTopics(id)');
     }
 
-    private function createTempKeepers(int $userId, bool $excludeSelf): void
+    private function createTempKeepers(bool $excludeSelf): void
     {
-        $selfFilter = $excludeSelf ? "WHERE keeper_id != '$userId'" : '';
+        $selfFilter = $excludeSelf ? "WHERE keeper_id != '$this->userId'" : '';
 
         // Данный запрос, для каждой раздачи, определяет наличие:
         // max_posted - хранителя включившего раздачу в отчёт, по данным форума (KeepersLists);
@@ -347,7 +385,7 @@ final class DefaultTopics implements ListInterface
     }
 
     /** Список хранителей всех раздач указанных подразделов. */
-    private function getKeepersByForumList(array $forumList, int $user_id): array
+    private function fillKeepersByForumList(array $forumList): void
     {
         $keepers = [];
         foreach (array_chunk($forumList, 499) as $forumsChunk) {
@@ -372,11 +410,16 @@ final class DefaultTopics implements ListInterface
 
             $keepers += $this->queryStatementGroup(
                 $statement,
-                [...$keys->values, ...$keys->values, $user_id]
+                [...$keys->values, ...$keys->values, $this->userId]
             );
         }
 
-        return $keepers;
+        $this->keepers = $keepers;
+    }
+
+    private function getTopicKeepers(int $topicId): array
+    {
+        return $this->keepers[$topicId] ?? [];
     }
 
     /** Исключить себя из списка хранителей раздачи. */
