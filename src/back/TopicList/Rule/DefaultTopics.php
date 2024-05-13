@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
@@ -38,7 +39,7 @@ final class DefaultTopics implements ListInterface
     public function getTopics(array $filter, Sort $sort): Topics
     {
         // Проверка фильтра даты регистрации раздачи.
-        Validate::checkDateRelease($filter);
+        $dateRelease = Validate::checkDateRelease($filter);
 
         // Проверка выбранного статуса раздач в клиенте.
         Validate::checkClientStatus($filter);
@@ -74,26 +75,30 @@ final class DefaultTopics implements ListInterface
         $forumsIDs = $this->getForumIdList();
         $forum     = KeysObject::create($forumsIDs);
 
-        // Хранители всех раздач из хранимых подразделов.
+        // Открываем транзакцию выполнения запроса к БД.
+        $this->db->beginTransaction();
+        // Создаём временные таблицы.
+        $this->createTempTopics($forum, $status, $priority, $dateRelease);
+        $this->createTempKeepers($userId, $excludeSelfKeep);
+
+        // Хранители всех раздач из искомых подразделов.
         $keepers = $this->getKeepersByForumList($forumsIDs, $userId);
 
         // Собрать общий запрос к базе.
         $statement = $this->getStatement(
-            $this->getKeepersStatusStatement($userId, $excludeSelfKeep),
             $filter,
             $filterKeepers,
             $filterAverageSeed,
-            $forum,
-            $status,
-            $priority
         );
 
         // Получаем раздачи из базы.
         $topics = $this->selectSortedTopics(
             $sort,
             $statement,
-            [...$forum->values, ...$status->values, ...$priority->values]
         );
+
+        // Закрываем транзакцию к БД.
+        $this->db->commitTransaction();
 
         $topicRows  = [];
         $totalCount = $totalSize = 0;
@@ -193,49 +198,86 @@ final class DefaultTopics implements ListInterface
         return $forumsIDs;
     }
 
-    private function getKeepersStatusStatement(int $userId, bool $excludeSelf): string
+    /**
+     * Создать временную таблицу Topics по имеющимся фильтрам.
+     */
+    private function createTempTopics(
+        KeysObject        $forum,
+        KeysObject        $status,
+        KeysObject        $priority,
+        DateTimeImmutable $dateRelease,
+    ): void {
+        $sql = /** @lang SQLite */
+            "
+            CREATE TEMP TABLE DefaultRuleTopics AS
+            SELECT *
+            FROM Topics
+            WHERE TRUE
+                AND Topics.forum_id IN ($forum->keys)
+                AND Topics.status IN ($status->keys)
+                AND Topics.keeping_priority IN ($priority->keys)
+                AND Topics.reg_time < ?
+        ";
+
+        $params = [
+            // Фильтр выбранных подразделов.
+            ...$forum->values,
+            // Фильтр по статусу раздачи.
+            ...$status->values,
+            // Фильтр по приоритету хранения раздачи
+            ...$priority->values,
+            // Фильтр по дате регистрации раздачи.
+            $dateRelease->getTimestamp(),
+        ];
+
+        $this->queryStatement($sql, $params);
+
+        // Добавим индекс по ид раздачи.
+        $this->queryStatement('CREATE INDEX temp.DefaultRuleTopicsIX_id ON DefaultRuleTopics(id)');
+    }
+
+    private function createTempKeepers(int $userId, bool $excludeSelf): void
     {
+        $selfFilter = $excludeSelf ? "WHERE keeper_id != '$userId'" : '';
+
         // Данный запрос, для каждой раздачи, определяет наличие:
         // max_posted - хранителя включившего раздачу в отчёт, по данным форума (KeepersLists);
         // has_complete - хранителя завершившего скачивание раздачи;
         // has_download - хранителя скачивающего раздачу;
         // has_seeding - хранителя раздающего раздачу, по данным апи (KeepersSeeders);
-        return sprintf(
-            '
-                SELECT topic_id,
-                    MAX(complete) AS has_complete,
-                    MAX(posted) AS max_posted,
-                    MAX(NOT complete) AS has_download,
-                    MAX(seeding) AS has_seeding
+        $sql = /** @lang SQLite */
+            "
+            CREATE TEMP TABLE DefaultRuleKeepersFilter AS
+            SELECT topic_id,
+                MAX(complete) AS has_complete,
+                MAX(posted) AS max_posted,
+                MAX(NOT complete) AS has_download,
+                MAX(seeding) AS has_seeding
+            FROM (
+                SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
                 FROM (
-                    SELECT topic_id, MAX(complete) AS complete, MAX(posted) AS posted, MAX(seeding) AS seeding
-                    FROM (
-                        SELECT kl.topic_id, kl.keeper_id, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                        FROM KeepersLists kl
-                        INNER JOIN Topics t ON t.id = kl.topic_id
-                        WHERE kl.posted > t.reg_time
-                        UNION ALL
-                        SELECT topic_id, keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
-                        FROM KeepersSeeders
-                    )
-                    %s
-                    GROUP BY topic_id, keeper_id
+                    SELECT kl.topic_id, kl.keeper_id, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
+                    FROM KeepersLists kl
+                    INNER JOIN DefaultRuleTopics t ON t.id = kl.topic_id
+                    WHERE kl.posted > t.reg_time
+                    UNION ALL
+                    SELECT ks.topic_id, ks.keeper_id, 1 AS complete, NULL AS posted, 1 AS seeding
+                    FROM KeepersSeeders AS ks
+                    INNER JOIN DefaultRuleTopics t ON t.id = ks.topic_id
                 )
-                GROUP BY topic_id
-            ',
-            // Исключаем себя из списка, при необходимости.
-            $excludeSelf ? "WHERE keeper_id != '$userId'" : ''
-        );
+                $selfFilter
+                GROUP BY topic_id, keeper_id
+            )
+            GROUP BY topic_id
+        ";
+
+        $this->queryStatement($sql);
     }
 
     private function getStatement(
-        string      $keepersStatement,
         array       $filter,
         Keepers     $filterKeepers,
         AverageSeed $averageSeed,
-        KeysObject  $forum,
-        KeysObject  $status,
-        KeysObject  $priority
     ): string {
         // Шаблон для статуса хранения.
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
@@ -255,26 +297,21 @@ final class DefaultTopics implements ListInterface
                 Torrents.error,
                 Torrents.client_id,
                 %s
-            FROM Topics
+            FROM temp.DefaultRuleTopics AS Topics
             LEFT JOIN Torrents ON Topics.info_hash = Torrents.info_hash
             %s
-            LEFT JOIN (
-                %s
-            ) Keepers ON Topics.id = Keepers.topic_id AND (Keepers.max_posted IS NULL OR Topics.reg_time < Keepers.max_posted)
-            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded ON Topics.info_hash = TopicsExcluded.info_hash
+            LEFT JOIN temp.DefaultRuleKeepersFilter AS Keepers
+                ON Topics.id = Keepers.topic_id
+                    AND (Keepers.max_posted IS NULL OR Topics.reg_time < Keepers.max_posted)
+            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded
+                ON Topics.info_hash = TopicsExcluded.info_hash
             WHERE TopicsExcluded.info_hash IS NULL
-                AND Topics.forum_id IN ($forum->keys)
-                AND Topics.status IN ($status->keys)
-                AND Topics.keeping_priority IN ($priority->keys)
                 AND ($torrentDone)
                 %s
         ";
 
         // Применить фильтр по статусу хранимого.
         $where = Validate::getKeptStatusFilter($filterKeepers->status);
-
-        // Фильтр по дате регистрации раздачи.
-        $where[] = sprintf('AND Topics.reg_time < %d', Validate::getDateRelease($filter)->format('U'));
 
         // Фильтр по клиенту.
         if ($filter['filter_client_id'] > 0) {
@@ -285,7 +322,6 @@ final class DefaultTopics implements ListInterface
             $statement,
             implode(', ', $averageSeed->fields),
             implode(' ', $averageSeed->joins),
-            $keepersStatement,
             implode(' ', $where)
         );
     }
@@ -321,12 +357,12 @@ final class DefaultTopics implements ListInterface
                 SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
                 FROM (
                     SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                    FROM Topics AS tp
+                    FROM DefaultRuleTopics AS tp
                     LEFT JOIN KeepersLists AS kl ON tp.id = kl.topic_id
                     WHERE tp.forum_id IN ($keys->keys) AND tp.reg_time < posted AND kl.topic_id IS NOT NULL
                     UNION ALL
                     SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, 0 AS posted, 1 AS seeding
-                    FROM Topics AS tp
+                    FROM DefaultRuleTopics AS tp
                     LEFT JOIN KeepersSeeders AS ks ON tp.id = ks.topic_id
                     WHERE tp.forum_id IN ($keys->keys) AND ks.topic_id IS NOT NULL
                 ) AS k
