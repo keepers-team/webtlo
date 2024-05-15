@@ -73,6 +73,9 @@ final class DB
                 throw new PDOException('Cant create PDOStatement');
             }
 
+            Log::append($sql);
+            Log::append(implode(';', $param));
+
             $sth->execute($param);
 
             return $sth;
