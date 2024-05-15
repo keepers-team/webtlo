@@ -395,31 +395,27 @@ final class DefaultTopics implements ListInterface
     private function fillKeepersByForumList(array $forumList): void
     {
         $keepers = [];
-        foreach (array_chunk($forumList, 499) as $forumsChunk) {
-            $keys = KeysObject::create($forumsChunk);
+        $statement = "
+            SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
+            FROM (
+                SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
+                FROM DefaultRuleTopics AS tp
+                LEFT JOIN KeepersLists AS kl ON tp.id = kl.topic_id
+                WHERE tp.reg_time < posted AND kl.topic_id IS NOT NULL
+                UNION ALL
+                SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, 0 AS posted, 1 AS seeding
+                FROM DefaultRuleTopics AS tp
+                LEFT JOIN KeepersSeeders AS ks ON tp.id = ks.topic_id
+                WHERE ks.topic_id IS NOT NULL
+            ) AS k
+            GROUP BY k.topic_id, k.keeper_id, k.keeper_name
+            ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
+        ";
 
-            $statement = "
-                SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
-                FROM (
-                    SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
-                    FROM DefaultRuleTopics AS tp
-                    LEFT JOIN KeepersLists AS kl ON tp.id = kl.topic_id
-                    WHERE tp.forum_id IN ($keys->keys) AND tp.reg_time < posted AND kl.topic_id IS NOT NULL
-                    UNION ALL
-                    SELECT ks.topic_id, ks.keeper_id, ks.keeper_name, 1 AS complete, 0 AS posted, 1 AS seeding
-                    FROM DefaultRuleTopics AS tp
-                    LEFT JOIN KeepersSeeders AS ks ON tp.id = ks.topic_id
-                    WHERE tp.forum_id IN ($keys->keys) AND ks.topic_id IS NOT NULL
-                ) AS k
-                GROUP BY k.topic_id, k.keeper_id, k.keeper_name
-                ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
-            ";
-
-            $keepers += $this->queryStatementGroup(
-                $statement,
-                [...$keys->values, ...$keys->values, $this->userId]
-            );
-        }
+        $keepers += $this->queryStatementGroup(
+            $statement,
+            [$this->userId]
+        );
 
         $this->keepers = $keepers;
     }
