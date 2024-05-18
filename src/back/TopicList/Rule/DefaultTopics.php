@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
+use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
@@ -221,11 +222,11 @@ final class DefaultTopics implements ListInterface
             $filter,
             $filterKeepers,
             $filterAverageSeed,
+            $sort
         );
 
         // Получаем раздачи из базы.
-        $topics = $this->selectSortedTopics(
-            $sort,
+        $topics = $this->selectTopics(
             $statement,
         );
 
@@ -326,24 +327,28 @@ final class DefaultTopics implements ListInterface
         array       $filter,
         Keepers     $filterKeepers,
         AverageSeed $averageSeed,
+        Sort $sort
     ): string {
         // Шаблон для статуса хранения.
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
+
+        $field = $sort->rule->value;
+        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
 
         // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
         $statement = "
             SELECT
                 Topics.id AS topic_id,
                 Topics.info_hash,
-                Topics.name,
-                Topics.size,
-                Topics.reg_time,
+                Topics.name as name,
+                Topics.size as size,
+                Topics.reg_time as reg_time,
                 Topics.forum_id,
                 Topics.keeping_priority AS priority,
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
-                Torrents.client_id,
+                Torrents.client_id as client_id,
                 %s
             FROM temp.DefaultRuleTopics AS Topics
             LEFT JOIN Torrents ON Topics.info_hash = Torrents.info_hash
@@ -356,6 +361,7 @@ final class DefaultTopics implements ListInterface
             WHERE TopicsExcluded.info_hash IS NULL
                 AND ($torrentDone)
                 %s
+            ORDER BY $field $direction
         ";
 
         // Применить фильтр по статусу хранимого.
