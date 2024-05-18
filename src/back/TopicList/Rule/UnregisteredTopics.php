@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
+use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -26,6 +27,9 @@ final class UnregisteredTopics implements ListInterface
     /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
+        $field = $sort->rule->value;
+        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
+
         $statement = "
             SELECT
                 Torrents.topic_id,
@@ -43,10 +47,10 @@ final class UnregisteredTopics implements ListInterface
             FROM TopicsUnregistered
             LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
             WHERE TopicsUnregistered.info_hash IS NOT NULL
-            ORDER BY TopicsUnregistered.name
+            ORDER BY $field $direction
         ";
 
-        $topics = $this->selectSortedTopics($sort, $statement);
+        $topics = $this->selectTopics($statement);
 
         $counter = new Topics();
         foreach ($topics as $topicData) {
