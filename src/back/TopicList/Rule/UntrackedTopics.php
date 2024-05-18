@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
+use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -27,7 +28,10 @@ final class UntrackedTopics implements ListInterface
     /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
-        $statement = '
+        $field = $sort->rule->value;
+        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
+
+        $statement = "
             SELECT
                 TopicsUntracked.id AS topic_id,
                 TopicsUntracked.info_hash,
@@ -44,9 +48,10 @@ final class UntrackedTopics implements ListInterface
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.info_hash
             WHERE TopicsUntracked.info_hash IS NOT NULL
-        ';
+            ORDER BY $field $direction
+        ";
 
-        $topics = $this->selectSortedTopics($sort, $statement);
+        $topics = $this->selectTopics($statement);
 
         $getForumHeader = function(int $id): string {
             $name  = Forums::getForumName($id);

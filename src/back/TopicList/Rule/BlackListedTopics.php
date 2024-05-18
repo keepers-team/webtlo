@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
+use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Output;
@@ -26,6 +27,10 @@ final class BlackListedTopics implements ListInterface
     /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
+
+        $field = $sort->rule->value;
+        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
+
         $statement = "
             SELECT
                 tp.id topic_id,
@@ -41,9 +46,10 @@ final class BlackListedTopics implements ListInterface
             FROM Topics AS tp
             LEFT JOIN TopicsExcluded AS te ON tp.info_hash = te.info_hash
             WHERE te.info_hash IS NOT NULL
+            ORDER BY $field $direction
         ";
 
-        $topics = $this->selectSortedTopics($sort, $statement);
+        $topics = $this->selectTopics($statement);
 
         // Типизируем данные раздач в объекты.
         $topics = array_map(fn($row) => Topic::fromTopicData($row), $topics);
