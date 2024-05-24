@@ -88,8 +88,9 @@ final class Settings
         $config['avg_seeders']                 = $ini->read('sections', 'avg_seeders', 1);
         $config['avg_seeders_period']          = $ini->read('sections', 'avg_seeders_period', 14);
         $config['avg_seeders_period_outdated'] = $ini->read('sections', 'avg_seeders_period_outdated', 7);
-        $config['enable_auto_apply_filter']    = $ini->read('sections', 'enable_auto_apply_filter', 1);
         $config['exclude_self_keep']           = $ini->read('sections', 'exclude_self_keep', 1);
+        $config['enable_auto_apply_filter']    = $ini->read('sections', 'enable_auto_apply_filter', 1);
+        $config['ui_save_selected_section']    = $ini->read('sections', 'ui_save_selected_section', 1);
 
         // регулировка раздач
         $config['topics_control']['peers']               = $ini->read('topics_control', 'peers', 10);
@@ -588,8 +589,9 @@ final class Settings
             $ini->write('sections', 'avg_seeders_period_outdated', trim($cfg['avg_seeders_period_outdated']));
         }
         $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
-        $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
         $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
+        $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
+        $ini->write('sections', 'ui_save_selected_section', (int)isset($cfg['ui_save_selected_section']));
     }
 
     private function setReports(array $cfg, array $excludeClientsIDs, array $excludeForumsIDs): void

@@ -7,32 +7,41 @@ $(document).ready(function () {
     let editableForumID;
 
     // загрузка данных о выбранном подразделе на главной
-    $('#main-subsections').selectmenu({
-        width: "calc(100% - 36px)",
-        change: function (event, ui) {
-            showResultTopics();
-            getFilteredTopics();
+    $('#main-subsections').change(function() {
+        // Очищаем результат.
+        showResultTopics();
+        // Загружаем раздачи.
+        getFilteredTopics();
+    }).selectmenu({
+        width : "calc(100% - 36px)",
+        change: function(event, ui) {
+            // Записываем выбранный ид раздела в куки.
             Cookies.set('saved_forum_id', ui.item.value);
+            $(this).trigger('change');
         },
-        create: function (event, ui) {
-            const forumID = Cookies.get('saved_forum_id');
-            if (typeof forumID !== 'undefined') {
-                $('#main-subsections').val(forumID).selectmenu("refresh");
+        create: function(event, ui) {
+            if (!$('#ui_save_selected_section').is(':checked')) {
+                return;
+            }
+
+            const savedForumId = Cookies.get('saved_forum_id');
+            if (typeof savedForumId !== 'undefined') {
+                $(this).val(savedForumId).selectmenu('refresh').trigger('change');
             }
         },
-        open: function (event, ui) {
+        open: function(event, ui) {
             // Выделяем выделенную строку жирным в списке.
             let selectedForumID = $('#main-subsections-button').attr('aria-activedescendant');
-            $('#main-subsections-menu div[role=option]').css({ 'font-weight': 'normal' });
-            $(`#${selectedForumID}`).css({ 'font-weight': 'bold' });
+            $('#main-subsections-menu div[role=option]').css({'font-weight': 'normal'});
+            $(`#${selectedForumID}`).css({'font-weight': 'bold'});
 
             const getIcon = function(faClass) {
                 return `<i class="fa ${faClass}" aria-hidden="true"></i> `;
             }
 
-            $("#main-subsections-menu li div").each(function () {
+            $("#main-subsections-menu li div").each(function() {
                 let forumTitle = $.trim($(this).text());
-                let forumData = $('#list-forums option').filter(function () {
+                let forumData = $('#list-forums option').filter(function() {
                     return $(this).text() === forumTitle;
                 }).data();
 

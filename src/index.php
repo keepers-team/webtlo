@@ -34,8 +34,9 @@ try {
     $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
     $unadded_subsections = $cfg['topics_control']['unadded_subsections'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
-    $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
     $exclude_self_keep = $cfg['exclude_self_keep'] == 1 ? "checked" : "";
+    $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
+    $ui_save_selected_section = $cfg['ui_save_selected_section'] == 1 ? "checked" : "";
 
     $send_summary_report = $cfg['reports']['send_summary_report'] == 1 ? "checked" : "";
     $auto_clear_messages = $cfg['reports']['auto_clear_messages'] == 1 ? "checked" : "";
@@ -248,7 +249,7 @@ function cfg_checkbox($cfg): Closure
 <body>
     <div id="menutabs" class="menu">
         <ul class="menu">
-            <li id="menu_main"       class="menu"><a href="#main"       class="menu">Главная</a></li>
+            <li id="menu_main"       class="menu"><a href="#main"       class="menu">Раздачи</a></li>
             <li id="menu_settings"   class="menu"><a href="#settings"   class="menu">Настройки</a></li>
             <li id="menu_reports"    class="menu"><a href="#reports"    class="menu">Отчёты</a></li>
             <li id="menu_statistics" class="menu"><a href="#statistics" class="menu">Статистика</a></li>
@@ -261,7 +262,7 @@ function cfg_checkbox($cfg): Closure
         </div>
         <div id="content">
             <div id="main" class="content">
-                <select id="main-subsections">
+                <select id="main-subsections" class="filter-select-menu">
                     <optgroup label="">
                         <option value="-999">[[Выберите необходимый раздел из списка]]</option>
                     </optgroup>
@@ -985,16 +986,22 @@ function cfg_checkbox($cfg): Closure
                                        type="text" size="2" value="<?= $cfg['avg_seeders_period'] ?? 14 ?>"/>
                                 дн.
                             </label>
+                            <label title="Всегда отключено для вкладки 'Хранимые раздачи по спискам'">
+                                <input name="exclude_self_keep" type="checkbox"
+                                       size="24" <?= $exclude_self_keep ?? '' ?> />
+                                не показывать себя, как хранителя, в списке раздач
+                            </label>
                             <label class="label"
-                                   title="При изменении параметров фильтра, автоматически обновлять список раздач на главной">
+                                   title="При изменении параметров фильтра, автоматически обновлять список раздач">
                                 <input id="enable_auto_apply_filter" name="enable_auto_apply_filter"
                                        type="checkbox" <?= $enable_auto_apply_filter ?? '' ?> />
                                 применять параметры фильтра автоматически
                             </label>
-                            <label title="Всегда отключено для вкладки 'Хранимые раздачи по спискам'">
-                                <input name="exclude_self_keep" type="checkbox"
-                                       size="24" <?= $exclude_self_keep ?? '' ?> />
-                                не показывать себя, как хранителя, в списке раздач на главной
+                            <label class="label"
+                                   title="Запоминать последний выбранный раздел, и загружать его автоматически при перезагрузке страницы (по умолчанию: включено). Может быть полезно отключить, при большом объёме хранимого, чтобы не загружать раздачи до применения желаемых фильтров.">
+                                <input id="ui_save_selected_section" name="ui_save_selected_section"
+                                       type="checkbox" <?= $ui_save_selected_section ?? '' ?> />
+                                запоминать выбранный раздел
                             </label>
                         </div>
                         <h2>Скачивание торрент-файлов</h2>
