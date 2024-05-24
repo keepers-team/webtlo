@@ -18,12 +18,20 @@ $(document).ready(function () {
         }
     });
 
+    // Ищем выбранную тему в куках. Если там нет - в конфиге. Если нигде нет - ставить тему по умолчанию.
+    currentUITheme = Cookies.get('theme');
+    if (!currentUITheme) {
+        currentUITheme = $('#config_selected_theme').val();
+    }
+    if (!currentUITheme) {
+        currentUITheme = defaultUITheme;
+    }
+
     // Переключатель тем оформления.
-    currentUITheme = Cookies.get('theme') ?? defaultUITheme;
-    $(`#theme-selector [value=${currentUITheme}]`).prop('selected', true);
+    $(`#theme_selector [value=${currentUITheme}]`).prop('selected', true);
     setUITheme();
 
-    $("#theme-selector").selectmenu({
+    $("#theme_selector").selectmenu({
         change: function (event, ui) {
             Cookies.set('theme', ui.item.value);
             currentUITheme = ui.item.value;

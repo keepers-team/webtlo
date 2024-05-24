@@ -60,6 +60,9 @@ final class Settings
         // Уровень записи логов.
         $config['log_level'] = $ini->read('other', 'log_level', 'Info');
 
+        // Выбранная тема интерфейса.
+        $config['ui']['theme'] = $ini->read('ui', 'theme', Defaults::uiTheme);
+
         // подразделы
         $subsections = $ini->read("sections", "subsections");
         if (!empty($subsections)) {
@@ -338,6 +341,9 @@ final class Settings
 
         // Автоматизация.
         $this->setAutomation($cfg);
+
+        // Настройки интерфейса.
+        $this->setUI($cfg);
 
         // Запись файла с настройками.
         return $this->ini->writeFile();
@@ -630,6 +636,13 @@ final class Settings
         $ini->write('update', 'priority', isset($cfg['update_priority']) ? 1 : 0);
         $ini->write('update', 'untracked', isset($cfg['update_untracked']) ? 1 : 0);
         $ini->write('update', 'unregistered', isset($cfg['update_unregistered']) ? 1 : 0);
+    }
+
+    private function setUI(array $cfg): void
+    {
+        $ini = $this->ini;
+
+        $ini->write('ui', 'theme', $cfg['theme_selector'] ?? Defaults::uiTheme);
     }
 
     /** Пробуем найти наименования подразделов в БД. */

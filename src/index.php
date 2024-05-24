@@ -1126,9 +1126,10 @@ function cfg_checkbox($cfg): Closure
                         </div>
                         <h2>Журнал и внешний вид</h2>
                         <div>
+                            <input type="hidden" id="config_selected_theme" value="<?= $cfg['ui']['theme'] ?? '' ?>" />
                             <label class="label">
                                 Цветовая схема интерфейса:
-                                <select id="theme-selector" class="myinput ignore-save-change">
+                                <select id="theme_selector" name="theme_selector" class="myinput">
                                     <option value="black-tie">Black Tie</option>
                                     <option value="blitzer">Blitzer</option>
                                     <option value="cupertino">Cupertino</option>
