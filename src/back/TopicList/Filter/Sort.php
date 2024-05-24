@@ -11,4 +11,9 @@ final class Sort
         public readonly SortDirection $direction,
     ) {
     }
+
+    public function fieldDirection(): string
+    {
+        return "{$this->rule->value} {$this->direction->sql()}";
+    }
 }

@@ -14,4 +14,14 @@ final class AverageSeed
         public readonly array $joins
     ) {
     }
+
+    public function getFields(): string
+    {
+        return implode(',', $this->fields);
+    }
+
+    public function getJoins(): string
+    {
+        return implode(' ', $this->joins);
+    }
 }

@@ -8,4 +8,12 @@ enum SortDirection: int
 {
     case UP   = 1;
     case DOWN = -1;
+
+    public function sql(): string
+    {
+        return match ($this) {
+            self::UP   => 'ASC',
+            self::DOWN => 'DESC',
+        };
+    }
 }
