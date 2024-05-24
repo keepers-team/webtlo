@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Output;
@@ -24,20 +23,15 @@ final class BlackListedTopics implements ListInterface
     ) {
     }
 
-    /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
-
-        $field = $sort->rule->value;
-        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
-
         $statement = "
             SELECT
-                tp.id topic_id,
+                tp.id AS topic_id,
                 tp.info_hash,
-                tp.name,
-                tp.size,
-                tp.reg_time,
+                tp.name AS name,
+                tp.size AS size,
+                tp.reg_time AS reg_time,
                 tp.forum_id,
                 tp.keeping_priority AS priority,
                 0 AS client_id,
@@ -46,7 +40,7 @@ final class BlackListedTopics implements ListInterface
             FROM Topics AS tp
             LEFT JOIN TopicsExcluded AS te ON tp.info_hash = te.info_hash
             WHERE te.info_hash IS NOT NULL
-            ORDER BY $field $direction
+            ORDER BY {$sort->fieldDirection()}
         ";
 
         $topics = $this->selectTopics($statement);

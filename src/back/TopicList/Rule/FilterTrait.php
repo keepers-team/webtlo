@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use Throwable;
 use RuntimeException;
 

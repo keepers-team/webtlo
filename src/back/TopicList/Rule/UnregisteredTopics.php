@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -24,15 +23,11 @@ final class UnregisteredTopics implements ListInterface
     ) {
     }
 
-    /** Хранимые раздачи из других подразделов. */
     public function getTopics(array $filter, Sort $sort): Topics
     {
-        $field = $sort->rule->value;
-        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
-
         $statement = "
             SELECT
-                Torrents.topic_id,
+                Torrents.topic_id AS topic_id,
                 CASE WHEN TopicsUnregistered.name IS '' OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END AS name,
                 TopicsUnregistered.status,
                 Torrents.info_hash,
@@ -40,14 +35,14 @@ final class UnregisteredTopics implements ListInterface
                 Torrents.time_added AS reg_time,
                 -1 AS seed,
                 -1 AS days_seed,
-                Torrents.client_id,
+                Torrents.client_id AS client_id,
                 Torrents.paused,
                 Torrents.error,
                 Torrents.done
             FROM TopicsUnregistered
             LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
             WHERE TopicsUnregistered.info_hash IS NOT NULL
-            ORDER BY $field $direction
+            ORDER BY {$sort->fieldDirection()}
         ";
 
         $topics = $this->selectTopics($statement);

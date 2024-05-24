@@ -7,14 +7,13 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Output;
-use Exception;
+use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DuplicatedTopics implements ListInterface
 {
@@ -29,31 +28,28 @@ final class DuplicatedTopics implements ListInterface
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public function getTopics(array $filter, Sort $sort): Topics
     {
         // Данные для фильтрации по средним сидам.
         $seedFilter = Validate::prepareAverageSeedFilter($filter, $this->cfg);
 
-        $field = $sort->rule->value;
-        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
-
         $statement = "
             SELECT
-                Topics.id topic_id,
+                Topics.id AS topic_id,
                 Topics.info_hash,
-                Topics.name,
-                Topics.size,
-                Topics.reg_time,
+                Topics.name AS name,
+                Topics.size AS size,
+                Topics.reg_time AS reg_time,
                 Topics.forum_id,
                 Topics.keeping_priority AS priority,
                 0 AS client_id,
-                " . implode(',', $seedFilter->fields) . '
+                {$seedFilter->getFields()}
             FROM Topics
-                ' . implode(' ', $seedFilter->joins) . "
+                {$seedFilter->getJoins()}
             WHERE Topics.info_hash IN (SELECT info_hash FROM Torrents GROUP BY info_hash HAVING count(1) > 1)
-            ORDER BY $field $direction
+            ORDER BY {$sort->fieldDirection()}
         ";
 
         $topics = $this->selectTopics($statement);

@@ -11,7 +11,6 @@ use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
@@ -20,7 +19,7 @@ use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Excluded;
-use Exception;
+use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DefaultTopics implements ListInterface
 {
@@ -39,7 +38,7 @@ final class DefaultTopics implements ListInterface
     }
 
     /**
-     * @throws Exception
+     * @throws ValidationException
      */
     public function getTopics(array $filter, Sort $sort): Topics
     {
@@ -327,42 +326,10 @@ final class DefaultTopics implements ListInterface
         array       $filter,
         Keepers     $filterKeepers,
         AverageSeed $averageSeed,
-        Sort $sort
+        Sort        $sort
     ): string {
         // Шаблон для статуса хранения.
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);
-
-        $field = $sort->rule->value;
-        $direction = $sort->direction == SortDirection::UP ? "ASC" : "DESC";
-
-        // 1 - fields, 2 - left join, 3 - keepers check, 4 - where
-        $statement = "
-            SELECT
-                Topics.id AS topic_id,
-                Topics.info_hash,
-                Topics.name as name,
-                Topics.size as size,
-                Topics.reg_time as reg_time,
-                Topics.forum_id,
-                Topics.keeping_priority AS priority,
-                Torrents.done,
-                Torrents.paused,
-                Torrents.error,
-                Torrents.client_id as client_id,
-                %s
-            FROM temp.DefaultRuleTopics AS Topics
-            LEFT JOIN Torrents ON Topics.info_hash = Torrents.info_hash
-            %s
-            LEFT JOIN temp.DefaultRuleKeepersFilter AS Keepers
-                ON Topics.id = Keepers.topic_id
-                    AND (Keepers.max_posted IS NULL OR Topics.reg_time < Keepers.max_posted)
-            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded
-                ON Topics.info_hash = TopicsExcluded.info_hash
-            WHERE TopicsExcluded.info_hash IS NULL
-                AND ($torrentDone)
-                %s
-            ORDER BY $field $direction
-        ";
 
         // Применить фильтр по статусу хранимого.
         $where = Validate::getKeptStatusFilter($filterKeepers->status);
@@ -372,12 +339,36 @@ final class DefaultTopics implements ListInterface
             $where[] = sprintf('AND Torrents.client_id = %d', (int)$filter['filter_client_id']);
         }
 
-        return sprintf(
-            $statement,
-            implode(', ', $averageSeed->fields),
-            implode(' ', $averageSeed->joins),
-            implode(' ', $where)
-        );
+        $where = implode(' ', $where);
+
+        // Собираем запрос целиком.
+        return "
+            SELECT
+                Topics.id AS topic_id,
+                Topics.info_hash,
+                Topics.name AS name,
+                Topics.size AS size,
+                Topics.reg_time AS reg_time,
+                Topics.forum_id,
+                Topics.keeping_priority AS priority,
+                Torrents.done,
+                Torrents.paused,
+                Torrents.error,
+                Torrents.client_id AS client_id,
+                {$averageSeed->getFields()}
+            FROM temp.DefaultRuleTopics AS Topics
+            LEFT JOIN Torrents ON Topics.info_hash = Torrents.info_hash
+            {$averageSeed->getJoins()}
+            LEFT JOIN temp.DefaultRuleKeepersFilter AS Keepers
+                ON Topics.id = Keepers.topic_id
+                    AND (Keepers.max_posted IS NULL OR Topics.reg_time < Keepers.max_posted)
+            LEFT JOIN (SELECT info_hash FROM TopicsExcluded GROUP BY info_hash) TopicsExcluded
+                ON Topics.info_hash = TopicsExcluded.info_hash
+            WHERE TopicsExcluded.info_hash IS NULL
+                AND ($torrentDone)
+                {$where}
+            ORDER BY {$sort->fieldDirection()}
+        ";
     }
 
     /** Количество раздач в "чёрном списке". */
