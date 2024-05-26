@@ -103,6 +103,14 @@ final class UpdateTime
         }
     }
 
+    /**
+     * Удалить неактуальные маркеры.
+     */
+    public function removeOutdatedRows(DateTimeImmutable $outdatedDate): void
+    {
+        $this->db->executeStatement('DELETE FROM UpdateTime WHERE ud < ?', [$outdatedDate->getTimestamp()]);
+    }
+
     private function initTable(): CloneTable
     {
         if (null === $this->table) {

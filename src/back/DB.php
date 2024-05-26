@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use KeepersTeam\Webtlo\Traits\DbClearTablesTrait;
 use KeepersTeam\Webtlo\Traits\DbMigrationTrait;
 use KeepersTeam\Webtlo\Traits\DbQueryTrait;
 use PDO;
@@ -12,6 +13,7 @@ use RuntimeException;
 
 final class DB
 {
+    use DbClearTablesTrait;
     use DbMigrationTrait;
     use DbQueryTrait;
 
@@ -54,8 +56,13 @@ final class DB
             }
         }
 
-        return self::$instance;
+        // Очистка таблиц от неактуальных записей.
+        $instance = self::$instance;
+        $instance->clearTables();
+
+        return $instance;
     }
+
 
     public static function getInstance(): self
     {

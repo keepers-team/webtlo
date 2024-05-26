@@ -163,8 +163,6 @@ final class Db
     public static function create(): void
     {
         self::$db = ModernDB::create();
-
-        self::clearTables();
     }
 
     private static function checkConnect(): void
@@ -172,55 +170,5 @@ final class Db
         if (null === self::$db) {
             self::create();
         }
-    }
-
-    /** Удалим устаревшие данные о раздачах. */
-    private static function clearTables(): void
-    {
-        $oneDay = 86400; // 24 * 60 * 60
-        // Данные о сидах устарели
-        $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
-
-        $outdatedTime = time() - (int)$avgSeedersPeriodOutdated * $oneDay;
-
-        // Проверяем необходимость выполнения очистки БД (раз в день).
-        $isCleanNeeded = LastUpdate::checkUpdateAvailable(UpdateMark::DB_CLEAN->value, $oneDay);
-        if (!$isCleanNeeded) {
-            return;
-        }
-
-        // Удалим устаревшие метки обновлений.
-        self::query_database(
-            'DELETE FROM UpdateTime WHERE ud < ?',
-            [$outdatedTime]
-        );
-
-        // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
-        self::query_database(
-            '
-            DELETE FROM Topics
-            WHERE keeping_priority <> 2
-                AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-        '
-        );
-
-        // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
-        $updatePriority = (bool)TIniFileEx::read('update', 'priority', 0);
-        if ($updatePriority) {
-            // Удалим устаревшие раздачи высокого приоритета.
-            $lastHighUpdate = LastUpdate::getTime(UpdateMark::HIGH_PRIORITY->value);
-            if ($lastHighUpdate < $outdatedTime) {
-                self::query_database(
-                    '
-                    DELETE FROM Topics
-                    WHERE keeping_priority = 2
-                        AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-                '
-                );
-            }
-        }
-
-        // Записываем дату последней очистки.
-        LastUpdate::setTime(UpdateMark::DB_CLEAN->value);
     }
 }
