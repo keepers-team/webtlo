@@ -13,6 +13,8 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
+use Monolog\Processor\MemoryUsageProcessor;
+use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -42,6 +44,14 @@ final class AppLogger
 
         // Запись в legacy-logger для вывода на фронт.
         $logger->pushHandler(self::getLegacyLogger($logLevel));
+
+        // Автоматическая подстановка значений, согласно PSR-3.
+        $logger->pushProcessor(new PsrLogMessageProcessor(null, true));
+
+        // Добавим в данные об использовании памяти.
+        if (Level::Debug === $logLevel) {
+            $logger->pushProcessor(new MemoryUsageProcessor());
+        }
 
         // Запись в заданный файл.
         if (null !== $logFile) {
