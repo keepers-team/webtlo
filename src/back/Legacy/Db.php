@@ -177,10 +177,17 @@ final class Db
     /** Удалим устаревшие данные о раздачах. */
     private static function clearTables(): void
     {
+        $oneDay = 86400; // 24 * 60 * 60
         // Данные о сидах устарели
         $avgSeedersPeriodOutdated = TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
 
-        $outdatedTime = time() - (int)$avgSeedersPeriodOutdated * 86400;
+        $outdatedTime = time() - (int)$avgSeedersPeriodOutdated * $oneDay;
+
+        // Проверяем необходимость выполнения очистки БД (раз в день).
+        $isCleanNeeded = LastUpdate::checkUpdateAvailable(UpdateMark::DB_CLEAN->value, $oneDay);
+        if (!$isCleanNeeded) {
+            return;
+        }
 
         // Удалим устаревшие метки обновлений.
         self::query_database(
@@ -212,5 +219,8 @@ final class Db
                 );
             }
         }
+
+        // Записываем дату последней очистки.
+        LastUpdate::setTime(UpdateMark::DB_CLEAN->value);
     }
 }
