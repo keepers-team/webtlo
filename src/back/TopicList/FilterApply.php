@@ -105,6 +105,8 @@ final class FilterApply
 
             $matched = [];
             foreach ($filterStrings->values as $filter) {
+                $filter = str_replace('\*', '.', $filter);
+
                 if (mb_substr($filter, 0, 1) === '!') {
                     $matched[] = !mb_eregi(mb_substr($filter, 1), $topic->name);
                 } else {
