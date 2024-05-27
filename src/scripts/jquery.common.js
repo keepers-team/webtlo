@@ -23,6 +23,12 @@ function showResultTopics(text = "") {
     $("#topics_result").html(text);
 }
 
+function addDefaultLog(log) {
+    if (log) {
+        $('#log').prepend(log);
+    }
+}
+
 let processStatus = {
     status : $('.process-status'),
     loading: $('.process-loading'),
@@ -145,7 +151,7 @@ function setSettings() {
             $(this).addClass("ui-state-disabled").prop("disabled", true);
         },
         success: function (response) {
-            $("#log").append(response.log ?? '');
+            addDefaultLog(response.log ?? '');
         },
         complete: function () {
             $(this).removeClass("ui-state-disabled").prop("disabled", false);
@@ -222,8 +228,8 @@ function getReport() {
         },
         success: function (response) {
             response = $.parseJSON(response);
-            $("#log").append(response.log);
             $("#reports-content").html(response.report);
+            addDefaultLog(response.log ?? '');
             //инициализация "аккордиона" сообщений
             $("#reports-content .report_message").each(function () {
                 $(this).accordion({
@@ -290,7 +296,7 @@ function checkNewVersion() {
         type: "POST",
         url: "php/actions/check_new_version.php",
         success: function (response) {
-            $("#log").append(response.log);
+            addDefaultLog(response.log ?? '');
             response = $.parseJSON(response);
 
             Cookies.set("new-version-number", response.newVersionNumber);

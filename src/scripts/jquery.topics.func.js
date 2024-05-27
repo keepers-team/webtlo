@@ -28,7 +28,7 @@ function downloadTorrents(replace_passkey) {
         },
         success: function (response) {
             response = $.parseJSON(response);
-            $("#log").append(response.log);
+            addDefaultLog(response.log ?? '');
             showResultTopics(response.result);
         },
     });
@@ -57,7 +57,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
         },
         success: function (response) {
             response = $.parseJSON(response);
-            $("#log").append(response.log);
+            addDefaultLog(response.log ?? '');
             if (response.error) {
                 showResultTopics(response.error);
                 return false;
@@ -88,7 +88,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
                 },
                 success: function (response) {
                     response = $.parseJSON(response);
-                    $("#log").append(response.log);
+                    addDefaultLog(response.log ?? '');
                     showResultTopics(response.result);
                 },
             });
@@ -304,7 +304,7 @@ function execActionTopics(topic_hashes, tor_clients, action, label, force_start,
         },
         success: function (response) {
             response = $.parseJSON(response);
-            $("#log").append(response.log);
+            addDefaultLog(response.log ?? '');
             showResultTopics(response.result);
             if (action == 'remove') {
                 getFilteredTopics();
@@ -369,7 +369,7 @@ function checkEmptyTitleTopics(manualUpdate = false) {
             response = $.parseJSON(response);
 
             if (response.log) {
-                $('#log').append(response.log);
+                addDefaultLog(response.log ?? '');
             }
 
             // Обновлять нечего, скрываем и обнуляем прогрессбар, очищаем интервал.
@@ -413,7 +413,7 @@ function updateEmptyTitleTopics() {
             response = $.parseJSON(response);
 
             if (response.log) {
-                $('#log').append(response.log);
+                addDefaultLog(response.log ?? '');
             }
         },
         complete: function () {

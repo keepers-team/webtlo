@@ -245,7 +245,7 @@ $(document).ready(function () {
                 },
                 success: function (response) {
                     response = $.parseJSON(response);
-                    $('#log').append(response.log);
+                    addDefaultLog(response.log ?? '');
 
                     $(this).children('i').remove();
                     $(this).append(response.status);

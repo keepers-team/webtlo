@@ -22,7 +22,7 @@ $(document).ready(function () {
                 success: function (response) {
                     filter_hold = false;
                     response = $.parseJSON(response);
-                    $("#log").append(response.log);
+                    addDefaultLog(response.log ?? '');
                     showResultTopics(response.result);
 
                     checkEmptyTitleTopics(true);
@@ -75,7 +75,7 @@ $(document).ready(function () {
             },
             success: function (response) {
                 response = $.parseJSON(response);
-                $("#log").append(response.log);
+                addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
             },
             complete: function () {
@@ -97,7 +97,7 @@ $(document).ready(function () {
             },
             success: function (response) {
                 response = $.parseJSON(response);
-                $("#log").append(response.log);
+                addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
             },
             complete: function () {
@@ -190,9 +190,7 @@ $(document).ready(function () {
                         elemParam.addClass(`fa fa-circle ${result}`);
                     }
 
-                    if (response.log) {
-                        $('#log').append(response.log);
-                    }
+                    addDefaultLog(response.log ?? '');
                 },
                 beforeSend: function () {
                     elemParam.removeAttr('class').addClass('fa fa-spinner fa-spin');
@@ -245,7 +243,7 @@ $(document).ready(function () {
             context: this,
             success: function (response) {
                 response = $.parseJSON(response);
-                $("#log").append(response.log);
+                addDefaultLog(response.log ?? '');
                 if (!$.isEmptyObject(response.captcha)) {
                     authResult.removeAttr("class").addClass("fa fa-circle text-danger");
 
