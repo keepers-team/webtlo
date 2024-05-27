@@ -49,11 +49,11 @@ final class Helper
         };
 
         $keepersNames = array_map(function($e) use ($user_id, $format) {
-            if ($e['complete'] == 1) {
-                if ($e['posted'] === 0) {
+            if ($e['complete']) {
+                if (!$e['posted']) {
                     $stateIcon = 'arrow-circle-o-up';
                 } else {
-                    $stateIcon = $e['seeding'] == 1 ? 'upload' : 'hard-drive';
+                    $stateIcon = $e['seeding'] ? 'upload' : 'hard-drive';
                 }
                 $stateColor = 'success';
             } else {

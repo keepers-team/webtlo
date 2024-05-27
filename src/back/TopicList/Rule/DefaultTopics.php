@@ -401,10 +401,10 @@ final class DefaultTopics implements ListInterface
             $statement = "
                 SELECT k.topic_id, k.keeper_id, k.keeper_name, MAX(k.complete) AS complete, MAX(k.posted) AS posted, MAX(k.seeding) AS seeding
                 FROM (
-                    SELECT kl.topic_id, kl.keeper_id, kl.keeper_name, kl.complete, CASE WHEN kl.complete = 1 THEN kl.posted END AS posted, 0 AS seeding
+                    SELECT kp.topic_id, kp.keeper_id, kp.keeper_name, kp.complete, CASE WHEN kp.complete = 1 THEN kp.posted END AS posted, kp.seeding
                     FROM temp.DefaultRuleTopics AS tp
-                    INNER JOIN temp.DefaultRuleKeepers AS kl ON tp.id = kl.topic_id
-                    WHERE tp.forum_id IN ($chunk->keys) AND (kl.posted IS NULL OR kl.posted > tp.reg_time)
+                    INNER JOIN temp.DefaultRuleKeepers AS kp ON tp.id = kp.topic_id
+                    WHERE tp.forum_id IN ($chunk->keys) AND (kp.posted IS NULL OR kp.posted > tp.reg_time)
                 ) AS k
                 GROUP BY k.topic_id, k.keeper_id, k.keeper_name
                 ORDER BY (CASE WHEN k.keeper_id == ? THEN 1 ELSE 0 END) DESC, complete DESC, seeding, posted DESC, k.keeper_name
