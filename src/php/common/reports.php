@@ -76,7 +76,7 @@ if ($forumReportAvailable) {
         $forumReportAvailable = false;
     }
 }
-$log->debug(sprintf('init report %s', Timers::getExecTime('init_report')));
+$log->debug('init report {sec}', ['sec' => Timers::getExecTime('init_report')]);
 
 Timers::start('create_report');
 // Создание отчётов.
@@ -89,7 +89,7 @@ if ($forumReportAvailable) {
     $forumReports->fillStoredValues();
 }
 
-$log->debug(sprintf('create report %s', Timers::getExecTime('create_report')));
+$log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
 Timers::start('create_api');
 
@@ -103,7 +103,7 @@ $sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
 if ($sendReport->isEnable()) {
     $sendReport->checkAccess();
 
-    $log->debug(sprintf('create api %s', Timers::getExecTime('create_api')));
+    $log->debug('create api {sec}', ['sec' => Timers::getExecTime('create_api')]);
 }
 
 if (!$sendReport->isEnable()) {
@@ -140,16 +140,13 @@ foreach ($forumReports->forums as $forum_id) {
             $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
 
             $log->debug(
-                sprintf("API. Отчёт отправлен [%d/%d] %s", $apiReportCount, $forumCount, $timer['send_api']),
-                $apiResult
+                'API. Отчёт отправлен [{current}/{total}] {sec}',
+                ['current' => $apiReportCount, 'total' => $forumCount, 'sec' => $timer['send_api'], ...$apiResult]
             );
         } catch (Exception $e) {
             $log->notice(
-                sprintf(
-                    'Попытка отправки отчёта через API для подраздела %d не удалась. Причина %s',
-                    $forum_id,
-                    $e->getMessage()
-                )
+                'Попытка отправки отчёта через API для подраздела {forum_id} не удалась. Причина {error}',
+                ['forum_id' => $forum_id, 'error' => $e->getMessage()]
             );
         }
     }
@@ -161,10 +158,8 @@ foreach ($forumReports->forums as $forum_id) {
             $forum = Forums::getForum($forum_id);
             if (null === $forum->topic_id) {
                 $log->notice(
-                    sprintf(
-                        'Отсутствует номер темы со списками для подраздела %d. Выполните обновление сведений.',
-                        $forum_id
-                    )
+                    'Отсутствует номер темы со списками для подраздела {forumId}. Выполните обновление сведений.',
+                    ['forumId' => $forum_id]
                 );
                 continue;
             }
@@ -173,11 +168,8 @@ foreach ($forumReports->forums as $forum_id) {
             $forumReport = $forumReports->getForumReport($forum);
         } catch (Exception $e) {
             $log->warning(
-                sprintf(
-                    'Формирование отчёта для подраздела %d пропущено. Причина %s',
-                    $forum_id,
-                    $e->getMessage()
-                )
+                'Формирование отчёта для подраздела {forumId} пропущено. Причина {error}',
+                ['forumId' => $forum_id, 'error' => $e->getMessage()]
             );
             continue;
         }
@@ -188,7 +180,10 @@ foreach ($forumReports->forums as $forum_id) {
         $topicId = $forum->topic_id;
         $messages = $forumReport['messages'];// Редактируем шапку темы, если её автор - пользователь.
         if ($user->userId === $forum->author_id && $forum->author_post_id && !empty($forumReport['header'])) {
-            $log->info(sprintf('Отправка шапки, ид темы %d, ид сообщения %d', $topicId, $forum->author_post_id));
+            $log->info(
+                'Отправка шапки, ид темы {topicId}, ид сообщения {postId}',
+                ['topicId' => $topicId, 'postId' => $forum->author_post_id]
+            );
             // отправка сообщения с шапкой
             $reports->send_message(
                 'editpost',
@@ -244,7 +239,8 @@ foreach ($forumReports->forums as $forum_id) {
         $timer['send_forum'] = Timers::getExecTime("send_forum_$forum_id");
 
         $log->debug(
-            sprintf('Forum. Отчёт отправлен [%d/%d] %s', $forumReportCount++, $forumCount, $timer['send_forum'])
+            'Forum. Отчёт отправлен [{current}/{total}] {sec}',
+            ['current' => $forumReportCount++, 'total' => $forumCount, 'sec' => $timer['send_forum']]
         );
     }
 
@@ -257,11 +253,11 @@ if (!empty($Timers)) {
 }
 
 if ($apiReportCount > 0) {
-    $log->info(sprintf('Отчётов отправлено в API: %d шт.', $apiReportCount));
+    $log->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
 }
 
 if (count($editedTopicsIDs)) {
-    $log->info(sprintf('Отчётов отправлено на форум: %d шт.', count($editedTopicsIDs)));
+    $log->info('Отчётов отправлено на форум: {count} шт.', ['count' => count($editedTopicsIDs)]);
     $log->debug(json_encode($editedPosts));
 }
 
@@ -291,7 +287,7 @@ if ($forumReportAvailable && isset($reports)) {
         // Запишем время отправки отчётов.
         LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
 
-        $log->info(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
+        $log->info('Отправка сводного отчёта завершена за {sec}', ['sec' => Timers::getExecTime('send_summary')]);
     }
 
     // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
@@ -328,14 +324,11 @@ if ($forumReportAvailable && isset($reports)) {
 
         if (count($emptyMessages)) {
             $log->info(
-                sprintf(
-                    'Помечено неактуальных сообщений: %d => %s',
-                    count($emptyMessages),
-                    implode(',', $emptyMessages)
-                )
+                'Помечено неактуальных сообщений: {count} => {messages}',
+                ['count' => count($emptyMessages), 'messages' => implode(', ', $emptyMessages)]
             );
         }
     }
 }
 
-$log->info(sprintf('Процесс отправки отчётов завершён за %s', Timers::getExecTime('send_reports')));
+$log->info('Процесс отправки отчётов завершён за {sec}', ['sec' => Timers::getExecTime('send_reports')]);
