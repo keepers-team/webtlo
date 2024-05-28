@@ -124,6 +124,15 @@ final class Creator
         return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
     }
 
+    public function getForumCount(): int
+    {
+        if (null === $this->forums) {
+            return 0;
+        }
+
+        return count($this->forums) - count($this->excludeForumsIDs);
+    }
+
     public function isForumExcluded(int $forumId): bool
     {
         return in_array($forumId, $this->excludeForumsIDs);

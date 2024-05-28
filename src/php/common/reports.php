@@ -118,7 +118,7 @@ $editedPosts     = [];
 
 $Timers = [];
 
-$forumCount = count($forumReports->forums);
+$forumCount = $forumReports->getForumCount();
 foreach ($forumReports->forums as $forum_id) {
     $timer = [];
 
@@ -136,12 +136,11 @@ foreach ($forumReports->forums as $forum_id) {
             // Пробуем отправить отчёт по API.
             $apiResult = $sendReport->sendForumTopics((int)$forum_id, $topicsToReport);
 
-            $apiReportCount++;
             $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
 
             $log->debug(
                 'API. Отчёт отправлен [{current}/{total}] {sec}',
-                ['current' => $apiReportCount, 'total' => $forumCount, 'sec' => $timer['send_api'], ...$apiResult]
+                ['current' => ++$apiReportCount, 'total' => $forumCount, 'sec' => $timer['send_api'], ...$apiResult]
             );
         } catch (Exception $e) {
             $log->notice(
@@ -240,7 +239,7 @@ foreach ($forumReports->forums as $forum_id) {
 
         $log->debug(
             'Forum. Отчёт отправлен [{current}/{total}] {sec}',
-            ['current' => $forumReportCount++, 'total' => $forumCount, 'sec' => $timer['send_forum']]
+            ['current' => ++$forumReportCount, 'total' => $forumCount, 'sec' => $timer['send_forum']]
         );
     }
 
