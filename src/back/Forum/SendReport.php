@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Forum;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\WebTLO;
@@ -11,6 +12,8 @@ use KeepersTeam\Webtlo\WebTLO;
 final class SendReport
 {
     private bool $enabled = true;
+
+    private ?DateTimeImmutable $revolution = null;
 
     public function __construct(
         private readonly ApiReportClient $apiReport,
@@ -87,5 +90,21 @@ final class SendReport
     public function isEnable(): bool
     {
         return $this->enabled;
+    }
+
+    public function checkRevolution(): ?DateTimeImmutable
+    {
+        $this->revolution = $this->apiReport->getRevolutionDate();
+
+        return $this->revolution;
+    }
+
+    public function isRevolutionStarted(): bool
+    {
+        if (null === $this->revolution) {
+            return false;
+        }
+
+        return $this->revolution <= new DateTimeImmutable();
     }
 }

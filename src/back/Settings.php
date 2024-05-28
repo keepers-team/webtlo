@@ -183,7 +183,7 @@ final class Settings
             // Отправлять ли отчёт пользователя в API.
             'send_report_api'     => $ini->read('reports', 'send_report_api', 1),
             // Отправлять ли отчёт пользователя на форум.
-            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 1),
+            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 0),
             // Отправлять сводный отчёт на форум
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             // Помечать лишние сообщения как неактуальные.

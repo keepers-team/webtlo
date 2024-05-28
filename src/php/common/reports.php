@@ -41,6 +41,28 @@ if (empty($cfg['subsections'])) {
 // Проверим полное обновление.
 LastUpdate::checkReportsSendAvailable($cfg);
 
+
+// Подключаемся к API отчётов.
+Timers::start('create_api');
+
+/** @var SendReport $sendReport */
+$sendReport = $app->get(SendReport::class);
+
+// Желание отправить отчёт через API.
+$sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
+
+// Проверяем доступность API.
+if ($sendReport->isEnable()) {
+    $sendReport->checkAccess();
+
+    $log->debug('create api {sec}', ['sec' => Timers::getExecTime('create_api')]);
+}
+
+if (!$sendReport->isEnable()) {
+    $log->info('Отправка отчёта в API невозможна или отключена');
+}
+
+
 Timers::start('init_report');
 
 // Желание отправить отчёты на форум.
@@ -48,6 +70,28 @@ $sendForumReports = (bool)($cfg['reports']['send_report_forum'] ?? true);
 
 // Желание отправить сводный отчёт на форум.
 $sendForumSummary = (bool)($cfg['reports']['send_summary_report'] ?? true);
+
+$forceCleanForum = true;
+if ($sendForumReports) {
+    $forceCleanForum  = false;
+
+    $revolution = $sendReport->checkRevolution();
+    if (null !== $revolution) {
+        $revolution = $revolution->format('d.m.Y');
+        if ($sendReport->isRevolutionStarted()) {
+            $log->warning('Отправка отчётов на форум невозможна. Внесите изменения в настройки отправки отчётов.');
+
+            $forceCleanForum  = true;
+            $sendForumReports = false;
+        } else {
+            $log->notice(
+                'Внимание, отправка отчётов на форум будет заблокирована, начиная с {date}. Внесите изменения в настройки отправки отчётов.',
+                ['date' => $revolution]
+            );
+        }
+    }
+}
+
 
 // Проверим заполненность таблиц.
 if ($sendForumReports && Db::select_count('ForumsOptions') === 0) {
@@ -91,24 +135,6 @@ if ($forumReportAvailable) {
 
 $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
-Timers::start('create_api');
-
-/** @var SendReport $sendReport */
-$sendReport = $app->get(SendReport::class);
-
-// Желание отправить отчёт через API.
-$sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
-
-// Проверяем доступность API.
-if ($sendReport->isEnable()) {
-    $sendReport->checkAccess();
-
-    $log->debug('create api {sec}', ['sec' => Timers::getExecTime('create_api')]);
-}
-
-if (!$sendReport->isEnable()) {
-    $log->info('Отправка отчёта в API невозможна или отключена');
-}
 
 $forumReportCount = 0;
 $apiReportCount   = 0;
@@ -262,6 +288,20 @@ if (count($editedTopicsIDs)) {
 
 
 if ($forumReportAvailable && isset($reports)) {
+    // Затираем более ненужные списки на форуме.
+    if ($forceCleanForum) {
+        foreach ($forumReports->forums as $forumId) {
+            $forumDetails = Forums::getForum($forumId);
+            if (empty($forumDetails->topic_id) || empty($forumDetails->post_ids)) {
+                continue;
+            }
+            foreach ($forumDetails->post_ids as $postId) {
+                $reports->send_message('editpost', ':!: не актуально', $forumDetails->topic_id, $postId);
+            }
+            $editedTopicsIDs[] = $forumDetails->topic_id;
+        }
+    }
+
     // Отправим сводный отчёт, даже если отправка обычных отчётов на форум отключена.
     if ($sendForumSummary) {
         Timers::start('send_summary');
