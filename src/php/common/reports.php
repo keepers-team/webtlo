@@ -42,15 +42,23 @@ if (empty($cfg['subsections'])) {
 LastUpdate::checkReportsSendAvailable($cfg);
 
 Timers::start('init_report');
-// Возможность отправить отчёт постом на форум.
-$forumReportAvailable = (bool)($cfg['reports']['send_report_forum'] ?? true);
+
+// Желание отправить отчёты на форум.
+$sendForumReports = (bool)($cfg['reports']['send_report_forum'] ?? true);
+
+// Желание отправить сводный отчёт на форум.
+$sendForumSummary = (bool)($cfg['reports']['send_summary_report'] ?? true);
+
 // Проверим заполненность таблиц.
-if ($forumReportAvailable && Db::select_count('ForumsOptions') === 0) {
+if ($sendForumReports && Db::select_count('ForumsOptions') === 0) {
     $log->error(
         'Отправка отчётов невозможна. Отсутствуют сведения о сканировании подразделов. Выполните полное обновление сведений.'
     );
-    $forumReportAvailable = false;
+    $sendForumReports = false;
 }
+
+// Возможность отправить любые отчёты на форум.
+$forumReportAvailable = $sendForumReports || $sendForumSummary;
 
 if ($forumReportAvailable) {
     // Подключаемся к форуму.
@@ -113,6 +121,7 @@ $Timers = [];
 $forumCount = count($forumReports->forums);
 foreach ($forumReports->forums as $forum_id) {
     $timer = [];
+
     // Пробуем отправить отчёт по API.
     if ($sendReport->isEnable() && !$forumReports->isForumExcluded($forum_id)) {
         Timers::start("send_api_$forum_id");
@@ -145,7 +154,8 @@ foreach ($forumReports->forums as $forum_id) {
         }
     }
 
-    if ($forumReportAvailable && isset($reports)) {
+    // Пробуем отправить отчёт на форум.
+    if ($forumReportAvailable && $sendForumReports && isset($reports)) {
         Timers::start("report_forum_$forum_id");
         try {
             $forum = Forums::getForum($forum_id);
@@ -257,13 +267,8 @@ if (count($editedTopicsIDs)) {
 
 
 if ($forumReportAvailable && isset($reports)) {
-    // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
-    if (!count($editedTopicsIDs)) {
-        return;
-    }
-
-    // работаем со сводным отчётом
-    if ($cfg['reports']['send_summary_report']) {
+    // Отправим сводный отчёт, даже если отправка обычных отчётов на форум отключена.
+    if ($sendForumSummary) {
         Timers::start('send_summary');
         // формируем сводный отчёт
         $summaryReport = $forumReports->getSummaryReport();
@@ -284,9 +289,14 @@ if ($forumReportAvailable && isset($reports)) {
         $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
 
         // Запишем время отправки отчётов.
-        LastUpdate::setTime(UpdateMark::FULL_UPDATE->value);
+        LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
 
         $log->info(sprintf('Отправка сводного отчёта завершена за %s', Timers::getExecTime('send_summary')));
+    }
+
+    // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
+    if (!count($editedTopicsIDs)) {
+        return;
     }
 
     // отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме

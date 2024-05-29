@@ -1041,15 +1041,29 @@ function cfg_checkbox($cfg): Closure
                         </div>
                         <h2>Отправка отчётов</h2>
                         <div>
-                            <label class="label" title="Можно отключить отправку сводного отчёта. Отчёты по хранимым подразделам будут отправлены как обычно.">
-                                <input name="send_summary_report" type="checkbox" size="24" <?= $send_summary_report ?? '' ?> />
-                                Отправлять сводный отчёт
+                            <label class="label" title="Отправлять ли отчёты по хранимым подразделам в API.">
+                                <input name="send_report_api" type="checkbox" size="24" <?= $checkbox_check('reports', 'send_report_api') ?? '' ?> />
+                                Отправлять отчёты в API
                             </label>
-                            <label class="label" title="Посты с отчётами о нехранимых подразделах, Будут заменены на 'Не актуально'">
-                                <input name="auto_clear_messages" type="checkbox" size="24" <?= $auto_clear_messages ?? '' ?> />
+                            <label class="label" title="Отправлять ли отчёты по хранимым подразделам на форум.">
+                                <input name="send_report_forum" type="checkbox" size="24" <?= $checkbox_check('reports', 'send_report_forum') ?? '' ?> />
+                                Отправлять отчёты на форум (в ближайшем будущем, отправка отчётов на форум будет отключена)
+                            </label>
+                            <label class="label" title="Можно отключить отправку сводного отчёта. Отчёты по хранимым подразделам будут отправлены как обычно.">
+                                <input name="send_summary_report" type="checkbox" size="24" <?= $checkbox_check ('reports', 'send_summary_report') ?? '' ?> />
+                                Отправлять сводный отчёт на форум
+                            </label>
+                            <label class="label" title="Посты с отчётами о нехранимых подразделах. Будут заменены на 'Не актуально'">
+                                <input name="auto_clear_messages" type="checkbox" size="24" <?= $checkbox_check ('reports', 'auto_clear_messages') ?? '' ?> />
                                 Очищать свои "неактуальные" сообщения в рабочем подфоруме
                             </label>
-                            <h3>Список исключённых групп, см. настройки торрент-клиентов/подразделов:</h3>
+                            <hr>
+                            <label class="label" title="Загружать отчёты других хранителей из API. Если отключено - сканируются посты на форуме">
+                                <input name="keepers_load_api" type="checkbox" size="24" <?= $checkbox_check ('reports', 'keepers_load_api') ?? '' ?> />
+                                Загружать отчёты хранителей из API
+                            </label>
+                            <hr>
+                            <h3>Список исключённых из отчётов групп, см. настройки торрент-клиентов/подразделов:</h3>
                             <label class="label">
                                 Исключенные клиенты
                                 <input id="exclude_clients_ids" type="text" size="20" readonly

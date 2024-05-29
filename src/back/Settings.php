@@ -180,11 +180,16 @@ final class Settings
 
         // отчёты
         $config['reports'] = [
-            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 1),
+            // Отправлять ли отчёт пользователя в API.
             'send_report_api'     => $ini->read('reports', 'send_report_api', 1),
-            'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
+            // Отправлять ли отчёт пользователя на форум.
+            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 1),
+            // Отправлять сводный отчёт на форум
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
+            // Помечать лишние сообщения как неактуальные.
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
+            // Получать ли отчёты других пользователей из API.
+            'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
             'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids'),
         ];
@@ -604,10 +609,16 @@ final class Settings
     {
         $ini = $this->ini;
 
+        // Отправлять ли отчёт пользователя в API.
+        $ini->write('reports', 'send_report_api', (int)isset($cfg['send_report_api']));
+        // Отправлять ли отчёт пользователя на форум.
+        $ini->write('reports', 'send_report_forum', (int)isset($cfg['send_report_forum']));
         // Отправка сводных отчётов на форум
-        $ini->write('reports', 'send_summary_report', isset($cfg['send_summary_report']) ? 1 : 0);
+        $ini->write('reports', 'send_summary_report', (int)isset($cfg['send_summary_report']));
         // Очистка своих сообщений на форуме
-        $ini->write('reports', 'auto_clear_messages', isset($cfg['auto_clear_messages']) ? 1 : 0);
+        $ini->write('reports', 'auto_clear_messages', (int)isset($cfg['auto_clear_messages']));
+        // Получать ли отчёты других пользователей из API.
+        $ini->write('reports', 'keepers_load_api', (int)isset($cfg['keepers_load_api']));
 
         // Исключаемые из отчётов торрент-клиенты
         $excludeClientsIDs = array_unique($excludeClientsIDs);
