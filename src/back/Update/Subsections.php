@@ -96,6 +96,13 @@ final class Subsections
             return;
         }
 
+        // Находим список игнорируемых хранителей.
+        $excludedKeepers = KeepersSeeders::getExcludedKeepersList($config);
+        $this->keepersSeeders->setExcludedKeepers($excludedKeepers);
+        if (count($excludedKeepers)) {
+            $this->logger->debug('KeepersSeeders. Исключены хранители', $excludedKeepers);
+        }
+
         $tabUpdateTime = $this->updateTime;
 
         // Обновим каждый хранимый подраздел.

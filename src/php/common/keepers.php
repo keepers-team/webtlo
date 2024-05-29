@@ -55,6 +55,12 @@ if ($sendForumReport) {
     }
 }
 
+// Находим список игнорируемых хранителей.
+$excludedKeepers = KeepersReports::getExcludedKeepersList($cfg);
+if (count($excludedKeepers)) {
+    $log->debug('KeepersLists. Исключены хранители', $excludedKeepers);
+}
+
 /** Список тем с отчётами на форуме. */
 $reportTopics = null;
 
@@ -63,6 +69,7 @@ $keepersUpdatedByApi = false;
 if (!empty($cfg['reports']['keepers_load_api'])) {
     /** @var KeepersReports $keepersReports */
     $keepersReports = $app->get(KeepersReports::class);
+    $keepersReports->setExcludedKeepers($excludedKeepers);
 
     $keepersUpdatedByApi = $keepersReports->update($cfg);
     if ($keepersUpdatedByApi) {
@@ -141,6 +148,7 @@ $forumsParams  = [];
 if (!empty($cfg['subsections'])) {
     // получаем данные
     foreach ($cfg['subsections'] as $forum_id => $subsection) {
+        $forumReportTopicId = null;
         // Ищем ид темы со списками в данных полученных из API отчётов (если они есть).
         if (null !== $reportTopics) {
             $forumReportTopicId = $reportTopics->getReportTopicId((int)$forum_id);
@@ -178,6 +186,12 @@ if (!empty($cfg['subsections'])) {
                 if (empty($keeper['topics_ids'])) {
                     continue;
                 }
+
+                // Пропускаем игнорируемых хранителей.
+                if (in_array((int)$keeper['user_id'], $excludedKeepers, true)) {
+                    continue;
+                }
+
                 $keeperIds[] = $keeper['user_id'];
 
                 // Если уже обновили списки через API, то нет смысла записывать их ещё раз.

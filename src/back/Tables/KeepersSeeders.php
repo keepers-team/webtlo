@@ -7,11 +7,14 @@ namespace KeepersTeam\Webtlo\Tables;
 use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Update\ExcludedKeepersTrait;
 use Psr\Log\LoggerInterface;
 
 /** Таблица раздач, которые сидируют Хранители. */
 final class KeepersSeeders
 {
+    use ExcludedKeepersTrait;
+
     // Параметры таблицы
     private const TABLE   = 'KeepersSeeders';
     private const PRIMARY = 'topic_id';
@@ -54,6 +57,11 @@ final class KeepersSeeders
     public function addKeptTopic(int $topicId, array $keepers): void
     {
         foreach ($keepers as $keeperId) {
+            // Пропускаем игнорируемых хранителей.
+            if (in_array($keeperId, $this->excludedKeepers, true)) {
+                continue;
+            }
+
             $keeper = $this->getKeeperInfo($keeperId);
             if (null !== $keeper) {
                 $this->keptTopics[] = [$topicId, $keeper->keeperId, $keeper->keeperName];

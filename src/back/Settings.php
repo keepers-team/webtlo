@@ -192,6 +192,8 @@ final class Settings
             'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
             'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids'),
+            // Список игнорируемых хранителей
+            'exclude_keepers_ids' => $ini->read('reports', 'exclude_keepers_ids'),
         ];
 
         // автоматизация

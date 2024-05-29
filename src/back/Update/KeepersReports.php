@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
-use Exception;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
@@ -19,6 +18,8 @@ use Throwable;
 
 final class KeepersReports
 {
+    use ExcludedKeepersTrait;
+
     public function __construct(
         private readonly ApiClient       $apiClient,
         private readonly ApiReportClient $apiReport,
@@ -29,7 +30,8 @@ final class KeepersReports
     }
 
     /**
-     * @throws Exception
+     * @param <string, mixed>[] $cfg
+     * @return bool
      */
     public function update(array $cfg): bool
     {
@@ -85,6 +87,11 @@ final class KeepersReports
                 }
 
                 foreach ($forumReports->keepers as $keeperReport) {
+                    // Пропускаем игнорируемых хранителей.
+                    if (in_array($keeperReport->keeperId, $this->excludedKeepers, true)) {
+                        continue;
+                    }
+
                     /** Данные о хранителе. */
                     $keeper = $this->keepers->getKeeperInfo($keeperReport->keeperId);
 
