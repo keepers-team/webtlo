@@ -40,7 +40,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ inputs.REGISTRY_IMAGE }}
+          images: |
+            ${{ inputs.REGISTRY_IMAGE }}
+            ghcr.io/${{ github.repository }}
           tags: |
             type=schedule
             type=ref,event=branch
