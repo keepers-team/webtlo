@@ -16,3 +16,13 @@ updates:
       # Prefix all commit messages with "[docker] " (no colon, but a trailing whitespace)
       prefix: "[github-actions] "
     open-pull-requests-limit: 2
+
+  - package-ecosystem: "composer"
+    directory: "/src"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "15:00"
+    commit-message:
+      prefix: "[composer] "
+    open-pull-requests-limit: 3
