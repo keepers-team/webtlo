@@ -23,6 +23,12 @@ jobs:
   build-docker:
     name: docker image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
 
