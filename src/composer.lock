@@ -638,16 +638,16 @@
         },
         {
             "name": "phpxmlrpc/phpxmlrpc",
-            "version": "4.10.1",
+            "version": "4.10.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gggeek/phpxmlrpc.git",
-                "reference": "ac18e315ac200692f3b02c773036c24be0acbefa"
+                "reference": "6725f215cd7d7c7d36c1d773aa89902aef2da67c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gggeek/phpxmlrpc/zipball/ac18e315ac200692f3b02c773036c24be0acbefa",
-                "reference": "ac18e315ac200692f3b02c773036c24be0acbefa",
+                "url": "https://api.github.com/repos/gggeek/phpxmlrpc/zipball/6725f215cd7d7c7d36c1d773aa89902aef2da67c",
+                "reference": "6725f215cd7d7c7d36c1d773aa89902aef2da67c",
                 "shasum": ""
             },
             "require": {
@@ -692,34 +692,34 @@
             ],
             "support": {
                 "issues": "https://github.com/gggeek/phpxmlrpc/issues",
-                "source": "https://github.com/gggeek/phpxmlrpc/tree/4.10.1"
+                "source": "https://github.com/gggeek/phpxmlrpc/tree/4.10.3"
             },
-            "time": "2023-02-22T12:25:19+00:00"
+            "time": "2024-04-23T10:50:06+00:00"
         },
         {
             "name": "phpxmlrpc/polyfill-xmlrpc",
-            "version": "1.0.0-rc1",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/gggeek/polyfill-xmlrpc.git",
-                "reference": "05cada8f3c50b7d1a38d6283c4b46b3ff2096e42"
+                "reference": "2c79dc261569a70ef9cd047b234a49be23598a3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gggeek/polyfill-xmlrpc/zipball/05cada8f3c50b7d1a38d6283c4b46b3ff2096e42",
-                "reference": "05cada8f3c50b7d1a38d6283c4b46b3ff2096e42",
+                "url": "https://api.github.com/repos/gggeek/polyfill-xmlrpc/zipball/2c79dc261569a70ef9cd047b234a49be23598a3d",
+                "reference": "2c79dc261569a70ef9cd047b234a49be23598a3d",
                 "shasum": ""
             },
             "require": {
-                "php": "^5.3.0 || ^7.0 || ^8.0",
-                "phpxmlrpc/phpxmlrpc": "^4.5.2"
+                "php": "^5.4.0 || ^7.0 || ^8.0",
+                "phpxmlrpc/phpxmlrpc": "^4.10.2"
             },
             "provide": {
                 "ext-xmlrpc": "*"
             },
             "require-dev": {
                 "ext-curl": "*",
-                "phpunit/phpunit": "^5.0 || ^8.5.12",
+                "phpunit/phpunit": "^4.8 || ^5.0 || ^8.5.12",
                 "phpunit/phpunit-selenium": "*",
                 "yoast/phpunit-polyfills": "*"
             },
@@ -750,9 +750,9 @@
             ],
             "support": {
                 "issues": "https://github.com/gggeek/polyfill-xmlrpc/issues",
-                "source": "https://github.com/gggeek/polyfill-xmlrpc/tree/1.0.0-rc1"
+                "source": "https://github.com/gggeek/polyfill-xmlrpc/tree/1.0.0"
             },
-            "time": "2022-01-30T15:28:08+00:00"
+            "time": "2024-04-15T11:49:22+00:00"
         },
         {
             "name": "psr/container",
@@ -2916,9 +2916,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "phpxmlrpc/polyfill-xmlrpc": 5
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
