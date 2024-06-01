@@ -17,3 +17,6 @@ indent_size = 2
 
 [docker/**]
 insert_final_newline = false
+
+[.github/**]
+insert_final_newline = false
