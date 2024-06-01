@@ -18,6 +18,7 @@ jobs:
 
   docker:
     name: Build
+    if: ${{ github.actor != 'dependabot[bot]' }}
     needs: [ validate, metadata ]
     uses: ./.github/workflows/sub-build-docker.yml
     with:
