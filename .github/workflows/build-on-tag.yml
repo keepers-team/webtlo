@@ -52,7 +52,7 @@ jobs:
           key: ${{ github.ref_type }}-${{ github.sha }}-release
           path: ./release
 
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v2
         name: Create release
         with:
           files: release/*.zip
