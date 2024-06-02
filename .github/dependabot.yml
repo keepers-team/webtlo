@@ -13,8 +13,12 @@ updates:
       time: "14:00"
     commit-message:
       prefix: "[github-actions] "
-    open-pull-requests-limit: 3
     rebase-strategy: "auto"
+    milestone: 7
+    open-pull-requests-limit: 3
+    labels:
+      - "C: Distribution"
+      - "T: Maintenance"
 
   - package-ecosystem: "composer"
     directory: "/src"
@@ -24,5 +28,9 @@ updates:
       time: "15:00"
     commit-message:
       prefix: "[composer] "
-    open-pull-requests-limit: 3
     rebase-strategy: "auto"
+    milestone: 7
+    open-pull-requests-limit: 3
+    labels:
+      - "C: Backend"
+      - "T: Maintenance"
