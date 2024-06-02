@@ -6,16 +6,15 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    # Workflow files stored in the default location of `.github/workflows`. (You don't need to specify `/.github/workflows` for `directory`. You can use `directory: "/"`.)
     directory: "/"
     schedule:
       interval: "weekly"
       day: "sunday"
       time: "14:00"
     commit-message:
-      # Prefix all commit messages with "[docker] " (no colon, but a trailing whitespace)
       prefix: "[github-actions] "
-    open-pull-requests-limit: 2
+    open-pull-requests-limit: 3
+    rebase-strategy: "auto"
 
   - package-ecosystem: "composer"
     directory: "/src"
@@ -26,3 +25,4 @@ updates:
     commit-message:
       prefix: "[composer] "
     open-pull-requests-limit: 3
+    rebase-strategy: "auto"
