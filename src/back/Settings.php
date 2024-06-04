@@ -439,16 +439,16 @@ final class Settings
         if (count($forums)) {
             foreach ($forums as $forumID => $forumData) {
                 if (isset($forumData['title'])) {
-                    $ini->write($forumID, 'title', trim($forumData['title']));
+                    $ini->write($forumID, 'title', trim((string)$forumData['title']));
                 }
                 if (isset($forumData['client'])) {
                     $ini->write($forumID, 'client', $forumData['client']);
                 }
                 if (isset($forumData['label'])) {
-                    $ini->write($forumID, 'label', trim($forumData['label']));
+                    $ini->write($forumID, 'label', trim((string)$forumData['label']));
                 }
                 if (isset($forumData['savepath'])) {
-                    $ini->write($forumID, 'data-folder', trim($forumData['savepath']));
+                    $ini->write($forumID, 'data-folder', trim((string)$forumData['savepath']));
                 }
                 if (isset($forumData['subdirectory'])) {
                     $ini->write($forumID, 'data-sub-folder', $forumData['subdirectory']);
