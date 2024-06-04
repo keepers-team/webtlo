@@ -69,11 +69,17 @@ final class TorrentClientOptions
             (int)($options['connect_timeout'] ?? Defaults::timeout),
         );
 
+        // Если не передан порт подключения к клиенту, добавляем порт по умолчанию.
+        $ssl = (bool)$options['ssl'];
+        if (empty($options['pt'])) {
+            $options['pt'] = $ssl ? 443 : 80;
+        }
+
         return new self(
             ClientType::from((string)$options['cl']),
             (string)$options['ht'],
             (int)$options['pt'],
-            (bool)$options['ssl'],
+            $ssl,
             $auth,
             $timeout
         );
@@ -92,11 +98,17 @@ final class TorrentClientOptions
             $auth = new BasicAuth((string)$options['login'], (string)$options['password']);
         }
 
+        // Если не передан порт подключения к клиенту, добавляем порт по умолчанию.
+        $ssl = (bool)$options['ssl'];
+        if (empty($options['port'])) {
+            $options['port'] = $ssl ? 443 : 80;
+        }
+
         return new self(
             ClientType::from((string)$options['type']),
             (string)$options['hostname'],
             (int)$options['port'],
-            (bool)$options['ssl'],
+            $ssl,
             $auth
         );
     }
