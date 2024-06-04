@@ -225,12 +225,15 @@ final class Transmission implements ClientInterface
                 $response = $this->request('session-get');
                 $result   = $this->validateResponse($response);
 
-                // Записываем токен авторизации.
-                if (!empty($result['session-id'])) {
-                    $this->headers[self::TOKEN] = $result['session-id'];
-
+                // Если получили ответ, значит авторизация успешна.
+                if (!empty($result['rpc-version'])) {
                     $this->rpcVersion    = $result['rpc-version'];
                     $this->authenticated = true;
+                }
+
+                // Записываем токен авторизации (на версии 2.94 его нет, должен быть записан автоматически в getLoginHandler).
+                if (!empty($result['session-id'])) {
+                    $this->headers[self::TOKEN] = $result['session-id'];
                 }
 
                 return $this->authenticated;
