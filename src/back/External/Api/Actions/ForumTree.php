@@ -32,7 +32,7 @@ trait ForumTree
         } catch (GuzzleException $error) {
             $code = $error->getCode();
 
-            $this->logger->warning('ForumTree. Ошибка получения данных', [$error->getMessage()]);
+            $this->logger->warning('ForumTree. Ошибка получения данных', [htmlspecialchars($error->getMessage())]);
 
             return ApiError::fromHttpCode($code);
         } catch (Throwable $error) {

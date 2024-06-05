@@ -40,7 +40,7 @@ trait Processor
         return function(GuzzleException $error, int $index, Promise $aggregatePromise) use (&$logger): void {
             $logger->debug('Got unexpected error when fetch chunk', [
                 'index'   => $index,
-                'message' => $error->getMessage(),
+                'message' => htmlspecialchars($error->getMessage()),
             ]);
 
             $code = $error->getCode();
