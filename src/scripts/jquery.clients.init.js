@@ -4,11 +4,12 @@
 $(document).ready(function () {
 
     // список торрент-клиентов
-    $("#list-torrent-clients").selectable();
+    const torrentClientsList = $('#list-torrent-clients');
+    torrentClientsList.selectable();
 
     // выбрать все торрент-клиенты
     var torrentClientTouchTime = 0;
-    $("#list-torrent-clients").bind("selectablestart", functionDelay(function () {
+    torrentClientsList.bind("selectablestart", functionDelay(function () {
         if (torrentClientTouchTime == 0) {
             torrentClientTouchTime = new Date().getTime();
         } else {
@@ -33,7 +34,7 @@ $(document).ready(function () {
     }
 
     // получить свойства торрент-клиентов
-    $("#list-torrent-clients").bind("selectablestop", function () {
+    torrentClientsList.bind("selectablestop", function () {
         var selectedItems = $(".ui-selected", this).size();
         var editedItems = $(".ui-editable", this).size();
         var torrentClientProps = $(".torrent-client-props");
@@ -171,7 +172,8 @@ $(document).ready(function () {
             }
         }
         $("#list-torrent-clients li").removeClass("ui-selected ui-editable ui-state-focus");
-        $("#list-torrent-clients").append("<li value=\"" + torrentClientID + "\">" + torrentClientComment + "</li>");
+
+        torrentClientsList.append("<li value=\"" + torrentClientID + "\">" + torrentClientComment + "</li>");
         var optionTorrentClient = $("#list-torrent-clients li[value=" + torrentClientID + "]");
         optionTorrentClient.attr("data-comment", torrentClientComment).data("comment", torrentClientComment);
         optionTorrentClient.attr("data-type", torrentClientType).data("type", torrentClientType);
@@ -184,7 +186,8 @@ $(document).ready(function () {
         optionTorrentClient.attr("data-exclude", torrentExclude).data("exclude", torrentExclude);
 
         optionTorrentClient.addClass("ui-widget-content ui-selected ui-state-focus");
-        $("#list-torrent-clients").trigger("selectablestop");
+
+        torrentClientsList.trigger("selectablestop");
         doSortSelect("list-torrent-clients", "li");
     });
 
@@ -228,9 +231,8 @@ $(document).ready(function () {
     });
 
     // Обновление списка торрент-клиентов в настройках подразделов
-    $('#add-torrent-client, #remove-torrent-client').on('click', refreshListTorrentClients);
-    let clientProps = $(`#torrent-client-props`);
-    clientProps.on('input selectmenuchange', functionDelay(refreshListTorrentClients, 400));
+    $('#add-torrent-client, #remove-torrent-client').on('click', functionDelay(refreshListTorrentClients, 400));
+    $(`#torrent-client-props`).on('input selectmenuchange', functionDelay(refreshListTorrentClients, 400));
 
     // проверка доступности торрент-клиентов
     $('#connect-torrent-client').on('click', function () {
