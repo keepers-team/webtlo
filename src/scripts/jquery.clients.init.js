@@ -23,6 +23,15 @@ $(document).ready(function () {
         }
     }, 100));
 
+
+    // Блок с настройками торрент-клиента.
+    const clientProperties = $('.torrent-client-props');
+    clientProperties.toggleWidgetsDisable = function(disabled = false) {
+        this.toggleDisable(disabled);
+        this.filter('select').selectmenu(disabled ? 'disable' : 'enable');
+        this.filter('.ui-spinner-input').spinner(disabled ? 'disable' : 'enable');
+    }
+
     // получить свойства торрент-клиентов
     $("#list-torrent-clients").bind("selectablestop", function () {
         var selectedItems = $(".ui-selected", this).size();
@@ -112,8 +121,9 @@ $(document).ready(function () {
 
     // добавить торрент-клиент в список
     $("#add-torrent-client").on("click", function () {
-        $(".torrent-client-props").removeClass("ui-state-disabled").prop("disabled", false);
-        $("#torrent-client-type").selectmenu("enable");
+        // Разблокируем ввод, при добавлении нового клиента.
+        clientProperties.toggleWidgetsDisable(false);
+
         var torrentClientComment = $("#torrent-client-comment").val();
         var torrentClientType = $("#torrent-client-type").val();
         var torrentClientHostname = $("#torrent-client-hostname").val();
@@ -178,35 +188,40 @@ $(document).ready(function () {
         doSortSelect("list-torrent-clients", "li");
     });
 
-    // удалить торрент-клиенты из списка
-    $("#remove-torrent-client").on("click", function () {
-        var selectedItems = $("#list-torrent-clients li.ui-selected").size();
-        if (selectedItems === 0) {
+    // Удалить торрент-клиент из списка.
+    $('#remove-torrent-client').on('click', function () {
+        const selectedClient = $('#list-torrent-clients li.ui-selected');
+
+        if (selectedClient.size() === 0) {
             return false;
         }
-        var itemIndex = $("#list-torrent-clients li.ui-selected").index();
-        $("#list-torrent-clients li.ui-selected").each(function () {
-            if (!$(this).hasClass("ui-connection")) {
+
+        let itemIndex = selectedClient.index();
+        selectedClient.each(function () {
+            if (!$(this).hasClass('ui-connection')) {
                 $(this).remove();
             }
         });
-        var totalItems = $("#list-torrent-clients li").size();
-        if (totalItems == 0) {
-            $(".torrent-client-props").val("").addClass("ui-state-disabled").prop("disabled", true);
-            $("#torrent-client-ssl").prop("checked", false);
-            $("#torrent-client-response").text("");
-            $("#torrent-client-type").selectmenu("disable");
+
+        const totalItems = $('#list-torrent-clients li').size();
+        if (totalItems === 0) {
+            // Клиентов нет - очищаем значения и блокируем ввод.
+            clientProperties.val('').toggleWidgetsDisable(true);
+
+            $('#torrent-client-ssl').prop('checked', false);
+            $('#torrent-client-response').text('');
         } else {
-            if (itemIndex != totalItems) {
+            if (itemIndex !== totalItems) {
                 itemIndex++;
             }
-            $("#list-torrent-clients li:nth-child(" + itemIndex + ")").addClass("ui-selected").trigger("selectablestop");
+            $(`#list-torrent-clients li:nth-child(${itemIndex})`).addClass('ui-selected').trigger('selectablestop');
         }
-        $("#list-forums option").each(function () {
-            var forumData = this.dataset;
-            var torrentClientID = $("#list-torrent-clients li[value=" + forumData.client + "]").val();
-            if (typeof torrentClientID === "undefined") {
-                $(this).attr("data-client", 0);
+
+        $('#list-forums option').each(function () {
+            const forumData = this.dataset;
+            const torrentClientID = $(`#list-torrent-clients li[value=${forumData.client}]`).val();
+            if (typeof torrentClientID === 'undefined') {
+                $(this).attr(`data-client`, 0);
             }
         });
 
@@ -275,7 +290,8 @@ $(document).ready(function () {
     if ($('#list-torrent-clients li').size() > 0) {
         $('#list-torrent-clients li:nth-child(1)').addClass('ui-selected').trigger('selectablestop');
     } else {
-        clientProps.addClass("ui-state-disabled").prop("disabled", true);
+        // Нет клиентов - блокируем ввод.
+        clientProperties.toggleWidgetsDisable(true);
     }
 
 });
