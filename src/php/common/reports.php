@@ -295,10 +295,24 @@ if ($forumReportAvailable && isset($reports)) {
             if (empty($forumDetails->topic_id) || empty($forumDetails->post_ids)) {
                 continue;
             }
+
+            // Пометим свои посты как "не актуальные".
+            $tmpPostList = [];
             foreach ($forumDetails->post_ids as $postId) {
-                $reports->send_message('editpost', ':!: не актуально', $forumDetails->topic_id, $postId);
+                $clearPostResult = $reports->send_message('editpost', ':!: не актуально', $forumDetails->topic_id, $postId);
+
+                // Если отредактировать пост не удалось, то скорее всего его уже отправили в архив.
+                if (empty($clearPostResult)) {
+                    $tmpPostList[] = $postId;
+                }
             }
             $editedTopicsIDs[] = $forumDetails->topic_id;
+
+            // Стираем в локальной БД несуществующие посты.
+            if (count($tmpPostList)) {
+                $tmpPostList = array_values(array_diff($forumDetails->post_ids, $tmpPostList));
+                Forums::updatePostList($forumId, $tmpPostList);
+            }
         }
     }
 
