@@ -186,6 +186,8 @@ final class Settings
             'send_report_forum'   => $ini->read('reports', 'send_report_forum', 0),
             // Отправлять сводный отчёт на форум
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
+            // Снимать отметку хранения с не хранимых подразделов.
+            'unset_other_forums' => $ini->read('reports', 'unset_other_forums', 1),
             // Помечать лишние сообщения как неактуальные.
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
             // Получать ли отчёты других пользователей из API.
@@ -617,6 +619,8 @@ final class Settings
         $ini->write('reports', 'send_report_forum', (int)isset($cfg['send_report_forum']));
         // Отправка сводных отчётов на форум
         $ini->write('reports', 'send_summary_report', (int)isset($cfg['send_summary_report']));
+        // Снимать отметку хранения с не хранимых подразделов
+        $ini->write('reports', 'unset_other_forums', (int)isset($cfg['unset_other_forums']));
         // Очистка своих сообщений на форуме
         $ini->write('reports', 'auto_clear_messages', (int)isset($cfg['auto_clear_messages']));
         // Получать ли отчёты других пользователей из API.

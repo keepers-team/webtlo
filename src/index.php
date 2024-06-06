@@ -1053,6 +1053,11 @@ function cfg_checkbox($cfg): Closure
                                 <input name="send_summary_report" type="checkbox" size="24" <?= $checkbox_check ('reports', 'send_summary_report') ?? '' ?> />
                                 Отправлять сводный отчёт на форум
                             </label>
+                            <hr>
+                            <label class="label" title="Снимать отметку хранения с подразделов, которые отсутствуют в списке 'Сканируемых подразделов'. Может быть полезно отключить, если используется несколько копий программы в разных локациях.">
+                                <input name="unset_other_forums" type="checkbox" size="24" <?= $checkbox_check ('reports', 'unset_other_forums') ?? '' ?> />
+                                Снимать отметку хранения с не хранимых подразделов
+                            </label>
                             <label class="label" title="Посты с отчётами о нехранимых подразделах. Будут заменены на 'Не актуально'">
                                 <input name="auto_clear_messages" type="checkbox" size="24" <?= $checkbox_check ('reports', 'auto_clear_messages') ?? '' ?> />
                                 Очищать свои "неактуальные" сообщения в рабочем подфоруме

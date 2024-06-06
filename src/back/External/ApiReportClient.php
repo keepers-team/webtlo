@@ -137,6 +137,38 @@ final class ApiReportClient
     }
 
     /**
+     * Задать статус хранения подразделов, и пометить остальные как более не хранимые
+     *
+     * @param int[]  $forumIds
+     * @param int    $status
+     * @param string $appVersion
+     * @param bool   $unsetOtherForums
+     * @return array<string, mixed>
+     */
+    public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): array
+    {
+        $params = [
+            'keeper_id'             => $this->cred->userId,
+            'status'                => $status,
+            'subforum_id'           => implode(',', array_filter($forumIds)),
+            'comment'               => $appVersion,
+            'unset_other_subforums' => $unsetOtherForums,
+        ];
+
+        try {
+            $response = $this->client->post('subforum/set_status_bulk', ['query' => $params]);
+        } catch (GuzzleException $e) {
+            $this->logException($e->getCode(), $e->getMessage(), $params);
+
+            return ['result' => $e->getMessage()];
+        }
+
+        $body = json_decode($response->getBody()->getContents(), true);
+
+        return $body ?: ['result' => 'unknown'];
+    }
+
+    /**
      * @param int      $forumId
      * @param string[] $columns
      * @return ?array<string, mixed>
@@ -159,7 +191,7 @@ final class ApiReportClient
     }
 
     /**
-     * Записать ошибку в логгер.
+     * Записать ошибку в лог.
      *
      * @param int                  $code
      * @param string               $message

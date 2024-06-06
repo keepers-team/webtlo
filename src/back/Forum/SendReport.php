@@ -82,6 +82,21 @@ final class SendReport
         return $result;
     }
 
+    /**
+     * @param int[] $forumIds
+     * @param bool  $unsetOtherForums
+     * @return array<string, mixed>
+     */
+    public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array
+    {
+        return $this->apiReport->setForumsStatus(
+            $forumIds,
+            KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            $this->webtlo->appVersionLine(),
+            $unsetOtherForums
+        );
+    }
+
     public function setEnable(bool $enabled): void
     {
         $this->enabled = $enabled;

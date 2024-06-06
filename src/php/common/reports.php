@@ -85,7 +85,7 @@ if ($sendForumReports) {
             $sendForumReports = false;
         } else {
             $log->notice(
-                'Внимание, отправка отчётов на форум будет заблокирована, начиная с {date}. Внесите изменения в настройки отправки отчётов.',
+                'Внимание, отправка отчётов на форум будет заблокирована, начиная с {date}. Для ускорения работы программы снимите в настройках галочку "Отправлять отчеты на форум".',
                 ['date' => $revolution]
             );
         }
@@ -145,11 +145,15 @@ $editedPosts     = [];
 $Timers = [];
 
 $forumCount = $forumReports->getForumCount();
+
+$forumsToReport = [];
 foreach ($forumReports->forums as $forum_id) {
     $timer = [];
 
     // Пробуем отправить отчёт по API.
     if ($sendReport->isEnable() && !$forumReports->isForumExcluded($forum_id)) {
+        $forumsToReport[] = $forum_id;
+
         Timers::start("send_api_$forum_id");
         try {
             Timers::start("search_db_$forum_id");
@@ -271,6 +275,13 @@ foreach ($forumReports->forums as $forum_id) {
 
     $forumReports->clearCache($forum_id);
     $Timers[] = ['forum' => $forum_id, ...$timer];
+}
+
+if (count($forumsToReport) && $sendReport->isEnable()) {
+    $unsetOtherForums = (bool)($cfg['reports']['unset_other_forums'] ?? true);
+
+    $setStatus = $sendReport->setForumsStatus($forumsToReport, $unsetOtherForums);
+    $log->debug('kept forums setStatus', $setStatus);
 }
 
 if (!empty($Timers)) {
