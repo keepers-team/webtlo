@@ -262,12 +262,23 @@ $(document).ready(function () {
     });
 
     let topicsFilter = $('#topics_filter');
+    let lastUsedFilter = '';
 
     topicsFilter.on('change input selectmenuchange spinstop', function (e) {
         e.preventDefault();
 
+        // Текущий отсортированный набор фильтров.
+        const currentFilter = topicsFilter.serializeAllArray().toSorted();
+        const currentFilterString = JSON.stringify(currentFilter);
+
+        // Если прошлый набор фильтров идентичен текущему - ничего не делаем.
+        if (lastUsedFilter === currentFilterString) {
+            return false;
+        }
+
         // Запоминаем параметры фильтра в куки.
-        Cookies.set('filter-options', topicsFilter.serializeAllArray());
+        lastUsedFilter = currentFilterString;
+        Cookies.set('filter-options', currentFilter);
 
         if ($('#enable_auto_apply_filter').prop('checked')) {
             filter_delay(getFilteredTopics, window);
