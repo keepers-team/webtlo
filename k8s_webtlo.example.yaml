@@ -1,0 +1,84 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webtlo
+  namespace: keepers
+spec:
+  selector:
+    app: webtlo
+  ports:
+    - port: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webtlo-config
+  namespace: keepers
+data:
+  TZ: Europe/Zurich
+  WEBTLO_UID: "1000"
+  WEBTLO_GID: "1000"
+  WEBTLO_CRON: "true"
+  CRON_UPDATE: 15 0 * * *
+  CRON_CONTROL: "false"
+  CRON_KEEPERS: 45 0 * * *
+  CRON_REPORTS: 0 1 * * *
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: webtlo-data-pvc
+  namespace: keepers
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webtlo
+  namespace: keepers
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: webtlo
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: webtlo
+    spec:
+      containers:
+        - name: webtlo
+          image: berkut174/webtlo:2.6.1
+          envFrom:
+            - configMapRef:
+                name: webtlo-config
+                optional: false
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 30m
+              memory: 32Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /data
+              name: data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: webtlo-data-pvc
+---
