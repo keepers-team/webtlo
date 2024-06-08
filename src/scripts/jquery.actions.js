@@ -71,7 +71,7 @@ $(document).ready(function () {
             url: "php/actions/send_reports.php",
             beforeSend: function () {
                 block_actions();
-                processStatus.set("Отправка отчётов на форум...");
+                processStatus.set("Отправка отчётов хранимого...");
             },
             success: function (response) {
                 response = $.parseJSON(response);

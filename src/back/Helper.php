@@ -8,7 +8,7 @@ use RuntimeException;
 
 final class Helper
 {
-    /** Сортировка массива по заданному ключу, с учётом кирилицы. */
+    /** Сортировка массива по заданному ключу, с учётом кириллицы. */
     public static function natsortField(array $input, string $field, int $direct = 1): array
     {
         uasort($input, function($a, $b) use ($field, $direct) {
