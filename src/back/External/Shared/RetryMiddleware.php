@@ -36,28 +36,27 @@ trait RetryMiddleware
             $reason = null !== $response ? $response->getStatusCode() : 'timeout';
 
             $attempts = $options['max_retry_attempts'];
-            $logger->warning(
-                sprintf('Повторная попытка выполнить запрос [%s/%s]', $attempt, $attempts),
-                [
-                    'url'    => $request->getUri()->getPath(),
-                    'reason' => $reason,
-                ]
-            );
+            $delay    = number_format($delay, 2);
 
-            $logger->debug(
-                'Retrying request',
-                [
-                    'url'     => $request->getUri()->__toString(),
-                    'delay'   => number_format($delay, 2),
-                    'attempt' => $attempt,
-                    'reason'  => $reason,
-                ]
-            );
+            $logger->warning('Повторная попытка выполнить запрос [{current}/{max}]({delay})', [
+                'current' => $attempt,
+                'max'     => $attempts,
+                'delay'   => $delay,
+                'reason'  => $reason,
+                'url'     => $request->getUri()->getPath(),
+            ]);
+
+            $logger->debug('Retrying request', [
+                'url'     => $request->getUri()->__toString(),
+                'delay'   => $delay,
+                'attempt' => $attempt,
+                'reason'  => $reason,
+            ]);
         };
 
         return GuzzleRetryMiddleware::factory([
             'retry_on_timeout'   => true,
-            'max_retry_attempts' => 3,
+            'max_retry_attempts' => 5,
             'on_retry_callback'  => $callback,
         ]);
     }

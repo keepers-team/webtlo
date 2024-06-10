@@ -41,15 +41,21 @@ trait TopicsPeers
         $peerProcessor     = self::getDynamicPeerProcessor($this->logger, $knownPeers, $missingTopics);
 
         /**
-         * @param array[][] $optionsChunks
+         * @param array[][] $topicsChunks
          * @return Generator
          */
-        $requests = function(array $optionsChunks) use (&$client) {
-            foreach ($optionsChunks as $chunk) {
-                yield function(array $options) use (&$client, &$chunk) {
+        $requests = function(array $topicsChunks) use (&$client) {
+            // Увеличим количество попыток, т.к. много запросов.
+            $retry = [
+                'max_retry_attempts'       => 6,
+                'default_retry_multiplier' => 7.5,
+            ];
+
+            foreach ($topicsChunks as $chunk) {
+                yield function(array $options) use (&$client, &$chunk, $retry) {
                     return $client->getAsync(
                         uri    : 'get_peer_stats',
-                        options: ['query' => ['val' => implode(',', $chunk), ...$options]]
+                        options: ['query' => ['val' => implode(',', $chunk), ...$options], ...$retry]
                     );
                 };
             }
