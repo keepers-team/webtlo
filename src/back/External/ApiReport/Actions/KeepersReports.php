@@ -33,11 +33,6 @@ trait KeepersReports
             foreach ($user['kept_releases'] as $release) {
                 $release = array_combine($columns, $release);
 
-                // Пропускаем раздачи, которые попали в отчёты не через api.
-                if (!($release['status'] & KeepingStatuses::ReportedByApi->value)) {
-                    continue;
-                }
-
                 // Пропускаем раздачи, у которых нет даты.
                 $posted = max($release['last_update_time'], $release['last_seeded_time']);
                 if (null === $posted) {
