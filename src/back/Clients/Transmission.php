@@ -328,7 +328,7 @@ final class Transmission implements ClientInterface
         $array = json_decode($body, true);
 
         if (null === $array) {
-            $this->logger->error('Fail to decode api response', [htmlspecialchars(trim($body))]);
+            $this->logger->error('Fail to decode api response', [$body]);
 
             throw new RuntimeException('Unsuccessful api request');
         }

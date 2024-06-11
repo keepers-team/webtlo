@@ -202,7 +202,7 @@ final class ApiReportClient
     {
         $this->logger->error(
             'Ошибка выполнения запроса',
-            ['code' => $code, 'error' => htmlspecialchars(trim($message))]
+            ['code' => $code, 'error' => $message]
         );
 
         if (!empty($params)) {

@@ -15,7 +15,7 @@ final class Log
         }
     }
 
-    public static function formatRows(array $rows, string $break = '<br />'): string
+    public static function formatRows(array $rows, string $break = '<br />', bool $replace = false): string
     {
         $splitWord = '-- DONE --';
 
@@ -34,13 +34,18 @@ final class Log
         // Переворачиваем порядок процессов. Последний - вверху.
         $output = array_merge(...array_reverse($output));
 
+        // Заменяем спецсимволы для вывода в UI.
+        if ($replace) {
+            $output = array_map(fn($el) => htmlspecialchars($el), $output);
+        }
+
         return implode($break, $output) . $break;
     }
 
     public static function get(string $break = '<br />'): string
     {
         if (!empty(self::$log)) {
-            return self::formatRows(self::$log, $break);
+            return self::formatRows(rows: self::$log, break: $break);
         }
 
         return '';

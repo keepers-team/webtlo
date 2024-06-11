@@ -17,7 +17,7 @@ $log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . ".log";
 
 if (file_exists($log_file)) {
     if ($data = file($log_file)) {
-        $data = Log::formatRows($data);
+        $data = Log::formatRows(rows: $data, replace: true);
 
         echo $data;
     }

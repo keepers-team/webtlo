@@ -306,13 +306,13 @@ final class Qbittorrent implements ClientInterface
                 } else {
                     $this->logger->warning(
                         'Failed to make request',
-                        ['code' => $e->getCode(), 'message' => htmlspecialchars(trim($e->getMessage()))]
+                        ['code' => $e->getCode(), 'message' => $e->getMessage()]
                     );
                 }
             } catch (Throwable $e) {
                 $this->logger->warning(
                     'Failed to make request',
-                    ['code' => $e->getCode(), 'message' => htmlspecialchars(trim($e->getMessage()))]
+                    ['code' => $e->getCode(), 'message' => $e->getMessage()]
                 );
             }
 
