@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-        
+
         To provide you with fast and high-quality support, please fill in the required fields below.
 
   - type: markdown
@@ -22,6 +22,7 @@ body:
       options:
         - x.x.x (alpha)
         - x.x.x (beta)
+        - 2.6.x (Actual)
         - 2.5.x (Stable)
         - <2.5.x (Legacy)
         - I don't know

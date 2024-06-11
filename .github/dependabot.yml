@@ -11,6 +11,7 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "14:00"
+      timezone: "Europe/Moscow"
     commit-message:
       prefix: "[github-actions] "
     rebase-strategy: "auto"
@@ -26,6 +27,7 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "15:00"
+      timezone: "Europe/Moscow"
     commit-message:
       prefix: "[composer] "
     rebase-strategy: "auto"
