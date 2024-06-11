@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Clients;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
@@ -34,15 +35,20 @@ final class Utorrent implements ClientInterface
 
     private string $token;
 
-    private Client $client;
+    private Client    $client;
+    private CookieJar $jar;
 
     public function __construct(
         private readonly LoggerInterface      $logger,
         private readonly TorrentClientOptions $options
     ) {
+        // Авторизация через Set-Cookie для 3.*
+        $this->jar = new CookieJar();
+
         // Параметры клиента.
         $clientOptions = [
             'base_uri' => $this->getClientBase($this->options, 'gui/'),
+            'cookies'  => $this->jar,
             'handler'  => $this->getDefaultHandler(),
             // Timeout options
             ...$this->options->getTimeoutOptions(),
@@ -218,7 +224,7 @@ final class Utorrent implements ClientInterface
 
                 $html = $response->getBody()->getContents();
 
-                // Проверяем токен авторизации.
+                // Проверяем токен авторизации для версий 1.* и 2.*
                 preg_match('|<div id=\'token\'.+>(.*)</div>|', $html, $tokenMatches);
                 if (!empty($tokenMatches)) {
                     $this->token = $tokenMatches[1];
