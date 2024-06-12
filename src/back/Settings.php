@@ -169,8 +169,6 @@ final class Settings
         $config['reports'] = [
             // Отправлять ли отчёт пользователя в API.
             'send_report_api'     => $ini->read('reports', 'send_report_api', 1),
-            // Отправлять ли отчёт пользователя на форум.
-            'send_report_forum'   => $ini->read('reports', 'send_report_forum', 0),
             // Отправлять сводный отчёт на форум
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
             // Снимать отметку хранения с не хранимых подразделов.
@@ -602,8 +600,6 @@ final class Settings
 
         // Отправлять ли отчёт пользователя в API.
         $ini->write('reports', 'send_report_api', (int)isset($cfg['send_report_api']));
-        // Отправлять ли отчёт пользователя на форум.
-        $ini->write('reports', 'send_report_forum', (int)isset($cfg['send_report_forum']));
         // Отправка сводных отчётов на форум
         $ini->write('reports', 'send_summary_report', (int)isset($cfg['send_summary_report']));
         // Снимать отметку хранения с не хранимых подразделов

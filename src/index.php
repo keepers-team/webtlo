@@ -1047,10 +1047,6 @@ function cfg_checkbox($cfg): Closure
                                 <input name="send_report_api" type="checkbox" size="24" <?= $checkbox_check('reports', 'send_report_api') ?? '' ?> />
                                 Отправлять отчёты в API
                             </label>
-                            <label class="label" title="Отправлять ли отчёты по хранимым подразделам на форум.">
-                                <input name="send_report_forum" type="checkbox" size="24" <?= $checkbox_check('reports', 'send_report_forum') ?? '' ?> />
-                                Отправлять отчёты на форум (в ближайшем будущем, отправка отчётов на форум будет отключена)
-                            </label>
                             <label class="label" title="Можно отключить отправку сводного отчёта. Отчёты по хранимым подразделам будут отправлены как обычно.">
                                 <input name="send_summary_report" type="checkbox" size="24" <?= $checkbox_check ('reports', 'send_summary_report') ?? '' ?> />
                                 Отправлять сводный отчёт на форум
