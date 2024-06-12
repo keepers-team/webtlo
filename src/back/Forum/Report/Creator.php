@@ -77,9 +77,8 @@ final class Creator
         // Вытаскиваем из базы хранимое
         $total = $this->calcSummary($this->stored);
 
-        // Строка хранимого подраздела.
-        // Первая ссылка в тему со списками, вторая на своё сообщение.
-        $subsectionPattern = '[*][url=viewtopic.php?t=%s][u]%s[/u][/url] — [url=viewtopic.php?p=%s][u]%s шт. (%s)[/u][/url]';
+        $urlPattern  = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
+
         // Разбираем хранимое
         $savedSubsections = [];
         foreach ($this->forums as $forumId) {
@@ -96,19 +95,21 @@ final class Creator
             $forum = Forums::getForum($forumId);
 
             $topic_id = $forum->topic_id ?: 'NaN';
-            $post_id  = $forum->post_ids[0] ?? 'NaN';
+            $post_id  = $forum->post_ids[0] ?? null;
 
-            // инфа о подразделе в сводный
-            $savedSubsections[] = sprintf(
-                $subsectionPattern,
-                $topic_id,
-                $forum->name,
-                $post_id,
-                $forumValues['keep_count'],
-                $this->bytes($forumValues['keep_size'])
-            );
+            // Ссылка на тему с отчётами подраздела.
+            $leftPart = sprintf($urlPattern, 't', $topic_id, $forum->name);
 
-            unset($forumId, $forumValues, $topic_id);
+            // Ссылка на свой пост(отчёт) и количество + объём раздач.
+            $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
+            if (null !== $post_id) {
+                $rightPart = sprintf($urlPattern, 'p', $post_id, $rightPart);
+            }
+
+            // Записываем данные о подразделе в сводный отчёт.
+            $savedSubsections[] = "[*]$leftPart - $rightPart";
+
+            unset($forumId, $forumValues, $topic_id, $post_id, $leftPart, $rightPart);
         }
 
         // формируем сводный отчёт
