@@ -175,6 +175,8 @@ final class Settings
             'send_report_api'     => $ini->read('reports', 'send_report_api', 1),
             // Отправлять сводный отчёт на форум
             'send_summary_report' => $ini->read('reports', 'send_summary_report', 1),
+            // Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом
+            'send_report_settings' => $ini->read('reports', 'send_report_settings', 1),
             // Снимать отметку хранения с не хранимых подразделов.
             'unset_other_forums' => $ini->read('reports', 'unset_other_forums', 1),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
@@ -646,6 +648,8 @@ final class Settings
         $ini->write('reports', 'send_report_api', (int)isset($cfg['send_report_api']));
         // Отправка сводных отчётов на форум
         $ini->write('reports', 'send_summary_report', (int)isset($cfg['send_summary_report']));
+        // Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом.
+        $ini->write('reports', 'send_report_settings', (int)isset($cfg['send_report_settings']));
         // Снимать отметку хранения с не хранимых подразделов
         $ini->write('reports', 'unset_other_forums', (int)isset($cfg['unset_other_forums']));
 

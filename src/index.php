@@ -1050,6 +1050,10 @@ function cfg_checkbox($cfg): Closure
                                 <input name="send_summary_report" type="checkbox" size="24" <?= $checkbox_check ('reports', 'send_summary_report') ?? '' ?> />
                                 Отправлять сводный отчёт на форум
                             </label>
+                            <label class="label" title="Количество и тип используемых торрент-клиентов. Данные о регулировке.">
+                                <input name="send_report_settings" type="checkbox" size="24" <?= $checkbox_check ('reports', 'send_report_settings') ?? '' ?> />
+                                Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом
+                            </label>
                             <hr>
                             <label class="label" title="Снимать отметку хранения с подразделов, которые отсутствуют в списке 'Сканируемых подразделов'. Может быть полезно отключить, если используется несколько копий программы в разных локациях.">
                                 <input name="unset_other_forums" type="checkbox" size="24" <?= $checkbox_check ('reports', 'unset_other_forums') ?? '' ?> />

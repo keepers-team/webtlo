@@ -122,7 +122,18 @@ final class Creator
         $summary[] = $this->webtlo->versionLineUrl();
         $summary[] = '[hr]';
 
-        return implode($this->implodeGlue, [...$summary, '[list=1]', ...$savedSubsections, '[/list]']);
+        $summary = [...$summary, '[list=1]', ...$savedSubsections, '[/list]'];
+
+        // Проверяем возможность добавить в сводный отчёт данные о настройках.
+        $shared = $this->getConfigTelemetry();
+        if (null !== $shared) {
+            $summary[] = '[hr]';
+            $summary[] = '[spoiler="Настройки Web-TLO"][pre]<br />';
+            $summary[] = $shared;
+            $summary[] = '<br />[/pre][/spoiler]';
+        }
+
+        return implode($this->implodeGlue, $summary);
     }
 
     public function getForumCount(): int
@@ -309,6 +320,72 @@ final class Creator
         }
 
         return $topicUrl;
+    }
+
+    private function getConfigTelemetry(): ?string
+    {
+        $config = $this->config;
+
+        if (empty($config['reports']['send_report_settings'])) {
+            return null;
+        }
+
+        $sharedConfig['proxy_activate_forum']  = (bool)$config['proxy_activate_forum'];
+        $sharedConfig['proxy_activate_api']    = (bool)$config['proxy_activate_api'];
+        $sharedConfig['proxy_activate_report'] = (bool)$config['proxy_activate_report'];
+
+        // Количество и тип используемых торрент клиентов.
+        $clients = array_filter($config['clients'], fn($el) => !$el['exclude']);
+
+        // Тип и количество используемых торрент-клиентов.
+        $distribution = array_count_values(array_map(fn($el) => $el['cl'], $clients));
+
+        // Количество раздач в используемых торрент-клиентах.
+        $clientTopics = [];
+        foreach ($this->getClientsTopics() as $clientId => $topics) {
+            if (!empty($client = $clients[$clientId])) {
+                $clientName = sprintf('%s-%s', $client['cl'], $clientId);
+                $clientTopics[$clientName] = array_filter($topics);
+            }
+        }
+
+        // Данные о торрент-клиентах.
+        $sharedConfig['clients'] = [
+            'distribution' => $distribution,
+            'topics'       => $clientTopics,
+        ];
+
+        // Регулировка по подразделам.
+        $subsections = array_filter($config['subsections'], fn($el) => !empty($el['control_peers']));
+        $subsections = array_map(fn($el) => (int)$el['control_peers'], $subsections);
+
+        ksort($subsections);
+
+        // Параметры регулировки.
+        $sharedConfig['control'] = [
+            'enabled'     => (bool)$config['automation']['control'],
+            'peers'       => (int)$config['topics_control']['peers'],
+            'keepers'     => (int)$config['topics_control']['keepers'],
+            'subsections' => $subsections,
+        ];
+
+        return json_encode($sharedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function getClientsTopics(): array
+    {
+        $query = '
+            SELECT client_id,
+                   COUNT(1) AS topics,
+                   SUM(CASE WHEN done = 1 THEN 1 ELSE 0 END) AS done,
+                   SUM(CASE WHEN done < 1 THEN 1 ELSE 0 END) AS downloading,
+                   SUM(paused) AS paused, SUM(error) AS error
+            FROM Torrents t
+            GROUP BY client_id
+            ORDER BY topics DESC
+        ';
+
+        return (array)Db::query_database($query, [], true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
     }
 
     /**
