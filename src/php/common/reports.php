@@ -5,7 +5,7 @@ use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Forum\SendReport;
-use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Timers;
 
@@ -23,9 +23,10 @@ $log->info('Начат процесс отправки отчётов...');
 $cfg = $app->getLegacyConfig();
 
 if (isset($checkEnabledCronAction)) {
-    $checkEnabledCronAction = $cfg['automation'][$checkEnabledCronAction] ?? -1;
-    if ($checkEnabledCronAction == 0) {
-        throw new Exception('Notice: Автоматическая отправка отчётов отключена в настройках.');
+    if (!Helper::isScheduleActionEnabled($cfg, $checkEnabledCronAction)) {
+        $log->notice('Автоматическая отправка отчётов отключена в настройках.');
+
+        return;
     }
 }
 
@@ -41,9 +42,8 @@ if (empty($cfg['subsections'])) {
 LastUpdate::checkReportsSendAvailable($cfg);
 
 
+Timers::start('init_api_report');
 // Подключаемся к API отчётов.
-Timers::start('create_api');
-
 /** @var SendReport $sendReport */
 $sendReport = $app->get(SendReport::class);
 
@@ -53,42 +53,13 @@ $sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
 // Проверяем доступность API.
 if ($sendReport->isEnable()) {
     $sendReport->checkAccess();
-
-    $log->debug('create api {sec}', ['sec' => Timers::getExecTime('create_api')]);
 }
 
 if (!$sendReport->isEnable()) {
-    $log->info('Отправка отчёта в API невозможна или отключена');
+    $log->notice('Отправка отчёта в API невозможна или отключена');
 }
+$log->debug('init api report {sec}', ['sec' => Timers::getExecTime('init_api_report')]);
 
-
-Timers::start('init_report');
-
-// Желание отправить сводный отчёт на форум.
-$sendForumSummary = (bool)($cfg['reports']['send_summary_report'] ?? true);
-
-$forceCleanForum = true;
-
-// Возможность отправить любые отчёты на форум.
-$forumReportAvailable = $sendForumSummary;
-
-if ($forumReportAvailable) {
-    // Подключаемся к форуму.
-    if (!isset($reports)) {
-        $reports = new Reports(
-            $cfg['forum_address'],
-            $user,
-        );
-        // применяем таймауты
-        $reports->curl_setopts($cfg['curl_setopt']['forum']);
-    }
-
-    if ($unavailable = $reports->check_access()) {
-        $log->error($unavailable->value);
-        $forumReportAvailable = false;
-    }
-}
-$log->debug('init report {sec}', ['sec' => Timers::getExecTime('init_report')]);
 
 Timers::start('create_report');
 // Создание отчётов.
@@ -97,29 +68,26 @@ $forumReports = new ReportCreator(
     $user
 );
 $forumReports->initConfig();
-if ($forumReportAvailable) {
-    $forumReports->fillStoredValues();
-}
 
 $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
+// Если API доступно - отправляем отчёты.
+if ($sendReport->isEnable()) {
+    $Timers = [];
 
-$forumReportCount = 0;
-$apiReportCount   = 0;
+    $forumCount = $forumReports->getForumCount();
 
-$editedTopicsIDs = [];
-$editedPosts     = [];
+    $apiReportCount = 0;
+    $forumsToReport = [];
+    foreach ($forumReports->forums as $forum_id) {
+        // Пропускаем исключённые подразделы.
+        if ($forumReports->isForumExcluded($forum_id)) {
+            continue;
+        }
 
-$Timers = [];
+        $timer = [];
 
-$forumCount = $forumReports->getForumCount();
-
-$forumsToReport = [];
-foreach ($forumReports->forums as $forum_id) {
-    $timer = [];
-
-    // Пробуем отправить отчёт по API.
-    if ($sendReport->isEnable() && !$forumReports->isForumExcluded($forum_id)) {
+        // Пробуем отправить отчёт по API.
         $forumsToReport[] = $forum_id;
 
         Timers::start("send_api_$forum_id");
@@ -140,73 +108,72 @@ foreach ($forumReports->forums as $forum_id) {
                 'API. Отчёт отправлен [{current}/{total}] {sec}',
                 ['current' => ++$apiReportCount, 'total' => $forumCount, 'sec' => $timer['send_api'], ...$apiResult]
             );
+
+            unset($topicsToReport, $apiResult);
         } catch (Exception $e) {
             $log->notice(
                 'Попытка отправки отчёта через API для подраздела {forum_id} не удалась. Причина {error}',
                 ['forum_id' => $forum_id, 'error' => $e->getMessage()]
             );
         }
+
+        $forumReports->clearCache($forum_id);
+        $Timers[] = ['forum' => $forum_id, ...$timer];
+
+        unset($forum_id, $timer);
     }
 
-    $forumReports->clearCache($forum_id);
-    $Timers[] = ['forum' => $forum_id, ...$timer];
+
+    // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
+    if (count($forumsToReport)) {
+        $unsetOtherForums = (bool)($cfg['reports']['unset_other_forums'] ?? true);
+
+        $setStatus = $sendReport->setForumsStatus($forumsToReport, $unsetOtherForums);
+        $log->debug('kept forums setStatus', $setStatus);
+    }
+
+
+    // Запишем таймеры в журнал.
+    if (!empty($Timers)) {
+        $log->debug(json_encode($Timers));
+    }
+
+    if ($apiReportCount > 0) {
+        $log->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
+
+        // Запишем время отправки отчётов.
+        LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
+    }
 }
 
-if (count($forumsToReport) && $sendReport->isEnable()) {
-    $unsetOtherForums = (bool)($cfg['reports']['unset_other_forums'] ?? true);
 
-    $setStatus = $sendReport->setForumsStatus($forumsToReport, $unsetOtherForums);
-    $log->debug('kept forums setStatus', $setStatus);
-}
+// Желание отправить сводный отчёт на форум.
+$sendSummaryReport = (bool)($cfg['reports']['send_summary_report'] ?? true);
+if ($sendSummaryReport) {
+    // Подключаемся к форуму.
+    try {
+        $reports = new Reports(
+            $cfg['forum_address'],
+            $user,
+        );
 
-if (!empty($Timers)) {
-    $log->debug(json_encode($Timers));
-}
+        // Применяем таймауты.
+        $reports->curl_setopts($cfg['curl_setopt']['forum']);
 
-if ($apiReportCount > 0) {
-    $log->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
-}
-
-if ($forumReportAvailable && isset($reports)) {
-    // Затираем более ненужные списки на форуме.
-    if ($forceCleanForum) {
-        foreach ($forumReports->forums as $forumId) {
-            $forumDetails = Forums::getForum($forumId);
-            if (empty($forumDetails->topic_id) || empty($forumDetails->post_ids)) {
-                continue;
-            }
-
-            // Пометим свои посты как "не актуальные".
-            $tmpPostList = [];
-            foreach ($forumDetails->post_ids as $postId) {
-                $clearPostResult = $reports->send_message('editpost', ':!: не актуально', $forumDetails->topic_id, $postId);
-
-                // Если отредактировать пост не удалось, то скорее всего его уже отправили в архив.
-                if (empty($clearPostResult)) {
-                    $tmpPostList[] = $postId;
-                }
-            }
-            $editedTopicsIDs[] = $forumDetails->topic_id;
-
-            // Стираем в локальной БД несуществующие посты.
-            if (count($tmpPostList)) {
-                $tmpPostList = array_values(array_diff($forumDetails->post_ids, $tmpPostList));
-                Forums::updatePostList($forumId, $tmpPostList);
-            }
+        // Проверяем возможность работы с форумом.
+        if ($unavailable = $reports->check_access()) {
+            throw new Exception($unavailable->value);
         }
-    }
 
-    // Отправим сводный отчёт, даже если отправка обычных отчётов на форум отключена.
-    if ($sendForumSummary) {
         Timers::start('send_summary');
-        // формируем сводный отчёт
+        // Формируем сводный отчёт.
         $summaryReport = $forumReports->getSummaryReport();
 
-        // ищем сообщение со сводным
+        // Ищем своё сообщение со сводным отчётом (если есть).
         $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
 
         $summaryPostMode = empty($summaryPostId) ? 'reply' : 'editpost';
-        // отправляем сводный отчёт
+        // Отправляем сводный отчёт.
         $reports->send_message(
             $summaryPostMode,
             $summaryReport,
@@ -214,54 +181,17 @@ if ($forumReportAvailable && isset($reports)) {
             $summaryPostId
         );
 
-        // Запишем ид темы со сводными, чтобы очистка сообщений не задела.
-        $editedTopicsIDs[] = ReportCreator::SUMMARY_FORUM;
-
         // Запишем время отправки отчётов.
         LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
 
         $log->info('Отправка сводного отчёта завершена за {sec}', ['sec' => Timers::getExecTime('send_summary')]);
+
+    } catch (Exception $e) {
+        $log->error($e->getMessage());
+        $log->warning('Нет доступа к форуму. Отправка сводного отчёта невозможна.');
     }
-
-    // Если ни одного отчёта по разделу не отправлено на форум, завершаем работу.
-    if (!count($editedTopicsIDs)) {
-        return;
-    }
-
-    // отредактируем все сторонние темы со своими сообщениями в рабочем подфоруме
-    if ($cfg['reports']['auto_clear_messages'] && isset($reports)) {
-        $emptyMessages = [];
-
-        $topicsIDsWithMyMessages = $reports->searchTopicsIDs(['uid' => $user->userId]);
-
-        $uneditedTopicsIDs = array_diff($topicsIDsWithMyMessages, $editedTopicsIDs);
-        if (!empty($uneditedTopicsIDs)) {
-            foreach ($uneditedTopicsIDs as $topicID) {
-                $messages = $reports->scanning_viewtopic($topicID);
-                if ($messages === false) {
-                    continue;
-                }
-                foreach ($messages as $index => $message) {
-                    // пропускаем шапку
-                    if ($index == 0) {
-                        continue;
-                    }
-                    // только свои сообщения
-                    if ($user->userId === $message['user_id']) {
-                        $emptyMessages[] = $message['post_id'];
-                        $reports->send_message('editpost', ':!: не актуально', $topicID, $message['post_id']);
-                    }
-                }
-            }
-        }
-
-        if (count($emptyMessages)) {
-            $log->info(
-                'Помечено неактуальных сообщений: {count} => {messages}',
-                ['count' => count($emptyMessages), 'messages' => implode(', ', $emptyMessages)]
-            );
-        }
-    }
+} else {
+    $log->notice('Отправка сводного отчёта на форум отключена в настройках.');
 }
 
 $log->info('Процесс отправки отчётов завершён за {sec}', ['sec' => Timers::getExecTime('send_reports')]);
