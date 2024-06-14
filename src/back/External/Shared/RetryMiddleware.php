@@ -56,7 +56,7 @@ trait RetryMiddleware
 
         return GuzzleRetryMiddleware::factory([
             'retry_on_timeout'   => true,
-            'max_retry_attempts' => 5,
+            'max_retry_attempts' => 3,
             'on_retry_callback'  => $callback,
         ]);
     }
