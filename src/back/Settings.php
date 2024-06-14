@@ -175,8 +175,6 @@ final class Settings
             'unset_other_forums' => $ini->read('reports', 'unset_other_forums', 1),
             // Помечать лишние сообщения как неактуальные.
             'auto_clear_messages' => $ini->read('reports', 'auto_clear_messages', 0),
-            // Получать ли отчёты других пользователей из API.
-            'keepers_load_api'    => $ini->read('reports', 'keepers_load_api', 1),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
             'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids'),
             // Список игнорируемых хранителей
@@ -606,8 +604,6 @@ final class Settings
         $ini->write('reports', 'unset_other_forums', (int)isset($cfg['unset_other_forums']));
         // Очистка своих сообщений на форуме
         $ini->write('reports', 'auto_clear_messages', (int)isset($cfg['auto_clear_messages']));
-        // Получать ли отчёты других пользователей из API.
-        $ini->write('reports', 'keepers_load_api', (int)isset($cfg['keepers_load_api']));
 
         // Исключаемые из отчётов торрент-клиенты
         $excludeClientsIDs = array_unique($excludeClientsIDs);

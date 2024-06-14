@@ -1061,11 +1061,6 @@ function cfg_checkbox($cfg): Closure
                                 Очищать свои "неактуальные" сообщения в рабочем подфоруме
                             </label>
                             <hr>
-                            <label class="label" title="Загружать отчёты других хранителей из API. Если отключено - сканируются посты на форуме">
-                                <input name="keepers_load_api" type="checkbox" size="24" <?= $checkbox_check ('reports', 'keepers_load_api') ?? '' ?> />
-                                Загружать отчёты хранителей из API
-                            </label>
-                            <hr>
                             <h3>Список исключённых из отчётов групп, см. настройки торрент-клиентов/подразделов:</h3>
                             <label class="label">
                                 Исключенные клиенты
