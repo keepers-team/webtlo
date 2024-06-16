@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\HighPriority;
+use KeepersTeam\Webtlo\Update\KeepersReports;
 use KeepersTeam\Webtlo\Update\Subsections;
 
 /**
@@ -29,8 +30,8 @@ try {
         'subsections' => 'runClass',
         // список высокоприоритетных раздач
         'priority'    => 'runClass',
-        // раздачи других хранителей
-        'keepers'     => 'keepers',
+        // отчёты других хранителей
+        'keepers'     => 'runClass',
         // раздачи в торрент-клиентах
         'clients'     => 'tor_clients',
     ];
@@ -79,6 +80,14 @@ try {
              */
             $highPriority = $app->get(HighPriority::class);
             $highPriority->update(config: $config);
+        } elseif ($process === 'keepers') {
+            /**
+             * Обновляем списки хранителей.
+             *
+             * @var KeepersReports $keepersReports
+             */
+            $keepersReports = $app->get(KeepersReports::class);
+            $keepersReports->updateReports(config: $config, schedule: true);
         } else {
             include_once sprintf('%s/../common/%s.php', dirname(__FILE__), $fileName);
         }

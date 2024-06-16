@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
+use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Tables\KeepersLists;
 use KeepersTeam\Webtlo\Tables\KeepersSeeders;
@@ -30,21 +32,37 @@ final class KeepersReports
     }
 
     /**
-     * @param <string, mixed>[] $cfg
+     * @param <string, mixed>[] $config
+     * @param bool              $schedule
      * @return bool
      */
-    public function update(array $cfg): bool
+    public function updateReports(array $config, bool $schedule = false): bool
     {
-        $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
+        // Проверяем возможность запуска обновления.
+        if (!$schedule && !Helper::isScheduleActionEnabled($config, 'update')) {
+            $this->logger->notice(
+                'KeepersLists. Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.'
+            );
+
+            return false;
+        }
 
         // Список ид хранимых подразделов.
-        $keptForums = array_keys($cfg['subsections'] ?? []);
+        $keptForums = array_keys($config['subsections'] ?? []);
+        if (!count($keptForums)) {
+            $this->logger->warning('Выполнить обновление сведений невозможно. Отсутствуют хранимые подразделы.');
+
+            return false;
+        }
+
+        Timers::start('update_keepers');
+        $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид обновлений подразделов.
-        $keptForumsUpdate = array_map(fn($el) => 100000 + $el, $keptForums);
+        $keptForumsUpdate = array_map(fn($el) => 100000 + (int)$el, $keptForums);
 
         $updateStatus = new LastUpdate($keptForumsUpdate);
-        $updateStatus->checkMarkersLess(15 * 50);
+        $updateStatus->checkMarkersLess(15 * 60);
 
         // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
         if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
@@ -73,12 +91,19 @@ final class KeepersReports
             return false;
         }
 
+        // Находим список игнорируемых хранителей.
+        $excludedKeepers = self::getExcludedKeepersList($config);
+        $this->setExcludedKeepers($excludedKeepers);
+        if (count($excludedKeepers)) {
+            $this->logger->debug('ApiReport. Исключены хранители', $excludedKeepers);
+        }
+
         $forumsScanned = 0;
         $keeperIds     = [];
 
-        if (isset($cfg['subsections'])) {
+        if (isset($config['subsections'])) {
             // получаем данные
-            foreach ($cfg['subsections'] as $forumId => $subsection) {
+            foreach ($config['subsections'] as $forumId => $subsection) {
                 try {
                     $forumReports = $this->apiReport->getKeepersReports($forumId);
                 } catch (Throwable $e) {
@@ -124,6 +149,7 @@ final class KeepersReports
         // Записываем изменения в локальную таблицу.
         $this->keepersLists->moveToOrigin($forumsScanned, count(array_unique($keeperIds)));
 
+        LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
         $this->logger->info(
             'ApiReport. Обновление отчётов хранителей завершено за ' . Timers::getExecTime('update_keepers')
         );
