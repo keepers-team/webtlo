@@ -19,7 +19,7 @@ trait ExcludedKeepersTrait
     }
 
     /**
-     * @param <string, mixed>[] $config
+     * @param array<string, mixed>[] $config
      * @return int[]
      */
     public static function getExcludedKeepersList(array $config): array

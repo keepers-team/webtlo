@@ -102,20 +102,6 @@ final class LastUpdate
 
     /**
      * Проверить наличие всех маркеров.
-     * Убедиться, что минимальная дата обновления меньше текущей на заданный промежуток.
-     */
-    public function checkMarkersLess(int $seconds = 3600): void
-    {
-        $this->checkMarkersExists();
-        if (null === $this->status) {
-            if (time() - $this->minTime < $seconds) {
-                $this->status = UpdateStatus::EXPIRED;
-            }
-        }
-    }
-
-    /**
-     * Проверить наличие всех маркеров.
      * Убедиться, что минимальная дата обновления больше текущей на заданный промежуток.
      */
     public function checkMarkersAbove(int $seconds = 3600): void
@@ -149,21 +135,6 @@ final class LastUpdate
             "SELECT ud FROM UpdateTime WHERE id = ?",
             [$markerId],
         );
-    }
-
-    /**
-     * Проверить прошло ли заданное количество секунд с последнего обновления маркера.
-     */
-    public static function checkUpdateAvailable(int $markerId, int $seconds = 3600): bool
-    {
-        $updateTime = self::getTime($markerId);
-
-        if (time() - $updateTime < $seconds) {
-            // Если время не прошло, запретить обновление.
-            return false;
-        }
-
-        return true;
     }
 
     /**

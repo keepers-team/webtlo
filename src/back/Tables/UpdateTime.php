@@ -6,7 +6,10 @@ namespace KeepersTeam\Webtlo\Tables;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Module\MarkersUpdate;
 use KeepersTeam\Webtlo\Module\CloneTable;
+use PDO;
 
 /** Таблица хранения последнего времени обновления различных меток. */
 final class UpdateTime
@@ -86,6 +89,23 @@ final class UpdateTime
         }
 
         $this->updatedMarkers[] = [$markerId, $updateTime];
+    }
+
+    /**
+     * @param int[] $markers
+     * @return MarkersUpdate
+     */
+    public function getMarkersObject(array $markers): MarkersUpdate
+    {
+        $mark = KeysObject::create($markers);
+
+        $updates = $this->db->query(
+            "SELECT id, ud FROM UpdateTime WHERE id IN ($mark->keys)",
+            $mark->values,
+            PDO::FETCH_KEY_PAIR
+        );
+
+        return new MarkersUpdate($markers, $updates);
     }
 
     /**

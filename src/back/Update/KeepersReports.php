@@ -11,9 +11,9 @@ use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Tables\KeepersLists;
 use KeepersTeam\Webtlo\Tables\KeepersSeeders;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -27,13 +27,14 @@ final class KeepersReports
         private readonly ApiReportClient $apiReport,
         private readonly KeepersLists    $keepersLists,
         private readonly KeepersSeeders  $keepers,
+        private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
     ) {
     }
 
     /**
-     * @param <string, mixed>[] $config
-     * @param bool              $schedule
+     * @param array<string, mixed>[] $config
+     * @param bool                   $schedule
      * @return bool
      */
     public function updateReports(array $config, bool $schedule = false): bool
@@ -61,7 +62,7 @@ final class KeepersReports
         // Список ид обновлений подразделов.
         $keptForumsUpdate = array_map(fn($el) => 100000 + (int)$el, $keptForums);
 
-        $updateStatus = new LastUpdate($keptForumsUpdate);
+        $updateStatus = $this->updateTime->getMarkersObject($keptForumsUpdate);
         $updateStatus->checkMarkersLess(15 * 60);
 
         // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
@@ -72,10 +73,8 @@ final class KeepersReports
         // Проверим минимальную дату обновления данных других хранителей.
         if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
             $this->logger->notice(
-                sprintf(
-                    'ApiReport. Обновление отчётов хранителей не требуется. Дата последнего выполнения %s',
-                    date('d.m.y H:i', $updateStatus->getLastCheckUpdateTime())
-                )
+                'ApiReport. Обновление отчётов хранителей не требуется. Дата последнего выполнения {date}',
+                ['date' => $updateStatus->getMinUpdate()->format('d.m.Y H:i')]
             );
 
             return true;
@@ -104,6 +103,7 @@ final class KeepersReports
         if (isset($config['subsections'])) {
             // получаем данные
             foreach ($config['subsections'] as $forumId => $subsection) {
+                $forumId = (int)$forumId;
                 try {
                     $forumReports = $this->apiReport->getKeepersReports($forumId);
                 } catch (Throwable $e) {
@@ -142,16 +142,19 @@ final class KeepersReports
                 $forumsScanned++;
 
                 // Пометим факт обновления отчётов хранителей подраздела.
-                LastUpdate::setTime(100000 + $forumId);
+                $this->updateTime->setMarkerTime(100000 + $forumId);
             }
         }
 
         // Записываем изменения в локальную таблицу.
         $this->keepersLists->moveToOrigin($forumsScanned, count(array_unique($keeperIds)));
 
-        LastUpdate::setTime(UpdateMark::FORUM_SCAN->value);
+        // TODO подумать, нужен ли этот маркер вообще.
+        // Записываем дату получения списков.
+        $this->updateTime->setMarkerTime(UpdateMark::FORUM_SCAN->value);
         $this->logger->info(
-            'ApiReport. Обновление отчётов хранителей завершено за ' . Timers::getExecTime('update_keepers')
+            'ApiReport. Обновление отчётов хранителей завершено за {sec}',
+            ['sec' => Timers::getExecTime('update_keepers')]
         );
 
         return true;
