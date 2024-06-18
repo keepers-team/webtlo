@@ -15,6 +15,9 @@ final class WebTLO
         'sqlite_version' => '3.38.0',
     ];
 
+    /** @var ?array{branch: string, commit: string, sha: string} */
+    private static ?array $git = null;
+
     public function __construct(
         public readonly string $version,
         public readonly string $github,
@@ -37,12 +40,21 @@ final class WebTLO
             $file = __DIR__ . '/../version.json';
         }
 
+        $result = [];
         if (file_exists($file)) {
             $result = json_decode(file_get_contents($file), true);
         }
 
+        $result['version'] ??= 'git';
+
+        $git = self::getGitInfo();
+        if (null !== $git) {
+            $result['version'] .= '-br-' . $git['branch'];
+            $result['sha']     = $git['sha'];
+        }
+
         return new self(
-            $result['version'] ?? 'unknown',
+            $result['version'],
             $result['github'] ?? '',
             $result['wiki'] ?? '#',
             $result['release'] ?? '',
@@ -172,5 +184,30 @@ final class WebTLO
         }
 
         return implode('', $result);
+    }
+
+    /**
+     * Пробуем найти данные о версии в Git.
+     *
+     * https://github.com/Seldaek/monolog/blob/3.6.0/src/Monolog/Processor/GitProcessor.php#L66
+     *
+     * @return ?array{branch: string, commit: string, sha: string}
+     */
+    private static function getGitInfo(): ?array
+    {
+        if (null !== self::$git) {
+            return self::$git;
+        }
+
+        $branches = shell_exec('git branch -v --no-abbrev');
+        if (is_string($branches) && 1 === preg_match('{^\* (.+?)\s+([a-f0-9]{40})(?:\s|$)}m', $branches, $matches)) {
+            return self::$git = [
+                'branch' => $matches[1],
+                'commit' => $matches[2],
+                'sha'    => substr($matches[2], 0, 7),
+            ];
+        }
+
+        return null;
     }
 }
