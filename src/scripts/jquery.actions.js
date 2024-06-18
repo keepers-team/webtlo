@@ -355,22 +355,37 @@ $(document).ready(function () {
     $("#get_reports").on("click", function () {
         getReport();
     })
+
     // получение статистики
-    $("#get_statistics").on("click", function () {
+    $('#get_statistics').on('click', function () {
         $.ajax({
             context: this,
-            type: "POST",
-            url: "php/actions/get_statistics.php",
+            type: 'POST',
+            url: 'php/actions/get_statistics.php',
             beforeSend: function () {
-                $(this).addClass("ui-state-disabled").prop("disabled", true);
+                $(this).toggleDisable(true);
             },
             success: function (response) {
                 response = $.parseJSON(response);
-                $("#table_statistics tbody").html(response.tbody);
-                $("#table_statistics tfoot").html(response.tfoot);
+
+                const tab = $('#table_statistics');
+                tab.find('tbody').html(response.tbody);
+                tab.find('tfoot').html(response.tfoot);
+
+                // Добавляем возможность открывать ссылку на подраздел.
+                tab.find('td:first-child')
+                    .addClass('statistic-forum-id')
+                    .prop('title', 'Открыть ссылку на подраздел')
+                    .click(function(e) {
+                        e.preventDefault();
+
+                        const domain = getForumUrl()
+                        const url = `${domain}/forum/viewforum.php?f=${this.innerText}`;
+                        window.open(url, '_blank');
+                    });
             },
             complete: function () {
-                $(this).removeClass("ui-state-disabled").prop("disabled", false);
+                $(this).toggleDisable(false);
             }
         });
     });
