@@ -649,6 +649,16 @@ div.toolbar-buttons > button.ui-button {
     padding: 5px;
 }
 
+#table_statistics td:nth-child(2) {
+    text-align: left;
+}
+
+td.statistic-forum-id {
+    cursor: pointer;
+    text-decoration-line: underline;
+    text-decoration-color: darkblue;
+}
+
 .warning {
     background: #fafa00;
 }
