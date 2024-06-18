@@ -729,6 +729,7 @@ function cfg_checkbox($cfg): Closure
                                            class="myinput" size="25"
                                            placeholder="Логин на форуме" title="Логин на форуме"
                                            value="<?= $cfg['tracker_login'] ?>"/>
+                                    <i class="fa fa-link forum-open-link" title="Открыть ссылку на профиль"></i>
                                 </div>
                                 <div>
                                     <label for="tracker_password" class="param-name">Пароль:</label>
@@ -907,28 +908,29 @@ function cfg_checkbox($cfg): Closure
                                 </label>
                             </div>
                             <fieldset id="forum-props">
-                                <label>
+                                <label title="Индекс подраздела">
                                     Индекс:
-                                    <input disabled size=10 id="forum-id" class="myinput forum-props ui-state-disabled" type="text" title="Индекс подраздела" />
+                                    <input disabled size=10 id="forum-id" class="myinput forum-props ui-state-disabled" type="text" />
+                                    <i class="fa fa-link" title="Открыть ссылку на подраздел"></i>
                                 </label>
-                                <label>
+                                <label title="Добавлять раздачи текущего подраздела в торрент-клиент">
                                     Торрент-клиент:
-                                    <select id="forum-client" class="myinput forum-props" title="Добавлять раздачи текущего подраздела в торрент-клиент">
+                                    <select id="forum-client" class="myinput forum-props">
                                         <option value=0>не выбран</option>
                                         <?= $optionTorrentClients ?? '' ?>
                                     </select>
                                 </label>
-                                <label>
+                                <label title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent, Flood и uTorrent)">
                                     Метка:
-                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent, Flood и uTorrent)" />
+                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" />
                                 </label>
-                                <label>
+                                <label title="При добавлении раздачи данные сохранять в каталог">
                                     Каталог для данных:
-                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" title="При добавлении раздачи данные сохранять в каталог" />
+                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" />
                                 </label>
-                                <label>
+                                <label title="Создавать подкаталог для данных добавляемой раздачи">
                                     Создавать подкаталог для добавляемой раздачи:
-                                    <select id="forum-subdirectory" class="myinput forum-props" title="Создавать подкаталог для данных добавляемой раздачи">
+                                    <select id="forum-subdirectory" class="myinput forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">номер темы</option>
                                         <option value="2">хэш раздачи</option>
@@ -1316,6 +1318,7 @@ function cfg_checkbox($cfg): Closure
 
     <!-- скрипты webtlo -->
     <script type="text/javascript" src="scripts/jquery.common.js"></script>
+    <script type="text/javascript" src="scripts/jquery.settings.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.topics.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.subsections.func.js"></script>
     <script type="text/javascript" src="scripts/jquery.clients.func.js"></script>

@@ -246,4 +246,17 @@ $(document).ready(function () {
         $('.forum-props').addClass('ui-state-disabled').prop('disabled', true);
     }
 
+    // Открыть ссылку на подраздел.
+    $('#forum-id').next('i').click(function(e) {
+        e.preventDefault();
+
+        if (!editableForumID) {
+            return;
+        }
+
+        const domain = getForumUrl()
+        const url = `${domain}/forum/viewforum.php?f=${editableForumID}`;
+        window.open(url, '_blank');
+    });
+
 });
