@@ -3,6 +3,8 @@
 
 $(document).ready(function () {
 
+    const topicsForm = $('#topics');
+
     $(".tor_download").on("click", function () {
         downloadTorrents($(this).val());
     });
@@ -285,30 +287,41 @@ $(document).ready(function () {
         }
     });
 
+    topicsForm.on('mousedown', '.keeper', function (e) {
+        if (e.altKey || e.which === 2) {
+            e.preventDefault();
+            openUserProfile($(this).text());
+        }
+    });
+
     // ник хранителя в поиск при двойном клике
-    $("#topics").on("dblclick", ".keeper", function (e) {
-        var searchLine = "";
-        var searchBox = $("input[name=filter_phrase]");
+    topicsForm.on('dblclick', '.keeper', function (e) {
+        const keeperName = $(this).text();
+        const searchBox = $('input[name=filter_phrase]');
+        const prevSearch = searchBox.val();
+
+        // Собираем желаемый список поисковых значений.
+        let values = prevSearch ? prevSearch.split(',') : [];
         if (e.ctrlKey) {
-            searchLine = searchBox.val() + "," + $(this).text();
-            searchBox.val(searchLine);
+            values.push(keeperName);
         } else {
-            searchLine = $(this).text();
-            searchBox.val(searchLine);
+            values = [keeperName];
         }
+
+        // Убираем повторы.
+        const newSearch = $.uniqueValues(values).join(',');
+        if (newSearch === prevSearch) {
+            return;
+        }
+
+        // Применяем поиск.
+        searchBox.val(newSearch);
+
         selectBlockText(this);
-        $('input[name=filter_by_phrase][type="radio"]').prop("checked", false);
-        $('#filter_by_keeper').prop("checked", true);
-        var isKeepers = $('input[name=is_keepers][type="checkbox"]').prop("checked");
-        var isKeepersSeeders = $('input[name=is_keepers_seeders][type="checkbox"]').prop("checked");
-        if (
-            !isKeepers
-            && !isKeepersSeeders
-        ) {
-            $('input[name=not_keepers_seeders][type="checkbox"]').prop("checked", false);
-            $('input[name=not_keepers][type="checkbox"]').prop("checked", false).change();
-        }
-        $("#topics_filter").trigger("change");
+        $('input[name=filter_by_phrase][type="radio"]').prop('checked', false);
+        $('#filter_by_keeper').prop('checked', true);
+
+        $('#topics_filter').trigger('change');
     });
 
     // клиент в поиск при двойном клике

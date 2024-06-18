@@ -351,6 +351,21 @@ function loadSavedFilterOptions(filter_options) {
     $('.filter_status_controlgroup').controlgroup('refresh');
 }
 
+/**
+ * Открыть профиль пользователя.
+ *
+ * @param {number|string} user id/name
+ */
+function openUserProfile(user) {
+    if (!user) {
+        return;
+    }
+
+    const domain = getForumUrl()
+    const url = `${domain}/forum/profile.php?mode=viewprofile&u=${user}`;
+    window.open(url, '_blank');
+}
+
 /** Проверка наличия раздач без названия + отображение. */
 let refreshTopics = {
     interval: null,
