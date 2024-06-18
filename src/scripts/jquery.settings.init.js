@@ -25,9 +25,7 @@ $(document).ready(function () {
             return;
         }
 
-        const domain = getForumUrl()
-        const url = `${domain}/forum/profile.php?mode=viewprofile&u=${user}`;
-        window.open(url, '_blank');
+        openUserProfile(user);
     });
 
 });

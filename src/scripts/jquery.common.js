@@ -370,6 +370,13 @@ function versionCompare(v1, v2, options) {
 
 // https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
 (function ($) {
+    /** Вернуть уникальный набор элементов. */
+    $.uniqueValues = function(array) {
+        return $.grep(array, function(el, index) {
+            return index === $.inArray(el, array);
+        });
+    }
+
     $.fn.serializeAllArray = function () {
         var data = $(this).serializeArray();
         $(":disabled[name]", this).each(function () {
