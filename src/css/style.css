@@ -1,7 +1,7 @@
 /*
- * 
+ *
  * stylesheet web-TLO (Web Torrent List Organizer)
- * 
+ *
  */
 
 /* @import url("./reset.css"); */
@@ -474,6 +474,10 @@ button.settings-button {
     display: inline-block;
     text-align: right;
     width: 8em;
+}
+
+.forum-open-link {
+    cursor: pointer;
 }
 
 #forum_url_params label, #api_url_params label {
