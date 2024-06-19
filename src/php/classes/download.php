@@ -43,12 +43,13 @@ class TorrentDownload
     }
 
     /**
-     * скачивание торрент-файла
-     * @param string $userKeyApi
-     * @param string $userID
-     * @param string $infoHash
-     * @param int|bool $addRetracker
-     * @return bool|resource
+     * Скачивание торрент-файла
+     *
+     * @param string   $userKeyApi
+     * @param string   $userID
+     * @param string   $infoHash
+     * @param int|bool $addRetrackerURL
+     * @return bool|string
      */
     public function getTorrentFile($userKeyApi, $userID, $infoHash, $addRetrackerURL = 0)
     {
@@ -81,23 +82,24 @@ class TorrentDownload
                 Log::append('Не удалось скачать торрент-файл для ' . $infoHash);
                 return false;
             }
+
             // выполняем запрос
             $response = curl_exec($this->ch);
             // повторные попытки
             if ($response === false) {
                 $responseHttpCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
                 Log::append('CURL ошибка: ' . curl_error($this->ch) . ' (раздача ' . $infoHash . ') [' . $responseHttpCode . ']');
-                if (
-                    $responseHttpCode < 300
-                    && $responseNumberTry <= $maxNumberTry
-                ) {
+
+                if ($responseHttpCode < 300) {
                     Log::append('Повторная попытка ' . $responseNumberTry . '/' . $maxNumberTry . ' получить данные');
                     sleep(5);
                     $responseNumberTry++;
                     continue;
                 }
+
                 return false;
             }
+
             // проверка "торрент не зарегистрирован" и т.д.
             preg_match('|<center.*>(.*)</center>|si', mb_convert_encoding($response, 'UTF-8', 'Windows-1251'), $accessError);
             if (!empty($accessError)) {
@@ -106,6 +108,7 @@ class TorrentDownload
                 Log::append('Error: ' . $errorText . ' (' . $infoHash . ')');
                 return false;
             }
+
             // проверка "ошибка 503" и т.д.
             preg_match('|<title>(.*)</title>|si', mb_convert_encoding($response, 'UTF-8', 'Windows-1251'), $connectionError);
             if (!empty($connectionError)) {
@@ -117,6 +120,7 @@ class TorrentDownload
             }
             break;
         }
+
         return $response;
     }
 

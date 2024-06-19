@@ -219,7 +219,7 @@ try {
         // Указываем раздачам метку, если она не выставлена при добавлении раздач.
         if ($forumLabel !== '' && !$client->isLabelAddingAllowed()) {
             // ждём добавления раздач, чтобы проставить метку
-            sleep(round(count($addedTorrentFiles) / 20) + 1);
+            sleep((int)round(count($addedTorrentFiles) / 20) + 1);
 
             // устанавливаем метку
             $response = $client->setLabel($addedTorrentFiles, $forumLabel);
@@ -268,7 +268,7 @@ try {
     $result = 'Задействовано торрент-клиентов — ' . $totalTorrentClients . ', добавлено раздач всего — ' . $totalTorrentFilesAdded . ' шт.';
     $endtime = microtime(true);
 
-    Log::append('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds($endtime - $starttime));
+    Log::append('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds((int)($endtime - $starttime)));
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }
