@@ -165,19 +165,6 @@ final class Settings
         $config['user_passkey'] = $ini->read('curators', 'user_passkey');
         $config['tor_for_user'] = $ini->read('curators', 'tor_for_user', 0);
 
-        // вакансии
-        $config['vacancies'] = [
-            'scan_reports'       => $ini->read('vacancies', 'scan_reports', 0),
-            'scan_posted_days'   => $ini->read('vacancies', 'scan_posted_days', 30),
-            'send_topic_id'      => $ini->read('vacancies', 'send_topic_id'),
-            'send_post_id'       => $ini->read('vacancies', 'send_post_id'),
-            'avg_seeders_period' => $ini->read('vacancies', 'avg_seeders_period', 14),
-            'avg_seeders_value'  => $ini->read('vacancies', 'avg_seeders_value', 0.5),
-            'reg_time_seconds'   => $ini->read('vacancies', 'reg_time_seconds', 2592000),
-            'exclude_forums_ids' => $ini->read('vacancies', 'exclude_forums_ids'),
-            'include_forums_ids' => $ini->read('vacancies', 'include_forums_ids'),
-        ];
-
         // отчёты
         $config['reports'] = [
             // Отправлять ли отчёт пользователя в API.
