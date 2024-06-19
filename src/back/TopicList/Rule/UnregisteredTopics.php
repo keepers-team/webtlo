@@ -18,7 +18,6 @@ final class UnregisteredTopics implements ListInterface
 
     public function __construct(
         private readonly DB     $db,
-        private readonly array  $cfg,
         private readonly Output $output
     ) {
     }

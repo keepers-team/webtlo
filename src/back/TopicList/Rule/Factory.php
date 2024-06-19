@@ -20,20 +20,18 @@ final class Factory
     /** Получить соответствующий класс для поиска раздач. */
     public function getRule(int $forumId): ListInterface
     {
-        $dependencies = [$this->db, $this->cfg, $this->output];
-
         // Хранимые раздачи из других подразделов.
         if ($forumId === 0) {
-            return new UntrackedTopics(...$dependencies);
+            return new UntrackedTopics($this->db, $this->output);
         } elseif ($forumId === -1) {
-            // Хранимые раздачи незарегистрированные на трекере.
-            return new UnregisteredTopics(...$dependencies);
+            // Хранимые раздачи незарегистрированные на форуме.
+            return new UnregisteredTopics($this->db, $this->output);
         } elseif ($forumId === -2) {
             // Раздачи из "Черного списка".
-            return new BlackListedTopics(...$dependencies);
+            return new BlackListedTopics($this->db, $this->output);
         } elseif ($forumId === -4) {
             // Хранимые дублирующиеся раздачи.
-            return new DuplicatedTopics(...$dependencies);
+            return new DuplicatedTopics($this->db, $this->cfg, $this->output);
         } elseif (
             // Основной поиск раздач.
             $forumId > 0        // Заданный раздел.
