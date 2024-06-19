@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use DateTimeImmutable;
 use RuntimeException;
 
 final class Helper
 {
-    /** Сортировка массива по заданному ключу, с учётом кириллицы. */
+    /**
+     * Сортировка массива по заданному ключу, с учётом кириллицы.
+     *
+     * @param array<int|string, mixed> $input
+     * @param string                   $field
+     * @param int                      $direct
+     * @return array<int|string, mixed>
+     */
     public static function natsortField(array $input, string $field, int $direct = 1): array
     {
         uasort($input, function($a, $b) use ($field, $direct) {
@@ -50,8 +58,9 @@ final class Helper
         $pad = fn(int $val): string => !$leadZeros ? (string)$val : str_pad((string)$val, 2, '0', STR_PAD_LEFT);
 
         if ($seconds > 0) {
-            $ss = $seconds % 60;
             $minutes = intdiv($seconds, 60);
+
+            $ss = $seconds % 60;
             $mm = $minutes % 60;
             $hh = intdiv($minutes, 60);
 
@@ -176,7 +185,12 @@ final class Helper
         });
     }
 
-    /** Найти используемый домен трекера в настройках. */
+    /**
+     * Найти используемый домен трекера в настройках.
+     *
+     * @param array<string, mixed> $cfg
+     * @return ?string
+     */
     public static function getForumDomain(array $cfg): ?string
     {
         if (!empty($cfg['forum_url'] && $cfg['forum_url'] !== 'custom')) {
@@ -200,13 +214,30 @@ final class Helper
         return array_map('intval', explode($separator, $string));
     }
 
-    /** Проверить включена ли опция автоматического запуска действия. */
+    public static function makeDateTime(int $timestamp): DateTimeImmutable
+    {
+        return (new DateTimeImmutable())->setTimestamp($timestamp);
+    }
+
+    /**
+     * Проверить включена ли опция автоматического запуска действия.
+     *
+     * @param array<string, mixed> $config
+     * @param string               $action
+     * @return bool
+     */
     public static function isScheduleActionEnabled(array $config, string $action): bool
     {
         return (bool)($config['automation'][$action] ?? 0);
     }
 
-    /** Проверить включена ли дополнительная опция обновления раздач. */
+    /**
+     * Проверить включена ли дополнительная опция обновления раздач.
+     *
+     * @param array<string, mixed> $config
+     * @param string               $property
+     * @return bool
+     */
     public static function isUpdatePropertyEnabled(array $config, string $property): bool
     {
         return (bool)($config['update'][$property] ?? 0);
