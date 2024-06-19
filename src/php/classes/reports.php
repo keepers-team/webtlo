@@ -336,46 +336,6 @@ class Reports
         return $posts_ids;
     }
 
-    public function scanning_viewforum($forum_id)
-    {
-        if (empty($forum_id)) {
-            return false;
-        }
-        $topics_ids = [];
-        $i = 0;
-        $page = 1;
-        while ($page > 0) {
-            $data = $this->make_request($this->forum_url . "/forum/viewforum.php?f=$forum_id&start=$i");
-            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
-            unset($data);
-            $topic_main = $html->find('table.forum > tr.hl-tr');
-            $pages = $html->find('a.pg:last')->prev();
-            if (
-                !empty($pages)
-                && $i == 0
-            ) {
-                $page = $html->find('a.pg:last')->prev()->text();
-            }
-            unset($html);
-            if (!empty($topic_main)) {
-                $topic_main = pq($topic_main);
-                foreach ($topic_main as $row) {
-                    $row = pq($row);
-                    $topic_icon = $row->find('img.topic_icon')->attr('src');
-                    // получаем ссылки на темы со списками
-                    if (preg_match('/.*(folder|folder_new)\.gif$/i', $topic_icon)) {
-                        $topic_id = $row->find('a.topictitle')->attr('href');
-                        $topics_ids[] = preg_replace('/.*?([0-9]*)$/', '$1', $topic_id);
-                    }
-                }
-            }
-            $page--;
-            $i += 50;
-            phpQuery::unloadDocuments();
-        }
-        return $topics_ids;
-    }
-
     public function scanning_viewtopic($topic_id, $posted_days = -1)
     {
         if (empty($topic_id)) {
