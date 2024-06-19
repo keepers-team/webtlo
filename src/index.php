@@ -1259,7 +1259,6 @@ function cfg_checkbox($cfg): Closure
                         <li class="menu"><a href="#log_keepers" class="menu log_file">keepers</a></li>
                         <li class="menu"><a href="#log_reports" class="menu log_file">reports</a></li>
                         <li class="menu"><a href="#log_control" class="menu log_file">control</a></li>
-                        <li class="menu"><a href="#log_seeders" class="menu log_file">seeders</a></li>
                     </ul>
                     <div id="log_content">
                         <div id="log"></div>
@@ -1267,7 +1266,6 @@ function cfg_checkbox($cfg): Closure
                         <div id="log_keepers"></div>
                         <div id="log_reports"></div>
                         <div id="log_control"></div>
-                        <div id="log_seeders"></div>
                     </div>
                 </div>
             </div>
