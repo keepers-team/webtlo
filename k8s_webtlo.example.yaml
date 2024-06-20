@@ -16,7 +16,7 @@ metadata:
   name: webtlo-config
   namespace: keepers
 data:
-  TZ: Europe/Zurich
+  TZ: Europe/Moscow
   WEBTLO_UID: "1000"
   WEBTLO_GID: "1000"
   WEBTLO_CRON: "true"
@@ -58,7 +58,7 @@ spec:
     spec:
       containers:
         - name: webtlo
-          image: berkut174/webtlo:2.6.1
+          image: berkut174/webtlo:2.6.2
           envFrom:
             - configMapRef:
                 name: webtlo-config
@@ -71,7 +71,7 @@ spec:
           resources:
             requests:
               cpu: 30m
-              memory: 32Mi
+              memory: 256Mi
             limits:
               memory: 256Mi
           volumeMounts:
