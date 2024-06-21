@@ -160,59 +160,6 @@ class Reports
         ];
     }
 
-    // поиск ID тем по заданным параметрам
-    public function searchTopicsIDs($params, $forumID = 1584)
-    {
-        if (empty($params)) {
-            return false;
-        }
-        $topicsIDs = [];
-        $startIndex = 0;
-        $currentPage = 1;
-        $pageID = '';
-        while ($currentPage > 0) {
-            $data = $this->make_request(
-                $this->forum_url . "/forum/search.php?id=$pageID",
-                array_merge(
-                    [
-                        'start' => $startIndex,
-                        'f' => $forumID
-                    ],
-                    $params
-                )
-            );
-            $html = phpQuery::newDocumentHTML($data, 'UTF-8');
-            unset($data);
-            $blockTopics = $html->find('table.forum > tbody:first');
-            $totalPages = $html->find('a.pg:last')->prev();
-            if (
-                !empty($totalPages)
-                && $startIndex == 0
-            ) {
-                $currentPage = $html->find('a.pg:last')->prev()->text();
-                $pageID = $html->find('a.pg:last')->attr('href');
-                $pageID = preg_replace('/.*id=([^\&]*).*/', '$1', $pageID);
-            }
-            unset($html);
-            if (!empty($blockTopics)) {
-                $blockTopics = pq($blockTopics);
-                foreach ($blockTopics->find('tr.tCenter') as $row) {
-                    $row = pq($row);
-                    $topicIcon = $row->find('img.topic_icon')->attr('src');
-                    // получаем ссылки на темы со списками
-                    if (preg_match('/.*(folder|folder_new)\.gif$/i', $topicIcon)) {
-                        $topicID = $row->find('a.topictitle')->attr('href');
-                        $topicsIDs[] = preg_replace('/.*?([0-9]*)$/', '$1', $topicID);
-                    }
-                }
-            }
-            $currentPage--;
-            $startIndex += 50;
-            phpQuery::unloadDocuments();
-        }
-        return $topicsIDs;
-    }
-
     public function search_post_id($topic_id, $last_post = false)
     {
         if (empty($topic_id)) {

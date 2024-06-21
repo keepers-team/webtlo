@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace KeepersTeam\Webtlo\Forum\Report;
 
+use DateTimeImmutable;
 use Exception;
-use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
-use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\WebTLO;
 use PDO;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Объект для создания новых отчётов.
@@ -26,9 +29,8 @@ final class Creator
     /** @var int[] */
     public ?array $forums = null;
 
-    private array       $config;
-    private Credentials $user;
-    private WebTLO      $webtlo;
+    /** @var array<string, mixed> */
+    private array $config;
 
     /** @var int[] Исключённые из отчётов подразделы */
     private array $excludeForumsIDs = [];
@@ -36,32 +38,29 @@ final class Creator
     /** @var int[] Исключённые из отчётов торрент-клиенты */
     private array $excludeClientsIDs = [];
 
-    private ?int $updateTime = null;
+    private ?DateTimeImmutable $updateTime = null;
 
     private CreationMode $mode = CreationMode::CRON;
 
     private string $implodeGlue = '[br]';
     private string $topicGlue   = '';
 
-    private array $keeperKeys = [
-        'keep_count', // Общее кол-во хранимых раздач
-        'keep_size',  // Общий вес хранимых раздач
-        'dl_count',   // Кол-во скачиваемых раздач
-        'dl_size',    // Вес скачиваемых раздач
-    ];
-
-    /** @var ?array Суммарные значения по каждому подразделу. Для заголовков. */
+    /**
+     * Суммарные значения по каждому подразделу. Для заголовков.
+     *
+     * @var ?array<string, mixed>[]
+     */
     private ?array $stored = null;
 
-    /** @var array Хранимые раздачи по каждому подразделу. */
-    private array  $cache  = [];
+    /** @var array<int, mixed> Хранимые раздачи по каждому подразделу. */
+    private array $cache = [];
 
     public function __construct(
-        array       $config,
-        Credentials $user
+        private readonly DB              $db,
+        private readonly UpdateTime      $updateTest,
+        private readonly WebTLO          $webtlo,
+        private readonly LoggerInterface $logger,
     ) {
-        $this->config = $config;
-        $this->user   = $user;
     }
 
     /**
@@ -77,7 +76,7 @@ final class Creator
         // Вытаскиваем из базы хранимое
         $total = $this->calcSummary($this->stored);
 
-        $urlPattern  = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
+        $urlPattern = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
 
         // Разбираем хранимое
         $savedSubsections = [];
@@ -153,23 +152,18 @@ final class Creator
     /**
      * Собрать отчёт по заданному разделу.
      *
-     * @throws Exception
+     * @param ForumObject $forum
+     * @return string[]
      */
     public function getForumReport(ForumObject $forum): array
     {
         // исключаем подразделы
         if ($this->isForumExcluded($forum->id)) {
-            throw new Exception("Из отчёта исключен подраздел № $forum->id");
+            throw new RuntimeException("Из отчёта исключен подраздел № $forum->id");
         }
 
         // Вытаскиваем из базы хранимое.
         $userStored = $this->getStoredForumValues($forum->id);
-
-        $topicHeader = '';
-        // Если отчёт для UI или текущий пользователь - автор шапки темы, собираем обновлённую шапку.
-        if (CreationMode::UI === $this->mode || $this->user->userId === $forum->author_id) {
-            $topicHeader = $this->createTopicFirstMessage($forum, $userStored);
-        }
 
         // Создаём заголовок отчёта по подразделу.
         $messageHeader = $this->prepareMessageHeader($userStored);
@@ -224,23 +218,23 @@ final class Creator
         unset($topics, $topics_count);
 
         if (empty($topicMessages)) {
-            throw new Exception("Error: Не удалось сформировать список хранимого для подраздела № $forum->id");
+            throw new RuntimeException("Не удалось сформировать список хранимого для подраздела № $forum->id");
         }
 
         // В первое сообщение дописываем заголовок.
         $topicMessages[0] = $messageHeader . $this->implodeGlue . $topicMessages[0];
 
-        return [
-            'header'   => $topicHeader,
-            'messages' => $topicMessages,
-        ];
+        return $topicMessages;
     }
 
     /**
-     * @throws Exception
+     * @param array<string, mixed> $config
+     * @param ?CreationMode        $mode
      */
-    public function initConfig(?CreationMode $mode = null): void
+    public function initConfig(array $config, ?CreationMode $mode = null): void
     {
+        $this->config = $config;
+
         if (null !== $mode) {
             $this->mode = $mode;
 
@@ -248,15 +242,17 @@ final class Creator
             $this->topicGlue   = '<br />';
         }
 
-        $this->webtlo = WebTLO::getVersion();
-
-        $this->getLastUpdateTime();
-        $this->setExcluded();
+        // Проверяем настройки.
         $this->setForums();
+        $this->setExcluded();
+        $this->getLastUpdateTime();
     }
 
     /**
      * Собрать заголовок сообщения с версией ПО.
+     *
+     * @param array<string, mixed> $userStored
+     * @return string
      */
     private function prepareMessageHeader(array $userStored): string
     {
@@ -270,6 +266,9 @@ final class Creator
 
     /**
      * Собрать шаблон заголовка сообщения с суммарными значениями.
+     *
+     * @param string[]             $rows
+     * @param array<string, mixed> $val
      */
     private function prepareSummaryHeader(array &$rows, array $val): void
     {
@@ -289,6 +288,9 @@ final class Creator
 
     /**
      * Получить ссылку для отчёта. Разные версии для UI|cron
+     *
+     * @param array<string, mixed> $topic
+     * @return string
      */
     private function prepareTopicUrl(array $topic): string
     {
@@ -372,6 +374,9 @@ final class Creator
         return json_encode($sharedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
+    /**
+     * @return array<int, array<string, int>>
+     */
     private function getClientsTopics(): array
     {
         $query = '
@@ -385,27 +390,30 @@ final class Creator
             ORDER BY topics DESC
         ';
 
-        return (array)Db::query_database($query, [], true, PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
+        return $this->db->query($query, [], PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
     }
 
     /**
      * Собираем сообщения для UI.
+     *
+     * @param string[] $messages
+     * @return string
      */
-    public function prepareReportsMessages(array $report): string
+    public function prepareReportsMessages(array $messages): string
     {
-        $messages = $report['messages'];
         array_walk($messages, function(&$a, $b) {
             $b++;
             $a = sprintf('<h3>Сообщение %d</h3><div>%s</div>', $b, $a);
         });
 
-        $topicReport = sprintf('<div class="report_message">%s</div>', implode('', $messages));
-
-        return $report['header'] . $this->implodeGlue . $topicReport;
+        return sprintf('<div class="report_message">%s</div>', implode('', $messages));
     }
 
     /**
      * Посчитать сумму хранимого.
+     *
+     * @param array<string, mixed> $stored
+     * @return array<string, mixed>
      */
     private function calcSummary(array $stored): array
     {
@@ -439,115 +447,9 @@ final class Creator
         return $total;
     }
 
-    /**
-     * Создание шапки темы, с общим списком всех хранителей и их хранимого.
-     */
-    private function createTopicFirstMessage(ForumObject $forum, array $userStored): string
-    {
-        $keepersStored = $this->getKeepersStoredReports($forum);
-
-        // Добавим себя в список хранителей.
-        $userStored['keeper_name'] = $this->user->userName;
-
-        $keepersStored[$this->user->userId] = $userStored;
-
-        // Значения общего хранимого.
-        $total = [];
-        foreach ($this->keeperKeys as $key) {
-            $total[$key] = array_sum(array_column($keepersStored, $key));
-            unset($key);
-        }
-
-        // Создаём список хранителей.
-        $count_keepers = 0;
-
-        $header = $keepers = [];
-
-        $keepers[] = '[list=1]';
-        uasort($keepersStored, fn($a, $b) => $b['keep_count'] <=> $a['keep_count']);
-
-        $pattern_keeper = '[*][url=profile.php?mode=viewprofile&u=%d][u][color=#006699]%s[/u][/color][/url] [color=gray]~>[/color] %s шт. [color=gray]~>[/color] %s';
-        foreach ($keepersStored as $keeper_id => $values) {
-            if (!$values['keep_count']) {
-                continue;
-            }
-
-            $count_keepers++;
-            $keepers[] = sprintf(
-                $pattern_keeper,
-                $keeper_id,
-                $values['keeper_name'],
-                $values['keep_count'],
-                $this->bytes($values['keep_size'])
-            );
-        }
-        unset($keepersStored);
-        $keepers[] = '[/list]';
-
-        $header[] = sprintf(
-            '[url=viewforum.php?f=%1$d][u][color=#006699]%2$s[/u][/color][/url]' .
-            ' || ID: %1$d || ' .
-            '[url=tracker.php?f=%1$d&tm=-1&o=10&s=1&oop=1][color=darkgreen][Проверка сидов][/color][/url]',
-            $forum->id,
-            preg_replace('/.*» ?(.*)$/', '$1', $forum->name)
-        );
-        $header[] = $this->getFormattedUpdateTime();
-        $header[] = '';
-        $header[] = sprintf('Всего раздач в подразделе: [b]%s[/b] шт. (%s)', $forum->quantity, $this->boldBytes($forum->size));
-        $header[] = sprintf('Всего хранимых раздач в подразделе: [b]%s[/b] шт. (%s)', $total['keep_count'], $this->boldBytes($total['keep_size']));
-        $header[] = sprintf('Всего скачиваемых раздач в подразделе: [b]%s[/b] шт. (%s)', $total['dl_count'], $this->boldBytes($total['dl_size']));
-        $header[] = sprintf('Всего хранителей: [b]%d[/b]', $count_keepers);
-        $header[] = '[hr]';
-
-        // Вставляем общее хранимое в шапку.
-        return implode($this->implodeGlue, array_merge($header, $keepers));
-    }
-
-
-    /**
-     * Посчитать хранимое других хранителей указанного подраздела.
-     */
-    private function getKeepersStoredReports(ForumObject $forum): array
-    {
-        $values = Db::query_database(
-            'SELECT
-                    keeper_id, keeper_name,
-                    SUM(CASE WHEN done = 1 THEN 1 ELSE 0 END) keep_count,
-                    SUM(CASE WHEN done < 1 THEN 1 ELSE 0 END) dl_count,
-                    SUM(CASE WHEN done = 1 THEN topic_size ELSE 0 END) keep_size,
-                    SUM(CASE WHEN done < 1 THEN topic_size ELSE 0 END) dl_size
-                FROM (
-                    SELECT
-                        kl.keeper_id, kl.keeper_name,
-                        kl.complete AS done,
-                        tp.size AS topic_size
-                    FROM Topics tp
-                    INNER JOIN KeepersLists kl ON kl.topic_id = tp.id
-                    WHERE tp.forum_id = ?
-                )
-                GROUP BY keeper_id, keeper_name
-                ORDER BY 3 DESC
-            ',
-            [$forum->id],
-            true,
-            PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
-        );
-
-        if (empty($values)) {
-            $notice_pattern = 'Notice: В БД отсутствуют данные о хранимом другими хранителями в подразделе [(%d) %s]. ' .
-                'Возможно, нужно выполнить обновление сведений.';
-            Log::append(sprintf($notice_pattern, $forum->id, $forum->name));
-
-            $values = [];
-        }
-
-        return $values;
-    }
 
     /**
      * Найти в БД хранимое пользователем в указанных подразделах.
-     *
-     * @throws Exception
      */
     public function fillStoredValues(?int $forumId = null): void
     {
@@ -562,7 +464,7 @@ final class Creator
         $include_forums = str_repeat('?,', count($forumIds) - 1) . '?';
 
         // Вытаскиваем из базы хранимое.
-        $values = Db::query_database(
+        $values = $this->db->query(
             "SELECT
                 forum_id,
                 SUM(CASE WHEN done = 1              THEN 1 ELSE 0 END) keep_count,
@@ -590,16 +492,16 @@ final class Creator
             )
             GROUP BY forum_id",
             array_merge($this->excludeClientsIDs, $forumIds),
-            true,
             PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
 
         if (empty($values)) {
-            throw new Exception(sprintf(
-                'Error: В БД отсутствуют данные о раздачах хранимых подразделов %s. ' .
-                'Возможно, нужно выполнить обновление сведений.',
-                implode(',', $forumIds)
-            ));
+            $this->logger->warning(
+                'В БД отсутствуют данные о раздачах хранимых подразделов {forums}. Возможно, нужно выполнить обновление сведений.',
+                ['forums' => implode(', ', $forumIds)]
+            );
+
+            return;
         }
 
         $this->stored = $values;
@@ -608,18 +510,17 @@ final class Creator
     /**
      * Найти хранимое пользователем в указанном подразделе.
      *
-     * @throws Exception
+     * @param int $forumId
+     * @return array<string, mixed>
      */
     private function getStoredForumValues(int $forumId): array
     {
         $values = $this->stored[$forumId] ?? [];
 
         if (empty($values)) {
-            throw new Exception(sprintf(
-                'Notice: В БД отсутствуют данные о раздачах хранимого подраздела %s. ' .
-                'Возможно, нужно выполнить обновление сведений.',
-                $forumId
-            ));
+            throw new RuntimeException(
+                "В БД отсутствуют данные о раздачах хранимого подраздела $forumId. Возможно, нужно выполнить обновление сведений."
+            );
         }
 
         return $values;
@@ -630,7 +531,6 @@ final class Creator
      *
      * @param int $forum_id
      * @return array<string, mixed>[]
-     * @throws Exception
      */
     public function getStoredForumTopics(int $forum_id): array
     {
@@ -641,7 +541,7 @@ final class Creator
         // Получение данных о раздачах подраздела.
         $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
 
-        $topics = Db::query_database(
+        $topics = $this->db->query(
             "
                 SELECT
                     tp.id,
@@ -658,11 +558,10 @@ final class Creator
                 ORDER BY tp.id
             ",
             array_merge([$forum_id], $this->excludeClientsIDs),
-            true
         );
 
         if (empty($topics)) {
-            throw new Exception("Error: Не получены данные о хранимых раздачах для подраздела № $forum_id");
+            throw new RuntimeException("Не получены данные о хранимых раздачах для подраздела № $forum_id");
         }
 
         $this->cache[$forum_id] = $topics;
@@ -675,34 +574,72 @@ final class Creator
         $this->cache[$forumId] = null;
     }
 
-    /**
-     * @throws Exception
-     */
     private function getLastUpdateTime(): void
     {
-        $updateTime = LastUpdate::getTime(UpdateMark::FULL_UPDATE->value);
-        if ($updateTime === 0) {
-            $update = LastUpdate::checkFullUpdate(
-                $this->config,
+        $lastTimestamp = $this->updateTest->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
+
+        if ($lastTimestamp === 0) {
+            $daysUpdateExpire = $this->config['reports']['daysUpdateExpire'] ?? 5;
+
+            $update = $this->updateTest->checkFullUpdate(
+                $this->forums,
+                (int)$daysUpdateExpire,
                 CreationMode::UI !== $this->mode
             );
 
             if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
-                $update->addLog();
-                throw new Exception('Сформировать отчёт невозможно. ' .
+                $update->addLogRecord($this->logger);
+
+                throw new RuntimeException(
+                    'Сформировать отчёт невозможно. ' .
                     'Данные в локальной БД неполные. ' .
-                    'Выполните полное обновление данных и попробуйте снова.');
+                    'Выполните полное обновление данных и попробуйте снова.'
+                );
             }
 
-            $updateTime = $update->getLastCheckUpdateTime();
+            $this->updateTime = $update->getMinUpdate();
+        } else {
+            $this->updateTime = Helper::makeDateTime($lastTimestamp);
         }
-
-        $this->updateTime = $updateTime;
     }
 
     private function getFormattedUpdateTime(): string
     {
-        return sprintf('Актуально на: [color=darkblue][b]%s[/b][/color]', date('d.m.Y', $this->updateTime));
+        $dateString = $this->updateTime === null ? 'никогда' : $this->updateTime->format('d.m.Y');
+
+        return sprintf('Актуально на: [color=darkblue][b]%s[/b][/color]', $dateString);
+    }
+
+    /**
+     * Найти данные хранимых подразделов.
+     */
+    private function setForums(): void
+    {
+        // Идентификаторы хранимых подразделов.
+        $forums = array_keys($this->config['subsections'] ?? []);
+        if (!count($forums)) {
+            throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
+        }
+
+        $this->forums = $forums;
+    }
+
+    /**
+     * Исключаемые подразделы и торрент-клиенты.
+     */
+    private function setExcluded(): void
+    {
+        $cfg_reports = $this->config['reports'];
+
+        if (!empty($cfg_reports['exclude_clients_ids'])) {
+            $this->logger->notice("Из отчётов исключены торрент клиенты: {$cfg_reports['exclude_clients_ids']}");
+        }
+        if (!empty($cfg_reports['exclude_forums_ids'])) {
+            $this->logger->notice("Из отчётов исключены подразделы: {$cfg_reports['exclude_forums_ids']}");
+        }
+
+        $this->excludeForumsIDs  = Helper::explodeInt($cfg_reports['exclude_forums_ids']);
+        $this->excludeClientsIDs = Helper::explodeInt($cfg_reports['exclude_clients_ids']);
     }
 
     private function bytes(int $bytes): string
@@ -714,40 +651,6 @@ final class Creator
     {
         $formatted = $this->bytes($bytes);
 
-        return vsprintf("[b]%s[/b] %s", explode(" ", $formatted));
-    }
-
-    /**
-     * Исключаемые подразделы и торрент-клиенты.
-     */
-    private function setExcluded(): void
-    {
-        $cfg_reports = $this->config['reports'];
-
-        if (!empty($cfg_reports['exclude_clients_ids'])) {
-            Log::append("Notice: Из отчётов исключены торрент клиенты: {$cfg_reports['exclude_clients_ids']}");
-        }
-        if (!empty($cfg_reports['exclude_forums_ids'])) {
-            Log::append("Notice: Из отчётов исключены подразделы: {$cfg_reports['exclude_forums_ids']}");
-        }
-
-        $this->excludeForumsIDs  = Helper::explodeInt($cfg_reports['exclude_forums_ids']);
-        $this->excludeClientsIDs = Helper::explodeInt($cfg_reports['exclude_clients_ids']);
-    }
-
-    /**
-     * Найти данные хранимых подразделов.
-     *
-     * @throws Exception
-     */
-    private function setForums(): void
-    {
-        // Идентификаторы хранимых подразделов.
-        $forums = array_keys($this->config['subsections'] ?? []);
-        if (!count($forums)) {
-            throw new Exception('Error: Отсутствуют хранимые подразделы. Проверьте настройки.');
-        }
-
-        $this->forums = $forums;
+        return vsprintf('[b]%s[/b] %s', explode(' ', $formatted));
     }
 }

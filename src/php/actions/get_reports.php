@@ -2,76 +2,60 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Forums;
-use KeepersTeam\Webtlo\Timers;
 
 $reports_result = [
     'report' => '',
 ];
+
+$output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />';
 try {
     // идентификатор подраздела
-    $forum_id = (int)($_POST['forum_id'] ?? -1);
+    $forumId = (int)($_POST['forum_id'] ?? -1);
 
-    if ($forum_id < 0) {
-        throw new Exception("Error: Неправильный идентификатор подраздела ($forum_id)");
+    if ($forumId < 0) {
+        throw new Exception("ERROR: Неправильный идентификатор подраздела ($forumId).");
     }
 
-    // получение настроек
-    $cfg  = App::getSettings();
-    $user = ConfigValidate::checkUser($cfg);
+    // Инициализация и получение конфига.
+    $app = AppContainer::create();
+    $cfg = $app->getLegacyConfig();
+    $log = $app->getLogger();
 
-    // проверка настроек
-    if (empty($cfg['subsections'])) {
-        throw new Exception("Error: Не выбраны хранимые подразделы");
-    }
+    /** @var ReportCreator $forumReports Создание отчётов */
+    $forumReports = $app->get(ReportCreator::class);
+    $forumReports->initConfig($cfg, CreationMode::UI);
 
-    // Создание отчётов.
-    $forumReports = new ReportCreator(
-        $cfg,
-        $user
-    );
-    $forumReports->initConfig(CreationMode::UI);
-
-    $Timers = [];
-    Timers::start('create_report');
-    if ($forum_id === 0) {
+    if ($forumId === 0) {
         // Сводный отчёт
         $output = $forumReports->getSummaryReport();
     } else {
         // Хранимые подразделы
-        $forum = Forums::getForum($forum_id);
-        Timers::start("create_$forum_id");
+        $forum = Forums::getForum($forumId);
         try {
-            $forumReports->fillStoredValues($forum_id);
-            $forumReport = $forumReports->getForumReport($forum);
-        } catch (Exception $e) {
-            throw new Exception(sprintf(
-                'Notice: Формирование отчёта для подраздела %d прекращено. Причина %s',
-                $forum_id,
-                $e->getMessage()
-            ));
-        }
+            $forumReports->fillStoredValues($forumId);
+            $reportMessages = $forumReports->getForumReport($forum);
 
-        $output = $forumReports->prepareReportsMessages($forumReport);
+            $output = $forumReports->prepareReportsMessages($reportMessages);
+        } catch (Exception $e) {
+            $log->notice('Формирование отчёта для подраздела {forum} прекращено. Причина {error}', ['forum' => $forumId, 'error' => $e->getMessage()]);
+        }
+    }
+    $log->info('-- DONE --');
+} catch (Exception $e) {
+    $message = $e->getMessage();
+    if (isset($log)) {
+        $log->error($message);
     }
 
-    Log::append(json_encode([
-        'forum'  => $forum_id,
-        'create' => Timers::getExecTime('create_report'),
-    ]));
-
-    $reports_result['report'] = $output;
-} catch (Exception $e) {
-    Log::append($e->getMessage());
-    $reports_result['report'] = "<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />";
+    $output.= '<br />' . $message;
 }
 
-// выводим лог
-$reports_result['log'] = Log::get();
+$reports_result['report'] = $output;
+$reports_result['log']    = Log::get();
 
 echo json_encode($reports_result, JSON_UNESCAPED_UNICODE);

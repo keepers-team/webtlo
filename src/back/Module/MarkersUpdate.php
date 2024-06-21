@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Module;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
+use Psr\Log\LoggerInterface;
 
 final class MarkersUpdate
 {
@@ -17,7 +19,7 @@ final class MarkersUpdate
     public function __construct(
         /** @var int[] Маркеры, которые нужно проверить. */
         public readonly array $markers,
-        /** @var int[] Метки времени обновления маркеров. */
+        /** @var array<int, int> Метки времени обновления маркеров. */
         public readonly array $timestamps,
     ) {
     }
@@ -69,6 +71,39 @@ final class MarkersUpdate
     public function getLastCheckStatus(): ?UpdateStatus
     {
         return $this->status;
+    }
+
+    /**
+     * Записать в лог данные маркеров.
+     */
+    public function addLogRecord(LoggerInterface $logger): void
+    {
+        $log = [
+            'countMarkers' => count($this->markers),
+            'countUpdates' => count($this->timestamps),
+            'markers'      => $this->markers,
+            'updates'      => $this->timestamps,
+        ];
+
+        if ($this->status === UpdateStatus::MISSED) {
+            $missed = array_keys(
+                array_diff_key(
+                    array_fill_keys($this->markers, 0),
+                    $this->timestamps
+                )
+            );
+
+            $log['missed'] = $missed;
+
+            $missed = array_map(function($markId) {
+                $mark = UpdateMark::tryFrom((int)$markId);
+
+                return $mark ? $mark->label() : "Раздачи подраздела №$markId";
+            }, $missed);
+
+            $logger->notice('Отсутствуют маркеры обновления для: {missed}', ['missed' => implode(', ', $missed)]);
+        }
+        $logger->debug(json_encode($log));
     }
 
     private function checkMarkersCount(): void

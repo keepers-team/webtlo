@@ -62,12 +62,10 @@ $log->debug('init api report {sec}', ['sec' => Timers::getExecTime('init_api_rep
 
 
 Timers::start('create_report');
-// Создание отчётов.
-$forumReports = new ReportCreator(
-    $cfg,
-    $user
-);
-$forumReports->initConfig();
+
+/** @var ReportCreator $forumReports Создание отчётов */
+$forumReports = $app->get(ReportCreator::class);
+$forumReports->initConfig($cfg);
 
 $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 

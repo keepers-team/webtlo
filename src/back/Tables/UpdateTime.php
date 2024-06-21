@@ -7,6 +7,8 @@ namespace KeepersTeam\Webtlo\Tables;
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\MarkersUpdate;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use PDO;
@@ -47,7 +49,7 @@ final class UpdateTime
      */
     public function getMarkerTime(int $markerId): DateTimeImmutable
     {
-        return (new DateTimeImmutable())->setTimestamp($this->getMarkerTimestamp($markerId));
+        return Helper::makeDateTime($this->getMarkerTimestamp($markerId));
     }
 
     /**
@@ -106,6 +108,32 @@ final class UpdateTime
         );
 
         return new MarkersUpdate($markers, $updates);
+    }
+
+
+    /**
+     * Проверить минимальное значение обновления всех нужных маркеров для формирования и отправки отчётов.
+     *
+     * @param int[] $markers
+     * @param int   $daysUpdateExpire
+     * @param bool  $checkForum
+     * @return MarkersUpdate
+     */
+    public function checkFullUpdate(array $markers, int $daysUpdateExpire = 5, bool $checkForum = true): MarkersUpdate
+    {
+        // Добавим важные маркеры обновлений.
+        $markers[] = UpdateMark::FORUM_TREE->value;
+        $markers[] = UpdateMark::SUBSECTIONS->value;
+        $markers[] = UpdateMark::CLIENTS->value;
+
+        if ($checkForum) {
+            $markers[] = UpdateMark::FORUM_SCAN->value;
+        }
+
+        $update = $this->getMarkersObject($markers);
+        $update->checkMarkersAbove($daysUpdateExpire * 24 * 3600);
+
+        return $update;
     }
 
     /**
