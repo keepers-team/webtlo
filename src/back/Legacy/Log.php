@@ -6,6 +6,7 @@ use KeepersTeam\Webtlo\Helper;
 
 final class Log
 {
+    /** @var string[] */
     private static array $log = [];
 
     public static function append(string $message = ''): void
@@ -15,6 +16,12 @@ final class Log
         }
     }
 
+    /**
+     * @param string[] $rows
+     * @param string   $break
+     * @param bool     $replace
+     * @return string
+     */
     public static function formatRows(array $rows, string $break = '<br />', bool $replace = false): string
     {
         $splitWord = '-- DONE --';

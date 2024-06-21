@@ -6,10 +6,18 @@ namespace KeepersTeam\Webtlo\DTO;
 
 final class KeysObject
 {
+    /**
+     * @param string         $keys
+     * @param int[]|string[] $values
+     */
     public function __construct(public string $keys, public array $values)
     {
     }
 
+    /**
+     * @param array<int|string, int|string> $data
+     * @return self
+     */
     public static function create(array $data): self
     {
         $values = count($data) ? array_values($data) : [''];

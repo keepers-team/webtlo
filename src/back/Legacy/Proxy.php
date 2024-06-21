@@ -7,15 +7,17 @@ use KeepersTeam\Webtlo\Config\ProxyType;
 /** Установка параметров прокси. */
 final class Proxy
 {
+    /** @var array<string, array<int, mixed>> */
     public static array $proxy = [
         'forum' => [],
         'api'   => [],
     ];
 
     protected static ?string $auth;
-    protected static ?string $type;
+    protected static ?int    $type;
     protected static ?string $address;
 
+    /** @var array<string, int> */
     private static array $types = ['http' => 0, 'socks4' => 4, 'socks4a' => 6, 'socks5' => 5, 'socks5h' => 7];
 
     public static function options(
@@ -34,6 +36,11 @@ final class Proxy
         }
     }
 
+    /**
+     * @param bool $activate_forum
+     * @param bool $activate_api
+     * @return array<string, array<int, mixed>>
+     */
     private static function set_proxy(bool $activate_forum, bool $activate_api): array
     {
         $param = [

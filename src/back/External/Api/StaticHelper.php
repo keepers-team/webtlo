@@ -37,11 +37,11 @@ trait StaticHelper
         $proxyConfig = null !== $proxy ? $proxy->getOptions() : [];
 
         $clientProperties = [
-            'base_uri'           => $baseUrl,
-            'headers'            => $clientHeaders,
-            'timeout'            => $timeout->request,
-            'connect_timeout'    => $timeout->connection,
-            'allow_redirects'    => true,
+            'base_uri'        => $baseUrl,
+            'headers'         => $clientHeaders,
+            'timeout'         => $timeout->request,
+            'connect_timeout' => $timeout->connection,
+            'allow_redirects' => true,
             // RetryMiddleware
             'handler'         => self::getDefaultHandler($logger),
             // Proxy options
@@ -59,6 +59,12 @@ trait StaticHelper
         return $client;
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @param LoggerInterface      $logger
+     * @param Proxy                $proxy
+     * @return Client
+     */
     public static function apiClientFromLegacy(array $cfg, LoggerInterface $logger, Proxy $proxy): Client
     {
         $useProxy = (bool)$cfg['proxy_activate_api'];
@@ -72,6 +78,10 @@ trait StaticHelper
         );
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return array{api_key: string}
+     */
     public static function getDefaultParams(array $cfg): array
     {
         return ['api_key' => $cfg['api_key']];

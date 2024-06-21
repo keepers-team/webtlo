@@ -14,6 +14,9 @@ final class Proxy
     ) {
     }
 
+    /**
+     * @return array{proxy: string, curl: array<int, mixed>}
+     */
     public function getOptions(): array
     {
         $curlOptions = [CURLOPT_PROXYTYPE => $this->type->value];
@@ -33,6 +36,9 @@ final class Proxy
         ];
     }
 
+    /**
+     * @return array{hostname: string, port: int, type: string, authenticated: bool}
+     */
     public function log(): array
     {
         return [
@@ -43,6 +49,10 @@ final class Proxy
         ];
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return self
+     */
     public static function fromLegacy(array $cfg): self
     {
         $proxyType = ProxyType::tryFromName(strtoupper((string)$cfg['proxy_type']));

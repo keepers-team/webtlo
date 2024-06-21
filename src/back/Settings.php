@@ -18,6 +18,9 @@ final class Settings
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function populate(): array
     {
         $ini    = $this->ini;
@@ -67,6 +70,7 @@ final class Settings
         $subsections = $ini->read("sections", "subsections");
         if (!empty($subsections)) {
             $subsections = explode(',', $subsections);
+            $subsections = array_map('intval', $subsections);
 
             $titles = $this->getSubsectionsTitles($subsections);
             foreach ($subsections as $id) {
@@ -295,6 +299,12 @@ final class Settings
         return $config;
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @param array<string, mixed> $forums
+     * @param array<string, mixed> $torrentClients
+     * @return bool
+     */
     public function update(array $cfg, array $forums, array $torrentClients): bool
     {
         // Уровень ведения журнала.
@@ -364,6 +374,10 @@ final class Settings
         return $iniClone->writeFile();
     }
 
+    /**
+     * @param array<int|string, mixed>|array<never> $torrentClients
+     * @return int[]
+     */
     private function setTorrentClients(array $torrentClients = []): array
     {
         $ini = $this->ini;
@@ -413,6 +427,10 @@ final class Settings
         return $excludeClientsIDs;
     }
 
+    /**
+     * @param array<int|string, mixed>|array<never> $forums
+     * @return int[]
+     */
     private function setSubsections(array $forums = []): array
     {
         $ini = $this->ini;
@@ -453,9 +471,13 @@ final class Settings
             $ini->write('sections', 'subsections', $forumsIDs);
         }
 
-        return $excludeForumsIDs;
+        return array_map('intval', $excludeForumsIDs);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setTopicControl(array $cfg): void
     {
         $ini = $this->ini;
@@ -470,6 +492,10 @@ final class Settings
         $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setProxy(array $cfg): void
     {
         $ini = $this->ini;
@@ -495,6 +521,10 @@ final class Settings
         }
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setCurators(array $cfg): void
     {
         $ini = $this->ini;
@@ -508,6 +538,10 @@ final class Settings
         $ini->write('curators', 'tor_for_user', isset($cfg['tor_for_user']) ? 1 : 0);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setForum(array $cfg): void
     {
         $ini = $this->ini;
@@ -545,6 +579,10 @@ final class Settings
         }
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setDownload(array $cfg): void
     {
         $ini = $this->ini;
@@ -556,6 +594,10 @@ final class Settings
         $ini->write('download', 'retracker', isset($cfg['retracker']) ? 1 : 0);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setTopicFiltration(array $cfg): void
     {
         $ini = $this->ini;
@@ -590,6 +632,12 @@ final class Settings
         $ini->write('sections', 'ui_save_selected_section', (int)isset($cfg['ui_save_selected_section']));
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @param int[]                $excludeClientsIDs
+     * @param int[]                $excludeForumsIDs
+     * @return void
+     */
     private function setReports(array $cfg, array $excludeClientsIDs, array $excludeForumsIDs): void
     {
         $ini = $this->ini;
@@ -612,6 +660,10 @@ final class Settings
         $ini->write('reports', 'exclude_forums_ids', implode(',', $excludeForumsIDs));
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setAutomation(array $cfg): void
     {
         $ini = $this->ini;
@@ -621,6 +673,10 @@ final class Settings
         $ini->write('automation', 'control', isset($cfg['automation_control']) ? 1 : 0);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setUpdate(array $cfg): void
     {
         $ini = $this->ini;
@@ -630,6 +686,10 @@ final class Settings
         $ini->write('update', 'unregistered', isset($cfg['update_unregistered']) ? 1 : 0);
     }
 
+    /**
+     * @param array<string, mixed> $cfg
+     * @return void
+     */
     private function setUI(array $cfg): void
     {
         $ini = $this->ini;
@@ -637,7 +697,12 @@ final class Settings
         $ini->write('ui', 'theme', $cfg['theme_selector'] ?? Defaults::uiTheme);
     }
 
-    /** Пробуем найти наименования подразделов в БД. */
+    /**
+     * Пробуем найти наименования подразделов в БД.
+     *
+     * @param int[] $subsections
+     * @return string[]|array<never>
+     */
     private function getSubsectionsTitles(array $subsections): array
     {
         $in = str_repeat('?,', count($subsections) - 1) . '?';
