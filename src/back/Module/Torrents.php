@@ -11,7 +11,13 @@ use PDO;
 /** Методы для работы с раздачами в торрент-клиентах. */
 final class Torrents
 {
-    /** Поиск в БД ид раздач, по хешу */
+    /**
+     * Поиск в БД ид раздач, по хешу
+     *
+     * @param string[] $hashes
+     * @param int      $chunkSize
+     * @return array<string, int>
+     */
     public static function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
     {
         $result = [];
@@ -28,14 +34,19 @@ final class Torrents
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
             );
             if (!empty($topics)) {
-                $result[] = $topics;
+                $result[] = (array)$topics;
             }
         }
 
         return array_merge(...$result);
     }
 
-    /** Удалить раздачи в БД по хешу */
+    /**
+     * Удалить раздачи в БД по хешу
+     *
+     * @param string[] $hashes
+     * @param int      $chunkSize
+     */
     public static function removeTorrents(array $hashes, int $chunkSize = 500): void
     {
         $hashes = array_chunk($hashes, $chunkSize);

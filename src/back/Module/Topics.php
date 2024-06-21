@@ -14,7 +14,13 @@ final class Topics
     /** Допустимые статус раздач */
     public const VALID_STATUSES = [0, 2, 3, 8, 10];
 
-    /** Поиск в БД ид раздач, по хешу */
+    /**
+     * Поиск в БД ид раздач, по хешу
+     *
+     * @param string[] $hashes
+     * @param int      $chunkSize
+     * @return array<string, int>
+     */
     public static function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
     {
         $result = [];
@@ -22,19 +28,24 @@ final class Topics
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
             $topics = Db::query_database(
-                "SELECT info_hash, id topic_id FROM Topics WHERE info_hash IN ($search->keys)",
+                "SELECT info_hash, id AS topic_id FROM Topics WHERE info_hash IN ($search->keys)",
                 $search->values,
                 true,
                 PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
             );
             if (!empty($topics)) {
-                $result[] = $topics;
+                $result[] = (array)$topics;
             }
         }
+
         return array_merge(...$result);
     }
 
-    /** Удаление раздач по списку их ИД */
+    /**
+     * Удаление раздач по списку их ИД
+     *
+     * @param int[] $topics
+     */
     public static function deleteTopicsByIds(array $topics): void
     {
         $topics = array_chunk($topics, 500);

@@ -26,6 +26,12 @@ $api = [
 ];
 
 
+/**
+ * @param string[]          $forum
+ * @param string[]          $api
+ * @param array<int, mixed> $proxies
+ * @return string
+ */
 function printProbe(array $forum, array $api, array $proxies): string
 {
     $connectivity = [];
@@ -54,6 +60,9 @@ function printProbe(array $forum, array $api, array $proxies): string
     return $output;
 }
 
+/**
+ * @return array<string, mixed>
+ */
 function getAbout(): array
 {
     $config = getConfig();
@@ -87,6 +96,9 @@ function getAbout(): array
     ];
 }
 
+/**
+ * @return array<string, mixed>
+ */
 function getConfig(): array
 {
     $config_path = (new TIniFileEx())::getFile();
@@ -97,12 +109,21 @@ function getConfig(): array
     return parse_ini_file($config_path, true);
 }
 
+/**
+ * @param ?array<int, int|string> $proxy
+ * @return string
+ */
 function getNullSafeProxy(?array $proxy): string
 {
-    return $proxy ? '✅ '. $proxy[0] : "❎ no proxy";
+    return $proxy ? '✅ ' . $proxy[0] : "❎ no proxy";
 }
 
-function getUrl(string $url, ?array $proxy)
+/**
+ * @param string                  $url
+ * @param ?array<int, int|string> $proxy
+ * @return ?int
+ */
+function getUrlHttpCode(string $url, ?array $proxy): ?int
 {
     try {
         $ch = curl_init();
@@ -125,18 +146,25 @@ function getUrl(string $url, ?array $proxy)
         }
         curl_exec($ch);
 
-        return curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        return (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     } catch (Exception) {
         return null;
     }
 }
 
+/**
+ * @param array<string, mixed> $connectivity
+ * @param array<int, mixed>    $proxies
+ * @param string[]             $hostnames
+ * @param string               $tpl
+ * @return void
+ */
 function checkAccess(array &$connectivity, array $proxies, array $hostnames, string $tpl): void
 {
     foreach ($hostnames as $hostname) {
         $url = sprintf($tpl, $hostname);
         foreach ($proxies as $proxy) {
-            $connectivity[$hostname][getNullSafeProxy($proxy)] = getUrl($url, $proxy);
+            $connectivity[$hostname][getNullSafeProxy($proxy)] = getUrlHttpCode($url, $proxy);
         }
     }
 }

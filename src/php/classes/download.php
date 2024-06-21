@@ -34,10 +34,11 @@ class TorrentDownload
     }
 
     /**
-     * установка пользовательских параметров для cURL
-     * @param array $options
+     * Установка пользовательских параметров для cURL
+     *
+     * @param (int|string)[] $options
      */
-    public function setUserConnectionOptions($options)
+    public function setUserConnectionOptions(array $options): void
     {
         curl_setopt_array($this->ch, $options);
     }
