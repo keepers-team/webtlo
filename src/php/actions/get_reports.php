@@ -41,12 +41,20 @@ try {
             $reportMessages = $forumReports->getForumReport($forum);
 
             $output = $forumReports->prepareReportsMessages($reportMessages);
-        } catch (Exception $e) {
-            $log->notice('Формирование отчёта для подраздела {forum} прекращено. Причина {error}', ['forum' => $forumId, 'error' => $e->getMessage()]);
+        } catch (RuntimeException $e) {
+            $log->notice(
+                'Формирование отчёта для подраздела {forum} прекращено. Причина {error}',
+                ['forum' => $forumId, 'error' => $e->getMessage()]
+            );
+        } catch (Throwable $e) {
+            $log->warning(
+                'Формирование отчёта для подраздела {forum} прекращено. Причина {error}',
+                ['forum' => $forumId, 'error' => $e->getMessage()]
+            );
         }
     }
     $log->info('-- DONE --');
-} catch (Exception $e) {
+} catch (Throwable $e) {
     $message = $e->getMessage();
     if (isset($log)) {
         $log->error($message);

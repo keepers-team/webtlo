@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Forum\SendReport;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Module\LastUpdate;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
@@ -38,10 +40,6 @@ if (empty($cfg['subsections'])) {
     return;
 }
 
-// Проверим полное обновление.
-LastUpdate::checkReportsSendAvailable($cfg);
-
-
 Timers::start('init_api_report');
 // Подключаемся к API отчётов.
 /** @var SendReport $sendReport */
@@ -68,6 +66,16 @@ $forumReports = $app->get(ReportCreator::class);
 $forumReports->initConfig($cfg);
 
 $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
+
+
+/** @var UpdateTime $updateTime */
+$updateTime = $app->get(UpdateTime::class);
+
+// Проверим полное обновление.
+if (!$updateTime->checkReportsSendAvailable($forumReports->forums, $log)) {
+    return;
+};
+
 
 // Если API доступно - отправляем отчёты.
 if ($sendReport->isEnable()) {
@@ -140,7 +148,7 @@ if ($sendReport->isEnable()) {
         $log->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
 
         // Запишем время отправки отчётов.
-        LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
+        $updateTime->setMarkerTime(UpdateMark::SEND_REPORT->value);
     }
 }
 
@@ -180,10 +188,9 @@ if ($sendSummaryReport) {
         );
 
         // Запишем время отправки отчётов.
-        LastUpdate::setTime(UpdateMark::SEND_REPORT->value);
+        $updateTime->setMarkerTime(UpdateMark::SEND_REPORT->value);
 
         $log->info('Отправка сводного отчёта завершена за {sec}', ['sec' => Timers::getExecTime('send_summary')]);
-
     } catch (Exception $e) {
         $log->error($e->getMessage());
         $log->warning('Нет доступа к форуму. Отправка сводного отчёта невозможна.');

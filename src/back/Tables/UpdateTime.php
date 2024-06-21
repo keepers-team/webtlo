@@ -8,10 +8,12 @@ use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\MarkersUpdate;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use PDO;
+use Psr\Log\LoggerInterface;
 
 /** Таблица хранения последнего времени обновления различных меток. */
 final class UpdateTime
@@ -110,6 +112,39 @@ final class UpdateTime
         return new MarkersUpdate($markers, $updates);
     }
 
+    /**
+     * Проверить наличие всех нужных маркеров обновления и их актуальность.
+     *
+     * @param int[]           $markers
+     * @param LoggerInterface $logger
+     * @return bool
+     */
+    public function checkReportsSendAvailable(array $markers, LoggerInterface $logger): bool
+    {
+        $update = self::checkFullUpdate($markers);
+
+        if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
+            $update->addLogRecord($logger);
+            $logger->error('Отправка отчётов невозможна. Данные в локальной БД неполные. Выполните полное обновление сведений.');
+
+            return false;
+        }
+
+        if ($update->getLastCheckStatus() === UpdateStatus::EXPIRED) {
+            $update->addLogRecord($logger);
+            $logger->error(
+                'Отправка отчётов невозможна. Данные в локальной БД устарели ({date}).',
+                ['date' => $update->getMinUpdate()->format('d.m.y H:i')]
+            );
+
+            return false;
+        }
+
+        // Запишем минимальную дату обновления всех сведений.
+        $this->setMarkerTime(UpdateMark::FULL_UPDATE->value, $update->getMinUpdate());
+
+        return true;
+    }
 
     /**
      * Проверить минимальное значение обновления всех нужных маркеров для формирования и отправки отчётов.

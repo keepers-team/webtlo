@@ -13,8 +13,8 @@ use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\LastUpdate;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
 $app = AppContainer::create();
@@ -24,11 +24,14 @@ $cfg = $app->getLegacyConfig();
 
 $logger = $app->getLogger();
 
+/** @var UpdateTime $updateTime */
+$updateTime = $app->get(UpdateTime::class);
+
 // Если нет настроенных торрент-клиентов, удалим все раздачи и отметку.
 if (empty($cfg['clients'])) {
     $logger->notice('Торрент-клиенты не найдены.');
 
-    LastUpdate::setTime(UpdateMark::CLIENTS->value, 0);
+    $updateTime->setMarkerTime(UpdateMark::CLIENTS->value, 0);
     Db::query_database('DELETE FROM Torrents WHERE true');
     return;
 }
@@ -157,13 +160,13 @@ if ($tabTorrents->cloneCount() > 0) {
 
 // Если обновление всех не исключённых клиентов прошло успешно - отметим это.
 if (!count(array_diff($failedClients, $excludedClients))) {
-    LastUpdate::setTime(UpdateMark::CLIENTS->value);
+    $updateTime->setMarkerTime(UpdateMark::CLIENTS->value);
 }
 
 $failedClients = KeysObject::create($failedClients);
 // Удалим лишние раздачи из БД.
 Db::query_database("
-    DELETE FROM $tabTorrents->origin 
+    DELETE FROM $tabTorrents->origin
     WHERE client_id NOT IN ($failedClients->keys) AND (
         info_hash || client_id NOT IN (
             SELECT ins.info_hash || ins.client_id
