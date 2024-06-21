@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use Throwable;
 use RuntimeException;
+use Throwable;
 
 trait FilterTrait
 {
-    /** Получить из БД список раздач и отсортировать по заданному фильтру. */
+    /**
+     * Получить из БД список раздач и отсортировать по заданному фильтру.
+     *
+     * @param string         $statement
+     * @param (int|string)[] $params
+     * @return array<string, mixed>[]
+     */
     protected function selectTopics(string $statement, array $params = []): array
     {
         try {

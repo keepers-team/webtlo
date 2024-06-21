@@ -9,6 +9,7 @@ final class Strings
     public function __construct(
         public readonly bool   $enabled,
         public readonly int    $type,
+        /** @var string[] */
         public readonly array  $values,
         public readonly string $pattern,
     ) {

@@ -7,9 +7,9 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
+use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
-use KeepersTeam\Webtlo\TopicList\Output;
 
 /** Раздачи из "Черного списка". */
 final class BlackListedTopics implements ListInterface

@@ -10,7 +10,9 @@ final class AverageSeed
         public readonly bool  $enabled,
         public readonly bool  $checkGreen,
         public readonly int   $seedPeriod,
+        /** @var string[] */
         public readonly array $fields,
+        /** @var string[] */
         public readonly array $joins
     ) {
     }

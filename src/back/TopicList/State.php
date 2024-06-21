@@ -29,6 +29,12 @@ final class State
         return sprintf("<i class='%s' title='%s'>%s</i>", $classes, $this->title, $text);
     }
 
+    /**
+     * @param array<string, mixed> $topicData
+     * @param int                  $daysRequire
+     * @param int                  $daysUpdate
+     * @return self
+     */
     public static function parseFromTorrent(array $topicData, int $daysRequire = 1, int $daysUpdate = 1): self
     {
         $icon  = self::getClientState($topicData);
@@ -38,6 +44,10 @@ final class State
         return new self($icon, $color, $title);
     }
 
+    /**
+     * @param array<string, mixed> $topicData
+     * @return self
+     */
     public static function clientOnly(array $topicData): self
     {
         $icon  = self::getClientState($topicData);
@@ -56,7 +66,12 @@ final class State
         return new self($icon, $color, $title);
     }
 
-    /** Определить состояние раздачи в клиенте. */
+    /**
+     * Определить состояние раздачи в клиенте.
+     *
+     * @param ?array<string, mixed> $topic
+     * @return string
+     */
     public static function getClientState(?array $topic = null): string
     {
         if (empty($topic)) {
@@ -86,7 +101,12 @@ final class State
         return $topicState;
     }
 
-    /** Определить цвет статуса раздачи в клиенте. */
+    /**
+     * Определить цвет статуса раздачи в клиенте.
+     *
+     * @param ?array<string, mixed> $topic
+     * @return string
+     */
     public static function getClientColor(?array $topic = null): string
     {
         $color = 'success';

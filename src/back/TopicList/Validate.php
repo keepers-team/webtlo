@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
@@ -14,11 +15,12 @@ use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Filter\SortDirection;
 use KeepersTeam\Webtlo\TopicList\Filter\SortRule;
 use KeepersTeam\Webtlo\TopicList\Filter\Strings;
-use DateTimeImmutable;
 
 final class Validate
 {
     /**
+     * @param array<string, mixed> $filter
+     * @return Sort
      * @throws ValidationException
      */
     public static function sortFilter(array $filter): Sort
@@ -45,6 +47,7 @@ final class Validate
     /**
      * Проверим ввод значения сидов или количества хранителей.
      *
+     * @param array<string, mixed> $filter
      * @throws ValidationException
      */
     public static function filterRuleIntervals(array $filter): void
@@ -101,6 +104,8 @@ final class Validate
     }
 
     /**
+     * @param array<string, mixed> $filter
+     * @return int[]
      * @throws ValidationException
      */
     public static function checkTrackerStatus(array $filter): array
@@ -109,10 +114,11 @@ final class Validate
             throw new ValidationException('Не выбраны статусы раздач для трекера.', 'filter-exception-tracker-status');
         }
 
-        return (array)$filter['filter_tracker_status'];
+        return array_map('intval', (array)$filter['filter_tracker_status']);
     }
 
     /**
+     * @param array<string, mixed> $filter
      * @throws ValidationException
      */
     public static function checkClientStatus(array $filter): void
@@ -126,6 +132,9 @@ final class Validate
     }
 
     /**
+     * @param array<string, mixed> $filter
+     * @param int                  $forumId
+     * @return int[]
      * @throws ValidationException
      */
     public static function checkKeepingPriority(array $filter, int $forumId): array
@@ -141,15 +150,21 @@ final class Validate
             }
         }
 
-        return (array)$filter['keeping_priority'];
+        return array_map('intval', (array)$filter['keeping_priority']);
     }
 
+    /**
+     * @param array<string, mixed> $filter
+     * @return DateTimeImmutable|null
+     */
     public static function getDateRelease(array $filter): ?DateTimeImmutable
     {
         return DateTimeImmutable::createFromFormat('d.m.Y', $filter['filter_date_release']) ?: null;
     }
 
     /**
+     * @param array<string, mixed> $filter
+     * @return DateTimeImmutable
      * @throws ValidationException
      */
     public static function checkDateRelease(array $filter): DateTimeImmutable
@@ -168,6 +183,9 @@ final class Validate
     /**
      * Собрать параметры для работы со средними сидами.
      *
+     * @param array<string, mixed>      $filter
+     * @param array<string, int|string> $cfg
+     * @return AverageSeed
      * @throws ValidationException
      */
     public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
@@ -219,7 +237,12 @@ final class Validate
         );
     }
 
-    /** Собрать параметры для фильтра по количеству сидов. */
+    /**
+     * Собрать параметры для фильтра по количеству сидов.
+     *
+     * @param array<string, mixed> $filter
+     * @return Seed
+     */
     public static function prepareSeedFilter(array $filter): Seed
     {
         $comparison = SeedComparison::INTERVAL;
@@ -240,6 +263,8 @@ final class Validate
     /**
      * Собрать параметры фильтрации по типам хранителей.
      *
+     * @param array<string, mixed> $filter
+     * @return Keepers
      * @throws ValidationException
      */
     public static function prepareKeepersFilter(array $filter): Keepers
@@ -273,7 +298,12 @@ final class Validate
         );
     }
 
-    /** Фильтр раздач по статусу хранения. */
+    /**
+     * Фильтр раздач по статусу хранения.
+     *
+     * @param KeptStatus $keptStatus
+     * @return string[]
+     */
     public static function getKeptStatusFilter(KeptStatus $keptStatus): array
     {
         $filter = [];
@@ -301,7 +331,12 @@ final class Validate
         return $filter;
     }
 
-    /** Фильтр по текстовой строке. */
+    /**
+     * Фильтр по текстовой строке.
+     *
+     * @param array<string, mixed> $filter
+     * @return Strings
+     */
     public static function prepareFilterStrings(array $filter): Strings
     {
         $pattern = '';

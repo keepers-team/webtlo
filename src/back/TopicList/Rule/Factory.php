@@ -11,7 +11,8 @@ use RuntimeException;
 final class Factory
 {
     public function __construct(
-        private readonly DB  $db,
+        private readonly DB     $db,
+        /** @var array<string, mixed> */
         private readonly array  $cfg,
         private readonly Output $output
     ) {

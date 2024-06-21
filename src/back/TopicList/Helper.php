@@ -8,7 +8,13 @@ use DateTimeImmutable;
 
 final class Helper
 {
-    /** Собрать наименование клиента. */
+    /**
+     * Собрать наименование клиента.
+     *
+     * @param array<string, mixed> $cfg
+     * @param ?int                 $clientID
+     * @return string
+     */
     public static function getClientName(array $cfg, ?int $clientID): string
     {
         if (!$clientID || !isset($cfg['clients'][$clientID])) {
@@ -21,7 +27,9 @@ final class Helper
         );
     }
 
-    /** Собрать заголовок для хранителя в зависимости от его связи с раздачей. */
+    /**
+     * Собрать заголовок для хранителя в зависимости от его связи с раздачей.
+     */
     public static function getKeeperTitle(string $state): string
     {
         $keeperBullets = [
@@ -34,7 +42,13 @@ final class Helper
         return $keeperBullets[$state] ?? '';
     }
 
-    /** Хранители раздачи в виде списка. */
+    /**
+     * Хранители раздачи в виде списка.
+     *
+     * @param array<string, mixed>[] $topicKeepers
+     * @param int                    $user_id
+     * @return string
+     */
     public static function getFormattedKeepersList(array $topicKeepers, int $user_id): string
     {
         if (!count($topicKeepers)) {
@@ -71,7 +85,13 @@ final class Helper
         return implode(', ', $keepersNames);
     }
 
-    /** Собрать заголовок со списком клиентов, в котором есть раздача. */
+    /**
+     * Собрать заголовок со списком клиентов, в котором есть раздача.
+     *
+     * @param array<string, mixed>[] $cfgClients
+     * @param array<string, mixed>[] $listTorrentClientsIDs
+     * @return string
+     */
     public static function getFormattedClientsList(array $cfgClients, array $listTorrentClientsIDs): string
     {
         $listTorrentClientsNames = array_map(function($e) use ($cfgClients): string {

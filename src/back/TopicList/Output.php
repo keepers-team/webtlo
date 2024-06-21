@@ -7,8 +7,10 @@ namespace KeepersTeam\Webtlo\TopicList;
 final class Output
 {
     public function __construct(
+        /** @var array<string, mixed> */
         private readonly array  $cfg,
         private readonly string $forum_address,
+        /** @var ?array<string, mixed> */
         private readonly ?array $filter = null
     ) {
     }
@@ -58,7 +60,13 @@ final class Output
         return implode(' - ', array_filter($link));
     }
 
-    /** Блок выбираемых к отображению полей. */
+    /**
+     * Блок выбираемых к отображению полей.
+     *
+     * @param Topic     $topic
+     * @param ?string[] $filter
+     * @return array<string, mixed>
+     */
     private function getSelectedStrings(Topic $topic, ?array $filter = null): array
     {
         // TODO Добавить автора и ид раздачи.

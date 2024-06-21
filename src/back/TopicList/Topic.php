@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList;
 
-use KeepersTeam\Webtlo\Helper as TloHelper;
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Helper as TloHelper;
 
 final class Topic
 {
@@ -23,6 +23,11 @@ final class Topic
     ) {
     }
 
+    /**
+     * @param array<string, int|string> $topicData
+     * @param ?State                    $state
+     * @return self
+     */
     public static function fromTopicData(array $topicData, ?State $state = null): self
     {
         return new self(

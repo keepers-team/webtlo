@@ -8,17 +8,17 @@ use DateTimeImmutable;
 use Generator;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\TopicList\Excluded;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Helper;
-use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
+use KeepersTeam\Webtlo\TopicList\Helper;
+use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
-use KeepersTeam\Webtlo\TopicList\Output;
-use KeepersTeam\Webtlo\TopicList\Excluded;
+use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DefaultTopics implements ListInterface
@@ -26,11 +26,13 @@ final class DefaultTopics implements ListInterface
     use FilterTrait;
     use DbHelperTrait;
 
-    private int   $userId;
+    private int $userId;
+    /** @var array<string, mixed>[][] */
     private array $keepers = [];
 
     public function __construct(
         private readonly DB     $db,
+        /** @var array<string, mixed> */
         private readonly array  $cfg,
         private readonly Output $output,
         private readonly int    $forumId
@@ -193,6 +195,17 @@ final class DefaultTopics implements ListInterface
 
     /**
      * Создать временные таблицы, сформировать запрос поиска раздач, выполнить запрос к БД, обернув в транзакцию.
+     *
+     * @param array<string, mixed> $filter
+     * @param Keepers              $filterKeepers
+     * @param AverageSeed          $filterAverageSeed
+     * @param KeysObject           $forum
+     * @param KeysObject           $status
+     * @param KeysObject           $priority
+     * @param DateTimeImmutable    $dateRelease
+     * @param bool                 $excludeSelfKeep
+     * @param Sort                 $sort
+     * @return Generator
      */
     private function queryTopics(
         array             $filter,
@@ -225,9 +238,7 @@ final class DefaultTopics implements ListInterface
         );
 
         // Получаем раздачи из базы.
-        $topics = $this->selectTopics(
-            $statement,
-        );
+        $topics = $this->selectTopics($statement);
 
         // Закрываем транзакцию к БД.
         $this->db->commitTransaction();
@@ -322,6 +333,13 @@ final class DefaultTopics implements ListInterface
         $this->queryStatement($sql);
     }
 
+    /**
+     * @param array<string, mixed> $filter
+     * @param Keepers              $filterKeepers
+     * @param AverageSeed          $averageSeed
+     * @param Sort                 $sort
+     * @return string
+     */
     private function getStatement(
         array       $filter,
         Keepers     $filterKeepers,
@@ -391,7 +409,11 @@ final class DefaultTopics implements ListInterface
         return new Excluded($excluded['count'] ?? 0, $excluded['size'] ?? 0);
     }
 
-    /** Список хранителей всех раздач указанных подразделов. */
+    /**
+     * Список хранителей всех раздач указанных подразделов.
+     *
+     * @param int[] $forumList
+     */
     private function fillKeepersByForumList(array $forumList): void
     {
         $keepers = [];
@@ -419,12 +441,22 @@ final class DefaultTopics implements ListInterface
         $this->keepers = $keepers;
     }
 
+    /**
+     * @param int $topicId
+     * @return array<string, mixed>[]
+     */
     private function getTopicKeepers(int $topicId): array
     {
         return $this->keepers[$topicId] ?? [];
     }
 
-    /** Исключить себя из списка хранителей раздачи. */
+    /**
+     * Исключить себя из списка хранителей раздачи.
+     *
+     * @param array<string, mixed>[] $topicKeepers
+     * @param int                    $userId
+     * @return array<string, mixed>[]
+     */
     private function excludeUserFromKeepers(array $topicKeepers, int $userId): array
     {
         return array_filter($topicKeepers, function($e) use ($userId) {

@@ -8,11 +8,11 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Helper;
-use KeepersTeam\Webtlo\TopicList\Validate;
+use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DuplicatedTopics implements ListInterface
@@ -22,6 +22,7 @@ final class DuplicatedTopics implements ListInterface
 
     public function __construct(
         private readonly DB     $db,
+        /** @var array<string, mixed> */
         private readonly array  $cfg,
         private readonly Output $output
     ) {
@@ -90,7 +91,12 @@ final class DuplicatedTopics implements ListInterface
         return $counter;
     }
 
-    /** Список клиентов, в которых хранятся заданные раздачи. */
+    /**
+     * Список клиентов, в которых хранятся заданные раздачи.
+     *
+     * @param KeysObject $hashes
+     * @return array<int|string, mixed>[]
+     */
     private function getClientsByHashes(KeysObject $hashes): array
     {
         $statement = "

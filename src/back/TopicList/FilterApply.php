@@ -13,7 +13,13 @@ use KeepersTeam\Webtlo\TopicList\Filter\Strings;
 /** Фильтрация полученного списка раздач. */
 final class FilterApply
 {
-    /** Попадает ли количество хранителей раздачи в заданные пределы по заданным правилам. */
+    /**
+     * Попадает ли количество хранителей раздачи в заданные пределы по заданным правилам.
+     *
+     * @param KeepersCount           $countRules
+     * @param array<string, mixed>[] $topicKeepers
+     * @return bool
+     */
     public static function isTopicKeepersInRange(KeepersCount $countRules, array $topicKeepers): bool
     {
         if (!$countRules->enabled) {
@@ -69,7 +75,13 @@ final class FilterApply
         return !$seedPeriod->checkGreen || $ds >= $seedPeriod->seedPeriod;
     }
 
-    /** Есть ли пользователь среди хранителей. */
+    /**
+     * Есть ли пользователь среди хранителей.
+     *
+     * @param array<string, mixed>[] $topicKeepers
+     * @param int                    $userId
+     * @return bool
+     */
     public static function isUserInKeepers(array $topicKeepers, int $userId): bool
     {
         $keepersList = array_column($topicKeepers, 'keeper_id');
@@ -77,8 +89,15 @@ final class FilterApply
         return count($keepersList) && in_array($userId, $keepersList);
     }
 
-    /** Фильтрация по текстовому полю. */
-    public static function isStringsMatch(Strings $filterStrings, Topic $topic, array $topic_keepers): bool
+    /**
+     * Фильтрация по текстовому полю.
+     *
+     * @param Strings                $filterStrings
+     * @param Topic                  $topic
+     * @param array<string, mixed>[] $topicKeepers
+     * @return bool
+     */
+    public static function isStringsMatch(Strings $filterStrings, Topic $topic, array $topicKeepers): bool
     {
         if (!$filterStrings->enabled) {
             return true;
@@ -86,7 +105,7 @@ final class FilterApply
 
         if ($filterStrings->type === 0) {
             // В имени хранителя.
-            $topicKeepers = array_column($topic_keepers, 'keeper_name');
+            $topicKeepers = array_column($topicKeepers, 'keeper_name');
 
             $matchKeepers = [];
             foreach ($filterStrings->values as $filterKeeper) {
