@@ -49,7 +49,12 @@ final class Topics
         return $this->db->queryCount("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
     }
 
-    /** Выбрать N раздач без названия. */
+    /**
+     * Выбрать N раздач без названия.
+     *
+     * @param int $limit
+     * @return int[]
+     */
     public function getUnnamedTopics(int $limit = 5000): array
     {
         return $this->db->query(
@@ -65,7 +70,12 @@ final class Topics
         return $this->db->selectRowsCount('Topics');
     }
 
-    /** Поиск существующих сведений о раздачах. */
+    /**
+     * Поиск существующих сведений о раздачах.
+     *
+     * @param int[] $topicIds
+     * @return array<int, array<string, int|string>>
+     */
     public function searchPrevious(array $topicIds): array
     {
         $selectTopics = KeysObject::create($topicIds);
@@ -81,7 +91,11 @@ final class Topics
         );
     }
 
-    /** Удаление раздач по списку их ИД */
+    /**
+     * Удаление раздач по списку их ИД
+     *
+     * @param int[] $topics
+     */
     public function deleteTopicsByIds(array $topics): void
     {
         $chunks = array_chunk(array_unique($topics), 500);

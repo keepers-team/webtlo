@@ -13,7 +13,7 @@ final class Seeders
     /**
      * Определить значения для записи истории сидов.
      *
-     * @return callable(int $seeders, array $previous): TopicAverage
+     * @return callable(int $seeders, array<string, mixed> $previous): TopicAverage
      */
     public static function AverageProcessor(
         bool              $calcAverage,

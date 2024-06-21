@@ -50,8 +50,11 @@ final class HighPriority
         'seeder_last_seen',
     ];
 
+    /** @var array<string, int|string>[] */
     private array $topicsUpdate = [];
+    /** @var array<int, array<string, int|string>> */
     private array $topicsInsert = [];
+    /** @var int[] */
     private array $topicsDelete = [];
 
     /** @var int[] Хранимые подразделы */
@@ -68,6 +71,8 @@ final class HighPriority
 
     /**
      * Выполнить обновление раздач с высоким приоритетом всего форума.
+     *
+     * @param array<string, mixed> $config
      */
     public function update(array $config): void
     {
@@ -270,18 +275,26 @@ final class HighPriority
 
     /**
      * @param HighPriorityTopic[] $topicsChunk
-     * @return array
+     * @return array<int, array<string, int|string>>
      */
     private function getPrevious(array $topicsChunk): array
     {
         return $this->topics->searchPrevious(array_map(fn($tp) => $tp->id, $topicsChunk));
     }
 
+    /**
+     * @param (int|string)[] $topic
+     * @return void
+     */
     private function addTopicForUpdate(array $topic): void
     {
         $this->topicsUpdate[] = array_combine(self::KEYS_UPDATE, $topic);
     }
 
+    /**
+     * @param array<int, array<string, int|string>> $topics
+     * @return void
+     */
     private function addTopicsForInsert(array $topics): void
     {
         $this->topicsInsert = $topics;

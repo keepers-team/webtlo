@@ -50,10 +50,14 @@ final class Subsections
         'seeder_last_seen',
     ];
 
+    /** @var array<string, int|string>[] */
     private array $topicsUpdate = [];
+    /** @var array<string, int|string>[] */
     private array $topicsInsert = [];
+    /** @var int[] */
     private array $topicsDelete = [];
 
+    /** @var int[] */
     private array $skipSubsections = [];
 
     public function __construct(
@@ -68,6 +72,9 @@ final class Subsections
 
     /**
      * Выполнить обновление раздач в хранимых подразделах.
+     *
+     * @param array<string, mixed> $config
+     * @param bool                 $schedule
      */
     public function update(array $config, bool $schedule = false): void
     {
@@ -287,18 +294,26 @@ final class Subsections
 
     /**
      * @param ForumTopic[] $topics
-     * @return array
+     * @return array<int, array<string, int|string>>
      */
     private function getPreviousTopics(array $topics): array
     {
         return $this->topics->searchPrevious(array_map(fn($tp) => $tp->id, $topics));
     }
 
+    /**
+     * @param (int|string)[] $topic
+     * @return void
+     */
     private function addTopicForUpdate(array $topic): void
     {
         $this->topicsUpdate[] = array_combine(self::KEYS_UPDATE, $topic);
     }
 
+    /**
+     * @param (int|string)[] $topic
+     * @return void
+     */
     private function addTopicForInsert(array $topic): void
     {
         $this->topicsInsert[] = array_combine(self::KEYS_INSERT, $topic);
@@ -346,6 +361,8 @@ final class Subsections
 
     /**
      * Переносим обработанные сведения из временных таблицы в БД, фиксируем обновление.
+     *
+     * @param int[] $subsections
      */
     private function moveUpdatedTopics(array $subsections): void
     {
@@ -367,6 +384,10 @@ final class Subsections
         }
     }
 
+    /**
+     * @param int[] $updatedSubsections
+     * @return void
+     */
     private function writeTopicsToOrigin(array $updatedSubsections): void
     {
         $this->initTempTables();
@@ -397,6 +418,10 @@ final class Subsections
         return $count;
     }
 
+    /**
+     * @param int[] $updatedSubsections
+     * @return void
+     */
     private function clearUnusedTopics(array $updatedSubsections): void
     {
         $in = implode(',', $updatedSubsections);
