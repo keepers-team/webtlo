@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "caseyamcl/guzzle_retry_middleware",
-            "version": "v2.9.0",
+            "version": "v2.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/caseyamcl/guzzle_retry_middleware.git",
-                "reference": "cbec4ce59c2dbd200a11aed19e7c26c37e50e535"
+                "reference": "e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/cbec4ce59c2dbd200a11aed19e7c26c37e50e535",
-                "reference": "cbec4ce59c2dbd200a11aed19e7c26c37e50e535",
+                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c",
+                "reference": "e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c",
                 "shasum": ""
             },
             "require": {
@@ -26,11 +26,12 @@
             },
             "require-dev": {
                 "jaschilz/php-coverage-badger": "^2.0",
-                "nesbot/carbon": "^2.0",
+                "nesbot/carbon": "^2.0|^3.0",
                 "phpstan/extension-installer": "^1.0",
                 "phpstan/phpstan": "^1.0",
                 "phpunit/phpunit": "^7.5|^8.0|^9.0",
-                "squizlabs/php_codesniffer": "^3.5"
+                "squizlabs/php_codesniffer": "^3.5",
+                "symfony/var-dumper": "^5.0|^6.0|^7.0"
             },
             "type": "library",
             "extra": {
@@ -68,7 +69,7 @@
             ],
             "support": {
                 "issues": "https://github.com/caseyamcl/guzzle_retry_middleware/issues",
-                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.9.0"
+                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.10.0"
             },
             "funding": [
                 {
@@ -76,7 +77,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-08-30T18:02:31+00:00"
+            "time": "2024-06-19T23:03:14+00:00"
         },
         {
             "name": "cesargb/php-log-rotation",
@@ -861,20 +862,20 @@
         },
         {
             "name": "psr/http-factory",
-            "version": "1.0.2",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-factory.git",
-                "reference": "e616d01114759c4c489f93b099585439f795fe35"
+                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/e616d01114759c4c489f93b099585439f795fe35",
-                "reference": "e616d01114759c4c489f93b099585439f795fe35",
+                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
+                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.0.0",
+                "php": ">=7.1",
                 "psr/http-message": "^1.0 || ^2.0"
             },
             "type": "library",
@@ -898,7 +899,7 @@
                     "homepage": "https://www.php-fig.org/"
                 }
             ],
-            "description": "Common interfaces for PSR-7 HTTP message factories",
+            "description": "PSR-17: Common interfaces for PSR-7 HTTP message factories",
             "keywords": [
                 "factory",
                 "http",
@@ -910,9 +911,9 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-factory/tree/1.0.2"
+                "source": "https://github.com/php-fig/http-factory"
             },
-            "time": "2023-04-10T20:10:41+00:00"
+            "time": "2024-04-15T12:06:14+00:00"
         },
         {
             "name": "psr/http-message",
