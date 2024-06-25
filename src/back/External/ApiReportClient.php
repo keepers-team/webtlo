@@ -112,6 +112,39 @@ final class ApiReportClient
     }
 
     /**
+     * Получить список раздач хранителя в указанном подразделе.
+     *
+     * @param int $subForumId
+     * @return ?array<string, mixed>
+     */
+    public function getUserKeptReleases(int $subForumId): ?array
+    {
+        $params = [
+            'subforum_id' => $subForumId,
+            'columns'     => 'info_hash',
+        ];
+
+        try {
+            $response = $this->client->get("keeper/{$this->cred->userId}/reports", ['query' => $params]);
+        } catch (GuzzleException $e) {
+            $this->logException($e->getCode(), $e->getMessage(), $params);
+
+            return null;
+        }
+
+        $body = $response->getBody()->getContents();
+        $data = json_decode($body, true);
+
+        foreach ($data as $subforum) {
+            if ((int)$subforum['subforum_id'] === $subForumId) {
+                return $subforum;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Задать статус хранения подраздела.
      */
     public function setForumStatus(int $forumId, int $status, string $appVersion = ''): bool
