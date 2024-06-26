@@ -88,41 +88,61 @@ class Reports
     }
 
     /**
-     * получение сведений о разрегистрированной раздаче
+     * Получение сведений о разрегистрированной раздаче
+     *
      * @param int $topicID
-     * @return bool|array
+     * @return ?array<string, mixed>
+     * @throws Exception
      */
-    public function getDataUnregisteredTopic($topicID)
+    public function getDataUnregisteredTopic(int $topicID): ?array
     {
-        if (!is_numeric($topicID)) {
-            return false;
+        if (empty($topicID)) {
+            return null;
         }
+
         $data = $this->make_request($this->forum_url . '/forum/viewtopic.php?t=' . $topicID);
+        if (empty($data)) {
+            return null;
+        }
+
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         unset($data);
-        // ссылка для скачивания
+
+        // ссылка для скачивания (доступна модераторам, даже если раздача закрыта).
         $downloadLink = $html->find('a.dl-link')->attr('href');
+
         // раздача в мусорке, не найдена
         $topicStatuses[] = $html->find('div.mrg_16')->text();
         // повтор, закрыто, не оформлена и т.п.
         $topicStatuses[] = $html->find('span#tor-status-resp b:first')->text();
         // поглощено и прочие открытые статусы
         $topicStatuses[] = $html->find('div.attach_link i.normal b:first')->text();
-        // имя
-        $topicName = $html->find('h1.maintitle a')->text();
-        // приоритет
-        $topicPriority = $html->find('div.attach_link b:last')->text();
+
         // статус
-        $topicStatus = implode('', array_diff($topicStatuses, ['']));
-        if (!empty($downloadLink)) {
+        $topicStatus = implode('', array_filter($topicStatuses));
+        if (empty($topicStatus) && !empty($downloadLink)) {
             $topicStatus = 'обновлено';
         }
+        if (empty($topicStatus)) {
+            $topicStatus = 'неизвестно';
+        }
+
+        // имя
+        $topicName = $html->find('h1.maintitle a')->text();
+
+        // приоритет
+        $topicPriority = $html->find('div.attach_link b:last')->text();
         if (empty($topicPriority)) {
             $topicPriority = $html->find('table.attach b:first')->text();
         }
+        if (empty($topicPriority)) {
+            $topicPriority = 'обычный';
+        }
+
         // данные о переносе раздачи
         $transferredTo = $html->find('td.t-breadcrumb-top:first > a')->text();
         $transferredTo = str_replace(PHP_EOL, ' » ', rtrim($transferredTo, PHP_EOL));
+
         $totalPages = $html->find('a.pg:last')->prev()->text();
         if ($totalPages > 1) {
             $lastPage = ($totalPages - 1) * 30;
@@ -130,6 +150,7 @@ class Reports
             $html = phpQuery::newDocumentHTML($data, 'UTF-8');
             unset($data);
         }
+
         // сканирование последнего сообщения в теме
         $transferredFrom = '';
         $transferredByWhom = '';
@@ -150,13 +171,14 @@ class Reports
         }
         unset($html);
         phpQuery::unloadDocuments();
+
         return [
-            'name' => $topicName,
-            'status' => mb_strtolower($topicStatus),
-            'priority' => $topicPriority,
-            'transferred_from' => $transferredFrom,
-            'transferred_to' => $transferredTo,
-            'transferred_by_whom' => $transferredByWhom
+            'name'                => $topicName,
+            'status'              => mb_strtolower($topicStatus),
+            'priority'            => $topicPriority,
+            'transferred_from'    => $transferredFrom,
+            'transferred_to'      => $transferredTo,
+            'transferred_by_whom' => $transferredByWhom,
         ];
     }
 
