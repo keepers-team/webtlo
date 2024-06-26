@@ -207,11 +207,13 @@ final class Helper
      *
      * @param string $string
      * @param string $separator
-     * @return int[]
+     * @return int[]|array{}
      */
     public static function explodeInt(string $string, string $separator = ','): array
     {
-        return array_map('intval', explode($separator, $string));
+        $values = explode($separator, trim($string));
+
+        return array_map('intval', array_filter($values));
     }
 
     public static function makeDateTime(int $timestamp): DateTimeImmutable
