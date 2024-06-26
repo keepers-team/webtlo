@@ -74,12 +74,14 @@ $updateTime = $app->get(UpdateTime::class);
 // Проверим полное обновление.
 if (!$updateTime->checkReportsSendAvailable($forumReports->forums, $log)) {
     return;
-};
+}
 
 
 // Если API доступно - отправляем отчёты.
 if ($sendReport->isEnable()) {
     $Timers = [];
+
+    $forumReports->setForumTopics($sendReport->getReportTopics());
 
     $forumCount = $forumReports->getForumCount();
 
@@ -156,8 +158,8 @@ if ($sendReport->isEnable()) {
 // Желание отправить сводный отчёт на форум.
 $sendSummaryReport = (bool)($cfg['reports']['send_summary_report'] ?? true);
 if ($sendSummaryReport) {
-    // Подключаемся к форуму.
     try {
+        // Подключаемся к форуму.
         $reports = new Reports(
             $cfg['forum_address'],
             $user,
@@ -173,7 +175,7 @@ if ($sendSummaryReport) {
 
         Timers::start('send_summary');
         // Формируем сводный отчёт.
-        $summaryReport = $forumReports->getSummaryReport();
+        $forumSummary = $forumReports->getSummaryReport(true);
 
         // Ищем своё сообщение со сводным отчётом (если есть).
         $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
@@ -182,7 +184,7 @@ if ($sendSummaryReport) {
         // Отправляем сводный отчёт.
         $reports->send_message(
             $summaryPostMode,
-            $summaryReport,
+            $forumSummary,
             ReportCreator::SUMMARY_FORUM,
             $summaryPostId
         );

@@ -10,6 +10,7 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
+use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
@@ -42,6 +43,12 @@ final class Creator
 
     private CreationMode $mode = CreationMode::CRON;
 
+    /** @var ?string[]*/
+    private ?array $summary = null;
+
+    /** @var ?array<string, mixed> */
+    private ?array $telemetry = null;
+
     private string $implodeGlue = '[br]';
     private string $topicGlue   = '';
 
@@ -54,6 +61,8 @@ final class Creator
 
     /** @var array<int, mixed> Хранимые раздачи по каждому подразделу. */
     private array $cache = [];
+
+    private ?ReportForumResponse $reportTopics = null;
 
     public function __construct(
         private readonly DB              $db,
@@ -68,68 +77,19 @@ final class Creator
      *
      * @throws Exception
      */
-    public function getSummaryReport(): string
+    public function getSummaryReport(bool $withTelemetry = false): string
     {
-        if (null === $this->stored) {
-            $this->fillStoredValues();
-        }
-        // Вытаскиваем из базы хранимое
-        $total = $this->calcSummary($this->stored);
-
-        $urlPattern = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
-
-        // Разбираем хранимое
-        $savedSubsections = [];
-        foreach ($this->forums as $forumId) {
-            // Исключаем подразделы, согласно конфига.
-            if (in_array($forumId, $this->excludeForumsIDs)) {
-                continue;
-            }
-
-            $forumValues = $this->stored[$forumId] ?? [];
-            if (!count($forumValues)) {
-                continue;
-            }
-
-            $forum = Forums::getForum($forumId);
-
-            $topic_id = $forum->topic_id ?: 'NaN';
-            $post_id  = $forum->post_ids[0] ?? null;
-
-            // Ссылка на тему с отчётами подраздела.
-            $leftPart = sprintf($urlPattern, 't', $topic_id, $forum->name);
-
-            // Ссылка на свой пост(отчёт) и количество + объём раздач.
-            $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
-            if (null !== $post_id) {
-                $rightPart = sprintf($urlPattern, 'p', $post_id, $rightPart);
-            }
-
-            // Записываем данные о подразделе в сводный отчёт.
-            $savedSubsections[] = "[*]$leftPart - $rightPart";
-
-            unset($forumId, $forumValues, $topic_id, $post_id, $leftPart, $rightPart);
-        }
-
-        // формируем сводный отчёт
-        $summary   = [];
-        $summary[] = $this->getFormattedUpdateTime();
-        $summary[] = '';
-        $summary[] = sprintf('Всего хранимых подразделов: [b]%s[/b] шт.', count($savedSubsections));
-        $this->prepareSummaryHeader($summary, $total);
-        $summary[] = '';
-        $summary[] = $this->webtlo->versionLineUrl();
-        $summary[] = '[hr]';
-
-        $summary = [...$summary, '[list=1]', ...$savedSubsections, '[/list]'];
+        $summary = $this->collectSummaryInfo();
 
         // Проверяем возможность добавить в сводный отчёт данные о настройках.
-        $shared = $this->getConfigTelemetry();
-        if (null !== $shared) {
-            $summary[] = '[hr]';
-            $summary[] = '[spoiler="Настройки Web-TLO"][pre]<br />';
-            $summary[] = $shared;
-            $summary[] = '<br />[/pre][/spoiler]';
+        if ($withTelemetry) {
+            $shared = $this->getConfigTelemetry();
+            if (!empty($shared)) {
+                $summary[] = '[hr]';
+                $summary[] = '[spoiler="Настройки Web-TLO"][pre]';
+                $summary[] = json_encode($shared, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                $summary[] = '[/pre][/spoiler]';
+            }
         }
 
         return implode($this->implodeGlue, $summary);
@@ -249,6 +209,133 @@ final class Creator
     }
 
     /**
+     * @return array{}|array<string, mixed>
+     */
+    public function getConfigTelemetry(): array
+    {
+        if (null !== $this->telemetry) {
+            return $this->telemetry;
+        }
+
+        $config = $this->config;
+
+        // Если отправка отключена в настройках, то ничего не собираем.
+        if (empty($config['reports']['send_report_settings'])) {
+            return $this->telemetry = [];
+        }
+
+        $shared = [
+            'software' => $this->webtlo->getSoftwareInfo(),
+            'proxy'    => [
+                'activate_forum'  => (bool)$config['proxy_activate_forum'],
+                'activate_api'    => (bool)$config['proxy_activate_api'],
+                'activate_report' => (bool)$config['proxy_activate_report'],
+            ],
+        ];
+
+        // Количество и тип используемых торрент клиентов.
+        $clients = array_filter($config['clients'], fn($el) => !$el['exclude']);
+
+        // Тип и количество используемых торрент-клиентов.
+        $distribution = array_count_values(array_map(fn($el) => $el['cl'], $clients));
+
+        // Количество раздач в используемых торрент-клиентах.
+        $clientTopics = [];
+        foreach ($this->getClientsTopics() as $clientId => $topics) {
+            if (!empty($clients[$clientId])) {
+                $clientName = sprintf('%s-%d', $clients[$clientId]['cl'], $clientId);
+                $clientTopics[$clientName] = array_filter($topics);
+            }
+        }
+
+        // Данные о торрент-клиентах.
+        $shared['clients'] = [
+            'distribution' => $distribution,
+            'topics'       => $clientTopics,
+        ];
+
+        // Регулировка по подразделам.
+        $subsections = array_filter($config['subsections'], fn($el) => !empty($el['control_peers']));
+        $subsections = array_map(fn($el) => (int)$el['control_peers'], $subsections);
+
+        ksort($subsections);
+
+        // Параметры регулировки.
+        $shared['control'] = [
+            'enabled'     => (bool)$config['automation']['control'],
+            'peers'       => (int)$config['topics_control']['peers'],
+            'keepers'     => (int)$config['topics_control']['keepers'],
+            'subsections' => $subsections,
+        ];
+
+        return $this->telemetry = $shared;
+    }
+
+    /**
+     * @return string[]
+     * @throws Exception
+     */
+    private function collectSummaryInfo(): array
+    {
+        // Если данные уже собраны - возвращаем готовый набор.
+        if (null !== $this->summary) {
+            return $this->summary;
+        }
+
+        // Собираем данные для сводного отчёта.
+        if (null === $this->stored) {
+            $this->fillStoredValues();
+        }
+        // Вытаскиваем из базы хранимое
+        $total = $this->calcSummary($this->stored);
+
+        $urlPattern = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
+
+        // Разбираем хранимое
+        $savedSubsections = [];
+        foreach ($this->forums as $forumId) {
+            // Исключаем подразделы, согласно конфига.
+            if ($this->isForumExcluded($forumId)) {
+                continue;
+            }
+
+            $forumValues = $this->stored[$forumId] ?? [];
+            if (!count($forumValues)) {
+                continue;
+            }
+
+            $forum = Forums::getForum($forumId);
+
+            $topicId = $this->getReportTopicId($forum);
+
+            // Ссылка на тему с отчётами подраздела.
+            $leftPart = $topicId !== null ?
+                sprintf($urlPattern, 't', $topicId, $forum->name) :
+                sprintf('[b]%s[/b]', $forum->name);
+
+            // Ссылка на свой пост(отчёт) и количество + объём раздач.
+            $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
+
+            // Записываем данные о подразделе в сводный отчёт.
+            $savedSubsections[] = "[*]$leftPart - $rightPart";
+
+            unset($forumId, $forumValues, $topicId, $leftPart, $rightPart);
+        }
+
+        // формируем сводный отчёт
+        $summary   = [];
+        $summary[] = $this->getFormattedUpdateTime();
+        $summary[] = '';
+        $summary[] = sprintf('Всего хранимых подразделов: [b]%s[/b] шт.', count($savedSubsections));
+        $this->prepareSummaryHeader($summary, $total);
+        $summary[] = '';
+        $summary[] = $this->webtlo->versionLineUrl();
+        $summary[] = '[hr]';
+
+        return $this->summary = [...$summary, '[list=1]', ...$savedSubsections, '[/list]'];
+    }
+
+    /**
      * Собрать заголовок сообщения с версией ПО.
      *
      * @param array<string, mixed> $userStored
@@ -322,56 +409,6 @@ final class Creator
         }
 
         return $topicUrl;
-    }
-
-    private function getConfigTelemetry(): ?string
-    {
-        $config = $this->config;
-
-        if (empty($config['reports']['send_report_settings'])) {
-            return null;
-        }
-
-        $sharedConfig['proxy_activate_forum']  = (bool)$config['proxy_activate_forum'];
-        $sharedConfig['proxy_activate_api']    = (bool)$config['proxy_activate_api'];
-        $sharedConfig['proxy_activate_report'] = (bool)$config['proxy_activate_report'];
-
-        // Количество и тип используемых торрент клиентов.
-        $clients = array_filter($config['clients'], fn($el) => !$el['exclude']);
-
-        // Тип и количество используемых торрент-клиентов.
-        $distribution = array_count_values(array_map(fn($el) => $el['cl'], $clients));
-
-        // Количество раздач в используемых торрент-клиентах.
-        $clientTopics = [];
-        foreach ($this->getClientsTopics() as $clientId => $topics) {
-            if (!empty($client = $clients[$clientId])) {
-                $clientName = sprintf('%s-%s', $client['cl'], $clientId);
-                $clientTopics[$clientName] = array_filter($topics);
-            }
-        }
-
-        // Данные о торрент-клиентах.
-        $sharedConfig['clients'] = [
-            'distribution' => $distribution,
-            'topics'       => $clientTopics,
-        ];
-
-        // Регулировка по подразделам.
-        $subsections = array_filter($config['subsections'], fn($el) => !empty($el['control_peers']));
-        $subsections = array_map(fn($el) => (int)$el['control_peers'], $subsections);
-
-        ksort($subsections);
-
-        // Параметры регулировки.
-        $sharedConfig['control'] = [
-            'enabled'     => (bool)$config['automation']['control'],
-            'peers'       => (int)$config['topics_control']['peers'],
-            'keepers'     => (int)$config['topics_control']['keepers'],
-            'subsections' => $subsections,
-        ];
-
-        return json_encode($sharedConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -567,6 +604,21 @@ final class Creator
         $this->cache[$forum_id] = $topics;
 
         return $topics;
+    }
+
+    public function setForumTopics(ReportForumResponse $reportTopics): void
+    {
+        $this->reportTopics = $reportTopics;
+    }
+
+    private function getReportTopicId(ForumObject $forum): ?int
+    {
+        $topicId = $this->reportTopics?->getReportTopicId($forum->id);
+        if (null === $topicId) {
+            $topicId = $forum->topic_id;
+        }
+
+        return $topicId;
     }
 
     public function clearCache(int $forumId): void
