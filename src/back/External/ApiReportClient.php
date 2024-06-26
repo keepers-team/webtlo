@@ -178,6 +178,19 @@ final class ApiReportClient
     }
 
     /**
+     * @param array<string, mixed> $data
+     * @return void
+     */
+    public function sendCustomData(array $data): void
+    {
+        try {
+            $this->client->post("custom_data/{$this->cred->userId}", ['json' => $data]);
+        } catch (GuzzleException $e) {
+            $this->logException($e->getCode(), $e->getMessage(), $data);
+        }
+    }
+
+    /**
      * @param int      $forumId
      * @param string[] $columns
      * @return ?array<string, mixed>

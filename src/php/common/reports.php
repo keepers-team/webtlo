@@ -159,6 +159,16 @@ if ($sendReport->isEnable()) {
 $sendSummaryReport = (bool)($cfg['reports']['send_summary_report'] ?? true);
 if ($sendSummaryReport) {
     try {
+        if ($sendReport->isEnable()) {
+            // Формируем сводный для API.
+            $apiCustom = $forumReports->getConfigTelemetry();
+
+            $apiCustom['summary_report'] = $forumReports->getSummaryReport();
+
+            // Отправляем Сводный отчёт и телеметрию в API.
+            $sendReport->sendCustomReport($apiCustom);
+        }
+
         // Подключаемся к форуму.
         $reports = new Reports(
             $cfg['forum_address'],
