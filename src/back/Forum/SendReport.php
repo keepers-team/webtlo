@@ -114,4 +114,13 @@ final class SendReport
 
         return new ReportForumResponse([]);
     }
+
+    /**
+     * @param array<string, mixed> $apiCustom
+     * @return void
+     */
+    public function sendCustomReport(array $apiCustom): void
+    {
+        $this->apiReport->sendCustomData($apiCustom);
+    }
 }
