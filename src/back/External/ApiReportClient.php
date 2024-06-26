@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External;
 
-use DateTimeImmutable;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -12,7 +11,6 @@ use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\External\ApiReport\Actions;
 use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Подключение к API отчётов. Получение и отправка данных с авторизацией по ключу.
@@ -23,8 +21,6 @@ final class ApiReportClient
     use Actions\KeepersReports;
     use Actions\Processor;
     use Actions\ReportForumTopics;
-
-    protected static int $concurrency = 4;
 
     public function __construct(
         private readonly Client          $client,
@@ -54,27 +50,6 @@ final class ApiReportClient
         }
 
         return false;
-    }
-
-    public function getRevolutionDate(): ?DateTimeImmutable
-    {
-        try {
-            $response = $this->client->get('mode_details');
-            $result   = json_decode($response->getBody()->getContents(), true);
-
-            if (empty($result['revolution_date'])) {
-                return null;
-            }
-
-            return new DateTimeImmutable($result['revolution_date']);
-        } catch (Throwable $e) {
-            $this->logger->debug(
-                'Не удалось получить дату революции из report-api.',
-                ['code' => $e->getCode(), 'error' => $e->getMessage()]
-            );
-        }
-
-        return null;
     }
 
     /**
@@ -189,6 +164,7 @@ final class ApiReportClient
         ];
 
         try {
+            // POST запрос с GET параметрами.
             $response = $this->client->post('subforum/set_status_bulk', ['query' => $params]);
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $params);
