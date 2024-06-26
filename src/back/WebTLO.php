@@ -145,6 +145,28 @@ final class WebTLO
     /**
      * @return array<string, string>
      */
+    public function getSoftwareInfo(): array
+    {
+        $about['webtlo_version'] = $this->version;
+
+        $about['OS'] = PHP_OS;
+
+        $server = $_SERVER['SERVER_SOFTWARE'] ?? '';
+        if (!empty($server)) {
+            $about['web_server'] = $server;
+        }
+
+        $about['installation']   = $this->installation;
+        $about['git_sha']        = $this->sha;
+        $about['php_version']    = phpversion();
+        $about['sqlite_version'] = SQLite3::version()['versionString'];
+
+        return $about;
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function getAbout(): array
     {
         $system = array_filter([

@@ -32,7 +32,7 @@ try {
 
     if ($forumId === 0) {
         // Сводный отчёт
-        $output = $forumReports->getSummaryReport();
+        $output = $forumReports->getSummaryReport(true);
     } else {
         // Хранимые подразделы
         $forum = Forums::getForum($forumId);
