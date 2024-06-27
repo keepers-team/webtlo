@@ -32,7 +32,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: /tmp/composer-cache
-          key: ${{ runner.os }}-${{ github.repository }}-composer-${{ hashFiles('**/composer.lock') }}
+          key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            Composer-${{ runner.os }}-
 
       - name: Install dependencies
         uses: php-actions/composer@v6
