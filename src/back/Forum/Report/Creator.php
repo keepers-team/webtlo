@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Exception;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\ForumObject;
+use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
@@ -497,8 +498,8 @@ final class Creator
             sort($forumIds);
         }
 
-        $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
-        $include_forums = str_repeat('?,', count($forumIds) - 1) . '?';
+        $includeForums  = KeysObject::create($forumIds);
+        $excludeClients = KeysObject::create($this->excludeClientsIDs);
 
         // Вытаскиваем из базы хранимое.
         $values = $this->db->query(
@@ -522,13 +523,13 @@ final class Creator
                 INNER JOIN (
                     SELECT info_hash, MAX(done) done
                     FROM Torrents
-                    WHERE error = 0 AND client_id NOT IN ($client_exclude)
+                    WHERE error = 0 AND client_id NOT IN ($excludeClients->keys)
                     GROUP BY info_hash
                 ) tr ON tp.info_hash = tr.info_hash
-                WHERE tp.forum_id IN ($include_forums)
+                WHERE tp.forum_id IN ($includeForums->keys)
             )
             GROUP BY forum_id",
-            array_merge($this->excludeClientsIDs, $forumIds),
+            array_merge($excludeClients->values, $includeForums->values),
             PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
 
@@ -576,7 +577,7 @@ final class Creator
         }
 
         // Получение данных о раздачах подраздела.
-        $client_exclude = str_repeat('?,', count($this->excludeClientsIDs) - 1) . '?';
+        $excludeClients = KeysObject::create($this->excludeClientsIDs);
 
         $topics = $this->db->query(
             "
@@ -590,11 +591,11 @@ final class Creator
                     MAX(tr.done) AS done
                 FROM Topics tp
                 INNER JOIN Torrents tr ON tr.info_hash = tp.info_hash
-                WHERE tp.forum_id = ? AND tr.error = 0 AND tr.client_id NOT IN ($client_exclude)
+                WHERE tp.forum_id = ? AND tr.error = 0 AND tr.client_id NOT IN ($excludeClients->keys)
                 GROUP BY tp.id, tp.info_hash, tp.forum_id, tp.name, tp.size, tp.status
                 ORDER BY tp.id
             ",
-            array_merge([$forum_id], $this->excludeClientsIDs),
+            array_merge([$forum_id], $excludeClients->values),
         );
 
         if (empty($topics)) {
