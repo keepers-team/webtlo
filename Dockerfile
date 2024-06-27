@@ -1,14 +1,14 @@
-FROM alpine:3.17 as base
+FROM alpine:3.17 AS base
 
 # environment
-ENV TZ Europe/Moscow
-ENV TERM "xterm-color"
-ENV S6_OVERLAY_VERSION v3.1.4.2
-ENV S6_KEEP_ENV 1
-ENV S6_BEHAVIOUR_IF_STAGE2_FAILS 2
-ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME 0
-ENV S6_SERVICES_GRACETIME 1000
-ENV S6_KILL_GRACETIME 1000
+ENV TZ="Europe/Moscow"
+ENV TERM="xterm-color"
+ENV S6_OVERLAY_VERSION="v3.1.4.2"
+ENV S6_KEEP_ENV=1
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+ENV S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0
+ENV S6_SERVICES_GRACETIME=1000
+ENV S6_KILL_GRACETIME=1000
 
 # packages & configure
 RUN apk add --update --no-cache \
@@ -35,10 +35,10 @@ RUN \
 COPY docker/rootfs /
 
 # set application-specific environment
-ENV WEBTLO_UID 1000
-ENV WEBTLO_GID 1000
+ENV WEBTLO_UID=1000
+ENV WEBTLO_GID=1000
 # set cron environment
-ENV WEBTLO_DIR "/data/storage"
+ENV WEBTLO_DIR="/data/storage"
 ENV WEBTLO_CRON="true" \
     CRON_UPDATE="15 * * * *" \
     CRON_CONTROL="25 * * * *" \
@@ -53,20 +53,20 @@ SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
 
 # install composer
-FROM composer as builder
+FROM composer AS builder
 COPY src/composer.* ./
 COPY src/back back
-RUN composer install --no-dev && composer dump-autoload -o
+RUN composer install --no-dev --no-progress && composer dump-autoload -o
 
 # image for development
-FROM base as dev
+FROM base AS dev
 RUN apk add --update --no-cache php81-phar php81-pecl-xdebug php81-tokenizer
 COPY /docker/debug /etc/php81/conf.d
 # copy composer parts
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 # image for production
-FROM base as prod
+FROM base AS prod
 # copy application to workdir
 COPY src .
 # copy composer parts
