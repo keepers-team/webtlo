@@ -27,10 +27,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: php-actions/composer@v6
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ github.repository }}-composer-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install dependencies
+        uses: php-actions/composer@v6
         with:
           working_dir: src
           args: --ignore-platform-reqs
+
       - name: PHPStan Static Analysis
         uses: php-actions/phpstan@v3
         with:
