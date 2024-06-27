@@ -13,9 +13,9 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .php-cs-fixer.cache
-          key: ${{ runner.OS }}-${{ github.repository }}-phpcsfixer-${{ github.sha }}
+          key: PhpCsFixer-${{ github.repository }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.OS }}-${{ github.repository }}-phpcsfixer-
+            PhpCsFixer-${{ github.repository }}-
 
       - name: PHP-CS-Fixer
         uses: docker://oskarstark/php-cs-fixer-ga
