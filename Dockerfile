@@ -1,4 +1,4 @@
-FROM alpine:3.17 as base
+FROM alpine:3.17 AS base
 
 # environment
 ENV TZ Europe/Moscow
@@ -53,20 +53,20 @@ SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
 
 # install composer
-FROM composer as builder
+FROM composer AS builder
 COPY src/composer.* ./
 COPY src/back back
-RUN composer install --no-dev && composer dump-autoload -o
+RUN composer install --no-dev --no-progress && composer dump-autoload -o
 
 # image for development
-FROM base as dev
+FROM base AS dev
 RUN apk add --update --no-cache php81-phar php81-pecl-xdebug php81-tokenizer
 COPY /docker/debug /etc/php81/conf.d
 # copy composer parts
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 # image for production
-FROM base as prod
+FROM base AS prod
 # copy application to workdir
 COPY src .
 # copy composer parts
