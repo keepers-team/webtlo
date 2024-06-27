@@ -27,17 +27,18 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           tags: |
-            type=ref,event=branch,prefix=-br-
-            type=sha,prefix=
+            type=sha,priority=200,prefix=
+            type=ref,priority=100,event=branch,prefix=-br-
 
       - name: Get git ref version, sha
         id: version
         run: |
-          suffix=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          sha=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          suffix=${{ fromJSON(steps.meta.outputs.json).tags[1] }}
           version=$( cd src && cat version.json | jq -r --arg V $suffix '.version + $V' )
           [ ${{ github.ref_type }} == 'tag' ] && version=${{ github.ref_name }}
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "sha=${{ fromJSON(steps.meta.outputs.json).tags[1] }}" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
           echo "webtlo-version=$version, sha=$sha"

@@ -16,6 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: /tmp/composer-cache
+          key: ${{ runner.os }}-${{ github.repository }}-composer-${{ hashFiles('**/composer.lock') }}
+
       - name: Install dependencies
         uses: php-actions/composer@v6
         with:
@@ -45,7 +52,7 @@ jobs:
             | jq '.installation="zip"' \
             > tmp.$$.json
           mv tmp.$$.json $json_version
-          
+
           zip -rm -9 "release/$zip_name" "$zip_dir"
 
           echo "Done $zip_name"
