@@ -16,6 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: /tmp/composer-cache
+          key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            Composer-${{ runner.os }}-
+
       - name: Install dependencies
         uses: php-actions/composer@v6
         with:
@@ -45,13 +54,45 @@ jobs:
             | jq '.installation="zip"' \
             > tmp.$$.json
           mv tmp.$$.json $json_version
-          
+
           zip -rm -9 "release/$zip_name" "$zip_dir"
 
           echo "Done $zip_name"
 
+
+      - name: Cache WebServer
+        id: cache_web_server
+        uses: actions/cache@v4
+        with:
+          path: /tmp/server_dir
+          key: WebServer-${{ runner.os }}-${{ vars.NGINX_VERSION || '1.24.0' }}-PHP-8.2
+
+      - name: Download web-server
+        if: steps.cache_web_server.outputs.cache-hit != 'true'
+        run: |
+          server_dir=/tmp/server_dir
+
+          rm -rf $server_dir
+          mkdir -p $server_dir/php
+
+          # Nginx: https://nginx.org/en/download.html
+          wget -nv -O nginx.zip "https://nginx.org/download/nginx-$NGINX_VERSION.zip"
+          unzip -d $server_dir nginx.zip
+          mv "$server_dir/nginx-$NGINX_VERSION" "$server_dir/nginx"
+
+          # PHP: https://windows.php.net/downloads Non-Thread-Safe
+          PHP_RELEASES='https://windows.php.net/downloads/releases'
+          PHP_RELEASE=$(curl -s "$PHP_RELEASES/releases.json" | jq -r '."8.2"."nts-vs16-x64".zip.path')
+
+          wget -nv -O php.zip "$PHP_RELEASES/$PHP_RELEASE"
+          unzip -d $server_dir/php php.zip
+        env:
+          NGINX_VERSION: ${{ vars.NGINX_VERSION || '1.24.0' }}
+
       - name: Build webtlo-win.zip
         run: |
+          server_dir=/tmp/server_dir
+
           zip_name="webtlo-win-${{ inputs.WEBTLO_VERSION }}.zip"
           zip_dir=webtlo-win
           json_version="src/version.json"
@@ -62,19 +103,7 @@ jobs:
           mv tmp.$$.json $json_version
 
           rm -rf $zip_dir
-          mkdir -p $zip_dir/php
-
-          # Nginx: https://nginx.org/en/download.html
-          wget -nv -O nginx.zip "https://nginx.org/download/nginx-$NGINX_VERSION.zip"
-          unzip -d $zip_dir nginx.zip
-          mv "$zip_dir/nginx-$NGINX_VERSION" "$zip_dir/nginx"
-
-          # PHP: https://windows.php.net/downloads Non-Thread-Safe
-          PHP_RELEASES='https://windows.php.net/downloads/releases'
-          PHP_RELEASE=$(curl -s "$PHP_RELEASES/releases.json" | jq -r '."8.2"."nts-vs16-x64".zip.path')
-
-          wget -nv -O php.zip "$PHP_RELEASES/$PHP_RELEASE"
-          unzip -d $zip_dir/php php.zip
+          cp -r $server_dir $zip_dir
 
           # CA certificates https://curl.se/docs/caextract.html
           wget -nv -O win/artifacts/php/ssl/cacert.pem https://curl.se/ca/cacert.pem
@@ -88,8 +117,6 @@ jobs:
           zip -rm -9 "release/$zip_name" "$zip_dir"
 
           echo "Done $zip_name"
-        env:
-          NGINX_VERSION: ${{ vars.NGINX_VERSION || '1.24.0' }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
