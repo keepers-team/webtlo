@@ -1,6 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use KeepersTeam\Webtlo\Forum\AccessCheck;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Legacy\Proxy;
@@ -108,9 +109,6 @@ class Reports
         $html = phpQuery::newDocumentHTML($data, 'UTF-8');
         unset($data);
 
-        // ссылка для скачивания (доступна модераторам, даже если раздача закрыта).
-        $downloadLink = $html->find('a.dl-link')->attr('href');
-
         // раздача в мусорке, не найдена
         $topicStatuses[] = $html->find('div.mrg_16')->text();
         // повтор, закрыто, не оформлена и т.п.
@@ -119,12 +117,12 @@ class Reports
         $topicStatuses[] = $html->find('div.attach_link i.normal b:first')->text();
 
         // статус
-        $topicStatus = implode('', array_filter($topicStatuses));
-        if (empty($topicStatus) && !empty($downloadLink)) {
-            $topicStatus = 'обновлено';
-        }
+        $topicStatus = trim(implode('', array_filter($topicStatuses)));
         if (empty($topicStatus)) {
             $topicStatus = 'неизвестно';
+        }
+        if (TorrentStatus::isValidStatusLabel($topicStatus)) {
+            $topicStatus = sprintf('обновлено (%s)', $topicStatus);
         }
 
         // имя
