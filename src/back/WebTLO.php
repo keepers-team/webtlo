@@ -47,10 +47,13 @@ final class WebTLO
 
         $result['version'] ??= 'git';
 
-        $git = self::getGitInfo();
-        if (null !== $git) {
-            $result['version'] .= '-br-' . $git['branch'];
-            $result['sha']     = $git['sha'];
+        // Если нет данных о версии, то пробуем их найти в Git.
+        if (empty($result['sha'])) {
+            $git = self::getGitInfo();
+            if (null !== $git) {
+                $result['version'] .= '-br-' . $git['branch'];
+                $result['sha']     = $git['sha'];
+            }
         }
 
         return new self(
@@ -219,6 +222,24 @@ final class WebTLO
     {
         if (null !== self::$git) {
             return self::$git;
+        }
+
+        $isCommandAvailable = static function(string $command): bool {
+            $pattern = 'command -v %s 2> /dev/null';
+            if ('WINNT' === PHP_OS) {
+                $pattern = 'where %s 2> nul';
+            }
+
+            $exec = shell_exec(sprintf($pattern, $command));
+            if (empty($exec)) {
+                return false;
+            }
+
+            return is_executable(trim($exec));
+        };
+
+        if (!$isCommandAvailable('git')) {
+            return null;
         }
 
         $branches = shell_exec('git branch -v --no-abbrev');
