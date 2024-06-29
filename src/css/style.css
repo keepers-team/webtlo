@@ -404,6 +404,10 @@ li.menu.ui-tabs-active {
     color: #dc3545;
 }
 
+.text-disabled {
+    opacity: .45;
+}
+
 /* settings */
 
 #settings {
