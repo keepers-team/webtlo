@@ -27,7 +27,8 @@ final class UnregisteredTopics implements ListInterface
         $statement = "
             SELECT
                 Torrents.topic_id AS topic_id,
-                CASE WHEN TopicsUnregistered.name IS '' OR TopicsUnregistered.name IS NULL THEN Torrents.name ELSE TopicsUnregistered.name END AS name,
+                COALESCE(TopicsUnregistered.name, Torrents.name) AS name,
+                COALESCE(Torrents.name, '') AS prev,
                 TopicsUnregistered.status,
                 Torrents.info_hash,
                 Torrents.total_size AS size,
@@ -39,8 +40,7 @@ final class UnregisteredTopics implements ListInterface
                 Torrents.error,
                 Torrents.done
             FROM TopicsUnregistered
-            LEFT JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
-            WHERE TopicsUnregistered.info_hash IS NOT NULL
+            INNER JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
             ORDER BY {$sort->fieldDirection()}
         ";
 
@@ -51,6 +51,12 @@ final class UnregisteredTopics implements ListInterface
             $topicStatus = $topicData['status'];
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly($topicData);
+
+            $details = '';
+            // Если имя раздачи отличается от имени в клиенте - выводим оба имени.
+            if (!empty($topicData['prev']) && $topicData['prev'] !== $topicData['name']) {
+                $details = sprintf('<span class="text-disabled">%s</span>', $topicData['prev']);
+            }
 
             // Типизируем данные раздачи в объект.
             $topic = Topic::fromTopicData($topicData, $topicState);
@@ -64,9 +70,9 @@ final class UnregisteredTopics implements ListInterface
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topicStatus] .= $this->output->formatTopic($topic);
+            $counter->list[$topicStatus] .= $this->output->formatTopic($topic, $details);
 
-            unset($topicStatus, $topicState, $topic);
+            unset($topicStatus, $topicState, $topic, $details);
         }
         unset($topics);
 
