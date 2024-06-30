@@ -120,44 +120,52 @@ final class Settings
         $config['proxy_address'] = $config['proxy_hostname'] . ':' . $config['proxy_port'];
         $config['proxy_auth']    = $config['proxy_login'] . ':' . $config['proxy_paswd'];
 
-        // авторизация
+        // Авторизация и хранительские ключи.
         $config['tracker_login'] = $ini->read('torrent-tracker', 'login');
         $config['tracker_paswd'] = $ini->read('torrent-tracker', 'password');
 
         $config['bt_key']  = $ini->read('torrent-tracker', 'bt_key');
         $config['api_key'] = $ini->read('torrent-tracker', 'api_key');
 
+        $config['user_id']      = $ini->read('torrent-tracker', 'user_id');
+        $config['user_session'] = $ini->read('torrent-tracker', 'user_session');
+
+        // Форум
+        $config['forum_url']        = basename($ini->read('torrent-tracker', 'forum_url', 'rutracker.org'));
+        $config['forum_url_custom'] = basename($ini->read('torrent-tracker', 'forum_url_custom'));
+        $config['forum_ssl']        = $ini->read('torrent-tracker', 'forum_ssl', 1);
+
+        $forum_schema = $config['forum_ssl'] ? 'https' : 'http';
+        $forum_url    = $config['forum_url'] === 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
+
+        $config['forum_base_url'] = $forum_url;
+        $config['forum_address']  = $forum_schema . '://' . $forum_url;
+
+        $config['forum_timeout']         = $ini->read('curl_setopt', 'forum_timeout', 40);
+        $config['forum_connect_timeout'] = $ini->read('curl_setopt', 'forum_connecttimeout', 40);
+
         // Апи для получения сведений о раздачах
         $config['api_url']        = basename($ini->read('torrent-tracker', 'api_url', 'api.rutracker.cc'));
         $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
+
+        $api_schema = $config['api_ssl'] ? 'https' : 'http';
+        $api_url    = $config['api_url'] === 'custom' ? $config['api_url_custom'] : $config['api_url'];
+
+        $config['api_base_url'] = $api_url;
+        $config['api_address']  = $api_schema . '://' . $api_url;
+
+        $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
+        $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
 
         // Апи для отправки отчётов.
         $config['report_url']        = basename($ini->read('torrent-tracker', 'report_url', 'rep.rutracker.cc'));
         $config['report_url_custom'] = basename($ini->read('torrent-tracker', 'report_url_custom'));
         $config['report_ssl']        = $ini->read('torrent-tracker', 'report_ssl', 1);
 
-        $config['user_id']      = $ini->read('torrent-tracker', 'user_id');
-        $config['user_session'] = $ini->read('torrent-tracker', 'user_session');
-
-        $config['forum_url']        = basename($ini->read('torrent-tracker', 'forum_url', 'rutracker.org'));
-        $config['forum_url_custom'] = basename($ini->read('torrent-tracker', 'forum_url_custom'));
-        $config['forum_ssl']        = $ini->read('torrent-tracker', 'forum_ssl', 1);
-
-        $api_schema   = $config['api_ssl'] ? 'https' : 'http';
-        $forum_schema = $config['forum_ssl'] ? 'https' : 'http';
-
-        $api_url   = $config['api_url'] === 'custom' ? $config['api_url_custom'] : $config['api_url'];
-        $forum_url = $config['forum_url'] === 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
-
-        $config['api_base_url']  = $api_url;
-        $config['api_address']   = $api_schema . '://' . $api_url;
-        $config['forum_address'] = $forum_schema . '://' . $forum_url;
-
-        $config['report_base_url']   = $config['report_url'] === 'custom' ? $config['report_url_custom'] : $config['report_url'];
-
-        $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
-        $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
+        $config['report_base_url'] = $config['report_url'] === 'custom'
+            ? $config['report_url_custom']
+            : $config['report_url'];
 
         // загрузки
         $config['save_dir']    = $ini->read('download', 'savedir', 'C:\Temp\\');

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\ApiReportClient;
@@ -54,6 +55,9 @@ final class AppContainer
 
             return AppLogger::create($logFile, $level);
         });
+
+        // Получение данных авторизации
+        $container->add(Credentials::class, fn() => Credentials::fromLegacy($container->get('config')));
 
         // Получаем настройки прокси.
         $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use Exception;
+
 /** Данные пользователя для доступа к форуму. */
 final class Credentials
 {
@@ -15,5 +17,17 @@ final class Credentials
         public readonly string  $apiKey,
         public readonly ?string $session = null,
     ) {
+    }
+
+    /**
+     * Проверим наличие нужных данных о пользователе.
+     *
+     * @param array<string, mixed> $cfg
+     * @return Credentials
+     * @throws Exception
+     */
+    public static function fromLegacy(array $cfg): self
+    {
+        return Validate::checkUser($cfg);
     }
 }
