@@ -614,12 +614,7 @@ final class Creator
 
     private function getReportTopicId(ForumObject $forum): ?int
     {
-        $topicId = $this->reportTopics?->getReportTopicId($forum->id);
-        if (null === $topicId) {
-            $topicId = $forum->topic_id;
-        }
-
-        return $topicId;
+        return $this->reportTopics?->getReportTopicId($forum->id);
     }
 
     public function clearCache(int $forumId): void
