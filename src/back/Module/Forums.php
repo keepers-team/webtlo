@@ -34,11 +34,13 @@ final class Forums
                 WHERE f.id = ?
             ';
 
-            $res = (array)Db::query_database_row($sql, [$forumId], true);
+            $res = Db::query_database_row($sql, [$forumId], true);
 
             if (empty($res)) {
                 throw new Exception("Error: Нет данных о хранимом подразделе № $forumId");
             }
+
+            $res = (array)$res;
             if (null !== $res['post_ids']) {
                 $res['post_ids'] = json_decode($res['post_ids'], true);
             }
@@ -63,18 +65,5 @@ final class Forums
             // TODO запись в лог.
             return '';
         }
-    }
-
-    /**
-     * Обновить список ид сообщений заданного подраздела.
-     *
-     * @param int   $forumId
-     * @param int[] $postList
-     */
-    public static function updatePostList(int $forumId, array $postList): void
-    {
-        $sql = 'INSERT INTO ForumsOptions (forum_id, post_ids) SELECT ?,?';
-
-        Db::query_database($sql, [$forumId, json_encode($postList)]);
     }
 }
