@@ -169,7 +169,7 @@ $(document).ready(function () {
 
         optionForum.attr('data-client', forumClient).data('client', forumClient);
         optionForum.attr('data-label', forumLabel).data('label', forumLabel);
-        optionForum.attr('data-save path', forumSavePath).data("save path", forumSavePath);
+        optionForum.attr('data-savepath', forumSavePath).data("savepath", forumSavePath);
         optionForum.attr('data-subdirectory', forumSubdirectory).data('subdirectory', forumSubdirectory);
         optionForum.attr('data-hide', forumHideTopics).data('hide', forumHideTopics);
         optionForum.attr('data-peers', forumControlPeers).data('peers', forumControlPeers);
