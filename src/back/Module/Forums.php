@@ -26,11 +26,8 @@ final class Forums
         $forum = self::$forums[$forumId] ?? null;
         if (null === $forum) {
             $sql = '
-                SELECT f.id, f.name, f.quantity, f.size,
-                       o.topic_id, o.author_id, o.author_name, o.author_post_id,
-                       o.post_ids
+                SELECT f.id, f.name, f.quantity, f.size
                 FROM Forums f
-                    LEFT JOIN ForumsOptions o ON o.forum_id = f.id
                 WHERE f.id = ?
             ';
 
@@ -40,11 +37,7 @@ final class Forums
                 throw new Exception("Error: Нет данных о хранимом подразделе № $forumId");
             }
 
-            $res = (array)$res;
-            if (null !== $res['post_ids']) {
-                $res['post_ids'] = json_decode($res['post_ids'], true);
-            }
-            $forum = new ForumObject(...$res);
+            $forum = new ForumObject(...(array)$res);
 
             self::$forums[$forumId] = $forum;
         }
