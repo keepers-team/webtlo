@@ -4,7 +4,7 @@ TorrentEditor.com API - Simple API to modify torrents
 Copyright (C) 2009  Tyler Alvord
 
 Web: http://torrenteditor.com
-IRC: #torrenteditor.com on efnet.org  
+IRC: #torrenteditor.com on efnet.org
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -147,26 +147,41 @@ class Torrent
     public function getTrackers()
     {
         // Load tracker list
-        $trackerlist = array();
+        $trackerList = [];
 
-        if ($this->torrent->get_value('announce-list')) {
-            $trackers = $this->torrent->get_value('announce-list')->get_plain();
-            foreach ($trackers as $key => $value) {
-                if (is_array($value->get_plain())) {
-                    foreach ($value as $key => $value2) {
-                        foreach ($value2 as $key => $value3) {
-                            array_push($trackerlist, $value3->get_plain());
+        $announceList = $this->torrent->get_value('announce-list');
+        if (!empty($announceList)) {
+            $trackers = $announceList->get_plain();
+            foreach ($trackers as $value) {
+                $level1 = $value->get_plain();
+
+                if (!empty($level1) && is_array($level1)) {
+                    foreach ($level1 as $value2) {
+                        $level2 = $value->get_plain();
+
+                        if (!empty($level2) && is_array($level2)) {
+                            foreach ($level2 as $value3) {
+                                $trackerList[] = $value3->get_plain();
+
+                                unset($value3);
+                            }
+                        } else {
+                            $trackerList[] = (string)$level2;
                         }
+
+                        unset($value2, $level2);
                     }
                 } else {
-                    array_push($trackerlist, $value->get_plain());
+                    $trackerList[] = (string)$level1;
                 }
+
+                unset($value, $level1);
             }
         } else if ($this->torrent->get_value('announce')) {
-            array_push($trackerlist, $this->torrent->get_value('announce')->get_plain());
+            $trackerList[] = $this->torrent->get_value('announce')->get_plain();
         }
 
-        return $trackerlist;
+        return $trackerList;
     }
 
     // Helper function to make adding a tracker easier
