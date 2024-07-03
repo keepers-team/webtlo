@@ -2,88 +2,101 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Config\ForumCredentials;
+use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Legacy\Proxy;
+
+$result = [
+    'bt_key'       => '',
+    'api_key'      => '',
+    'user_id'      => '',
+    'user_session' => '',
+    'captcha'      => '',
+    'captcha_path' => '',
+];
 
 try {
-    include_once dirname(__FILE__) . '/../classes/user_details.php';
+    // Подключаем контейнер.
+    $app = AppContainer::create();
 
-    App::init();
-
-    parse_str($_POST['cfg'], $cfg);
+    parse_str($_POST['cfg'], $config);
 
     if (
-        empty($cfg['tracker_username'])
-        || empty($cfg['tracker_password'])
-        || empty($cfg['forum_url'])
+        empty($config['tracker_username'])
+        || empty($config['tracker_password'])
     ) {
         throw new Exception();
     }
 
-    // капча
-    $cap_fields = [];
-    if (
-        !empty($_POST['cap_code'])
-        && !empty($_POST['cap_fields'])
-    ) {
-        $cap_code = $_POST['cap_code'];
-        $cap_fields = explode(',', $_POST['cap_fields']);
-        $cap_fields = [
-            $cap_fields[0] => $cap_fields[1],
-            $cap_fields[2] => $cap_code,
+    // Логин и пароль для авторизации на форуме.
+    $username = is_array($config['tracker_username'])
+        ? implode('', $config['tracker_username'])
+        : (string)$config['tracker_username'];
+    $password = is_array($config['tracker_password'])
+        ? implode('', $config['tracker_password'])
+        : (string)$config['tracker_password'];
+
+    $auth = ForumCredentials::fromFrontProperties(login: $username, password: $password);
+
+    // Заполненный пользователем код CAPTCHA.
+    $captchaFields = null;
+    if (!empty($_POST['cap_code']) && !empty($_POST['cap_fields'])) {
+        $captchaCode = (string)$_POST['cap_code'];
+
+        $fields = explode(',', (string)$_POST['cap_fields']);
+
+        $captchaFields = [
+            $fields[0] => $fields[1],
+            $fields[2] => $captchaCode,
         ];
-    };
 
-    // параметры прокси
-    $activate_forum = !empty($cfg['proxy_activate_forum']) ? 1 : 0;
-    $activate_api = !empty($cfg['proxy_activate_api']) ? 1 : 0;
-    $proxy_address = $cfg['proxy_hostname'] . ':' . $cfg['proxy_port'];
-    $proxy_auth = $cfg['proxy_login'] . ':' . $cfg['proxy_paswd'];
+        unset($captchaCode, $fields);
+    }
 
-    // устанавливаем прокси
-    Proxy::options(
-        (bool)$activate_forum,
-        (bool)$activate_api,
-        $cfg['proxy_type'],
-        $proxy_address,
-        $proxy_auth
+    $logger   = $app->getLogger();
+    $settings = $app->getSettings();
+    $proxy    = $app->get(Proxy::class);
+
+    // Подключаемся к форуму.
+    $forumClient = ForumClient::createFromLegacy(
+        settings : $settings,
+        forumAuth: $auth,
+        logger   : $logger,
+        proxy    : $proxy
     );
 
-    // адрес форума
-    $forum_schema = !empty($cfg['forum_ssl']) ? 'https' : 'http';
-    $forum_url = $cfg['forum_url'] == 'custom' ? $cfg['forum_url_custom'] : $cfg['forum_url'];
-    $forum_address = $forum_schema . '://' . $forum_url;
+    // Пробуем авторизоваться.
+    $captchaRequest = $forumClient->manualLogin(captcha: $captchaFields);
+    if (null === $captchaRequest) {
+        // Авторизация выполнена успешно.
+        $result['user_session'] = $forumClient->getUpdatedCookie();
 
-    // получаем ключи пользователя
-    UserDetails::get_details(
-        $forum_address,
-        $cfg['tracker_username'],
-        $cfg['tracker_password'],
-        $cap_fields
-    );
+        // Получаем хранительские ключи для доступа к API.
+        $apiCred = $forumClient->getApiCredentials();
+        if (null !== $apiCred) {
+            $result['bt_key']  = $apiCred->btKey;
+            $result['api_key'] = $apiCred->apiKey;
+            // Принудительный перевод в строку, т.к. jQuery считает int пустым объектом.
+            $result['user_id'] = (string)$apiCred->userId;
+        }
+    } else {
+        // Получили CAPTCHA с ошибкой авторизации.
+        $logger->warning($captchaRequest->message);
 
-    echo json_encode(
-        [
-            'bt_key' => UserDetails::$bt,
-            'api_key' => UserDetails::$api,
-            'user_id' => UserDetails::$uid,
-            'user_session' => UserDetails::$cookie,
-            'captcha' => '',
-            'captcha_path' => '',
-            'log' => Log::get(),
-        ]
-    );
+        $result['captcha']      = $captchaRequest->codes;
+        $result['captcha_path'] = $forumClient->fetchCaptchaImage(imageLink: $captchaRequest->image);
+    }
+
+    $logger->info('-- DONE --');
 } catch (Exception $e) {
-    Log::append($e->getMessage());
-    echo json_encode(
-        [
-            'bt_key' => '',
-            'api_key' => '',
-            'user_id' => '',
-            'captcha' => UserDetails::$captcha,
-            'captcha_path' => UserDetails::$captcha_path,
-            'log' => Log::get(),
-        ]
-    );
+    $mess = $e->getMessage();
+    if (!empty($mess)) {
+        Log::append($e->getMessage());
+    }
 }
+
+$result['log'] = Log::get();
+
+echo json_encode($result, JSON_UNESCAPED_UNICODE);
