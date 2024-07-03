@@ -307,10 +307,18 @@ class Reports
         if ($html->find('div.mrg_16')->text() === 'Тема не найдена') {
             return AccessCheck::USER_CANDIDATE;
         }
+
         $topic_title = $html->find('a#topic-title')->text();
-        if (!(str_ends_with($topic_title, '#3'))) {
-            return AccessCheck::VERSION_OUTDATED;
+
+        $matches = [];
+        if (preg_match('/#(\d+)$/', $topic_title, $matches)) {
+            $allowed = (int)$matches[1];
+
+            if (!($allowed <= 4)) {
+                return AccessCheck::VERSION_OUTDATED;
+            }
         }
+
         return null;
     }
 
