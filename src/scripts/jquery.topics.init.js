@@ -62,8 +62,8 @@ $(document).ready(function () {
             success: function (response) {
                 response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
-                showResultTopics(response.result);
                 getFilteredTopics();
+                showResultTopics(response.result);
             }
         });
     });

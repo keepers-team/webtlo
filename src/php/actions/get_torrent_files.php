@@ -2,7 +2,8 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Timers;
@@ -11,29 +12,20 @@ try {
     Timers::start('download');
 
     include_once dirname(__FILE__) . '/../torrenteditor.php';
-    include_once dirname(__FILE__) . '/../classes/download.php';
 
-    $result = "";
+    $result = '';
 
     // список выбранных раздач
     if (empty($_POST['topic_hashes'])) {
-        $result = "Выберите раздачи";
-        throw new Exception();
+        throw new RuntimeException('Выберите раздачи');
     }
 
-    // получение настроек
-    $cfg = App::getSettings();
+    $app = AppContainer::create();
+    $cfg = $app->getLegacyConfig();
+    $log = $app->getLogger();
 
-    // проверка настроек
-    if (empty($cfg['api_key'])) {
-        $result = "В настройках не указан хранительский ключ API";
-        throw new Exception();
-    }
-
-    if (empty($cfg['user_id'])) {
-        $result = "В настройках не указан хранительский ключ ID";
-        throw new Exception();
-    }
+    // Ключи для скачивания файлов.
+    $apiCredentials = $app->get(ApiCredentials::class);
 
     // идентификатор подраздела
     $forum_id = $_POST['forum_id'] ?? 0;
@@ -48,8 +40,7 @@ try {
     $torrent_files_path = !$replace_passkey ? $cfg['save_dir'] : $cfg['dir_torrents'];
 
     if (empty($torrent_files_path)) {
-        $result = "В настройках не указан каталог для скачивания торрент-файлов";
-        throw new Exception();
+        throw new Exception('В настройках не указан каталог для скачивания торрент-файлов');
     }
 
     // дополнительный слэш в конце каталога
@@ -58,10 +49,7 @@ try {
     }
 
     // создание подкаталога
-    if (
-        !$replace_passkey
-        && $cfg['savesub_dir']
-    ) {
+    if (!$replace_passkey && $cfg['savesub_dir']) {
         $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
     }
 
@@ -78,8 +66,13 @@ try {
         );
     }
 
-    // скачивание торрент-файлов
-    $download = new TorrentDownload($cfg['forum_address']);
+    $forumClient = $app->getForumClient();
+    if (!$forumClient->checkConnection()) {
+        throw new RuntimeException('Ошибка подключения к форуму.');
+    }
+
+    // Записываем ключи доступа к API.
+    $forumClient->setApiCredentials(apiCredentials: $apiCredentials);
 
     $log_string = sprintf(
         "Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ",
@@ -92,17 +85,24 @@ try {
                 ? 'Замена Passkey: ' .$cfg['user_passkey']
                 : 'Passkey пуст.';
     }
-    Log::append($log_string);
+    $log->info($log_string);
 
-    // применяем таймауты
-    $download->setUserConnectionOptions($cfg['curl_setopt']['forum']);
+    $addRetracker = (bool)($cfg['retracker'] ?? false);
 
     $torrent_files_downloaded = [];
     foreach ($topicHashes['topic_hashes'] as $topicHash) {
-        $data = $download->getTorrentFile($cfg['api_key'], $cfg['user_id'], $topicHash, $cfg['retracker']);
-        if ($data === false) {
+        $topicHash = (string)$topicHash;
+
+        $data = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $addRetracker);
+        if (null === $data) {
             continue;
         }
+
+        $data = $data->getContents();
+        if (empty($data)){
+            continue;
+        }
+
         // меняем пасскей
         if ($replace_passkey) {
             $torrent = new Torrent();
@@ -110,6 +110,7 @@ try {
                 Log::append("Error: $torrent->error ($topicHash).");
                 break;
             }
+
             $trackers = $torrent->getTrackers();
             foreach ($trackers as &$tracker) {
                 // Если задан пустой заменный ключ, то пихаем дефолтный 'ann?magnet'
@@ -123,24 +124,31 @@ try {
                 if ($cfg['tor_for_user']) {
                     $tracker = preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
                 }
+
+                unset($tracker);
             }
-            unset($tracker);
             $torrent->setTrackers($trackers);
             $data = $torrent->bencode();
+
+            unset($trackers, $torrent);
         }
         // сохранить в каталог
-        $file_put_contents = file_put_contents(
+        $fileSaved = file_put_contents(
             sprintf(
                 $torrent_files_path_pattern,
                 $topicHash
             ),
             $data
         );
-        if ($file_put_contents === false) {
-            Log::append("Произошла ошибка при сохранении торрент-файла ($topicHash)");
+        if ($fileSaved === false) {
+            $log->warning("Произошла ошибка при сохранении торрент-файла ($topicHash)");
+
             continue;
         }
+
         $torrent_files_downloaded[] = $topicHash;
+
+        unset($topicHash, $data, $fileSaved);
     }
     unset($topicHashes);
 
@@ -150,6 +158,9 @@ try {
         count($torrent_files_downloaded),
         Timers::getExecTime('download')
     );
+
+    $log->info($result);
+    $log->info('-- DONE --');
 } catch (Exception $e) {
     $result = $e->getMessage();
     Log::append($result);
@@ -158,4 +169,4 @@ try {
 echo json_encode([
     'log' => Log::get(),
     'result' => $result,
-]);
+], JSON_UNESCAPED_UNICODE);
