@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require __DIR__ . '/../../vendor/autoload.php';
+
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -10,10 +12,6 @@ use KeepersTeam\Webtlo\Forum\SendReport;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
-
-include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/reports.php';
-include_once dirname(__FILE__) . '/../classes/user_details.php';
 
 $app = AppContainer::create('reports.log');
 $log = $app->getLogger();
@@ -143,7 +141,7 @@ if ($sendReport->isEnable()) {
 
     // Запишем таймеры в журнал.
     if (!empty($Timers)) {
-        $log->debug(json_encode($Timers));
+        $log->debug((string)json_encode($Timers));
     }
 
     if ($apiReportCount > 0) {
@@ -170,34 +168,19 @@ if ($sendSummaryReport) {
         }
 
         // Подключаемся к форуму.
-        $reports = new Reports(
-            $cfg['forum_address'],
-            $user,
-        );
+        $forumClient = $app->getForumClient();
 
-        // Применяем таймауты.
-        $reports->curl_setopts($cfg['curl_setopt']['forum']);
-
-        // Проверяем возможность работы с форумом.
-        if ($unavailable = $reports->check_access()) {
-            throw new Exception($unavailable->value);
+        // Проверяем доступ к форуму.
+        if (!$forumClient->checkConnection()) {
+            throw new RuntimeException('Ошибка подключения к форуму.');
         }
 
         Timers::start('send_summary');
         // Формируем сводный отчёт.
         $forumSummary = $forumReports->getSummaryReport(true);
 
-        // Ищем своё сообщение со сводным отчётом (если есть).
-        $summaryPostId = $reports->search_post_id(ReportCreator::SUMMARY_FORUM, true);
-
-        $summaryPostMode = empty($summaryPostId) ? 'reply' : 'editpost';
         // Отправляем сводный отчёт.
-        $reports->send_message(
-            $summaryPostMode,
-            $forumSummary,
-            ReportCreator::SUMMARY_FORUM,
-            $summaryPostId
-        );
+        $forumClient->sendSummaryReport($user->userId, $forumSummary);
 
         // Запишем время отправки отчётов.
         $updateTime->setMarkerTime(UpdateMark::SEND_REPORT->value);

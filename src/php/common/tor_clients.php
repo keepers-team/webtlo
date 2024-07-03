@@ -1,11 +1,9 @@
 <?php
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
-include_once dirname(__FILE__) . '/../classes/reports.php';
 
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
-use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
@@ -266,13 +264,14 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 
         // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
         if (!empty($unregisteredTopics)) {
-            $user = ConfigValidate::checkUser($cfg);
+            $forumClient = $app->getForumClient();
 
-            $forumReports = new Reports($forumDomain, $user);
-            $forumReports->curl_setopts($cfg['curl_setopt']['forum']);
+            if (!$forumClient->checkConnection()){
+                throw new RuntimeException('Ошибка подключения к форуму. Поиск прекращён.');
+            }
 
             foreach ($unregisteredTopics as $topicID => $infoHash) {
-                $topicData = $forumReports->getDataUnregisteredTopic((int)$topicID);
+                $topicData = $forumClient->getUnregisteredTopic((int)$topicID);
                 if (null === $topicData) {
                     continue;
                 }
@@ -313,4 +312,4 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
 }
 $tabUnregistered->clearUnusedRows();
 
-$logger->debug(json_encode($timers));
+$logger->debug((string)json_encode($timers));
