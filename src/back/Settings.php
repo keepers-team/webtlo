@@ -13,6 +13,11 @@ use PDO;
 
 final class Settings
 {
+    /**
+     * @var ?array<string, mixed>
+     */
+    private static ?array $config = null;
+
     public function __construct(
         private readonly TIniFileEx $ini
     ) {
@@ -23,6 +28,10 @@ final class Settings
      */
     public function populate(): array
     {
+        if (null !== self::$config) {
+            return self::$config;
+        }
+
         $ini    = $this->ini;
         $config = [];
 
@@ -306,7 +315,7 @@ final class Settings
             $config['proxy_auth']
         );
 
-        return $config;
+        return self::$config = $config;
     }
 
     /**
@@ -731,5 +740,11 @@ final class Settings
 
             return [];
         }
+    }
+
+    public function setForumCookie(string $cookie): void
+    {
+        $this->ini->write('torrent-tracker', 'user_session', trim($cookie));
+        $this->ini->writeFile();
     }
 }

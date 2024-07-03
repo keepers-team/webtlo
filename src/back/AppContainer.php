@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Credentials;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
@@ -44,9 +47,8 @@ final class AppContainer
         $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
 
         // Подключаем файл конфига, 'config.ini' по-умолчанию.
-        $container->add('config', function() {
-            return (new Settings(new TIniFileEx()))->populate();
-        });
+        $container->add(Settings::class, fn() => new Settings(ini: new TIniFileEx()));
+        $container->add('config', fn() => $container->get(Settings::class)->populate());
 
         // Добавляем интерфейс для записи логов.
         $container->add(LoggerInterface::class, function() use ($container, $logFile) {
@@ -58,9 +60,22 @@ final class AppContainer
 
         // Получение данных авторизации
         $container->add(Credentials::class, fn() => Credentials::fromLegacy($container->get('config')));
+        $container->add(ApiCredentials::class, fn() => ApiCredentials::fromLegacy($container->get('config')));
+        $container->add(ForumCredentials::class, fn() => ForumCredentials::fromLegacy($container->get('config')));
 
         // Получаем настройки прокси.
         $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));
+
+        // Добавляем клиент для работы с Форумом.
+        $container->add(ForumClient::class, function() use ($container) {
+            $logger = $container->get(LoggerInterface::class);
+
+            $settings = $container->get(Settings::class);
+            $proxy    = $container->get(Proxy::class);
+            $cred     = $container->get(ForumCredentials::class);
+
+            return ForumClient::createFromLegacy($settings, $cred, $logger, $proxy);
+        });
 
         // Добавляем клиент для работы с API.
         $container->add(ApiClient::class, function() use ($container) {
@@ -113,6 +128,11 @@ final class AppContainer
     public function getLegacyConfig(): array
     {
         return $this->get('config');
+    }
+
+    public function getForumClient(): ForumClient
+    {
+        return $this->get(ForumClient::class);
     }
 
     public function getApiClient(): ApiClient
