@@ -136,6 +136,35 @@ if ($sendReport->isEnable()) {
 
     // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
     if (count($forumsToReport)) {
+        try {
+            // Получаем обновлённые раздачи, которые можно отправить.
+            $refreshedTopics = $forumReports->getRefreshedTopics($forumsToReport);
+            if (null !== $refreshedTopics) {
+                // Минимальная дата обновления раздачи, среди найденных обновлённых раздач, -1 день.
+                $minDate = min(array_column($refreshedTopics, 'registered'));
+                $minDate = Helper::makeDateTime($minDate)->sub(new DateInterval('P1D'));
+
+                $refreshedTopics = array_column($refreshedTopics, 'topic_id');
+
+                // Отправляем обновлённые раздачи, чтобы они отображались как "Хранит | Прошлая версия".
+                $apiResult = $sendReport->sendUnregisteredTopics(
+                    topicsToReport: $refreshedTopics,
+                    reportDate    : $minDate,
+                );
+
+                $log->debug('API. Обновлённые раздачи отправлены', $apiResult);
+                unset($minDate, $apiResult);
+            }
+
+            unset($refreshedTopics);
+        } catch (Exception $e) {
+            $log->notice(
+                'Попытка отправки отчёта через API для обновлённых раздач не удалась. Причина {error}',
+                ['error' => $e->getMessage()]
+            );
+        }
+
+        // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
         $unsetOtherForums = (bool)($cfg['reports']['unset_other_forums'] ?? true);
 
         $setStatus = $sendReport->setForumsStatus($forumsToReport, $unsetOtherForums);
