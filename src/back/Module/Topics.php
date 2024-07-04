@@ -11,9 +11,6 @@ use PDO;
 /** Методы для работы с раздачами в хранимых подразделах. */
 final class Topics
 {
-    /** Допустимые статус раздач */
-    public const VALID_STATUSES = [0, 2, 3, 8, 10];
-
     /**
      * Поиск в БД ид раздач, по хешу
      *
@@ -39,23 +36,5 @@ final class Topics
         }
 
         return array_merge(...$result);
-    }
-
-    /**
-     * Удаление раздач по списку их ИД
-     *
-     * @param int[] $topics
-     */
-    public static function deleteTopicsByIds(array $topics): void
-    {
-        $topics = array_chunk($topics, 500);
-        foreach ($topics as $chunk) {
-            $delete = KeysObject::create($chunk);
-            Db::query_database(
-                "DELETE FROM Topics WHERE id IN ($delete->keys)",
-                $delete->values
-            );
-            unset($chunk, $delete);
-        }
     }
 }

@@ -9,6 +9,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
+use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Module\CloneTable;
@@ -208,7 +209,7 @@ if ($cfg['update']['untracked']) {
         } elseif (!empty($response->topics)) {
             foreach ($response->topics as $topicData) {
                 // Пропускаем раздачи в невалидных статусах.
-                if (!in_array($topicData->status->value, Topics::VALID_STATUSES)) {
+                if (!TorrentStatus::isValidStatus($topicData->status)) {
                     $unregisteredApiTopics[$topicData->hash] = $topicData;
 
                     continue;
