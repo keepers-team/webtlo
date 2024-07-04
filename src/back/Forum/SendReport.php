@@ -85,6 +85,32 @@ final class SendReport
     }
 
     /**
+     * @param int[]             $topicsToReport
+     * @param DateTimeInterface $reportDate
+     * @return array<string, mixed>
+     */
+    public function sendUnregisteredTopics(array $topicsToReport, DateTimeInterface $reportDate): array
+    {
+        $result = [
+            'refreshedTopics' => count($topicsToReport),
+            'reportedDate'    => $reportDate,
+        ];
+
+        // Отправляем отчёт о скачанных раздачах.
+        $completeReport = $this->apiReport->reportKeptReleases(
+            forumId   : 0,
+            topicIds  : $topicsToReport,
+            status    : KeepingStatuses::ReportedByApi->value,
+            reportDate: $reportDate,
+        );
+        if (null !== $completeReport) {
+            $result['refreshedComplete'] = $completeReport;
+        }
+
+        return $result;
+    }
+
+    /**
      * @param int[] $forumIds
      * @param bool  $unsetOtherForums
      * @return array<string, mixed>

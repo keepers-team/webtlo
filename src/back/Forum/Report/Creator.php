@@ -25,8 +25,7 @@ use RuntimeException;
  */
 final class Creator
 {
-    /** Ид темы для публикации сводных отчётов */
-    public const SUMMARY_FORUM = 4275633;
+    use Traits\RefreshedTopics;
 
     /** @var int[] */
     public ?array $forums = null;
@@ -663,13 +662,14 @@ final class Creator
      */
     private function setForums(): void
     {
-        // Идентификаторы хранимых подразделов.
-        $forums = array_keys($this->config['subsections'] ?? []);
-        if (!count($forums)) {
+        if (empty($this->config['subsections'])) {
             throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
         }
 
-        $this->forums = $forums;
+        // Идентификаторы хранимых подразделов.
+        $forums = array_keys($this->config['subsections']);
+
+        $this->forums = array_map('intval', $forums);
     }
 
     /**
