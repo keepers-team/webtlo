@@ -9,13 +9,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "sunday"
-      time: "14:00"
+      day: "friday"
+      time: "11:00"
       timezone: "Europe/Moscow"
     commit-message:
       prefix: "[github-actions] "
     rebase-strategy: "auto"
-    milestone: 7
+    milestone: 8
     open-pull-requests-limit: 3
     labels:
       - "C: Distribution"
@@ -25,13 +25,13 @@ updates:
     directory: "/src"
     schedule:
       interval: "weekly"
-      day: "sunday"
-      time: "15:00"
+      day: "friday"
+      time: "12:00"
       timezone: "Europe/Moscow"
     commit-message:
       prefix: "[composer] "
     rebase-strategy: "auto"
-    milestone: 7
+    milestone: 8
     open-pull-requests-limit: 3
     labels:
       - "C: Backend"
