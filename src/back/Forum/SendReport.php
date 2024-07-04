@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Forum;
 
+use DateTimeInterface;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
@@ -27,9 +28,10 @@ final class SendReport
     /**
      * @param int                    $forumId
      * @param array<string, mixed>[] $topicsToReport
+     * @param DateTimeInterface      $reportDate
      * @return array<string, mixed>
      */
-    public function sendForumTopics(int $forumId, array $topicsToReport): array
+    public function sendForumTopics(int $forumId, array $topicsToReport, DateTimeInterface $reportDate): array
     {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
@@ -59,7 +61,8 @@ final class SendReport
             $forumId,
             $downloadedTopics,
             KeepingStatuses::ReportedByApi->value,
-            true
+            $reportDate,
+            true,
         );
         if (null !== $completeReport) {
             $result['reportComplete'] = $completeReport;
@@ -71,6 +74,7 @@ final class SendReport
                 $forumId,
                 $downloadingTopics,
                 KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
+                $reportDate,
             );
             if (null !== $downloadingReport) {
                 $result['reportDownloading'] = $downloadingReport;

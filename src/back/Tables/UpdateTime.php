@@ -117,9 +117,9 @@ final class UpdateTime
      *
      * @param int[]           $markers
      * @param LoggerInterface $logger
-     * @return bool
+     * @return ?DateTimeImmutable
      */
-    public function checkReportsSendAvailable(array $markers, LoggerInterface $logger): bool
+    public function checkReportsSendAvailable(array $markers, LoggerInterface $logger): ?DateTimeImmutable
     {
         $update = self::checkFullUpdate($markers);
 
@@ -127,7 +127,7 @@ final class UpdateTime
             $update->addLogRecord($logger);
             $logger->error('Отправка отчётов невозможна. Данные в локальной БД неполные. Выполните полное обновление сведений.');
 
-            return false;
+            return null;
         }
 
         if ($update->getLastCheckStatus() === UpdateStatus::EXPIRED) {
@@ -137,13 +137,13 @@ final class UpdateTime
                 ['date' => $update->getMinUpdate()->format('d.m.y H:i')]
             );
 
-            return false;
+            return null;
         }
 
         // Запишем минимальную дату обновления всех сведений.
         $this->setMarkerTime(UpdateMark::FULL_UPDATE->value, $update->getMinUpdate());
 
-        return true;
+        return $update->getMinUpdate();
     }
 
     /**

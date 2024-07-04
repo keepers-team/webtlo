@@ -70,10 +70,10 @@ $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report'
 $updateTime = $app->get(UpdateTime::class);
 
 // Проверим полное обновление.
-if (!$updateTime->checkReportsSendAvailable($forumReports->forums, $log)) {
+$fullUpdateTime = $updateTime->checkReportsSendAvailable($forumReports->forums, $log);
+if (null === $fullUpdateTime) {
     return;
 }
-
 
 // Если API доступно - отправляем отчёты.
 if ($sendReport->isEnable()) {
@@ -106,7 +106,11 @@ if ($sendReport->isEnable()) {
             $timer['search_db'] = Timers::getExecTime("search_db_$forum_id");
 
             // Пробуем отправить отчёт по API.
-            $apiResult = $sendReport->sendForumTopics((int)$forum_id, $topicsToReport);
+            $apiResult = $sendReport->sendForumTopics(
+                forumId: (int)$forum_id,
+                topicsToReport: $topicsToReport,
+                reportDate: $fullUpdateTime,
+            );
 
             $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
 
