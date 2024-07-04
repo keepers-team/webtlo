@@ -8,5 +8,3 @@ parameters:
     analyse:
       - src/index.php
       - src/vendor
-      - src/php/bencode.php
-      - src/php/torrenteditor.php
