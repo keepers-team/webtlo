@@ -4,7 +4,7 @@
     "type": "project",
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "license": "GPLv3",
+    "license": "GPL-3.0-only",
     "autoload": {
         "psr-4": {
             "KeepersTeam\\Webtlo\\": "back/"
@@ -20,10 +20,12 @@
         "guzzlehttp/guzzle": "^7.8",
         "caseyamcl/guzzle_retry_middleware": "^2.9",
         "ext-curl": "*",
+        "ext-dom": "*",
+        "ext-libxml": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
-        "ext-xml": "*",
-        "ext-sqlite3": "*"
+        "ext-sqlite3": "*",
+        "ext-xml": "*"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
