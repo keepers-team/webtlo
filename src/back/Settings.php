@@ -8,7 +8,6 @@ use Exception;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Legacy\Proxy;
 use PDO;
 
 final class Settings
@@ -158,11 +157,9 @@ final class Settings
         $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
 
-        $api_schema = $config['api_ssl'] ? 'https' : 'http';
-        $api_url    = $config['api_url'] === 'custom' ? $config['api_url_custom'] : $config['api_url'];
-
-        $config['api_base_url'] = $api_url;
-        $config['api_address']  = $api_schema . '://' . $api_url;
+        $config['api_base_url'] = $config['api_url'] === 'custom'
+            ? $config['api_url_custom']
+            : $config['api_url'];
 
         $config['api_timeout']         = $ini->read('curl_setopt', 'api_timeout', 40);
         $config['api_connect_timeout'] = $ini->read('curl_setopt', 'api_connecttimeout', 40);
@@ -214,22 +211,6 @@ final class Settings
             'priority'     => $ini->read('update', 'priority', 0),
             'untracked'    => $ini->read('update', 'untracked', 1),
             'unregistered' => $ini->read('update', 'unregistered', 1),
-        ];
-
-        // таймауты
-        $config['curl_setopt'] = [
-            'api'            => [
-                CURLOPT_TIMEOUT        => $ini->read('curl_setopt', 'api_timeout', 40),
-                CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'api_connecttimeout', 40),
-            ],
-            'forum'          => [
-                CURLOPT_TIMEOUT        => $ini->read('curl_setopt', 'forum_timeout', 40),
-                CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'forum_connecttimeout', 40),
-            ],
-            'torrent_client' => [
-                CURLOPT_TIMEOUT        => $ini->read('curl_setopt', 'torrent_client_timeout', 40),
-                CURLOPT_CONNECTTIMEOUT => $ini->read('curl_setopt', 'torrent_client_connecttimeout', 40),
-            ],
         ];
 
         // версия конфига
@@ -305,15 +286,6 @@ final class Settings
             $ini->write("other", "user_version", 3);
             $ini->writeFile();
         }
-
-        // установка настроек прокси
-        Proxy::options(
-            (bool)$config['proxy_activate_forum'],
-            (bool)$config['proxy_activate_api'],
-            $config['proxy_type'],
-            $config['proxy_address'],
-            $config['proxy_auth']
-        );
 
         return self::$config = $config;
     }
