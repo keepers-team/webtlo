@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External;
 
+use DateTimeInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
@@ -53,22 +54,25 @@ final class ApiReportClient
     }
 
     /**
-     * @param int   $forumId
-     * @param int[] $topicIds
-     * @param int   $status
-     * @param bool  $excludeOtherReleases
+     * @param int               $forumId
+     * @param int[]             $topicIds
+     * @param int               $status
+     * @param DateTimeInterface $reportDate
+     * @param bool              $excludeOtherReleases
      * @return ?array<string, int>
      */
     public function reportKeptReleases(
-        int   $forumId,
-        array $topicIds,
-        int   $status,
-        bool  $excludeOtherReleases = false,
+        int               $forumId,
+        array             $topicIds,
+        int               $status,
+        DateTimeInterface $reportDate,
+        bool              $excludeOtherReleases = false,
     ): ?array {
         $params = [
             'keeper_id'                           => $this->cred->userId,
             'topic_ids'                           => $topicIds,
             'status'                              => $status,
+            'last_update_time'                    => $reportDate->format(DateTimeInterface::ATOM),
             'reported_subforum_id'                => $forumId,
             'unreport_other_releases_in_subforum' => $excludeOtherReleases,
         ];
