@@ -9,11 +9,13 @@ use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Module\CloneTable;
 use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Tables\TopicsUnregistered;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
@@ -59,13 +61,6 @@ $tabTorrents = CloneTable::create(
 $tabUntracked = CloneTable::create(
     'TopicsUntracked',
     ['id','forum_id','name','info_hash','seeders','size','status','reg_time'],
-);
-
-// Таблица хранимых раздач, более не зарегистрированных на форуме.
-$tabUnregistered = CloneTable::create(
-    'TopicsUnregistered',
-    ['info_hash','name','status','priority','transferred_from','transferred_to','transferred_by_whom'],
-    'info_hash'
 );
 
 
@@ -179,6 +174,7 @@ Db::query_database("
 ", $failedClients->values);
 
 
+$unregisteredApiTopics = [];
 // Найдём раздачи из не хранимых подразделов.
 if ($cfg['update']['untracked']) {
     Timers::start('search_untracked');
@@ -215,6 +211,8 @@ if ($cfg['update']['untracked']) {
             foreach ($response->topics as $topicData) {
                 // Пропускаем раздачи в невалидных статусах.
                 if (!in_array($topicData->status->value, Topics::VALID_STATUSES)) {
+                    $unregisteredApiTopics[$topicData->hash] = $topicData;
+
                     continue;
                 }
 
@@ -255,68 +253,63 @@ if ($cfg['update']['untracked']) {
 $tabUntracked->clearUnusedRows();
 
 
+/** @var TopicsUnregistered $tabUnregistered */
+$tabUnregistered = $app->get(TopicsUnregistered::class);
+
 // Найдём разрегистрированные раздачи.
 if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
     Timers::start('search_unregistered');
-    $topicsUnregistered = Db::query_database(
-        "
-            SELECT
-                Torrents.info_hash,
-                Torrents.topic_id
-            FROM Torrents
-            LEFT JOIN Topics ON Topics.info_hash = Torrents.info_hash
-            LEFT JOIN TopicsUntracked ON TopicsUntracked.info_hash = Torrents.info_hash
-            WHERE Topics.info_hash IS NULL
-                AND TopicsUntracked.info_hash IS NULL
-                AND Torrents.topic_id <> ''
-        ",
-        [],
-        true,
-        PDO::FETCH_KEY_PAIR
-    );
 
-    if (!empty($topicsUnregistered)) {
-        if (!isset($reports)) {
+    try {
+        $unregisteredTopics = $tabUnregistered->searchUnregisteredTopics();
+
+        // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
+        if (!empty($unregisteredTopics)) {
             $user = ConfigValidate::checkUser($cfg);
 
-            $reports = new Reports($forumDomain, $user);
-            $reports->curl_setopts($cfg['curl_setopt']['forum']);
-        }
+            $forumReports = new Reports($forumDomain, $user);
+            $forumReports->curl_setopts($cfg['curl_setopt']['forum']);
 
-        $insertedUnregisteredTopics = [];
-        foreach ($topicsUnregistered as $infoHash => $topicID) {
-            $topicData = $reports->getDataUnregisteredTopic($topicID);
-            if ($topicData === false) {
-                continue;
-            }
-            $insertedUnregisteredTopics[] = array_combine(
-                $tabUnregistered->keys,
-                [
+            foreach ($unregisteredTopics as $topicID => $infoHash) {
+                $topicData = $forumReports->getDataUnregisteredTopic((int)$topicID);
+                if (null === $topicData) {
+                    continue;
+                }
+
+                // Если о раздаче есть данные в API, то дописываем их, как более верные.
+                if (!empty($unregisteredApiTopics[$infoHash])) {
+                    $topic = $unregisteredApiTopics[$infoHash];
+
+                    $topicData['name']   = $topic->title;
+                    $topicData['status'] = $topic->status->label();
+                    if (empty($topicData['priority'])) {
+                        $topicData['priority'] = KeepingPriority::Normal->label();
+                    }
+
+                    unset($topic);
+                }
+
+                $tabUnregistered->addTopic([
                     $infoHash,
                     $topicData['name'],
                     $topicData['status'],
                     $topicData['priority'],
                     $topicData['transferred_from'],
                     $topicData['transferred_to'],
-                    $topicData['transferred_by_whom']
-                ]
-            );
-        }
-        unset($topicsUnregistered);
+                    $topicData['transferred_by_whom'],
+                ]);
+            }
+            unset($unregisteredTopics, $unregisteredApiTopics);
 
-        $tabUnregistered->cloneFillChunk($insertedUnregisteredTopics);
-        unset($insertedUnregisteredTopics);
-
-        $countUnregistered = $tabUnregistered->cloneCount();
-        if ($countUnregistered > 0) {
-            $logger->info(sprintf('Найдено разрегистрированных или обновлённых раздач: %d шт.', $countUnregistered));
-            $tabUnregistered->moveToOrigin();
+            $tabUnregistered->fillTempTable();
         }
+    } catch (Exception $e) {
+        $logger->warning('Ошибка при поиске разрегистрированных раздач. {error}', ['error' => $e->getMessage()]);
     }
+    $tabUnregistered->moveToOrigin();
 
     $timers['search_unregistered'] = Timers::getExecTime('search_unregistered');
 }
-// Удалим лишние раздачи из таблицы разрегистрированных.
 $tabUnregistered->clearUnusedRows();
 
 $logger->debug(json_encode($timers));
