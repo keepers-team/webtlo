@@ -6,12 +6,11 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Module\TorrentEditor;
 use KeepersTeam\Webtlo\Timers;
 
 try {
     Timers::start('download');
-
-    include_once dirname(__FILE__) . '/../torrenteditor.php';
 
     $result = '';
 
@@ -33,8 +32,14 @@ try {
     // нужна ли замена passkey
     $replace_passkey = (bool)($_POST['replace_passkey'] ?? false);
 
+    $passkeyValue   = (string)$cfg['user_passkey'];
+    $forRegularUser = (bool)($cfg['tor_for_user'] ?? false);
+
     // парсим список выбранных раздач
     parse_str($_POST['topic_hashes'], $topicHashes);
+
+    /** @var string[] $topicHashes */
+    $topicHashes = array_map('strval', (array)$topicHashes['topic_hashes']);
 
     // выбор каталога
     $torrent_files_path = !$replace_passkey ? $cfg['save_dir'] : $cfg['dir_torrents'];
@@ -75,63 +80,46 @@ try {
     $forumClient->setApiCredentials(apiCredentials: $apiCredentials);
 
     $log_string = sprintf(
-        "Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ",
-        count($topicHashes['topic_hashes']),
-        $cfg['tor_for_user'] ? 'пользовательские' : 'хранительские'
+        'Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ',
+        count($topicHashes),
+        $forRegularUser ? 'пользовательские' : 'хранительские'
     );
     if ($replace_passkey) {
-        $log_string .=
-            !empty($cfg['user_passkey'])
-                ? 'Замена Passkey: ' .$cfg['user_passkey']
-                : 'Passkey пуст.';
+        $log_string .= !empty($passkeyValue) ? "Замена Passkey: [$passkeyValue]" : 'Passkey пуст.';
     }
     $log->info($log_string);
 
     $addRetracker = (bool)($cfg['retracker'] ?? false);
 
     $torrent_files_downloaded = [];
-    foreach ($topicHashes['topic_hashes'] as $topicHash) {
-        $topicHash = (string)$topicHash;
-
+    foreach ($topicHashes as $topicHash) {
         $data = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $addRetracker);
         if (null === $data) {
             continue;
         }
 
-        $data = $data->getContents();
+        // Меняем ключ для трекера.
+        if ($replace_passkey) {
+            try {
+                $torrent = TorrentEditor::loadFromStream(logger: $log, stream: $data);
+                $torrent->replaceTrackers(passkey: $passkeyValue, regularUser: $forRegularUser);
+
+                $data = $torrent->getTorrent()->storeToString();
+
+                unset($torrent);
+            } catch (Exception $e) {
+                $log->warning('Ошибка редактирования торрента', ['error' => $e->getMessage()]);
+
+                continue;
+            }
+        } else {
+            $data = $data->getContents();
+        }
+
         if (empty($data)){
             continue;
         }
 
-        // меняем пасскей
-        if ($replace_passkey) {
-            $torrent = new Torrent();
-            if (!$torrent->load($data)) {
-                Log::append("Error: $torrent->error ($topicHash).");
-                break;
-            }
-
-            $trackers = $torrent->getTrackers();
-            foreach ($trackers as &$tracker) {
-                // Если задан пустой заменный ключ, то пихаем дефолтный 'ann?magnet'
-                if (empty($cfg['user_passkey'])) {
-                    $tracker = preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
-                } else {
-                    $tracker = preg_replace('/(?<==)\w+$/', $cfg['user_passkey'], $tracker);
-                }
-
-                // Для обычных пользователей заменяем адрес трекера и тип ключа.
-                if ($cfg['tor_for_user']) {
-                    $tracker = preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
-                }
-
-                unset($tracker);
-            }
-            $torrent->setTrackers($trackers);
-            $data = $torrent->bencode();
-
-            unset($trackers, $torrent);
-        }
         // сохранить в каталог
         $fileSaved = file_put_contents(
             sprintf(
