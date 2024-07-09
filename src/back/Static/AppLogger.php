@@ -16,17 +16,25 @@ use Monolog\Logger;
 use Monolog\Processor\MemoryUsageProcessor;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
-/** Общий Web-TLO логгер. */
+/**
+ * Интерфейс для записи журнала выполнения.
+ */
 final class AppLogger
 {
     /** @var Level[] Уровни ведения журнала. */
-    public const Levels = [
+    private const Levels = [
         Level::Debug,
         Level::Info,
         Level::Notice,
         Level::Warning,
+    ];
+
+    private const ValidLogLevels = [
+        'DEBUG',
+        'INFO',
+        'NOTICE',
+        'WARNING',
     ];
 
     private static int $logMaxSize  = 2097152;
@@ -106,11 +114,17 @@ final class AppLogger
 
     public static function getLogLevel(string $logLevel): Level
     {
-        try {
-            return Level::fromName(strtoupper($logLevel));
-        } catch (Throwable) {
-            return Level::Info;
+        // Convert the input log level to uppercase
+        $upperLogLevel = strtoupper($logLevel);
+
+        // Check if the converted log level is in the array of valid log levels
+        if (in_array($upperLogLevel, self::ValidLogLevels, true)) {
+            // If valid, return the corresponding Level
+            return Level::fromName($upperLogLevel);
         }
+
+        // If invalid, return the default log level
+        return Level::Info;
     }
 
     public static function getSelectOptions(string $optionFormat, string $logLevel): string
