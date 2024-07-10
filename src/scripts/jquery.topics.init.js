@@ -181,6 +181,29 @@ $(document).ready(function () {
         getCountSizeSelectedTopics();
     });
 
+    // Изменение выбранных статусов хранения раздачи.
+    const inputClientStatus = $('input[name="filter_client_status[]"]');
+    inputClientStatus.change(function() {
+        let filterClient = $('#filter_client_id');
+
+        // Если выбран "любой" клиент, то делать ничего не нужно.
+        if (0 === +filterClient.val()) {
+            return false;
+        }
+
+        const checkedValues = $.map(inputClientStatus.filter(':checked'), (el) => el.value);
+        if (checkedValues.length === 1 && checkedValues[0] === 'null') {
+            // Сбрасываем фильтр по торрент-клиенту.
+            filterClient.val(0).selectmenu('refresh');
+
+            // Подсвечиваем элемент с фильтром по торрент-клиенту.
+            const instance = filterClient.selectmenu('instance');
+            if (instance && instance.button) {
+                $(instance.button).highlight();
+            }
+        }
+    });
+
     // выделение/снятие выделения интервала раздач
     $("#topics").on("click", ".topic", function (event) {
         var $checkboxes = $("#topics .topic");
