@@ -8,8 +8,3 @@ parameters:
     analyse:
       - src/index.php
       - src/vendor
-      - src/php/phpQuery
-      - src/php/bencode.php
-      - src/php/torrenteditor.php
-      - src/php/classes/reports.php
-      - src/php/classes/user_details.php
