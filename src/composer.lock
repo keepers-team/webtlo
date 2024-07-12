@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5ebd3df017cf82fb53c124420346f444",
+    "content-hash": "8aa712d28717bf13f5c93bb06f2360e3",
     "packages": [
         {
             "name": "caseyamcl/guzzle_retry_middleware",
@@ -3630,9 +3630,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "phpxmlrpc/polyfill-xmlrpc": 5
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
