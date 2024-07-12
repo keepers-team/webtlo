@@ -19,6 +19,7 @@
         "cesargb/php-log-rotation": "^2.7",
         "guzzlehttp/guzzle": "^7.8",
         "caseyamcl/guzzle_retry_middleware": "^2.9",
+        "arokettu/torrent-file": "^5.2",
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-libxml": "*",
@@ -30,6 +31,7 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
         "phpstan/phpstan": "^1.10",
-        "symfony/var-dumper": "^6.4"
+        "symfony/var-dumper": "^6.4",
+        "symfony/polyfill-iconv": "^1.30"
     }
 }
