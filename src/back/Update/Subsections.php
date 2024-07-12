@@ -237,7 +237,7 @@ final class Subsections
                 $topicRegistered = $topic->registered->getTimestamp();
 
                 // Обновление данных или запись с нуля?
-                $doTopicUpdate = $topic->hash === $previousTopic['info_hash']
+                $doTopicUpdate = $topic->hash === ($previousTopic['info_hash'] ?? null)
                     && $topicRegistered === (int)($previousTopic['reg_time'] ?? 0);
 
                 if ($doTopicUpdate) {
