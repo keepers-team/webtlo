@@ -82,7 +82,7 @@ final class Topics
 
         return $this->db->query(
             "
-                SELECT id, reg_time, seeders, seeders_updates_today, seeders_updates_days, poster, name
+                SELECT id, info_hash, reg_time, seeders, seeders_updates_today, seeders_updates_days, poster, name
                 FROM Topics
                 WHERE id IN ($selectTopics->keys)
             ",
