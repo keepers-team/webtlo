@@ -9,6 +9,7 @@ use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\Config\ReportSend;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -62,6 +63,9 @@ final class AppContainer
         $container->add(Credentials::class, fn() => Credentials::fromLegacy($container->get('config')));
         $container->add(ApiCredentials::class, fn() => ApiCredentials::fromLegacy($container->get('config')));
         $container->add(ForumCredentials::class, fn() => ForumCredentials::fromLegacy($container->get('config')));
+
+        // Опции получения и отправки отчётов.
+        $container->add(ReportSend::class, fn() => ReportSend::getReportSend($container->get('config')));
 
         // Получаем настройки прокси.
         $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));
