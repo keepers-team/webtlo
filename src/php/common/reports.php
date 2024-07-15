@@ -5,7 +5,8 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
-use KeepersTeam\Webtlo\Config\Validate as ConfigValidate;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
+use KeepersTeam\Webtlo\Config\ReportSend;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Forum\SendReport;
@@ -30,21 +31,20 @@ if (isset($checkEnabledCronAction)) {
     }
 }
 
-// Проверка настроек.
-$user = ConfigValidate::checkUser($cfg);
-if (empty($cfg['subsections'])) {
-    $log->error('Не выбраны хранимые подразделы');
+/** @var ApiCredentials $apiCred Хранительские ключи. */
+$apiCred = $app->get(ApiCredentials::class);
 
-    return;
-}
-
-Timers::start('init_api_report');
 // Подключаемся к API отчётов.
+Timers::start('init_api_report');
+
 /** @var SendReport $sendReport */
 $sendReport = $app->get(SendReport::class);
 
+/** @var ReportSend $reportConfig Настройки отправки отчётов. */
+$reportConfig = $app->get(ReportSend::class);
+
 // Желание отправить отчёт через API.
-$sendReport->setEnable((bool)($cfg['reports']['send_report_api'] ?? true));
+$sendReport->setEnable($reportConfig->sendReports);
 
 // Проверяем доступность API.
 if ($sendReport->isEnable()) {
@@ -61,7 +61,7 @@ Timers::start('create_report');
 
 /** @var ReportCreator $forumReports Создание отчётов */
 $forumReports = $app->get(ReportCreator::class);
-$forumReports->initConfig($cfg);
+$forumReports->initConfig();
 
 $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
@@ -79,13 +79,14 @@ if (null === $fullUpdateTime) {
 if ($sendReport->isEnable()) {
     $Timers = [];
 
+    // Задаём ид тем, с отчётами по хранимым подразделам.
     $forumReports->setForumTopics($sendReport->getReportTopics());
 
     $forumCount = $forumReports->getForumCount();
 
     $apiReportCount = 0;
     $forumsToReport = [];
-    foreach ($forumReports->forums as $forum_id) {
+    foreach ($forumReports->getForums() as $forum_id) {
         // Пропускаем исключённые подразделы.
         if ($forumReports->isForumExcluded($forum_id)) {
             continue;
@@ -107,9 +108,10 @@ if ($sendReport->isEnable()) {
 
             // Пробуем отправить отчёт по API.
             $apiResult = $sendReport->sendForumTopics(
-                forumId: (int)$forum_id,
+                forumId       : $forum_id,
                 topicsToReport: $topicsToReport,
-                reportDate: $fullUpdateTime,
+                reportDate    : $fullUpdateTime,
+                reportRewrite : $reportConfig->unsetOtherTopics,
             );
 
             $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
@@ -136,38 +138,11 @@ if ($sendReport->isEnable()) {
 
     // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
     if (count($forumsToReport)) {
-        try {
-            // Получаем обновлённые раздачи, которые можно отправить.
-            $refreshedTopics = $forumReports->getRefreshedTopics($forumsToReport);
-            if (null !== $refreshedTopics) {
-                // Минимальная дата обновления раздачи, среди найденных обновлённых раздач, -1 день.
-                $minDate = min(array_column($refreshedTopics, 'registered'));
-                $minDate = Helper::makeDateTime($minDate)->sub(new DateInterval('P1D'));
-
-                $refreshedTopics = array_column($refreshedTopics, 'topic_id');
-
-                // Отправляем обновлённые раздачи, чтобы они отображались как "Хранит | Прошлая версия".
-                $apiResult = $sendReport->sendUnregisteredTopics(
-                    topicsToReport: $refreshedTopics,
-                    reportDate    : $minDate,
-                );
-
-                $log->debug('API. Обновлённые раздачи отправлены', $apiResult);
-                unset($minDate, $apiResult);
-            }
-
-            unset($refreshedTopics);
-        } catch (Exception $e) {
-            $log->notice(
-                'Попытка отправки отчёта через API для обновлённых раздач не удалась. Причина {error}',
-                ['error' => $e->getMessage()]
-            );
-        }
-
         // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
-        $unsetOtherForums = (bool)($cfg['reports']['unset_other_forums'] ?? true);
-
-        $setStatus = $sendReport->setForumsStatus($forumsToReport, $unsetOtherForums);
+        $setStatus = $sendReport->setForumsStatus(
+            forumIds        : $forumsToReport,
+            unsetOtherForums: $reportConfig->unsetOtherSubForums
+        );
         $log->debug('kept forums setStatus', $setStatus);
     }
 
@@ -187,8 +162,7 @@ if ($sendReport->isEnable()) {
 
 
 // Желание отправить сводный отчёт на форум.
-$sendSummaryReport = (bool)($cfg['reports']['send_summary_report'] ?? true);
-if ($sendSummaryReport) {
+if ($reportConfig->sendSummary) {
     try {
         if ($sendReport->isEnable()) {
             // Формируем сводный для API.
@@ -213,7 +187,7 @@ if ($sendSummaryReport) {
         $forumSummary = $forumReports->getSummaryReport(true);
 
         // Отправляем сводный отчёт.
-        $forumClient->sendSummaryReport($user->userId, $forumSummary);
+        $forumClient->sendSummaryReport($apiCred->userId, $forumSummary);
 
         // Запишем время отправки отчётов.
         $updateTime->setMarkerTime(UpdateMark::SEND_REPORT->value);

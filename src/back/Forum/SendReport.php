@@ -29,10 +29,15 @@ final class SendReport
      * @param int                    $forumId
      * @param array<string, mixed>[] $topicsToReport
      * @param DateTimeInterface      $reportDate
+     * @param bool                   $reportRewrite
      * @return array<string, mixed>
      */
-    public function sendForumTopics(int $forumId, array $topicsToReport, DateTimeInterface $reportDate): array
-    {
+    public function sendForumTopics(
+        int               $forumId,
+        array             $topicsToReport,
+        DateTimeInterface $reportDate,
+        bool              $reportRewrite = false
+    ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
             $forumId,
@@ -62,7 +67,7 @@ final class SendReport
             $downloadedTopics,
             KeepingStatuses::ReportedByApi->value,
             $reportDate,
-            true,
+            $reportRewrite,
         );
         if (null !== $completeReport) {
             $result['reportComplete'] = $completeReport;
