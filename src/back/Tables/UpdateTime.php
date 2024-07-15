@@ -172,6 +172,19 @@ final class UpdateTime
     }
 
     /**
+     * Получить даты основных обновлений.
+     */
+    public function getMainMarkers(): MarkersUpdate
+    {
+        $markers[] = UpdateMark::FORUM_TREE->value;
+        $markers[] = UpdateMark::SUBSECTIONS->value;
+        $markers[] = UpdateMark::CLIENTS->value;
+        $markers[] = UpdateMark::FORUM_SCAN->value;
+
+        return $this->getMarkersObject($markers);
+    }
+
+    /**
      * Перенести данные о хранимых раздачах в основную таблицу БД.
      */
     public function fillTable(): void
