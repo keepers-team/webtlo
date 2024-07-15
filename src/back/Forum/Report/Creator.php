@@ -270,6 +270,9 @@ final class Creator
             'subsections' => $subsections,
         ];
 
+        // Локальные даты обновления сведений.
+        $shared['markers'] = $this->updateTest->getMainMarkers()->getFormattedMarkers();
+
         return $this->telemetry = $shared;
     }
 
