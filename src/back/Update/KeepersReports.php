@@ -151,7 +151,7 @@ final class KeepersReports
 
         // TODO подумать, нужен ли этот маркер вообще.
         // Записываем дату получения списков.
-        $this->updateTime->setMarkerTime(UpdateMark::FORUM_SCAN->value);
+        $this->updateTime->setMarkerTime(UpdateMark::KEEPERS->value);
         $this->logger->info(
             'ApiReport. Обновление отчётов хранителей завершено за {sec}',
             ['sec' => Timers::getExecTime('update_keepers')]

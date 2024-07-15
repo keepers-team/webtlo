@@ -162,7 +162,7 @@ final class UpdateTime
         $markers[] = UpdateMark::CLIENTS->value;
 
         if ($checkForum) {
-            $markers[] = UpdateMark::FORUM_SCAN->value;
+            $markers[] = UpdateMark::KEEPERS->value;
         }
 
         $update = $this->getMarkersObject($markers);
@@ -178,8 +178,8 @@ final class UpdateTime
     {
         $markers[] = UpdateMark::FORUM_TREE->value;
         $markers[] = UpdateMark::SUBSECTIONS->value;
+        $markers[] = UpdateMark::KEEPERS->value;
         $markers[] = UpdateMark::CLIENTS->value;
-        $markers[] = UpdateMark::FORUM_SCAN->value;
 
         return $this->getMarkersObject($markers);
     }
