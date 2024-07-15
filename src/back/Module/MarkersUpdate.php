@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Module;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
@@ -22,6 +23,18 @@ final class MarkersUpdate
         /** @var array<int, int> Метки времени обновления маркеров. */
         public readonly array $timestamps,
     ) {
+    }
+
+    /**
+     * Отформатировать дату обновления маркеров.
+     *
+     * @return array{}|array<int, string>
+     */
+    public function getFormattedMarkers(): array
+    {
+        return array_map(function($el) {
+            return Helper::makeDateTime($el)->format(DateTimeInterface::ATOM);
+        }, $this->timestamps);
     }
 
     /**
@@ -103,7 +116,7 @@ final class MarkersUpdate
 
             $logger->notice('Отсутствуют маркеры обновления для: {missed}', ['missed' => implode(', ', $missed)]);
         }
-        $logger->debug(json_encode($log));
+        $logger->debug((string)json_encode($log));
     }
 
     private function checkMarkersCount(): void
