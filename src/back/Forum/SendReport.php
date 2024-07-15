@@ -29,10 +29,15 @@ final class SendReport
      * @param int                    $forumId
      * @param array<string, mixed>[] $topicsToReport
      * @param DateTimeInterface      $reportDate
+     * @param bool                   $reportRewrite
      * @return array<string, mixed>
      */
-    public function sendForumTopics(int $forumId, array $topicsToReport, DateTimeInterface $reportDate): array
-    {
+    public function sendForumTopics(
+        int               $forumId,
+        array             $topicsToReport,
+        DateTimeInterface $reportDate,
+        bool              $reportRewrite = false
+    ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
             $forumId,
@@ -62,7 +67,7 @@ final class SendReport
             $downloadedTopics,
             KeepingStatuses::ReportedByApi->value,
             $reportDate,
-            true,
+            $reportRewrite,
         );
         if (null !== $completeReport) {
             $result['reportComplete'] = $completeReport;
@@ -79,32 +84,6 @@ final class SendReport
             if (null !== $downloadingReport) {
                 $result['reportDownloading'] = $downloadingReport;
             }
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param int[]             $topicsToReport
-     * @param DateTimeInterface $reportDate
-     * @return array<string, mixed>
-     */
-    public function sendUnregisteredTopics(array $topicsToReport, DateTimeInterface $reportDate): array
-    {
-        $result = [
-            'refreshedTopics' => count($topicsToReport),
-            'reportedDate'    => $reportDate,
-        ];
-
-        // Отправляем отчёт о скачанных раздачах.
-        $completeReport = $this->apiReport->reportKeptReleases(
-            forumId   : 0,
-            topicIds  : $topicsToReport,
-            status    : KeepingStatuses::ReportedByApi->value,
-            reportDate: $reportDate,
-        );
-        if (null !== $completeReport) {
-            $result['refreshedComplete'] = $completeReport;
         }
 
         return $result;
