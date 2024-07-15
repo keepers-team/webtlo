@@ -28,7 +28,7 @@ try {
 
     /** @var ReportCreator $forumReports Создание отчётов */
     $forumReports = $app->get(ReportCreator::class);
-    $forumReports->initConfig($cfg, CreationMode::UI);
+    $forumReports->initConfig(CreationMode::UI);
 
     if ($forumId === 0) {
         // Сводный отчёт
@@ -58,6 +58,7 @@ try {
     $message = $e->getMessage();
     if (isset($log)) {
         $log->error($message);
+        $log->info('-- DONE --');
     }
 
     $output.= '<br />' . $message;

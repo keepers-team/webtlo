@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Forum\Report;
 
 use DateTimeImmutable;
 use Exception;
+use KeepersTeam\Webtlo\Config\ReportSend;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\DTO\KeysObject;
@@ -14,6 +15,7 @@ use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\WebTLO;
 use PDO;
@@ -25,25 +27,14 @@ use RuntimeException;
  */
 final class Creator
 {
-    use Traits\RefreshedTopics;
-
     /** @var int[] */
     public ?array $forums = null;
-
-    /** @var array<string, mixed> */
-    private array $config;
-
-    /** @var int[] Исключённые из отчётов подразделы */
-    private array $excludeForumsIDs = [];
-
-    /** @var int[] Исключённые из отчётов торрент-клиенты */
-    private array $excludeClientsIDs = [];
 
     private ?DateTimeImmutable $updateTime = null;
 
     private CreationMode $mode = CreationMode::CRON;
 
-    /** @var ?string[]*/
+    /** @var ?string[] Сводный отчёт. */
     private ?array $summary = null;
 
     /** @var ?array<string, mixed> */
@@ -66,6 +57,8 @@ final class Creator
 
     public function __construct(
         private readonly DB              $db,
+        private readonly Settings        $settings,
+        private readonly ReportSend      $reportSend,
         private readonly UpdateTime      $updateTest,
         private readonly WebTLO          $webtlo,
         private readonly LoggerInterface $logger,
@@ -101,12 +94,24 @@ final class Creator
             return 0;
         }
 
-        return count($this->forums) - count($this->excludeForumsIDs);
+        return count($this->forums) - count($this->reportSend->excludedSubForums);
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getForums(): array
+    {
+        if (null === $this->forums) {
+            throw new RuntimeException('No forums found');
+        }
+
+        return $this->forums;
     }
 
     public function isForumExcluded(int $forumId): bool
     {
-        return in_array($forumId, $this->excludeForumsIDs);
+        return in_array($forumId, $this->reportSend->excludedSubForums, true);
     }
 
     /**
@@ -188,13 +193,10 @@ final class Creator
     }
 
     /**
-     * @param array<string, mixed> $config
-     * @param ?CreationMode        $mode
+     * @param ?CreationMode $mode
      */
-    public function initConfig(array $config, ?CreationMode $mode = null): void
+    public function initConfig(?CreationMode $mode = null): void
     {
-        $this->config = $config;
-
         if (null !== $mode) {
             $this->mode = $mode;
 
@@ -204,7 +206,7 @@ final class Creator
 
         // Проверяем настройки.
         $this->setForums();
-        $this->setExcluded();
+        $this->checkExcluded();
         $this->getLastUpdateTime();
     }
 
@@ -217,10 +219,10 @@ final class Creator
             return $this->telemetry;
         }
 
-        $config = $this->config;
+        $config = $this->settings->populate();
 
         // Если отправка отключена в настройках, то ничего не собираем.
-        if (empty($config['reports']['send_report_settings'])) {
+        if (!$this->reportSend->sendTelemetry) {
             return $this->telemetry = [];
         }
 
@@ -286,6 +288,10 @@ final class Creator
         if (null === $this->stored) {
             $this->fillStoredValues();
         }
+        if (null === $this->stored) {
+            throw new RuntimeException('Нет данных для построения сводного отчёта.');
+        }
+
         // Вытаскиваем из базы хранимое
         $total = $this->calcSummary($this->stored);
 
@@ -469,7 +475,7 @@ final class Creator
 
         foreach ($stored as $forum_id => $forumData) {
             // исключаем подразделы
-            if (in_array($forum_id, $this->excludeForumsIDs)) {
+            if (in_array((int)$forum_id, $this->reportSend->excludedSubForums, true)) {
                 continue;
             }
 
@@ -498,7 +504,7 @@ final class Creator
         }
 
         $includeForums  = KeysObject::create($forumIds);
-        $excludeClients = KeysObject::create($this->excludeClientsIDs);
+        $excludeClients = KeysObject::create($this->reportSend->excludedClients);
 
         // Вытаскиваем из базы хранимое.
         $values = $this->db->query(
@@ -576,7 +582,7 @@ final class Creator
         }
 
         // Получение данных о раздачах подраздела.
-        $excludeClients = KeysObject::create($this->excludeClientsIDs);
+        $excludeClients = KeysObject::create($this->reportSend->excludedClients);
 
         $topics = $this->db->query(
             "
@@ -626,12 +632,10 @@ final class Creator
         $lastTimestamp = $this->updateTest->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
 
         if ($lastTimestamp === 0) {
-            $daysUpdateExpire = $this->config['reports']['daysUpdateExpire'] ?? 5;
-
             $update = $this->updateTest->checkFullUpdate(
-                $this->forums,
-                (int)$daysUpdateExpire,
-                CreationMode::UI !== $this->mode
+                markers         : $this->forums,
+                daysUpdateExpire: $this->reportSend->daysUpdateExpire,
+                checkForum      : CreationMode::UI !== $this->mode
             );
 
             if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
@@ -662,12 +666,14 @@ final class Creator
      */
     private function setForums(): void
     {
-        if (empty($this->config['subsections'])) {
+        $config = $this->settings->populate();
+
+        if (empty($config['subsections'])) {
             throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
         }
 
         // Идентификаторы хранимых подразделов.
-        $forums = array_keys($this->config['subsections']);
+        $forums = array_keys($config['subsections']);
 
         $this->forums = array_map('intval', $forums);
     }
@@ -675,19 +681,33 @@ final class Creator
     /**
      * Исключаемые подразделы и торрент-клиенты.
      */
-    private function setExcluded(): void
+    private function checkExcluded(): void
     {
-        $cfg_reports = $this->config['reports'];
+        $excludedClients = $this->reportSend->excludedClients;
+        if (!empty($excludedClients)) {
+            $config = $this->settings->populate();
 
-        if (!empty($cfg_reports['exclude_clients_ids'])) {
-            $this->logger->notice("Из отчётов исключены торрент клиенты: {$cfg_reports['exclude_clients_ids']}");
-        }
-        if (!empty($cfg_reports['exclude_forums_ids'])) {
-            $this->logger->notice("Из отчётов исключены подразделы: {$cfg_reports['exclude_forums_ids']}");
+            $names = [];
+            foreach ($config['clients'] as $id => $client) {
+                if (in_array((int)$id, $excludedClients, true)) {
+                    $names[] = sprintf('%s[%d](%s)', $client['cm'], (int)$id, $client['cl']);
+                }
+
+                unset($id, $client);
+            }
+
+            $this->logger->notice(
+                'Из отчётов исключены торрент клиенты: {excluded}.',
+                ['excluded' => implode(', ', $names)]
+            );
         }
 
-        $this->excludeForumsIDs  = Helper::explodeInt($cfg_reports['exclude_forums_ids']);
-        $this->excludeClientsIDs = Helper::explodeInt($cfg_reports['exclude_clients_ids']);
+        if (!empty($this->reportSend->excludedSubForums)) {
+            $this->logger->notice(
+                'Из отчётов исключены хранимые подразделы: {excluded}.',
+                ['excluded' => implode(', ', $this->reportSend->excludedSubForums)]
+            );
+        }
     }
 
     private function bytes(int $bytes): string
