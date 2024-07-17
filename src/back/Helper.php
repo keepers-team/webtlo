@@ -27,8 +27,8 @@ final class Helper
                 return ($a <=> $b) * $direct;
             }
 
-            $a = mb_ereg_replace('ё', 'е', mb_strtolower($a, 'UTF-8'));
-            $b = mb_ereg_replace('ё', 'е', mb_strtolower($b, 'UTF-8'));
+            $a = (string)mb_ereg_replace('ё', 'е', mb_strtolower((string)$a, 'UTF-8'));
+            $b = (string)mb_ereg_replace('ё', 'е', mb_strtolower((string)$b, 'UTF-8'));
 
             return (strnatcasecmp($a, $b)) * $direct;
         });
@@ -110,7 +110,7 @@ final class Helper
         if (!is_dir($path)) {
             return unlink($path);
         }
-        foreach (scandir($path) as $next_path) {
+        foreach ((array)scandir($path) as $next_path) {
             if ('.' === $next_path || '..' === $next_path) {
                 continue;
             }
@@ -205,8 +205,7 @@ final class Helper
     /**
      * Разбиение строки по символу с приведением значений к int.
      *
-     * @param string $string
-     * @param string $separator
+     * @param non-empty-string $separator
      * @return int[]|array{}
      */
     public static function explodeInt(string $string, string $separator = ','): array
@@ -214,6 +213,17 @@ final class Helper
         $values = explode($separator, trim($string));
 
         return array_map('intval', array_filter($values));
+    }
+
+    /**
+     * @param array<int|string, mixed> $array
+     * @return array<string, mixed>
+     */
+    public static function convertKeysToString(array $array): array
+    {
+        $keys = array_map('strval', array_keys($array));
+
+        return array_combine($keys, $array);
     }
 
     public static function makeDateTime(int $timestamp): DateTimeImmutable
