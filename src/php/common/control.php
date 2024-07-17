@@ -79,19 +79,21 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $logger->info(sprintf(
         '%s получено раздач: %d шт за %s',
         $clientTag,
-        count($torrents),
+        $torrents->count(),
         Timers::getExecTime("get_client_$torrentClientID")
     ));
 
     Timers::start("get_topics_$torrentClientID");
+
+    $unaddedHashes = $torrents->getHashes();
     // ограничение на количество хэшей за раз
     $placeholdersLimit = 999;
     $torrentsHashes = array_chunk(
-        array_keys($torrents),
+        $unaddedHashes,
         $placeholdersLimit - count($forumsIDs)
     );
+
     $topicsHashes = [];
-    $unaddedHashes = array_keys($torrents);
     // вытаскиваем из базы хэши раздач только для хранимых подразделов
     foreach ($torrentsHashes as $torrentsHashes) {
         $placeholdersTorrentsHashes = str_repeat('?,', count($torrentsHashes) - 1) . '?';
@@ -158,19 +160,21 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
 
             foreach ($response->peers as $topic) {
                 $topicHash = (string)$topic->identifier;
+
+                $torrent = $torrents->getTorrent($topicHash);
                 if (
                     // пропускаем отсутствующий торрент
-                    empty($torrents[$topicHash])
+                    null === $torrent
                     // пропускаем торрент с ошибкой
-                    || $torrents[$topicHash]['error'] == 1
+                    || $torrent->error
                     // пропускаем торрент на загрузке
-                    || $torrents[$topicHash]['done'] != 1
+                    || $torrent->done != 1
                 ) {
                     continue;
                 }
 
                 // статус торрента
-                $torrentStatus = $torrents[$topicHash]['paused'] == 1 ? -1 : 1;
+                $torrentStatus = $torrent->paused ? -1 : 1;
                 // учитываем себя
                 $seeders = $topic->seeders - ($topic->seeders ? $torrentStatus : 0);
                 // находим значение личей
@@ -210,7 +214,9 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                     }
                 }
 
-                unset($topic, $topicHash, $torrentStatus, $seeders, $leechers, $keepers, $peers, $peersState);
+                unset($topic, $topicHash);
+                unset($torrent, $torrentStatus);
+                unset($seeders, $leechers, $keepers, $peers, $peersState);
             }
 
             $logger->debug('Обработка раздела', [

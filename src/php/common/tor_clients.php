@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Module\CloneTable;
-use KeepersTeam\Webtlo\Module\Topics;
 use KeepersTeam\Webtlo\Tables\TopicsUnregistered;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
@@ -34,6 +33,7 @@ if (empty($cfg['clients'])) {
 
     $updateTime->setMarkerTime(UpdateMark::CLIENTS->value, 0);
     Db::query_database('DELETE FROM Torrents WHERE true');
+
     return;
 }
 $logger->info(sprintf('Сканирование торрент-клиентов... Найдено %d шт.', count($cfg['clients'])));
@@ -51,7 +51,7 @@ $tabTorrents = CloneTable::create(
         'paused',
         'time_added',
         'total_size',
-        'tracker_error'
+        'tracker_error',
     ],
     'info_hash'
 );
@@ -59,7 +59,7 @@ $tabTorrents = CloneTable::create(
 // Таблица хранимых раздач из других подразделов.
 $tabUntracked = CloneTable::create(
     'TopicsUntracked',
-    ['id','forum_id','name','info_hash','seeders','size','status','reg_time'],
+    ['id', 'forum_id', 'name', 'info_hash', 'seeders', 'size', 'status', 'reg_time'],
 );
 
 
@@ -109,25 +109,25 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
 
     $insertedTorrents = [];
-    $countTorrents = count($torrents);
-    foreach ($torrents as $torrentHash => $torrentData) {
+    $countTorrents    = count($torrents);
+    foreach ($torrents->getGenerator() as $torrent) {
         $insertedTorrents[] = array_combine(
             $tabTorrents->keys,
             [
-                $torrentHash,
-                $torrentData['topic_id'],
+                $torrent->topicHash,
+                $torrent->topicId,
                 $torrentClientID,
-                $torrentData['done'],
-                $torrentData['error'],
-                $torrentData['name'],
-                $torrentData['paused'],
-                $torrentData['time_added'],
-                $torrentData['total_size'],
-                $torrentData['tracker_error']
+                $torrent->done,
+                (int)$torrent->error,
+                $torrent->name,
+                (int)$torrent->paused,
+                $torrent->added->getTimestamp(),
+                $torrent->size,
+                $torrent->trackerError,
             ]
         );
 
-        unset($torrentHash, $torrentData, $topicID, $currentSearchDomain);
+        unset($torrentHash, $torrent, $topicID, $currentSearchDomain);
     }
     unset($torrents);
 
@@ -135,12 +135,11 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $tabTorrents->cloneFillChunk($insertedTorrents);
     unset($insertedTorrents);
 
-    $logger->info(sprintf(
-        '%s получено раздач: %d шт за %s',
-        $clientTag,
-        $countTorrents,
-        Timers::getExecTime("update_client_$torrentClientID")
-    ));
+    $logger->info('{client} получено раздач: {count} шт за {sec}', [
+        'client' => $clientTag,
+        'count'  => $countTorrents,
+        'sec'    => Timers::getExecTime("update_client_$torrentClientID"),
+    ]);
 
     unset($torrentClientID, $torrentClientData, $countTorrents);
 }
@@ -159,7 +158,8 @@ if (!count(array_diff($failedClients, $excludedClients))) {
 
 $failedClients = KeysObject::create($failedClients);
 // Удалим лишние раздачи из БД.
-Db::query_database("
+Db::query_database(
+    "
     DELETE FROM $tabTorrents->origin
     WHERE client_id NOT IN ($failedClients->keys) AND (
         info_hash || client_id NOT IN (
@@ -170,7 +170,9 @@ Db::query_database("
             SELECT DISTINCT client_id FROM $tabTorrents->clone
         )
     )
-", $failedClients->values);
+    ",
+    $failedClients->values
+);
 
 
 $unregisteredApiTopics = [];
@@ -266,7 +268,7 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
         if (!empty($unregisteredTopics)) {
             $forumClient = $app->getForumClient();
 
-            if (!$forumClient->checkConnection()){
+            if (!$forumClient->checkConnection()) {
                 throw new RuntimeException('Ошибка подключения к форуму. Поиск прекращён.');
             }
 
@@ -280,7 +282,7 @@ if ($cfg['update']['untracked'] && $cfg['update']['unregistered']) {
                 if (!empty($unregisteredApiTopics[$infoHash])) {
                     $topic = $unregisteredApiTopics[$infoHash];
 
-                    $topicData['name']   = $topic->title;
+                    $topicData['name'] = $topic->title;
                     $topicData['status'] = $topic->status->label();
                     if (empty($topicData['priority'])) {
                         $topicData['priority'] = KeepingPriority::Normal->label();
