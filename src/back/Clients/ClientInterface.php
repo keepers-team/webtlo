@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients;
 
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
+
 /**
  * Набор функциональных возможностей торрент-клиента.
  */
@@ -18,9 +21,9 @@ interface ClientInterface
      * Получение сведений о раздачах от торрент-клиента
      *
      * @param array<string, mixed> $filter
-     * @return array<string, array<string, mixed>>
+     * @return Torrents
      */
-    public function getTorrents(array $filter = []): array;
+    public function getTorrents(array $filter = []): Torrents;
 
     /**
      * Добавить раздачу в торрент-клиент из файла.

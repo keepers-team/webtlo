@@ -6,7 +6,10 @@ namespace KeepersTeam\Webtlo\Clients;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -59,49 +62,66 @@ final class Rtorrent implements ClientInterface
         }
     }
 
-    public function getTorrents(array $filter = []): array
+    public function getTorrents(array $filter = []): Torrents
     {
         $response = $this->makeRequest(
             'd.multicall2',
             [
                 '',
                 'main',
-                'd.complete=',
-                'd.custom2=',
-                'd.hash=',
-                'd.message=',
-                'd.name=',
-                'd.size_bytes=',
-                'd.state=',
-                'd.timestamp.started=',
+                'd.hash=',              // [0] хеш раздачи
+                'd.complete=',          // [1] скачивание завершено
+                'd.custom2=',           // [2] комментарий
+                'd.message=',           // [3] сообщение трекера
+                'd.name=',              // [4] название
+                'd.size_bytes=',        // [5] размер раздачи
+                'd.state=',             // [6] состояние раздачи, 0 - остановлена
+                'd.timestamp.started=', // [7] добавление раздачи в клиент
+                'd.left_bytes=',        // [8] байт не скачано
+                'd.is_multi_file=',     // [9] несколько файлов в раздаче
+                'd.base_filename=',     // [10] название файла или каталога
+                'd.directory=',         // [11] полный путь хранения раздачи
             ]
         );
+
         $torrents = [];
         foreach ($response as $torrent) {
-            $torrentHash    = strtoupper($torrent[2]);
-            $torrentComment = str_replace('VRS24mrker', '', rawurldecode($torrent[1]));
-            $torrentError   = !empty($torrent[3]) ? 1 : 0;
-            $trackerError   = '';
+            $torrentHash    = strtoupper((string)$torrent[0]);
+            $torrentComment = str_replace('VRS24mrker', '', rawurldecode((string)$torrent[2]));
 
-            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)]/', $torrent[3], $matches);
+            $trackerError = null;
+            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)]/', (string)$torrent[3], $matches);
             if (!empty($matches)) {
                 $trackerError = empty($matches[2]) ? $matches[1] : $matches[2];
             }
 
-            $torrents[$torrentHash] = [
-                'topic_id'      => $this->getTorrentTopicId($torrentComment),
-                'comment'       => $torrentComment,
-                'done'          => $torrent[0],
-                'error'         => $torrentError,
-                'name'          => $torrent[4],
-                'paused'        => (int)!$torrent[6],
-                'time_added'    => $torrent[7],
-                'total_size'    => $torrent[5],
-                'tracker_error' => $trackerError,
-            ];
+            // Если "осталось скачать" == 0, то выводим статус.
+            // Если "осталось скачать" != 0, то делим остаток на общий размер.
+            $progress = $torrent[8] === 0 ? $torrent[1] : ($torrent[5] - $torrent[8]) / $torrent[5];
+
+            // Если файл один, то просто путь. Если файлов несколько, то dirname.
+            $storagePath = !$torrent[9] ? $torrent[11] : dirname($torrent[11]);
+
+            $torrents[$torrentHash] = new Torrent(
+                topicHash   : $torrentHash,
+                clientHash  : $torrentHash,
+                name        : (string)$torrent[4],
+                topicId     : $this->getTorrentTopicId($torrentComment),
+                size        : (int)$torrent[5],
+                added       : Helper::makeDateTime((int)$torrent[7]),
+                done        : $progress,
+                paused      : !$torrent[6],
+                error       : !empty($torrent[3]),
+                trackerError: $trackerError ?: null,
+                comment     : $torrentComment ?: null,
+                storagePath : $storagePath ?? null
+            );
+
+            unset($torrent, $torrentHash, $torrentComment, $trackerError);
+            unset($progress, $storagePath);
         }
 
-        return $torrents;
+        return new Torrents($torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool

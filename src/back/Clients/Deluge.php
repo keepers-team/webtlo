@@ -7,7 +7,10 @@ namespace KeepersTeam\Webtlo\Clients;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -56,7 +59,7 @@ final class Deluge implements ClientInterface
         }
     }
 
-    public function getTorrents(array $filter = []): array
+    public function getTorrents(array $filter = []): Torrents
     {
         $fields = [
             (object)[],
@@ -69,33 +72,50 @@ final class Deluge implements ClientInterface
                 'time_added',
                 'total_size',
                 'tracker_status',
+                'save_path',
+                'is_finished',
+                'file_progress',
             ],
         ];
 
         $response = $this->makeRequest(method: 'core.get_torrents_status', params: $fields);
+
         $torrents = [];
         foreach ($response as $torrentHash => $torrent) {
-            $torrentHash   = strtoupper($torrentHash);
-            $torrentPaused = !empty($torrent['paused']) ? 1 : 0;
-            $torrentError  = $torrent['message'] !== 'OK' ? 1 : 0;
+            $torrentHash = strtoupper((string)$torrentHash);
 
+            $torrentError = $torrent['message'] !== 'OK';
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $trackerError = $matches[1] ?? '';
 
-            $torrents[$torrentHash] = [
-                'topic_id'      => $this->getTorrentTopicId($torrent['comment']),
-                'comment'       => $torrent['comment'],
-                'done'          => $torrent['progress'] / 100,
-                'error'         => $torrentError,
-                'name'          => $torrent['name'],
-                'paused'        => $torrentPaused,
-                'time_added'    => $torrent['time_added'],
-                'total_size'    => $torrent['total_size'],
-                'tracker_error' => $trackerError,
-            ];
+            $progress = $torrent['progress'] / 100;
+            // Если торрент скачан полностью, проверив выбраны ли все файлы раздачи.
+            if ($torrent['is_finished']) {
+                $files    = $torrent['file_progress'];
+                $progress = array_sum($files) / max(count($files), 1);
+
+                unset($files);
+            }
+
+            $torrents[$torrentHash] = new Torrent(
+                topicHash   : $torrentHash,
+                clientHash  : $torrentHash,
+                name        : (string)$torrent['name'],
+                topicId     : $this->getTorrentTopicId($torrent['comment']),
+                size        : (int)$torrent['total_size'],
+                added       : Helper::makeDateTime((int)$torrent['time_added']),
+                done        : $progress,
+                paused      : (bool)$torrent['paused'],
+                error       : $torrentError,
+                trackerError: $trackerError,
+                comment     : $torrent['comment'] ?: null,
+                storagePath : $torrent['save_path'] ?? null
+            );
+
+            unset($torrentHash, $torrent, $torrentError, $trackerError, $progress);
         }
 
-        return $torrents;
+        return new Torrents($torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
