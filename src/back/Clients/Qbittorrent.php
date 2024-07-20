@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients;
 
+use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Module\Topics;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -26,6 +29,7 @@ final class Qbittorrent implements ClientInterface
     use Traits\AllowedFunctions;
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
+    use Traits\TopicIdSearch;
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
     private bool $categoryAddingAllowed = true;
@@ -36,7 +40,7 @@ final class Qbittorrent implements ClientInterface
     /**
      * Категории раздач в клиенте.
      *
-     * @var ?string[]
+     * @var ?array<string, array<string, string>>
      */
     private ?array $categories = null;
 
@@ -45,7 +49,7 @@ final class Qbittorrent implements ClientInterface
      *
      * @var string[]
      */
-    private array $errorStates = ['error', 'missingFiles', 'unknown'];
+    private const errorStates = ['error', 'missingFiles', 'unknown'];
 
     private Client    $client;
     private CookieJar $jar;
@@ -72,88 +76,36 @@ final class Qbittorrent implements ClientInterface
         }
     }
 
-    public function getTorrents(array $filter = []): array
+    public function getTorrents(array $filter = []): Torrents
     {
         /** Получить просто список раздач без дополнительных действий */
-        $simpleRun = $filter['simple'] ?? false;
+        $simpleRun = (bool)($filter['simple'] ?? 0);
 
-        Timers::start('torrents_info');
-        $response = $this->makeRequest(url: 'torrents/info');
-        Timers::stash('torrents_info');
+        $generator = $this->generateTorrentsList(simpleRun: $simpleRun);
 
         $torrents = [];
-        Timers::start('processing');
-        foreach ($response as $torrent) {
-            $clientHash    = $torrent['hash'];
-            $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $torrent['hash']);
-            $torrentPaused = str_starts_with($torrent['state'], 'paused') ? 1 : 0;
-            $torrentError  = in_array($torrent['state'], $this->errorStates) ? 1 : 0;
+        foreach ($generator as $hash => $payload) {
+            $hash = (string)$hash;
 
-            $torrents[$torrentHash] = [
-                'topic_id'      => null,
-                'comment'       => '',
-                'done'          => $torrent['progress'],
-                'error'         => $torrentError,
-                'name'          => $torrent['name'],
-                'paused'        => $torrentPaused,
-                'time_added'    => $torrent['added_on'],
-                'total_size'    => $torrent['total_size'],
-                'client_hash'   => $clientHash,
-                'tracker_error' => '',
-            ];
-
-            if (!$simpleRun) {
-                // Получение ошибок трекера.
-                // Для раздач на паузе, нет рабочих трекеров и смысла их проверять тоже нет.
-                if (!$torrentPaused && empty($torrent['tracker'])) {
-                    $torrentTrackers = $this->getTrackers($clientHash);
-                    if (!empty($torrentTrackers)) {
-                        foreach ($torrentTrackers as $torrentTracker) {
-                            if ((int)$torrentTracker['status'] === 4) {
-                                $torrents[$torrentHash]['tracker_error'] = $torrentTracker['msg'];
-                                break;
-                            }
-                        }
-                    }
-                    unset($torrentTrackers);
-                }
-            }
-
-            unset($clientHash, $torrentHash, $torrentPaused, $torrentError);
-        }
-        Timers::stash('processing');
-
-        if (!$simpleRun) {
-            Timers::start('db_search');
-            // Пробуем найти раздачи в локальной БД.
-            $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
-            if (count($topics)) {
-                $torrents = array_replace_recursive($torrents, $topics);
-            }
-            unset($topics);
-            Timers::stash('db_search');
-
-            // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий
-            $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
-            if (count($emptyTopics)) {
-                Timers::start('comment_search');
-                foreach ($emptyTopics as $torrentHash => $torrent) {
-                    // получение ссылки на раздачу
-                    $properties = $this->getProperties($torrent['client_hash']);
-                    if (!empty($properties)) {
-                        $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
-                        $torrents[$torrentHash]['comment']  = $properties['comment'];
-                    }
-                    unset($torrentHash, $torrent, $properties);
-                }
-                Timers::stash('comment_search');
-            }
-            unset($emptyTopics);
+            $torrents[$hash] = new Torrent(
+                topicHash   : $hash,
+                clientHash  : (string)$payload['client_hash'],
+                name        : (string)$payload['name'],
+                topicId     : $payload['topic_id'] ?: null,
+                size        : (int)$payload['total_size'],
+                added       : Helper::makeDateTime((int)$payload['time_added']),
+                done        : $payload['done'],
+                paused      : (bool)$payload['paused'],
+                error       : (bool)$payload['error'],
+                trackerError: $payload['tracker_error'] ?: null,
+                comment     : $payload['comment'] ?: null,
+                storagePath : $payload['storagePath'] ?? null
+            );
         }
 
-        $this->logger->debug('Topics search', Timers::getStash());
+        $this->logger->debug('Done processing', Timers::getStash());
 
-        return $torrents;
+        return new Torrents($torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -405,21 +357,98 @@ final class Qbittorrent implements ClientInterface
         return false;
     }
 
+    private function generateTorrentsList(bool $simpleRun): Generator
+    {
+        // Получаем и обрабатываем список раздач от клиента.
+        $torrents = $this->processTorrents(
+            clientTorrents: $this->requestTorrents(),
+            callback      : $simpleRun ? null : fn(string $clientHash) => $this->checkTorrentTrackers($clientHash)
+        );
+
+        if (!$simpleRun) {
+            // Попытка найти ид раздачи в локальных таблицах.
+            $this->tryFillTopicIdFromTopics($torrents);
+            $this->tryFillTopicIdFromTorrents($torrents);
+
+            // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий.
+            $this->tryFillTopicIdFromComments($torrents);
+        }
+
+        foreach ($torrents as $hash => $torrent) {
+            yield $hash => $torrent;
+        }
+    }
+
+    private function requestTorrents(): Generator
+    {
+        Timers::start('torrents_info');
+        $response = $this->makeRequest(url: 'torrents/info');
+        Timers::stash('torrents_info');
+
+        foreach ($response as $torrent) {
+            yield $torrent;
+        }
+    }
+
     /**
-     * @param string $torrentHash
      * @return array<string, mixed>
      */
-    private function getProperties(string $torrentHash): array
+    private function processTorrents(Generator $clientTorrents, ?callable $callback = null): array
     {
-        return $this->makeRequest(
-            url   : 'torrents/properties',
-            params: ['hash' => strtolower($torrentHash)]
-        );
+        Timers::start('processing');
+
+        $torrents = [];
+        foreach ($clientTorrents as $torrent) {
+            $clientHash    = strtoupper($torrent['hash']);
+            $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $clientHash);
+            $torrentPaused = str_starts_with($torrent['state'], 'paused');
+            $torrentError  = in_array($torrent['state'], self::errorStates);
+            $trackerError  = null;
+
+            // Процент загрузки торрента.
+            $progress = $torrent['progress'];
+            if ($progress === 1 && !empty($torrent['availability'])) {
+                if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
+                    $progress = (float)$torrent['availability'];
+                }
+            }
+
+            // Получение ошибок трекера.
+            if (null !== $callback) {
+                // Для раздач на паузе, нет рабочих трекеров и смысла их проверять тоже нет.
+                if (!$torrentPaused && empty($torrent['tracker'])) {
+                    $trackerError = $callback($clientHash);
+                    if (null !== $trackerError) {
+                        $torrentError = true;
+                    }
+                }
+            }
+
+            $torrents[$torrentHash] = [
+                'topic_id'      => null,
+                'comment'       => null,
+                'done'          => $progress,
+                'error'         => $torrentError,
+                'name'          => $torrent['name'],
+                'paused'        => $torrentPaused,
+                'time_added'    => $torrent['added_on'],
+                'total_size'    => $torrent['total_size'],
+                'client_hash'   => $clientHash,
+                'storagePath'   => $torrent['save_path'],
+                'tracker_error' => $trackerError,
+            ];
+
+            unset($torrent, $clientHash, $torrentHash);
+            unset($torrentPaused, $torrentError, $trackerError, $progress);
+        }
+        Timers::stash('processing');
+
+        return $torrents;
     }
 
     /**
      * @param string $torrentHash
-     * @return array<string, mixed>[]
+     * @return array{}|array{url: string, status: int, message: string}[]
      */
     private function getTrackers(string $torrentHash): array
     {
@@ -431,11 +460,44 @@ final class Qbittorrent implements ClientInterface
         );
         foreach ($trackers as $tracker) {
             if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
-                $torrent_trackers[] = $tracker;
+                $torrent_trackers[] = [
+                    'url'     => $tracker['url'],
+                    'status'  => (int)$tracker['status'],
+                    'message' => $tracker['msg'],
+                ];
             }
         }
 
         return $torrent_trackers;
+    }
+
+    private function checkTorrentTrackers(string $clientHash): ?string
+    {
+        $trackers = $this->getTrackers($clientHash);
+
+        if (!empty($trackers)) {
+            foreach ($trackers as $tracker) {
+                if ($tracker['status'] === 4) {
+                    return (string)$tracker['message'];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $torrentHash
+     * @return array<string, mixed>
+     */
+    private function getProperties(string $torrentHash): array
+    {
+        $properties = $this->makeRequest(
+            url   : 'torrents/properties',
+            params: ['hash' => strtolower($torrentHash)]
+        );
+
+        return Helper::convertKeysToString(array: $properties);
     }
 
     private function checkLabelExists(string $labelName = ''): void
@@ -445,7 +507,9 @@ final class Qbittorrent implements ClientInterface
         }
 
         if (null === $this->categories) {
-            $this->categories = $this->makeRequest(url: 'torrents/categories');
+            $this->categories = Helper::convertKeysToString(
+                array: $this->makeRequest(url: 'torrents/categories')
+            );
         }
 
         if (!array_key_exists($labelName, $this->categories)) {
@@ -453,6 +517,34 @@ final class Qbittorrent implements ClientInterface
             $this->categories[$labelName] = [
                 'name' => $labelName,
             ];
+        }
+    }
+
+    /**
+     * Пробуем найти ид раздачи в дополнительных данных торрента.
+     *
+     * @param array<string, mixed> $torrents
+     */
+    private function tryFillTopicIdFromComments(array &$torrents): void
+    {
+        Timers::start('comment_search');
+
+        $emptyTopics = self::getEmptyTopics($torrents);
+        if (count($emptyTopics)) {
+            $this->logger->debug('Start search torrents in comment column', ['empty' => count($emptyTopics)]);
+
+            foreach ($emptyTopics as $torrentHash => $torrent) {
+                $properties = $this->getProperties($torrent['client_hash']);
+                if (!empty($properties)) {
+                    $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
+                    $torrents[$torrentHash]['comment']  = $properties['comment'];
+                }
+
+                unset($torrentHash, $torrent, $properties);
+            }
+
+            Timers::stash('comment_search');
+            $this->logger->debug('End search torrents in comment column');
         }
     }
 

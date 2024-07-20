@@ -8,7 +8,10 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -30,7 +33,7 @@ final class Flood implements ClientInterface
     private bool $categoryAddingAllowed = true;
 
     /** @var string[] */
-    private array $errorStates = [
+    private const trackerErrorStates = [
         '/.*Couldn\'t connect.*/',
         '/.*error.*/',
         '/.*Timeout.*/',
@@ -63,31 +66,36 @@ final class Flood implements ClientInterface
         }
     }
 
-    public function getTorrents(array $filter = []): array
+    public function getTorrents(array $filter = []): Torrents
     {
         $response = $this->makeRequest(uri: 'torrents');
 
         $torrents = [];
         foreach ($response['torrents'] as $torrent) {
-            $torrentHash   = $torrent['hash'];
-            $torrentPaused = in_array('stopped', $torrent['status']) ? 1 : 0;
+            $torrentHash   = strtoupper($torrent['hash']);
+            $torrentPaused = in_array('stopped', $torrent['status']);
 
-            [$torrentError, $errorMessage] = $this->checkTorrentError($torrent);
+            [$torrentError, $errorMessage] = self::checkTorrentError($torrent);
 
-            $torrents[$torrentHash] = [
-                'topic_id'      => $this->getTorrentTopicId($torrent['comment']),
-                'comment'       => $torrent['comment'],
-                'done'          => $torrent['percentComplete'] / 100,
-                'error'         => $torrentError,
-                'name'          => $torrent['name'],
-                'paused'        => $torrentPaused,
-                'time_added'    => $torrent['dateAdded'],
-                'total_size'    => $torrent['sizeBytes'],
-                'tracker_error' => $errorMessage,
-            ];
+            $torrents[$torrentHash] = new Torrent(
+                topicHash   : $torrentHash,
+                clientHash  : $torrentHash,
+                name        : (string)$torrent['name'],
+                topicId     : $this->getTorrentTopicId($torrent['comment']),
+                size        : (int)$torrent['sizeBytes'],
+                added       : Helper::makeDateTime((int)$torrent['dateAdded']),
+                done        : $torrent['percentComplete'] / 100,
+                paused      : $torrentPaused,
+                error       : (bool)$torrentError,
+                trackerError: $errorMessage ?: null,
+                comment     : $torrent['comment'] ?: null,
+                storagePath : $torrent['directory'] ?? null
+            );
+
+            unset($torrent, $torrentHash, $torrentPaused, $torrentError, $errorMessage);
         }
 
-        return $torrents;
+        return new Torrents($torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -298,13 +306,13 @@ final class Flood implements ClientInterface
      * @param array<string, mixed> $torrent
      * @return array{int, string}
      */
-    private function checkTorrentError(array $torrent): array
+    private static function checkTorrentError(array $torrent): array
     {
         if (in_array('error', $torrent['status'])) {
             return [1, $torrent['message'] ?: 'torrent status error'];
         }
 
-        foreach ($this->errorStates as $pattern) {
+        foreach (self::trackerErrorStates as $pattern) {
             if (preg_match($pattern, $torrent['message'])) {
                 return [1, $torrent['message']];
             }
