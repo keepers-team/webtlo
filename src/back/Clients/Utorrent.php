@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients;
 
+use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Module\Topics;
-use KeepersTeam\Webtlo\Module\Torrents;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -28,6 +30,7 @@ final class Utorrent implements ClientInterface
     use Traits\AllowedFunctions;
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
+    use Traits\TopicIdSearch;
 
     private const HashesPerRequest = 32;
 
@@ -65,72 +68,36 @@ final class Utorrent implements ClientInterface
         }
     }
 
-    public function getTorrents(array $filter = []): array
+    public function getTorrents(array $filter = []): Torrents
     {
         /** Получить просто список раздач без дополнительных действий */
-        $simpleRun = $filter['simple'] ?? false;
+        $simpleRun = (bool)($filter['simple'] ?? 0);
 
-        Timers::start('torrents_info');
-        $response = $this->makeRequest(action: '1', method: 'list');
-        Timers::stash('torrents_info');
+        $generator = $this->generateTorrentsList(simpleRun: $simpleRun);
 
         $torrents = [];
-        Timers::start('processing');
-        foreach ($response['torrents'] as $torrent) {
-            /* status reference
-                0 - loaded
-                1 - queued
-                2 - paused
-                3 - error
-                4 - checked
-                5 - start after check
-                6 - checking
-                7 - started
-            */
-            $torrentState  = decbin($torrent[1]);
-            $torrentHash   = strtoupper($torrent[0]);
-            $torrentPaused = $torrentState[2] || !$torrentState[7] ? 1 : 0;
+        foreach ($generator as $hash => $payload) {
+            $hash = (string)$hash;
 
-            $torrents[$torrentHash] = [
-                'topic_id'      => null,
-                'comment'       => '',
-                'done'          => $torrent[4] / 1000,
-                'error'         => $torrentState[3],
-                'name'          => $torrent[2],
-                'paused'        => $torrentPaused,
-                'time_added'    => '',
-                'total_size'    => $torrent[3],
-                'tracker_error' => '',
-            ];
-        }
-        Timers::stash('processing');
-
-        if (!$simpleRun) {
-            // Пробуем найти раздачи в локальной БД.
-            Timers::start('db_topics_search');
-            $topics = Topics::getTopicsIdsByHashes(array_keys($torrents));
-            if (count($topics)) {
-                $torrents = array_replace_recursive($torrents, $topics);
-            }
-            Timers::stash('db_topics_search');
-
-            // Пробуем найти раздачи в локальной таблице раздач в клиентах.
-            $emptyTopics = array_filter($torrents, fn($el) => empty($el['topic_id']));
-            if (count($emptyTopics)) {
-                Timers::start('db_torrents_search');
-                $topics = Torrents::getTopicsIdsByHashes(array_keys($emptyTopics));
-                if (count($topics)) {
-                    $torrents = array_replace_recursive($torrents, $topics);
-                }
-                unset($topics);
-                Timers::stash('db_torrents_search');
-            }
-            unset($emptyTopics);
+            $torrents[$hash] = new Torrent(
+                topicHash   : $hash,
+                clientHash  : $hash,
+                name        : (string)$payload['name'],
+                topicId     : $payload['topic_id'] ?: null,
+                size        : (int)$payload['total_size'],
+                added       : Helper::makeDateTime((int)$payload['time_added']),
+                done        : $payload['done'],
+                paused      : (bool)$payload['paused'],
+                error       : (bool)$payload['error'],
+                trackerError: $payload['tracker_error'] ?: null,
+                comment     : $payload['comment'] ?: null,
+                storagePath : null
+            );
         }
 
-        $this->logger->debug('Topics search', Timers::getStash());
+        $this->logger->debug('Done processing', Timers::getStash());
 
-        return $torrents;
+        return new Torrents($torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -333,6 +300,74 @@ final class Utorrent implements ClientInterface
             $method => $action,
             ...$params,
         ]);
+    }
+
+    private function generateTorrentsList(bool $simpleRun): Generator
+    {
+        // Получаем и обрабатываем список раздач от клиента.
+        $torrents = $this->processTorrents(
+            clientTorrents: $this->requestTorrents()
+        );
+
+        if (!$simpleRun) {
+            // Попытка найти ид раздачи в локальных таблицах.
+            $this->tryFillTopicIdFromTopics($torrents);
+            $this->tryFillTopicIdFromTorrents($torrents);
+        }
+
+        foreach ($torrents as $hash => $torrent) {
+            yield $hash => $torrent;
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function processTorrents(Generator $clientTorrents): array
+    {
+        $torrents = [];
+        Timers::start('processing');
+        foreach ($clientTorrents as $torrent) {
+            /* status reference
+                0 - loaded
+                1 - queued
+                2 - paused
+                3 - error
+                4 - checked
+                5 - start after check
+                6 - checking
+                7 - started
+            */
+            $torrentState  = decbin((int)$torrent[1]);
+            $torrentHash   = strtoupper((string)$torrent[0]);
+            $torrentPaused = $torrentState[2] || !$torrentState[7];
+
+            $torrents[$torrentHash] = [
+                'topic_id'      => null,
+                'comment'       => null,
+                'done'          => (int)$torrent[4] / 1000,
+                'error'         => (bool)$torrentState[3],
+                'name'          => (string)$torrent[2],
+                'paused'        => $torrentPaused,
+                'time_added'    => null,
+                'total_size'    => (int)$torrent[3],
+                'tracker_error' => null,
+            ];
+        }
+        Timers::stash('processing');
+
+        return $torrents;
+    }
+
+    private function requestTorrents(): Generator
+    {
+        Timers::start('torrents_info');
+        $response = $this->makeRequest(action: '1', method: 'list');
+        Timers::stash('torrents_info');
+
+        foreach ($response['torrents'] as $torrent) {
+            yield $torrent;
+        }
     }
 
     /**
