@@ -9,9 +9,9 @@ use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\RejectionException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
-use KeepersTeam\Webtlo\External\Api\V1\TopicPeers;
 use KeepersTeam\Webtlo\External\Api\V1\TopicsPeersResponse;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
+use KeepersTeam\Webtlo\External\Data\TopicPeers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -125,11 +125,11 @@ trait TopicsPeers
     private static function parseDynamicPeer(int|string $identifier, array $payload): TopicPeers
     {
         return new TopicPeers(
-            identifier: $identifier,
-            seeders   : $payload[0],
-            leechers  : $payload[1],
-            lastSeeded: self::dateTimeFromTimestamp($payload[2]),
-            keepers   : $payload[3] ?? null,
+            id      : is_int($identifier) ? $identifier : -1,
+            hash    : is_string($identifier) ? $identifier : 'unknown',
+            seeders : (int)$payload[0],
+            leechers: (int)$payload[1],
+            keepers : count($payload[3] ?? []),
         );
     }
 }
