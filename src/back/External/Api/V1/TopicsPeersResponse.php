@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Api\V1;
 
-/** Список данных о пирах раздач. */
+use KeepersTeam\Webtlo\External\Data\TopicPeers;
+
+/**
+ * Список данных о пирах раздач.
+ */
 final class TopicsPeersResponse
 {
     /**
