@@ -19,6 +19,7 @@ use Psr\Log\LoggerInterface;
 final class ApiReportClient
 {
     use StaticHelper;
+    use Actions\ForumTopicsPeers;
     use Actions\KeepersReports;
     use Actions\Processor;
     use Actions\ReportForumTopics;

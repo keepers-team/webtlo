@@ -23,6 +23,11 @@ trait Processor
         return (new DateTimeImmutable())->setTimestamp($timestamp);
     }
 
+    /**
+     * Returns the request limit based on the search mode.
+     *
+     * @return int<1, max> The request limit, which is always a positive integer.
+     */
     protected static function getRequestLimit(TopicSearchMode $searchMode): int
     {
         return match ($searchMode) {
