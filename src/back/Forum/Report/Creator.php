@@ -657,6 +657,11 @@ final class Creator
         }
     }
 
+    public function setFullUpdateTime(DateTimeImmutable $updateTime): void
+    {
+        $this->updateTime = $updateTime;
+    }
+
     private function getFormattedUpdateTime(): string
     {
         $dateString = $this->updateTime === null ? 'никогда' : $this->updateTime->format('d.m.Y');

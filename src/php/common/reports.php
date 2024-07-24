@@ -75,6 +75,9 @@ if (null === $fullUpdateTime) {
     return;
 }
 
+// Перезапишем актуальную дату отчётности, после проверки.
+$forumReports->setFullUpdateTime($fullUpdateTime);
+
 // Если API доступно - отправляем отчёты.
 if ($sendReport->isEnable()) {
     $Timers = [];
