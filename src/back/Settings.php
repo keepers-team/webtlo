@@ -193,6 +193,8 @@ final class Settings
             'send_report_settings' => $ini->read('reports', 'send_report_settings', 1),
             // Снимать отметку хранения с не хранимых подразделов.
             'unset_other_forums' => $ini->read('reports', 'unset_other_forums', 1),
+            // Снимать отметку хранения с не хранимых раздач
+            'unset_other_topics' => $ini->read('reports', 'unset_other_topics', 1),
             'exclude_forums_ids'  => $ini->read('reports', 'exclude_forums_ids'),
             'exclude_clients_ids' => $ini->read('reports', 'exclude_clients_ids'),
             // Список игнорируемых хранителей
@@ -641,6 +643,8 @@ final class Settings
         $ini->write('reports', 'send_report_settings', (int)isset($cfg['send_report_settings']));
         // Снимать отметку хранения с не хранимых подразделов
         $ini->write('reports', 'unset_other_forums', (int)isset($cfg['unset_other_forums']));
+        // Снимать отметку хранения с не хранимых раздач
+        $ini->write('reports', 'unset_other_topics', (int)isset($cfg['unset_other_topics']));
 
         // Исключаемые из отчётов торрент-клиенты
         $excludeClientsIDs = array_unique($excludeClientsIDs);
