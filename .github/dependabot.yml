@@ -15,7 +15,7 @@ updates:
     commit-message:
       prefix: "[github-actions] "
     rebase-strategy: "auto"
-    milestone: 8
+    milestone: 9
     open-pull-requests-limit: 3
     labels:
       - "C: Distribution"
