@@ -595,34 +595,27 @@ final class Settings
     {
         $ini = $this->ini;
 
-        if (
-            isset($cfg['rule_topics'])
-            && is_numeric($cfg['rule_topics'])
-        ) {
-            $ini->write('sections', 'rule_topics', trim($cfg['rule_topics']));
+        $numerics = [
+            'rule_topics',
+            'rule_date_release',
+            'avg_seeders_period',
+            'avg_seeders_period_outdated',
+        ];
+        foreach ($numerics as $key) {
+            if (isset($cfg[$key]) && is_numeric($cfg[$key])) {
+                $ini->write('sections', $key, trim((string)$cfg[$key]));
+            }
         }
-        if (
-            isset($cfg['rule_date_release'])
-            && is_numeric($cfg['rule_date_release'])
-        ) {
-            $ini->write('sections', 'rule_date_release', trim($cfg['rule_date_release']));
+
+        $booleans = [
+            'avg_seeders',
+            'exclude_self_keep',
+            'enable_auto_apply_filter',
+            'ui_save_selected_section',
+        ];
+        foreach ($booleans as $key) {
+            $ini->write('sections', $key, (int)isset($cfg[$key]));
         }
-        if (
-            isset($cfg['avg_seeders_period'])
-            && is_numeric($cfg['avg_seeders_period'])
-        ) {
-            $ini->write('sections', 'avg_seeders_period', trim($cfg['avg_seeders_period']));
-        }
-        if (
-            isset($cfg['avg_seeders_period_outdated'])
-            && is_numeric($cfg['avg_seeders_period_outdated'])
-        ) {
-            $ini->write('sections', 'avg_seeders_period_outdated', trim($cfg['avg_seeders_period_outdated']));
-        }
-        $ini->write('sections', 'avg_seeders', isset($cfg['avg_seeders']) ? 1 : 0);
-        $ini->write('sections', 'exclude_self_keep', isset($cfg['exclude_self_keep']) ? 1 : 0);
-        $ini->write('sections', 'enable_auto_apply_filter', isset($cfg['enable_auto_apply_filter']) ? 1 : 0);
-        $ini->write('sections', 'ui_save_selected_section', (int)isset($cfg['ui_save_selected_section']));
     }
 
     /**
