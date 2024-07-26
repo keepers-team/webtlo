@@ -6,10 +6,10 @@ use KeepersTeam\Webtlo\Action\Control;
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\DTO\KeysObject;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\Module\ControlHelper;
 use KeepersTeam\Webtlo\Timers;
 
-$app = AppContainer::create();
+$app = AppContainer::create('control.log');
 
 $logger = $app->getLogger();
 
@@ -34,17 +34,18 @@ if (isset($checkEnabledCronAction)) {
     }
 }
 
-// Подключение к Api.
-$apiClient = $app->getApiClient();
-
 // Хранимые подразделы.
 $forums = KeysObject::create(array_keys($cfg['subsections']));
 
-/** @var TopicControl $topicControl */
+/** @var TopicControl $topicControl Параметры регулировки */
 $topicControl = $app->get(TopicControl::class);
 
-/** @var Control $actionControl */
+/** @var Control $actionControl Выполнение регулировки */
 $actionControl = $app->get(Control::class);
+
+/** @var ControlHelper $apiHelper Получение раздач из API */
+$apiHelper = $app->get(ControlHelper::class);
+$apiHelper->setCachedSubForums(forums: $actionControl->getRepeatedSubForums());
 
 $clientFactory = $app->getClientFactory();
 
@@ -92,10 +93,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     // Получаем раздачи из БД.
     $topicsHashes = $actionControl->getStoredHashes($torrentClientID, $forums, $torrents);
 
+    // Счётчики применения фортуны при переключении состояния раздачи.
+    $randomCounter = $randomProc = 0;
+
     $controlTopics = ['stop' => [], 'start' => []];
     foreach ($topicsHashes as $forumID => $hashes) {
         // Пропустим подраздел, есть его нет в списке хранимых и регулировка "прочих" отключена.
-        if (!$topicControl->manageOtherSubsections && $forumID === 'unadded') {
+        if (!$topicControl->manageOtherSubsections && $forumID === Control::UnknownHashes) {
             continue;
         }
 
@@ -111,16 +115,11 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
         $peersLimit = Control::getPeerLimit($topicControl, $clientControlPeers, $subControlPeers);
 
         Timers::start("subsection_$forumID");
-        // получаем данные о пирах
-        $response = $apiClient->getPeerStats($hashes);
-        if ($response instanceof ApiError) {
-            $logger->error(sprintf('%d %s', $response->code, $response->text));
-            throw new RuntimeException('Error: Не получены данные о пирах раздач.');
-        }
-
-        foreach ($response->peers as $topic) {
+        // Получаем данные о пирах искомых раздач и перебираем их.
+        $topicsPeers = $apiHelper->getTopicsPeersGenerator(group: $forumID, hashes: $hashes);
+        foreach ($topicsPeers as $topic) {
             // Проверяем наличие и статус раздачи в клиенте.
-            $torrent = $torrents->getTorrent(hash: (string)$topic->identifier);
+            $torrent = $torrents->getTorrent(hash: $topic->hash);
             if (
                 // пропускаем отсутствующий торрент
                 null === $torrent
@@ -132,14 +131,28 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
                 continue;
             }
 
-            if (Control::shouldStopSeeding($topicControl, $peersLimit, $torrent, $topic)) {
-                if (!$torrent->paused) {
-                    $controlTopics['stop'][] = $torrent->clientHash;
+            // Вычисляем необходимое изменение состояния раздачи в клиенте.
+            $desiredChange = $actionControl->determineDesiredState(
+                topic    : $topic,
+                peerLimit: $peersLimit,
+                isSeeding: !$torrent->paused
+            );
+            if ($desiredChange->isRandom()) {
+                $randomCounter++;
+            }
+
+            if ($desiredChange->shouldStartSeeding()) {
+                if ($desiredChange->isRandom()) {
+                    $randomProc++;
                 }
-            } else {
-                if ($torrent->paused) {
-                    $controlTopics['start'][] = $torrent->clientHash;
+
+                $controlTopics['start'][] = $torrent->clientHash;
+            } elseif ($desiredChange->shouldStopSeeding()) {
+                if ($desiredChange->isRandom()) {
+                    $randomProc++;
                 }
+
+                $controlTopics['stop'][] = $torrent->clientHash;
             }
 
             unset($topic, $torrent);
@@ -152,11 +165,14 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             'execTime'  => Timers::getExecTime("subsection_$forumID"),
         ]);
 
-        unset($forumID, $hashes, $response);
+        unset($forumID, $hashes);
     }
 
     if (!count($controlTopics['start']) && !count($controlTopics['stop'])) {
-        $logger->notice("Регулировка раздач не требуется для торрент-клиента $clientTag");
+        $logger->notice("Регулировка раздач не требуется для торрент-клиента $clientTag", [
+            'randomTotal' => $randomCounter,
+            'randomProc' => $randomProc,
+        ]);
         continue;
     }
 
@@ -183,10 +199,13 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     }
 
     $logger->info('Регулировка раздач в торрент-клиенте {tag} завершена за {sec}', [
-        'tag'   => $clientTag,
-        'sec'   => Timers::getExecTime("control_client_$torrentClientID"),
-        'start' => count($controlTopics['start']),
-        'stop'  => count($controlTopics['stop']),
+        'tag'    => $clientTag,
+        'sec'    => Timers::getExecTime("control_client_$torrentClientID"),
+        'start'  => count($controlTopics['start']),
+        'stop'   => count($controlTopics['stop']),
+        'total'  => $torrents->count(),
+        'random' => $randomCounter,
+        'proc'   => $randomProc,
     ]);
     unset($controlTopics);
 }
@@ -197,3 +216,4 @@ if (count($excludedForums)) {
     ]);
 }
 $logger->info('Регулировка раздач в торрент-клиентах завершена за ' . Timers::getExecTime('control'));
+$logger->info('-- DONE --');
