@@ -270,6 +270,15 @@ final class Creator
             'subsections' => $subsections,
         ];
 
+        // Параметры отправки отчётов.
+        $shared['reports'] = [
+            'enabled'             => (bool)$config['automation']['reports'],
+            'send_report_api'     => (bool)$config['reports']['send_report_api'],
+            'send_summary_report' => (bool)$config['reports']['send_summary_report'],
+            'unset_other_forums'  => (bool)$config['reports']['unset_other_forums'],
+            'unset_other_topics'  => (bool)$config['reports']['unset_other_topics'],
+        ];
+
         // Локальные даты обновления сведений.
         $shared['markers'] = $this->updateTest->getMainMarkers()->getFormattedMarkers();
 
