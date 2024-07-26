@@ -63,12 +63,16 @@ $(document).ready(function () {
     });
 
     // отправка отчётов
-    $("button.send_reports").on("click", function () {
+    $("button.send_reports").on("click", function (evt) {
         let buttons = $("button.send_reports").toggleDisable(true);
         let icon = buttons.find("i.fa").toggleClass('fa-paper-plane-o fa-spinner');
         $.ajax({
             type: "POST",
             url: "php/actions/send_reports.php",
+            contentType: "application/json",
+            data: JSON.stringify({
+                cleanOverride : evt.ctrlKey
+            }),
             beforeSend: function () {
                 block_actions();
                 processStatus.set("Отправка отчётов хранимого...");

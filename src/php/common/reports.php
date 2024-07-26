@@ -43,6 +43,18 @@ $sendReport = $app->get(SendReport::class);
 /** @var ReportSend $reportConfig Настройки отправки отчётов. */
 $reportConfig = $app->get(ReportSend::class);
 
+// Признак необходимости отправки "чистых" отчётов из настроек.
+$reportRewrite = $reportConfig->unsetOtherTopics;
+
+// Проверяем наличие запроса фронта о необходимости отправки чистых отчётов.
+$postData = json_decode((string)file_get_contents('php://input'), true);
+if (!empty($postData['cleanOverride']) && $postData['cleanOverride'] === true) {
+    $reportRewrite = true;
+
+    $log->notice('Получен сигнал для отправки "чистых" отчётов.');
+}
+unset($postData);
+
 // Желание отправить отчёт через API.
 $sendReport->setEnable($reportConfig->sendReports);
 
@@ -114,7 +126,7 @@ if ($sendReport->isEnable()) {
                 forumId       : $forum_id,
                 topicsToReport: $topicsToReport,
                 reportDate    : $fullUpdateTime,
-                reportRewrite : $reportConfig->unsetOtherTopics,
+                reportRewrite : $reportRewrite,
             );
 
             $timer['send_api'] = Timers::getExecTime("send_api_$forum_id");
