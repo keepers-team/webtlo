@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use Generator;
+use KeepersTeam\Webtlo\Action\Traits\ControlUnseededTrait;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\DB;
@@ -17,6 +18,8 @@ use Psr\Log\LoggerInterface;
 
 final class Control
 {
+    use ControlUnseededTrait;
+
     public const UnknownHashes = 'UnknownHashes';
 
     public function __construct(

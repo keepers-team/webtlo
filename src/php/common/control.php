@@ -49,6 +49,10 @@ $apiHelper->setCachedSubForums(forums: $actionControl->getRepeatedSubForums());
 
 $clientFactory = $app->getClientFactory();
 
+$actionControl->unseededInitMessage();
+
+$unseededModuleEnabled = $actionControl->isUnseededEnable();
+
 $excludedForums = [];
 foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
     $torrentClientID = (int)$torrentClientID;
@@ -111,6 +115,11 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             continue;
         }
 
+        $forumUnseededTopics = [];
+        if ($unseededModuleEnabled && $actionControl->checkUnseededLimit()) {
+            $forumUnseededTopics = $apiHelper->getUnseededHashes($forumID, $topicControl->daysUntilUnseeded);
+        }
+
         // Лимит пиров для регулировки.
         $peersLimit = Control::getPeerLimit($topicControl, $clientControlPeers, $subControlPeers);
 
@@ -132,11 +141,18 @@ foreach ($cfg['clients'] as $torrentClientID => $torrentClientData) {
             }
 
             // Вычисляем необходимое изменение состояния раздачи в клиенте.
-            $desiredChange = $actionControl->determineDesiredState(
-                topic    : $topic,
-                peerLimit: $peersLimit,
-                isSeeding: !$torrent->paused
-            );
+
+            // Если раздача входит в список не сидированных, то она должна быть запущена.
+            $desiredChange = $actionControl->checkTorrentUnseeded(torrent: $torrent, unseededHashes: $forumUnseededTopics);
+            // Если не входит, то вычисляем по общему алгоритму.
+            if (null === $desiredChange) {
+                $desiredChange = $actionControl->determineDesiredState(
+                    topic    : $topic,
+                    peerLimit: $peersLimit,
+                    isSeeding: !$torrent->paused
+                );
+            }
+
             if ($desiredChange->isRandom()) {
                 $randomCounter++;
             }
@@ -215,5 +231,7 @@ if (count($excludedForums)) {
         'excluded' => implode(', ', array_unique($excludedForums)),
     ]);
 }
+
+$actionControl->unseededCloseMessage();
 $logger->info('Регулировка раздач в торрент-клиентах завершена за ' . Timers::getExecTime('control'));
 $logger->info('-- DONE --');
