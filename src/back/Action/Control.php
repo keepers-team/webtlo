@@ -5,19 +5,22 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use Generator;
-use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
-use KeepersTeam\Webtlo\External\Api\V1\TopicPeers;
+use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
+use KeepersTeam\Webtlo\External\Data\TopicPeers;
 use KeepersTeam\Webtlo\Timers;
 use PDO;
 use Psr\Log\LoggerInterface;
 
 final class Control
 {
+    public const UnknownHashes = 'UnknownHashes';
+
     public function __construct(
+        private readonly TopicControl    $options,
         private readonly DB              $db,
         private readonly LoggerInterface $logger,
     ) {
@@ -27,9 +30,9 @@ final class Control
     {
         Timers::start("get_topics_$torrentClientID");
 
-        $unaddedHashes = $torrents->getHashes();
+        $unknownHashes = $torrents->getHashes();
 
-        $hashesChunks = array_chunk($unaddedHashes, 999);
+        $hashesChunks = array_chunk($unknownHashes, 999);
 
         $topicsHashes = [];
         foreach ($hashesChunks as $chunk) {
@@ -50,7 +53,8 @@ final class Control
             );
 
             foreach ($result as $forumId => $hashes) {
-                $unaddedHashes = array_diff($unaddedHashes, $hashes);
+                // Найденные хеши вычитаем из общей кучи.
+                $unknownHashes = array_diff($unknownHashes, $hashes);
 
                 $topicsHashes[$forumId][] = $hashes;
             }
@@ -59,24 +63,46 @@ final class Control
         $topicsHashes = array_map(fn($el) => array_merge(...$el), $topicsHashes);
 
         $this->logger->info(
-            'Поиск раздач в БД завершён за {sec}. Найдено раздач из хранимых подразделов {count} шт, из прочих {unadded} шт.',
+            'Поиск раздач в БД завершён за {sec}. Найдено раздач из хранимых подразделов {count} шт, из прочих {unknown} шт.',
             [
                 'count'   => count($topicsHashes, COUNT_RECURSIVE) - count($topicsHashes),
-                'unadded' => count($unaddedHashes),
+                'unknown' => count($unknownHashes),
                 'sec'     => Timers::getExecTime("get_topics_$torrentClientID"),
             ]
         );
 
         // Сортируем подразделы по ИД.
         ksort($topicsHashes);
-        if (count($unaddedHashes)) {
-            $topicsHashes['unadded'] = $unaddedHashes;
-        }
-        unset($unaddedHashes);
-
         foreach ($topicsHashes as $group => $hashes) {
             yield $group => $hashes;
         }
+
+        // Возвращаем "прочие" раздачи отдельно.
+        yield self::UnknownHashes => $unknownHashes;
+    }
+
+    /**
+     * Найти список хранимых подразделов, раздачи который встречаются в нескольких торрент-клиентах.
+     *
+     * @return array{}|int[]
+     */
+    public function getRepeatedSubForums(): array
+    {
+        $query = '
+            SELECT t.forum_id
+            FROM (
+                SELECT DISTINCT tp.forum_id, tr.client_id
+                FROM Topics AS tp
+                INNER JOIN Torrents AS tr
+                    ON tr.info_hash = tp.info_hash
+            ) AS t
+            GROUP BY t.forum_id
+            HAVING COUNT(1) > 1
+        ';
+
+        $forums = $this->db->query($query, [], PDO::FETCH_COLUMN);
+
+        return array_map('intval', $forums);
     }
 
     /**
@@ -108,24 +134,63 @@ final class Control
     }
 
     /**
-     * Нужно ли остановить раздачу в торрент клиенте?
+     * Определить желаемое состояние раздачи в клиенте, в зависимости от текущих значений и настроек.
      */
-    public static function shouldStopSeeding(
-        TopicControl $control,
-        int          $peerLimit,
-        Torrent      $torrent,
-        TopicPeers   $topic
-    ): bool {
-        // Количество сидов на раздаче.
-        $seeders = $topic->seeders;
+    public function determineDesiredState(TopicPeers $topic, int $peerLimit, bool $isSeeding): DesiredStatusChange
+    {
+        $controlOptions = $this->options;
 
-        // Если раздача запущена и есть сиды, то вычитаем себя из их числа.
-        if ($seeders > 0 && !$torrent->paused) {
-            $seeders--;
+        // Если у раздачи нет личей и выбрана опция "не сидировать без личей", то рандомно останавливаем раздачу.
+        if ($isSeeding && self::shouldSkipSeeding(control: $controlOptions, topic: $topic)) {
+            return DesiredStatusChange::RandomStop;
         }
 
-        // Расчётное значение ПИРОВ раздачи. Пиры - всё другие участники, кроме меня.
-        $peers = $seeders;
+        // Расчётное значение пиров раздачи.
+        $peers = self::calculatePeers(control: $controlOptions, topic: $topic, isSeeding: $isSeeding);
+
+        // Если текущее количество пиров равно лимиту - то ничего с раздачей не делаем.
+        if ($peers === $peerLimit) {
+            return DesiredStatusChange::Nothing;
+        }
+
+        // Если раздача раздаётся, и лимит не превышает - ничего не делаем.
+        if ($isSeeding && $peers < $peerLimit) {
+            return DesiredStatusChange::Nothing;
+        }
+
+        // Если раздача остановлена и лимит превышает - ничего не делаем.
+        if (!$isSeeding && $peers > $peerLimit) {
+            return DesiredStatusChange::Nothing;
+        }
+
+        // Если состояние раздачи нужно переключить, но разница с лимитом не велика, то применяем рандом.
+        if (abs($peers - $peerLimit) <= $controlOptions->randomApplyCount) {
+            return $isSeeding
+                ? DesiredStatusChange::RandomStop
+                : DesiredStatusChange::RandomStart;
+        }
+
+        // Если есть сиды и пиров больше нужного - останавливаем раздачу. В противном случае - запускам.
+        return $topic->seeders > 0 && $peers > $peerLimit
+            ? DesiredStatusChange::Stop
+            : DesiredStatusChange::Start;
+    }
+
+    /**
+     * Определяет, следует ли остановить сидирование раздачи.
+     */
+    private static function shouldSkipSeeding(TopicControl $control, TopicPeers $topic): bool
+    {
+        return !$control->seedingWithoutLeechers && $topic->leechers === 0 && $topic->seeders > 1;
+    }
+
+    /**
+     * Вычисление количества пиров раздачи, в зависимости от выбранных настроек.
+     */
+    private static function calculatePeers(TopicControl $control, TopicPeers $topic, bool $isSeeding): int
+    {
+        // Расчётное значение пиров раздачи.
+        $peers = $topic->seeders;
 
         // Если выбрана опция учёта личей как пиров, то плюсуем их.
         if ($control->countLeechersAsPeers) {
@@ -133,28 +198,19 @@ final class Control
         }
 
         // Если выбрана опция игнорирования части сидов-хранителей на раздаче и они есть.
-        if (null !== $topic->keepers && $control->excludedKeepersCount > 0) {
+        if ($topic->keepers > 0 && $control->excludedKeepersCount > 0) {
             // Количество сидов хранителей на раздаче.
-            $keepers = count($topic->keepers);
+            $keepers = $topic->keepers;
 
             // Если раздача запущена, то вычитаем себя из сидов-хранителей.
-            if ($keepers > 0 && !$torrent->paused) {
+            if ($isSeeding) {
                 $keepers--;
             }
 
             // Вычитаем количество исключаемых хранителей.
-            $peers -= (int)min($keepers, $control->excludedKeepersCount);
+            $peers -= min($keepers, $control->excludedKeepersCount);
         }
 
-        // Если нет личей и настройка выключена, то такую раздачу держать запущенной не нужно.
-        $skipSeedingWithoutLeechers = !$control->seedingWithoutLeechers && $topic->leechers === 0;
-
-        // Сверяем количество пиров раздачи с лимитом.
-        $toMuchPeers = max(0, $peers) >= $peerLimit;
-
-        // Останавливаем раздачу, только если есть другие сиды и одно из:
-        // - количество пиров больше заданного ограничения
-        // - у раздачи нет личей и соответствующая опция выключена
-        return $seeders > 0 && ($toMuchPeers || $skipSeedingWithoutLeechers);
+        return max(0, $peers);
     }
 }

@@ -1,20 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
-use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    // Инициализируем контейнер, без имени лога, чтобы записи не двоились от legacy/di.
-    AppContainer::create();
+    // Инициализируем контейнер.
+    $app = AppContainer::create('control.log');
+    $log = $app->getLogger();
 
     // дёргаем скрипт
     $checkEnabledCronAction = 'control';
     include_once dirname(__FILE__) . '/../php/common/control.php';
-} catch (Exception $e) {
-    Log::append($e->getMessage());
+} catch (Throwable $e) {
+    if (isset($log)) {
+        $log->error($e->getMessage());
+    }
 }
-
-// записываем в лог
-Log::write('control.log');
