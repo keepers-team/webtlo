@@ -34,6 +34,26 @@ final class ControlHelper
     ) {
     }
 
+
+    /**
+     * @return array{}|string[]
+     */
+    public function getUnseededHashes(int|string $group, int $days): array
+    {
+        if (is_string($group)) {
+            return [];
+        }
+
+        $response = $this->apiReport->getKeeperUnseededTopics(forumId: $group);
+        if ($response instanceof ApiError) {
+            $this->logger->error(sprintf('%d %s', $response->code, $response->text));
+
+            return [];
+        }
+
+        return $response->getHashes(notSeedingDays: $days);
+    }
+
     /**
      * @param int[] $forums
      */
