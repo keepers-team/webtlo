@@ -32,8 +32,8 @@ updates:
       prefix: "[composer] "
     rebase-strategy: "auto"
     versioning-strategy: "lockfile-only"
-    milestone: 8
-    open-pull-requests-limit: 3
+    milestone: 9
+    open-pull-requests-limit: 10
     labels:
       - "C: Backend"
       - "T: Maintenance"
