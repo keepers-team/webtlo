@@ -110,9 +110,12 @@ final class Settings
         // регулировка раздач
         $config['topics_control']['peers']               = $ini->read('topics_control', 'peers', 10);
         $config['topics_control']['keepers']             = $ini->read('topics_control', 'keepers', 3);
+        $config['topics_control']['random']              = $ini->read('topics_control', 'random', 1);
         $config['topics_control']['unadded_subsections'] = $ini->read('topics_control', 'unadded_subsections', 0);
         $config['topics_control']['leechers']            = $ini->read('topics_control', 'leechers', 0);
         $config['topics_control']['no_leechers']         = $ini->read('topics_control', 'no_leechers', 1);
+        $config['topics_control']['days_until_unseeded'] = $ini->read('topics_control', 'days_until_unseeded', 21);
+        $config['topics_control']['max_unseeded_count']  = $ini->read('topics_control', 'max_unseeded_count', 100);
 
         // прокси
         $config['proxy_activate_forum']  = $ini->read('proxy', 'activate_forum', 1);
@@ -481,8 +484,11 @@ final class Settings
 
         $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
         $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
+        $ini->write('topics_control', 'random', (int)($cfg['random'] ?? 0));
         $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
         $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
+        $ini->write('topics_control', 'days_until_unseeded', (int)($cfg['days_until_unseeded'] ?? 0));
+        $ini->write('topics_control', 'max_unseeded_count', (int)($cfg['max_unseeded_count'] ?? 0));
     }
 
     /**
