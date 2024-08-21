@@ -25,14 +25,12 @@ try {
 
     // Callback для чекбоксов.
     $checkbox_check = cfg_checkbox($cfg);
+    $numeric_check  = cfg_numeric_value($cfg);
 
     // чекбоксы
     $savesub_dir = $cfg['savesub_dir'] == 1 ? "checked" : "";
     $retracker = $cfg['retracker'] == 1 ? "checked" : "";
     $avg_seeders = $cfg['avg_seeders'] == 1 ? "checked" : "";
-    $leechers = $cfg['topics_control']['leechers'] ? "checked" : "";
-    $no_leechers = $cfg['topics_control']['no_leechers'] ? "checked" : "";
-    $unadded_subsections = $cfg['topics_control']['unadded_subsections'] ? "checked" : "";
     $tor_for_user = $cfg['tor_for_user'] == 1 ? "checked" : "";
     $exclude_self_keep = $cfg['exclude_self_keep'] == 1 ? "checked" : "";
     $enable_auto_apply_filter = $cfg['enable_auto_apply_filter'] == 1 ? "checked" : "";
@@ -219,6 +217,13 @@ function cfg_checkbox($cfg): Closure
     return function($section, $option) use ($cfg) {
         $value = $cfg[$section][$option] ?? 0;
         return $value == 1 ? "checked" : "";
+    };
+}
+
+function cfg_numeric_value($cfg): Closure
+{
+    return function($section, $option) use ($cfg) {
+        return $cfg[$section][$option] ?? 0;
     };
 }
 
@@ -1112,24 +1117,38 @@ function cfg_checkbox($cfg): Closure
                             <h3>Регулировка раздач<sup>2</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:
-                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?= $cfg['topics_control']['peers'] ?? 10 ?>" />
+                                <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?= $numeric_check('topics_control', 'peers') ?>" />
                             </label>
                             <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
                                 Не учитывать до
-                                <input id="keepers" name="keepers" class="spinner-keepers" type="text" size="1" value="<?= $cfg['topics_control']['keepers'] ?? 3 ?>" />
+                                <input id="keepers" name="keepers" class="control-keepers-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'keepers') ?>" />
                                 сидирующих хранителей, при подсчете текущих сидов
                             </label>
+                            <label class="label" title="Пограничный случай - это когда количество пиров раздачи отличается от лимита на значение указанное в этой настройке. В таком случае раздача не будет строго переключать своей состояние (выкл/вкл), а будет это делать случайно. 0 - для выключения (по умолчанию: 1)">
+                                Случайно игнорировать до
+                                <input name="random" class="control-random-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'random') ?>" />
+                                пиров в пограничных случаях
+                            </label>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
-                                <input name="unadded_subsections" type="checkbox" <?= $unadded_subsections ?? '' ?> />
+                                <input name="unadded_subsections" type="checkbox" <?= $checkbox_check('topics_control', 'unadded_subsections') ?> />
                                 регулировать раздачи не из хранимых подразделов
                             </label>
-                            <label class="label" title="Установите, если необходимо учитывать значение личей при регулировке, иначе будут браться только значения сидов (по умолчанию: выключено)">
-                                <input name="leechers" type="checkbox" <?= $leechers ?? '' ?> />
+                            <label class="label" title="Установите, если необходимо учитывать значение личей при подсчёте пиров, иначе будут браться только значения сидов (по умолчанию: выключено)">
+                                <input name="leechers" type="checkbox" <?= $checkbox_check('topics_control', 'leechers') ?> />
                                 учитывать значение личей
                             </label>
                             <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
-                                <input name="no_leechers" type="checkbox" <?= $no_leechers ?? '' ?> />
+                                <input name="no_leechers" type="checkbox" <?= $checkbox_check('topics_control', 'no_leechers') ?> />
                                 запускать раздачи с 0 (нулём) личей
+                            </label>
+                            <h3>Принудительный запуск давно не сидируемых раздач</h3>
+                            <label class="label" title="Если раздачу не сидировали заданное количество дней, временно включим её для учёта в API . 0 - для выключения (по умолчанию: 21)">
+                                Количество дней, по прошествии которых раздача считается не сидируемой:
+                                <input name="days_until_unseeded" class="control-unseeded-days-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'days_until_unseeded') ?>" />
+                            </label>
+                            <label class="label">
+                                Максимальное количество не сидируемых раздач, которые можно запустить одновременно:
+                                <input name="max_unseeded_count" class="control-unseeded-count-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'max_unseeded_count') ?>" />
                             </label>
                             <hr>
                             <ol class="footnote">

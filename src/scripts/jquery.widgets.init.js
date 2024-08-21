@@ -200,10 +200,21 @@ $(document).ready(function () {
         max: 100,
         mouseWheel: true
     });
-    // регулировка раздач, количество хранителей
-    $(".spinner-keepers").spinner({
+    // регулировка раздач, количество хранителей, "ширина" рандома
+    $('.control-keepers-spinner, .control-random-spinner').spinner({
         min: 0,
         max: 10,
+        mouseWheel: true
+    });
+    // Регулировка, количество дней, по прошествии которых раздача считается не сидируемой
+    $('.control-unseeded-days-spinner').spinner({
+        min: 0,
+        max: 30,
+        mouseWheel: true
+    });
+    // Регулировка, максимальное количество не сидируемых раздач, которые можно запустить одновременно
+    $('.control-unseeded-count-spinner').spinner({
+        min: 0,
         mouseWheel: true
     });
 
