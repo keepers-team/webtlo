@@ -90,21 +90,23 @@ $(document).ready(function () {
         });
     });
 
-    // регулировка раздач
-    $("#control_torrents").on("click", function () {
+    // Регулировка раздач в торрент-клиентах.
+    $('#control_torrents').on('click', function () {
         $.ajax({
-            type: "POST",
-            url: "php/actions/control_torrents.php",
-            beforeSend: function () {
+            type: 'POST',
+            url: 'php/actions/control_torrents.php',
+            beforeSend: () => {
+                showResultTopics();
                 block_actions();
-                processStatus.set("Регулировка раздач...");
+                processStatus.set('Регулировка раздач...');
             },
-            success: function (response) {
+            success: response => {
                 response = $.parseJSON(response);
+
                 addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
             },
-            complete: function () {
+            complete: () => {
                 block_actions();
             },
         });
