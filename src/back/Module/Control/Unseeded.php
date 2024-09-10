@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module\Control;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
+use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Tables\UpdateTime;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -28,6 +31,7 @@ final class Unseeded
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ConfigControl   $topicControl,
+        private readonly UpdateTime      $updateTime,
     ) {
     }
 
@@ -86,7 +90,9 @@ final class Unseeded
                     ]
                 );
             } else {
-                $this->logger->info('[Unseeded] Нет долго не сидируемых раздач, так держать!');
+                // Если нет раздач, которые нужно запускать, записываем дату и не проверяем до следующего дня.
+                $this->updateTime->setMarkerTime(marker: UpdateMark::UNSEEDED);
+                $this->logger->info('[Unseeded] Нет долго не сидируемых раздач, так держать! (Отключёно до следующего дня)');
             }
         }
     }
@@ -105,6 +111,17 @@ final class Unseeded
 
         return $this->moduleEnable =
             $this->topicControl->daysUntilUnseeded
-            && $this->topicControl->maxUnseededCount;
+            && $this->topicControl->maxUnseededCount
+            && $this->checkTodayEnabled();
+    }
+
+    /**
+     * Проверяем, нужно ли сегодня искать раздачи.
+     */
+    private function checkTodayEnabled(): bool
+    {
+        $lastCheck = $this->updateTime->getMarkerTime(marker: UpdateMark::UNSEEDED);
+
+        return (new DateTimeImmutable())->setTime(0, 0) > $lastCheck;
     }
 }

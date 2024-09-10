@@ -38,42 +38,52 @@ final class UpdateTime
     /**
      * Получить timestamp с датой обновления.
      */
-    public function getMarkerTimestamp(int $markerId): int
+    public function getMarkerTimestamp(int|UpdateMark $marker): int
     {
+        if ($marker instanceof UpdateMark) {
+            $marker = $marker->value;
+        }
+
         return (int)$this->db->queryColumn(
             "SELECT ud FROM UpdateTime WHERE id = ?",
-            [$markerId],
+            [$marker],
         );
     }
 
     /**
      * Получить объект с датой обновления.
      */
-    public function getMarkerTime(int $markerId): DateTimeImmutable
+    public function getMarkerTime(int|UpdateMark $marker): DateTimeImmutable
     {
-        return Helper::makeDateTime($this->getMarkerTimestamp($markerId));
+        return Helper::makeDateTime($this->getMarkerTimestamp($marker));
     }
 
     /**
      * Записать новое значения даты обновления.
      */
-    public function setMarkerTime(int $markerId, int|DateTimeImmutable $updateTime = new DateTimeImmutable()): void
-    {
+    public function setMarkerTime(
+        int|UpdateMark        $marker,
+        int|DateTimeImmutable $updateTime = new DateTimeImmutable()
+    ): void {
+        if ($marker instanceof UpdateMark) {
+            $marker = $marker->value;
+        }
         if ($updateTime instanceof DateTimeImmutable) {
             $updateTime = $updateTime->getTimestamp();
         }
+
         $this->db->executeStatement(
             "INSERT INTO UpdateTime (id, ud) SELECT ?,?",
-            [$markerId, $updateTime]
+            [$marker, $updateTime]
         );
     }
 
     /**
      * Проверить прошло ли достаточно времени с последнего обновления.
      */
-    public function checkUpdateAvailable(int $markerId, int $seconds = 3600): bool
+    public function checkUpdateAvailable(int|UpdateMark $marker, int $seconds = 3600): bool
     {
-        $updateTime = $this->getMarkerTimestamp($markerId);
+        $updateTime = $this->getMarkerTimestamp($marker);
 
         // Если не прошло заданное количество времени, обновление невозможно.
         if (time() - $updateTime < $seconds) {
