@@ -23,6 +23,8 @@ enum UpdateMark: int
     case SEND_REPORT   = 9901;
     /** Дата последней очистки таблиц. */
     case DB_CLEAN      = 9920;
+    /** Проверка давно не сидируемых раздач. */
+    case UNSEEDED      = 9930;
 
     public function label(): string
     {
@@ -35,6 +37,7 @@ enum UpdateMark: int
             self::FULL_UPDATE   => 'Полное обновление всех сведений',
             self::SEND_REPORT   => 'Успешная отправка отчётов',
             self::DB_CLEAN      => 'Последняя очистка таблиц от неактуальных сведений',
+            self::UNSEEDED      => 'Проверка давно не сидируемых раздач',
         };
     }
 }
