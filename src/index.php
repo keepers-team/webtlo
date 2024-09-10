@@ -1081,6 +1081,7 @@ function cfg_numeric_value($cfg): Closure
                                        value="<?= $cfg['reports']['exclude_forums_ids'] ?? '' ?>"/>
                             </label>
                         </div>
+
                         <h2>Автоматизация и дополнительные настройки</h2>
                         <div>
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
@@ -1114,15 +1115,17 @@ function cfg_numeric_value($cfg): Closure
                                 Поиск хранимых раздач незарегистрированных на трекере
                             </label>
                             <hr>
-                            <h3>Регулировка раздач<sup>2</sup></h3>
+
+                            <h3>[Control] Регулировка раздач<sup>2</sup></h3>
                             <label class="label" title="Укажите числовое значение пиров, при котором требуется останавливать раздачи в торрент-клиентах (по умолчанию: 10)">
                                 Останавливать раздачи с количеством пиров более:
                                 <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?= $numeric_check('topics_control', 'peers') ?>" />
+                                (Лимит пиров)
                             </label>
                             <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
                                 Не учитывать до
                                 <input id="keepers" name="keepers" class="control-keepers-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'keepers') ?>" />
-                                сидирующих хранителей, при подсчете текущих сидов
+                                сидирующих хранителей, при подсчете пиров раздачи
                             </label>
                             <label class="label" title="Пограничный случай - это когда количество пиров раздачи отличается от лимита на значение указанное в этой настройке. В таком случае раздача не будет строго переключать своей состояние (выкл/вкл), а будет это делать случайно. 0 - для выключения (по умолчанию: 1)">
                                 Случайно игнорировать до
@@ -1141,13 +1144,14 @@ function cfg_numeric_value($cfg): Closure
                                 <input name="no_leechers" type="checkbox" <?= $checkbox_check('topics_control', 'no_leechers') ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
-                            <h3>Принудительный запуск давно не сидируемых раздач</h3>
-                            <label class="label" title="Если раздачу не сидировали заданное количество дней, временно включим её для учёта в API . 0 - для выключения (по умолчанию: 21)">
+
+                            <h3>[Unseeded] Запуск давно не сидируемых раздач</h3>
+                            <label class="label" title="Если раздачу не сидировали заданное количество дней, временно включим её для учёта в API. 0 - для выключения (по умолчанию: 21)">
                                 Количество дней, по прошествии которых раздача считается не сидируемой:
                                 <input name="days_until_unseeded" class="control-unseeded-days-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'days_until_unseeded') ?>" />
                             </label>
                             <label class="label">
-                                Максимальное количество не сидируемых раздач, которые можно запустить одновременно:
+                                Количество раздач, которые будут запущены за раз:
                                 <input name="max_unseeded_count" class="control-unseeded-count-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'max_unseeded_count') ?>" />
                             </label>
                             <hr>
@@ -1158,6 +1162,7 @@ function cfg_numeric_value($cfg): Closure
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
                         </div>
+
                         <h2>Журнал и внешний вид</h2>
                         <div>
                             <input type="hidden" id="config_selected_theme" value="<?= $cfg['ui']['theme'] ?? '' ?>" />
