@@ -111,6 +111,7 @@ final class Settings
         $config['topics_control']['peers']               = $ini->read('topics_control', 'peers', 10);
         $config['topics_control']['keepers']             = $ini->read('topics_control', 'keepers', 3);
         $config['topics_control']['random']              = $ini->read('topics_control', 'random', 1);
+        $config['topics_control']['priority']            = $ini->read('topics_control', 'priority', 1);
         $config['topics_control']['unadded_subsections'] = $ini->read('topics_control', 'unadded_subsections', 0);
         $config['topics_control']['leechers']            = $ini->read('topics_control', 'leechers', 0);
         $config['topics_control']['no_leechers']         = $ini->read('topics_control', 'no_leechers', 1);
@@ -485,6 +486,7 @@ final class Settings
         $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
         $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
         $ini->write('topics_control', 'random', (int)($cfg['random'] ?? 0));
+        $ini->write('topics_control', 'priority', (int)($cfg['peer_priority'] ?? 1));
         $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
         $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
         $ini->write('topics_control', 'days_until_unseeded', (int)($cfg['days_until_unseeded'] ?? 0));

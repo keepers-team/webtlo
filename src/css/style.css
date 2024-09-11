@@ -224,6 +224,10 @@ li.menu.ui-tabs-active {
     width: 3em;
 }
 
+.ui-controlgroup.ui-padding-02 .ui-button {
+    padding: 0.2em;
+}
+
 /* Уберём зависающее jquery-ui выделение */
 .ui-state-focus.ui-visual-focus {
     box-shadow: none;
