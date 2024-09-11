@@ -117,9 +117,9 @@ final class TopicControl
 
                 // Лимит пиров для регулировки текущей группы раздач.
                 $peerLimit = PeerCalc::calcLimit(
-                    peerLimit             : $topicControl->peersLimit,
+                    controlConfig         : $topicControl,
                     clientControlPeers    : $clientControlPeers,
-                    subsectionControlPeers: $subControlPeers
+                    subsectionControlPeers: $subControlPeers,
                 );
 
                 Timers::start("subsection_$group");

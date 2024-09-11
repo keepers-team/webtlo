@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Module\Control;
 
 use KeepersTeam\Webtlo\Config\TopicControl;
+use KeepersTeam\Webtlo\Enum\ControlPeerLimitPriority;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
@@ -31,13 +32,16 @@ final class PeerCalc
     /**
      * Определяем лимит пиров для регулировки в зависимости от настроек для подраздела и торрент клиента.
      */
-    public static function calcLimit(int $peerLimit, int $clientControlPeers, int $subsectionControlPeers): int
+    public static function calcLimit(TopicControl $controlConfig, int $clientControlPeers, int $subsectionControlPeers): int
     {
+        // Лимит пиров по умолчанию.
+        $peerLimit = $controlConfig->peersLimit;
+
         // Задан лимит для клиента и для раздела.
         if ($clientControlPeers > -1 && $subsectionControlPeers > -1) {
-            // Если лимит для клиента меньше лимита для подраздела, то используем лимит для клиента.
-            $peerLimit = $subsectionControlPeers;
-            if ($clientControlPeers < $subsectionControlPeers) {
+            if (ControlPeerLimitPriority::Subsection === $controlConfig->peerLimitPriority) {
+                $peerLimit = $subsectionControlPeers;
+            } else {
                 $peerLimit = $clientControlPeers;
             }
         } elseif ($clientControlPeers > -1) {

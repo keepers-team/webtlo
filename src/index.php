@@ -1132,6 +1132,18 @@ function cfg_numeric_value($cfg): Closure
                                 <input name="random" class="control-random-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'random') ?>" />
                                 пиров в пограничных случаях
                             </label>
+                            <label class="label" title="Если лимит пиров задан и для подраздела и для торрент-клиента, нужно выбрать приоритет одного над другим.">
+                                Приоритет при вычислении лимита пиров
+                                <div class="config_controlgroup">
+                                    <input type="hidden" id="peer_priority" class="radio_from_input" value="<?= $numeric_check('topics_control', 'priority') ?>">
+
+                                    <input type="radio" id="peer_priority_subsection" name="peer_priority" value="1" checked="checked">
+                                    <label for="peer_priority_subsection">подраздел</label>
+
+                                    <input type="radio" id="peer_priority_client" name="peer_priority" value="2">
+                                    <label for="peer_priority_client">торрент-клиент</label>
+                                </div>
+                            </label>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
                                 <input name="unadded_subsections" type="checkbox" <?= $checkbox_check('topics_control', 'unadded_subsections') ?> />
                                 регулировать раздачи не из хранимых подразделов

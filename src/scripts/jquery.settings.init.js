@@ -1,8 +1,8 @@
 /* Инициализация работы с настройками */
 
-$(document).ready(function () {
+$(document).ready(function() {
 
-    $('#show_passwords').on('click', function () {
+    $('#show_passwords').on('click', function() {
         $(this).find('i.fa').toggleClass('fa-eye fa-eye-slash');
 
         let elems = $('.user_protected');
@@ -26,6 +26,18 @@ $(document).ready(function () {
         }
 
         openUserProfile(user);
+    });
+
+    // Переносим значения радио кнопок из скрытых элементов формы.
+    $('#config .radio_from_input').each(function() {
+        $(`input[type=radio][name='${this.id}'][value=${this.value}]`).prop('checked', true);
+    });
+
+    // Инициализация кнопок настроек.
+    $('#config .config_controlgroup').controlgroup({
+        classes: {
+            'ui-controlgroup': 'hide-dot ui-padding-02'
+        }
     });
 
 });
