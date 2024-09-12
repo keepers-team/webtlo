@@ -28,6 +28,19 @@ $(document).ready(function() {
         openUserProfile(user);
     });
 
+    // topics_control => interval / TopicControl => peersLimitIntervals
+    $('#peers_intervals').on('keypress', function(e) {
+        const charStr = String.fromCharCode(e.which);
+
+        // Разрешаем только цифры и допустимые символы [:;\|/].
+        if (!/[0-9:;\\|\/,]/.test(charStr)) {
+            e.preventDefault(); // Блокируем ввод, если символ не подходит
+        }
+    }).on('click focus blur', function() {
+        // Заменяем недопустимые символы.
+        this.value = this.value.replace(/[^0-9:;\\|\/,]/g, '');
+    });
+
     // Переносим значения радио кнопок из скрытых элементов формы.
     $('#config .radio_from_input').each(function() {
         $(`input[type=radio][name='${this.id}'][value=${this.value}]`).prop('checked', true);

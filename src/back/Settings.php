@@ -109,6 +109,7 @@ final class Settings
 
         // регулировка раздач
         $config['topics_control']['peers']               = $ini->read('topics_control', 'peers', 10);
+        $config['topics_control']['intervals']           = $ini->read('topics_control', 'intervals', '');
         $config['topics_control']['keepers']             = $ini->read('topics_control', 'keepers', 3);
         $config['topics_control']['random']              = $ini->read('topics_control', 'random', 1);
         $config['topics_control']['priority']            = $ini->read('topics_control', 'priority', 1);
@@ -479,11 +480,9 @@ final class Settings
     {
         $ini = $this->ini;
 
-        if (isset($cfg['peers']) && is_numeric($cfg['peers'])) {
-            $ini->write('topics_control', 'peers', $cfg['peers']);
-        }
-
-        $ini->write('topics_control', 'keepers', isset($cfg['keepers']) ? (int)$cfg['keepers'] : 0);
+        $ini->write('topics_control', 'peers', (int)($cfg['peers'] ?? 0));
+        $ini->write('topics_control', 'intervals', (string)($cfg['peers_intervals'] ?? ''));
+        $ini->write('topics_control', 'keepers', (int)($cfg['keepers'] ?? 0));
         $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
         $ini->write('topics_control', 'random', (int)($cfg['random'] ?? 0));
         $ini->write('topics_control', 'priority', (int)($cfg['peer_priority'] ?? 1));
