@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Module\Control;
 
 use KeepersTeam\Webtlo\Config\TopicControl;
+use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
 use KeepersTeam\Webtlo\Enum\ControlPeerLimitPriority;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
 final class PeerCalc
 {
+    private ?int $peerLimit = null;
+
+    public function __construct(private readonly ConfigControl $config)
+    {
+    }
+
     /**
      * @param array<string, mixed> $clientProps
      */
@@ -32,14 +39,14 @@ final class PeerCalc
     /**
      * Определяем лимит пиров для регулировки в зависимости от настроек для подраздела и торрент клиента.
      */
-    public static function calcLimit(TopicControl $controlConfig, int $clientControlPeers, int $subsectionControlPeers): int
+    public function calcLimit(int $clientControlPeers, int $subsectionControlPeers): int
     {
-        // Лимит пиров по умолчанию.
-        $peerLimit = $controlConfig->peersLimit;
+        // Лимит пиров по умолчанию из настроек.
+        $peerLimit = $this->getPeerLimit();
 
         // Задан лимит для клиента и для раздела.
         if ($clientControlPeers > -1 && $subsectionControlPeers > -1) {
-            if (ControlPeerLimitPriority::Subsection === $controlConfig->peerLimitPriority) {
+            if (ControlPeerLimitPriority::Subsection === $this->config->peerLimitPriority) {
                 $peerLimit = $subsectionControlPeers;
             } else {
                 $peerLimit = $clientControlPeers;
@@ -58,15 +65,15 @@ final class PeerCalc
     /**
      * Определить желаемое состояние раздачи в клиенте, в зависимости от текущих значений и настроек.
      */
-    public static function determineDesiredState(TopicControl $controlConfig, TopicPeers $topic, int $peerLimit, bool $isSeeding): DesiredStatusChange
+    public function determineDesiredState(TopicPeers $topic, int $peerLimit, bool $isSeeding): DesiredStatusChange
     {
         // Если у раздачи нет личей и выбрана опция "не сидировать без личей", то рандомно останавливаем раздачу.
-        if ($isSeeding && self::shouldSkipSeeding(control: $controlConfig, topic: $topic)) {
+        if ($isSeeding && self::shouldSkipSeeding(control: $this->config, topic: $topic)) {
             return DesiredStatusChange::RandomStop;
         }
 
         // Расчётное значение пиров раздачи.
-        $peers = self::calculateTopicPeers(control: $controlConfig, topic: $topic, isSeeding: $isSeeding);
+        $peers = $this->calculateTopicPeers(topic: $topic, isSeeding: $isSeeding);
 
         // Если текущее количество пиров равно лимиту - то ничего с раздачей не делаем.
         if ($peers === $peerLimit) {
@@ -84,7 +91,7 @@ final class PeerCalc
         }
 
         // Если состояние раздачи нужно переключить, но разница с лимитом не велика, то применяем рандом.
-        if (abs($peers - $peerLimit) <= $controlConfig->randomApplyCount) {
+        if (abs($peers - $peerLimit) <= $this->config->randomApplyCount) {
             return $isSeeding
                 ? DesiredStatusChange::RandomStop
                 : DesiredStatusChange::RandomStart;
@@ -99,8 +106,10 @@ final class PeerCalc
     /**
      * Вычисление количества пиров раздачи, в зависимости от выбранных настроек.
      */
-    private static function calculateTopicPeers(TopicControl $control, TopicPeers $topic, bool $isSeeding): int
+    private function calculateTopicPeers(TopicPeers $topic, bool $isSeeding): int
     {
+        $control = $this->config;
+
         // Расчётное значение пиров раздачи.
         $peers = $topic->seeders;
 
@@ -124,6 +133,28 @@ final class PeerCalc
         }
 
         return max(0, $peers);
+    }
+
+    /**
+     * Найти в настройках глобальное значение лимита пиров, в т.ч. из интервалов, если они заданы.
+     */
+    private function getPeerLimit(): int
+    {
+        if (null !== $this->peerLimit) {
+            return $this->peerLimit;
+        }
+
+        if (empty($this->config->peersLimitIntervals)) {
+            return $this->peerLimit = $this->config->peersLimit;
+        }
+
+        // Текущий час (0-23).
+        $currentHour = (int)date('G');
+
+        $interval  = new PeerInterval($this->config->peersLimitIntervals);
+        $peerLimit = $interval->getCurrentIntervalPeerLimit($currentHour);
+
+        return $this->peerLimit = $peerLimit ?? $this->config->peersLimit;
     }
 
     /**
