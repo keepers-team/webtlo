@@ -1122,6 +1122,10 @@ function cfg_numeric_value($cfg): Closure
                                 <input id="peers" name="peers" class="spinner-peers" type="text" size="2" value="<?= $numeric_check('topics_control', 'peers') ?>" />
                                 (Лимит пиров)
                             </label>
+                            <label class="label" title="Перечисление цифр значения пиров, используемые в зависимости от времени суток. Например, '3/4/5/6' или '3:4|5:12|4:8', где [4:8] - [лимит пиров:размер временного интервала (ч.)]. (по умолчанию: пусто)">
+                                Динамический набор интервалов количества пиров:
+                                <input id="peers_intervals" name="peers_intervals" type="text" value="<?= $cfg['topics_control']['intervals'] ?? '' ?>" />
+                            </label>
                             <label class="label" title="Укажите значение количества сидов-хранителей, которых не учитывать при подсчёте сидов. 0 - для выключения (по умолчанию: 3)">
                                 Не учитывать до
                                 <input id="keepers" name="keepers" class="control-keepers-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'keepers') ?>" />
