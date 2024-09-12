@@ -23,6 +23,7 @@ final class TopicControl
 
     /**
      * @param int      $peersLimit             Предел пиров при регулировке
+     * @param string   $peersLimitIntervals    Набор интервалов предела пиров
      * @param int      $excludedKeepersCount   Количество исключаемых из регулировки хранителей на раздаче
      * @param int      $randomApplyCount       Разница пиров, при которой применяется рандом переключения состояния раздачи
      * @param Priority $peerLimitPriority      Приоритет разных значений лимита пиров при регулировке
@@ -34,6 +35,7 @@ final class TopicControl
      */
     public function __construct(
         public readonly int      $peersLimit,
+        public readonly string   $peersLimitIntervals,
         public readonly int      $excludedKeepersCount,
         public readonly int      $randomApplyCount,
         public readonly Priority $peerLimitPriority,
@@ -54,6 +56,7 @@ final class TopicControl
 
         return new TopicControl(
             peersLimit            : (int)($control['peers'] ?? 10),
+            peersLimitIntervals   : (string)($control['intervals'] ?? ''),
             excludedKeepersCount  : (int)($control['keepers'] ?? 3),
             randomApplyCount      : (int)($control['random'] ?? 1),
             peerLimitPriority     : Priority::from((int)($control['priority'] ?? 1)),

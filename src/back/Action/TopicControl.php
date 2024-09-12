@@ -27,6 +27,7 @@ final class TopicControl
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ConfigControl   $topicControl,
+        private readonly PeerCalc        $calc,
         private readonly ClientFactory   $clientFactory,
         private readonly ApiSearch       $api,
         private readonly DbSearch        $db,
@@ -116,8 +117,7 @@ final class TopicControl
                 }
 
                 // Лимит пиров для регулировки текущей группы раздач.
-                $peerLimit = PeerCalc::calcLimit(
-                    controlConfig         : $topicControl,
+                $peerLimit = $this->calc->calcLimit(
                     clientControlPeers    : $clientControlPeers,
                     subsectionControlPeers: $subControlPeers,
                 );
@@ -148,11 +148,10 @@ final class TopicControl
                     );
                     // Если не входит, то вычисляем по общему алгоритму.
                     if (null === $desiredChange) {
-                        $desiredChange = PeerCalc::determineDesiredState(
-                            controlConfig: $this->topicControl,
-                            topic        : $topic,
-                            peerLimit    : $peerLimit,
-                            isSeeding    : !$torrent->paused,
+                        $desiredChange = $this->calc->determineDesiredState(
+                            topic    : $topic,
+                            peerLimit: $peerLimit,
+                            isSeeding: !$torrent->paused,
                         );
                     }
 
