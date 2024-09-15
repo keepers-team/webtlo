@@ -19,4 +19,7 @@ $rules  = [
     ],
 ];
 
-return $config->setRules($rules)->setFinder($finder);
+return $config
+    ->setRules($rules)->setFinder($finder)
+    ->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect())
+;
