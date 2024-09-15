@@ -266,7 +266,13 @@ final class Creator
         $shared['control'] = [
             'enabled'     => (bool)$config['automation']['control'],
             'peers'       => (int)$config['topics_control']['peers'],
+            'intervals'   => (string)$config['topics_control']['intervals'],
             'keepers'     => (int)$config['topics_control']['keepers'],
+            'random'      => (int)$config['topics_control']['random'],
+            'unseeded'    => [
+                'days'  => (int)$config['topics_control']['days_until_unseeded'],
+                'count' => (int)$config['topics_control']['max_unseeded_count'],
+            ],
             'subsections' => $subsections,
         ];
 
