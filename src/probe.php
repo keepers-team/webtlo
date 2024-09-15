@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\TIniFileEx;
-use KeepersTeam\Webtlo\WebTLO;
+use KeepersTeam\Webtlo\Module\ProbeChecker;
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 
@@ -15,159 +16,22 @@ $proxies = [
     ['gateway.keeps.cyou', 2081],
 ];
 
-$forum = [
-    'rutracker.org',
-    'rutracker.net',
-    'rutracker.nl',
+$urls = [
+    'forum'  => [
+        'rutracker.org',
+        'rutracker.net',
+        'rutracker.nl',
+    ],
+    'api'    => [
+        'api.rutracker.cc',
+    ],
+    'report' => [
+        'rep.rutracker.cc',
+    ],
 ];
 
-$api = [
-    'api.rutracker.cc',
-];
 
-
-/**
- * @param string[]          $forum
- * @param string[]          $api
- * @param array<int, mixed> $proxies
- * @return string
- */
-function printProbe(array $forum, array $api, array $proxies): string
-{
-    $connectivity = [];
-    checkAccess($connectivity, $proxies, $forum, "https://%s/forum/info.php?show=copyright_holders");
-    checkAccess($connectivity, $proxies, $api, "https://%s/v1/get_client_ip");
-
-    $output = "Domain           ";
-    foreach ($proxies as $proxy) {
-        $output .= " | " . str_pad(getNullSafeProxy($proxy), 18);
-    }
-    $output .= "\r\n";
-
-    foreach (array_merge($forum, $api) as $url) {
-        $output .= str_pad($url, 17);
-        foreach ($proxies as $proxy) {
-            $code  = $connectivity[$url][getNullSafeProxy($proxy)] ?? 0;
-            $emoji = ($code < 300 && $code > 0) ? "✅" : "❌";
-
-            $output .= " | " . str_pad($emoji . " " . $code, 18);
-        }
-        $output .= "\r\n";
-    }
-
-    $output .= "\r\n" . json_encode(getAbout(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\r\n";
-
-    return $output;
-}
-
-/**
- * @return array<string, mixed>
- */
-function getAbout(): array
-{
-    $config = getConfig();
-    $webtlo = WebTLO::getVersion();
-
-    $parsed = [];
-
-    $parsed['forum_url'] = $config['torrent-tracker']['forum_url'] == 'custom'
-        ? $config['torrent-tracker']['forum_url_custom']
-        : $config['torrent-tracker']['forum_url'];
-    $parsed['forum_ssl'] = $config['torrent-tracker']['forum_ssl'];
-
-    $parsed['api_url'] = $config['torrent-tracker']['api_url'] == 'custom'
-        ? $config['torrent-tracker']['api_url_custom']
-        : $config['torrent-tracker']['api_url'];
-    $parsed['api_ssl'] = $config['torrent-tracker']['api_ssl'];
-
-
-    if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_api'] == 1) {
-        $parsed['proxy']['url']  = $config['proxy']['hostname'] . ":" . $config['proxy']['port'];
-        $parsed['proxy']['type'] = $config['proxy']['type'];
-    }
-    $parsed['proxy']['activate_forum'] = $config['proxy']['activate_forum'];
-    $parsed['proxy']['activate_api']   = $config['proxy']['activate_api'];
-
-
-    return [
-        'version' => $webtlo->version,
-        'about'   => $webtlo->getAbout(),
-        'config'  => $parsed,
-    ];
-}
-
-/**
- * @return array<string, mixed>
- */
-function getConfig(): array
-{
-    $config_path = (new TIniFileEx())::getFile();
-    if (!file_exists($config_path)) {
-        return [];
-    }
-
-    return parse_ini_file($config_path, true);
-}
-
-/**
- * @param ?array<int, int|string> $proxy
- * @return string
- */
-function getNullSafeProxy(?array $proxy): string
-{
-    return $proxy ? '✅ ' . $proxy[0] : "❎ no proxy";
-}
-
-/**
- * @param string                  $url
- * @param ?array<int, int|string> $proxy
- * @return ?int
- */
-function getUrlHttpCode(string $url, ?array $proxy): ?int
-{
-    try {
-        $ch = curl_init();
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_HEADER         => true,
-            CURLOPT_NOBODY         => true,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 2,
-            CURLOPT_USERAGENT      => "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_TIMEOUT        => 5,
-            CURLOPT_URL            => $url,
-        ]);
-        if (null !== $proxy) {
-            curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME);
-            curl_setopt($ch, CURLOPT_PROXY, sprintf("%s:%d", $proxy[0], $proxy[1]));
-        }
-        curl_exec($ch);
-
-        return (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    } catch (Exception) {
-        return null;
-    }
-}
-
-/**
- * @param array<string, mixed> $connectivity
- * @param array<int, mixed>    $proxies
- * @param string[]             $hostnames
- * @param string               $tpl
- * @return void
- */
-function checkAccess(array &$connectivity, array $proxies, array $hostnames, string $tpl): void
-{
-    foreach ($hostnames as $hostname) {
-        $url = sprintf($tpl, $hostname);
-        foreach ($proxies as $proxy) {
-            $connectivity[$hostname][getNullSafeProxy($proxy)] = getUrlHttpCode($url, $proxy);
-        }
-    }
-}
+$checker = new ProbeChecker($urls, $proxies);
 
 ?>
 <!DOCTYPE html>
@@ -203,7 +67,7 @@ function checkAccess(array &$connectivity, array $proxies, array $hostnames, str
             overflow: auto;
             color: var(--preformatted);
 
-            font-family: var(--mono-font);
+            font-family: var(--mono-font), monospace;
 
             background-color: var(--accent-bg);
             border: 1px solid var(--border);
@@ -231,8 +95,8 @@ function checkAccess(array &$connectivity, array $proxies, array $hostnames, str
 <body>
 <h2>webTLO configuration checker</h2>
 <label>
-<textarea rows="33" cols="120" spellcheck="false">
-<?= printProbe($forum, $api, $proxies); ?>
+<textarea rows="35" cols="120" spellcheck="false">
+<?= $checker->printProbe(); ?>
 </textarea>
 </label>
 </body>
