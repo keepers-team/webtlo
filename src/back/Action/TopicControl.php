@@ -46,7 +46,7 @@ final class TopicControl
         $this->validateConfig(config: $config);
 
         // Проверяем возможность запуска регулировки.
-        if (!$schedule && !Helper::isScheduleActionEnabled(config: $config, action: 'update')) {
+        if (!$schedule && !Helper::isScheduleActionEnabled(config: $config, action: 'control')) {
             $this->logger->notice('[Control] Автоматическая регулировка раздач отключена в настройках.');
 
             return;
