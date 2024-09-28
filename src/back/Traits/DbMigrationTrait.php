@@ -100,6 +100,13 @@ trait DbMigrationTrait
         // Исключаем из скриптов миграции файл инициализации с нуля.
         $exclude = ['..', '.', self::INIT_FILE];
 
-        return array_values(array_diff(scandir($sqlPath), $exclude));
+        // Use scandir and check if it's not false
+        $files = scandir($sqlPath);
+        if ($files === false) {
+            // Return an empty array if scandir fails
+            return [];
+        }
+
+        return array_values(array_diff($files, $exclude));
     }
 }
