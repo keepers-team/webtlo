@@ -37,6 +37,9 @@ final class Qbittorrent implements ClientInterface
     /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
     private int $torrentAddingSleep = 100;
 
+    /** Версия webApi. */
+    private ?string $apiVersion = null;
+
     /**
      * Категории раздач в клиенте.
      *
@@ -205,14 +208,18 @@ final class Qbittorrent implements ClientInterface
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest(url: 'torrents/resume', params: $fields);
+        $methodName = $this->getTorrentMethodName(method: 'start');
+
+        return $this->sendRequest(url: $methodName, params: $fields);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest(url: 'torrents/pause', params: $fields);
+        $methodName = $this->getTorrentMethodName(method: 'stop');
+
+        return $this->sendRequest(url: $methodName, params: $fields);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
@@ -355,6 +362,50 @@ final class Qbittorrent implements ClientInterface
         }
 
         return false;
+    }
+
+    /**
+     * Получить версию webApi торрент-клиента.
+     */
+    private function getApiVersion(): string
+    {
+        if (null !== $this->apiVersion) {
+            return $this->apiVersion;
+        }
+
+        $apiVersion = 'default';
+        try {
+            $response = $this->request(url: 'app/webapiVersion');
+            $apiVersion = $response->getBody()->getContents();
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Failed to get webApiVersion',
+                ['code' => $e->getCode(), 'message' => $e->getMessage()]
+            );
+        }
+
+        return $this->apiVersion = $apiVersion;
+    }
+
+    /**
+     * Определить метод, который нужно вызвать в зависимости от версии webApi.
+     */
+    private function getTorrentMethodName(string $method): string
+    {
+        /**
+         * Действия для запуска и остановки раздач по умолчанию (webApi < 2.11.0).
+         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#pause-torrents
+         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#resume-torrents
+         */
+        $actions = ['start' => 'resume', 'stop' => 'pause'];
+
+        // Для версий кубита 5.0.0 (webApi >= 2.11) и выше - новые пути.
+        // TODO добавить ссылку на описание, когда его сделают.
+        if (version_compare($this->getApiVersion(), '2.11.0') >= 0) {
+            $actions = ['start' => 'start', 'stop' => 'stop'];
+        }
+
+        return sprintf('torrents/%s', $actions[$method] ?? '');
     }
 
     private function generateTorrentsList(bool $simpleRun): Generator
