@@ -106,6 +106,8 @@ final class TopicControl
                     continue;
                 }
 
+                Timers::start("subsection_$group");
+
                 $forumUnseededTopics = [];
                 if ($this->unseeded->checkLimit()) {
                     $forumUnseededTopics = $this->api->getUnseededHashes(
@@ -122,7 +124,6 @@ final class TopicControl
                     subsectionControlPeers: $subControlPeers,
                 );
 
-                Timers::start("subsection_$group");
                 // Получаем данные о пирах искомых раздач и перебираем их.
                 $topicsPeers = $this->api->getTopicsPeersGenerator(group: $group, hashes: $hashes);
                 foreach ($topicsPeers as $topic) {
@@ -204,6 +205,8 @@ final class TopicControl
                 continue;
             }
 
+            Timers::start("apply_control_$clientId");
+
             // Запускаем раздачи.
             if (count($controlTopics['start'])) {
                 // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
@@ -225,6 +228,8 @@ final class TopicControl
                     }
                 }
             }
+
+            $this->logger->debug('Отправка команд завершена за {sec}.', ['sec' => Timers::getExecTime("apply_control_$clientId")]);
 
             $this->logger->info('Регулировка раздач в торрент-клиенте {tag} завершена за {sec}.', [
                 'tag' => $clientTag,
