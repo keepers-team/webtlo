@@ -37,6 +37,9 @@ final class Qbittorrent implements ClientInterface
     /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
     private int $torrentAddingSleep = 100;
 
+    /** Версия webApi. */
+    private ?string $apiVersion = null;
+
     /**
      * Категории раздач в клиенте.
      *
@@ -50,6 +53,20 @@ final class Qbittorrent implements ClientInterface
      * @var string[]
      */
     private const errorStates = ['error', 'missingFiles', 'unknown'];
+
+    /**
+     * Статусы остановленной раздачи.
+     *
+     * @var string[]
+     */
+    private const pauseStates = [
+        // Статусы webApi < 2.11
+        'pausedUP',
+        'pausedDL',
+        // Статусы webApi >= 2.11
+        'stoppedUP',
+        'stoppedDL',
+    ];
 
     private Client    $client;
     private CookieJar $jar;
@@ -205,14 +222,18 @@ final class Qbittorrent implements ClientInterface
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest(url: 'torrents/resume', params: $fields);
+        $methodName = $this->getTorrentMethodName(method: 'start');
+
+        return $this->sendRequest(url: $methodName, params: $fields);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
         $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
 
-        return $this->sendRequest(url: 'torrents/pause', params: $fields);
+        $methodName = $this->getTorrentMethodName(method: 'stop');
+
+        return $this->sendRequest(url: $methodName, params: $fields);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
@@ -357,6 +378,50 @@ final class Qbittorrent implements ClientInterface
         return false;
     }
 
+    /**
+     * Получить версию webApi торрент-клиента.
+     */
+    private function getApiVersion(): string
+    {
+        if (null !== $this->apiVersion) {
+            return $this->apiVersion;
+        }
+
+        $apiVersion = 'default';
+        try {
+            $response = $this->request(url: 'app/webapiVersion');
+            $apiVersion = $response->getBody()->getContents();
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Failed to get webApiVersion',
+                ['code' => $e->getCode(), 'message' => $e->getMessage()]
+            );
+        }
+
+        return $this->apiVersion = $apiVersion;
+    }
+
+    /**
+     * Определить метод, который нужно вызвать в зависимости от версии webApi.
+     */
+    private function getTorrentMethodName(string $method): string
+    {
+        /**
+         * Действия для запуска и остановки раздач по умолчанию (webApi < 2.11.0).
+         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#pause-torrents
+         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#resume-torrents
+         */
+        $actions = ['start' => 'resume', 'stop' => 'pause'];
+
+        // Для версий кубита 5.0.0 (webApi >= 2.11) и выше - новые пути.
+        // TODO добавить ссылку на описание, когда его сделают.
+        if (version_compare($this->getApiVersion(), '2.11.0') >= 0) {
+            $actions = ['start' => 'start', 'stop' => 'stop'];
+        }
+
+        return sprintf('torrents/%s', $actions[$method] ?? '');
+    }
+
     private function generateTorrentsList(bool $simpleRun): Generator
     {
         // Получаем и обрабатываем список раздач от клиента.
@@ -401,8 +466,8 @@ final class Qbittorrent implements ClientInterface
         foreach ($clientTorrents as $torrent) {
             $clientHash    = strtoupper($torrent['hash']);
             $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $clientHash);
-            $torrentPaused = str_starts_with($torrent['state'], 'paused');
-            $torrentError  = in_array($torrent['state'], self::errorStates);
+            $torrentPaused = self::isTorrentStatePaused(state: (string)$torrent['state']);
+            $torrentError  = self::isTorrentStateError(state: (string)$torrent['state']);
             $trackerError  = null;
 
             // Процент загрузки торрента.
@@ -546,6 +611,16 @@ final class Qbittorrent implements ClientInterface
             Timers::stash('comment_search');
             $this->logger->debug('End search torrents in comment column');
         }
+    }
+
+    private static function isTorrentStatePaused(string $state): bool
+    {
+        return in_array($state, self::pauseStates, true);
+    }
+
+    private static function isTorrentStateError(string $state): bool
+    {
+        return in_array($state, self::errorStates, true);
     }
 
     public function __destruct()
