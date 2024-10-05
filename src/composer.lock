@@ -207,16 +207,16 @@
         },
         {
             "name": "caseyamcl/guzzle_retry_middleware",
-            "version": "v2.10.0",
+            "version": "v2.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/caseyamcl/guzzle_retry_middleware.git",
-                "reference": "e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c"
+                "reference": "319829956ad61be3f48fba8f79e789b92538e56f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c",
-                "reference": "e2ddb58a3d88ed120eb9c4739d72680ed6b3d55c",
+                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/319829956ad61be3f48fba8f79e789b92538e56f",
+                "reference": "319829956ad61be3f48fba8f79e789b92538e56f",
                 "shasum": ""
             },
             "require": {
@@ -268,7 +268,7 @@
             ],
             "support": {
                 "issues": "https://github.com/caseyamcl/guzzle_retry_middleware/issues",
-                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.10.0"
+                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.11.0"
             },
             "funding": [
                 {
@@ -276,7 +276,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-06-19T23:03:14+00:00"
+            "time": "2024-09-16T19:01:08+00:00"
         },
         {
             "name": "cesargb/php-log-rotation",
