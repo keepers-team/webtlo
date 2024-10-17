@@ -74,18 +74,9 @@ final class Subsections
      * Выполнить обновление раздач в хранимых подразделах.
      *
      * @param array<string, mixed> $config
-     * @param bool                 $schedule
      */
-    public function update(array $config, bool $schedule = false): void
+    public function update(array $config): void
     {
-        // Проверяем возможность запуска обновления.
-        if (!$schedule && !Helper::isScheduleActionEnabled($config, 'update')) {
-            $this->logger->notice(
-                'Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.'
-            );
-
-            return;
-        }
 
         // Проверяем наличие хранимых подразделов.
         $subsections = array_keys($config['subsections'] ?? []);

@@ -71,7 +71,7 @@ try {
              * @var Subsections $updateSubsections
              */
             $updateSubsections = $app->get(Subsections::class);
-            $updateSubsections->update(config: $config, schedule: true);
+            $updateSubsections->update(config: $config);
         } elseif ($process === 'priority') {
             /**
              * Обновляем список высокоприоритетных раздач.
@@ -87,7 +87,7 @@ try {
              * @var KeepersReports $keepersReports
              */
             $keepersReports = $app->get(KeepersReports::class);
-            $keepersReports->updateReports(config: $config, schedule: true);
+            $keepersReports->updateReports(config: $config);
         } else {
             include_once sprintf('%s/../common/%s.php', dirname(__FILE__), $fileName);
         }

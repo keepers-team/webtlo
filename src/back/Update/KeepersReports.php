@@ -34,20 +34,10 @@ final class KeepersReports
 
     /**
      * @param array<string, mixed>[] $config
-     * @param bool                   $schedule
      * @return bool
      */
-    public function updateReports(array $config, bool $schedule = false): bool
+    public function updateReports(array $config): bool
     {
-        // Проверяем возможность запуска обновления.
-        if (!$schedule && !Helper::isScheduleActionEnabled($config, 'update')) {
-            $this->logger->notice(
-                'KeepersLists. Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.'
-            );
-
-            return false;
-        }
-
         // Список ид хранимых подразделов.
         $keptForums = array_keys($config['subsections'] ?? []);
         if (!count($keptForums)) {

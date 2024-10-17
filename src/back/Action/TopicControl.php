@@ -38,19 +38,12 @@ final class TopicControl
     /**
      * @param array<string, mixed>[] $config
      */
-    public function process(array $config, bool $schedule = false): void
+    public function process(array $config): void
     {
         Timers::start('control');
         $this->logger->info('[Control] Начат процесс регулировки раздач в торрент-клиентах...');
 
         $this->validateConfig(config: $config);
-
-        // Проверяем возможность запуска регулировки.
-        if (!$schedule && !Helper::isScheduleActionEnabled(config: $config, action: 'control')) {
-            $this->logger->notice('[Control] Автоматическая регулировка раздач отключена в настройках.');
-
-            return;
-        }
 
         $this->findRepeatedSubForums();
         $this->unseeded->init();
@@ -249,7 +242,6 @@ final class TopicControl
         $this->logger->info('[Control] Регулировка раздач в торрент-клиентах завершена за {sec}.', [
             'sec' => Timers::getExecTime('control'),
         ]);
-        $this->logger->info('-- DONE --');
     }
 
     /**
