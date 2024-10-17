@@ -818,6 +818,7 @@ function cfg_numeric_value($cfg): Closure
                                 </div>
                             </div>
                         </div>
+
                         <h2 id="sub_setting_client">Торрент-клиенты</h2>
                         <div>
                             <div>
@@ -839,64 +840,74 @@ function cfg_numeric_value($cfg): Closure
                             </div>
                             <div id="torrent-client-props" class="block-settings">
                                 <div>
-                                    <label>
-                                        Название:
-                                        <input name="torrent-client-comment" id="torrent-client-comment" class="torrent-client-props" type="text" size="50" title="Произвольное название торрент-клиента (комментарий)" />
-                                    </label>
-                                    <label>
-                                        Торрент-клиент:
-                                        <select name="torrent-client-type" id="torrent-client-type" class="torrent-client-props">
-                                            <option value="utorrent">uTorrent</option>
-                                            <option value="transmission">Transmission</option>
-                                            <option value="deluge" title="WebUi plugin">Deluge</option>
-                                            <option value="qbittorrent">qBittorrent</option>
-                                            <option value="flood">Flood</option>
-                                            <option value="rtorrent">rTorrent</option>
-                                        </select>
-                                    </label>
+                                    <label for="torrent-client-comment" class="prop-inline-block">Название:</label>
+                                    <input name="torrent-client-comment" id="torrent-client-comment" class="myinput torrent-client-props" type="text" size="23" title="Произвольное название торрент-клиента (комментарий)" />
                                 </div>
                                 <div>
-                                    <label>
-                                        IP-адрес/сетевое имя:
-                                        <input name="torrent-client-hostname" id="torrent-client-hostname" class="torrent-client-props" type="text" size="24" title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом." />
-                                        <input name="torrent-client-ssl" id="torrent-client-ssl" class="torrent-client-props" type="checkbox" />
-                                        HTTPS
-                                    </label>
-                                    <label>
-                                        Порт:
-                                        <input name="torrent-client-port" id="torrent-client-port" class="torrent-client-props" type="text" size="24" title="Порт веб-интерфейса торрент-клиента." />
-                                    </label>
+                                    <label for="torrent-client-type" class="prop-inline-block">Торрент-клиент:</label>
+                                    <select name="torrent-client-type" id="torrent-client-type" class="torrent-client-props" size="23">
+                                        <option value="utorrent">uTorrent</option>
+                                        <option value="transmission">Transmission</option>
+                                        <option value="deluge" title="WebUi plugin">Deluge</option>
+                                        <option value="qbittorrent">qBittorrent</option>
+                                        <option value="flood">Flood</option>
+                                        <option value="rtorrent">rTorrent</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>
-                                        Логин:
-                                        <input name="torrent-client-login" id="torrent-client-login" class="torrent-client-props" type="text" size="24" title="Логин для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
-                                    </label>
-                                    <label>
-                                        Пароль:
-                                        <input name="torrent-client-password" id="torrent-client-password" class="torrent-client-props" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
-                                        <button type="button" class="torrent-client-password-toggle" title="Показать/скрыть пароль">
-                                            <i class="fa fa-eye"></i>
-                                        </button>
-                                    </label>
+                                    <label for="torrent-client-hostname" class="prop-inline-block">IP-адрес/сетевое имя:</label>
+                                    <input name="torrent-client-hostname" id="torrent-client-hostname"
+                                           class="torrent-client-props" type="text" size="23"
+                                           title="IP-адрес или сетевое/доменное имя компьютера с запущенным торрент-клиентом."/>
+
+                                    <input name="torrent-client-ssl" id="torrent-client-ssl"
+                                           class="torrent-client-props" type="checkbox"/>
+                                    <label for="torrent-client-ssl">HTTPS</label>
                                 </div>
                                 <div>
-                                    <label title="Позволяет исключить все раздачи данного торрент-клиента из формируемых отчётов">
+                                    <label for="torrent-client-port" class="prop-inline-block">Порт:</label>
+                                    <input name="torrent-client-port" id="torrent-client-port"
+                                           class="torrent-client-props" type="text" size="23"
+                                           title="Порт веб-интерфейса торрент-клиента."/>
+                                </div>
+                                <div>
+                                    <label for="torrent-client-login" class="prop-inline-block">Логин:</label>
+                                    <input name="torrent-client-login" id="torrent-client-login"
+                                           class="torrent-client-props" type="text" size="23"
+                                           title="Логин для доступа к веб-интерфейсу торрент-клиента (необязательно)."/>
+                                </div>
+                                <div>
+                                    <label for="torrent-client-password" class="prop-inline-block">Пароль:</label>
+                                    <input name="torrent-client-password" id="torrent-client-password"
+                                           class="torrent-client-props" type="password" size="23"
+                                           title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)."/>
+                                    <button type="button" class="torrent-client-password-toggle" title="Показать/скрыть пароль">
+                                        <i class="fa fa-eye"></i>
+                                    </button>
+                                </div>
+
+                                <hr />
+                                <div class="torrent-client-selectmenu">
+                                    <label for="torrent-client-exclude" class="prop-inline-block ui-width-18"
+                                           title="Позволяет исключить все раздачи данного торрент-клиента из формируемых отчётов">
                                         Исключить раздачи из отчётов
-                                        <select id="torrent-client-exclude" class="myinput torrent-client-props">
-                                            <option value="0">нет</option>
-                                            <option value="1">да</option>
-                                        </select>
                                     </label>
+                                    <select id="torrent-client-exclude" class="torrent-client-props">
+                                        <option value="0">нет</option>
+                                        <option value="1">да</option>
+                                    </select>
                                 </div>
-                                <div>
-                                    <label>
-                                        Останавливать раздачи с количеством пиров более:
-                                        <input name="torrent-client-peers" id="torrent-client-peers" class="torrent-client-props spinner-peers" type="text" size="10" title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Автоматизация и дополнительные настройки > Регулировка раздач.'" />
+                                <div class="torrent-client-spinner">
+                                    <label for="torrent-client-peers" class="prop-inline-block ui-width-18">
+                                        Лимит пиров для регулировки:
                                     </label>
+                                    <input name="torrent-client-peers" id="torrent-client-peers"
+                                           class="torrent-client-props spinner-peers" type="text" size="10"
+                                           title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Автоматизация и дополнительные настройки > Регулировка раздач.'"/>
                                 </div>
                             </div>
                         </div>
+
                         <h2 id="sub_setting_forum">Сканируемые подразделы</h2>
                         <div>
                             <div class="input-container">

@@ -484,6 +484,11 @@ button.settings-button {
     width: 8em;
 }
 
+.prop-inline-block {
+    display: inline-block;
+    text-align: right;
+}
+
 .forum-open-link {
     cursor: pointer;
 }
@@ -513,16 +518,31 @@ button.settings-button {
     padding-top: 8px;
 }
 
-#torrent-client-props label {
-    display: block;
-}
-
-#torrent-client-props label * {
-    vertical-align: middle;
-}
-
 .torrent-client-props {
     margin: 5px 0;
+}
+
+#torrent-client-props .ui-button {
+    padding: .3em 1em;
+    vertical-align: baseline;
+}
+
+#torrent-client-props .prop-inline-block {
+    width: 12em;
+}
+
+#torrent-client-props .prop-inline-block.ui-width-18 {
+    width: 18em;
+}
+
+/* #torrent-client-exclude */
+#torrent-client-props .torrent-client-selectmenu .ui-selectmenu-button {
+    width: 4em;
+}
+
+/* #torrent-client-peers */
+#torrent-client-props .torrent-client-spinner .ui-spinner {
+    width: 6em;
 }
 
 #list-torrent-clients {
