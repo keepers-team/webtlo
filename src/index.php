@@ -875,6 +875,9 @@ function cfg_numeric_value($cfg): Closure
                                     <label>
                                         Пароль:
                                         <input name="torrent-client-password" id="torrent-client-password" class="torrent-client-props" type="password" size="24" title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)." />
+                                        <button type="button" class="torrent-client-password-toggle" title="Показать/скрыть пароль">
+                                            <i class="fa fa-eye"></i>
+                                        </button>
                                     </label>
                                 </div>
                                 <div>

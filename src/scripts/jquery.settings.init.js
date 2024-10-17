@@ -2,15 +2,14 @@
 
 $(document).ready(function() {
 
+    // Показать/скрыть пароли/ключи от форума/API.
     $('#show_passwords').on('click', function() {
-        $(this).find('i.fa').toggleClass('fa-eye fa-eye-slash');
+        togglePasswordVisibility(this, $('.user_protected'))
+    });
 
-        let elems = $('.user_protected');
-        if (elems.prop('type') === 'text') {
-            elems.prop('type', 'password');
-        } else {
-            elems.prop('type', 'text');
-        }
+    // Показать/скрыть пароль от торрент-клиента.
+    $('button.torrent-client-password-toggle').on('click', function() {
+        togglePasswordVisibility(this, $('#torrent-client-password'))
     });
 
     // Открыть ссылку на профиль пользователя.
