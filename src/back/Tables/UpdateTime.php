@@ -160,20 +160,13 @@ final class UpdateTime
      * Проверить минимальное значение обновления всех нужных маркеров для формирования и отправки отчётов.
      *
      * @param int[] $markers
-     * @param int   $daysUpdateExpire
-     * @param bool  $checkForum
-     * @return MarkersUpdate
      */
-    public function checkFullUpdate(array $markers, int $daysUpdateExpire = 5, bool $checkForum = true): MarkersUpdate
+    public function checkFullUpdate(array $markers, int $daysUpdateExpire = 5): MarkersUpdate
     {
         // Добавим важные маркеры обновлений.
         $markers[] = UpdateMark::FORUM_TREE->value;
         $markers[] = UpdateMark::SUBSECTIONS->value;
         $markers[] = UpdateMark::CLIENTS->value;
-
-        if ($checkForum) {
-            $markers[] = UpdateMark::KEEPERS->value;
-        }
 
         $update = $this->getMarkersObject($markers);
         $update->checkMarkersAbove($daysUpdateExpire * 24 * 3600);

@@ -652,8 +652,7 @@ final class Creator
         if ($lastTimestamp === 0) {
             $update = $this->updateTest->checkFullUpdate(
                 markers         : $this->forums,
-                daysUpdateExpire: $this->reportSend->daysUpdateExpire,
-                checkForum      : CreationMode::UI !== $this->mode
+                daysUpdateExpire: $this->reportSend->daysUpdateExpire
             );
 
             if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
