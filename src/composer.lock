@@ -207,16 +207,16 @@
         },
         {
             "name": "caseyamcl/guzzle_retry_middleware",
-            "version": "v2.11.0",
+            "version": "v2.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/caseyamcl/guzzle_retry_middleware.git",
-                "reference": "319829956ad61be3f48fba8f79e789b92538e56f"
+                "reference": "5867f6e6bda922f2a7aa748ae38bb832e96eb62b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/319829956ad61be3f48fba8f79e789b92538e56f",
-                "reference": "319829956ad61be3f48fba8f79e789b92538e56f",
+                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/5867f6e6bda922f2a7aa748ae38bb832e96eb62b",
+                "reference": "5867f6e6bda922f2a7aa748ae38bb832e96eb62b",
                 "shasum": ""
             },
             "require": {
@@ -268,7 +268,7 @@
             ],
             "support": {
                 "issues": "https://github.com/caseyamcl/guzzle_retry_middleware/issues",
-                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.11.0"
+                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.12.0"
             },
             "funding": [
                 {
@@ -276,7 +276,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-09-16T19:01:08+00:00"
+            "time": "2024-10-10T17:30:16+00:00"
         },
         {
             "name": "cesargb/php-log-rotation",
@@ -456,16 +456,16 @@
         },
         {
             "name": "guzzlehttp/promises",
-            "version": "2.0.3",
+            "version": "2.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/promises.git",
-                "reference": "6ea8dd08867a2a42619d65c3deb2c0fcbf81c8f8"
+                "reference": "f9c436286ab2892c7db7be8c8da4ef61ccf7b455"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/promises/zipball/6ea8dd08867a2a42619d65c3deb2c0fcbf81c8f8",
-                "reference": "6ea8dd08867a2a42619d65c3deb2c0fcbf81c8f8",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/f9c436286ab2892c7db7be8c8da4ef61ccf7b455",
+                "reference": "f9c436286ab2892c7db7be8c8da4ef61ccf7b455",
                 "shasum": ""
             },
             "require": {
@@ -519,7 +519,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/promises/issues",
-                "source": "https://github.com/guzzle/promises/tree/2.0.3"
+                "source": "https://github.com/guzzle/promises/tree/2.0.4"
             },
             "funding": [
                 {
@@ -535,7 +535,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-07-18T10:29:17+00:00"
+            "time": "2024-10-17T10:06:22+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
