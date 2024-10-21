@@ -217,6 +217,17 @@ final class Helper
 
     /**
      * @param array<int|string, mixed> $array
+     * @return array<int, mixed>
+     */
+    public static function convertKeysToInt(array $array): array
+    {
+        $keys = array_map('intval', array_keys($array));
+
+        return array_combine($keys, $array);
+    }
+
+    /**
+     * @param array<int|string, mixed> $array
      * @return array<string, mixed>
      */
     public static function convertKeysToString(array $array): array

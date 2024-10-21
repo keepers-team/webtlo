@@ -124,16 +124,16 @@ trait TopicsDetails
     {
         return new TopicDetails(
             id        : $topicId,
-            hash      : $payload['info_hash'],
-            forumId   : $payload['forum_id'],
-            poster    : $payload['poster_id'],
+            hash      : (string)$payload['info_hash'],
+            forumId   : (int)$payload['forum_id'],
+            poster    : (int)$payload['poster_id'],
             size      : (int)$payload['size'],
-            registered: self::dateTimeFromTimestamp($payload['reg_time']),
+            registered: self::dateTimeFromTimestamp((int)$payload['reg_time']),
             status    : TorrentStatus::from($payload['tor_status']),
-            seeders   : $payload['seeders'],
-            title     : $payload['topic_title'],
-            lastSeeded: self::dateTimeFromTimestamp($payload['seeder_last_seen']),
-            downloads : $payload['dl_count']
+            seeders   : (int)$payload['seeders'],
+            title     : (string)$payload['topic_title'],
+            lastSeeded: self::dateTimeFromTimestamp((int)$payload['seeder_last_seen']),
+            downloads : (int)$payload['dl_count']
         );
     }
 }

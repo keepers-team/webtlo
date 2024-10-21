@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +39,9 @@ trait KeepersList
                 return $result;
             }
 
-            return self::parseStaticKeepersList($result);
+            return self::parseStaticKeepersList(
+                Helper::convertKeysToString($result)
+            );
         };
     }
 
