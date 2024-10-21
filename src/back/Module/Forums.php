@@ -48,8 +48,12 @@ final class Forums
     /**
      * Получить имя заданного подраздела.
      */
-    public static function getForumName(int $forumId): string
+    public static function getForumName(?int $forumId): string
     {
+        if (null === $forumId) {
+            return '';
+        }
+
         try {
             $forum = self::getForum($forumId);
 
