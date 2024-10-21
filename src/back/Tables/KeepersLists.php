@@ -28,7 +28,7 @@ final class KeepersLists
 
     private ?CloneTable $table = null;
 
-    /** @var array<string, mixed>[] */
+    /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
     public function __construct(
@@ -88,14 +88,11 @@ final class KeepersLists
 
         $keepersSeedersCount = $tab->cloneCount();
         if ($keepersSeedersCount > 0) {
-            $this->logger->info(
-                sprintf(
-                    'Подразделов: %d шт, хранителей: %d, хранимых раздач: %d шт.',
-                    $forumsScanned,
-                    $keepersCount,
-                    $keepersSeedersCount
-                )
-            );
+            $this->logger->info('Подразделов: {forums} шт, хранителей: {keepers}, хранимых раздач: {topics} шт.', [
+                'forums'  => $forumsScanned,
+                'keepers' => $keepersCount,
+                'topics'  => $keepersSeedersCount,
+            ]);
             $this->logger->info('Запись в базу данных списков раздач хранителей...');
 
             $tab->moveToOrigin();
