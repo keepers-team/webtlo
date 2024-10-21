@@ -5,26 +5,35 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Clients;
 
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
+use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Tables\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 final class ClientFactory
 {
-    public function __construct(private readonly LoggerInterface $logger)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly Topics          $topics,
+        private readonly Torrents        $torrents,
+    ) {
     }
 
     public function getClient(TorrentClientOptions $clientOptions): ClientInterface
     {
+        // Параметры для основных клиентов.
         $params = [$this->logger, $clientOptions];
 
+        // Расширенные параметры для поиска раздач в локальной БД.
+        $extended = [...$params, $this->topics, $this->torrents];
+
         return match ($clientOptions->type) {
-            ClientType::Qbittorrent  => new Qbittorrent(...$params),
+            ClientType::Qbittorrent  => new Qbittorrent(...$extended),
             ClientType::Deluge       => new Deluge(...$params),
             ClientType::Flood        => new Flood(...$params),
             ClientType::Rtorrent     => new Rtorrent(...$params),
             ClientType::Transmission => new Transmission(...$params),
-            ClientType::Utorrent     => new Utorrent(...$params),
+            ClientType::Utorrent     => new Utorrent(...$extended),
         };
     }
 

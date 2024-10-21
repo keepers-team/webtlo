@@ -12,6 +12,8 @@ use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Tables\Topics as TableTopics;
+use KeepersTeam\Webtlo\Tables\Torrents as TableTorrents;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -73,7 +75,9 @@ final class Qbittorrent implements ClientInterface
 
     public function __construct(
         private readonly LoggerInterface      $logger,
-        private readonly TorrentClientOptions $options
+        private readonly TorrentClientOptions $options,
+        private readonly TableTopics          $tableTopics,
+        private readonly TableTorrents        $tableTorrents,
     ) {
         $this->jar = new CookieJar();
 
