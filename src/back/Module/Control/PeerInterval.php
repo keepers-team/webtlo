@@ -27,9 +27,9 @@ final class PeerInterval
         // Заменяем все лишние символы.
         $input = preg_replace('/[^0-9:]+/', '/', $this->pattern);
 
-        $useExternalPattern = str_contains($input, ':');
+        $useExternalPattern = str_contains((string)$input, ':');
 
-        $values    = array_filter(explode('/', $input));
+        $values    = array_filter(explode('/', (string)$input));
         $numValues = count($values);
 
         // Если значений больше 24, то отбросим лишние.
