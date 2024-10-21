@@ -63,20 +63,6 @@ final class Db
     }
 
     /**
-     * Создать временную таблицу по списку полей.
-     */
-    public static function temp_keys_table(string $table, array $keys): string
-    {
-        $tempTable = "temp.$table";
-
-        $sql = sprintf('CREATE TEMP TABLE %s (%s)', $table, implode(',', $keys));
-        self::query_database($sql);
-
-        return $tempTable;
-    }
-
-
-    /**
      * Вставить в таблицу массив сырых данных.
      */
     public static function table_insert_dataset(
@@ -120,38 +106,6 @@ final class Db
         }
 
         return 'SELECT ' . implode(' UNION ALL SELECT ', $set);
-    }
-
-    /**
-     * объединение нескольких запросов на получение данных
-     *
-     * @param array $source
-     * @return string|bool
-     */
-    public static function unionQuery($source)
-    {
-        self::checkConnect();
-
-        if (!is_array($source)) {
-            return false;
-        }
-        $query  = '';
-        $values = [];
-        foreach ($source as &$row) {
-            if (!is_array($row)) {
-                return false;
-            }
-            $row      = array_map(
-                function($e) {
-                    return is_numeric($e) ? $e : self::$db->db->quote($e ?? '');
-                },
-                $row
-            );
-            $values[] = implode(',', $row);
-        }
-        $query = 'SELECT ' . implode(' UNION ALL SELECT ', $values);
-
-        return $query;
     }
 
     /**
