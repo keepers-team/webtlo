@@ -15,6 +15,13 @@ use Psr\Log\LoggerInterface;
 
 final class DbSearch
 {
+    /**
+     * Максимальное количество переменных для SQLite < 3.32
+     *
+     * https://www.sqlite.org/limits.html
+     */
+    private const SQLITE_MAX_VARIABLE_NUMBER = 999;
+
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly DB              $db,
@@ -27,7 +34,8 @@ final class DbSearch
 
         $unknownHashes = $torrents->getHashes();
 
-        $hashesChunks = array_chunk($unknownHashes, 999);
+        $chunkLimit   = max(1, self::SQLITE_MAX_VARIABLE_NUMBER - count($forums->values));
+        $hashesChunks = array_chunk($unknownHashes, $chunkLimit);
 
         $topicsHashes = [];
         foreach ($hashesChunks as $chunk) {
