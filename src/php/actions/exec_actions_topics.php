@@ -6,7 +6,7 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Module\Torrents;
+use KeepersTeam\Webtlo\Tables\Torrents;
 
 try {
     $result = '';
@@ -85,6 +85,9 @@ try {
         throw new Exception('Не получены данные о выбранных раздачах');
     }
 
+    /** @var Torrents $localTable Локальная БД хранения данных о раздачах. */
+    $localTable = $app->get(Torrents::class);
+
     $log->info('Количество затрагиваемых торрент-клиентов: {client}', ['client' => count($torrentHashesByClient)]);
     foreach ($torrentHashesByClient as $clientID => $torrentHashes) {
         if (empty($torrentHashes)) {
@@ -131,7 +134,7 @@ try {
                 $response = $client->removeTorrents($torrentHashes, $removeFiles);
                 if ($response !== false) {
                     // помечаем в базе удаление
-                    Torrents::removeTorrents($torrentHashes);
+                    $localTable->deleteTorrentsByHashes($torrentHashes);
                 }
                 break;
         }
