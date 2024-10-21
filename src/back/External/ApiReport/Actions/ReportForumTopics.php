@@ -8,6 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumTopic;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -38,7 +39,9 @@ trait ReportForumTopics
                 return $result;
             }
 
-            return self::parseStaticReportTopic($result);
+            return self::parseStaticReportTopic(
+                Helper::convertKeysToInt($result)
+            );
         };
     }
 

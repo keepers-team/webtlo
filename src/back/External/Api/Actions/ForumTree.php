@@ -9,6 +9,7 @@ use GuzzleHttp\Promise\Utils;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumDetails;
 use KeepersTeam\Webtlo\External\Api\V1\ForumsResponse;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -61,7 +62,10 @@ trait ForumTree
                 return $sizeResult;
             }
 
-            return self::parseStaticForumTree($treeResult, $sizeResult);
+            return self::parseStaticForumTree(
+                Helper::convertKeysToString($treeResult),
+                Helper::convertKeysToString($sizeResult)
+            );
         };
     }
 
