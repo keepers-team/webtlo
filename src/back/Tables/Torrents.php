@@ -45,4 +45,22 @@ final class Torrents
 
         return array_merge(...$result);
     }
+
+    /**
+     * Удалить раздачи в БД по хешу
+     *
+     * @param string[] $hashes
+     */
+    public function deleteTorrentsByHashes(array $hashes): void
+    {
+        $hashes = array_chunk($hashes, 500);
+        foreach ($hashes as $chunk) {
+            $search = KeysObject::create($chunk);
+
+            $this->db->executeStatement(
+                "DELETE FROM Torrents WHERE info_hash IN ($search->keys)",
+                $search->values
+            );
+        }
+    }
 }
