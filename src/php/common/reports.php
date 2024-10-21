@@ -82,7 +82,7 @@ $log->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report'
 $updateTime = $app->get(UpdateTime::class);
 
 // Проверим полное обновление.
-$fullUpdateTime = $updateTime->checkReportsSendAvailable($forumReports->forums, $log);
+$fullUpdateTime = $updateTime->checkReportsSendAvailable($forumReports->getForums(), $log);
 if (null === $fullUpdateTime) {
     return;
 }

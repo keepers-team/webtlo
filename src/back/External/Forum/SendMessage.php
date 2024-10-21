@@ -47,7 +47,7 @@ trait SendMessage
                 $this->blockingReason = $unavailable->value;
             }
         }
-        if ($this->blockingSend) {
+        if ($this->blockingSend && null !== $this->blockingReason) {
             throw new RuntimeException($this->blockingReason);
         }
 

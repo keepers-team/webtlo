@@ -317,7 +317,7 @@ final class Creator
 
         // Разбираем хранимое
         $savedSubsections = [];
-        foreach ($this->forums as $forumId) {
+        foreach ($this->getForums() as $forumId) {
             // Исключаем подразделы, согласно конфига.
             if ($this->isForumExcluded($forumId)) {
                 continue;
@@ -517,7 +517,7 @@ final class Creator
         if (null !== $forumId) {
             $forumIds = [$forumId];
         } else {
-            $forumIds = $this->forums;
+            $forumIds = $this->getForums();
             sort($forumIds);
         }
 
@@ -651,7 +651,7 @@ final class Creator
 
         if ($lastTimestamp === 0) {
             $update = $this->updateTest->checkFullUpdate(
-                markers         : $this->forums,
+                markers         : $this->getForums(),
                 daysUpdateExpire: $this->reportSend->daysUpdateExpire
             );
 

@@ -72,7 +72,7 @@ trait UnregisteredTopic
             // Переходим на последнюю страницу темы, если она есть.
             $list = $dom->query(expression: '//table[@id="pagination"]//a[@class="pg"]');
             if (!empty($list) && $list->count() > 1) {
-                $lastPage = (int)$list->item($list->length - 2)->textContent;
+                $lastPage = (int)$list->item($list->length - 2)?->textContent;
 
                 $topicPage = $this->fetchTopicPage(topicId: $topicId, offset: ($lastPage - 1) * 30);
                 if (null !== $topicPage) {
@@ -94,13 +94,13 @@ trait UnregisteredTopic
                     $list = $dom->query(expression: '*//a[@class="postLink"]', contextNode: $lastMessage);
                     if (!empty($list) && $list->count() === 3) {
                         // Откуда перенесена раздача.
-                        $transferredFrom = $list->item(0)->nodeValue;
+                        $transferredFrom = $list->item(0)?->nodeValue;
 
                         $user = $list->item(2);
                         $href = self::getFirstNodeValue(list: $dom->query(expression: '@href', contextNode: $user));
                         if (preg_match('/^profile.php\?mode=viewprofile&u=[0-9]+$/', $href)) {
                             // Кто перенёс раздачу.
-                            $transferredByWhom = $user->nodeValue;
+                            $transferredByWhom = $user?->nodeValue;
                         }
 
                         unset($user, $href);
@@ -123,9 +123,9 @@ trait UnregisteredTopic
             'name'                => $topicName,
             'status'              => $topicStatus,
             'priority'            => $topicPriority,
-            'transferred_from'    => $transferredFrom,
+            'transferred_from'    => (string)$transferredFrom,
             'transferred_to'      => $currentForumName,
-            'transferred_by_whom' => $transferredByWhom,
+            'transferred_by_whom' => (string)$transferredByWhom,
         ];
     }
 
