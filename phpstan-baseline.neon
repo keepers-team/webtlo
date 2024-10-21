@@ -106,16 +106,6 @@ parameters:
 			path: src/back/Legacy/Db.php
 
 		-
-			message: "#^Method KeepersTeam\\\\Webtlo\\\\Legacy\\\\Db\\:\\:temp_keys_table\\(\\) has parameter \\$keys with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/back/Legacy/Db.php
-
-		-
-			message: "#^Method KeepersTeam\\\\Webtlo\\\\Legacy\\\\Db\\:\\:unionQuery\\(\\) has parameter \\$source with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/back/Legacy/Db.php
-
-		-
 			message: "#^Method KeepersTeam\\\\Webtlo\\\\Module\\\\CloneTable\\:\\:__construct\\(\\) has parameter \\$keys with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/back/Module/CloneTable.php
