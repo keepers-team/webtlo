@@ -82,7 +82,7 @@ final class Log
     {
         // переименовываем файл лога, если он больше 5 Мб
         if (file_exists($logFile) && filesize($logFile) >= 5242880) {
-            if (!rename($logFile, preg_replace('|.log$|', '.1.log', $logFile))) {
+            if (!rename($logFile, (string)preg_replace('|.log$|', '.1.log', $logFile))) {
                 echo "Не удалось переименовать файл лога.";
             }
         }
