@@ -3,13 +3,14 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
     $app = AppContainer::create();
     $log = $app->getLogger();
 
-    $request = json_decode(file_get_contents('php://input'), true);
+    $request = json_decode((string)file_get_contents('php://input'), true);
 
     // парсим настройки
     $cfg = [];
@@ -19,6 +20,7 @@ try {
     if (empty($cfg)) {
         throw new RuntimeException('Настройки не переданы. Нечего сохранять.');
     }
+    $cfg = Helper::convertKeysToString($cfg);
 
     $settings = $app->getSettings();
 
