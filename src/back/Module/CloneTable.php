@@ -46,7 +46,12 @@ final class CloneTable
      */
     public function cloneFillChunk(array $dataset, int $chunkSize = 500): void
     {
-        $dataset = array_chunk($dataset, $chunkSize, true);
+        $dataset = array_chunk(
+            $dataset,
+            max(1, $chunkSize),
+            true
+        );
+
         foreach ($dataset as $chunk) {
             $this->cloneFill($chunk);
             unset($chunk);

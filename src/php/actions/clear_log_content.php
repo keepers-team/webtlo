@@ -16,5 +16,8 @@ $log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . ".log";
 
 if (file_exists($log_file)) {
     $fh = fopen($log_file, 'w');
-    fclose($fh);
+
+    if ($fh !== false) {
+        fclose($fh);
+    }
 }

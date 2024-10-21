@@ -21,7 +21,7 @@ final class Torrents
     public static function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
     {
         $result = [];
-        $hashes = array_chunk($hashes, $chunkSize);
+        $hashes = array_chunk($hashes, max(1, $chunkSize));
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
             $topics = Db::query_database(
@@ -49,7 +49,7 @@ final class Torrents
      */
     public static function removeTorrents(array $hashes, int $chunkSize = 500): void
     {
-        $hashes = array_chunk($hashes, $chunkSize);
+        $hashes = array_chunk($hashes, max(1, $chunkSize));
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 

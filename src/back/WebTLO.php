@@ -40,10 +40,13 @@ final class WebTLO
             $file = __DIR__ . '/../version.json';
         }
 
-        $result = [];
+        // Пробуем считать версию из файла.
         if (file_exists($file)) {
-            $result = json_decode(file_get_contents($file), true);
+            $result = json_decode((string)file_get_contents($file), true);
         }
+
+        // Если ничего не нашлось, то пустой массив.
+        $result ??= [];
 
         $result['version'] ??= 'git';
 
