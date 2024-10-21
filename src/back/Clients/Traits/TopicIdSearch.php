@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients\Traits;
 
-use KeepersTeam\Webtlo\Module\Topics;
-use KeepersTeam\Webtlo\Module\Torrents;
 use KeepersTeam\Webtlo\Timers;
 
 trait TopicIdSearch
@@ -17,17 +15,6 @@ trait TopicIdSearch
     protected static function getEmptyTopics(array $torrents): array
     {
         return array_filter($torrents, fn($el) => empty($el['topic_id']));
-    }
-
-    /**
-     * @param array<string, mixed> $torrents
-     * @return array{}|string[]
-     */
-    protected static function getEmptyTopicsHashes(array $torrents): array
-    {
-        $emptyTopics = self::getEmptyTopics($torrents);
-
-        return array_map('strval', array_keys($emptyTopics));
     }
 
     /**
@@ -43,7 +30,7 @@ trait TopicIdSearch
         if (count($emptyHashed)) {
             $this->logger->debug('Start search torrents in Topics table', ['empty' => count($emptyHashed)]);
 
-            $topics = Topics::getTopicsIdsByHashes($emptyHashed);
+            $topics = $this->tableTopics->getTopicsIdsByHashes($emptyHashed);
             if (count($topics)) {
                 $torrents = array_replace_recursive($torrents, $topics);
             }
@@ -66,7 +53,7 @@ trait TopicIdSearch
         if (count($emptyHashed)) {
             $this->logger->debug('Start search torrents in Torrents table', ['empty' => count($emptyHashed)]);
 
-            $topics = Torrents::getTopicsIdsByHashes($emptyHashed);
+            $topics = $this->tableTorrents->getTopicsIdsByHashes($emptyHashed);
             if (count($topics)) {
                 $torrents = array_replace_recursive($torrents, $topics);
             }
@@ -74,5 +61,16 @@ trait TopicIdSearch
             Timers::stash('db_torrents_search');
             $this->logger->debug('End search torrents in Torrents table', ['filled' => count($topics)]);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $torrents
+     * @return array{}|string[]
+     */
+    private static function getEmptyTopicsHashes(array $torrents): array
+    {
+        $emptyTopics = self::getEmptyTopics($torrents);
+
+        return array_map('strval', array_keys($emptyTopics));
     }
 }
