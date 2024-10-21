@@ -102,9 +102,9 @@ trait GetCredentials
         $nodes = $dom->query(expression: $xpathQuery);
         if (!empty($nodes) && count($nodes) === 3) {
             return new ApiCredentials(
-                userId: (int)$nodes->item(2)->nodeValue,
-                btKey : (string)$nodes->item(0)->nodeValue,
-                apiKey: (string)$nodes->item(1)->nodeValue,
+                userId: (int)$nodes->item(2)?->nodeValue,
+                btKey : (string)$nodes->item(0)?->nodeValue,
+                apiKey: (string)$nodes->item(1)?->nodeValue,
             );
         }
 
