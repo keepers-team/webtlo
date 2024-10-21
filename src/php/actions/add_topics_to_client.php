@@ -18,6 +18,7 @@ try {
         throw new Exception();
     }
     parse_str($_POST['topic_hashes'], $topicHashes);
+    $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
 
     $app = AppContainer::create();
     $log = $app->getLogger();
@@ -49,12 +50,13 @@ try {
     $log->info('Запущен процесс добавления раздач в торрент-клиенты...');
     // получение ID раздач с привязкой к подразделу
     $topicHashesByForums = [];
-    $topicHashes = array_chunk($topicHashes['topic_hashes'], 999);
-    foreach ($topicHashes as $topicHashes) {
-        $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
+
+    $topicHashes = array_chunk($topicHashes, 999);
+    foreach ($topicHashes as $topicHashesChunk) {
+        $placeholders = str_repeat('?,', count($topicHashesChunk) - 1) . '?';
         $data = Db::query_database(
             'SELECT forum_id, info_hash FROM Topics WHERE info_hash IN (' . $placeholders . ')',
-            $topicHashes,
+            $topicHashesChunk,
             true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
@@ -69,10 +71,11 @@ try {
                 $topicHashesByForums[$forumID] = $forumTopicHashes;
             }
         }
-        unset($forumTopicHashes);
-        unset($data);
+
+        unset($topicHashesChunk, $forumTopicHashes, $data);
     }
     unset($topicHashes);
+
     if (empty($topicHashesByForums)) {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
         throw new Exception();

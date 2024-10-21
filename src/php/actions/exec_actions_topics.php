@@ -3,6 +3,7 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Torrents;
@@ -47,8 +48,9 @@ try {
 
     $torrentClients = $_POST['tor_clients'];
     parse_str($_POST['topic_hashes'], $topicHashes);
+    $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
 
-    $topicHashesChunks = array_chunk($topicHashes['topic_hashes'], 499);
+    $topicHashesChunks = array_chunk($topicHashes, 499);
     foreach ($topicHashesChunks as $topicHashes) {
         $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
 

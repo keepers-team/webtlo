@@ -2,6 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Db;
 
 try {
@@ -11,25 +12,28 @@ try {
     }
 
     parse_str($_POST['topic_hashes'], $topicHashes);
+    $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
 
     $value = empty($_POST['value']) ? 0 : 1;
 
-    $topicHashes = array_chunk($topicHashes['topic_hashes'], 500);
+    $topicHashes = array_chunk($topicHashes, 500);
 
-    foreach ($topicHashes as $topicHashes) {
+    foreach ($topicHashes as $topicHashesChunk) {
         if ($value == 0) {
-            $in = str_repeat('?,', count($topicHashes) - 1) . '?';
+            $in = str_repeat('?,', count($topicHashesChunk) - 1) . '?';
             Db::query_database(
                 "DELETE FROM TopicsExcluded WHERE info_hash IN ($in)",
-                $topicHashes
+                $topicHashesChunk
             );
         } elseif ($value == 1) {
-            $select = str_repeat('SELECT ? UNION ALL ', count($topicHashes) - 1) . ' SELECT ?';
+            $select = str_repeat('SELECT ? UNION ALL ', count($topicHashesChunk) - 1) . ' SELECT ?';
             Db::query_database(
                 "INSERT INTO TopicsExcluded (info_hash) $select",
-                $topicHashes
+                $topicHashesChunk
             );
         }
+
+        unset($topicHashesChunk);
     }
 
     echo 'Обновление "чёрного списка" раздач успешно завершено';

@@ -55,8 +55,11 @@ class Backup
     {
         // Все файлы по указанному пути.
         $files = glob($path . DIRECTORY_SEPARATOR . $pattern);
+        if (empty($files)) {
+            return;
+        }
 
-        // Сортируем он свежих к старым и удаляем самые старые.
+        // Сортируем от свежих к старым и удаляем самые старые.
         $matches = [];
         foreach ($files as $file) {
             $matches[filemtime($file)] = $file;
