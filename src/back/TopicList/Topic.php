@@ -31,16 +31,16 @@ final class Topic
     public static function fromTopicData(array $topicData, ?State $state = null): self
     {
         return new self(
-            $topicData['topic_id'],
-            $topicData['info_hash'],
-            $topicData['name'],
-            $topicData['size'],
-            Helper::setTimestamp((int)$topicData['reg_time']),
-            $topicData['forum_id'] ?? null,
-            round($topicData['seed'] ?? -1, 2),
-            $topicData['priority'] ?? null,
-            $state,
-            $topicData['client_id'] ?? null,
+            id         : (int)$topicData['topic_id'],
+            hash       : (string)$topicData['info_hash'],
+            name       : (string)$topicData['name'],
+            size       : (int)$topicData['size'],
+            regDate    : Helper::setTimestamp((int)$topicData['reg_time']),
+            forumId    : !empty($topicData['forum_id']) ? (int)$topicData['forum_id'] : null,
+            averageSeed: round((float)($topicData['seed'] ?? -1), 2),
+            priority   : !empty($topicData['priority']) ? (int)$topicData['priority'] : null,
+            state      : $state,
+            clientId   : !empty($topicData['client_id']) ? (int)$topicData['client_id'] : null
         );
     }
 

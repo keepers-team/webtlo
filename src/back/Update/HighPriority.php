@@ -77,7 +77,10 @@ final class HighPriority
     public function update(array $config): void
     {
         // Хранимые подразделы.
-        $this->subsections = array_keys($config['subsections'] ?? []);
+        $this->subsections = array_map(
+            'intval',
+            array_keys($config['subsections'] ?? [])
+        );
 
         // Проверяем возможность запуска обновления.
         if (!Helper::isUpdatePropertyEnabled($config, 'priority')) {

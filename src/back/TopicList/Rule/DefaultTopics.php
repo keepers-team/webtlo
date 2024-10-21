@@ -227,7 +227,9 @@ final class DefaultTopics implements ListInterface
         $this->createTempKeepersFilter($excludeSelfKeep);
 
         // Хранители всех раздач из искомых подразделов.
-        $this->fillKeepersByForumList($forum->values);
+        $this->fillKeepersByForumList(
+            \KeepersTeam\Webtlo\Helper::convertKeysToInt($forum->values)
+        );
 
         // Собрать общий запрос к базе.
         $statement = $this->getStatement(

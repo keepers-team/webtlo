@@ -6,6 +6,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB as ModernDB;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
@@ -36,6 +37,7 @@ try {
     // Получаем параметры фильтра.
     $filter = [];
     parse_str($_POST['filter'], $filter);
+    $filter = Helper::convertKeysToString($filter);
 
     // Проверяем наличие сортировки.
     $sorting = Validate::sortFilter($filter);

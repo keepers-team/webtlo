@@ -77,7 +77,6 @@ final class Subsections
      */
     public function update(array $config): void
     {
-
         // Проверяем наличие хранимых подразделов.
         $subsections = array_keys($config['subsections'] ?? []);
         if (!count($subsections)) {
@@ -104,10 +103,9 @@ final class Subsections
         $tabUpdateTime = $this->updateTime;
 
         // Обновим каждый хранимый подраздел.
+        $subsections = array_map('intval', $subsections);
         sort($subsections);
         foreach ($subsections as $forumId) {
-            $forumId = (int)$forumId;
-
             // Получаем дату предыдущего обновления подраздела.
             $forumLastUpdated = $tabUpdateTime->getMarkerTime($forumId);
 
