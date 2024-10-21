@@ -354,7 +354,7 @@ final class Validate
 
             // В названии раздачи.
             if (1 === $filterType) {
-                $pattern = preg_replace(
+                $pattern = (string)preg_replace(
                     '/[её]/ui',
                     '(е|ё)',
                     quotemeta($filter['filter_phrase'])

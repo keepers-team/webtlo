@@ -47,7 +47,7 @@ final class UntrackedTopics implements ListInterface
 
         $topics = $this->selectTopics($statement);
 
-        $getForumHeader = function(int $id): string {
+        $getForumHeader = function(?int $id): string {
             $name  = Forums::getForumName($id);
             $click = sprintf('addUnsavedSubsection(%s, "%s");', $id, $name);
 
