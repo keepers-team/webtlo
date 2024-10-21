@@ -25,7 +25,7 @@ final class PeerInterval
         }
 
         // Заменяем все лишние символы.
-        $input = preg_replace('/[^0-9:]+/', '/', $this->pattern);
+        $input = (string)preg_replace('/[^0-9:]+/', '/', $this->pattern);
 
         $useExternalPattern = str_contains($input, ':');
 
@@ -38,7 +38,6 @@ final class PeerInterval
 
             $numValues = 24;
         }
-
 
         // Вычисляем целочисленную размерность интервала.
         $defaultDuration = 24 / $numValues;

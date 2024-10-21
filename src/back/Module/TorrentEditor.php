@@ -74,7 +74,9 @@ final class TorrentEditor
         if (!$list->empty()) {
             $trackers = array_merge(...$list->toArray());
         } else {
-            $trackers[] = $torrent->getAnnounce();
+            if ($announce = $torrent->getAnnounce()) {
+                $trackers[] = $announce;
+            }
         }
 
         return $trackers;
@@ -127,14 +129,14 @@ final class TorrentEditor
         foreach ($trackers as &$tracker) {
             // Если задан пустой ключ, то записываем 'ann?magnet'.
             if (empty($passkey)) {
-                $tracker = preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
+                $tracker = (string)preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
             } else {
-                $tracker = preg_replace('/(?<==)\w+$/', $passkey, $tracker);
+                $tracker = (string)preg_replace('/(?<==)\w+$/', $passkey, $tracker);
             }
 
             // Для обычных пользователей заменяем адрес трекера и тип ключа.
             if ($regularUser) {
-                $tracker = preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
+                $tracker = (string)preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
             }
 
             unset($tracker);

@@ -67,7 +67,7 @@ final class MarkersUpdate
         }
     }
 
-    public function getMinUpdate(): ?DateTimeImmutable
+    public function getMinUpdate(): DateTimeImmutable
     {
         if (null !== $this->min) {
             return $this->min;
