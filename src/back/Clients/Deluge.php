@@ -222,10 +222,13 @@ final class Deluge implements ClientInterface
         if (!$this->authenticated) {
             try {
                 // Авторизуемся в клиенте. Логин всегда deluge.
-                $this->request('auth.login', [$this->options->credentials->password]);
+                $this->request('auth.login', [$this->options->credentials->password ?? '']);
 
                 // Проверяем успешность и наличие куки авторизации.
                 if ($this->jar->count() === 0) {
+                    if (null === $this->options->credentials) {
+                        $this->logger->warning('Не указан пароль для авторизации в торрент-клиенте.');
+                    }
                     $this->logger->error('Failed to obtain session identifier');
 
                     return false;
