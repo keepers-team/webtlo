@@ -28,7 +28,10 @@ final class TIniFileEx
         if (empty(self::$filename)) {
             self::setFile(self::DEFAULT);
         }
-        self::$readConfig = is_readable(self::$filename) ? parse_ini_file(self::$filename, true) : [];
+
+        $content = is_readable(self::$filename) ? parse_ini_file(self::$filename, true) : [];
+
+        self::$readConfig = $content ?: [];
     }
 
     private static function setFile(string $filename): void
@@ -55,7 +58,8 @@ final class TIniFileEx
         if (is_bool($value)) {
             $value = $value ? 1 : 0;
         }
-        self::$writeConfig[$section][$key] = $value;
+
+        self::$writeConfig[(string)$section][(string)$key] = $value;
     }
 
     public static function writeFile(): bool
