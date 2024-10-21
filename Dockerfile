@@ -60,7 +60,7 @@ RUN composer install --no-dev --no-progress && composer dump-autoload -o
 
 # image for development
 FROM base AS dev
-RUN apk add --update --no-cache php81-phar php81-pecl-xdebug php81-tokenizer
+RUN apk add --update --no-cache git php81-phar php81-pecl-xdebug php81-tokenizer
 COPY /docker/debug /etc/php81/conf.d
 # copy composer parts
 COPY --from=composer /usr/bin/composer /usr/bin/composer
