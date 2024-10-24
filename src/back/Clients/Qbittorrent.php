@@ -265,16 +265,10 @@ final class Qbittorrent implements ClientInterface
     {
         if (!$this->authenticated) {
             try {
-                if (null === $this->options->credentials) {
-                    $this->logger->warning('Не указаны логин и пароль для авторизации в торрент-клиенте.');
-
-                    return false;
-                }
-
-                $response = $this->client->post('auth/login', [
+                $response = $this->client->post(uri: 'auth/login', options: [
                     'form_params' => [
-                        'username' => $this->options->credentials->username,
-                        'password' => $this->options->credentials->password,
+                        'username' => $this->options->credentials?->username,
+                        'password' => $this->options->credentials?->password,
                     ],
                 ]);
 
@@ -282,6 +276,10 @@ final class Qbittorrent implements ClientInterface
                 $this->authenticated =
                     200 === $response->getStatusCode()
                     && $this->checkSID();
+
+                if (!$this->authenticated && null === $this->options->credentials) {
+                    $this->logger->warning('Не указаны логин и пароль для авторизации в торрент-клиенте.');
+                }
 
                 return $this->authenticated;
             } catch (GuzzleException $e) {
