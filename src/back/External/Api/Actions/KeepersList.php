@@ -55,7 +55,9 @@ trait KeepersList
 
         $keepers = [];
         foreach ($result['result'] as $keeperId => $keeper) {
-            $keepers[] = new KeeperData(
+            $keeperId = (int)$keeperId;
+
+            $keepers[$keeperId] = new KeeperData(
                 keeperId   : $keeperId,
                 keeperName : $keeper[$format['username']],
                 isCandidate: (bool)$keeper[$format['is_candidate']],
