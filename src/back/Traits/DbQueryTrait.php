@@ -59,14 +59,13 @@ trait DbQueryTrait
      *
      * @param string         $sql
      * @param (int|string)[] $param
-     * @param int            $pdo
-     * @return int|string
+     * @return array<string, mixed>
      */
-    public function queryRow(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): mixed
+    public function queryRow(string $sql, array $param = []): array
     {
         $sth = $this->executeStatement($sql, $param);
 
-        return $sth->fetch($pdo);
+        return $sth->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -74,11 +73,13 @@ trait DbQueryTrait
      *
      * @param string         $sql
      * @param (int|string)[] $param
-     * @return mixed
+     * @return null|int|string
      */
     public function queryColumn(string $sql, array $param = []): mixed
     {
-        return $this->queryRow($sql, $param, PDO::FETCH_COLUMN);
+        $sth = $this->executeStatement($sql, $param);
+
+        return $sth->fetch(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -90,10 +91,20 @@ trait DbQueryTrait
      */
     public function queryCount(string $sql, array $param = []): int
     {
-        return (int)($this->queryColumn($sql, $param) ?? 0);
+        return (int)$this->queryColumn($sql, $param);
     }
 
-    /** Запрос количество строк в таблице. */
+    /**
+     * Получить количество изменённых строк предыдущим запросом.
+     */
+    public function queryChanges(): int
+    {
+        return (int)$this->queryColumn('SELECT CHANGES()');
+    }
+
+    /**
+     * Запрос количество строк в таблице.
+     */
     public function selectRowsCount(string $table): int
     {
         return $this->queryCount("SELECT COUNT() FROM $table");
@@ -118,7 +129,9 @@ trait DbQueryTrait
         }
     }
 
-    /** Выполнить готовый запрос к БД. */
+    /**
+     * Выполнить готовый запрос к БД.
+     */
     protected function executeQuery(string $sql): void
     {
         try {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Traits\DbClearTablesTrait;
+use KeepersTeam\Webtlo\Traits\DbDataSet;
 use KeepersTeam\Webtlo\Traits\DbMigrationTrait;
 use KeepersTeam\Webtlo\Traits\DbQueryTrait;
 use PDO;
@@ -14,6 +15,7 @@ use RuntimeException;
 final class DB
 {
     use DbClearTablesTrait;
+    use DbDataSet;
     use DbMigrationTrait;
     use DbQueryTrait;
 
