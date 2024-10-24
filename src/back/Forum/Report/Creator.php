@@ -153,7 +153,7 @@ final class Creator
             }
             $topicUrl = $this->prepareTopicUrl($topic);
 
-            $tmp['topicCounter']++;
+            ++$tmp['topicCounter'];
             $tmp['topicLines'][] = $topicUrl;
 
             $topicLineLength      = mb_strlen($topicUrl, 'UTF-8');
@@ -334,7 +334,7 @@ final class Creator
             $topicId = $this->getReportTopicId(forum: $forum);
 
             // Ссылка на тему с отчётами подраздела.
-            $leftPart = $topicId !== null ?
+            $leftPart = null !== $topicId ?
                 sprintf($urlPattern, 't', $topicId, $forum->name) :
                 sprintf('[b]%s[/b]', $forum->name);
 
@@ -412,10 +412,10 @@ final class Creator
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
+                $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
                 $topic['topic_name'],
                 $this->bytes($topic['topic_size']),
-                ($topic['done'] != 1 ? ' :!: ' : '')
+                (1 != $topic['done'] ? ' :!: ' : '')
             );
         }
         if (CreationMode::CRON === $this->mode) {
@@ -424,10 +424,10 @@ final class Creator
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
+                $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
                 $topic['topic_hash'],
                 $topic['id'],
-                ($topic['done'] != 1 ? ' :!: ' : '')
+                (1 != $topic['done'] ? ' :!: ' : '')
             );
         }
 
@@ -461,7 +461,7 @@ final class Creator
     public function prepareReportsMessages(array $messages): string
     {
         array_walk($messages, function(&$a, $b) {
-            $b++;
+            ++$b;
             $a = sprintf('<h3>Сообщение %d</h3><div>%s</div>', $b, $a);
         });
 
@@ -645,13 +645,13 @@ final class Creator
     {
         $lastTimestamp = $this->tableUpdate->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
 
-        if ($lastTimestamp === 0) {
+        if (0 === $lastTimestamp) {
             $update = $this->tableUpdate->checkFullUpdate(
                 markers         : $this->getForums(),
                 daysUpdateExpire: $this->reportSend->daysUpdateExpire
             );
 
-            if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
+            if (UpdateStatus::MISSED === $update->getLastCheckStatus()) {
                 $update->addLogRecord($this->logger);
 
                 throw new RuntimeException(
@@ -674,7 +674,7 @@ final class Creator
 
     private function getFormattedUpdateTime(): string
     {
-        $dateString = $this->updateTime === null ? 'никогда' : $this->updateTime->format('d.m.Y');
+        $dateString = null === $this->updateTime ? 'никогда' : $this->updateTime->format('d.m.Y');
 
         return sprintf('Актуально на: [color=darkblue][b]%s[/b][/color]', $dateString);
     }

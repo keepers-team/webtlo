@@ -102,7 +102,7 @@ final class Flood implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -203,9 +203,9 @@ final class Flood implements ClientInterface
                 $response = $e->getResponse();
 
                 $statusCode = $response->getStatusCode();
-                if ($statusCode == 401) {
+                if (401 == $statusCode) {
                     $this->logger->error('Incorrect login/password', ['response' => $response->getReasonPhrase()]);
-                } elseif ($statusCode == 422) {
+                } elseif (422 == $statusCode) {
                     $this->logger->error('Malformed request', ['response' => $response->getReasonPhrase()]);
                 } else {
                     $this->logger->error('Failed to authenticate', ['response' => $response->getReasonPhrase()]);
@@ -264,18 +264,18 @@ final class Flood implements ClientInterface
         try {
             $response = $this->request(uri: $uri, method: $method, params: $params);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (ClientException $e) {
             $response = $e->getResponse();
 
             $statusCode = $response->getStatusCode();
-            if ($statusCode === 400) {
+            if (400 === $statusCode) {
                 $this->logger->error('Malformed request', ['code' => $statusCode]);
             }
-            if ($statusCode === 403) {
+            if (403 === $statusCode) {
                 $this->logger->error('Invalid destination', ['code' => $statusCode]);
             }
-            if ($statusCode === 500) {
+            if (500 === $statusCode) {
                 $this->logger->error('Malformed request', ['code' => $statusCode]);
             } else {
                 $this->logger->error($response->getReasonPhrase(), ['code' => $statusCode]);

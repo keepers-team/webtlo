@@ -54,12 +54,12 @@ final class KeepersReports
         $updateStatus->checkMarkersLess(15 * 60);
 
         // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
-        if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
+        if (UpdateStatus::MISSED === $updateStatus->getLastCheckStatus()) {
             $this->keepersLists->clearLists();
         }
 
         // Проверим минимальную дату обновления данных других хранителей.
-        if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
+        if (UpdateStatus::EXPIRED === $updateStatus->getLastCheckStatus()) {
             $this->logger->notice(
                 'ApiReport. Обновление отчётов хранителей не требуется. Дата последнего выполнения {date}',
                 ['date' => $updateStatus->getMinUpdate()->format('d.m.Y H:i')]
@@ -135,7 +135,7 @@ final class KeepersReports
                 }
 
                 // Считаем обновлённые подразделы.
-                $forumsScanned++;
+                ++$forumsScanned;
 
                 // Пометим факт обновления отчётов хранителей подраздела.
                 $this->updateTime->setMarkerTime(100000 + $forumId);

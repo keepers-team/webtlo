@@ -61,7 +61,7 @@ final class UnregisteredTopics implements ListInterface
             $topic = Topic::fromTopicData($topicData, $topicState);
             unset($topicData);
 
-            $counter->count++;
+            ++$counter->count;
             $counter->size += $topic->size;
 
             if (!isset($counter->list[$topicStatus])) {

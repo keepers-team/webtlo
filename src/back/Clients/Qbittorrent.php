@@ -133,7 +133,7 @@ final class Qbittorrent implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -162,9 +162,9 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->client->post('torrents/add', ['multipart' => $fields]);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (GuzzleException $e) {
-            if ($e->getCode() === 415) {
+            if (415 === $e->getCode()) {
                 $this->logger->error('Torrent file is not valid');
             } else {
                 $this->logger->warning(
@@ -189,9 +189,9 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->request(url: 'torrents/setCategory', params: $fields);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (GuzzleException $e) {
-            if ($e->getCode() === 409) {
+            if (409 === $e->getCode()) {
                 $this->logger->error('Category name does not exist', ['name' => $label]);
             } else {
                 $this->logger->warning(
@@ -215,9 +215,9 @@ final class Qbittorrent implements ClientInterface
             $this->request(url: 'torrents/createCategory', params: $fields);
         } catch (GuzzleException $e) {
             $statusCode = $e->getCode();
-            if ($statusCode === 400) {
+            if (400 === $statusCode) {
                 $this->logger->error('Category name is empty');
-            } elseif ($statusCode === 409) {
+            } elseif (409 === $statusCode) {
                 $this->logger->error('Category name is invalid', ['name' => $categoryName]);
             }
         }
@@ -285,7 +285,7 @@ final class Qbittorrent implements ClientInterface
 
                 return $this->authenticated;
             } catch (GuzzleException $e) {
-                if ($e->getCode() === 403) {
+                if (403 === $e->getCode()) {
                     $this->logger->error("User's IP is banned for too many failed login attempts");
                 } else {
                     $this->logger->warning(
@@ -315,7 +315,7 @@ final class Qbittorrent implements ClientInterface
             try {
                 $response = $this->client->post('auth/logout', ['form_params' => []]);
 
-                $this->authenticated = !($response->getStatusCode() === 200);
+                $this->authenticated = !(200 === $response->getStatusCode());
 
                 return !$this->authenticated;
             } catch (Throwable) {
@@ -378,7 +378,7 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->request(url: $url, params: $params);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -483,7 +483,7 @@ final class Qbittorrent implements ClientInterface
 
             // Процент загрузки торрента.
             $progress = $torrent['progress'];
-            if ($progress === 1 && !empty($torrent['availability'])) {
+            if (1 === $progress && !empty($torrent['availability'])) {
                 if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
                     $progress = (float) $torrent['availability'];
                 }
@@ -552,7 +552,7 @@ final class Qbittorrent implements ClientInterface
 
         if (!empty($trackers)) {
             foreach ($trackers as $tracker) {
-                if ($tracker['status'] === 4) {
+                if (4 === $tracker['status']) {
                     return (string) $tracker['message'];
                 }
             }

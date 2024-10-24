@@ -68,7 +68,7 @@ trait UnregisteredTopic
         // Кто и откуда перенёс тему.
         $transferredByWhom = $transferredFrom = '';
 
-        $isTopicInArchive = mb_strpos($currentForumName, 'Архив') !== false;
+        $isTopicInArchive = false !== mb_strpos($currentForumName, 'Архив');
         if (!empty($currentForumName) && $isTopicInArchive) {
             // Переходим на последнюю страницу темы, если она есть.
             $list = $dom->query(expression: '//table[@id="pagination"]//a[@class="pg"]');
@@ -93,7 +93,7 @@ trait UnregisteredTopic
                 // Если последнее сообщение принадлежит боту, ищем того, кто это сделал.
                 if (preg_match('/17561.gif$/i', $avatarLink)) {
                     $list = $dom->query(expression: '*//a[@class="postLink"]', contextNode: $lastMessage);
-                    if (!empty($list) && $list->count() === 3) {
+                    if (!empty($list) && 3 === $list->count()) {
                         // Откуда перенесена раздача.
                         $transferredFrom = $list->item(0)?->nodeValue;
 

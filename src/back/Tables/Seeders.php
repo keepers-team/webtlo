@@ -35,7 +35,7 @@ final class Seeders
                 $daysUpdate = $previous['seeders_updates_days'] ?? 0;
                 // по прошествии дня
                 if ($isDayChanged) {
-                    $daysUpdate++;
+                    ++$daysUpdate;
                 } else {
                     $sumUpdates += $previous['seeders_updates_today'] ?? 0;
                     $sumSeeders += $previous['seeders'] ?? 0;

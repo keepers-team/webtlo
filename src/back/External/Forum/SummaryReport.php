@@ -78,12 +78,12 @@ trait SummaryReport
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && 1 === count($nodes)) {
             $postLink = self::getFirstNodeValue(list: $nodes);
 
             $matches = [];
             preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
-            if (count($matches) === 2) {
+            if (2 === count($matches)) {
                 return (int) $matches[1];
             }
         }

@@ -23,7 +23,7 @@ final class Factory
     public function getRule(int $forumId): ListInterface
     {
         // Хранимые раздачи из других подразделов.
-        if ($forumId === 0) {
+        if (0 === $forumId) {
             return new UntrackedTopics($this->db, $this->forums, $this->output);
         }
 
@@ -45,9 +45,9 @@ final class Factory
         if (
             // Основной поиск раздач.
             $forumId > 0        // Заданный раздел.
-            || $forumId === -3  // Все хранимые подразделы.
-            || $forumId === -5  // Высокий приоритет.
-            || $forumId === -6  // Все хранимые подразделы по спискам.
+            || -3 === $forumId  // Все хранимые подразделы.
+            || -5 === $forumId  // Высокий приоритет.
+            || -6 === $forumId  // Все хранимые подразделы по спискам.
         ) {
             return new DefaultTopics($this->db, $this->cfg, $this->output, $forumId);
         }

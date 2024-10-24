@@ -145,7 +145,7 @@ final class Validate
     public static function checkKeepingPriority(array $filter, int $forumId): array
     {
         if (empty($filter['keeping_priority'])) {
-            if ($forumId === -5) {
+            if (-5 === $forumId) {
                 return [2];
             }
 
@@ -212,7 +212,7 @@ final class Validate
 
             // Применить фильтр средних сидов.
             $temp = [];
-            for ($i = 0; $i < $seedPeriod; $i++) {
+            for ($i = 0; $i < $seedPeriod; ++$i) {
                 $temp['sum_se'][] = "CASE WHEN d$i IS '' OR d$i IS NULL THEN 0 ELSE d$i END";
                 $temp['sum_qt'][] = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE q$i END";
                 $temp['qt'][]     = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE 1 END";
@@ -310,23 +310,23 @@ final class Validate
     {
         $filter = [];
         // Фильтр "Хранитель с отчётом" = "да"/"нет"
-        if ($keptStatus->hasKeeper === 1) {
+        if (1 === $keptStatus->hasKeeper) {
             $filter[] = 'AND Keepers.max_posted IS NOT NULL';
-        } elseif ($keptStatus->hasKeeper === 0) {
+        } elseif (0 === $keptStatus->hasKeeper) {
             $filter[] = 'AND Keepers.max_posted IS NULL';
         }
 
         // Фильтр "Хранитель раздаёт" = "да"/"нет"
-        if ($keptStatus->hasSeeder === 1) {
+        if (1 === $keptStatus->hasSeeder) {
             $filter[] = 'AND Keepers.has_seeding = 1';
-        } elseif ($keptStatus->hasSeeder === 0) {
+        } elseif (0 === $keptStatus->hasSeeder) {
             $filter[] = 'AND (Keepers.has_seeding = 0 OR Keepers.has_seeding IS NULL)';
         }
 
         // Фильтр "Хранитель скачивает" = "да"/"нет"
-        if ($keptStatus->hasDownloader === 1) {
+        if (1 === $keptStatus->hasDownloader) {
             $filter[] = 'AND Keepers.has_download = 1';
-        } elseif ($keptStatus->hasDownloader === 0) {
+        } elseif (0 === $keptStatus->hasDownloader) {
             $filter[] = 'AND (Keepers.has_download = 0 OR Keepers.has_download IS NULL)';
         }
 

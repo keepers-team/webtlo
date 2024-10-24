@@ -107,7 +107,7 @@ final class Transmission implements ClientInterface
         Timers::start('processing');
         foreach ($response['torrents'] as $torrent) {
             $torrentHash  = strtoupper($torrent['hashString']);
-            $trackerError = (int) $torrent['error'] === 2 ? $torrent['errorString'] : null;
+            $trackerError = 2 === (int) $torrent['error'] ? $torrent['errorString'] : null;
 
             $progress = $torrent['percentDone'];
             // Если торрент скачан полностью, проверив выбраны ли все файлы раздачи.
@@ -123,8 +123,8 @@ final class Transmission implements ClientInterface
                 size        : (int) $torrent['totalSize'],
                 added       : Helper::makeDateTime((int) $torrent['addedDate']),
                 done        : $progress,
-                paused      : (int) $torrent['status'] === 0,
-                error       : (int) $torrent['error'] !== 0,
+                paused      : 0 === (int) $torrent['status'],
+                error       : 0 !== (int) $torrent['error'],
                 trackerError: $trackerError,
                 comment     : $torrent['comment'] ?: null,
                 storagePath : $torrent['downloadDir'] ?? null
@@ -142,7 +142,7 @@ final class Transmission implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -323,7 +323,7 @@ final class Transmission implements ClientInterface
         try {
             $response = $this->request($method, $params);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
