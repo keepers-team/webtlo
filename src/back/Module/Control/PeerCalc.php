@@ -21,7 +21,7 @@ final class PeerCalc
      */
     public static function getClientLimit(array $clientProps): int
     {
-        return ($clientProps['control_peers'] !== '') ? (int) $clientProps['control_peers'] : -2;
+        return ('' !== $clientProps['control_peers']) ? (int) $clientProps['control_peers'] : -2;
     }
 
     /**
@@ -31,7 +31,7 @@ final class PeerCalc
     {
         $subControlPeers = $config['subsections'][$group]['control_peers'] ?? -2;
 
-        return ($subControlPeers !== '') ? (int) $subControlPeers : -2;
+        return ('' !== $subControlPeers) ? (int) $subControlPeers : -2;
     }
 
     /**
@@ -123,7 +123,7 @@ final class PeerCalc
 
             // Если раздача запущена, то вычитаем себя из сидов-хранителей.
             if ($isSeeding) {
-                $keepers--;
+                --$keepers;
             }
 
             // Вычитаем количество исключаемых хранителей.
@@ -160,6 +160,6 @@ final class PeerCalc
      */
     private static function shouldSkipSeeding(TopicControl $control, TopicPeers $topic): bool
     {
-        return !$control->seedingWithoutLeechers && $topic->leechers === 0 && $topic->seeders > 1;
+        return !$control->seedingWithoutLeechers && 0 === $topic->leechers && $topic->seeders > 1;
     }
 }

@@ -103,7 +103,7 @@ final class State
     public static function getClientColor(?array $topic = null): string
     {
         $color = 'success';
-        if (empty($topic) || $topic['done'] != 1 || $topic['error'] == 1) {
+        if (empty($topic) || 1 != $topic['done'] || 1 == $topic['error']) {
             $color = 'danger';
         }
 

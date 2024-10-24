@@ -97,7 +97,7 @@ final class MarkersUpdate
             'updates'      => $this->timestamps,
         ];
 
-        if ($this->status === UpdateStatus::MISSED) {
+        if (UpdateStatus::MISSED === $this->status) {
             $missed = array_keys(
                 array_diff_key(
                     array_fill_keys($this->markers, 0),

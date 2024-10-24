@@ -86,11 +86,11 @@ final class TIniFileEx
 
         // Write config file atomically
         $wRes = file_put_contents(self::$filename . ".tmp", $result, LOCK_EX);
-        if ($wRes === false) {
+        if (false === $wRes) {
             return false;
         }
         $r = rename(self::$filename . ".tmp", self::$filename);
-        if ($r === false) {
+        if (false === $r) {
             return false;
         }
 

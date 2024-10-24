@@ -108,7 +108,7 @@ final class Utorrent implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -140,7 +140,7 @@ final class Utorrent implements ClientInterface
         try {
             $response = $this->client->post('', ['query' => $query, 'multipart' => $fields]);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (GuzzleException $e) {
             $this->logger->warning(
                 'Failed to add torrent',
@@ -276,7 +276,7 @@ final class Utorrent implements ClientInterface
         try {
             $response = $this->request(action: $action, params: $params, method: $method);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -384,7 +384,7 @@ final class Utorrent implements ClientInterface
         $result = true;
         foreach ($hashesChunks as $hashesChunk) {
             $response = $this->sendRequest(action: 'setprops', params: ['hashes' => $hashesChunk]);
-            if ($response === false) {
+            if (false === $response) {
                 $result = false;
             }
         }

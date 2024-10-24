@@ -85,7 +85,7 @@ final class Deluge implements ClientInterface
         foreach ($response as $torrentHash => $torrent) {
             $torrentHash = strtoupper((string) $torrentHash);
 
-            $torrentError = $torrent['message'] !== 'OK';
+            $torrentError = 'OK' !== $torrent['message'];
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $trackerError = $matches[1] ?? '';
 
@@ -122,7 +122,7 @@ final class Deluge implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if ($content === false) {
+        if (false === $content) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -168,7 +168,7 @@ final class Deluge implements ClientInterface
             ];
 
             $response = $this->sendRequest(method: 'label.set_torrent', params: $fields);
-            if ($response === false) {
+            if (false === $response) {
                 $result = false;
             }
         }
@@ -200,7 +200,7 @@ final class Deluge implements ClientInterface
             ];
 
             $response = $this->sendRequest(method: 'core.remove_torrent', params: $fields);
-            if ($response === false) {
+            if (false === $response) {
                 $result = false;
             }
         }
@@ -226,7 +226,7 @@ final class Deluge implements ClientInterface
                 $this->request('auth.login', [$this->options->credentials->password ?? '']);
 
                 // Проверяем успешность и наличие куки авторизации.
-                if ($this->jar->count() === 0) {
+                if (0 === $this->jar->count()) {
                     if (null === $this->options->credentials) {
                         $this->logger->warning('Не указан пароль для авторизации в торрент-клиенте.');
                     }
@@ -321,7 +321,7 @@ final class Deluge implements ClientInterface
         try {
             $response = $this->request(method: $method, params: $params);
 
-            return $response->getStatusCode() === 200;
+            return 200 === $response->getStatusCode();
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -343,7 +343,7 @@ final class Deluge implements ClientInterface
     {
         if (null === $this->labels) {
             $enablePlugin = $this->enablePlugin('Label');
-            if ($enablePlugin === false) {
+            if (false === $enablePlugin) {
                 return false;
             }
             $this->labels = $this->makeRequest(method: 'label.get_labels');

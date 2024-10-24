@@ -19,7 +19,7 @@ trait DbMigrationTrait
         // Определим текущую версию БД.
         $currentVersion = (int) ($this->queryColumn('PRAGMA user_version') ?? 0);
 
-        if ($currentVersion === self::DATABASE_VERSION) {
+        if (self::DATABASE_VERSION === $currentVersion) {
             // БД актуальна, делать ничего не нужно.
             return;
         }
@@ -84,7 +84,7 @@ trait DbMigrationTrait
                     throw new RuntimeException(sprintf('Пустой файл миграции %s', $file));
                 }
 
-                $currentVersion++;
+                ++$currentVersion;
                 $this->executeQuery($query);
             }
         }
@@ -104,7 +104,7 @@ trait DbMigrationTrait
 
         // Use scandir and check if it's not false
         $files = scandir($sqlPath);
-        if ($files === false) {
+        if (false === $files) {
             // Return an empty array if scandir fails
             return [];
         }

@@ -64,7 +64,7 @@ final class UntrackedTopics implements ListInterface
 
         $counter = new Topics();
         foreach ($topics as $topic) {
-            $counter->count++;
+            ++$counter->count;
             $counter->size += $topic->size;
 
             if (!isset($counter->list[$topic->forumId])) {

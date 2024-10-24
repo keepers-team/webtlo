@@ -132,7 +132,7 @@ final class Helper
     public static function getStorageDir(): string
     {
         $directory = getenv('WEBTLO_DIR');
-        if ($directory === false) {
+        if (false === $directory) {
             // Default path is /webtlo/data
             return self::normalizePath(
                 __DIR__ . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 1) . 'data'
@@ -169,13 +169,13 @@ final class Helper
     public static function normalizePath(string $path): string
     {
         return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function($left, $right) {
-            if ($left === null) {
+            if (null === $left) {
                 return $right;
             }
-            if ($right === "" || $right === ".") {
+            if ("" === $right || "." === $right) {
                 return $left;
             }
-            if ($right === "..") {
+            if (".." === $right) {
                 return dirname($left);
             }
             $pattern = sprintf("/\%s+/", DIRECTORY_SEPARATOR);
@@ -191,7 +191,7 @@ final class Helper
      */
     public static function getForumDomain(array $cfg): ?string
     {
-        if (!empty($cfg['forum_url'] && $cfg['forum_url'] !== 'custom')) {
+        if (!empty($cfg['forum_url'] && 'custom' !== $cfg['forum_url'])) {
             return $cfg['forum_url'];
         }
 

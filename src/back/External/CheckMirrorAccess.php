@@ -67,7 +67,7 @@ final class CheckMirrorAccess
             return !empty($result);
         } catch (ClientException $e) {
             $statusCode = $e->getCode();
-            if ($statusCode === 401) {
+            if (401 === $statusCode) {
                 $this->logger->debug('Ответ получен', $log);
 
                 return true;

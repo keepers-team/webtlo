@@ -147,12 +147,12 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && 1 === count($nodes)) {
             $postLink = (string) $nodes->item(0)?->nodeValue;
 
             $matches = [];
             preg_match("|.*viewtopic\.php\?p=(\d+)|si", $postLink, $matches);
-            if (count($matches) === 2) {
+            if (2 === count($matches)) {
                 return (int) $matches[1];
             }
         }
@@ -181,7 +181,7 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && 1 === count($nodes)) {
             $result = $nodes->item(0)?->textContent;
         }
 
@@ -193,12 +193,12 @@ trait SendMessage
         $dom = self::parseDOM($page);
 
         $nodes = $dom->query(expression: '/html/head/script[1]');
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && 1 === count($nodes)) {
             $script = self::getFirstNodeValue(list: $nodes);
 
             $matches = [];
             preg_match("|.*form_token[^']*'([^,]*)',.*|si", $script, $matches);
-            if (count($matches) === 2 && !empty($matches[1])) {
+            if (2 === count($matches) && !empty($matches[1])) {
                 return self::$formToken = (string) $matches[1];
             }
         }

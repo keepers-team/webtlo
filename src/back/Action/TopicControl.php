@@ -56,7 +56,7 @@ final class TopicControl
             $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
 
             $clientControlPeers = PeerCalc::getClientLimit($torrentClientData);
-            if ($clientControlPeers === -1) {
+            if (-1 === $clientControlPeers) {
                 $this->logger->notice("Для клиента $clientTag отключена регулировка.");
 
                 continue;
@@ -93,7 +93,7 @@ final class TopicControl
 
                 $subControlPeers = PeerCalc::getForumLimit(config: $config, group: $group);
                 // Пропускаем исключённые из регулировки подразделы.
-                if ($subControlPeers === -1) {
+                if (-1 === $subControlPeers) {
                     $this->excludedForums[] = $group;
 
                     continue;
@@ -150,18 +150,18 @@ final class TopicControl
                     }
 
                     if ($desiredChange->isRandom()) {
-                        $randomCounter++;
+                        ++$randomCounter;
                     }
 
                     if ($desiredChange->shouldStartSeeding()) {
                         if ($desiredChange->isRandom()) {
-                            $randomProc++;
+                            ++$randomProc;
                         }
 
                         $controlTopics['start'][] = $torrent->clientHash;
                     } elseif ($desiredChange->shouldStopSeeding()) {
                         if ($desiredChange->isRandom()) {
-                            $randomProc++;
+                            ++$randomProc;
                         }
 
                         $controlTopics['stop'][] = $torrent->clientHash;
@@ -205,7 +205,7 @@ final class TopicControl
                 // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
                 foreach (array_chunk($controlTopics['start'], 100) as $hashes) {
                     $response = $client->startTorrents(torrentHashes: $hashes);
-                    if ($response === false) {
+                    if (false === $response) {
                         $this->logger->error('Возникли проблемы при отправке запроса на запуск раздач.');
                     }
                 }
@@ -216,7 +216,7 @@ final class TopicControl
                 // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
                 foreach (array_chunk($controlTopics['stop'], 100) as $hashes) {
                     $response = $client->stopTorrents(torrentHashes: $hashes);
-                    if ($response === false) {
+                    if (false === $response) {
                         $this->logger->error('Возникли проблемы при отправке запроса на остановку раздач.');
                     }
                 }
@@ -286,7 +286,7 @@ final class TopicControl
             $client = $this->clientFactory->fromConfigProperties(options: $clientProps);
 
             // Проверка доступности торрент-клиента.
-            if ($client->isOnline() === false) {
+            if (false === $client->isOnline()) {
                 $this->logger->notice('Клиент {tag} в данный момент недоступен.', ['tag' => $clientTag]);
 
                 return null;

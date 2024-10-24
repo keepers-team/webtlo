@@ -31,7 +31,7 @@ final class Log
             $output[$blockNum][] = $isSplit ? $splitWord : $row;
             if ($isSplit) {
                 $output[$blockNum][] = '';
-                $blockNum++;
+                ++$blockNum;
             }
         }
 

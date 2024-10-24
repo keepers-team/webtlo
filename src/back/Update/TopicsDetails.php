@@ -60,7 +60,7 @@ final class TopicsDetails
             ['topics' => $beforeUpdate, 'perRun' => $perRun, 'runs' => $runs]
         );
 
-        for ($run = 1; $run <= $runs; $run++) {
+        for ($run = 1; $run <= $runs; ++$run) {
             Timers::start("chunk_$run");
 
             $topics = $this->topics->getUnnamedTopics($perRun);

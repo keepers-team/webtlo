@@ -61,7 +61,7 @@ trait GetCredentials
 
         $matches = [];
         preg_match('|[^-]*-([0-9]*)-.*|', $rawValue, $matches);
-        if (count($matches) !== 2 || false === filter_var($matches[1], FILTER_SANITIZE_NUMBER_INT)) {
+        if (2 !== count($matches) || false === filter_var($matches[1], FILTER_SANITIZE_NUMBER_INT)) {
             $logger->error('Malformed cookie', $userCookie->toArray());
 
             return null;
@@ -102,7 +102,7 @@ trait GetCredentials
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 3) {
+        if (!empty($nodes) && 3 === count($nodes)) {
             return new ApiCredentials(
                 userId: (int) $nodes->item(2)?->nodeValue,
                 btKey : (string) $nodes->item(0)?->nodeValue,

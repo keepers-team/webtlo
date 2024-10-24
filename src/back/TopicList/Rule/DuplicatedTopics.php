@@ -74,7 +74,7 @@ final class DuplicatedTopics implements ListInterface
 
         $counter = new Topics();
         foreach ($topics as $topic) {
-            $counter->count++;
+            ++$counter->count;
             $counter->size += $topic->size;
 
             // Выводим строку с данными раздачи.

@@ -55,7 +55,7 @@ final class Unseeded
         if ($this->startCounter < $this->topicControl->maxUnseededCount) {
             // Если раздача есть в списке не сидированных, то увеличиваем счётчик.
             if (in_array($torrent->topicHash, $unseededHashes, true)) {
-                $this->startCounter++;
+                ++$this->startCounter;
 
                 return $torrent->paused
                     ? DesiredStatusChange::Start

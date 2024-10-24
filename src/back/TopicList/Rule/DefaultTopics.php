@@ -125,7 +125,7 @@ final class DefaultTopics implements ListInterface
             }
 
             // Фильтрация раздач по своим спискам.
-            if ($this->forumId == -6) {
+            if (-6 == $this->forumId) {
                 $excludeSelfKeep = false;
 
                 if (!FilterApply::isUserInKeepers($topicKeepers, $userId)) {
@@ -148,7 +148,7 @@ final class DefaultTopics implements ListInterface
                 continue;
             }
 
-            $totalCount++;
+            ++$totalCount;
             $totalSize += $topic->size;
 
             // Выводим строку с данными раздачи.
@@ -171,7 +171,7 @@ final class DefaultTopics implements ListInterface
     {
         if ($this->forumId > 0) {
             $forumsIDs = [$this->forumId];
-        } elseif ($this->forumId === -5) {
+        } elseif (-5 === $this->forumId) {
             // Высокий приоритет.
             $forumsIDs = $this->getHighPriorityForums();
         } else {
