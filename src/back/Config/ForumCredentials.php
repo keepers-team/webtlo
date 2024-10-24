@@ -24,10 +24,10 @@ final class ForumCredentials
     public static function fromLegacy(array $cfg): self
     {
         if (empty($cfg['tracker_login'])) {
-            throw new RuntimeException("Не указано имя пользователя для доступа к форуму. Проверьте настройки.");
+            throw new RuntimeException('Не указано имя пользователя для доступа к форуму. Проверьте настройки.');
         }
         if (empty($cfg['tracker_paswd'])) {
-            throw new RuntimeException("Не указан пароль пользователя для доступа к форуму. Проверьте настройки.");
+            throw new RuntimeException('Не указан пароль пользователя для доступа к форуму. Проверьте настройки.');
         }
 
         return new self(

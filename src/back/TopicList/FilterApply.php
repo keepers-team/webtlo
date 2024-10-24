@@ -133,7 +133,7 @@ final class FilterApply
             // В номере/ид раздачи.
             $matchId = false;
             foreach ($filterStrings->values as $filterId) {
-                $filterId = sprintf("^%s$", str_replace('*', '.*', $filterId));
+                $filterId = sprintf('^%s$', str_replace('*', '.*', $filterId));
                 if (mb_eregi($filterId, (string) $topic->id)) {
                     $matchId = true;
                 }

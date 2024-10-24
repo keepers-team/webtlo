@@ -61,17 +61,17 @@ final class Log
 
         $result = is_writable($dir) || mkdir($dir);
         if (!$result) {
-            echo "Нет или недостаточно прав для доступа к каталогу logs";
+            echo 'Нет или недостаточно прав для доступа к каталогу logs';
         }
 
         $logFile = "$dir/$logFile";
         self::move($logFile);
-        if ($logFile = fopen($logFile, "a")) {
+        if ($logFile = fopen($logFile, 'a')) {
             fwrite($logFile, self::get("\n"));
             fwrite($logFile, " -- DONE --\n");
             fclose($logFile);
         } else {
-            echo "Не удалось создать файл лога.";
+            echo 'Не удалось создать файл лога.';
         }
     }
 
@@ -80,7 +80,7 @@ final class Log
         // переименовываем файл лога, если он больше 5 Мб
         if (file_exists($logFile) && filesize($logFile) >= 5242880) {
             if (!rename($logFile, (string) preg_replace('|.log$|', '.1.log', $logFile))) {
-                echo "Не удалось переименовать файл лога.";
+                echo 'Не удалось переименовать файл лога.';
             }
         }
     }

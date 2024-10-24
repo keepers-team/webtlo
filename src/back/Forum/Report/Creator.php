@@ -406,6 +406,8 @@ final class Creator
     {
         $topicUrl = '';
         // #dl - скачивание, :!: - смайлик.
+        $downloadIcon = 1 != $topic['done'] ? ' :!: ' : '';
+
         if (CreationMode::UI === $this->mode) {
             // [url=viewtopic.php?t=topic_id#dl]topic_name[/url] 842 GB :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s%s';
@@ -415,7 +417,7 @@ final class Creator
                 $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
                 $topic['topic_name'],
                 $this->bytes($topic['topic_size']),
-                (1 != $topic['done'] ? ' :!: ' : '')
+                $downloadIcon
             );
         }
         if (CreationMode::CRON === $this->mode) {
@@ -427,7 +429,7 @@ final class Creator
                 $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
                 $topic['topic_hash'],
                 $topic['id'],
-                (1 != $topic['done'] ? ' :!: ' : '')
+                $downloadIcon
             );
         }
 

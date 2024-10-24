@@ -34,7 +34,7 @@ final class Settings
         $config = [];
 
         // торрент-клиенты
-        $qt = $ini->read("other", "qt", "0");
+        $qt = $ini->read('other', 'qt', '0');
 
         $config['clients'] = [];
         for ($i = 1; $i <= $qt; ++$i) {
@@ -74,22 +74,22 @@ final class Settings
         $config['ui']['theme'] = $ini->read('ui', 'theme', Defaults::uiTheme);
 
         // подразделы
-        $subsections = $ini->read("sections", "subsections");
+        $subsections = $ini->read('sections', 'subsections');
         if (!empty($subsections)) {
             $subsections = explode(',', $subsections);
             $subsections = array_map('intval', $subsections);
 
             $titles = $this->getSubsectionsTitles($subsections);
             foreach ($subsections as $id) {
-                $forum_client = $ini->read($id, "client", 0);
+                $forum_client = $ini->read($id, 'client', 0);
 
-                $config['subsections'][$id]['cl']            = "" !== $forum_client ? $forum_client : 0;
-                $config['subsections'][$id]['lb']            = $ini->read("$id", "label");
-                $config['subsections'][$id]['df']            = $ini->read("$id", "data-folder");
-                $config['subsections'][$id]['sub_folder']    = $ini->read($id, "data-sub-folder", 0);
-                $config['subsections'][$id]['hide_topics']   = $ini->read($id, "hide-topics", 0);
+                $config['subsections'][$id]['cl']            = '' !== $forum_client ? $forum_client : 0;
+                $config['subsections'][$id]['lb']            = $ini->read("$id", 'label');
+                $config['subsections'][$id]['df']            = $ini->read("$id", 'data-folder');
+                $config['subsections'][$id]['sub_folder']    = $ini->read($id, 'data-sub-folder', 0);
+                $config['subsections'][$id]['hide_topics']   = $ini->read($id, 'hide-topics', 0);
                 $config['subsections'][$id]['id']            = $id;
-                $config['subsections'][$id]['na']            = $titles[$id] ?? $ini->read("$id", "title", "$id");
+                $config['subsections'][$id]['na']            = $titles[$id] ?? $ini->read("$id", 'title', "$id");
                 $config['subsections'][$id]['control_peers'] = $ini->read($id, 'control-peers');
                 $config['subsections'][$id]['exclude']       = $ini->read($id, 'exclude', 0);
             }
@@ -229,30 +229,30 @@ final class Settings
                 && !empty($config['clients'])
             ) {
                 $tor_clients_ids = array_keys($config['clients']);
-                $tor_comments    = array_column($config['clients'], "cm");
+                $tor_comments    = array_column($config['clients'], 'cm');
                 $tor_clients     = array_combine($tor_comments, $tor_clients_ids);
                 foreach ($subsections as $forum_id) {
-                    $forum_client = $ini->read($forum_id, "client", "0");
+                    $forum_client = $ini->read($forum_id, 'client', '0');
                     if (
                         !empty($forum_client)
                         && isset($tor_clients[$forum_client])
                     ) {
                         $forum_client_correct = $tor_clients[$forum_client];
-                        $ini->write($forum_id, "client", $forum_client_correct);
+                        $ini->write($forum_id, 'client', $forum_client_correct);
                         $config['subsections'][$forum_id]['cl'] = $forum_client_correct;
                     }
                 }
             }
-            $ini->write("other", "user_version", 1);
+            $ini->write('other', 'user_version', 1);
             $ini->writeFile();
         }
 
         if ($user_version < 2) {
-            $proxy_activate = $ini->read("proxy", "activate", 0);
+            $proxy_activate = $ini->read('proxy', 'activate', 0);
 
             $config['proxy_activate_forum'] = $proxy_activate;
-            $ini->write("proxy", "activate_forum", $proxy_activate);
-            $ini->write("other", "user_version", 2);
+            $ini->write('proxy', 'activate_forum', $proxy_activate);
+            $ini->write('other', 'user_version', 2);
             $ini->writeFile();
         }
 
@@ -261,10 +261,10 @@ final class Settings
             Backup::config($ini->getFile(), $user_version);
 
             // Парсим опцию исключения из отчётов
-            $excludeForumsIDs = $ini->read("reports", "exclude");
-            $excludeForumsIDs = array_filter(explode(",", trim($excludeForumsIDs)));
+            $excludeForumsIDs = $ini->read('reports', 'exclude');
+            $excludeForumsIDs = array_filter(explode(',', trim($excludeForumsIDs)));
             $excludeForumsIDs = array_unique($excludeForumsIDs);
-            $ini->write("reports", "exclude", "");
+            $ini->write('reports', 'exclude', '');
 
             if (count($excludeForumsIDs)) {
                 $checkedForumIDs = [];
@@ -289,7 +289,7 @@ final class Settings
                 }
             }
 
-            $ini->write("other", "user_version", 3);
+            $ini->write('other', 'user_version', 3);
             $ini->writeFile();
         }
 

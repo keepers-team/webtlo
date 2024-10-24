@@ -31,7 +31,7 @@ final class UpdateTime
         }
 
         return (int) $this->db->queryColumn(
-            "SELECT ud FROM UpdateTime WHERE id = ?",
+            'SELECT ud FROM UpdateTime WHERE id = ?',
             [$marker],
         );
     }
@@ -59,7 +59,7 @@ final class UpdateTime
         }
 
         $this->db->executeStatement(
-            "INSERT INTO UpdateTime (id, ud) SELECT ?,?",
+            'INSERT INTO UpdateTime (id, ud) SELECT ?,?',
             [$marker, $updateTime]
         );
     }
