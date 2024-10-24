@@ -15,6 +15,7 @@ use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Static\AppLogger;
+use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
 use Psr\Log\LoggerInterface;
@@ -44,6 +45,9 @@ final class AppContainer
         $container = new Container();
         $container->defaultToShared();
         $container->delegate(new ReflectionContainer(true));
+
+        // Добавляем создание таблиц-клонов.
+        $container->addServiceProvider(new CloneServiceProvider());
 
         // Подключаем описание версии WebTLO.
         $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
