@@ -18,19 +18,6 @@ final class App
         }
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public static function getSettings(string $filename = ''): array
-    {
-        self::init();
-
-        // TODO container auto-wire.
-        $settings = new Settings(new TIniFileEx($filename));
-
-        return $settings->populate();
-    }
-
     /** Часовой пояс по-умолчанию */
     private static function setDefaultTimeZone(): void
     {

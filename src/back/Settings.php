@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo;
 
 use Exception;
 use KeepersTeam\Webtlo\Config\Defaults;
-use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use PDO;
 
@@ -18,7 +17,8 @@ final class Settings
     private static ?array $config = null;
 
     public function __construct(
-        private readonly TIniFileEx $ini
+        private readonly TIniFileEx $ini,
+        private readonly DB         $db,
     ) {
     }
 
@@ -705,10 +705,9 @@ final class Settings
         $in = str_repeat('?,', count($subsections) - 1) . '?';
 
         try {
-            return (array)Db::query_database(
-                "SELECT id,name FROM Forums WHERE id IN ($in)",
+            return $this->db->query(
+                "SELECT id, name FROM Forums WHERE id IN ($in)",
                 $subsections,
-                true,
                 PDO::FETCH_KEY_PAIR
             );
         } catch (Exception $e) {
