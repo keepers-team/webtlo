@@ -29,8 +29,7 @@ final class ApiReportClient
         private readonly Client          $client,
         private readonly Credentials     $cred,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     public function checkAccess(): bool
     {
@@ -117,7 +116,7 @@ final class ApiReportClient
         $data = json_decode($body, true);
 
         foreach ($data as $subforum) {
-            if ((int)$subforum['subforum_id'] === $subForumId) {
+            if ((int) $subforum['subforum_id'] === $subForumId) {
                 return $subforum;
             }
         }
@@ -147,7 +146,7 @@ final class ApiReportClient
 
         $body = json_decode($response->getBody()->getContents(), true);
 
-        return (bool)($body['result'] ?? false);
+        return (bool) ($body['result'] ?? false);
     }
 
     /**

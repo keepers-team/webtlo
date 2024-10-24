@@ -14,6 +14,5 @@ final class KeepersCount
         public readonly bool $useKeptSeed,
         public readonly int  $min,
         public readonly int  $max,
-    ) {
-    }
+    ) {}
 }

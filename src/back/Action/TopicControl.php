@@ -32,8 +32,7 @@ final class TopicControl
         private readonly ApiSearch       $api,
         private readonly DbSearch        $db,
         private readonly Unseeded        $unseeded,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed>[] $config
@@ -53,7 +52,7 @@ final class TopicControl
         // Хранимые подразделы.
         $forums = $this->getKeptForumIds(config: $config);
         foreach ($config['clients'] as $clientId => $torrentClientData) {
-            $clientId = (int)$clientId;
+            $clientId = (int) $clientId;
 
             $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
 
@@ -222,7 +221,10 @@ final class TopicControl
                 }
             }
 
-            $this->logger->debug('Отправка команд завершена за {sec}.', ['sec' => Timers::getExecTime("apply_control_$clientId")]);
+            $this->logger->debug(
+                'Отправка команд завершена за {sec}.',
+                ['sec' => Timers::getExecTime("apply_control_$clientId")]
+            );
 
             $this->logger->info('Регулировка раздач в торрент-клиенте {tag} завершена за {sec}.', [
                 'tag' => $clientTag,

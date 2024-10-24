@@ -50,7 +50,7 @@ trait DbHelperTrait
     public function queryStatementRow(string $statement, array $params = []): array
     {
         try {
-            return (array)$this->db->queryRow($statement, $params);
+            return (array) $this->db->queryRow($statement, $params);
         } catch (Exception $e) {
             throw new RuntimeException($e->getMessage());
         }

@@ -10,8 +10,7 @@ final class State
         public readonly string $icon,
         public readonly string $color,
         public readonly string $title
-    ) {
-    }
+    ) {}
 
     public function getIconElem(string $classes = ''): string
     {
@@ -89,11 +88,11 @@ final class State
             // Скачивается.
             $topicState = 'arrow-circle-o-down';
         }
-        if (1 === (int)($topic['paused'] ?? 0)) {
+        if (1 === (int) ($topic['paused'] ?? 0)) {
             // Приостановлена.
             $topicState = 'pause-circle-o';
         }
-        if (1 === (int)($topic['error'] ?? 0)) {
+        if (1 === (int) ($topic['error'] ?? 0)) {
             // С ошибкой в клиенте.
             $topicState = 'times-circle-o';
         }

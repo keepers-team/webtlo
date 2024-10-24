@@ -34,8 +34,7 @@ final class TopicsUntracked
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly CloneTable      $clone,
-    ) {
-    }
+    ) {}
 
     public function addTopic(TopicDetails $topic): void
     {

@@ -22,8 +22,7 @@ final class TopicsPeers
         public readonly DateTimeImmutable $cacheTime,
         private readonly array            $columns,
         private readonly array            $releases,
-    ) {
-    }
+    ) {}
 
     /**
      * Из всего списка раздач, отфильтровать только нужные, по списку.
@@ -39,11 +38,11 @@ final class TopicsPeers
                 $topic = array_combine($this->columns, $release);
 
                 yield new TopicPeers(
-                    id      : (int)$topic['topic_id'],
-                    hash    : (string)$topic['info_hash'],
-                    seeders : (int)$topic['seeders'],
-                    leechers: (int)$topic['leechers'],
-                    keepers : (int)$topic['keeper_seeders'],
+                    id      : (int) $topic['topic_id'],
+                    hash    : (string) $topic['info_hash'],
+                    seeders : (int) $topic['seeders'],
+                    leechers: (int) $topic['leechers'],
+                    keepers : (int) $topic['keeper_seeders'],
                 );
             }
         }

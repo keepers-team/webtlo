@@ -11,6 +11,5 @@ final class TopicAverage
         public readonly int $daysUpdate = 0,
         public readonly int $sumUpdates = 1,
         public readonly int $sumSeeders = 0
-    ) {
-    }
+    ) {}
 }

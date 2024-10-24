@@ -33,6 +33,5 @@ final class ApiClient
         private readonly array           $defaultParams,
         private readonly Client          $client,
         private readonly LoggerInterface $logger
-    ) {
-    }
+    ) {}
 }

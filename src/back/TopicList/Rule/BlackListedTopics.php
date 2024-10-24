@@ -20,8 +20,7 @@ final class BlackListedTopics implements ListInterface
         private readonly DB     $db,
         private readonly Forums $forums,
         private readonly Output $output,
-    ) {
-    }
+    ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
     {

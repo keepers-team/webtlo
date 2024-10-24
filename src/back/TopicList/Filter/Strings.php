@@ -12,6 +12,5 @@ final class Strings
         /** @var string[] */
         public readonly array  $values,
         public readonly string $pattern,
-    ) {
-    }
+    ) {}
 }

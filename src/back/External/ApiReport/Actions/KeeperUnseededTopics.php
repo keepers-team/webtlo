@@ -41,7 +41,7 @@ trait KeeperUnseededTopics
             }
 
             foreach ($result as $subforum) {
-                if ((int)$subforum['subforum_id'] === $forumId) {
+                if ((int) $subforum['subforum_id'] === $forumId) {
                     return new KeeperUnseededResponse(
                         subForumId: $subforum['subforum_id'],
                         totalCount: $subforum['total_count'],

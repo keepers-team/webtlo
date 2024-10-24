@@ -18,8 +18,7 @@ final class KeepersResponse
     public function __construct(
         public readonly DateTimeImmutable $updateTime,
         public readonly array             $keepers,
-    ) {
-    }
+    ) {}
 
     public function getKeeperInfo(int $keeperId): ?KeeperData
     {

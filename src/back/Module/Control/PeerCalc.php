@@ -14,16 +14,14 @@ final class PeerCalc
 {
     private ?int $peerLimit = null;
 
-    public function __construct(private readonly ConfigControl $config)
-    {
-    }
+    public function __construct(private readonly ConfigControl $config) {}
 
     /**
      * @param array<string, mixed> $clientProps
      */
     public static function getClientLimit(array $clientProps): int
     {
-        return ($clientProps['control_peers'] !== '') ? (int)$clientProps['control_peers'] : -2;
+        return ($clientProps['control_peers'] !== '') ? (int) $clientProps['control_peers'] : -2;
     }
 
     /**
@@ -33,7 +31,7 @@ final class PeerCalc
     {
         $subControlPeers = $config['subsections'][$group]['control_peers'] ?? -2;
 
-        return ($subControlPeers !== '') ? (int)$subControlPeers : -2;
+        return ($subControlPeers !== '') ? (int) $subControlPeers : -2;
     }
 
     /**
@@ -149,7 +147,7 @@ final class PeerCalc
         }
 
         // Текущий час (0-23).
-        $currentHour = (int)date('G');
+        $currentHour = (int) date('G');
 
         $interval  = new PeerInterval($this->config->peersLimitIntervals);
         $peerLimit = $interval->getCurrentIntervalPeerLimit($currentHour);

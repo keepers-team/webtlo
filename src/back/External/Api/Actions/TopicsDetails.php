@@ -101,13 +101,13 @@ trait TopicsDetails
         ): void {
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
-                $logger->debug('Failed chunk request', ['index' => $index, 'reason' => (array)$result]);
+                $logger->debug('Failed chunk request', ['index' => $index, 'reason' => (array) $result]);
 
                 return;
             }
 
             foreach ($result['result'] as $id => $payload) {
-                $topicId = (int)$id;
+                $topicId = (int) $id;
                 if (null !== $payload) {
                     $knownTopics[] = self::parseDynamicTopicDetails($topicId, $payload);
                 }
@@ -124,16 +124,16 @@ trait TopicsDetails
     {
         return new TopicDetails(
             id        : $topicId,
-            hash      : (string)$payload['info_hash'],
-            forumId   : (int)$payload['forum_id'],
-            poster    : (int)$payload['poster_id'],
-            size      : (int)$payload['size'],
-            registered: self::dateTimeFromTimestamp((int)$payload['reg_time']),
+            hash      : (string) $payload['info_hash'],
+            forumId   : (int) $payload['forum_id'],
+            poster    : (int) $payload['poster_id'],
+            size      : (int) $payload['size'],
+            registered: self::dateTimeFromTimestamp((int) $payload['reg_time']),
             status    : TorrentStatus::from($payload['tor_status']),
-            seeders   : (int)$payload['seeders'],
-            title     : (string)$payload['topic_title'],
-            lastSeeded: self::dateTimeFromTimestamp((int)$payload['seeder_last_seen']),
-            downloads : (int)$payload['dl_count']
+            seeders   : (int) $payload['seeders'],
+            title     : (string) $payload['topic_title'],
+            lastSeeded: self::dateTimeFromTimestamp((int) $payload['seeder_last_seen']),
+            downloads : (int) $payload['dl_count']
         );
     }
 }

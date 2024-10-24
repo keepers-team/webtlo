@@ -49,7 +49,7 @@ trait ForumTopics
             $topics = [];
             foreach ($result['result'] as $id => $data) {
                 $payload  = array_combine($format, $data);
-                $topics[] = self::parseStaticForumTopics($forumId, (int)$id, $payload);
+                $topics[] = self::parseStaticForumTopics($forumId, (int) $id, $payload);
             }
 
             return new ForumTopicsResponse(
@@ -75,7 +75,7 @@ trait ForumTopics
             forumId   : $forumId,
             registered: self::dateTimeFromTimestamp($payload['reg_time']),
             priority  : KeepingPriority::from($payload['keeping_priority']),
-            size      : (int)$payload['tor_size_bytes'],
+            size      : (int) $payload['tor_size_bytes'],
             poster    : $payload['topic_poster'],
             seeders   : $payload['seeders'],
             keepers   : $payload['keepers'],

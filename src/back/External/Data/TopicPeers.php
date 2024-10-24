@@ -22,6 +22,5 @@ final class TopicPeers
         public readonly int    $seeders,
         public readonly int    $leechers,
         public readonly int    $keepers,
-    ) {
-    }
+    ) {}
 }

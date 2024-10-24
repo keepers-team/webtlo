@@ -59,7 +59,7 @@ final class TIniFileEx
             $value = $value ? 1 : 0;
         }
 
-        self::$writeConfig[(string)$section][(string)$key] = $value;
+        self::$writeConfig[(string) $section][(string) $key] = $value;
     }
 
     public static function writeFile(): bool
@@ -79,7 +79,7 @@ final class TIniFileEx
         foreach (self::$readConfig as $secName => $section) {
             $result .= '[' . $secName . ']' . $_BR_;
             foreach ($section as $key => $value) {
-                $result .= sprintf('%s="%s"%s', $key, str_replace('\\', '\\\\', (string)$value), $_BR_);
+                $result .= sprintf('%s="%s"%s', $key, str_replace('\\', '\\\\', (string) $value), $_BR_);
             }
             $result .= $_BR_;
         }
@@ -94,7 +94,7 @@ final class TIniFileEx
             return false;
         }
 
-        return (bool)$wRes;
+        return (bool) $wRes;
     }
 
     public static function cloneFile(string $filename): void

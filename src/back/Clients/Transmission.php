@@ -106,24 +106,24 @@ final class Transmission implements ClientInterface
         Timers::start('processing');
         foreach ($response['torrents'] as $torrent) {
             $torrentHash  = strtoupper($torrent['hashString']);
-            $trackerError = (int)$torrent['error'] === 2 ? $torrent['errorString'] : null;
+            $trackerError = (int) $torrent['error'] === 2 ? $torrent['errorString'] : null;
 
             $progress = $torrent['percentDone'];
             // Если торрент скачан полностью, проверив выбраны ли все файлы раздачи.
-            if (1 === (int)$progress && count($torrent['files']) > 1) {
-                $progress = array_sum(array_column($torrent['files'], 'bytesCompleted')) / (int)$torrent['totalSize'];
+            if (1 === (int) $progress && count($torrent['files']) > 1) {
+                $progress = array_sum(array_column($torrent['files'], 'bytesCompleted')) / (int) $torrent['totalSize'];
             }
 
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
-                name        : (string)$torrent['name'],
+                name        : (string) $torrent['name'],
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
-                size        : (int)$torrent['totalSize'],
-                added       : Helper::makeDateTime((int)$torrent['addedDate']),
+                size        : (int) $torrent['totalSize'],
+                added       : Helper::makeDateTime((int) $torrent['addedDate']),
                 done        : $progress,
-                paused      : (int)$torrent['status'] === 0,
-                error       : (int)$torrent['error'] !== 0,
+                paused      : (int) $torrent['status'] === 0,
+                error       : (int) $torrent['error'] !== 0,
                 trackerError: $trackerError,
                 comment     : $torrent['comment'] ?: null,
                 storagePath : $torrent['downloadDir'] ?? null
@@ -352,7 +352,7 @@ final class Transmission implements ClientInterface
             throw new RuntimeException('Unsuccessful api request');
         }
 
-        return (array)$array['arguments'];
+        return (array) $array['arguments'];
     }
 
     /**
@@ -386,6 +386,6 @@ final class Transmission implements ClientInterface
 
     private function prepareLabel(string $label): string
     {
-        return (string)str_replace(',', '', $label);
+        return (string) str_replace(',', '', $label);
     }
 }

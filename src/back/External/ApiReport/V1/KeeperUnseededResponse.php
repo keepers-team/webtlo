@@ -22,8 +22,7 @@ final class KeeperUnseededResponse
         public readonly DateTimeImmutable $cacheTime,
         private readonly array            $columns,
         private readonly array            $releases,
-    ) {
-    }
+    ) {}
 
     /**
      * Найти хеши раздач, которые не сидировались более заданного количества дней.

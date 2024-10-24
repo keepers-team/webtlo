@@ -75,24 +75,24 @@ final class Utorrent implements ClientInterface
     public function getTorrents(array $filter = []): Torrents
     {
         /** Получить просто список раздач без дополнительных действий */
-        $simpleRun = (bool)($filter['simple'] ?? 0);
+        $simpleRun = (bool) ($filter['simple'] ?? 0);
 
         $generator = $this->generateTorrentsList(simpleRun: $simpleRun);
 
         $torrents = [];
         foreach ($generator as $hash => $payload) {
-            $hash = (string)$hash;
+            $hash = (string) $hash;
 
             $torrents[$hash] = new Torrent(
                 topicHash   : $hash,
                 clientHash  : $hash,
-                name        : (string)$payload['name'],
+                name        : (string) $payload['name'],
                 topicId     : $payload['topic_id'] ?: null,
-                size        : (int)$payload['total_size'],
-                added       : Helper::makeDateTime((int)$payload['time_added']),
+                size        : (int) $payload['total_size'],
+                added       : Helper::makeDateTime((int) $payload['time_added']),
                 done        : $payload['done'],
-                paused      : (bool)$payload['paused'],
-                error       : (bool)$payload['error'],
+                paused      : (bool) $payload['paused'],
+                error       : (bool) $payload['error'],
                 trackerError: $payload['tracker_error'] ?: null,
                 comment     : $payload['comment'] ?: null,
                 storagePath : null
@@ -342,19 +342,19 @@ final class Utorrent implements ClientInterface
                 6 - checking
                 7 - started
             */
-            $torrentState  = decbin((int)$torrent[1]);
-            $torrentHash   = strtoupper((string)$torrent[0]);
+            $torrentState  = decbin((int) $torrent[1]);
+            $torrentHash   = strtoupper((string) $torrent[0]);
             $torrentPaused = $torrentState[2] || !$torrentState[7];
 
             $torrents[$torrentHash] = [
                 'topic_id'      => null,
                 'comment'       => null,
-                'done'          => (int)$torrent[4] / 1000,
-                'error'         => (bool)$torrentState[3],
-                'name'          => (string)$torrent[2],
+                'done'          => (int) $torrent[4] / 1000,
+                'error'         => (bool) $torrentState[3],
+                'name'          => (string) $torrent[2],
                 'paused'        => $torrentPaused,
                 'time_added'    => null,
-                'total_size'    => (int)$torrent[3],
+                'total_size'    => (int) $torrent[3],
                 'tracker_error' => null,
             ];
         }

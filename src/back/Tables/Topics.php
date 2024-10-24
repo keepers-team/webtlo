@@ -34,9 +34,7 @@ final class Topics
     /** Допустимые статусы раздач. */
     public const VALID_STATUSES = [0, 2, 3, 8, 10];
 
-    public function __construct(private readonly DB $db)
-    {
-    }
+    public function __construct(private readonly DB $db) {}
 
     public function isValidTopic(TorrentStatus $topicStatus): bool
     {

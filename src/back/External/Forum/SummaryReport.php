@@ -81,7 +81,7 @@ trait SummaryReport
             $matches = [];
             preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
             if (count($matches) === 2) {
-                return (int)$matches[1];
+                return (int) $matches[1];
             }
         }
 

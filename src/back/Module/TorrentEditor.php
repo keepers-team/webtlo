@@ -22,8 +22,7 @@ final class TorrentEditor
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly TorrentFile     $torrent,
-    ) {
-    }
+    ) {}
 
     /**
      * Load a torrent file from a file path.
@@ -129,14 +128,14 @@ final class TorrentEditor
         foreach ($trackers as &$tracker) {
             // Если задан пустой ключ, то записываем 'ann?magnet'.
             if (empty($passkey)) {
-                $tracker = (string)preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
+                $tracker = (string) preg_replace('/(?<=ann\?).+$/', 'magnet', $tracker);
             } else {
-                $tracker = (string)preg_replace('/(?<==)\w+$/', $passkey, $tracker);
+                $tracker = (string) preg_replace('/(?<==)\w+$/', $passkey, $tracker);
             }
 
             // Для обычных пользователей заменяем адрес трекера и тип ключа.
             if ($regularUser) {
-                $tracker = (string)preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
+                $tracker = (string) preg_replace(['/(?<=\.)([-\w]+\.\w+)/', '/\w+(?==)/'], ['t-ru.org', 'pk'], $tracker);
             }
 
             unset($tracker);

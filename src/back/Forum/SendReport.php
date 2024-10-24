@@ -17,8 +17,7 @@ final class SendReport
     public function __construct(
         private readonly ApiReportClient $apiReport,
         private readonly WebTLO          $webtlo,
-    ) {
-    }
+    ) {}
 
     public function checkAccess(): void
     {

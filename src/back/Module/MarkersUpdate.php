@@ -22,8 +22,7 @@ final class MarkersUpdate
         public readonly array $markers,
         /** @var array<int, int> Метки времени обновления маркеров. */
         public readonly array $timestamps,
-    ) {
-    }
+    ) {}
 
     /**
      * Отформатировать дату обновления маркеров.
@@ -109,14 +108,14 @@ final class MarkersUpdate
             $log['missed'] = $missed;
 
             $missed = array_map(function($markId) {
-                $mark = UpdateMark::tryFrom((int)$markId);
+                $mark = UpdateMark::tryFrom((int) $markId);
 
                 return $mark ? $mark->label() : "Раздачи подраздела №$markId";
             }, $missed);
 
             $logger->notice('Отсутствуют маркеры обновления для: {missed}', ['missed' => implode(', ', $missed)]);
         }
-        $logger->debug((string)json_encode($log));
+        $logger->debug((string) json_encode($log));
     }
 
     private function checkMarkersCount(): void

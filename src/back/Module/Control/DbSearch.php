@@ -25,8 +25,7 @@ final class DbSearch
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly DB              $db,
-    ) {
-    }
+    ) {}
 
     public function getStoredHashes(KeysObject $forums, Torrents $torrents, string $timer): Generator
     {

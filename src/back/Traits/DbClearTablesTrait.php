@@ -28,7 +28,7 @@ trait DbClearTablesTrait
         }
 
         // Данные о сидах устарели
-        $keepDataPeriod = (int)TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
+        $keepDataPeriod = (int) TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
         $outdatedDate   = (new DateTimeImmutable())->modify("- $keepDataPeriod day");
 
         // Удалим устаревшие метки обновлений.
@@ -44,7 +44,7 @@ trait DbClearTablesTrait
         );
 
         // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
-        $updatePriority = (bool)TIniFileEx::read('update', 'priority', 0);
+        $updatePriority = (bool) TIniFileEx::read('update', 'priority', 0);
         if ($updatePriority) {
             // Удалим устаревшие раздачи высокого приоритета.
             $highPriorityUpdate = $updateTime->getMarkerTime(UpdateMark::HIGH_PRIORITY->value);

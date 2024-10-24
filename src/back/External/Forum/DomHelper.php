@@ -37,6 +37,6 @@ trait DomHelper
      */
     protected static function getFirstNodeValue(mixed $list): string
     {
-        return (!empty($list)) ? (string)$list->item(0)?->nodeValue : '';
+        return (!empty($list)) ? (string) $list->item(0)?->nodeValue : '';
     }
 }

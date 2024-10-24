@@ -36,8 +36,7 @@ final class TopicsInsert
 
     public function __construct(
         private readonly CloneTable $clone,
-    ) {
-    }
+    ) {}
 
     /**
      * @param (int|string)[] $topic

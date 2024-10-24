@@ -36,8 +36,7 @@ final class HighPriorityInsert
 
     public function __construct(
         private readonly CloneTable $clone,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{}|string[]

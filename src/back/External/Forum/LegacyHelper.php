@@ -38,18 +38,18 @@ trait LegacyHelper
     ): ForumClient {
         $cfg = $settings->populate();
 
-        $useProxy = (bool)$cfg['proxy_activate_forum'];
+        $useProxy = (bool) $cfg['proxy_activate_forum'];
 
         $cookieJar = new CookieJar();
 
         $client = self::createClient(
             logger     : $logger,
-            forumDomain: (string)$cfg['forum_base_url'],
-            ssl        : (bool)$cfg['forum_ssl'],
+            forumDomain: (string) $cfg['forum_base_url'],
+            ssl        : (bool) $cfg['forum_ssl'],
             forumAuth  : $forumAuth,
             cookieJar  : $cookieJar,
             proxy      : $useProxy ? $proxy : null,
-            timeout    : new Timeout((int)$cfg['forum_timeout'], (int)$cfg['forum_connect_timeout']),
+            timeout    : new Timeout((int) $cfg['forum_timeout'], (int) $cfg['forum_connect_timeout']),
         );
 
         return new ForumClient(

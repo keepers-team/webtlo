@@ -12,6 +12,5 @@ final class ReportForumTopic
     public function __construct(
         public readonly int $forumId,
         public readonly int $topicId
-    ) {
-    }
+    ) {}
 }

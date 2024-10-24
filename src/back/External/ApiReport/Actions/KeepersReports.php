@@ -52,7 +52,7 @@ trait KeepersReports
                 );
             }
 
-            return new KeeperTopics((int)$user['keeper_id'], $topics);
+            return new KeeperTopics((int) $user['keeper_id'], $topics);
         }, $reports);
 
         return new KeepersResponse($forumId, $keepers);

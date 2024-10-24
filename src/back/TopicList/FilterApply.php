@@ -141,7 +141,7 @@ final class FilterApply
             $matchId = false;
             foreach ($filterStrings->values as $filterId) {
                 $filterId = sprintf("^%s$", str_replace('*', '.*', $filterId));
-                if (mb_eregi($filterId, (string)$topic->id)) {
+                if (mb_eregi($filterId, (string) $topic->id)) {
                     $matchId = true;
                 }
             }

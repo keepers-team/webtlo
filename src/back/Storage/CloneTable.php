@@ -12,8 +12,7 @@ final class CloneTable
     public function __construct(
         private readonly DB              $db,
         private readonly TableCloneObject $table,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{}|string[]

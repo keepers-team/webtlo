@@ -18,6 +18,5 @@ final class Captcha
         public readonly string $message,
         public readonly string $image,
         public readonly array  $codes,
-    ) {
-    }
+    ) {}
 }

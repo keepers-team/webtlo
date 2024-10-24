@@ -35,7 +35,7 @@ trait DbQueryTrait
             $this->rollbackTransaction();
 
             Log::append($sql);
-            throw new RuntimeException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 
@@ -51,7 +51,7 @@ trait DbQueryTrait
     {
         $sth = $this->executeStatement($sql, $param);
 
-        return (array)$sth->fetchAll($pdo);
+        return (array) $sth->fetchAll($pdo);
     }
 
     /**
@@ -91,7 +91,7 @@ trait DbQueryTrait
      */
     public function queryCount(string $sql, array $param = []): int
     {
-        return (int)$this->queryColumn($sql, $param);
+        return (int) $this->queryColumn($sql, $param);
     }
 
     /**
@@ -99,7 +99,7 @@ trait DbQueryTrait
      */
     public function queryChanges(): int
     {
-        return (int)$this->queryColumn('SELECT CHANGES()');
+        return (int) $this->queryColumn('SELECT CHANGES()');
     }
 
     /**
@@ -138,7 +138,7 @@ trait DbQueryTrait
             $this->db->exec($sql);
         } catch (Throwable $e) {
             Log::append($sql);
-            throw new RuntimeException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 }

@@ -36,8 +36,7 @@ final class DefaultTopics implements ListInterface
         private readonly array  $cfg,
         private readonly Output $output,
         private readonly int    $forumId
-    ) {
-    }
+    ) {}
 
     /**
      * @throws ValidationException
@@ -72,10 +71,10 @@ final class DefaultTopics implements ListInterface
         $filterStrings = Validate::prepareFilterStrings($filter);
 
         // Исключить себя из списка хранителей.
-        $excludeSelfKeep = (bool)$this->cfg['exclude_self_keep'];
+        $excludeSelfKeep = (bool) $this->cfg['exclude_self_keep'];
 
         // Текущий пользователь.
-        $userId = (int)$this->cfg['user_id'];
+        $userId = (int) $this->cfg['user_id'];
 
         $this->userId = $userId;
 
@@ -99,7 +98,7 @@ final class DefaultTopics implements ListInterface
         $totalCount = $totalSize = 0;
         // Перебираем раздачи.
         foreach ($topics as $topicData) {
-            $daysSeed = (int)$topicData['days_seed'];
+            $daysSeed = (int) $topicData['days_seed'];
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::parseFromTorrent(
                 $topicData,
@@ -116,7 +115,7 @@ final class DefaultTopics implements ListInterface
             $topicKeepers = $this->getTopicKeepers($topic->id);
 
             // Фильтрация по количеству сидов.
-            if (!FilterApply::isSeedCountInRange($filterSeed, (float)$topic->averageSeed)) {
+            if (!FilterApply::isSeedCountInRange($filterSeed, (float) $topic->averageSeed)) {
                 continue;
             }
 
@@ -179,7 +178,7 @@ final class DefaultTopics implements ListInterface
             $forumsIDs = [];
             // -3 Все хранимые подразделы.
             // -6 Все хранимые подразделы по спискам.
-            $subsections = (array)($this->cfg['subsections'] ?? []);
+            $subsections = (array) ($this->cfg['subsections'] ?? []);
             foreach ($subsections as $sub_forum_id => $subsection) {
                 if (!$subsection['hide_topics']) {
                     $forumsIDs[] = $sub_forum_id;
@@ -356,7 +355,7 @@ final class DefaultTopics implements ListInterface
 
         // Фильтр по клиенту.
         if ($filter['filter_client_id'] > 0) {
-            $where[] = sprintf('AND Torrents.client_id = %d', (int)$filter['filter_client_id']);
+            $where[] = sprintf('AND Torrents.client_id = %d', (int) $filter['filter_client_id']);
         }
 
         $where = implode(' ', $where);
@@ -462,7 +461,7 @@ final class DefaultTopics implements ListInterface
     private function excludeUserFromKeepers(array $topicKeepers, int $userId): array
     {
         return array_filter($topicKeepers, function($e) use ($userId) {
-            return $userId !== (int)$e['keeper_id'];
+            return $userId !== (int) $e['keeper_id'];
         });
     }
 }

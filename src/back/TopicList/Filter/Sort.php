@@ -9,8 +9,7 @@ final class Sort
     public function __construct(
         public readonly SortRule      $rule,
         public readonly SortDirection $direction,
-    ) {
-    }
+    ) {}
 
     public function fieldDirection(): string
     {

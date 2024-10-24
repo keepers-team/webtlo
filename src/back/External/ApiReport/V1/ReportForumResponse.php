@@ -12,9 +12,7 @@ final class ReportForumResponse
     /**
      * @param array<int, ReportForumTopic> $reportForumTopics
      */
-    public function __construct(public readonly array $reportForumTopics)
-    {
-    }
+    public function __construct(public readonly array $reportForumTopics) {}
 
     public function getReportTopicId(int $forumId): ?int
     {

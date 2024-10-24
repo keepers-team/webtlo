@@ -20,8 +20,7 @@ final class Topic
         public readonly ?int              $priority = null,
         public readonly ?State            $state = null,
         public readonly ?int              $clientId = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, int|string> $topicData
@@ -31,16 +30,16 @@ final class Topic
     public static function fromTopicData(array $topicData, ?State $state = null): self
     {
         return new self(
-            id         : (int)$topicData['topic_id'],
-            hash       : (string)$topicData['info_hash'],
-            name       : (string)$topicData['name'],
-            size       : (int)$topicData['size'],
-            regDate    : Helper::setTimestamp((int)$topicData['reg_time']),
-            forumId    : !empty($topicData['forum_id']) ? (int)$topicData['forum_id'] : null,
-            averageSeed: round((float)($topicData['seed'] ?? -1), 2),
-            priority   : !empty($topicData['priority']) ? (int)$topicData['priority'] : null,
+            id         : (int) $topicData['topic_id'],
+            hash       : (string) $topicData['info_hash'],
+            name       : (string) $topicData['name'],
+            size       : (int) $topicData['size'],
+            regDate    : Helper::setTimestamp((int) $topicData['reg_time']),
+            forumId    : !empty($topicData['forum_id']) ? (int) $topicData['forum_id'] : null,
+            averageSeed: round((float) ($topicData['seed'] ?? -1), 2),
+            priority   : !empty($topicData['priority']) ? (int) $topicData['priority'] : null,
             state      : $state,
-            clientId   : !empty($topicData['client_id']) ? (int)$topicData['client_id'] : null
+            clientId   : !empty($topicData['client_id']) ? (int) $topicData['client_id'] : null
         );
     }
 
@@ -87,7 +86,7 @@ final class Topic
 
         return sprintf(
             "<span class='text-danger %s'>%s</span>",
-            $this->getSeedClassName((int)floor($this->averageSeed)),
+            $this->getSeedClassName((int) floor($this->averageSeed)),
             $this->averageSeed,
         );
     }

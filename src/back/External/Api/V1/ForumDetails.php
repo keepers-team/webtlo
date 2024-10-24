@@ -12,6 +12,5 @@ final class ForumDetails
         public readonly string $name,
         public readonly int    $count,
         public readonly int    $size
-    ) {
-    }
+    ) {}
 }

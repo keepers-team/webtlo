@@ -12,8 +12,7 @@ final class Output
         private readonly string $forum_address,
         /** @var ?array<string, mixed> */
         private readonly ?array $filter = null
-    ) {
-    }
+    ) {}
 
     public function formatTopic(Topic $topic, ?string $details = null): string
     {

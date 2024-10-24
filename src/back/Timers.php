@@ -30,7 +30,7 @@ final class Timers
     {
         self::stop($marker);
 
-        return (int)floor(self::$markers[$marker]['exec']);
+        return (int) floor(self::$markers[$marker]['exec']);
     }
 
     public static function getExecTime(string $marker = 'default', bool $leadZeros = false): string
@@ -39,7 +39,7 @@ final class Timers
 
         $time = self::$markers[$marker]['exec'] ?? 0;
 
-        return Helper::convertSeconds((int)$time, $leadZeros);
+        return Helper::convertSeconds((int) $time, $leadZeros);
     }
 
     public static function printExecTime(string $marker = 'default'): void

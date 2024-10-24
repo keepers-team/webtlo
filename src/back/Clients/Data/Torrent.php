@@ -38,6 +38,5 @@ final class Torrent
         public readonly ?string           $trackerError = null,
         public readonly ?string           $comment = null,
         public readonly ?string           $storagePath = null,
-    ) {
-    }
+    ) {}
 }

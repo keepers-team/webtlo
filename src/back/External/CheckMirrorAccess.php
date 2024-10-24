@@ -18,9 +18,7 @@ final class CheckMirrorAccess
 {
     use RetryMiddleware;
 
-    public function __construct(private readonly LoggerInterface $logger)
-    {
-    }
+    public function __construct(private readonly LoggerInterface $logger) {}
 
     public function checkAddress(string $type, string $url, bool $ssl, ?Proxy $proxy): bool
     {
@@ -41,7 +39,7 @@ final class CheckMirrorAccess
         $path = $this->getPath($type);
         $log  = [
             'type'  => $type,
-            'proxy' => (bool)$proxy,
+            'proxy' => (bool) $proxy,
         ];
 
         $clientProperties = [

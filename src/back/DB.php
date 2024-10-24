@@ -30,9 +30,7 @@ final class DB
 
     private static ?self $instance = null;
 
-    public function __construct(public readonly PDO $db)
-    {
-    }
+    public function __construct(public readonly PDO $db) {}
 
     public static function create(): DB
     {
@@ -96,7 +94,7 @@ final class DB
         );
         $mask = "/^$mask$/ui";
 
-        return preg_match($mask, (string)$value);
+        return preg_match($mask, (string) $value);
     }
 
     public function __destruct()

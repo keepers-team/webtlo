@@ -32,8 +32,7 @@ final class Unseeded
         private readonly LoggerInterface $logger,
         private readonly ConfigControl   $topicControl,
         private readonly UpdateTime      $updateTime,
-    ) {
-    }
+    ) {}
 
     /**
      * Добавить в счётчик количество найденных не сидируемых раздач.

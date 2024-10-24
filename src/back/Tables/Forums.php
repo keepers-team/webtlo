@@ -12,9 +12,7 @@ final class Forums
     /** @var ForumObject[] */
     private static array $forums = [];
 
-    public function __construct(private readonly DB $db)
-    {
-    }
+    public function __construct(private readonly DB $db) {}
 
     /**
      * Получить параметры заданного подраздела.
@@ -37,10 +35,10 @@ final class Forums
             }
 
             $forum = new ForumObject(
-                id      : (int)$res['id'],
-                name    : (string)$res['name'],
-                quantity: (int)$res['quantity'],
-                size    : (int)$res['size'],
+                id      : (int) $res['id'],
+                name    : (string) $res['name'],
+                quantity: (int) $res['quantity'],
+                size    : (int) $res['size'],
             );
 
             self::$forums[$forumId] = $forum;

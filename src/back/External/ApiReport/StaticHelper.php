@@ -80,15 +80,15 @@ trait StaticHelper
         LoggerInterface $logger,
         Proxy           $proxy
     ): Client {
-        $useProxy = (bool)$cfg['proxy_activate_report'];
+        $useProxy = (bool) $cfg['proxy_activate_report'];
 
         return self::createApiReportClient(
             $logger,
-            (string)$cfg['report_base_url'],
-            (bool)$cfg['report_ssl'],
+            (string) $cfg['report_base_url'],
+            (bool) $cfg['report_ssl'],
             $cred,
             $useProxy ? $proxy : null,
-            new Timeout((int)$cfg['api_timeout'], (int)$cfg['api_connect_timeout']),
+            new Timeout((int) $cfg['api_timeout'], (int) $cfg['api_connect_timeout']),
         );
     }
 

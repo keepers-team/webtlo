@@ -17,7 +17,7 @@ trait DbMigrationTrait
     protected function checkDatabaseVersion(string $databasePath): void
     {
         // Определим текущую версию БД.
-        $currentVersion = (int)($this->queryColumn('PRAGMA user_version') ?? 0);
+        $currentVersion = (int) ($this->queryColumn('PRAGMA user_version') ?? 0);
 
         if ($currentVersion === self::DATABASE_VERSION) {
             // БД актуальна, делать ничего не нужно.
@@ -73,7 +73,7 @@ trait DbMigrationTrait
         // где 0000 - новая версия БД, после применения миграции.
         foreach ($this->getFiles($dir) as $file) {
             [$pragmaVersion] = explode('-', $file);
-            $pragmaVersion = (int)$pragmaVersion;
+            $pragmaVersion = (int) $pragmaVersion;
 
             if ($currentVersion < $pragmaVersion) {
                 $query = file_get_contents($dir . DIRECTORY_SEPARATOR . $file);

@@ -80,13 +80,13 @@ final class Flood implements ClientInterface
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
-                name        : (string)$torrent['name'],
+                name        : (string) $torrent['name'],
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
-                size        : (int)$torrent['sizeBytes'],
-                added       : Helper::makeDateTime((int)$torrent['dateAdded']),
+                size        : (int) $torrent['sizeBytes'],
+                added       : Helper::makeDateTime((int) $torrent['dateAdded']),
                 done        : $torrent['percentComplete'] / 100,
                 paused      : $torrentPaused,
-                error       : (bool)$torrentError,
+                error       : (bool) $torrentError,
                 trackerError: $errorMessage ?: null,
                 comment     : $torrent['comment'] ?: null,
                 storagePath : $torrent['directory'] ?? null

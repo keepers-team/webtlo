@@ -23,8 +23,7 @@ final class ForumTree
         private readonly ApiClient       $apiClient,
         private readonly CloneFactory    $cloneFactory,
         private readonly UpdateTime      $updateTime,
-    ) {
-    }
+    ) {}
 
     public function update(): void
     {
@@ -48,7 +47,7 @@ final class ForumTree
         $tabForums = $this->cloneFactory->makeClone(table: 'Forums', keys: ['id', 'name', 'quantity', 'size']);
 
         // Преобразуем объекты в простой массив. TODO переделать.
-        $forums = array_map(fn($el) => array_combine($tabForums->getTableKeys(), (array)$el), $response->forums);
+        $forums = array_map(fn($el) => array_combine($tabForums->getTableKeys(), (array) $el), $response->forums);
 
         // Записываем в базу данных.
         $tabForums->cloneFillChunk(dataSet: $forums);

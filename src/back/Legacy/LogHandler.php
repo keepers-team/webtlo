@@ -19,6 +19,6 @@ final class LogHandler extends AbstractProcessingHandler implements HandlerInter
 
     protected function write(LogRecord $record): void
     {
-        Log::append(trim((string)$record->formatted));
+        Log::append(trim((string) $record->formatted));
     }
 }
