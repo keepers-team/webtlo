@@ -8,9 +8,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -24,8 +24,8 @@ use Throwable;
  */
 final class Flood implements ClientInterface
 {
-    use Traits\AuthClient;
     use Traits\AllowedFunctions;
+    use Traits\AuthClient;
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
 

@@ -23,8 +23,8 @@ use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DefaultTopics implements ListInterface
 {
-    use FilterTrait;
     use DbHelperTrait;
+    use FilterTrait;
 
     private int $userId;
     /** @var array<string, mixed>[][] */

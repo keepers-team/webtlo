@@ -3,8 +3,8 @@
 namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
-use KeepersTeam\Webtlo\External\Api\StaticHelper;
 use KeepersTeam\Webtlo\External\Api\Actions;
+use KeepersTeam\Webtlo\External\Api\StaticHelper;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -12,7 +12,6 @@ use Psr\Log\LoggerInterface;
  */
 final class ApiClient
 {
-    use StaticHelper;
     use Actions\ForumTopics;
     use Actions\ForumTree;
     use Actions\HighPriorityTopics;
@@ -20,6 +19,7 @@ final class ApiClient
     use Actions\Processor;
     use Actions\TopicsDetails;
     use Actions\TopicsPeers;
+    use StaticHelper;
 
     protected static string $apiVersion  = 'v1';
     protected static int    $concurrency = 4;

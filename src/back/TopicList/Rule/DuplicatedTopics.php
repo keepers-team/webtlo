@@ -17,8 +17,8 @@ use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 final class DuplicatedTopics implements ListInterface
 {
-    use FilterTrait;
     use DbHelperTrait;
+    use FilterTrait;
 
     public function __construct(
         private readonly DB     $db,

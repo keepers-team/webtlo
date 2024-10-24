@@ -18,12 +18,12 @@ use Psr\Log\LoggerInterface;
  */
 final class ApiReportClient
 {
-    use StaticHelper;
     use Actions\ForumTopicsPeers;
-    use Actions\KeeperUnseededTopics;
     use Actions\KeepersReports;
+    use Actions\KeeperUnseededTopics;
     use Actions\Processor;
     use Actions\ReportForumTopics;
+    use StaticHelper;
 
     public function __construct(
         private readonly Client          $client,
