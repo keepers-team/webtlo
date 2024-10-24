@@ -36,7 +36,6 @@ trait CaptchaHelper
      *
      * @param string          $authPage HTML-страница
      * @param LoggerInterface $logger   Интерфейс для записи журнала
-     * @return Captcha
      */
     protected static function parseCaptchaCodes(string $authPage, LoggerInterface $logger): Captcha
     {

@@ -20,7 +20,6 @@ final class ForumCredentials
      * Проверим наличие нужных значений для авторизации на форуме.
      *
      * @param array<string, mixed> $cfg
-     * @return ForumCredentials
      */
     public static function fromLegacy(array $cfg): self
     {

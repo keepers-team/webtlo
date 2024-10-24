@@ -36,7 +36,6 @@ final class TopicsUpdate
 
     /**
      * @param (int|string)[] $topic
-     * @return void
      */
     public function addTopic(array $topic): void
     {

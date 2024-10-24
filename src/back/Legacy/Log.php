@@ -18,9 +18,6 @@ final class Log
 
     /**
      * @param string[] $rows
-     * @param string   $break
-     * @param bool     $replace
-     * @return string
      */
     public static function formatRows(array $rows, string $break = '<br />', bool $replace = false): string
     {

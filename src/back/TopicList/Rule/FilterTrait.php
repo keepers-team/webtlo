@@ -12,7 +12,6 @@ trait FilterTrait
     /**
      * Получить из БД список раздач и отсортировать по заданному фильтру.
      *
-     * @param string         $statement
      * @param (int|string)[] $params
      * @return array<string, mixed>[]
      */

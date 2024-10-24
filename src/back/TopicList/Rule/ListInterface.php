@@ -13,8 +13,6 @@ interface ListInterface
      * Получить список раздач по заданным условиям.
      *
      * @param array<string, mixed> $filter
-     * @param Sort                 $sort
-     * @return Topics
      */
     public function getTopics(array $filter, Sort $sort): Topics;
 }

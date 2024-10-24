@@ -62,7 +62,6 @@ final class Output
     /**
      * Блок выбираемых к отображению полей.
      *
-     * @param Topic     $topic
      * @param ?string[] $filter
      * @return array<string, mixed>
      */

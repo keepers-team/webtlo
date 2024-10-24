@@ -93,7 +93,6 @@ final class DuplicatedTopics implements ListInterface
     /**
      * Список клиентов, в которых хранятся заданные раздачи.
      *
-     * @param KeysObject $hashes
      * @return array<int|string, mixed>[]
      */
     private function getClientsByHashes(KeysObject $hashes): array

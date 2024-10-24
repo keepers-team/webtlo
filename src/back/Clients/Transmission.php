@@ -277,9 +277,7 @@ final class Transmission implements ClientInterface
     }
 
     /**
-     * @param string               $method
      * @param array<string, mixed> $options
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $method, array $options = []): ResponseInterface
@@ -298,7 +296,6 @@ final class Transmission implements ClientInterface
     }
 
     /**
-     * @param string               $method
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
@@ -316,9 +313,7 @@ final class Transmission implements ClientInterface
     }
 
     /**
-     * @param string               $method
      * @param array<string, mixed> $params
-     * @return bool
      */
     private function sendRequest(string $method, array $params = []): bool
     {
@@ -334,7 +329,6 @@ final class Transmission implements ClientInterface
     }
 
     /**
-     * @param ResponseInterface $response
      * @return array<string, mixed>
      */
     private function validateResponse(ResponseInterface $response): array
@@ -359,7 +353,6 @@ final class Transmission implements ClientInterface
 
     /**
      * @param array<string, mixed> $headers
-     * @return callable
      */
     private function getLoginHandler(array &$headers): callable
     {

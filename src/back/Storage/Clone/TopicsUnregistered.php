@@ -59,7 +59,6 @@ final class TopicsUnregistered
 
     /**
      * @param array<int, mixed> $topic
-     * @return void
      */
     public function addTopic(array $topic): void
     {

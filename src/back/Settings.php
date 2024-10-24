@@ -300,7 +300,6 @@ final class Settings
      * @param array<string, mixed> $cfg
      * @param array<string, mixed> $forums
      * @param array<string, mixed> $torrentClients
-     * @return bool
      */
     public function update(array $cfg, array $forums, array $torrentClients): bool
     {
@@ -473,7 +472,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setTopicControl(array $cfg): void
     {
@@ -493,7 +491,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setProxy(array $cfg): void
     {
@@ -522,7 +519,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setCurators(array $cfg): void
     {
@@ -539,7 +535,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setForum(array $cfg): void
     {
@@ -580,7 +575,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setDownload(array $cfg): void
     {
@@ -595,7 +589,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setTopicFiltration(array $cfg): void
     {
@@ -628,7 +621,6 @@ final class Settings
      * @param array<string, mixed> $cfg
      * @param int[]                $excludeClientsIDs
      * @param int[]                $excludeForumsIDs
-     * @return void
      */
     private function setReports(array $cfg, array $excludeClientsIDs, array $excludeForumsIDs): void
     {
@@ -658,7 +650,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setAutomation(array $cfg): void
     {
@@ -671,7 +662,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setUpdate(array $cfg): void
     {
@@ -684,7 +674,6 @@ final class Settings
 
     /**
      * @param array<string, mixed> $cfg
-     * @return void
      */
     private function setUI(array $cfg): void
     {

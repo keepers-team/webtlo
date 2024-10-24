@@ -271,9 +271,7 @@ final class Deluge implements ClientInterface
     }
 
     /**
-     * @param string            $method
      * @param array<int, mixed> $params
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $method, array $params = []): ResponseInterface
@@ -288,7 +286,6 @@ final class Deluge implements ClientInterface
     }
 
     /**
-     * @param string            $method
      * @param array<int, mixed> $params
      * @return array<int|string, mixed>
      */
@@ -314,9 +311,7 @@ final class Deluge implements ClientInterface
     }
 
     /**
-     * @param string            $method
      * @param array<int, mixed> $params
-     * @return bool
      */
     private function sendRequest(string $method, array $params = []): bool
     {

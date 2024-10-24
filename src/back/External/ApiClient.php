@@ -26,8 +26,6 @@ final class ApiClient
 
     /**
      * @param array<string, string> $defaultParams
-     * @param Client               $client
-     * @param LoggerInterface      $logger
      */
     public function __construct(
         private readonly array           $defaultParams,

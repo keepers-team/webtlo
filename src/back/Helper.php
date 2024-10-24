@@ -13,8 +13,6 @@ final class Helper
      * Сортировка массива по заданному ключу, с учётом кириллицы.
      *
      * @param array<int|string, mixed> $input
-     * @param string                   $field
-     * @param int                      $direct
      * @return array<int|string, mixed>
      */
     public static function natsortField(array $input, string $field, int $direct = 1): array
@@ -189,7 +187,6 @@ final class Helper
      * Найти используемый домен трекера в настройках.
      *
      * @param array<string, mixed> $cfg
-     * @return ?string
      */
     public static function getForumDomain(array $cfg): ?string
     {
@@ -248,8 +245,6 @@ final class Helper
      * Проверить включена ли опция автоматического запуска действия.
      *
      * @param array<string, mixed> $config
-     * @param string               $action
-     * @return bool
      */
     public static function isScheduleActionEnabled(array $config, string $action): bool
     {
@@ -260,8 +255,6 @@ final class Helper
      * Проверить включена ли дополнительная опция обновления раздач.
      *
      * @param array<string, mixed> $config
-     * @param string               $property
-     * @return bool
      */
     public static function isUpdatePropertyEnabled(array $config, string $property): bool
     {

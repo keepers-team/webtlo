@@ -69,10 +69,6 @@ trait StaticHelper
 
     /**
      * @param array<string, mixed> $cfg
-     * @param Credentials          $cred
-     * @param LoggerInterface      $logger
-     * @param Proxy                $proxy
-     * @return Client
      */
     public static function apiClientFromLegacy(
         array           $cfg,
@@ -94,7 +90,6 @@ trait StaticHelper
 
     /**
      * @param array<string, mixed> $cfg
-     * @return Credentials
      * @throws Exception
      */
     public static function apiCredentials(array $cfg): Credentials

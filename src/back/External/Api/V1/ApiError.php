@@ -19,7 +19,6 @@ final class ApiError
 
     /**
      * @param ?array<string, mixed> $legacyError
-     * @return ApiError
      */
     public static function fromLegacyError(?array $legacyError): ApiError
     {

@@ -15,7 +15,6 @@ use Psr\Log\LoggerInterface;
 trait ReportForumTopics
 {
     /**
-     * @return ReportForumResponse|ApiError
      */
     public function getForumsReportTopics(): ReportForumResponse|ApiError
     {
@@ -48,7 +47,6 @@ trait ReportForumTopics
 
     /**
      * @param array<int, mixed> $result
-     * @return ReportForumResponse
      */
     private static function parseStaticReportTopic(array $result): ReportForumResponse
     {

@@ -286,9 +286,7 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
-     * @param string            $command
      * @param array<int, mixed> $params
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $command, array $params = []): ResponseInterface
@@ -299,7 +297,6 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
-     * @param string            $command
      * @param array<int, mixed> $params
      * @return array<int, mixed>
      */
@@ -319,9 +316,7 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
-     * @param string            $command
      * @param array<int, mixed> $params
-     * @return bool
      */
     private function sendRequest(string $command, array $params = []): bool
     {
@@ -347,7 +342,6 @@ final class Rtorrent implements ClientInterface
      * Высов списка команд по очереди.
      *
      * @param array<string, mixed>[] $callsChain
-     * @return bool
      */
     private function makeMultiCall(array $callsChain): bool
     {
@@ -355,7 +349,6 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
-     * @param string            $method
      * @param string[]          $torrentHashes
      * @param array<int, mixed> $params
      * @return array<array<string, mixed>>
@@ -369,7 +362,6 @@ final class Rtorrent implements ClientInterface
 
     /**
      * @param array<array<string, mixed>> $calls
-     * @return bool
      */
     private function actionTorrents(array $calls): bool
     {
@@ -391,9 +383,7 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
-     * @param string            $command
      * @param array<int, mixed> $params
-     * @return string
      */
     private function xmpRequestEncode(string $command, array $params = []): string
     {

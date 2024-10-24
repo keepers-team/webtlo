@@ -143,7 +143,6 @@ final class ForumClient
      * @param int                  $code    Код ошибки
      * @param string               $message Сообщение об ошибке
      * @param array<string, mixed> $params  Параметры запроса
-     * @return void
      */
     private function logException(int $code, string $message, array $params = []): void
     {

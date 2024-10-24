@@ -15,7 +15,6 @@ trait DbClearTablesTrait
      * Очистка таблиц от неактуальных данных.
      * TODO Изменить работу с конфигом.
      *
-     * @return void
      */
     protected function clearTables(): void
     {

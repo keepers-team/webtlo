@@ -62,10 +62,7 @@ trait ForumTopics
     }
 
     /**
-     * @param int                  $forumId
-     * @param int                  $topicId
      * @param array<string, mixed> $payload
-     * @return ForumTopic
      */
     private static function parseStaticForumTopics(int $forumId, int $topicId, array $payload): ForumTopic
     {

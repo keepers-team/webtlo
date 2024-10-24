@@ -23,8 +23,6 @@ trait TopicsDetails
      * Получить сведения о раздачах по списку ид/хешей.
      *
      * @param (int|string)[]  $topics
-     * @param TopicSearchMode $searchMode
-     * @return ApiError|TopicsDetailsResponse
      */
     public function getTopicsDetails(
         array           $topics,
@@ -87,9 +85,7 @@ trait TopicsDetails
     }
 
     /**
-     * @param LoggerInterface $logger
      * @param TopicDetails[]  $knownTopics
-     * @return callable
      */
     private static function getTopicDetailsProcessor(
         LoggerInterface $logger,
@@ -116,9 +112,7 @@ trait TopicsDetails
     }
 
     /**
-     * @param int                       $topicId
      * @param array<string, int|string> $payload
-     * @return TopicDetails
      */
     private static function parseDynamicTopicDetails(int $topicId, array $payload): TopicDetails
     {

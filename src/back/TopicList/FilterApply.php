@@ -16,9 +16,7 @@ final class FilterApply
     /**
      * Попадает ли количество хранителей раздачи в заданные пределы по заданным правилам.
      *
-     * @param KeepersCount           $countRules
      * @param array<string, mixed>[] $topicKeepers
-     * @return bool
      */
     public static function isTopicKeepersInRange(KeepersCount $countRules, array $topicKeepers): bool
     {
@@ -79,8 +77,6 @@ final class FilterApply
      * Есть ли пользователь среди хранителей.
      *
      * @param array<string, mixed>[] $topicKeepers
-     * @param int                    $userId
-     * @return bool
      */
     public static function isUserInKeepers(array $topicKeepers, int $userId): bool
     {
@@ -92,10 +88,7 @@ final class FilterApply
     /**
      * Фильтрация по текстовому полю.
      *
-     * @param Strings                $filterStrings
-     * @param Topic                  $topic
      * @param array<string, mixed>[] $topicKeepers
-     * @return bool
      */
     public static function isStringsMatch(Strings $filterStrings, Topic $topic, array $topicKeepers): bool
     {

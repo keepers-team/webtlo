@@ -59,9 +59,7 @@ trait HighPriorityTopics
     }
 
     /**
-     * @param string                    $topicId
      * @param array<string, int|string> $payload
-     * @return HighPriorityTopic
      */
     private static function parseStaticHighPriorityTopic(string $topicId, array $payload): HighPriorityTopic
     {

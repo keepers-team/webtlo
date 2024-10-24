@@ -21,7 +21,6 @@ final class ApiCredentials
      * Проверим наличие нужных значений в настройках.
      *
      * @param array<string, mixed> $cfg
-     * @return ApiCredentials
      * @throws RuntimeException()
      */
     public static function fromLegacy(array $cfg): self

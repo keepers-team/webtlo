@@ -117,7 +117,6 @@ final class Creator
     /**
      * Собрать отчёт по заданному разделу.
      *
-     * @param ForumObject $forum
      * @return string[]
      */
     public function getForumReport(ForumObject $forum): array
@@ -193,7 +192,6 @@ final class Creator
     }
 
     /**
-     * @param ?CreationMode $mode
      */
     public function initConfig(?CreationMode $mode = null): void
     {
@@ -367,7 +365,6 @@ final class Creator
      * Собрать заголовок сообщения с версией ПО.
      *
      * @param array<string, mixed> $userStored
-     * @return string
      */
     private function prepareMessageHeader(array $userStored): string
     {
@@ -405,7 +402,6 @@ final class Creator
      * Получить ссылку для отчёта. Разные версии для UI|cron
      *
      * @param array<string, mixed> $topic
-     * @return string
      */
     private function prepareTopicUrl(array $topic): string
     {
@@ -462,7 +458,6 @@ final class Creator
      * Собираем сообщения для UI.
      *
      * @param string[] $messages
-     * @return string
      */
     public function prepareReportsMessages(array $messages): string
     {
@@ -574,7 +569,6 @@ final class Creator
     /**
      * Найти хранимое пользователем в указанном подразделе.
      *
-     * @param int $forumId
      * @return array<string, mixed>
      */
     private function getStoredForumValues(int $forumId): array
@@ -593,7 +587,6 @@ final class Creator
     /**
      * Найти в БД список хранимых раздач подраздела.
      *
-     * @param int $forum_id
      * @return array<string, mixed>[]
      */
     public function getStoredForumTopics(int $forum_id): array

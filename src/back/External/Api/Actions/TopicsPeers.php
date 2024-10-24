@@ -23,8 +23,6 @@ trait TopicsPeers
      * Получить данные о пирах раздач по списку ид/хешей.
      *
      * @param (int|string)[]  $topics
-     * @param TopicSearchMode $searchMode
-     * @return ApiError|TopicsPeersResponse
      */
     public function getPeerStats(
         array           $topics,
@@ -85,10 +83,8 @@ trait TopicsPeers
     }
 
     /**
-     * @param LoggerInterface $logger
      * @param TopicPeers[]    $knownPeers
      * @param (int|string)[]  $missingTopics
-     * @return callable
      */
     private static function getDynamicPeerProcessor(
         LoggerInterface $logger,
@@ -118,9 +114,7 @@ trait TopicsPeers
     }
 
     /**
-     * @param int|string        $identifier
      * @param array<int, mixed> $payload
-     * @return TopicPeers
      */
     private static function parseDynamicPeer(int|string $identifier, array $payload): TopicPeers
     {

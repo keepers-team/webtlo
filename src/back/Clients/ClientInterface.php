@@ -20,7 +20,6 @@ interface ClientInterface
      * Получение сведений о раздачах от торрент-клиента
      *
      * @param array<string, mixed> $filter
-     * @return Torrents
      */
     public function getTorrents(array $filter = []): Torrents;
 

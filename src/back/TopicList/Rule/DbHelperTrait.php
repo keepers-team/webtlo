@@ -29,7 +29,6 @@ trait DbHelperTrait
     }
 
     /**
-     * @param string         $statement
      * @param (int|string)[] $params
      * @return array<int, mixed>[]|array<never>
      */
@@ -43,7 +42,6 @@ trait DbHelperTrait
     }
 
     /**
-     * @param string         $statement
      * @param (int|string)[] $params
      * @return array<int, mixed>|array<never>
      */
@@ -57,7 +55,6 @@ trait DbHelperTrait
     }
 
     /**
-     * @param string         $statement
      * @param (int|string)[] $params
      * @return array<int|string, mixed>[]|array<never>
      */

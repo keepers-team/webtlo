@@ -50,7 +50,6 @@ final class Topics
     /**
      * Выбрать N раздач без названия.
      *
-     * @param int $limit
      * @return int[]
      */
     public function getUnnamedTopics(int $limit = 5000): array

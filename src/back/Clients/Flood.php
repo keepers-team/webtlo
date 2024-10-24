@@ -222,10 +222,7 @@ final class Flood implements ClientInterface
     }
 
     /**
-     * @param string               $uri
-     * @param string               $method
      * @param array<string, mixed> $params
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $uri, string $method = 'GET', array $params = []): ResponseInterface
@@ -239,8 +236,6 @@ final class Flood implements ClientInterface
     }
 
     /**
-     * @param string               $uri
-     * @param string               $method
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
@@ -258,10 +253,7 @@ final class Flood implements ClientInterface
     }
 
     /**
-     * @param string               $uri
-     * @param string               $method
      * @param array<string, mixed> $params
-     * @return bool
      */
     private function sendRequest(string $uri, string $method = 'GET', array $params = []): bool
     {
