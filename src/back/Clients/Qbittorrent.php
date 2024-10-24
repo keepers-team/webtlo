@@ -100,24 +100,24 @@ final class Qbittorrent implements ClientInterface
     public function getTorrents(array $filter = []): Torrents
     {
         /** Получить просто список раздач без дополнительных действий */
-        $simpleRun = (bool)($filter['simple'] ?? 0);
+        $simpleRun = (bool) ($filter['simple'] ?? 0);
 
         $generator = $this->generateTorrentsList(simpleRun: $simpleRun);
 
         $torrents = [];
         foreach ($generator as $hash => $payload) {
-            $hash = (string)$hash;
+            $hash = (string) $hash;
 
             $torrents[$hash] = new Torrent(
                 topicHash   : $hash,
-                clientHash  : (string)$payload['client_hash'],
-                name        : (string)$payload['name'],
+                clientHash  : (string) $payload['client_hash'],
+                name        : (string) $payload['name'],
                 topicId     : $payload['topic_id'] ?: null,
-                size        : (int)$payload['total_size'],
-                added       : Helper::makeDateTime((int)$payload['time_added']),
+                size        : (int) $payload['total_size'],
+                added       : Helper::makeDateTime((int) $payload['time_added']),
                 done        : $payload['done'],
-                paused      : (bool)$payload['paused'],
-                error       : (bool)$payload['error'],
+                paused      : (bool) $payload['paused'],
+                error       : (bool) $payload['error'],
                 trackerError: $payload['tracker_error'] ?: null,
                 comment     : $payload['comment'] ?: null,
                 storagePath : $payload['storagePath'] ?? null
@@ -476,15 +476,15 @@ final class Qbittorrent implements ClientInterface
         foreach ($clientTorrents as $torrent) {
             $clientHash    = strtoupper($torrent['hash']);
             $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $clientHash);
-            $torrentPaused = self::isTorrentStatePaused(state: (string)$torrent['state']);
-            $torrentError  = self::isTorrentStateError(state: (string)$torrent['state']);
+            $torrentPaused = self::isTorrentStatePaused(state: (string) $torrent['state']);
+            $torrentError  = self::isTorrentStateError(state: (string) $torrent['state']);
             $trackerError  = null;
 
             // Процент загрузки торрента.
             $progress = $torrent['progress'];
             if ($progress === 1 && !empty($torrent['availability'])) {
                 if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
-                    $progress = (float)$torrent['availability'];
+                    $progress = (float) $torrent['availability'];
                 }
             }
 
@@ -537,7 +537,7 @@ final class Qbittorrent implements ClientInterface
             if (!preg_match('/\*\*.*\*\*/', $tracker['url'])) {
                 $torrent_trackers[] = [
                     'url'     => $tracker['url'],
-                    'status'  => (int)$tracker['status'],
+                    'status'  => (int) $tracker['status'],
                     'message' => $tracker['msg'],
                 ];
             }
@@ -553,7 +553,7 @@ final class Qbittorrent implements ClientInterface
         if (!empty($trackers)) {
             foreach ($trackers as $tracker) {
                 if ($tracker['status'] === 4) {
-                    return (string)$tracker['message'];
+                    return (string) $tracker['message'];
                 }
             }
         }

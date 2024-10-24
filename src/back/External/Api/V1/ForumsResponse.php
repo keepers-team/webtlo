@@ -13,6 +13,5 @@ final class ForumsResponse
         public readonly DateTimeImmutable $updateTime,
         /** @var ForumDetails[] */
         public readonly array             $forums,
-    ) {
-    }
+    ) {}
 }

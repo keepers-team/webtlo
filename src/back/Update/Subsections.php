@@ -37,8 +37,7 @@ final class Subsections
         private readonly KeepersSeeders  $keepersSeeders,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger
-    ) {
-    }
+    ) {}
 
     /**
      * Выполнить обновление раздач в хранимых подразделах.
@@ -107,7 +106,7 @@ final class Subsections
 
             // Получение данных о сидах, в зависимости от дат обновления.
             $avgProcessor = Seeders::AverageProcessor(
-                (bool)$config['avg_seeders'],
+                (bool) $config['avg_seeders'],
                 $forumLastUpdated,
                 $topicResponse->updateTime
             );
@@ -196,7 +195,7 @@ final class Subsections
 
                 // Обновление данных или запись с нуля?
                 $doTopicUpdate = $topic->hash === ($previousTopic['info_hash'] ?? null)
-                    && $topicRegistered === (int)($previousTopic['reg_time'] ?? 0);
+                    && $topicRegistered === (int) ($previousTopic['reg_time'] ?? 0);
 
                 if ($doTopicUpdate) {
                     // Обновление существующей в БД раздачи.

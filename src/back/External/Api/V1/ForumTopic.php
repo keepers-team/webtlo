@@ -22,6 +22,5 @@ final class ForumTopic
         /** @var ?int[] */
         public readonly ?array            $keepers,
         public readonly DateTimeImmutable $lastSeeded,
-    ) {
-    }
+    ) {}
 }

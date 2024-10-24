@@ -16,8 +16,7 @@ final class Credentials
         public readonly string  $btKey,
         public readonly string  $apiKey,
         public readonly ?string $session = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Проверим наличие нужных данных о пользователе.

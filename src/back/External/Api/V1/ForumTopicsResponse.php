@@ -14,6 +14,5 @@ final class ForumTopicsResponse
         public readonly int               $totalSize,
         /** @var ForumTopic[] */
         public readonly array             $topics,
-    ) {
-    }
+    ) {}
 }

@@ -9,6 +9,5 @@ final class Keepers
     public function __construct(
         public readonly KeptStatus   $status,
         public readonly KeepersCount $count,
-    ) {
-    }
+    ) {}
 }

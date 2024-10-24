@@ -27,8 +27,8 @@ final class Helper
                 return ($a <=> $b) * $direct;
             }
 
-            $a = (string)mb_ereg_replace('ё', 'е', mb_strtolower((string)$a, 'UTF-8'));
-            $b = (string)mb_ereg_replace('ё', 'е', mb_strtolower((string)$b, 'UTF-8'));
+            $a = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $a, 'UTF-8'));
+            $b = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $b, 'UTF-8'));
 
             return (strnatcasecmp($a, $b)) * $direct;
         });
@@ -55,7 +55,7 @@ final class Helper
     /** Конвертация секунд в строку. */
     public static function convertSeconds(int $seconds, bool $leadZeros = false): string
     {
-        $pad = fn(int $val): string => !$leadZeros ? (string)$val : str_pad((string)$val, 2, '0', STR_PAD_LEFT);
+        $pad = fn(int $val): string => !$leadZeros ? (string) $val : str_pad((string) $val, 2, '0', STR_PAD_LEFT);
 
         if ($seconds > 0) {
             $minutes = intdiv($seconds, 60);
@@ -110,7 +110,7 @@ final class Helper
         if (!is_dir($path)) {
             return unlink($path);
         }
-        foreach ((array)scandir($path) as $next_path) {
+        foreach ((array) scandir($path) as $next_path) {
             if ('.' === $next_path || '..' === $next_path) {
                 continue;
             }
@@ -251,7 +251,7 @@ final class Helper
      */
     public static function isScheduleActionEnabled(array $config, string $action): bool
     {
-        return (bool)($config['automation'][$action] ?? 0);
+        return (bool) ($config['automation'][$action] ?? 0);
     }
 
     /**
@@ -263,6 +263,6 @@ final class Helper
      */
     public static function isUpdatePropertyEnabled(array $config, string $property): bool
     {
-        return (bool)($config['update'][$property] ?? 0);
+        return (bool) ($config['update'][$property] ?? 0);
     }
 }

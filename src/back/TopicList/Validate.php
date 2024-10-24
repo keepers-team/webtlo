@@ -25,7 +25,7 @@ final class Validate
      */
     public static function sortFilter(array $filter): Sort
     {
-        $sortRule = SortRule::tryFrom((string)($filter['filter_sort'] ?? null));
+        $sortRule = SortRule::tryFrom((string) ($filter['filter_sort'] ?? null));
         if (null === $sortRule) {
             throw new ValidationException(
                 'Не выбрано или неизвестное поле для сортировки.',
@@ -33,7 +33,7 @@ final class Validate
             );
         }
 
-        $sortDirection = SortDirection::tryFrom((int)($filter['filter_sort_direction'] ?? null));
+        $sortDirection = SortDirection::tryFrom((int) ($filter['filter_sort_direction'] ?? null));
         if (null === $sortDirection) {
             throw new ValidationException(
                 'Не выбрано или неизвестное направление сортировки.',
@@ -114,7 +114,7 @@ final class Validate
             throw new ValidationException('Не выбраны статусы раздач для трекера.', 'filter-exception-tracker-status');
         }
 
-        return array_map('intval', (array)$filter['filter_tracker_status']);
+        return array_map('intval', (array) $filter['filter_tracker_status']);
     }
 
     /**
@@ -150,7 +150,7 @@ final class Validate
             }
         }
 
-        return array_map('intval', (array)$filter['keeping_priority']);
+        return array_map('intval', (array) $filter['keeping_priority']);
     }
 
     /**
@@ -190,11 +190,11 @@ final class Validate
      */
     public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
     {
-        $useAvgSeeders = (bool)($cfg['avg_seeders'] ?? false);
-        $greenSeeders  = (bool)($filter['avg_seeders_complete'] ?? false);
+        $useAvgSeeders = (bool) ($cfg['avg_seeders'] ?? false);
+        $greenSeeders  = (bool) ($filter['avg_seeders_complete'] ?? false);
 
         // Жёсткое ограничение от 1 до 30 дней для средних сидов.
-        $seedPeriod = min(max((int)$filter['avg_seeders_period'], 1), 30);
+        $seedPeriod = min(max((int) $filter['avg_seeders_period'], 1), 30);
 
         $fields = $joins = [];
         if ($useAvgSeeders) {
@@ -247,16 +247,16 @@ final class Validate
     {
         $comparison = SeedComparison::INTERVAL;
 
-        $useInterval = (bool)($filter['filter_interval'] ?? false);
+        $useInterval = (bool) ($filter['filter_interval'] ?? false);
         if (!$useInterval) {
-            $comparison = SeedComparison::from((int)$filter['filter_rule_direction']);
+            $comparison = SeedComparison::from((int) $filter['filter_rule_direction']);
         }
 
         return new Seed(
             $comparison,
-            (float)($filter['filter_rule'] ?? 3),
-            (float)($filter['filter_rule_interval']['min'] ?? 1),
-            (float)($filter['filter_rule_interval']['max'] ?? 10)
+            (float) ($filter['filter_rule'] ?? 3),
+            (float) ($filter['filter_rule_interval']['min'] ?? 1),
+            (float) ($filter['filter_rule_interval']['max'] ?? 10)
         );
     }
 
@@ -270,13 +270,13 @@ final class Validate
     public static function prepareKeepersFilter(array $filter): Keepers
     {
         $count = new KeepersCount(
-            (bool)($filter['is_keepers'] ?? false),
-            (bool)($filter['keepers_count_seed'] ?? false),
-            (bool)($filter['keepers_count_download'] ?? false),
-            (bool)($filter['keepers_count_kept'] ?? false),
-            (bool)($filter['keepers_count_kept_seed'] ?? false),
-            (int)($filter['keepers_filter_count']['min'] ?? 1),
-            (int)($filter['keepers_filter_count']['max'] ?? 10),
+            (bool) ($filter['is_keepers'] ?? false),
+            (bool) ($filter['keepers_count_seed'] ?? false),
+            (bool) ($filter['keepers_count_download'] ?? false),
+            (bool) ($filter['keepers_count_kept'] ?? false),
+            (bool) ($filter['keepers_count_kept_seed'] ?? false),
+            (int) ($filter['keepers_filter_count']['min'] ?? 1),
+            (int) ($filter['keepers_filter_count']['max'] ?? 10),
         );
 
         if ($count->enabled) {
@@ -290,9 +290,9 @@ final class Validate
 
         return new Keepers(
             new KeptStatus(
-                (int)($filter['filter_status_has_keeper'] ?? -1),
-                (int)($filter['filter_status_has_seeder'] ?? -1),
-                (int)($filter['filter_status_has_downloader'] ?? -1),
+                (int) ($filter['filter_status_has_keeper'] ?? -1),
+                (int) ($filter['filter_status_has_seeder'] ?? -1),
+                (int) ($filter['filter_status_has_downloader'] ?? -1),
             ),
             $count,
         );
@@ -342,7 +342,7 @@ final class Validate
         $pattern = '';
         $values  = [];
 
-        $filterType = (int)$filter['filter_by_phrase'];
+        $filterType = (int) $filter['filter_by_phrase'];
         if (!empty($filter['filter_phrase'])) {
             // В имени хранителя.
             if (0 === $filterType) {
@@ -354,7 +354,7 @@ final class Validate
 
             // В названии раздачи.
             if (1 === $filterType) {
-                $pattern = (string)preg_replace(
+                $pattern = (string) preg_replace(
                     '/[её]/ui',
                     '(е|ё)',
                     quotemeta($filter['filter_phrase'])

@@ -19,8 +19,7 @@ final class Settings
     public function __construct(
         private readonly TIniFileEx $ini,
         private readonly DB         $db,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -221,7 +220,7 @@ final class Settings
         ];
 
         // версия конфига
-        $user_version = (int)$ini->read('other', 'user_version', 0);
+        $user_version = (int) $ini->read('other', 'user_version', 0);
 
         // применение заплаток
         if ($user_version < 1) {
@@ -270,7 +269,7 @@ final class Settings
             if (count($excludeForumsIDs)) {
                 $checkedForumIDs = [];
                 foreach ($excludeForumsIDs as $forum_id) {
-                    $forum_id = (int)$forum_id;
+                    $forum_id = (int) $forum_id;
                     if (isset($config['subsections'][$forum_id])) {
                         $config['subsections'][$forum_id]['exclude'] = 1;
                         $ini->write($forum_id, 'exclude', 1);
@@ -438,16 +437,16 @@ final class Settings
         if (count($forums)) {
             foreach ($forums as $forumID => $forumData) {
                 if (isset($forumData['title'])) {
-                    $ini->write($forumID, 'title', trim((string)$forumData['title']));
+                    $ini->write($forumID, 'title', trim((string) $forumData['title']));
                 }
                 if (isset($forumData['client'])) {
                     $ini->write($forumID, 'client', $forumData['client']);
                 }
                 if (isset($forumData['label'])) {
-                    $ini->write($forumID, 'label', trim((string)$forumData['label']));
+                    $ini->write($forumID, 'label', trim((string) $forumData['label']));
                 }
                 if (isset($forumData['savepath'])) {
-                    $ini->write($forumID, 'data-folder', trim((string)$forumData['savepath']));
+                    $ini->write($forumID, 'data-folder', trim((string) $forumData['savepath']));
                 }
                 if (isset($forumData['subdirectory'])) {
                     $ini->write($forumID, 'data-sub-folder', $forumData['subdirectory']);
@@ -480,16 +479,16 @@ final class Settings
     {
         $ini = $this->ini;
 
-        $ini->write('topics_control', 'peers', (int)($cfg['peers'] ?? 0));
-        $ini->write('topics_control', 'intervals', (string)($cfg['peers_intervals'] ?? ''));
-        $ini->write('topics_control', 'keepers', (int)($cfg['keepers'] ?? 0));
+        $ini->write('topics_control', 'peers', (int) ($cfg['peers'] ?? 0));
+        $ini->write('topics_control', 'intervals', (string) ($cfg['peers_intervals'] ?? ''));
+        $ini->write('topics_control', 'keepers', (int) ($cfg['keepers'] ?? 0));
         $ini->write('topics_control', 'leechers', isset($cfg['leechers']) ? 1 : 0);
-        $ini->write('topics_control', 'random', (int)($cfg['random'] ?? 0));
-        $ini->write('topics_control', 'priority', (int)($cfg['peer_priority'] ?? 1));
+        $ini->write('topics_control', 'random', (int) ($cfg['random'] ?? 0));
+        $ini->write('topics_control', 'priority', (int) ($cfg['peer_priority'] ?? 1));
         $ini->write('topics_control', 'no_leechers', isset($cfg['no_leechers']) ? 1 : 0);
         $ini->write('topics_control', 'unadded_subsections', isset($cfg['unadded_subsections']) ? 1 : 0);
-        $ini->write('topics_control', 'days_until_unseeded', (int)($cfg['days_until_unseeded'] ?? 0));
-        $ini->write('topics_control', 'max_unseeded_count', (int)($cfg['max_unseeded_count'] ?? 0));
+        $ini->write('topics_control', 'days_until_unseeded', (int) ($cfg['days_until_unseeded'] ?? 0));
+        $ini->write('topics_control', 'max_unseeded_count', (int) ($cfg['max_unseeded_count'] ?? 0));
     }
 
     /**
@@ -610,7 +609,7 @@ final class Settings
         ];
         foreach ($numerics as $key) {
             if (isset($cfg[$key]) && is_numeric($cfg[$key])) {
-                $ini->write('sections', $key, trim((string)$cfg[$key]));
+                $ini->write('sections', $key, trim((string) $cfg[$key]));
             }
         }
 
@@ -621,7 +620,7 @@ final class Settings
             'ui_save_selected_section',
         ];
         foreach ($booleans as $key) {
-            $ini->write('sections', $key, (int)isset($cfg[$key]));
+            $ini->write('sections', $key, (int) isset($cfg[$key]));
         }
     }
 
@@ -636,15 +635,15 @@ final class Settings
         $ini = $this->ini;
 
         // Отправлять ли отчёт пользователя в API.
-        $ini->write('reports', 'send_report_api', (int)isset($cfg['send_report_api']));
+        $ini->write('reports', 'send_report_api', (int) isset($cfg['send_report_api']));
         // Отправка сводных отчётов на форум
-        $ini->write('reports', 'send_summary_report', (int)isset($cfg['send_summary_report']));
+        $ini->write('reports', 'send_summary_report', (int) isset($cfg['send_summary_report']));
         // Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом.
-        $ini->write('reports', 'send_report_settings', (int)isset($cfg['send_report_settings']));
+        $ini->write('reports', 'send_report_settings', (int) isset($cfg['send_report_settings']));
         // Снимать отметку хранения с не хранимых подразделов
-        $ini->write('reports', 'unset_other_forums', (int)isset($cfg['unset_other_forums']));
+        $ini->write('reports', 'unset_other_forums', (int) isset($cfg['unset_other_forums']));
         // Снимать отметку хранения с не хранимых раздач
-        $ini->write('reports', 'unset_other_topics', (int)isset($cfg['unset_other_topics']));
+        $ini->write('reports', 'unset_other_topics', (int) isset($cfg['unset_other_topics']));
 
         // Исключаемые из отчётов торрент-клиенты
         $excludeClientsIDs = array_unique($excludeClientsIDs);

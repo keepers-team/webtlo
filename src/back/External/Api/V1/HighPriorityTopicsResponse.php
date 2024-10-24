@@ -14,6 +14,5 @@ final class HighPriorityTopicsResponse
         public readonly int               $totalSize,
         /** @var HighPriorityTopic[] */
         public readonly array             $topics,
-    ) {
-    }
+    ) {}
 }

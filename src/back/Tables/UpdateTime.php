@@ -19,8 +19,7 @@ final class UpdateTime
 {
     public function __construct(
         private readonly DB           $db,
-    ) {
-    }
+    ) {}
 
     /**
      * Получить timestamp с датой обновления.
@@ -31,7 +30,7 @@ final class UpdateTime
             $marker = $marker->value;
         }
 
-        return (int)$this->db->queryColumn(
+        return (int) $this->db->queryColumn(
             "SELECT ud FROM UpdateTime WHERE id = ?",
             [$marker],
         );

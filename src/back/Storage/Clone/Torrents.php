@@ -37,8 +37,7 @@ final class Torrents
     public function __construct(
         private readonly DB         $db,
         private readonly CloneTable $clone,
-    ) {
-    }
+    ) {}
 
     public function addTorrent(int $clientId, Torrent $torrent): void
     {
@@ -47,9 +46,9 @@ final class Torrents
             $torrent->topicId,
             $clientId,
             $torrent->done,
-            (int)$torrent->error,
+            (int) $torrent->error,
             $torrent->name,
-            (int)$torrent->paused,
+            (int) $torrent->paused,
             $torrent->added->getTimestamp(),
             $torrent->size,
             $torrent->trackerError,

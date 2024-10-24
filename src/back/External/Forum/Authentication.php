@@ -161,7 +161,7 @@ trait Authentication
         if ($cookies->count() > 0) {
             $cookie = $cookies->getCookieByName(name: self::$authCookieName);
 
-            $this->updatedCookie = (string)$cookie;
+            $this->updatedCookie = (string) $cookie;
         }
     }
 }

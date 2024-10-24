@@ -10,9 +10,7 @@ use PDO;
 
 final class Torrents
 {
-    public function __construct(private readonly DB $db)
-    {
-    }
+    public function __construct(private readonly DB $db) {}
 
     /**
      * Поиск в БД ид раздач, по хешу

@@ -12,6 +12,5 @@ final class Seed
         public readonly float          $value = 3,
         public readonly float          $min = 1,
         public readonly float          $max = 10,
-    ) {
-    }
+    ) {}
 }

@@ -25,8 +25,7 @@ final class DuplicatedTopics implements ListInterface
         /** @var array<string, mixed> */
         private readonly array  $cfg,
         private readonly Output $output
-    ) {
-    }
+    ) {}
 
     /**
      * @throws ValidationException
@@ -60,7 +59,7 @@ final class DuplicatedTopics implements ListInterface
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::seedOnly(
                 $seedFilter->seedPeriod,
-                (int)$topicData['days_seed']
+                (int) $topicData['days_seed']
             );
 
             return Topic::fromTopicData($topicData, $topicState);

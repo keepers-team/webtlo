@@ -15,7 +15,7 @@ trait DbDataSet
             $value = array_map(function($elem) {
                 return is_numeric($elem)
                     ? $elem
-                    : $this->db->quote((string)($elem ?? ''));
+                    : $this->db->quote((string) ($elem ?? ''));
             }, $value);
 
             $value = (empty($value[$primaryKey]) ? "$id," : "") . implode(',', $value);

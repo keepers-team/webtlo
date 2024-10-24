@@ -24,7 +24,7 @@ final class Seeders
         $lastUpdated = $lastUpdated->setTime(0, 0);
 
         // Сменились ли сутки, относительно прошлого обновления сведений.
-        $isDayChanged = (int)$updateTime->diff($lastUpdated)->format('%d') > 0;
+        $isDayChanged = (int) $updateTime->diff($lastUpdated)->format('%d') > 0;
 
         return function(int $seeders, array $previous = []) use ($calcAverage, $isDayChanged): TopicAverage {
             $daysUpdate = 0;

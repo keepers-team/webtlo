@@ -11,6 +11,5 @@ final class ForumObject
         public string $name,
         public int    $quantity,
         public int    $size,
-    ) {
-    }
+    ) {}
 }

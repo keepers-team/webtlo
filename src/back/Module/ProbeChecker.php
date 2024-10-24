@@ -40,10 +40,10 @@ final class ProbeChecker
     public function printProbe(): string
     {
         $allUrls   = array_merge(...array_values($this->urls));
-        $urlLength = (int)max(array_map('strlen', $allUrls));
+        $urlLength = (int) max(array_map('strlen', $allUrls));
 
         $proxyNames  = array_map(fn($proxy) => $this->getNullSafeProxy($proxy), $this->proxies);
-        $proxyLength = (int)max(array_map('strlen', $proxyNames));
+        $proxyLength = (int) max(array_map('strlen', $proxyNames));
 
         $output = str_pad('Domain', $urlLength);
         foreach ($proxyNames as $proxy) {
@@ -56,7 +56,7 @@ final class ProbeChecker
             foreach ($urls as $url) {
                 $output .= str_pad($url, $urlLength);
                 foreach ($this->proxies as $proxy) {
-                    $uri   = $this->getUrl((string)$type, $url);
+                    $uri   = $this->getUrl((string) $type, $url);
                     $code  = $this->getUrlHttpCode($uri, $proxy);
                     $emoji = (($code < 300 && $code > 0) || $code === 401) ? "✅" : "❌";
 
@@ -115,7 +115,7 @@ final class ProbeChecker
             return [];
         }
 
-        return (array)parse_ini_file($config_path, true);
+        return (array) parse_ini_file($config_path, true);
     }
 
     /**

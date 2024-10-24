@@ -16,7 +16,7 @@ enum DesiredStatusChange
     {
         return match ($this) {
             self::Start       => true,
-            self::RandomStart => (bool)rand(0, 1),
+            self::RandomStart => (bool) rand(0, 1),
             default           => false,
         };
     }
@@ -25,7 +25,7 @@ enum DesiredStatusChange
     {
         return match ($this) {
             self::Stop       => true,
-            self::RandomStop => (bool)rand(0, 1),
+            self::RandomStop => (bool) rand(0, 1),
             default          => false,
         };
     }

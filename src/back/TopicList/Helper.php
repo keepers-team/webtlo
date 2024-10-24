@@ -74,12 +74,12 @@ final class Helper
                 $stateIcon  = 'arrow-circle-o-down';
                 $stateColor = 'danger';
             }
-            if ($user_id === (int)$e['keeper_id']) {
+            if ($user_id === (int) $e['keeper_id']) {
                 $stateColor = 'self';
             }
             $state = new State($stateIcon, $stateColor, self::getKeeperTitle($stateIcon));
 
-            return $format($state, (string)$e['keeper_name']);
+            return $format($state, (string) $e['keeper_name']);
         }, $topicKeepers);
 
         return implode(', ', $keepersNames);

@@ -21,6 +21,5 @@ final class TopicDetails
         public readonly string            $title,
         public readonly DateTimeImmutable $lastSeeded,
         public readonly int               $downloads,
-    ) {
-    }
+    ) {}
 }

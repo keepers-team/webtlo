@@ -127,8 +127,8 @@ trait TopicsPeers
         return new TopicPeers(
             id      : is_int($identifier) ? $identifier : -1,
             hash    : is_string($identifier) ? $identifier : 'unknown',
-            seeders : (int)$payload[0],
-            leechers: (int)$payload[1],
+            seeders : (int) $payload[0],
+            leechers: (int) $payload[1],
             keepers : count($payload[3] ?? []),
         );
     }

@@ -72,7 +72,7 @@ trait UnregisteredTopic
             // Переходим на последнюю страницу темы, если она есть.
             $list = $dom->query(expression: '//table[@id="pagination"]//a[@class="pg"]');
             if (!empty($list) && $list->count() > 1) {
-                $lastPage = (int)$list->item($list->length - 2)?->textContent;
+                $lastPage = (int) $list->item($list->length - 2)?->textContent;
 
                 $topicPage = $this->fetchTopicPage(topicId: $topicId, offset: ($lastPage - 1) * 30);
                 if (null !== $topicPage) {
@@ -123,9 +123,9 @@ trait UnregisteredTopic
             'name'                => $topicName,
             'status'              => $topicStatus,
             'priority'            => $topicPriority,
-            'transferred_from'    => (string)$transferredFrom,
+            'transferred_from'    => (string) $transferredFrom,
             'transferred_to'      => $currentForumName,
-            'transferred_by_whom' => (string)$transferredByWhom,
+            'transferred_by_whom' => (string) $transferredByWhom,
         ];
     }
 

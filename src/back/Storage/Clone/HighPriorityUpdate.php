@@ -31,8 +31,7 @@ final class HighPriorityUpdate
 
     public function __construct(
         private readonly CloneTable $clone,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<int, int|string> $topic

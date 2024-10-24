@@ -27,6 +27,6 @@ trait ExcludedKeepersTrait
         $excludedKeepers = preg_replace('/[^0-9]/', '|', $config['reports']['exclude_keepers_ids'] ?? '');
         $excludedKeepers = explode('|', $excludedKeepers);
 
-        return array_map(fn($el) => (int)$el, array_filter($excludedKeepers));
+        return array_map(fn($el) => (int) $el, array_filter($excludedKeepers));
     }
 }

@@ -9,9 +9,7 @@ final class PeerInterval
     /** @var ?array{value: int, start:int, end: int}[]  */
     private ?array $intervals = null;
 
-    public function __construct(private readonly string $pattern)
-    {
-    }
+    public function __construct(private readonly string $pattern) {}
 
     /**
      * Преобразует строку из настроек в интервалы со значениями.
@@ -25,7 +23,7 @@ final class PeerInterval
         }
 
         // Заменяем все лишние символы.
-        $input = (string)preg_replace('/[^0-9:]+/', '/', $this->pattern);
+        $input = (string) preg_replace('/[^0-9:]+/', '/', $this->pattern);
 
         $useExternalPattern = str_contains($input, ':');
 
@@ -52,14 +50,14 @@ final class PeerInterval
         foreach ($values as $value) {
             // Разделяем парные значения на раздельные величины. 5:3 = лимит 5 сидов, интервал 3 часа.
             if ($useExternalPattern) {
-                [$value, $duration] = array_map('intval', explode(':', (string)$value));
+                [$value, $duration] = array_map('intval', explode(':', (string) $value));
             }
 
             // Если число одинокое, используем интервал по умолчанию.
             $duration ??= $defaultDuration;
 
             $intervals[] = [
-                'value' => max(0, min((int)$value, 99)),
+                'value' => max(0, min((int) $value, 99)),
                 'start' => $currentHour,
                 'end'   => $currentHour + $duration,
             ];
@@ -82,7 +80,7 @@ final class PeerInterval
 
         foreach ($intervals as $interval) {
             if ($currentHour >= $interval['start'] && $currentHour < $interval['end']) {
-                return (int)$interval['value'];
+                return (int) $interval['value'];
             }
         }
 

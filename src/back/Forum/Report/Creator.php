@@ -63,8 +63,7 @@ final class Creator
         private readonly Forums          $tableForums,
         private readonly WebTLO          $webtlo,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * Сводный отчёт.
@@ -230,9 +229,9 @@ final class Creator
         $shared = [
             'software' => $this->webtlo->getSoftwareInfo(),
             'proxy'    => [
-                'activate_forum'  => (bool)$config['proxy_activate_forum'],
-                'activate_api'    => (bool)$config['proxy_activate_api'],
-                'activate_report' => (bool)$config['proxy_activate_report'],
+                'activate_forum'  => (bool) $config['proxy_activate_forum'],
+                'activate_api'    => (bool) $config['proxy_activate_api'],
+                'activate_report' => (bool) $config['proxy_activate_report'],
             ],
         ];
 
@@ -259,31 +258,31 @@ final class Creator
 
         // Регулировка по подразделам.
         $subsections = array_filter($config['subsections'], fn($el) => !empty($el['control_peers']));
-        $subsections = array_map(fn($el) => (int)$el['control_peers'], $subsections);
+        $subsections = array_map(fn($el) => (int) $el['control_peers'], $subsections);
 
         ksort($subsections);
 
         // Параметры регулировки.
         $shared['control'] = [
-            'enabled'     => (bool)$config['automation']['control'],
-            'peers'       => (int)$config['topics_control']['peers'],
-            'intervals'   => (string)$config['topics_control']['intervals'],
-            'keepers'     => (int)$config['topics_control']['keepers'],
-            'random'      => (int)$config['topics_control']['random'],
+            'enabled'     => (bool) $config['automation']['control'],
+            'peers'       => (int) $config['topics_control']['peers'],
+            'intervals'   => (string) $config['topics_control']['intervals'],
+            'keepers'     => (int) $config['topics_control']['keepers'],
+            'random'      => (int) $config['topics_control']['random'],
             'unseeded'    => [
-                'days'  => (int)$config['topics_control']['days_until_unseeded'],
-                'count' => (int)$config['topics_control']['max_unseeded_count'],
+                'days'  => (int) $config['topics_control']['days_until_unseeded'],
+                'count' => (int) $config['topics_control']['max_unseeded_count'],
             ],
             'subsections' => $subsections,
         ];
 
         // Параметры отправки отчётов.
         $shared['reports'] = [
-            'enabled'             => (bool)$config['automation']['reports'],
-            'send_report_api'     => (bool)$config['reports']['send_report_api'],
-            'send_summary_report' => (bool)$config['reports']['send_summary_report'],
-            'unset_other_forums'  => (bool)$config['reports']['unset_other_forums'],
-            'unset_other_topics'  => (bool)$config['reports']['unset_other_topics'],
+            'enabled'             => (bool) $config['automation']['reports'],
+            'send_report_api'     => (bool) $config['reports']['send_report_api'],
+            'send_summary_report' => (bool) $config['reports']['send_summary_report'],
+            'unset_other_forums'  => (bool) $config['reports']['unset_other_forums'],
+            'unset_other_topics'  => (bool) $config['reports']['unset_other_topics'],
         ];
 
         // Локальные даты обновления сведений.
@@ -497,7 +496,7 @@ final class Creator
 
         foreach ($stored as $forum_id => $forumData) {
             // исключаем подразделы
-            if (in_array((int)$forum_id, $this->reportSend->excludedSubForums, true)) {
+            if (in_array((int) $forum_id, $this->reportSend->excludedSubForums, true)) {
                 continue;
             }
 
@@ -715,8 +714,8 @@ final class Creator
 
             $names = [];
             foreach ($config['clients'] as $id => $client) {
-                if (in_array((int)$id, $excludedClients, true)) {
-                    $names[] = sprintf('%s[%d](%s)', $client['cm'], (int)$id, $client['cl']);
+                if (in_array((int) $id, $excludedClients, true)) {
+                    $names[] = sprintf('%s[%d](%s)', $client['cm'], (int) $id, $client['cl']);
                 }
 
                 unset($id, $client);

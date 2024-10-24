@@ -9,6 +9,5 @@ final class Excluded
     public function __construct(
         public int $count = 0,
         public int $size = 0
-    ) {
-    }
+    ) {}
 }

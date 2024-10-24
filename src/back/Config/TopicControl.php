@@ -44,8 +44,7 @@ final class TopicControl
         public readonly bool     $manageOtherSubsections,
         public readonly int      $daysUntilUnseeded,
         public readonly int      $maxUnseededCount,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed> $cfg
@@ -55,16 +54,16 @@ final class TopicControl
         $control = $cfg['topics_control'] ?? [];
 
         return new TopicControl(
-            peersLimit            : (int)($control['peers'] ?? 10),
-            peersLimitIntervals   : (string)($control['intervals'] ?? ''),
-            excludedKeepersCount  : (int)($control['keepers'] ?? 3),
-            randomApplyCount      : (int)($control['random'] ?? 1),
-            peerLimitPriority     : Priority::from((int)($control['priority'] ?? 1)),
-            countLeechersAsPeers  : (bool)($control['leechers'] ?? 0),
-            seedingWithoutLeechers: (bool)($control['no_leechers'] ?? 1),
-            manageOtherSubsections: (bool)($control['unadded_subsections'] ?? 0),
-            daysUntilUnseeded     : (int)($control['days_until_unseeded'] ?? 21),
-            maxUnseededCount      : (int)($control['max_unseeded_count'] ?? 100),
+            peersLimit            : (int) ($control['peers'] ?? 10),
+            peersLimitIntervals   : (string) ($control['intervals'] ?? ''),
+            excludedKeepersCount  : (int) ($control['keepers'] ?? 3),
+            randomApplyCount      : (int) ($control['random'] ?? 1),
+            peerLimitPriority     : Priority::from((int) ($control['priority'] ?? 1)),
+            countLeechersAsPeers  : (bool) ($control['leechers'] ?? 0),
+            seedingWithoutLeechers: (bool) ($control['no_leechers'] ?? 1),
+            manageOtherSubsections: (bool) ($control['unadded_subsections'] ?? 0),
+            daysUntilUnseeded     : (int) ($control['days_until_unseeded'] ?? 21),
+            maxUnseededCount      : (int) ($control['max_unseeded_count'] ?? 100),
         );
     }
 }

@@ -23,8 +23,7 @@ final class CloneFactory
     public function __construct(
         private readonly DB              $db,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * Создание временной таблицы, которая является копией существующей таблицы.

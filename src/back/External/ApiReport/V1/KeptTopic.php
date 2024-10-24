@@ -12,6 +12,5 @@ final class KeptTopic
         public readonly int               $id,
         public readonly DateTimeImmutable $posted,
         public readonly bool              $complete,
-    ) {
-    }
+    ) {}
 }

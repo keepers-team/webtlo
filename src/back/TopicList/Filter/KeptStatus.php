@@ -10,6 +10,5 @@ final class KeptStatus
         public readonly int $hasKeeper,
         public readonly int $hasSeeder,
         public readonly int $hasDownloader,
-    ) {
-    }
+    ) {}
 }

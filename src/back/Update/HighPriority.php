@@ -36,8 +36,7 @@ final class HighPriority
         private readonly HighPriorityUpdate $cloneUpdate,
         private readonly UpdateTime         $updateTime,
         private readonly LoggerInterface    $logger
-    ) {
-    }
+    ) {}
 
     /**
      * Выполнить обновление раздач с высоким приоритетом всего форума.
@@ -88,7 +87,7 @@ final class HighPriority
 
         // Получение данных о сидах, в зависимости от дат обновления.
         $avgProcessor = Seeders::AverageProcessor(
-            (bool)$config['avg_seeders'],
+            (bool) $config['avg_seeders'],
             $lastUpdated,
             $priorityResponse->updateTime
         );
@@ -146,21 +145,21 @@ final class HighPriority
 
                 // Обновление данных или запись с нуля?
                 $isTopicInsert = empty($previousTopic) // Нет данных о раздаче.
-                    || $topicRegistered !== (int)($previousTopic['reg_time'] ?? 0) // Изменилась дата регистрации.
+                    || $topicRegistered !== (int) ($previousTopic['reg_time'] ?? 0) // Изменилась дата регистрации.
                     || empty($previousTopic['name']) // Пустое название.
-                    || (int)$previousTopic['poster'] === 0; // Нет автора раздачи/
+                    || (int) $previousTopic['poster'] === 0; // Нет автора раздачи/
 
                 if (!$isTopicInsert) {
                     // Обновление существующей в БД раздачи.
                     $this->cloneUpdate->addTopic([
                         $topic->id,
                         $topic->forumId,
-                        (int)$average->sumSeeders,
+                        (int) $average->sumSeeders,
                         $topic->status->value,
-                        (int)$average->sumUpdates,
-                        (int)$average->daysUpdate,
+                        (int) $average->sumUpdates,
+                        (int) $average->daysUpdate,
                         KeepingPriority::High->value,
-                        (int)$previousTopic['poster'],
+                        (int) $previousTopic['poster'],
                     ]);
                 } else {
                     // Удаляем прошлый вариант раздачи, если он есть.

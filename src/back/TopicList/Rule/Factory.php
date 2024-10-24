@@ -17,8 +17,7 @@ final class Factory
         private readonly array  $cfg,
         private readonly Forums $forums,
         private readonly Output $output,
-    ) {
-    }
+    ) {}
 
     /** Получить соответствующий класс для поиска раздач. */
     public function getRule(int $forumId): ListInterface

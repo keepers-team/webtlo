@@ -10,9 +10,7 @@ final class KeysObject
      * @param string         $keys
      * @param int[]|string[] $values
      */
-    public function __construct(public string $keys, public array $values)
-    {
-    }
+    public function __construct(public string $keys, public array $values) {}
 
     /**
      * @param array<int|string, int|string> $data

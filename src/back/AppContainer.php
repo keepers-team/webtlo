@@ -26,9 +26,7 @@ final class AppContainer
 {
     private static ?self $appContainer = null;
 
-    private function __construct(public readonly Container $container)
-    {
-    }
+    private function __construct(public readonly Container $container) {}
 
     /** Создаём di-контейнер. */
     public static function create(?string $logFile = null): self

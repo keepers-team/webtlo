@@ -15,9 +15,7 @@ final class Torrents implements Countable
     /**
      * @param array<string, Torrent> $torrents
      */
-    public function __construct(public readonly array $torrents = [])
-    {
-    }
+    public function __construct(public readonly array $torrents = []) {}
 
     /**
      * @return string[]

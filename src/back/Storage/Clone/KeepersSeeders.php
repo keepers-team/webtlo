@@ -34,8 +34,7 @@ final class KeepersSeeders
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly CloneTable      $clone,
-    ) {
-    }
+    ) {}
 
     public function withKeepers(KeepersResponse $keepers): void
     {

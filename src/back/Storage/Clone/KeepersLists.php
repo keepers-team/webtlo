@@ -33,8 +33,7 @@ final class KeepersLists
         private readonly DB              $db,
         private readonly LoggerInterface $logger,
         private readonly CloneTable      $clone,
-    ) {
-    }
+    ) {}
 
     /**
      * @param KeeperData  $keeper
@@ -49,7 +48,7 @@ final class KeepersLists
                 $keeper->keeperId,
                 $keeper->keeperName,
                 $topic->posted->getTimestamp(),
-                (int)$topic->complete,
+                (int) $topic->complete,
             ];
         }
     }

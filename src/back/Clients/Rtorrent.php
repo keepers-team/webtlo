@@ -86,11 +86,11 @@ final class Rtorrent implements ClientInterface
 
         $torrents = [];
         foreach ($response as $torrent) {
-            $torrentHash    = strtoupper((string)$torrent[0]);
-            $torrentComment = str_replace('VRS24mrker', '', rawurldecode((string)$torrent[2]));
+            $torrentHash    = strtoupper((string) $torrent[0]);
+            $torrentComment = str_replace('VRS24mrker', '', rawurldecode((string) $torrent[2]));
 
             $trackerError = null;
-            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)]/', (string)$torrent[3], $matches);
+            preg_match('/Tracker: \[([^"]*"*([^"]*)"*)]/', (string) $torrent[3], $matches);
             if (!empty($matches)) {
                 $trackerError = empty($matches[2]) ? $matches[1] : $matches[2];
             }
@@ -105,10 +105,10 @@ final class Rtorrent implements ClientInterface
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
-                name        : (string)$torrent[4],
+                name        : (string) $torrent[4],
                 topicId     : $this->getTorrentTopicId($torrentComment),
-                size        : (int)$torrent[5],
-                added       : Helper::makeDateTime((int)$torrent[7]),
+                size        : (int) $torrent[5],
+                added       : Helper::makeDateTime((int) $torrent[7]),
                 done        : $progress,
                 paused      : !$torrent[6],
                 error       : !empty($torrent[3]),
@@ -315,7 +315,7 @@ final class Rtorrent implements ClientInterface
 
         $content = $response->getBody()->getContents();
 
-        return (array)$this->xmlResponseDecode($content);
+        return (array) $this->xmlResponseDecode($content);
     }
 
     /**

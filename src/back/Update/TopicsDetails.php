@@ -28,8 +28,7 @@ final class TopicsDetails
         private readonly Topics          $topics,
         private readonly CloneFactory    $cloneFactory,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /** Выполнить обновление дополнительных сведений о раздачах. */
     public function update(int $topicsPerRun = 5000): void
@@ -50,9 +49,9 @@ final class TopicsDetails
     {
         $tab = $this->cloneFactory->makeClone(table: 'Topics', keys: self::TOPIC_KEYS, prefix: 'Details');
 
-        $runs = (int)ceil($beforeUpdate / $perRun);
+        $runs = (int) ceil($beforeUpdate / $perRun);
 
-        $len    = strlen((string)$beforeUpdate);
+        $len    = strlen((string) $beforeUpdate);
         $runLog = "Обновление раздач [%{$len}d/%d]";
 
         $exec = [];

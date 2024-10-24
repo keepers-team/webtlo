@@ -10,6 +10,5 @@ final class KeeperTopics
         public readonly int   $keeperId,
         /** @var KeptTopic[] */
         public readonly array $topics
-    ) {
-    }
+    ) {}
 }

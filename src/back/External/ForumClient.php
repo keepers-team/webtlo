@@ -86,8 +86,7 @@ final class ForumClient
         private readonly CookieJar        $cookie,
         private readonly LoggerInterface  $logger,
         private readonly Settings         $settings,
-    ) {
-    }
+    ) {}
 
     /**
      * Выполнить GET-запрос.

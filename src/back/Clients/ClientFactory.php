@@ -16,8 +16,7 @@ final class ClientFactory
         private readonly LoggerInterface $logger,
         private readonly Topics          $topics,
         private readonly Torrents        $torrents,
-    ) {
-    }
+    ) {}
 
     public function getClient(TorrentClientOptions $clientOptions): ClientInterface
     {
@@ -45,7 +44,7 @@ final class ClientFactory
      */
     public function fromConfigProperties(array $options): ClientInterface
     {
-        $type = ClientType::tryFrom((string)$options['cl']);
+        $type = ClientType::tryFrom((string) $options['cl']);
 
         if (null === $type) {
             $this->logger->error('Unknown client type.', $options);
@@ -63,7 +62,7 @@ final class ClientFactory
      */
     public function fromFrontProperties(array $options): ClientInterface
     {
-        $type = ClientType::tryFrom((string)$options['type']);
+        $type = ClientType::tryFrom((string) $options['type']);
 
         if (null === $type) {
             $this->logger->error('Unknown client type.', $options);

@@ -26,8 +26,7 @@ final class WebTLO
         public readonly string $releaseApi,
         public readonly string $installation,
         public readonly string $sha,
-    ) {
-    }
+    ) {}
 
     public static function getVersion(): self
     {
@@ -42,7 +41,7 @@ final class WebTLO
 
         // Пробуем считать версию из файла.
         if (file_exists($file)) {
-            $result = json_decode((string)file_get_contents($file), true);
+            $result = json_decode((string) file_get_contents($file), true);
         }
 
         // Если ничего не нашлось, то пустой массив.

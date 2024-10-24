@@ -110,11 +110,11 @@ trait SendMessage
 
         $list = $dom->query(expression: '//a[@id="topic-title"]');
         if (!empty($list) && $list->count() > 0) {
-            $topicTitle = (string)$list->item(0)?->textContent;
+            $topicTitle = (string) $list->item(0)?->textContent;
 
             $matches = [];
             if (preg_match('/#(\d+)$/', $topicTitle, $matches)) {
-                $allowed = (int)$matches[1];
+                $allowed = (int) $matches[1];
 
                 if (!($allowed <= self::$appSendVersion)) {
                     return AccessCheck::VERSION_OUTDATED;
@@ -146,12 +146,12 @@ trait SendMessage
 
         $nodes = $dom->query(expression: $xpathQuery);
         if (!empty($nodes) && count($nodes) === 1) {
-            $postLink = (string)$nodes->item(0)?->nodeValue;
+            $postLink = (string) $nodes->item(0)?->nodeValue;
 
             $matches = [];
             preg_match("|.*viewtopic\.php\?p=(\d+)|si", $postLink, $matches);
             if (count($matches) === 2) {
-                return (int)$matches[1];
+                return (int) $matches[1];
             }
         }
 
@@ -196,7 +196,7 @@ trait SendMessage
             $matches = [];
             preg_match("|.*form_token[^']*'([^,]*)',.*|si", $script, $matches);
             if (count($matches) === 2 && !empty($matches[1])) {
-                return self::$formToken = (string)$matches[1];
+                return self::$formToken = (string) $matches[1];
             }
         }
 

@@ -20,8 +20,7 @@ final class TorrentClientOptions
         public readonly Timeout    $timeout = new Timeout(),
         /** @var array<string ,mixed> $extra */
         public readonly array      $extra = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{timeout: int, connect_timeout: int}
@@ -61,24 +60,24 @@ final class TorrentClientOptions
     {
         $auth = null;
         if (!empty($options['lg']) && !empty($options['pw'])) {
-            $auth = new BasicAuth((string)$options['lg'], (string)$options['pw']);
+            $auth = new BasicAuth((string) $options['lg'], (string) $options['pw']);
         }
 
         $timeout = new Timeout(
-            (int)($options['request_timeout'] ?? Defaults::timeout),
-            (int)($options['connect_timeout'] ?? Defaults::timeout),
+            (int) ($options['request_timeout'] ?? Defaults::timeout),
+            (int) ($options['connect_timeout'] ?? Defaults::timeout),
         );
 
         // Если не передан порт подключения к клиенту, добавляем порт по умолчанию.
-        $ssl = (bool)$options['ssl'];
+        $ssl = (bool) $options['ssl'];
         if (empty($options['pt'])) {
             $options['pt'] = $ssl ? 443 : 80;
         }
 
         return new self(
-            ClientType::from((string)$options['cl']),
-            (string)$options['ht'],
-            (int)$options['pt'],
+            ClientType::from((string) $options['cl']),
+            (string) $options['ht'],
+            (int) $options['pt'],
             $ssl,
             $auth,
             $timeout
@@ -95,19 +94,19 @@ final class TorrentClientOptions
     {
         $auth = null;
         if (!empty($options['login']) && !empty($options['password'])) {
-            $auth = new BasicAuth((string)$options['login'], (string)$options['password']);
+            $auth = new BasicAuth((string) $options['login'], (string) $options['password']);
         }
 
         // Если не передан порт подключения к клиенту, добавляем порт по умолчанию.
-        $ssl = (bool)$options['ssl'];
+        $ssl = (bool) $options['ssl'];
         if (empty($options['port'])) {
             $options['port'] = $ssl ? 443 : 80;
         }
 
         return new self(
-            ClientType::from((string)$options['type']),
-            (string)$options['hostname'],
-            (int)$options['port'],
+            ClientType::from((string) $options['type']),
+            (string) $options['hostname'],
+            (int) $options['port'],
             $ssl,
             $auth
         );

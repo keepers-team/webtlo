@@ -21,6 +21,5 @@ final class TopicsPeersResponse
     public function __construct(
         public readonly array $peers,
         public readonly array $missingTopics
-    ) {
-    }
+    ) {}
 }

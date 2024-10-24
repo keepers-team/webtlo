@@ -15,8 +15,7 @@ final class ApiCredentials
         public readonly int    $userId,
         public readonly string $btKey,
         public readonly string $apiKey,
-    ) {
-    }
+    ) {}
 
     /**
      * Проверим наличие нужных значений в настройках.
@@ -32,9 +31,9 @@ final class ApiCredentials
         }
 
         return new self(
-            (int)$cfg['user_id'],
-            (string)$cfg['bt_key'],
-            (string)$cfg['api_key'],
+            (int) $cfg['user_id'],
+            (string) $cfg['bt_key'],
+            (string) $cfg['api_key'],
         );
     }
 }

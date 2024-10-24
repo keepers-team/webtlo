@@ -11,6 +11,5 @@ final class KeeperData
         public readonly int    $keeperId,
         public readonly string $keeperName,
         public readonly bool   $isCandidate
-    ) {
-    }
+    ) {}
 }

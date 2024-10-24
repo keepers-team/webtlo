@@ -27,8 +27,7 @@ final class KeepersReports
         private readonly KeepersLists    $keepersLists,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * @param array<string, mixed>[] $config
@@ -48,7 +47,7 @@ final class KeepersReports
         $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид обновлений подразделов.
-        $keptForumsUpdate = array_map(fn($el) => 100000 + (int)$el, $keptForums);
+        $keptForumsUpdate = array_map(fn($el) => 100000 + (int) $el, $keptForums);
 
         $updateStatus = $this->updateTime->getMarkersObject($keptForumsUpdate);
         $updateStatus->checkMarkersLess(15 * 60);
@@ -96,7 +95,7 @@ final class KeepersReports
             foreach ($config['subsections'] as $forumId => $subsection) {
                 Timers::start("get_report_api_$forumId");
 
-                $forumId = (int)$forumId;
+                $forumId = (int) $forumId;
                 try {
                     $forumReports = $this->apiReport->getKeepersReports($forumId);
                 } catch (Throwable $e) {

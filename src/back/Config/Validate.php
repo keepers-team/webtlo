@@ -38,7 +38,7 @@ final class Validate
         return new Credentials(
             $cfg['tracker_login'],
             $cfg['tracker_paswd'],
-            (int)$cfg['user_id'],
+            (int) $cfg['user_id'],
             $cfg['bt_key'],
             $cfg['api_key'],
             $cfg['user_session'] ?: null

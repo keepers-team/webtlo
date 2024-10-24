@@ -13,8 +13,7 @@ final class Proxy
         public readonly int        $port = Defaults::proxyPort,
         public readonly ProxyType  $type = ProxyType::SOCKS5H,
         public readonly ?BasicAuth $credentials = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{proxy: string, curl: array<int, mixed>}
@@ -56,7 +55,7 @@ final class Proxy
      */
     public static function fromLegacy(array $cfg): self
     {
-        $proxyType = ProxyType::tryFromName(strtoupper((string)$cfg['proxy_type']));
+        $proxyType = ProxyType::tryFromName(strtoupper((string) $cfg['proxy_type']));
         if (null === $proxyType) {
             throw new RuntimeException("Unknown proxy type '{$cfg['proxy_type']}'");
         }
@@ -70,8 +69,8 @@ final class Proxy
         }
 
         return new self(
-            (string)$cfg['proxy_hostname'],
-            (int)$cfg['proxy_port'],
+            (string) $cfg['proxy_hostname'],
+            (int) $cfg['proxy_port'],
             $proxyType,
             $proxyAuth
         );

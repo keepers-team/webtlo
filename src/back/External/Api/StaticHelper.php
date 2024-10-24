@@ -67,14 +67,14 @@ trait StaticHelper
      */
     public static function apiClientFromLegacy(array $cfg, LoggerInterface $logger, Proxy $proxy): Client
     {
-        $useProxy = (bool)$cfg['proxy_activate_api'];
+        $useProxy = (bool) $cfg['proxy_activate_api'];
 
         return self::createApiClient(
             $logger,
-            (string)$cfg['api_base_url'],
-            (bool)$cfg['api_ssl'],
+            (string) $cfg['api_base_url'],
+            (bool) $cfg['api_ssl'],
             $useProxy ? $proxy : null,
-            new Timeout((int)$cfg['api_timeout'], (int)$cfg['api_connect_timeout']),
+            new Timeout((int) $cfg['api_timeout'], (int) $cfg['api_connect_timeout']),
         );
     }
 

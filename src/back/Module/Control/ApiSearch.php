@@ -34,8 +34,7 @@ final class ApiSearch
         private readonly ApiClient       $apiForum,
         private readonly ApiReportClient $apiReport,
         private readonly LoggerInterface $logger,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{}|string[]

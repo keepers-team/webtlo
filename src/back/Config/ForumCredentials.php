@@ -14,8 +14,7 @@ final class ForumCredentials
     public function __construct(
         public readonly BasicAuth $auth,
         public readonly ?string   $session = null,
-    ) {
-    }
+    ) {}
 
     /**
      * Проверим наличие нужных значений для авторизации на форуме.
@@ -34,8 +33,8 @@ final class ForumCredentials
 
         return new self(
             new BasicAuth(
-                (string)$cfg['tracker_login'],
-                (string)$cfg['tracker_paswd']
+                (string) $cfg['tracker_login'],
+                (string) $cfg['tracker_paswd']
             ),
             $cfg['user_session'] ?: null,
         );

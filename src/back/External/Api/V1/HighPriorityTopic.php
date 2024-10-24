@@ -16,6 +16,5 @@ final class HighPriorityTopic
         public readonly DateTimeImmutable $registered,
         public readonly int               $size,
         public readonly int               $forumId,
-    ) {
-    }
+    ) {}
 }

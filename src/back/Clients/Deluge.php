@@ -62,7 +62,7 @@ final class Deluge implements ClientInterface
     public function getTorrents(array $filter = []): Torrents
     {
         $fields = [
-            (object)[],
+            (object) [],
             [
                 'comment',
                 'message',
@@ -82,7 +82,7 @@ final class Deluge implements ClientInterface
 
         $torrents = [];
         foreach ($response as $torrentHash => $torrent) {
-            $torrentHash = strtoupper((string)$torrentHash);
+            $torrentHash = strtoupper((string) $torrentHash);
 
             $torrentError = $torrent['message'] !== 'OK';
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
@@ -100,12 +100,12 @@ final class Deluge implements ClientInterface
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
-                name        : (string)$torrent['name'],
+                name        : (string) $torrent['name'],
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
-                size        : (int)$torrent['total_size'],
-                added       : Helper::makeDateTime((int)$torrent['time_added']),
+                size        : (int) $torrent['total_size'],
+                added       : Helper::makeDateTime((int) $torrent['time_added']),
                 done        : $progress,
-                paused      : (bool)$torrent['paused'],
+                paused      : (bool) $torrent['paused'],
                 error       : $torrentError,
                 trackerError: $trackerError,
                 comment     : $torrent['comment'] ?: null,
@@ -304,11 +304,11 @@ final class Deluge implements ClientInterface
         $array = json_decode($response->getBody()->getContents(), true);
 
         if (!empty($array['error']['message'])) {
-            $this->logger->error('Failed to make request', (array)$array);
+            $this->logger->error('Failed to make request', (array) $array);
             throw new RuntimeException('Failed to make request');
         }
 
-        return (array)$array['result'];
+        return (array) $array['result'];
     }
 
     /**

@@ -34,8 +34,7 @@ final class TopicsUnregistered
         private readonly DB              $db,
         private readonly LoggerInterface $logger,
         private readonly CloneTable      $clone,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<int, string>
