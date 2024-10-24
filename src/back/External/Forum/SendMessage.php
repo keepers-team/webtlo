@@ -151,7 +151,7 @@ trait SendMessage
             $postLink = (string) $nodes->item(0)?->nodeValue;
 
             $matches = [];
-            preg_match("|.*viewtopic\.php\?p=(\d+)|si", $postLink, $matches);
+            preg_match('|.*viewtopic\.php\?p=(\d+)|si', $postLink, $matches);
             if (2 === count($matches)) {
                 return (int) $matches[1];
             }

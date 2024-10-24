@@ -18,7 +18,7 @@ trait DbDataSet
                     : $this->db->quote((string) ($elem ?? ''));
             }, $value);
 
-            $value = (empty($value[$primaryKey]) ? "$id," : "") . implode(',', $value);
+            $value = (empty($value[$primaryKey]) ? "$id," : '') . implode(',', $value);
         }
 
         return 'SELECT ' . implode(' UNION ALL SELECT ', $dataSet);

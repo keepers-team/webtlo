@@ -29,7 +29,7 @@ final class Helper
             $a = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $a, 'UTF-8'));
             $b = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $b, 'UTF-8'));
 
-            return (strnatcasecmp($a, $b)) * $direct;
+            return strnatcasecmp($a, $b) * $direct;
         });
 
         return $input;
@@ -135,7 +135,7 @@ final class Helper
         if (false === $directory) {
             // Default path is /webtlo/data
             return self::normalizePath(
-                __DIR__ . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 1) . 'data'
+                __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'data'
             );
         }
 
@@ -147,14 +147,14 @@ final class Helper
      */
     public static function getLogDir(): string
     {
-        return self::getStorageDir() . DIRECTORY_SEPARATOR . "logs";
+        return self::getStorageDir() . DIRECTORY_SEPARATOR . 'logs';
     }
 
     /** Получить путь к каталогу/файлу миграций. */
     public static function getMigrationPath(?string $file = null): string
     {
         // webtlo/sql
-        $path = __DIR__ . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 1) . 'sql';
+        $path = __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'sql';
 
         if (null !== $file) {
             $path .= DIRECTORY_SEPARATOR . $file;
@@ -172,13 +172,13 @@ final class Helper
             if (null === $left) {
                 return $right;
             }
-            if ("" === $right || "." === $right) {
+            if ('' === $right || '.' === $right) {
                 return $left;
             }
-            if (".." === $right) {
+            if ('..' === $right) {
                 return dirname($left);
             }
-            $pattern = sprintf("/\%s+/", DIRECTORY_SEPARATOR);
+            $pattern = sprintf('/\%s+/', DIRECTORY_SEPARATOR);
 
             return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . DIRECTORY_SEPARATOR . $right);
         });

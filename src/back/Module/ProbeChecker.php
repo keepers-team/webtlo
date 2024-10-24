@@ -47,7 +47,7 @@ final class ProbeChecker
 
         $output = str_pad('Domain', $urlLength);
         foreach ($proxyNames as $proxy) {
-            $output .= " | " . str_pad($proxy, $proxyLength);
+            $output .= ' | ' . str_pad($proxy, $proxyLength);
         }
         $output .= "\r\n";
 
@@ -57,9 +57,9 @@ final class ProbeChecker
                 foreach ($this->proxies as $proxy) {
                     $uri   = $this->getUrl((string) $type, $url);
                     $code  = $this->getUrlHttpCode($uri, $proxy);
-                    $emoji = (($code < 300 && $code > 0) || 401 === $code) ? "✅" : "❌";
+                    $emoji = (($code < 300 && $code > 0) || 401 === $code) ? '✅' : '❌';
 
-                    $output .= " | " . str_pad($emoji . " " . $code, $proxyLength);
+                    $output .= ' | ' . str_pad($emoji . ' ' . $code, $proxyLength);
                 }
 
                 $output .= "\r\n";
@@ -91,7 +91,7 @@ final class ProbeChecker
         ];
 
         if (1 == $config['proxy']['activate_forum'] || 1 == $config['proxy']['activate_api']) {
-            $parsed['proxy']['url']  = $config['proxy']['hostname'] . ":" . $config['proxy']['port'];
+            $parsed['proxy']['url']  = $config['proxy']['hostname'] . ':' . $config['proxy']['port'];
             $parsed['proxy']['type'] = $config['proxy']['type'];
         }
         $parsed['proxy']['activate_forum'] = $config['proxy']['activate_forum'];
@@ -122,7 +122,7 @@ final class ProbeChecker
      */
     private function getNullSafeProxy(?array $proxy): string
     {
-        return $proxy ? '✅ ' . $proxy[0] : "❎ no proxy";
+        return $proxy ? '✅ ' . $proxy[0] : '❎ no proxy';
     }
 
     /**

@@ -24,14 +24,14 @@ final class Proxy
 
         if (null !== $this->credentials) {
             $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf(
-                "%s:%s",
+                '%s:%s',
                 $this->credentials->username,
                 $this->credentials->password
             );
         }
 
         return [
-            'proxy' => sprintf("%s:%d", $this->hostname, $this->port),
+            'proxy' => sprintf('%s:%d', $this->hostname, $this->port),
             'curl'  => $curlOptions,
         ];
     }

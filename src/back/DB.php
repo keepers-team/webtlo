@@ -88,9 +88,9 @@ final class DB
     private static function lexa_ci_utf8_like(string $mask, mixed $value): bool|int
     {
         $mask = str_replace(
-            ["%", "_"],
-            [".*?", "."],
-            preg_quote($mask, "/")
+            ['%', '_'],
+            ['.*?', '.'],
+            preg_quote($mask, '/')
         );
         $mask = "/^$mask$/ui";
 
