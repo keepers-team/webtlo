@@ -118,8 +118,7 @@ final class Rtorrent implements ClientInterface
                 storagePath : $storagePath ?? null
             );
 
-            unset($torrent, $torrentHash, $torrentComment, $trackerError);
-            unset($progress, $storagePath);
+            unset($torrent, $torrentHash, $torrentComment, $trackerError, $progress, $storagePath);
         }
 
         return new Torrents($torrents);

@@ -514,8 +514,7 @@ final class Qbittorrent implements ClientInterface
                 'tracker_error' => $trackerError,
             ];
 
-            unset($torrent, $clientHash, $torrentHash);
-            unset($torrentPaused, $torrentError, $trackerError, $progress);
+            unset($torrent, $clientHash, $torrentHash, $torrentPaused, $torrentError, $trackerError, $progress);
         }
         Timers::stash('processing');
 
