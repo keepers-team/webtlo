@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Tables\Forums;
 use KeepersTeam\Webtlo\TopicList\Output;
 use RuntimeException;
 
@@ -14,7 +15,8 @@ final class Factory
         private readonly DB     $db,
         /** @var array<string, mixed> */
         private readonly array  $cfg,
-        private readonly Output $output
+        private readonly Forums $forums,
+        private readonly Output $output,
     ) {
     }
 
@@ -23,13 +25,13 @@ final class Factory
     {
         // Хранимые раздачи из других подразделов.
         if ($forumId === 0) {
-            return new UntrackedTopics($this->db, $this->output);
+            return new UntrackedTopics($this->db, $this->forums, $this->output);
         } elseif ($forumId === -1) {
             // Хранимые раздачи незарегистрированные на форуме.
             return new UnregisteredTopics($this->db, $this->output);
         } elseif ($forumId === -2) {
             // Раздачи из "Черного списка".
-            return new BlackListedTopics($this->db, $this->output);
+            return new BlackListedTopics($this->db, $this->forums, $this->output);
         } elseif ($forumId === -4) {
             // Хранимые дублирующиеся раздачи.
             return new DuplicatedTopics($this->db, $this->cfg, $this->output);

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Tables\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Topic;
@@ -18,7 +18,8 @@ final class BlackListedTopics implements ListInterface
 
     public function __construct(
         private readonly DB     $db,
-        private readonly Output $output
+        private readonly Forums $forums,
+        private readonly Output $output,
     ) {
     }
 
@@ -55,7 +56,7 @@ final class BlackListedTopics implements ListInterface
             if (!isset($counter->list[$topic->forumId])) {
                 $counter->list[$topic->forumId] = sprintf(
                     "<div class='subsection-title'>%s [%d]</div>",
-                    Forums::getForumName($topic->forumId),
+                    $this->forums->getForumName(forumId: $topic->forumId),
                     $topic->forumId,
                 );
             }
