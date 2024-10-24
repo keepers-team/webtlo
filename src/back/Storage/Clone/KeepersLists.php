@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Tables;
+namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
-use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Storage\CloneTable;
 use Psr\Log\LoggerInterface;
 
 /**
- * Таблица раздач, хранимых другими хранителями, согласно отчётам.
+ * Временная таблица содержащая данные о хранителях и их хранимых раздачах, по данным API отчётов.
  */
 final class KeepersLists
 {
-    // Параметры таблицы
-    private const TABLE   = 'KeepersLists';
-    private const PRIMARY = 'topic_id';
-    private const KEYS    = [
+    // Параметры таблицы.
+    public const TABLE   = 'KeepersLists';
+    public const PRIMARY = 'topic_id';
+    public const KEYS    = [
         self::PRIMARY,
         'keeper_id',
         'keeper_name',
@@ -26,14 +26,13 @@ final class KeepersLists
         'complete',
     ];
 
-    private ?CloneTable $table = null;
-
     /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
     public function __construct(
         private readonly DB              $db,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly CloneTable      $clone,
     ) {
     }
 
@@ -55,25 +54,14 @@ final class KeepersLists
         }
     }
 
-    public function addKeptTopic(int $topicId, int $keeperId, string $keeperName, int $posted, int $complete): void
-    {
-        $this->keptTopics[] = [
-            $topicId,
-            $keeperId,
-            $keeperName,
-            $posted,
-            $complete,
-        ];
-    }
-
     /**
      * Записать часть раздач во временную таблицу.
      */
     public function fillTempTable(): void
     {
-        $tab = $this->initTable();
+        $tab = $this->clone;
 
-        $rows = array_map(fn($el) => array_combine($tab->keys, $el), $this->keptTopics);
+        $rows = array_map(fn($el) => array_combine($tab->getTableKeys(), $el), $this->keptTopics);
         $tab->cloneFillChunk($rows, 200);
 
         $this->keptTopics = [];
@@ -84,7 +72,7 @@ final class KeepersLists
      */
     public function moveToOrigin(int $forumsScanned, int $keepersCount): void
     {
-        $tab = $this->initTable();
+        $tab = $this->clone;
 
         $keepersSeedersCount = $tab->cloneCount();
         if ($keepersSeedersCount > 0) {
@@ -98,30 +86,14 @@ final class KeepersLists
             $tab->moveToOrigin();
 
             // Удаляем неактуальные записи списков.
-            $this->db->executeStatement(
-                "DELETE FROM $tab->origin WHERE topic_id || keeper_id NOT IN (
-                    SELECT upd.topic_id || upd.keeper_id
-                    FROM $tab->clone AS tmp
-                    LEFT JOIN $tab->origin AS upd ON tmp.topic_id = upd.topic_id AND tmp.keeper_id = upd.keeper_id
-                    WHERE upd.topic_id IS NOT NULL
-                )"
-            );
+            $tab->removeUnusedKeepersRows();
 
-            $this->logger->info(sprintf('Записано %d хранимых раздач.', $keepersSeedersCount));
+            $this->logger->info('Записано {topics} хранимых раздач.', ['topics' => $keepersSeedersCount]);
         }
     }
 
     public function clearLists(): void
     {
         $this->db->executeStatement('DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000');
-    }
-
-    private function initTable(): CloneTable
-    {
-        if (null === $this->table) {
-            $this->table = CloneTable::create(self::TABLE, self::KEYS, self::PRIMARY);
-        }
-
-        return $this->table;
     }
 }
