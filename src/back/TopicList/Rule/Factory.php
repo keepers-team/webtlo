@@ -25,16 +25,24 @@ final class Factory
         // Хранимые раздачи из других подразделов.
         if ($forumId === 0) {
             return new UntrackedTopics($this->db, $this->forums, $this->output);
-        } elseif ($forumId === -1) {
+        }
+
+        if (-1 === $forumId) {
             // Хранимые раздачи незарегистрированные на форуме.
             return new UnregisteredTopics($this->db, $this->output);
-        } elseif ($forumId === -2) {
+        }
+
+        if (-2 === $forumId) {
             // Раздачи из "Черного списка".
             return new BlackListedTopics($this->db, $this->forums, $this->output);
-        } elseif ($forumId === -4) {
+        }
+
+        if (-4 === $forumId) {
             // Хранимые дублирующиеся раздачи.
             return new DuplicatedTopics($this->db, $this->cfg, $this->output);
-        } elseif (
+        }
+
+        if (
             // Основной поиск раздач.
             $forumId > 0        // Заданный раздел.
             || $forumId === -3  // Все хранимые подразделы.

@@ -138,9 +138,9 @@ final class Helper
             return self::normalizePath(
                 __DIR__ . DIRECTORY_SEPARATOR . str_repeat(".." . DIRECTORY_SEPARATOR, 1) . 'data'
             );
-        } else {
-            return $directory;
         }
+
+        return $directory;
     }
 
     /**
@@ -195,7 +195,9 @@ final class Helper
     {
         if (!empty($cfg['forum_url'] && $cfg['forum_url'] !== 'custom')) {
             return $cfg['forum_url'];
-        } elseif (!empty($cfg['forum_url_custom'])) {
+        }
+
+        if (!empty($cfg['forum_url_custom'])) {
             return $cfg['forum_url_custom'];
         }
 

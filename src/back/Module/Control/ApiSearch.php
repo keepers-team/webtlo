@@ -78,7 +78,9 @@ final class ApiSearch
         if (is_int($group)) {
             // Получаем раздачи всего подраздела, кешируем ответ, фильтруем только нужные (быстро).
             return $this->getSubForumTopics(forumId: $group)->filterReleases(hashes: $hashes);
-        } elseif ($group === TopicControl::UnknownHashes) {
+        }
+
+        if (TopicControl::UnknownHashes === $group) {
             // Получаем только искомые раздачи, т.к. не знаем ид подраздела (долго).
             return $this->getApiForumPeers(hashes: $hashes);
         }

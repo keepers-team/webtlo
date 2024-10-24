@@ -142,12 +142,12 @@ final class Validate
         if (empty($filter['keeping_priority'])) {
             if ($forumId === -5) {
                 return [2];
-            } else {
-                throw new ValidationException(
-                    'Не выбраны приоритеты раздач для трекера.',
-                    'filter-exception-tracker-priority'
-                );
             }
+
+            throw new ValidationException(
+                'Не выбраны приоритеты раздач для трекера.',
+                'filter-exception-tracker-priority'
+            );
         }
 
         return array_map('intval', (array) $filter['keeping_priority']);
