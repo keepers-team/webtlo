@@ -11,7 +11,6 @@ use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
 use KeepersTeam\Webtlo\Storage\Clone\Torrents;
@@ -19,6 +18,7 @@ use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
 $app = AppContainer::create();
+$db  = $app->getDataBase();
 
 // получение настроек
 $cfg = $app->getLegacyConfig();
@@ -33,7 +33,7 @@ if (empty($cfg['clients'])) {
     $logger->notice('Торрент-клиенты не найдены.');
 
     $updateTime->setMarkerTime(UpdateMark::CLIENTS->value, 0);
-    Db::query_database('DELETE FROM Torrents WHERE true');
+    $db->executeStatement('DELETE FROM Torrents WHERE true');
 
     return;
 }

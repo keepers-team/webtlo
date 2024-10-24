@@ -2,14 +2,17 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
 
 try {
     if (empty($_POST['topic_hashes'])) {
         $result = "Выберите раздачи";
         throw new Exception();
     }
+
+    $app = AppContainer::create();
+    $db  = $app->getDataBase();
 
     parse_str($_POST['topic_hashes'], $topicHashes);
     $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
@@ -21,13 +24,13 @@ try {
     foreach ($topicHashes as $topicHashesChunk) {
         if ($value == 0) {
             $in = str_repeat('?,', count($topicHashesChunk) - 1) . '?';
-            Db::query_database(
+            $db->executeStatement(
                 "DELETE FROM TopicsExcluded WHERE info_hash IN ($in)",
                 $topicHashesChunk
             );
         } elseif ($value == 1) {
             $select = str_repeat('SELECT ? UNION ALL ', count($topicHashesChunk) - 1) . ' SELECT ?';
-            Db::query_database(
+            $db->executeStatement(
                 "INSERT INTO TopicsExcluded (info_hash) $select",
                 $topicHashesChunk
             );

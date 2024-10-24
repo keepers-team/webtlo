@@ -5,7 +5,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
@@ -22,6 +21,8 @@ try {
 
     $app = AppContainer::create();
     $log = $app->getLogger();
+
+    $db = $app->getDataBase();
 
     // получение настроек
     $cfg = $app->getLegacyConfig();
@@ -54,13 +55,13 @@ try {
     $topicHashes = array_chunk($topicHashes, 999);
     foreach ($topicHashes as $topicHashesChunk) {
         $placeholders = str_repeat('?,', count($topicHashesChunk) - 1) . '?';
-        $data = Db::query_database(
+        $data = $db->query(
             'SELECT forum_id, info_hash FROM Topics WHERE info_hash IN (' . $placeholders . ')',
             $topicHashesChunk,
-            true,
-            PDO::FETCH_GROUP | PDO::FETCH_COLUMN
+            PDO::FETCH_GROUP | PDO::FETCH_COLUMN,
         );
         unset($placeholders);
+
         foreach ($data as $forumID => $forumTopicHashes) {
             if (isset($topicHashesByForums[$forumID])) {
                 $topicHashesByForums[$forumID] = array_merge(
@@ -182,10 +183,9 @@ try {
         foreach ($downloadedTorrentFiles as $downloadedTorrentFilesChunk) {
             // получаем идентификаторы раздач
             $placeholders = str_repeat('?,', count($downloadedTorrentFilesChunk) - 1) . '?';
-            $topicIDsByHash = Db::query_database(
+            $topicIDsByHash = $db->query(
                 'SELECT info_hash, id FROM Topics WHERE info_hash IN (' . $placeholders . ')',
                 $downloadedTorrentFilesChunk,
-                true,
                 PDO::FETCH_KEY_PAIR
             );
             unset($placeholders);
@@ -246,7 +246,7 @@ try {
 
         foreach ($addedTorrentFilesChunks as $addedTorrentFilesChunk) {
             $placeholders = str_repeat('?,', count($addedTorrentFilesChunk) - 1) . '?';
-            Db::query_database(
+            $db->query(
                 'INSERT INTO Torrents (
                     info_hash,
                     client_id,
