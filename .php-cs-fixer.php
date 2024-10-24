@@ -6,16 +6,15 @@ $finder = PhpCsFixer\Finder::create()
 
 $config = new PhpCsFixer\Config();
 $rules  = [
-    '@PSR12'          => true,
+    '@PER-CS'         => true,
     '@PHP83Migration' => true,
 
     'no_empty_statement'     => true,
-    'array_indentation'      => true,
     'standardize_not_equals' => true,
 
     'function_declaration' => [
-        'closure_function_spacing' => 'none',
         'closure_fn_spacing'       => 'none',
+        'closure_function_spacing' => 'none',
     ],
 ];
 
