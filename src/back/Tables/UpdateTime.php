@@ -168,5 +168,4 @@ final class UpdateTime
     {
         $this->db->executeStatement('DELETE FROM UpdateTime WHERE ud < ?', [$outdatedDate->getTimestamp()]);
     }
-
 }

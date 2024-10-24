@@ -40,6 +40,7 @@ final class KeeperUnseededResponse
             // Если даты нет, значит её очень давно не сидировали, добавляем в список.
             if (null === $topic['last_seeded_time']) {
                 $hashes[] = $topic['info_hash'];
+
                 continue;
             }
 

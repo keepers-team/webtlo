@@ -83,7 +83,6 @@ final class Topic
             return '';
         }
 
-
         return sprintf(
             "<span class='text-danger %s'>%s</span>",
             $this->getSeedClassName((int) floor($this->averageSeed)),

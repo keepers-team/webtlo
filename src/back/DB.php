@@ -63,7 +63,6 @@ final class DB
         return $instance;
     }
 
-
     public static function getInstance(): self
     {
         if (null === self::$instance) {

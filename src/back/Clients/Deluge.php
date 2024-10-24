@@ -298,6 +298,7 @@ final class Deluge implements ClientInterface
             $response = $this->request(method: $method, params: $params);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to make request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
+
             throw new RuntimeException('Failed to make request');
         }
 
@@ -305,6 +306,7 @@ final class Deluge implements ClientInterface
 
         if (!empty($array['error']['message'])) {
             $this->logger->error('Failed to make request', (array) $array);
+
             throw new RuntimeException('Failed to make request');
         }
 

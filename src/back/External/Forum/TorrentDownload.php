@@ -33,6 +33,7 @@ trait TorrentDownload
                 'h'                 => $infoHash,
             ],
         ];
+
         try {
             $this->logger->debug('Downloading torrent', ['hash' => $infoHash]);
             $response = $this->client->post(self::torrentUrl, $options);

@@ -23,6 +23,7 @@ trait ForumTopics
     public function getForumTopicsData(int $forumId): ForumTopicsResponse|ApiError
     {
         $dataProcessor = self::getForumTopicsProcessor($this->logger, $forumId);
+
         try {
             $response = $this->client->get(
                 uri: sprintf('static/pvc/f/%d', $forumId)

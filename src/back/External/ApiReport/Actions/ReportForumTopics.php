@@ -20,6 +20,7 @@ trait ReportForumTopics
     public function getForumsReportTopics(): ReportForumResponse|ApiError
     {
         $dataProcessor = self::getReportTopicsProcessor($this->logger);
+
         try {
             $response = $this->client->get(uri: 'subforum/report_topics');
         } catch (GuzzleException $error) {

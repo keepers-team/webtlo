@@ -31,7 +31,6 @@ final class ForumClient
     /** @var string Куки для авторизации на форуме. */
     protected static string $authCookieName = 'bb_session';
 
-
     /** @var int Ид темы для публикации сводных отчётов */
     protected const reportsTopicId = 4275633;
 
@@ -56,7 +55,6 @@ final class ForumClient
     /** @var string URL загрузки торрент-файла */
     protected const torrentUrl = '/forum/dl.php';
 
-
     /** @var string Действие редактирования */
     protected const editAction = 'editpost';
 
@@ -68,7 +66,6 @@ final class ForumClient
 
     /** @var string Действие публикации */
     protected const replyAction = 'reply';
-
 
     /** @var ?string Обновленный cookie авторизации */
     protected ?string $updatedCookie = null;

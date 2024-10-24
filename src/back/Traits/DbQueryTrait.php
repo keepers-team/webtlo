@@ -35,6 +35,7 @@ trait DbQueryTrait
             $this->rollbackTransaction();
 
             Log::append($sql);
+
             throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
@@ -138,6 +139,7 @@ trait DbQueryTrait
             $this->db->exec($sql);
         } catch (Throwable $e) {
             Log::append($sql);
+
             throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }

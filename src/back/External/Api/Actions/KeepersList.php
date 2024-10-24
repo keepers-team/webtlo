@@ -20,6 +20,7 @@ trait KeepersList
     public function getKeepersList(): KeepersResponse|ApiError
     {
         $dataProcessor = self::getKeepersProcessor($this->logger);
+
         try {
             $response = $this->client->get(uri: 'static/keepers_user_data');
         } catch (GuzzleException $error) {

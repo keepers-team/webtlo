@@ -308,6 +308,7 @@ final class Transmission implements ClientInterface
             $response = $this->request($method, $params);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to make request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
+
             throw new RuntimeException('Failed to make request');
         }
 
@@ -349,6 +350,7 @@ final class Transmission implements ClientInterface
 
         if ('success' !== $array['result']) {
             $this->logger->error('Unsuccessful api request', $array);
+
             throw new RuntimeException('Unsuccessful api request');
         }
 

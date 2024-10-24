@@ -22,6 +22,7 @@ trait HighPriorityTopics
     public function getTopicsHighPriority(): HighPriorityTopicsResponse|ApiError
     {
         $dataProcessor = self::getHighPriorityTopicProcessor($this->logger);
+
         try {
             $response = $this->client->get(uri: 'static/pvc/high_priority_topics.json.gz');
         } catch (GuzzleException $error) {
