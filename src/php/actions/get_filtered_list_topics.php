@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\DB as ModernDB;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Tables\Forums;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
@@ -24,7 +24,7 @@ $returnObject = [
 
 try {
 
-    App::init();
+    $app = AppContainer::create();
 
     $forum_id = $_POST['forum_id'] ?? null;
     if (!is_numeric($forum_id)) {
@@ -43,12 +43,20 @@ try {
     $sorting = Validate::sortFilter($filter);
 
     // Получаем настройки.
-    $cfg = App::getSettings();
+    $cfg = $app->getLegacyConfig();
 
-    $db = ModernDB::getInstance();
+    $db = $app->getDataBase();
+
+    /** @var Forums $forums */
+    $forums = $app->get(Forums::class);
 
     // Собираем фабрику.
-    $ruleFactory = new Factory($db, $cfg, new Output($cfg, $cfg['forum_address'] ?? ''));
+    $ruleFactory = new Factory(
+        db    : $db,
+        cfg   : $cfg,
+        forums: $forums,
+        output: new Output($cfg, $cfg['forum_address'] ?? '')
+    );
 
     //  0 - из других подразделов
     // -1 - незарегистрированные

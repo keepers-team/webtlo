@@ -6,7 +6,7 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Tables\Forums;
 
 $reports_result = [
     'report' => '',
@@ -26,6 +26,9 @@ try {
     $cfg = $app->getLegacyConfig();
     $log = $app->getLogger();
 
+    /** @var Forums $forums */
+    $forums = $app->get(Forums::class);
+
     /** @var ReportCreator $forumReports Создание отчётов */
     $forumReports = $app->get(ReportCreator::class);
     $forumReports->initConfig(CreationMode::UI);
@@ -35,10 +38,14 @@ try {
         $output = $forumReports->getSummaryReport(true);
     } else {
         // Хранимые подразделы
-        $forum = Forums::getForum($forumId);
         try {
-            $forumReports->fillStoredValues($forumId);
-            $reportMessages = $forumReports->getForumReport($forum);
+            $forum = $forums->getForum(forumId: $forumId);
+            if (null === $forum) {
+                throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
+            }
+
+            $forumReports->fillStoredValues(forumId: $forumId);
+            $reportMessages = $forumReports->getForumReport(forum: $forum);
 
             $output = $forumReports->prepareReportsMessages($reportMessages);
         } catch (RuntimeException $e) {

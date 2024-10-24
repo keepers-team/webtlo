@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\Module\Forums;
+use KeepersTeam\Webtlo\Tables\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\State;
@@ -19,7 +19,8 @@ final class UntrackedTopics implements ListInterface
 
     public function __construct(
         private readonly DB     $db,
-        private readonly Output $output
+        private readonly Forums $forums,
+        private readonly Output $output,
     ) {
     }
 
@@ -48,7 +49,7 @@ final class UntrackedTopics implements ListInterface
         $topics = $this->selectTopics($statement);
 
         $getForumHeader = function(?int $id): string {
-            $name  = Forums::getForumName($id);
+            $name  = $this->forums->getForumName(forumId: $id);
             $click = sprintf('addUnsavedSubsection(%s, "%s");', $id, $name);
 
             return "<div class='subsection-title'>$name <a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>[$id]</a></div>";

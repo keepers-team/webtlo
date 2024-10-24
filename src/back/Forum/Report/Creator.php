@@ -14,8 +14,8 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Module\Forums;
 use KeepersTeam\Webtlo\Settings;
+use KeepersTeam\Webtlo\Tables\Forums;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\WebTLO;
 use PDO;
@@ -59,7 +59,8 @@ final class Creator
         private readonly DB              $db,
         private readonly Settings        $settings,
         private readonly ReportSend      $reportSend,
-        private readonly UpdateTime      $updateTest,
+        private readonly UpdateTime      $tableUpdate,
+        private readonly Forums          $tableForums,
         private readonly WebTLO          $webtlo,
         private readonly LoggerInterface $logger,
     ) {
@@ -286,7 +287,7 @@ final class Creator
         ];
 
         // Локальные даты обновления сведений.
-        $shared['markers'] = $this->updateTest->getMainMarkers()->getFormattedMarkers();
+        $shared['markers'] = $this->tableUpdate->getMainMarkers()->getFormattedMarkers();
 
         return $this->telemetry = $shared;
     }
@@ -328,9 +329,12 @@ final class Creator
                 continue;
             }
 
-            $forum = Forums::getForum($forumId);
+            $forum = $this->tableForums->getForum(forumId: $forumId);
+            if (null === $forum) {
+                throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
+            }
 
-            $topicId = $this->getReportTopicId($forum);
+            $topicId = $this->getReportTopicId(forum: $forum);
 
             // Ссылка на тему с отчётами подраздела.
             $leftPart = $topicId !== null ?
@@ -647,10 +651,10 @@ final class Creator
 
     private function getLastUpdateTime(): void
     {
-        $lastTimestamp = $this->updateTest->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
+        $lastTimestamp = $this->tableUpdate->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
 
         if ($lastTimestamp === 0) {
-            $update = $this->updateTest->checkFullUpdate(
+            $update = $this->tableUpdate->checkFullUpdate(
                 markers         : $this->getForums(),
                 daysUpdateExpire: $this->reportSend->daysUpdateExpire
             );
