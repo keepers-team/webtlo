@@ -7,12 +7,11 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
-use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Tables\KeepersLists;
-use KeepersTeam\Webtlo\Tables\KeepersSeeders;
+use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -26,7 +25,6 @@ final class KeepersReports
         private readonly ApiClient       $apiClient,
         private readonly ApiReportClient $apiReport,
         private readonly KeepersLists    $keepersLists,
-        private readonly KeepersSeeders  $keepers,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
     ) {
@@ -34,7 +32,7 @@ final class KeepersReports
 
     /**
      * @param array<string, mixed>[] $config
-     * @return bool
+     * @return bool - true, если обновление выполнено успешно.
      */
     public function updateReports(array $config): bool
     {
@@ -76,7 +74,8 @@ final class KeepersReports
         }
 
         // Получаем список хранителей.
-        if (!$this->getKeepersList()) {
+        $keepersList = $this->getKeepersList();
+        if (null === $keepersList) {
             return false;
         }
 
@@ -91,8 +90,12 @@ final class KeepersReports
         $keeperIds     = [];
 
         if (isset($config['subsections'])) {
-            // получаем данные
+            $apiReportCount = 0;
+            $forumCount = count($config['subsections']);
+
             foreach ($config['subsections'] as $forumId => $subsection) {
+                Timers::start("get_report_api_$forumId");
+
                 $forumId = (int)$forumId;
                 try {
                     $forumReports = $this->apiReport->getKeepersReports($forumId);
@@ -108,7 +111,7 @@ final class KeepersReports
                     }
 
                     /** Данные о хранителе. */
-                    $keeper = $this->keepers->getKeeperInfo($keeperReport->keeperId);
+                    $keeper = $keepersList->getKeeperInfo($keeperReport->keeperId);
 
                     // Пропускаем раздачи несуществующих хранителей.
                     if (null === $keeper) {
@@ -133,13 +136,22 @@ final class KeepersReports
 
                 // Пометим факт обновления отчётов хранителей подраздела.
                 $this->updateTime->setMarkerTime(100000 + $forumId);
+
+                $this->logger->debug('Отчёт получен [{current}/{total}] {sec}', [
+                    'forumId' => $forumId,
+                    'current' => ++$apiReportCount,
+                    'total'   => $forumCount,
+                    'sec'     => Timers::getExecTime("get_report_api_$forumId"),
+                ]);
             }
         }
 
         // Записываем изменения в локальную таблицу.
-        $this->keepersLists->moveToOrigin($forumsScanned, count(array_unique($keeperIds)));
+        $this->keepersLists->moveToOrigin(
+            forumsScanned: $forumsScanned,
+            keepersCount : count(array_unique($keeperIds))
+        );
 
-        // TODO подумать, нужен ли этот маркер вообще.
         // Записываем дату получения списков.
         $this->updateTime->setMarkerTime(UpdateMark::KEEPERS->value);
         $this->logger->info(
@@ -168,7 +180,7 @@ final class KeepersReports
     /**
      * Загрузить список всех хранителей.
      */
-    private function getKeepersList(): bool
+    private function getKeepersList(): ?KeepersResponse
     {
         $response = $this->apiClient->getKeepersList();
         if ($response instanceof ApiError) {
@@ -177,10 +189,9 @@ final class KeepersReports
                 ['code' => $response->code, 'text' => $response->text]
             );
 
-            return false;
+            return null;
         }
-        $this->keepers->addKeepersInfo($response->keepers);
 
-        return true;
+        return $response;
     }
 }

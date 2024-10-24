@@ -11,28 +11,15 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\MarkersUpdate;
-use KeepersTeam\Webtlo\Module\CloneTable;
 use PDO;
 use Psr\Log\LoggerInterface;
 
 /** Таблица хранения последнего времени обновления различных меток. */
 final class UpdateTime
 {
-    // Параметры таблицы.
-    public const TABLE   = 'UpdateTime';
-    public const PRIMARY = 'id';
-    public const KEYS    = [
-        self::PRIMARY,
-        'ud',
-    ];
-
-    private ?CloneTable $table = null;
-
-    /** @var array<int, int>[] */
-    private array $updatedMarkers = [];
-
-    public function __construct(private readonly DB $db)
-    {
+    public function __construct(
+        private readonly DB           $db,
+    ) {
     }
 
     /**
@@ -91,18 +78,6 @@ final class UpdateTime
         }
 
         return true;
-    }
-
-    /**
-     * Добавить данные об обновлении маркера.
-     */
-    public function addMarkerUpdate(int $markerId, int|DateTimeImmutable $updateTime = new DateTimeImmutable()): void
-    {
-        if ($updateTime instanceof DateTimeImmutable) {
-            $updateTime = $updateTime->getTimestamp();
-        }
-
-        $this->updatedMarkers[] = [$markerId, $updateTime];
     }
 
     /**
@@ -188,21 +163,6 @@ final class UpdateTime
     }
 
     /**
-     * Перенести данные о хранимых раздачах в основную таблицу БД.
-     */
-    public function fillTable(): void
-    {
-        $tab = $this->initTable();
-
-        if (count($this->updatedMarkers) > 0) {
-            $rows = array_map(fn($el) => array_combine($tab->keys, $el), $this->updatedMarkers);
-            $tab->cloneFillChunk($rows);
-
-            $tab->moveToOrigin();
-        }
-    }
-
-    /**
      * Удалить неактуальные маркеры.
      */
     public function removeOutdatedRows(DateTimeImmutable $outdatedDate): void
@@ -210,12 +170,4 @@ final class UpdateTime
         $this->db->executeStatement('DELETE FROM UpdateTime WHERE ud < ?', [$outdatedDate->getTimestamp()]);
     }
 
-    private function initTable(): CloneTable
-    {
-        if (null === $this->table) {
-            $this->table = CloneTable::create(self::TABLE, self::KEYS, self::PRIMARY);
-        }
-
-        return $this->table;
-    }
 }
