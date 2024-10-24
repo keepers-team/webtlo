@@ -71,6 +71,7 @@ final class Topics
      * Поиск существующих сведений о раздачах.
      *
      * @param int[] $topicIds
+     *
      * @return array<int, array<string, int|string>>
      */
     public function searchPrevious(array $topicIds): array
@@ -92,6 +93,7 @@ final class Topics
      * Поиск в БД ид раздач, по хешу.
      *
      * @param string[] $hashes
+     *
      * @return array<string, array{topic_id:int}>
      */
     public function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
@@ -118,7 +120,7 @@ final class Topics
     }
 
     /**
-     * Удаление раздач по списку их ИД
+     * Удаление раздач по списку их ИД.
      *
      * @param int[] $topics
      */

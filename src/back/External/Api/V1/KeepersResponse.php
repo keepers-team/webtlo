@@ -12,8 +12,8 @@ use DateTimeImmutable;
 final class KeepersResponse
 {
     /**
-     * @param DateTimeImmutable      $updateTime Дата получения данных.
-     * @param array<int, KeeperData> $keepers    Ид хранителя => Данные о нём.
+     * @param DateTimeImmutable      $updateTime дата получения данных
+     * @param array<int, KeeperData> $keepers    ид хранителя => Данные о нём
      */
     public function __construct(
         public readonly DateTimeImmutable $updateTime,

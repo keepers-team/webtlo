@@ -18,9 +18,8 @@ trait GetCredentials
     /**
      * Получение API ключей.
      *
-     * @return ?ApiCredentials Объект API ключей или null в случае ошибки.
+     * @return ?ApiCredentials объект API ключей или null в случае ошибки
      */
-
     public function getApiCredentials(): ?ApiCredentials
     {
         $userId = self::parseUserId(cookieJar: $this->cookie, logger: $this->logger);
@@ -41,6 +40,7 @@ trait GetCredentials
      *
      * @param CookieJar       $cookieJar Объект cookie
      * @param LoggerInterface $logger    Интерфейс для записи журнала
+     *
      * @return ?int Идентификатор пользователя или null в случае ошибки
      */
     private static function parseUserId(CookieJar $cookieJar, LoggerInterface $logger): ?int
@@ -73,8 +73,9 @@ trait GetCredentials
     /**
      * Получение страницы профиля пользователя.
      *
-     * @param int $userId Идентификатор пользователя.
-     * @return ?string HTML-страница профиля или null в случае ошибки.
+     * @param int $userId идентификатор пользователя
+     *
+     * @return ?string HTML-страница профиля или null в случае ошибки
      */
     private function getProfile(int $userId): ?string
     {
@@ -87,6 +88,7 @@ trait GetCredentials
      * Получение API ключей со страницы профиля.
      *
      * @param string $profilePage HTML-страница профиля
+     *
      * @return ?ApiCredentials Объект API ключей или null в случае ошибки
      */
     private static function parseApiCredentials(string $profilePage): ?ApiCredentials

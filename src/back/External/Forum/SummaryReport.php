@@ -16,6 +16,7 @@ trait SummaryReport
      *
      * @param int    $userId  Идентификатор пользователя
      * @param string $message Текст сообщения
+     *
      * @return ?int Идентификатор сообщения, если отправка успешна, иначе null
      */
     public function sendSummaryReport(int $userId, string $message): ?int
@@ -29,6 +30,7 @@ trait SummaryReport
      * Search user's message in topic with summary reports.
      *
      * @param int $userId Идентификатор пользователя
+     *
      * @return ?int Идентификатор сообщения, если поиск успешен, иначе null
      */
     private function searchSummaryReportMessageId(int $userId): ?int
@@ -57,6 +59,7 @@ trait SummaryReport
      * Parse the post ID from the summary report search results.
      *
      * @param string $page HTML содержимое страницы
+     *
      * @return ?int Идентификатор сообщения, если найден, иначе null
      */
     private static function parsePostIdFromReportSearch(string $page): ?int

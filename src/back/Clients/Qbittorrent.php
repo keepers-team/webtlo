@@ -22,7 +22,8 @@ use Throwable;
 
 /**
  * Class Qbittorrent
- * Supported by qBittorrent 4.1 and later
+ * Supported by qBittorrent 4.1 and later.
+ *
  * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
  */
 final class Qbittorrent implements ClientInterface
@@ -343,6 +344,7 @@ final class Qbittorrent implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @throws GuzzleException
      */
     private function request(string $url, array $params = []): ResponseInterface
@@ -352,6 +354,7 @@ final class Qbittorrent implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @return array<int|string, mixed>
      */
     private function makeRequest(string $url, array $params = []): array
@@ -396,6 +399,7 @@ final class Qbittorrent implements ClientInterface
 
         try {
             $response = $this->request(url: 'app/webapiVersion');
+
             $apiVersion = $response->getBody()->getContents();
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -414,6 +418,7 @@ final class Qbittorrent implements ClientInterface
     {
         /**
          * Действия для запуска и остановки раздач по умолчанию (webApi < 2.11.0).
+         *
          * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#pause-torrents
          * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#resume-torrents
          */

@@ -90,6 +90,7 @@ trait StaticHelper
 
     /**
      * @param array<string, mixed> $cfg
+     *
      * @throws Exception
      */
     public static function apiCredentials(array $cfg): Credentials

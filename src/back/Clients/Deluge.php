@@ -18,7 +18,8 @@ use Throwable;
 
 /**
  * Class Deluge
- * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later
+ * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later.
+ *
  * https://deluge.readthedocs.io/en/latest/devguide/how-to/curl-jsonrpc.html
  * https://github.com/kaysond/deluge-php/blob/master/deluge.class.php
  */
@@ -272,6 +273,7 @@ final class Deluge implements ClientInterface
 
     /**
      * @param array<int, mixed> $params
+     *
      * @throws GuzzleException
      */
     private function request(string $method, array $params = []): ResponseInterface
@@ -287,6 +289,7 @@ final class Deluge implements ClientInterface
 
     /**
      * @param array<int, mixed> $params
+     *
      * @return array<int|string, mixed>
      */
     private function makeRequest(string $method, array $params = []): array
@@ -328,6 +331,7 @@ final class Deluge implements ClientInterface
 
     /**
      * @param string[] $torrentHashes
+     *
      * @return string[][]
      */
     private function prepareHashes(array $torrentHashes): array

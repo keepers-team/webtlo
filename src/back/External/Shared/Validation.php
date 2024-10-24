@@ -15,7 +15,7 @@ trait Validation
     protected static string $webMime     = 'text/html';
 
     /**
-     * Check response for correctness
+     * Check response for correctness.
      *
      * @param LoggerInterface   $logger       Logger
      * @param ResponseInterface $response     Received response

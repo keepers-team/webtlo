@@ -77,6 +77,7 @@ trait StaticHelper
 
     /**
      * @param array<string, mixed> $cfg
+     *
      * @return array{api_key: string}
      */
     public static function getDefaultParams(array $cfg): array

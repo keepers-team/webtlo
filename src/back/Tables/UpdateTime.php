@@ -98,7 +98,7 @@ final class UpdateTime
     /**
      * Проверить наличие всех нужных маркеров обновления и их актуальность.
      *
-     * @param int[]           $markers
+     * @param int[] $markers
      */
     public function checkReportsSendAvailable(array $markers, LoggerInterface $logger): ?DateTimeImmutable
     {

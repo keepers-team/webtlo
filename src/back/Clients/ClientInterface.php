@@ -17,7 +17,7 @@ interface ClientInterface
     public function isOnline(): bool;
 
     /**
-     * Получение сведений о раздачах от торрент-клиента
+     * Получение сведений о раздачах от торрент-клиента.
      *
      * @param array<string, mixed> $filter
      */
@@ -55,7 +55,7 @@ interface ClientInterface
     public function stopTorrents(array $torrentHashes): bool;
 
     /**
-     * Удаление раздач перечисленных в $torrentHashes
+     * Удаление раздач перечисленных в $torrentHashes.
      *
      * @param string[] $torrentHashes
      */

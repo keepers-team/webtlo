@@ -17,7 +17,8 @@ use Throwable;
 
 /**
  * Class Rtorrent
- * Supported by rTorrent 0.9.7 and later
+ * Supported by rTorrent 0.9.7 and later.
+ *
  * https://rtorrent-docs.readthedocs.io/en/latest/scripting.html
  * https://php.watch/versions/8.0/xmlrpc#alternatives
  * https://github.com/gggeek/polyfill-xmlrpc
@@ -287,6 +288,7 @@ final class Rtorrent implements ClientInterface
 
     /**
      * @param array<int, mixed> $params
+     *
      * @throws GuzzleException
      */
     private function request(string $command, array $params = []): ResponseInterface
@@ -298,6 +300,7 @@ final class Rtorrent implements ClientInterface
 
     /**
      * @param array<int, mixed> $params
+     *
      * @return array<int, mixed>
      */
     private function makeRequest(string $command, array $params = []): array
@@ -351,6 +354,7 @@ final class Rtorrent implements ClientInterface
     /**
      * @param string[]          $torrentHashes
      * @param array<int, mixed> $params
+     *
      * @return array<array<string, mixed>>
      */
     private function prepareHashesCalls(string $method, array $torrentHashes, array $params = []): array

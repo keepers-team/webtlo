@@ -26,6 +26,7 @@ final class SendReport
 
     /**
      * @param array<string, mixed>[] $topicsToReport
+     *
      * @return array<string, mixed>
      */
     public function sendForumTopics(
@@ -87,6 +88,7 @@ final class SendReport
 
     /**
      * @param int[] $forumIds
+     *
      * @return array<string, mixed>
      */
     public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array

@@ -115,8 +115,8 @@ final class HighPriority
     /**
      * Обработать все раздачи.
      *
-     * @param HighPriorityTopic[] $topics       Раздачи.
-     * @param callable            $avgProcessor Расчёт средних сидов.
+     * @param HighPriorityTopic[] $topics       раздачи
+     * @param callable            $avgProcessor расчёт средних сидов
      */
     private function processSubsectionTopics(array $topics, callable $avgProcessor): void
     {
@@ -223,7 +223,10 @@ final class HighPriority
     }
 
     /**
+     * Разбиваем список раздач по 500 шт.
+     *
      * @param HighPriorityTopic[] $topics
+     *
      * @return HighPriorityTopic[][]
      */
     private function chunkTopics(array $topics): array
@@ -234,15 +237,12 @@ final class HighPriority
             return !in_array($el->forumId, $subsections);
         });
 
-        // Разбиваем список раздач по 500 шт.
-        /** @var HighPriorityTopic[][] $topicsChunks */
-        $topicsChunks = array_chunk($topics, 500);
-
-        return $topicsChunks;
+        return array_chunk($topics, 500);
     }
 
     /**
      * @param HighPriorityTopic[] $topicsChunk
+     *
      * @return array<int, array<string, int|string>>
      */
     private function getPrevious(array $topicsChunk): array

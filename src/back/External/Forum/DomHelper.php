@@ -16,6 +16,7 @@ trait DomHelper
 {
     /**
      * @param string $page HTML-страница в виде строки
+     *
      * @return DOMXPath Объект DOMXPath для поиска по DOM-дереву
      */
     protected static function parseDOM(string $page): DOMXPath
@@ -33,6 +34,7 @@ trait DomHelper
      * Получает значение первого узла из списка узлов DOM.
      *
      * @param mixed|DOMNodeList<DOMNode> $list Список узлов DOM
+     *
      * @return string Значение первого узла в списке, или пустая строка, если узел не найден
      */
     protected static function getFirstNodeValue(mixed $list): string

@@ -10,6 +10,7 @@ trait TopicIdSearch
 {
     /**
      * @param array<string, mixed> $torrents
+     *
      * @return array{}|array<string, mixed>
      */
     protected static function getEmptyTopics(array $torrents): array
@@ -65,6 +66,7 @@ trait TopicIdSearch
 
     /**
      * @param array<string, mixed> $torrents
+     *
      * @return array{}|string[]
      */
     private static function getEmptyTopicsHashes(array $torrents): array

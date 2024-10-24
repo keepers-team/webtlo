@@ -86,6 +86,7 @@ final class TopicsDetails
      * Запросить дополнительные сведения по списку ид раздач.
      *
      * @param int[] $topics
+     *
      * @return array<string, mixed>[]
      */
     private function getDetails(array $topics): array

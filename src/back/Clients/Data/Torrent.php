@@ -12,18 +12,18 @@ use DateTimeImmutable;
 final class Torrent
 {
     /**
-     * @param string            $topicHash    Хеш раздачи на форуме.
-     * @param string            $clientHash   Хеш раздачи в клиенте.
-     * @param string            $name         Название раздачи.
-     * @param int|null          $topicId      Ид темы на форуме.
-     * @param int               $size         Размер раздачи.
-     * @param DateTimeImmutable $added        Дата добавления раздачи в клиенте.
-     * @param int|float         $done         Прогресс загрузки (1 = скачана, <1 - качается).
-     * @param bool              $paused       Остановлена ли раздача в клиенте.
-     * @param bool              $error        Есть ошибка в клиенте.
-     * @param string|null       $trackerError Текст ошибки трекера.
-     * @param string|null       $comment      Текст комментария раздачи (содержит topicId).
-     * @param string|null       $storagePath  Путь хранения раздачи на диске.
+     * @param string            $topicHash    хеш раздачи на форуме
+     * @param string            $clientHash   хеш раздачи в клиенте
+     * @param string            $name         название раздачи
+     * @param null|int          $topicId      ид темы на форуме
+     * @param int               $size         размер раздачи
+     * @param DateTimeImmutable $added        дата добавления раздачи в клиенте
+     * @param int|float         $done         прогресс загрузки (1 = скачана, <1 - качается)
+     * @param bool              $paused       остановлена ли раздача в клиенте
+     * @param bool              $error        есть ошибка в клиенте
+     * @param null|string       $trackerError текст ошибки трекера
+     * @param null|string       $comment      текст комментария раздачи (содержит topicId)
+     * @param null|string       $storagePath  путь хранения раздачи на диске
      */
     public function __construct(
         public readonly string            $topicHash,

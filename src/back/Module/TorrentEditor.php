@@ -9,7 +9,7 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class TorrentEditor
+ * Class TorrentEditor.
  *
  * This class provides methods to load, edit, and retrieve torrent files and their trackers.
  */

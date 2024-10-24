@@ -14,8 +14,6 @@ use Psr\Log\LoggerInterface;
 
 trait ReportForumTopics
 {
-    /**
-     */
     public function getForumsReportTopics(): ReportForumResponse|ApiError
     {
         $dataProcessor = self::getReportTopicsProcessor($this->logger);

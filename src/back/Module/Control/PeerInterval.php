@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Module\Control;
 
 final class PeerInterval
 {
-    /** @var ?array{value: int, start:int, end: int}[]  */
+    /** @var ?array{value: int, start:int, end: int}[] */
     private ?array $intervals = null;
 
     public function __construct(private readonly string $pattern) {}

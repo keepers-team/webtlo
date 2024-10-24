@@ -13,9 +13,10 @@ final class Torrents
     public function __construct(private readonly DB $db) {}
 
     /**
-     * Поиск в БД ид раздач, по хешу
+     * Поиск в БД ид раздач, по хешу.
      *
      * @param string[] $hashes
+     *
      * @return array<string, array{topic_id:int}>
      */
     public function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
@@ -45,7 +46,7 @@ final class Torrents
     }
 
     /**
-     * Удалить раздачи в БД по хешу
+     * Удалить раздачи в БД по хешу.
      *
      * @param string[] $hashes
      */

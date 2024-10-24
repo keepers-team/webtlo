@@ -18,20 +18,19 @@ final class TopicControl
      *
      * Сиды-хранители ⊆ Сиды
      */
-
     public const UnknownHashes = 'UnknownHashes';
 
     /**
-     * @param int      $peersLimit             Предел пиров при регулировке
-     * @param string   $peersLimitIntervals    Набор интервалов предела пиров
-     * @param int      $excludedKeepersCount   Количество исключаемых из регулировки хранителей на раздаче
-     * @param int      $randomApplyCount       Разница пиров, при которой применяется рандом переключения состояния раздачи
-     * @param Priority $peerLimitPriority      Приоритет разных значений лимита пиров при регулировке
-     * @param bool     $countLeechersAsPeers   Учитывать личей при подсчёте пиров
-     * @param bool     $seedingWithoutLeechers Сидировать раздачи, на которых нет личей
-     * @param bool     $manageOtherSubsections Регулировать раздачи из прочих подразделов
-     * @param int      $daysUntilUnseeded      Количество дней, по прошествии которых раздача считается не сидируемой
-     * @param int      $maxUnseededCount       Максимальное количество не сидируемых раздач, которые можно запустить одновременно
+     * @param int      $peersLimit             предел пиров при регулировке
+     * @param string   $peersLimitIntervals    набор интервалов предела пиров
+     * @param int      $excludedKeepersCount   количество исключаемых из регулировки хранителей на раздаче
+     * @param int      $randomApplyCount       разница пиров, при которой применяется рандом переключения состояния раздачи
+     * @param Priority $peerLimitPriority      приоритет разных значений лимита пиров при регулировке
+     * @param bool     $countLeechersAsPeers   учитывать личей при подсчёте пиров
+     * @param bool     $seedingWithoutLeechers сидировать раздачи, на которых нет личей
+     * @param bool     $manageOtherSubsections регулировать раздачи из прочих подразделов
+     * @param int      $daysUntilUnseeded      количество дней, по прошествии которых раздача считается не сидируемой
+     * @param int      $maxUnseededCount       максимальное количество не сидируемых раздач, которые можно запустить одновременно
      */
     public function __construct(
         public readonly int      $peersLimit,

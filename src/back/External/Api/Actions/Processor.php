@@ -26,15 +26,15 @@ trait Processor
     /**
      * Returns the request limit based on the search mode.
      *
-     * @return int<1, max> The request limit, which is always a positive integer.
+     * @return int<1, max> the request limit, which is always a positive integer
      */
     protected static function getRequestLimit(TopicSearchMode $searchMode): int
     {
         return match ($searchMode) {
             TopicSearchMode::ID   => 100,
-            /**
+            /*
              * Hashes are longer, so to avoid HTTP 414 in legacy API
-             * we're capping max identifiers per request
+             * we're capping max identifiers per request.
              */
             TopicSearchMode::HASH => 32,
         };
