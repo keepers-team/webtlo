@@ -48,6 +48,7 @@ final class ClientFactory
 
         if (null === $type) {
             $this->logger->error('Unknown client type.', $options);
+
             throw new RuntimeException('Unknown client type');
         }
 
@@ -66,6 +67,7 @@ final class ClientFactory
 
         if (null === $type) {
             $this->logger->error('Unknown client type.', $options);
+
             throw new RuntimeException('Unknown client type');
         }
 

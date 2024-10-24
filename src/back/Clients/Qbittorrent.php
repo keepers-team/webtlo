@@ -398,6 +398,7 @@ final class Qbittorrent implements ClientInterface
         }
 
         $apiVersion = 'default';
+
         try {
             $response = $this->request(url: 'app/webapiVersion');
             $apiVersion = $response->getBody()->getContents();

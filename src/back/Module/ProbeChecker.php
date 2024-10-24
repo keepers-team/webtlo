@@ -51,7 +51,6 @@ final class ProbeChecker
         }
         $output .= "\r\n";
 
-
         foreach ($this->urls as $type => $urls) {
             foreach ($urls as $url) {
                 $output .= str_pad($url, $urlLength);

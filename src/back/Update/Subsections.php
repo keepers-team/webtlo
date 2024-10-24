@@ -84,6 +84,7 @@ final class Subsections
             // Если не прошёл час с прошлого обновления - пропускаем подраздел.
             if (time() - $forumLastUpdated->getTimestamp() < 3600) {
                 $this->skipSubsections[] = $forumId;
+
                 continue;
             }
 

@@ -246,6 +246,7 @@ final class Creator
         foreach ($this->getClientsTopics() as $clientId => $topics) {
             if (!empty($clients[$clientId])) {
                 $clientName = sprintf('%s-%d', $clients[$clientId]['cl'], $clientId);
+
                 $clientTopics[$clientName] = array_filter($topics);
             }
         }
@@ -510,7 +511,6 @@ final class Creator
 
         return $total;
     }
-
 
     /**
      * Найти в БД хранимое пользователем в указанных подразделах.

@@ -66,6 +66,7 @@ trait Processor
         }
 
         $rawResponse = $response->getBody()->getContents();
+
         try {
             $result = json_decode(json: $rawResponse, associative: true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $error) {

@@ -196,6 +196,7 @@ final class HighPriority
                 $response = $this->apiClient->getTopicsDetails(array_keys($topicsInsert));
                 if ($response instanceof ApiError) {
                     $this->logger->error(sprintf('%d %s', $response->code, $response->text));
+
                     throw new RuntimeException('Error: Не получены дополнительные данные о раздачах');
                 }
 

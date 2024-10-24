@@ -16,6 +16,7 @@ trait ForumTopicsPeers
     public function getForumTopicsPeers(int $forumId): TopicsPeers|ApiError
     {
         $dataProcessor = self::getStaticPeersProcessor($this->logger);
+
         try {
             $params = [
                 'columns' => 'info_hash,seeders,leechers,keeper_seeders',

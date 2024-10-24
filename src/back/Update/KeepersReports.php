@@ -90,16 +90,19 @@ final class KeepersReports
 
         if (isset($config['subsections'])) {
             $apiReportCount = 0;
+
             $forumCount = count($config['subsections']);
 
             foreach ($config['subsections'] as $forumId => $subsection) {
                 Timers::start("get_report_api_$forumId");
 
                 $forumId = (int) $forumId;
+
                 try {
                     $forumReports = $this->apiReport->getKeepersReports($forumId);
                 } catch (Throwable $e) {
                     $this->logger->warning($e->getMessage());
+
                     continue;
                 }
 

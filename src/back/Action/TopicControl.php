@@ -58,6 +58,7 @@ final class TopicControl
             $clientControlPeers = PeerCalc::getClientLimit($torrentClientData);
             if ($clientControlPeers === -1) {
                 $this->logger->notice("Для клиента $clientTag отключена регулировка.");
+
                 continue;
             }
 
@@ -94,6 +95,7 @@ final class TopicControl
                 // Пропускаем исключённые из регулировки подразделы.
                 if ($subControlPeers === -1) {
                     $this->excludedForums[] = $group;
+
                     continue;
                 }
 
@@ -306,6 +308,7 @@ final class TopicControl
         $this->logger->info('Получаем раздачи торрент-клиента {tag}.', ['tag' => $clientTag]);
 
         Timers::start("get_client_$clientTag");
+
         try {
             $torrents = $client->getTorrents(['simple' => true]);
         } catch (Throwable $e) {

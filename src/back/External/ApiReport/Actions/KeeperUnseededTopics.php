@@ -16,6 +16,7 @@ trait KeeperUnseededTopics
     public function getKeeperUnseededTopics(int $forumId): KeeperUnseededResponse|ApiError
     {
         $dataProcessor = self::getStaticUnseededProcessor($this->logger);
+
         try {
             $params = [
                 'subforum_id' => $forumId,
