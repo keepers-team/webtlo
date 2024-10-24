@@ -7,19 +7,22 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
-use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Tables\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-/** Обновить список подразделов форума. */
+/**
+ * Обновить список подразделов форума.
+ */
 final class ForumTree
 {
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ApiClient       $apiClient,
-        private readonly UpdateTime      $updateTime
+        private readonly CloneFactory    $cloneFactory,
+        private readonly UpdateTime      $updateTime,
     ) {
     }
 
@@ -28,8 +31,8 @@ final class ForumTree
         Timers::start('forum_tree');
 
         $this->logger->info('Начато обновление дерева подразделов...');
-        // Проверяем время последнего обновления. TODO переделать коннект к БД.
-        if (!$this->updateTime->checkUpdateAvailable(UpdateMark::FORUM_TREE->value)) {
+        // Проверяем время последнего обновления.
+        if (!$this->updateTime->checkUpdateAvailable(marker: UpdateMark::FORUM_TREE)) {
             $this->logger->notice('Обновление дерева подразделов не требуется.');
 
             return;
@@ -42,13 +45,13 @@ final class ForumTree
         }
 
         // Параметры таблиц.
-        $tabForums = CloneTable::create('Forums', ['id', 'name', 'quantity', 'size']);
+        $tabForums = $this->cloneFactory->makeClone(table: 'Forums', keys: ['id', 'name', 'quantity', 'size']);
 
-        // Преобразуем объекты в простой массий. TODO переделать.
-        $forums = array_map(fn($el) => array_combine($tabForums->keys, (array)$el), $response->forums);
+        // Преобразуем объекты в простой массив. TODO переделать.
+        $forums = array_map(fn($el) => array_combine($tabForums->getTableKeys(), (array)$el), $response->forums);
 
         // Записываем в базу данных.
-        $tabForums->cloneFillChunk($forums);
+        $tabForums->cloneFillChunk(dataSet: $forums);
 
         // Переносим данные из временной таблицы в основную.
         $tabForums->moveToOrigin();
@@ -57,14 +60,11 @@ final class ForumTree
         $tabForums->clearUnusedRows();
 
         // Записываем время обновления.
-        $this->updateTime->setMarkerTime(UpdateMark::FORUM_TREE->value, $response->updateTime);
+        $this->updateTime->setMarkerTime(marker: UpdateMark::FORUM_TREE, updateTime: $response->updateTime);
 
-        $this->logger->info(
-            sprintf(
-                'Обновление дерева подразделов завершено за %s, обработано подразделов: %d шт.',
-                Timers::getExecTime('forum_tree'),
-                count($forums)
-            )
-        );
+        $this->logger->info('Обновление дерева подразделов завершено за {sec}, обработано подразделов: {count} шт.', [
+            'sec'   => Timers::getExecTime('forum_tree'),
+            'count' => count($forums),
+        ]);
     }
 }

@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
-use KeepersTeam\Webtlo\Module\CloneTable;
+use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Tables\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -26,7 +26,8 @@ final class TopicsDetails
     public function __construct(
         private readonly ApiClient       $apiClient,
         private readonly Topics          $topics,
-        private readonly LoggerInterface $logger
+        private readonly CloneFactory    $cloneFactory,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -47,7 +48,7 @@ final class TopicsDetails
 
     private function fillDetails(int $beforeUpdate, int $perRun): void
     {
-        $tab = CloneTable::create('Topics', self::TOPIC_KEYS);
+        $tab = $this->cloneFactory->makeClone(table: 'Topics', keys: self::TOPIC_KEYS, prefix: 'Details');
 
         $runs = (int)ceil($beforeUpdate / $perRun);
 
@@ -67,7 +68,7 @@ final class TopicsDetails
             if (count($topics)) {
                 $details = $this->getDetails($topics);
                 if (count($details)) {
-                    $tab->cloneFillChunk($details);
+                    $tab->cloneFillChunk(dataSet: $details);
                 }
                 if ($tab->cloneCount()) {
                     $tab->moveToOrigin();
