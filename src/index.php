@@ -1,7 +1,7 @@
 <?php
 
 use KeepersTeam\Webtlo\AppContainer;
-use KeepersTeam\Webtlo\Legacy\Db as DbLegacy;
+use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\WebTLO;
 
@@ -13,7 +13,7 @@ try {
     include_once dirname(__FILE__) . '/vendor/autoload.php';
 
     AppContainer::create();
-    DbLegacy::create();
+    DB::create();
 } catch (Exception $e) {
     $initError = $e->getMessage();
 }

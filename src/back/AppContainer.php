@@ -53,7 +53,10 @@ final class AppContainer
         $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
 
         // Подключаем файл конфига, 'config.ini' по-умолчанию.
-        $container->add(Settings::class, fn() => new Settings(ini: new TIniFileEx()));
+        $container->add(Settings::class, fn() => new Settings(
+            ini: new TIniFileEx(),
+            db : $container->get(DB::class),
+        ));
         $container->add('config', fn() => $container->get(Settings::class)->populate());
 
         // Добавляем интерфейс для записи логов.
@@ -140,6 +143,11 @@ final class AppContainer
     public function getLegacyConfig(): array
     {
         return $this->get('config');
+    }
+
+    public function getDataBase(): DB
+    {
+        return $this->get(DB::class);
     }
 
     public function getForumClient(): ForumClient
