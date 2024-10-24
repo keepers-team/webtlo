@@ -8,9 +8,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleRetry\GuzzleRetryMiddleware;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Http\Message\RequestInterface;
@@ -26,8 +26,8 @@ use Throwable;
  */
 final class Transmission implements ClientInterface
 {
-    use Traits\AuthClient;
     use Traits\AllowedFunctions;
+    use Traits\AuthClient;
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
 

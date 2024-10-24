@@ -9,9 +9,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Tables\Topics as TableTopics;
 use KeepersTeam\Webtlo\Tables\Torrents as TableTorrents;
@@ -28,8 +28,8 @@ use Throwable;
  */
 final class Utorrent implements ClientInterface
 {
-    use Traits\AuthClient;
     use Traits\AllowedFunctions;
+    use Traits\AuthClient;
     use Traits\CheckDomain;
     use Traits\RetryMiddleware;
     use Traits\TopicIdSearch;
