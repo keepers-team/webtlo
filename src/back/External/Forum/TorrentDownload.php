@@ -44,8 +44,8 @@ trait TorrentDownload
 
         if (self::isValidMime(logger: $this->logger, response: $response, expectedMime: self::$torrentMime)) {
             return $response->getBody();
-        } else {
-            return null;
         }
+
+        return null;
     }
 }

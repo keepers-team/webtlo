@@ -82,8 +82,8 @@ trait Processor
             $logger->warning('Invalid result', ['json' => $rawResponse]);
 
             return ApiError::fromLegacyError(legacyError: $result['error'] ?? null);
-        } else {
-            return $result;
         }
+
+        return $result;
     }
 }

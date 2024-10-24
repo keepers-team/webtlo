@@ -64,9 +64,9 @@ final class FilterApply
 
         if (SeedComparison::NO_MORE === $range->comparisonType) {
             return $topicSeeds <= $range->value;
-        } else {
-            return $topicSeeds >= $range->value;
         }
+
+        return $topicSeeds >= $range->value;
     }
 
     /** Количество дней обновления сидов "полное". */

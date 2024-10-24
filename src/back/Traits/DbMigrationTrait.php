@@ -22,7 +22,9 @@ trait DbMigrationTrait
         if ($currentVersion === self::DATABASE_VERSION) {
             // БД актуальна, делать ничего не нужно.
             return;
-        } elseif ($currentVersion > self::DATABASE_VERSION) {
+        }
+
+        if ($currentVersion > self::DATABASE_VERSION) {
             // Странный случай, вероятно, откат версии ТЛО.
             throw new RuntimeException(
                 sprintf(
@@ -30,7 +32,9 @@ trait DbMigrationTrait
                     $currentVersion
                 )
             );
-        } elseif ($currentVersion === 0) {
+        }
+
+        if (0 === $currentVersion) {
             // Создание БД с нуля
             $this->initTables();
         } elseif ($currentVersion > 0) {
@@ -73,9 +77,8 @@ trait DbMigrationTrait
         // где 0000 - новая версия БД, после применения миграции.
         foreach ($this->getFiles($dir) as $file) {
             [$pragmaVersion] = explode('-', $file);
-            $pragmaVersion = (int) $pragmaVersion;
 
-            if ($currentVersion < $pragmaVersion) {
+            if ($currentVersion < (int) $pragmaVersion) {
                 $query = file_get_contents($dir . DIRECTORY_SEPARATOR . $file);
                 if (empty($query)) {
                     throw new RuntimeException(sprintf('Пустой файл миграции %s', $file));
