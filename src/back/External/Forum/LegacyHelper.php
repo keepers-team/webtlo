@@ -28,7 +28,6 @@ trait LegacyHelper
      * @param ForumCredentials $forumAuth Учетные данные форума
      * @param LoggerInterface  $logger    Интерфейс для записи журнала
      * @param Proxy            $proxy     Прокси
-     * @return ForumClient
      */
     public static function createFromLegacy(
         Settings         $settings,
@@ -71,7 +70,6 @@ trait LegacyHelper
      * @param CookieJar        $cookieJar   CookieJar для управления cookies
      * @param ?Proxy           $proxy       Прокси
      * @param Timeout          $timeout     Таймауты
-     * @return Client
      */
     private static function createClient(
         LoggerInterface  $logger,

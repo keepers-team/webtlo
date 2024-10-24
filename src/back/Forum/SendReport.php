@@ -25,10 +25,7 @@ final class SendReport
     }
 
     /**
-     * @param int                    $forumId
      * @param array<string, mixed>[] $topicsToReport
-     * @param DateTimeInterface      $reportDate
-     * @param bool                   $reportRewrite
      * @return array<string, mixed>
      */
     public function sendForumTopics(
@@ -90,7 +87,6 @@ final class SendReport
 
     /**
      * @param int[] $forumIds
-     * @param bool  $unsetOtherForums
      * @return array<string, mixed>
      */
     public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array
@@ -125,7 +121,6 @@ final class SendReport
 
     /**
      * @param array<string, mixed> $apiCustom
-     * @return void
      */
     public function sendCustomReport(array $apiCustom): void
     {

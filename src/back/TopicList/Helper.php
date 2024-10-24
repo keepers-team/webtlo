@@ -12,8 +12,6 @@ final class Helper
      * Собрать наименование клиента.
      *
      * @param array<string, mixed> $cfg
-     * @param ?int                 $clientID
-     * @return string
      */
     public static function getClientName(array $cfg, ?int $clientID): string
     {
@@ -46,8 +44,6 @@ final class Helper
      * Хранители раздачи в виде списка.
      *
      * @param array<string, mixed>[] $topicKeepers
-     * @param int                    $user_id
-     * @return string
      */
     public static function getFormattedKeepersList(array $topicKeepers, int $user_id): string
     {
@@ -90,7 +86,6 @@ final class Helper
      *
      * @param array<string, mixed>[] $cfgClients
      * @param array<string, mixed>[] $listTorrentClientsIDs
-     * @return string
      */
     public static function getFormattedClientsList(array $cfgClients, array $listTorrentClientsIDs): string
     {

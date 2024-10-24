@@ -342,9 +342,7 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * @param string               $url
      * @param array<string, mixed> $params
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $url, array $params = []): ResponseInterface
@@ -353,7 +351,6 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * @param string               $url
      * @param array<string, mixed> $params
      * @return array<int|string, mixed>
      */
@@ -371,9 +368,7 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * @param string               $url
      * @param array<string, mixed> $params
-     * @return bool
      */
     private function sendRequest(string $url, array $params = []): bool
     {
@@ -523,7 +518,6 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * @param string $torrentHash
      * @return array{}|array{url: string, status: int, message: string}[]
      */
     private function getTrackers(string $torrentHash): array
@@ -563,7 +557,6 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * @param string $torrentHash
      * @return array<string, mixed>
      */
     private function getProperties(string $torrentHash): array

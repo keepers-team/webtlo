@@ -196,15 +196,6 @@ final class DefaultTopics implements ListInterface
      * Создать временные таблицы, сформировать запрос поиска раздач, выполнить запрос к БД, обернув в транзакцию.
      *
      * @param array<string, mixed> $filter
-     * @param Keepers              $filterKeepers
-     * @param AverageSeed          $filterAverageSeed
-     * @param KeysObject           $forum
-     * @param KeysObject           $status
-     * @param KeysObject           $priority
-     * @param DateTimeImmutable    $dateRelease
-     * @param bool                 $excludeSelfKeep
-     * @param Sort                 $sort
-     * @return Generator
      */
     private function queryTopics(
         array             $filter,
@@ -336,10 +327,6 @@ final class DefaultTopics implements ListInterface
 
     /**
      * @param array<string, mixed> $filter
-     * @param Keepers              $filterKeepers
-     * @param AverageSeed          $averageSeed
-     * @param Sort                 $sort
-     * @return string
      */
     private function getStatement(
         array       $filter,
@@ -443,7 +430,6 @@ final class DefaultTopics implements ListInterface
     }
 
     /**
-     * @param int $topicId
      * @return array<string, mixed>[]
      */
     private function getTopicKeepers(int $topicId): array
@@ -455,7 +441,6 @@ final class DefaultTopics implements ListInterface
      * Исключить себя из списка хранителей раздачи.
      *
      * @param array<string, mixed>[] $topicKeepers
-     * @param int                    $userId
      * @return array<string, mixed>[]
      */
     private function excludeUserFromKeepers(array $topicKeepers, int $userId): array

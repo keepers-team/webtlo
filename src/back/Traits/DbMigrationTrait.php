@@ -95,7 +95,6 @@ trait DbMigrationTrait
     /**
      * Получить список файлов миграции.
      *
-     * @param string $sqlPath
      * @return string[]
      */
     private function getFiles(string $sqlPath): array

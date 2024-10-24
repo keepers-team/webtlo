@@ -296,7 +296,6 @@ final class Subsections
 
     /**
      * @param int[] $updatedSubsections
-     * @return void
      */
     private function writeTopicsToOrigin(array $updatedSubsections): void
     {
@@ -315,7 +314,6 @@ final class Subsections
 
     /**
      * @param int[] $updatedSubsections
-     * @return void
      */
     private function clearUnusedTopics(array $updatedSubsections): void
     {

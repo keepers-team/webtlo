@@ -40,7 +40,6 @@ final class ClientFactory
      * Коннект с клиентом, из параметров клиента в конфиге.
      *
      * @param array<string, mixed> $options
-     * @return ClientInterface
      */
     public function fromConfigProperties(array $options): ClientInterface
     {
@@ -59,7 +58,6 @@ final class ClientFactory
      * Коннект с клиентом, из параметров клиента из UI.
      *
      * @param array<string, mixed> $options
-     * @return ClientInterface
      */
     public function fromFrontProperties(array $options): ClientInterface
     {

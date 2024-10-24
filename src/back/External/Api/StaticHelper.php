@@ -61,9 +61,6 @@ trait StaticHelper
 
     /**
      * @param array<string, mixed> $cfg
-     * @param LoggerInterface      $logger
-     * @param Proxy                $proxy
-     * @return Client
      */
     public static function apiClientFromLegacy(array $cfg, LoggerInterface $logger, Proxy $proxy): Client
     {

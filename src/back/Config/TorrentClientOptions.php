@@ -54,7 +54,6 @@ final class TorrentClientOptions
      * Параметры клиента из данных в конфиге.
      *
      * @param array<string, mixed> $options
-     * @return TorrentClientOptions
      */
     public static function fromConfigProperties(array $options): self
     {
@@ -88,7 +87,6 @@ final class TorrentClientOptions
      * Параметры клиента из данных в конфиге.
      *
      * @param array<string, mixed> $options
-     * @return TorrentClientOptions
      */
     public static function fromFrontProperties(array $options): self
     {

@@ -15,8 +15,6 @@ trait Processor
     use Validation;
 
     /**
-     * @param LoggerInterface   $logger
-     * @param ResponseInterface $response
      * @return array<int|string, mixed>|ApiError
      */
     protected static function decodeResponse(LoggerInterface $logger, ResponseInterface $response): array|ApiError

@@ -11,7 +11,6 @@ trait ExcludedKeepersTrait
 
     /**
      * @param int[] $excluded
-     * @return void
      */
     public function setExcludedKeepers(array $excluded): void
     {

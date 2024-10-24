@@ -22,7 +22,6 @@ final class Credentials
      * Проверим наличие нужных данных о пользователе.
      *
      * @param array<string, mixed> $cfg
-     * @return Credentials
      * @throws Exception
      */
     public static function fromLegacy(array $cfg): self

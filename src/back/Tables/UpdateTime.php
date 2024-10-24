@@ -81,7 +81,6 @@ final class UpdateTime
 
     /**
      * @param int[] $markers
-     * @return MarkersUpdate
      */
     public function getMarkersObject(array $markers): MarkersUpdate
     {
@@ -100,8 +99,6 @@ final class UpdateTime
      * Проверить наличие всех нужных маркеров обновления и их актуальность.
      *
      * @param int[]           $markers
-     * @param LoggerInterface $logger
-     * @return ?DateTimeImmutable
      */
     public function checkReportsSendAvailable(array $markers, LoggerInterface $logger): ?DateTimeImmutable
     {

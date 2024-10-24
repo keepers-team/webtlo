@@ -48,7 +48,6 @@ trait KeepersList
 
     /**
      * @param array<string, mixed> $result
-     * @return KeepersResponse
      */
     private static function parseStaticKeepersList(array $result): KeepersResponse
     {

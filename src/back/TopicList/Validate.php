@@ -20,7 +20,6 @@ final class Validate
 {
     /**
      * @param array<string, mixed> $filter
-     * @return Sort
      * @throws ValidationException
      */
     public static function sortFilter(array $filter): Sort
@@ -133,7 +132,6 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
-     * @param int                  $forumId
      * @return int[]
      * @throws ValidationException
      */
@@ -155,7 +153,6 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
-     * @return DateTimeImmutable|null
      */
     public static function getDateRelease(array $filter): ?DateTimeImmutable
     {
@@ -164,7 +161,6 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
-     * @return DateTimeImmutable
      * @throws ValidationException
      */
     public static function checkDateRelease(array $filter): DateTimeImmutable
@@ -185,7 +181,6 @@ final class Validate
      *
      * @param array<string, mixed>      $filter
      * @param array<string, int|string> $cfg
-     * @return AverageSeed
      * @throws ValidationException
      */
     public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
@@ -241,7 +236,6 @@ final class Validate
      * Собрать параметры для фильтра по количеству сидов.
      *
      * @param array<string, mixed> $filter
-     * @return Seed
      */
     public static function prepareSeedFilter(array $filter): Seed
     {
@@ -264,7 +258,6 @@ final class Validate
      * Собрать параметры фильтрации по типам хранителей.
      *
      * @param array<string, mixed> $filter
-     * @return Keepers
      * @throws ValidationException
      */
     public static function prepareKeepersFilter(array $filter): Keepers
@@ -301,7 +294,6 @@ final class Validate
     /**
      * Фильтр раздач по статусу хранения.
      *
-     * @param KeptStatus $keptStatus
      * @return string[]
      */
     public static function getKeptStatusFilter(KeptStatus $keptStatus): array
@@ -335,7 +327,6 @@ final class Validate
      * Фильтр по текстовой строке.
      *
      * @param array<string, mixed> $filter
-     * @return Strings
      */
     public static function prepareFilterStrings(array $filter): Strings
     {

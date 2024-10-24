@@ -20,7 +20,6 @@ trait Validation
      * @param LoggerInterface   $logger       Logger
      * @param ResponseInterface $response     Received response
      * @param string            $expectedMime Expected MIME
-     * @return bool
      */
     protected static function isValidMime(
         LoggerInterface   $logger,

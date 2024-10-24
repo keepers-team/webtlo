@@ -40,7 +40,6 @@ final class TopicsInsert
 
     /**
      * @param (int|string)[] $topic
-     * @return void
      */
     public function addTopic(array $topic): void
     {

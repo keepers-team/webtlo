@@ -51,7 +51,6 @@ final class Proxy
 
     /**
      * @param array<string, mixed> $cfg
-     * @return self
      */
     public static function fromLegacy(array $cfg): self
     {

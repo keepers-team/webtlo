@@ -16,9 +16,7 @@ trait DbQueryTrait
     /**
      * Подготовить запрос и выполнить с параметрами.
      *
-     * @param string         $sql
      * @param (int|string)[] $param
-     * @return PDOStatement
      */
     public function executeStatement(string $sql, array $param = []): PDOStatement
     {
@@ -43,9 +41,7 @@ trait DbQueryTrait
     /**
      * Запрос набора строк.
      *
-     * @param string         $sql
      * @param (int|string)[] $param
-     * @param int            $pdo
      * @return array<int, mixed>
      */
     public function query(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): array
@@ -58,7 +54,6 @@ trait DbQueryTrait
     /**
      * Запрос одной строки.
      *
-     * @param string         $sql
      * @param (int|string)[] $param
      * @return array<string, mixed>
      */
@@ -72,7 +67,6 @@ trait DbQueryTrait
     /**
      * Запрос одной ячейки.
      *
-     * @param string         $sql
      * @param (int|string)[] $param
      * @return null|int|string
      */
@@ -86,9 +80,7 @@ trait DbQueryTrait
     /**
      * Запрос count счётчика.
      *
-     * @param string         $sql
      * @param (int|string)[] $param
-     * @return int
      */
     public function queryCount(string $sql, array $param = []): int
     {

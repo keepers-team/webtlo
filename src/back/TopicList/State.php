@@ -30,9 +30,6 @@ final class State
 
     /**
      * @param array<string, mixed> $topicData
-     * @param int                  $daysRequire
-     * @param int                  $daysUpdate
-     * @return self
      */
     public static function parseFromTorrent(array $topicData, int $daysRequire = 1, int $daysUpdate = 1): self
     {
@@ -45,7 +42,6 @@ final class State
 
     /**
      * @param array<string, mixed> $topicData
-     * @return self
      */
     public static function clientOnly(array $topicData): self
     {
@@ -69,7 +65,6 @@ final class State
      * Определить состояние раздачи в клиенте.
      *
      * @param ?array<string, mixed> $topic
-     * @return string
      */
     public static function getClientState(?array $topic = null): string
     {
@@ -104,7 +99,6 @@ final class State
      * Определить цвет статуса раздачи в клиенте.
      *
      * @param ?array<string, mixed> $topic
-     * @return string
      */
     public static function getClientColor(?array $topic = null): string
     {

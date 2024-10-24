@@ -36,9 +36,7 @@ final class KeepersLists
     ) {}
 
     /**
-     * @param KeeperData  $keeper
      * @param KeptTopic[] $topics
-     * @return void
      */
     public function addKeptTopics(KeeperData $keeper, array $topics): void
     {

@@ -229,10 +229,7 @@ final class Utorrent implements ClientInterface
     }
 
     /**
-     * @param string               $action
      * @param array<string, mixed> $params
-     * @param string               $method
-     * @return ResponseInterface
      * @throws GuzzleException
      */
     private function request(string $action, array $params = [], string $method = 'action'): ResponseInterface
@@ -252,9 +249,7 @@ final class Utorrent implements ClientInterface
     }
 
     /**
-     * @param string               $action
      * @param array<string, mixed> $params
-     * @param string               $method
      * @return array<string, mixed>
      */
     private function makeRequest(string $action, array $params = [], string $method = 'action'): array
@@ -271,10 +266,7 @@ final class Utorrent implements ClientInterface
     }
 
     /**
-     * @param string               $action
      * @param array<string, mixed> $params
-     * @param string               $method
-     * @return bool
      */
     private function sendRequest(string $action, array $params = [], string $method = 'action'): bool
     {
@@ -292,10 +284,7 @@ final class Utorrent implements ClientInterface
     /**
      * Кодируем выполняемое действие + токен авторизации.
      *
-     * @param string               $method
-     * @param string               $action
      * @param array<string, mixed> $params
-     * @return string
      */
     private function buildHttpQuery(string $method, string $action, array $params = []): string
     {
@@ -378,9 +367,6 @@ final class Utorrent implements ClientInterface
      * Изменение параметров торрента.
      *
      * @param string[] $hashes
-     * @param string   $property
-     * @param string   $value
-     * @return bool
      */
     private function setProperties(array $hashes, string $property, string $value): bool
     {

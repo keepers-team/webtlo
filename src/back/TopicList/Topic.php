@@ -24,8 +24,6 @@ final class Topic
 
     /**
      * @param array<string, int|string> $topicData
-     * @param ?State                    $state
-     * @return self
      */
     public static function fromTopicData(array $topicData, ?State $state = null): self
     {

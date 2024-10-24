@@ -72,7 +72,6 @@ trait ForumTree
     /**
      * @param array<string, mixed> $trees
      * @param array<string, mixed> $sizes
-     * @return ForumsResponse
      */
     private static function parseStaticForumTree(array $trees, array $sizes): ForumsResponse
     {
