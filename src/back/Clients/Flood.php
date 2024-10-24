@@ -19,7 +19,8 @@ use Throwable;
 
 /**
  * Class Flood
- * Supported by flood by jesec API
+ * Supported by flood by jesec API.
+ *
  * https://flood-api.netlify.app
  */
 final class Flood implements ClientInterface
@@ -126,6 +127,7 @@ final class Flood implements ClientInterface
 
     /**
      * Присвоение пустой метки (удаление метки) - не работает для qBittorrent.
+     *
      * https://github.com/jesec/flood/issues/605
      */
     public function setLabel(array $torrentHashes, string $label = ''): bool
@@ -223,6 +225,7 @@ final class Flood implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @throws GuzzleException
      */
     private function request(string $uri, string $method = 'GET', array $params = []): ResponseInterface
@@ -237,6 +240,7 @@ final class Flood implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @return array<string, mixed>
      */
     private function makeRequest(string $uri, string $method = 'GET', array $params = []): array
@@ -302,6 +306,7 @@ final class Flood implements ClientInterface
      * Проверить наличие ошибки в статусе торрента.
      *
      * @param array<string, mixed> $torrent
+     *
      * @return array{int, string}
      */
     private static function checkTorrentError(array $torrent): array

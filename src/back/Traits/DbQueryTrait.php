@@ -42,6 +42,7 @@ trait DbQueryTrait
      * Запрос набора строк.
      *
      * @param (int|string)[] $param
+     *
      * @return array<int, mixed>
      */
     public function query(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): array
@@ -55,6 +56,7 @@ trait DbQueryTrait
      * Запрос одной строки.
      *
      * @param (int|string)[] $param
+     *
      * @return array<string, mixed>
      */
     public function queryRow(string $sql, array $param = []): array
@@ -68,6 +70,7 @@ trait DbQueryTrait
      * Запрос одной ячейки.
      *
      * @param (int|string)[] $param
+     *
      * @return null|int|string
      */
     public function queryColumn(string $sql, array $param = []): mixed

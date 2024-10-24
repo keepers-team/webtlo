@@ -63,6 +63,7 @@ final class Output
      * Блок выбираемых к отображению полей.
      *
      * @param ?string[] $filter
+     *
      * @return array<string, mixed>
      */
     private function getSelectedStrings(Topic $topic, ?array $filter = null): array

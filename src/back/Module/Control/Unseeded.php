@@ -20,11 +20,11 @@ final class Unseeded
     private ?bool $moduleEnable = null;
 
     /**
-     * @var int Счётчик запускаемых раздач.
+     * @var int счётчик запускаемых раздач
      */
     private int $startCounter = 0;
     /**
-     * @var int Общее количество не сидируемых раздач, в проверенных хранимых подразделах.
+     * @var int общее количество не сидируемых раздач, в проверенных хранимых подразделах
      */
     private int $totalCount = 0;
 

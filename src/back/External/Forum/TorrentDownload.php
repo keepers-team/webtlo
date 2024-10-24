@@ -18,9 +18,10 @@ trait TorrentDownload
     }
 
     /**
-     * Download torrent file
+     * Download torrent file.
      *
      * @param string $infoHash Info hash for torrent
+     *
      * @return ?StreamInterface Stream with torrent body
      */
     public function downloadTorrent(string $infoHash, bool $addRetracker = false): ?StreamInterface

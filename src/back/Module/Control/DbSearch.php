@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 final class DbSearch
 {
     /**
-     * Максимальное количество переменных для SQLite < 3.32
+     * Максимальное количество переменных для SQLite < 3.32.
      *
      * https://www.sqlite.org/limits.html
      */

@@ -372,6 +372,7 @@ final class Settings
 
     /**
      * @param array<int|string, mixed>|array<never> $torrentClients
+     *
      * @return int[]
      */
     private function setTorrentClients(array $torrentClients = []): array
@@ -425,6 +426,7 @@ final class Settings
 
     /**
      * @param array<int|string, mixed>|array<never> $forums
+     *
      * @return int[]
      */
     private function setSubsections(array $forums = []): array
@@ -686,6 +688,7 @@ final class Settings
      * Пробуем найти наименования подразделов в БД.
      *
      * @param int[] $subsections
+     *
      * @return string[]|array<never>
      */
     private function getSubsectionsTitles(array $subsections): array

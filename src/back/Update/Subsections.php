@@ -158,8 +158,8 @@ final class Subsections
     /**
      * Обработать раздачи подраздела.
      *
-     * @param ForumTopic[] $topics       Раздачи подраздела.
-     * @param callable     $avgProcessor Расчёт средних сидов.
+     * @param ForumTopic[] $topics       раздачи подраздела
+     * @param callable     $avgProcessor расчёт средних сидов
      */
     private function processSubsectionTopics(array $topics, callable $avgProcessor): void
     {
@@ -250,6 +250,7 @@ final class Subsections
 
     /**
      * @param ForumTopic[] $topics
+     *
      * @return array<int, array<string, int|string>>
      */
     private function getPreviousTopics(array $topics): array

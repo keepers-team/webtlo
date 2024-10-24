@@ -21,7 +21,8 @@ use Throwable;
 
 /**
  * Class Transmission
- * Supported by Transmission 2.80 and later
+ * Supported by Transmission 2.80 and later.
+ *
  * https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md
  */
 final class Transmission implements ClientInterface
@@ -278,6 +279,7 @@ final class Transmission implements ClientInterface
 
     /**
      * @param array<string, mixed> $options
+     *
      * @throws GuzzleException
      */
     private function request(string $method, array $options = []): ResponseInterface
@@ -297,6 +299,7 @@ final class Transmission implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @return array<string, mixed>
      */
     private function makeRequest(string $method, array $params = []): array

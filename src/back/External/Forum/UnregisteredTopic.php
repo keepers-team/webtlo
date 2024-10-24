@@ -17,6 +17,7 @@ trait UnregisteredTopic
      * Поиск сведений о раздаче в её теме.
      *
      * @param int $topicId ID темы
+     *
      * @return ?array<string, string> Ассоциативный массив сведений о раздаче
      */
     public function getUnregisteredTopic(int $topicId): ?array
@@ -134,6 +135,7 @@ trait UnregisteredTopic
      *
      * @param int  $topicId ID темы
      * @param ?int $offset  Смещение для получения последней страницы темы
+     *
      * @return ?string Страница темы в виде HTML
      */
     private function fetchTopicPage(int $topicId, ?int $offset = null): ?string

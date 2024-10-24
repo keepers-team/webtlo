@@ -441,6 +441,7 @@ final class DefaultTopics implements ListInterface
      * Исключить себя из списка хранителей раздачи.
      *
      * @param array<string, mixed>[] $topicKeepers
+     *
      * @return array<string, mixed>[]
      */
     private function excludeUserFromKeepers(array $topicKeepers, int $userId): array

@@ -55,7 +55,8 @@ final class ApiReportClient
     }
 
     /**
-     * @param int[]             $topicIds
+     * @param int[] $topicIds
+     *
      * @return ?array<string, int>
      */
     public function reportKeptReleases(
@@ -145,9 +146,10 @@ final class ApiReportClient
     }
 
     /**
-     * Задать статус хранения подразделов, и пометить остальные как более не хранимые
+     * Задать статус хранения подразделов, и пометить остальные как более не хранимые.
      *
-     * @param int[]  $forumIds
+     * @param int[] $forumIds
+     *
      * @return array<string, mixed>
      */
     public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): array
@@ -188,6 +190,7 @@ final class ApiReportClient
 
     /**
      * @param string[] $columns
+     *
      * @return ?array<string, mixed>
      */
     public function getForumReports(int $forumId, array $columns = []): ?array

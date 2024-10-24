@@ -33,7 +33,8 @@ trait SendMessage
      *
      * @param int      $topicId Идентификатор темы
      * @param string   $message Текст сообщения
-     * @param int|null $postId  Идентификатор сообщения для редактирования (null для нового сообщения)
+     * @param null|int $postId  Идентификатор сообщения для редактирования (null для нового сообщения)
+     *
      * @return ?int Идентификатор отправленного сообщения, если отправка успешна, иначе null
      */
     public function sendMessage(int $topicId, string $message, ?int $postId = null): ?int
@@ -129,6 +130,7 @@ trait SendMessage
      * Извлечение идентификатора сообщения из ответа сервера.
      *
      * @param string $page HTML содержимое страницы
+     *
      * @return ?int Идентификатор сообщения, если найден, иначе null
      */
     private static function parseTopicIdFromPostResponse(string $page): ?int
@@ -162,6 +164,7 @@ trait SendMessage
      * Извлечение ошибки из ответа сервера при неудачной попытке отправки сообщения.
      *
      * @param string $page HTML содержимое страницы
+     *
      * @return string Текст ошибки
      */
     private static function parseTopicEditErrorFromPostResponse(string $page): string

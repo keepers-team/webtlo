@@ -63,8 +63,9 @@ final class KeeperUnseededResponse
     /**
      * Рассчитывает дату отсечки на основе количества дней.
      *
-     * @param int $days Количество дней для отсечки.
-     * @return DateTimeImmutable Дата отсечки.
+     * @param int $days количество дней для отсечки
+     *
+     * @return DateTimeImmutable дата отсечки
      */
     private static function calculateCutoffDate(int $days): DateTimeImmutable
     {

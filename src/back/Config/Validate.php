@@ -12,6 +12,7 @@ final class Validate
      * Проверим наличие нужных данных о пользователе.
      *
      * @param array<string, mixed> $cfg
+     *
      * @throws Exception
      */
     public static function checkUser(array $cfg): Credentials

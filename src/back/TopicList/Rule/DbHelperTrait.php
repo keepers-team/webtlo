@@ -30,6 +30,7 @@ trait DbHelperTrait
 
     /**
      * @param (int|string)[] $params
+     *
      * @return array<int, mixed>[]|array<never>
      */
     public function queryStatement(string $statement, array $params = []): array
@@ -43,6 +44,7 @@ trait DbHelperTrait
 
     /**
      * @param (int|string)[] $params
+     *
      * @return array<int, mixed>|array<never>
      */
     public function queryStatementRow(string $statement, array $params = []): array
@@ -56,6 +58,7 @@ trait DbHelperTrait
 
     /**
      * @param (int|string)[] $params
+     *
      * @return array<int|string, mixed>[]|array<never>
      */
     public function queryStatementGroup(string $statement, array $params = []): array

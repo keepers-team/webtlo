@@ -90,6 +90,7 @@ final class ForumClient
      *
      * @param string               $url    URL для запроса
      * @param array<string, mixed> $params Параметры запроса
+     *
      * @return ?string Результат запроса
      */
     public function get(string $url, array $params = []): ?string
@@ -102,6 +103,7 @@ final class ForumClient
      *
      * @param string               $url    URL для запроса
      * @param array<string, mixed> $params Параметры запроса
+     *
      * @return ?string Результат запроса
      */
     public function post(string $url, array $params = []): ?string
@@ -116,6 +118,7 @@ final class ForumClient
      * @param string               $url      URL для запроса
      * @param array<string, mixed> $params   Параметры запроса
      * @param bool                 $validate Нужно ли валидировать ответ
+     *
      * @return ?string Результат запроса
      */
     private function request(string $method, string $url, array $params = [], bool $validate = true): ?string

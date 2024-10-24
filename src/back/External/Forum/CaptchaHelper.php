@@ -17,8 +17,9 @@ trait CaptchaHelper
     /**
      * Получение изображения CAPTCHA.
      *
-     * @param string $imageLink Ссылка на изображение CAPTCHA.
-     * @return ?string Изображение CAPTCHA в формате base64 или null в случае ошибки.
+     * @param string $imageLink ссылка на изображение CAPTCHA
+     *
+     * @return ?string изображение CAPTCHA в формате base64 или null в случае ошибки
      */
     public function fetchCaptchaImage(string $imageLink): ?string
     {

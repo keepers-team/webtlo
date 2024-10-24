@@ -22,7 +22,7 @@ trait TopicsDetails
     /**
      * Получить сведения о раздачах по списку ид/хешей.
      *
-     * @param (int|string)[]  $topics
+     * @param (int|string)[] $topics
      */
     public function getTopicsDetails(
         array           $topics,
@@ -38,6 +38,7 @@ trait TopicsDetails
 
         /**
          * @param array[][] $optionsChunks
+         *
          * @return Generator
          */
         $requests = function(array $optionsChunks) use (&$client) {
@@ -85,7 +86,7 @@ trait TopicsDetails
     }
 
     /**
-     * @param TopicDetails[]  $knownTopics
+     * @param TopicDetails[] $knownTopics
      */
     private static function getTopicDetailsProcessor(
         LoggerInterface $logger,

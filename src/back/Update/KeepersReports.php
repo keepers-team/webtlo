@@ -31,7 +31,8 @@ final class KeepersReports
 
     /**
      * @param array<string, mixed>[] $config
-     * @return bool - true, если обновление выполнено успешно.
+     *
+     * @return bool - true, если обновление выполнено успешно
      */
     public function updateReports(array $config): bool
     {

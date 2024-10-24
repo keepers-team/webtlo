@@ -13,6 +13,7 @@ final class Helper
      * Сортировка массива по заданному ключу, с учётом кириллицы.
      *
      * @param array<int|string, mixed> $input
+     *
      * @return array<int|string, mixed>
      */
     public static function natsortField(array $input, string $field, int $direct = 1): array
@@ -163,7 +164,7 @@ final class Helper
     }
 
     /**
-     * Get normalized path, like realpath() for non-existing path or file
+     * Get normalized path, like realpath() for non-existing path or file.
      */
     public static function normalizePath(string $path): string
     {
@@ -205,6 +206,7 @@ final class Helper
      * Разбиение строки по символу с приведением значений к int.
      *
      * @param non-empty-string $separator
+     *
      * @return int[]|array{}
      */
     public static function explodeInt(string $string, string $separator = ','): array
@@ -216,6 +218,7 @@ final class Helper
 
     /**
      * @param array<int|string, mixed> $array
+     *
      * @return array<int, mixed>
      */
     public static function convertKeysToInt(array $array): array
@@ -227,6 +230,7 @@ final class Helper
 
     /**
      * @param array<int|string, mixed> $array
+     *
      * @return array<string, mixed>
      */
     public static function convertKeysToString(array $array): array

@@ -12,9 +12,8 @@ trait Authentication
     /**
      * Проверка доступности форума.
      *
-     * @return bool Статус доступности форума.
+     * @return bool статус доступности форума
      */
-
     public function checkConnection(): bool
     {
         if ($this->cookie->count() > 0) {
@@ -46,6 +45,7 @@ trait Authentication
      * Авторизация по кнопке из настроек.
      *
      * @param ?array<string, string> $captcha Заполненные коды CAPTCHA
+     *
      * @return ?Captcha Объект CAPTCHA или null в случае успеха авторизации
      */
     public function manualLogin(?array $captcha): ?Captcha
@@ -108,7 +108,7 @@ trait Authentication
     /**
      * Автоматическая авторизация на форуме, используя существующие ключи.
      *
-     * @return bool Статус авторизации.
+     * @return bool статус авторизации
      */
     private function autoLogin(): bool
     {
@@ -133,6 +133,7 @@ trait Authentication
      * Получение страницы авторизации.
      *
      * @param ?array<string, string> $captcha Заполненные коды CAPTCHA
+     *
      * @return ?string HTML-страница авторизации или null в случае ошибки
      */
     private function fetchLoginPage(?array $captcha = null): ?string

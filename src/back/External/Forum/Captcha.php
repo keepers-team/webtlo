@@ -11,8 +11,8 @@ final class Captcha
 {
     /**
      * @param string           $message Сообщение с ошибкой авторизации
-     * @param string           $image   URL изображения CAPTCHA.
-     * @param array{}|string[] $codes   Массив строк, содержащий имена и значения кодов CAPTCHA.
+     * @param string           $image   URL изображения CAPTCHA
+     * @param array{}|string[] $codes   массив строк, содержащий имена и значения кодов CAPTCHA
      */
     public function __construct(
         public readonly string $message,

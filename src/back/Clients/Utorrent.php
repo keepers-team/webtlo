@@ -23,7 +23,8 @@ use Throwable;
 
 /**
  * Class Utorrent
- * Supported by uTorrent 1.8.2 and later
+ * Supported by uTorrent 1.8.2 and later.
+ *
  * https://forum.utorrent.com/topic/21814-web-ui-api/
  */
 final class Utorrent implements ClientInterface
@@ -230,6 +231,7 @@ final class Utorrent implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @throws GuzzleException
      */
     private function request(string $action, array $params = [], string $method = 'action'): ResponseInterface
@@ -250,6 +252,7 @@ final class Utorrent implements ClientInterface
 
     /**
      * @param array<string, mixed> $params
+     *
      * @return array<string, mixed>
      */
     private function makeRequest(string $action, array $params = [], string $method = 'action'): array

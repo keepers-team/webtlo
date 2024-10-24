@@ -63,7 +63,7 @@ trait LegacyHelper
     /**
      * Создание HTTP-клиента.
      *
-     * @param LoggerInterface  $logger      Интерфейс для записи журнала.
+     * @param LoggerInterface  $logger      интерфейс для записи журнала
      * @param string           $forumDomain Домен форума
      * @param bool             $ssl         Использовать SSL
      * @param ForumCredentials $forumAuth   Учетные данные форума

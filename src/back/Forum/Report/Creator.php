@@ -191,8 +191,6 @@ final class Creator
         return $topicMessages;
     }
 
-    /**
-     */
     public function initConfig(?CreationMode $mode = null): void
     {
         if (null !== $mode) {
@@ -292,6 +290,7 @@ final class Creator
 
     /**
      * @return string[]
+     *
      * @throws Exception
      */
     private function collectSummaryInfo(): array
@@ -399,7 +398,7 @@ final class Creator
     }
 
     /**
-     * Получить ссылку для отчёта. Разные версии для UI|cron
+     * Получить ссылку для отчёта. Разные версии для UI|cron.
      *
      * @param array<string, mixed> $topic
      */
@@ -473,6 +472,7 @@ final class Creator
      * Посчитать сумму хранимого.
      *
      * @param array<string, mixed> $stored
+     *
      * @return array<string, mixed>
      */
     private function calcSummary(array $stored): array

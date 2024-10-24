@@ -22,7 +22,7 @@ trait TopicsPeers
     /**
      * Получить данные о пирах раздач по списку ид/хешей.
      *
-     * @param (int|string)[]  $topics
+     * @param (int|string)[] $topics
      */
     public function getPeerStats(
         array           $topics,
@@ -40,6 +40,7 @@ trait TopicsPeers
 
         /**
          * @param array[][] $topicsChunks
+         *
          * @return Generator
          */
         $requests = function(array $topicsChunks) use (&$client) {
@@ -83,8 +84,8 @@ trait TopicsPeers
     }
 
     /**
-     * @param TopicPeers[]    $knownPeers
-     * @param (int|string)[]  $missingTopics
+     * @param TopicPeers[]   $knownPeers
+     * @param (int|string)[] $missingTopics
      */
     private static function getDynamicPeerProcessor(
         LoggerInterface $logger,

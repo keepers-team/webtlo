@@ -82,6 +82,7 @@ final class DB
 
     /**
      * PHP SQLite case-insensitive LIKE for Unicode strings.
+     *
      * https://blog.amartynov.ru/php-sqlite-case-insensitive-like-utf8/
      */
     private static function lexa_ci_utf8_like(string $mask, mixed $value): bool|int

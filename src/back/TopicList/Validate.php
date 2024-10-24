@@ -20,6 +20,7 @@ final class Validate
 {
     /**
      * @param array<string, mixed> $filter
+     *
      * @throws ValidationException
      */
     public static function sortFilter(array $filter): Sort
@@ -47,6 +48,7 @@ final class Validate
      * Проверим ввод значения сидов или количества хранителей.
      *
      * @param array<string, mixed> $filter
+     *
      * @throws ValidationException
      */
     public static function filterRuleIntervals(array $filter): void
@@ -104,7 +106,9 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
+     *
      * @return int[]
+     *
      * @throws ValidationException
      */
     public static function checkTrackerStatus(array $filter): array
@@ -118,6 +122,7 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
+     *
      * @throws ValidationException
      */
     public static function checkClientStatus(array $filter): void
@@ -132,7 +137,9 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
+     *
      * @return int[]
+     *
      * @throws ValidationException
      */
     public static function checkKeepingPriority(array $filter, int $forumId): array
@@ -161,6 +168,7 @@ final class Validate
 
     /**
      * @param array<string, mixed> $filter
+     *
      * @throws ValidationException
      */
     public static function checkDateRelease(array $filter): DateTimeImmutable
@@ -181,6 +189,7 @@ final class Validate
      *
      * @param array<string, mixed>      $filter
      * @param array<string, int|string> $cfg
+     *
      * @throws ValidationException
      */
     public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
@@ -258,6 +267,7 @@ final class Validate
      * Собрать параметры фильтрации по типам хранителей.
      *
      * @param array<string, mixed> $filter
+     *
      * @throws ValidationException
      */
     public static function prepareKeepersFilter(array $filter): Keepers

@@ -13,6 +13,7 @@ trait FilterTrait
      * Получить из БД список раздач и отсортировать по заданному фильтру.
      *
      * @param (int|string)[] $params
+     *
      * @return array<string, mixed>[]
      */
     protected function selectTopics(string $statement, array $params = []): array
