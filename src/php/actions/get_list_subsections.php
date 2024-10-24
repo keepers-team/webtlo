@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
-use KeepersTeam\Webtlo\Legacy\Db;
+use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Update\ForumTree;
 
 try {
@@ -13,9 +15,14 @@ try {
 
     $app = AppContainer::create();
 
-    $patterns = is_array($_GET['term']) ? $_GET['term'] : [$_GET['term']];
+    /** @var DB $db */
+    $db = $app->get(DB::class);
 
-    if (empty(Db::select_count('Forums'))) {
+    $patterns = is_array($_GET['term'])
+        ? $_GET['term']
+        : explode(';', (string)$_GET['term']);
+
+    if (empty($db->selectRowsCount('Forums'))) {
         /** @var ForumTree $forumTree Обновляем дерево подразделов. */
         $forumTree = $app->get(ForumTree::class);
         $forumTree->update();
@@ -23,22 +30,29 @@ try {
 
     $forums = [];
     foreach ($patterns as $pattern) {
+        $pattern = trim((string)$pattern);
+
         if (!is_numeric($pattern)) {
             $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
         }
-        $data = Db::query_database(
-            "SELECT id AS value, name AS label FROM Forums
-            WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)",
-            ['term' => $pattern],
-            true
+
+        $data = $db->query(
+            sql  : "
+                SELECT id AS value, name AS label FROM Forums
+                WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)
+             ",
+            param: ['term' => (string)$pattern],
         );
+
         $forums = array_merge_recursive($forums, $data);
     }
 
     echo json_encode($forums, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
-    echo json_encode([[
-        'label' => $e->getMessage(),
-        'value' => -1,
-    ]]);
+    echo json_encode([
+        [
+            'label' => $e->getMessage(),
+            'value' => -1,
+        ],
+    ]);
 }

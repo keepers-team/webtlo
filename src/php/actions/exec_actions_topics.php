@@ -4,7 +4,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Tables\Torrents;
 
@@ -36,6 +35,7 @@ try {
     }
 
     $app = AppContainer::create();
+    $db  = $app->getDataBase();
 
     // получение настроек
     $cfg = $app->getLegacyConfig();
@@ -54,14 +54,13 @@ try {
     foreach ($topicHashesChunks as $topicHashes) {
         $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
 
-        $data = Db::query_database(
+        $data = $db->query(
             'SELECT
                 client_id,
                 info_hash
             FROM Torrents
             WHERE info_hash IN (' . $placeholders . ')',
             $topicHashes,
-            true,
             PDO::FETCH_GROUP | PDO::FETCH_COLUMN
         );
         unset($placeholders);

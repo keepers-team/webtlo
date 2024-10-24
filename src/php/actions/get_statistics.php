@@ -2,18 +2,20 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Db;
 
 $statistics_result = [
     'tbody' => '',
     'tfoot' => '',
 ];
 try {
+    $app = AppContainer::create();
+    $db  = $app->getDataBase();
+
     // получение настроек
-    $cfg = App::getSettings();
+    $cfg = $app->getLegacyConfig();
 
     if (empty($cfg['subsections'])) {
         throw new Exception("Не выбраны хранимые подразделы");
@@ -66,10 +68,9 @@ try {
             ORDER BY LOWER(f.name)
         ";
 
-        $data = Db::query_database(
-            $sql,
-            array_merge($forumChunk->values, $forumChunk->values),
-            true
+        $data = $db->query(
+            sql  : $sql,
+            param: array_merge($forumChunk->values, $forumChunk->values),
         );
 
         $statistics = array_merge($statistics, $data);

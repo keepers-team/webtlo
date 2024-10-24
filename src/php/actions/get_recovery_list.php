@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Db;
+use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    $cfg = App::getSettings();
+    $app = AppContainer::create();
+    $db  = $app->getDataBase();
 
-    $counters = Db::query_database(
+    // получение настроек
+    $cfg = $app->getLegacyConfig();
+
+    $counters = $db->query(
         'SELECT tu.status, COUNT(1) AS quantity
         FROM TopicsUnregistered AS tu
             LEFT JOIN Torrents AS tr ON tr.info_hash = tu.info_hash
         WHERE tr.done = 1.0
             AND tu.priority IS NOT ("низкий")
         GROUP BY tu.status
-        ORDER BY 2 DESC',
-        [],
-        true
+        ORDER BY 2 DESC'
     );
 
     if (count($counters)) {
@@ -45,7 +46,7 @@ try {
 
     $in = str_repeat('?,', count($allowedStatuses) - 1) . '?';
 
-    $topics = Db::query_database(
+    $topics = $db->query(
         'SELECT
             tr.topic_id,
             tu.status,
@@ -58,7 +59,6 @@ try {
             AND tu.priority IS NOT ("низкий")
             AND tu.status IN (' . $in . ')',
         $allowedStatuses,
-        true
     );
 
     if (!count($topics)) {
