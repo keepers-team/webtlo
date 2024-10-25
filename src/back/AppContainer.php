@@ -24,9 +24,21 @@ use Throwable;
 
 final class AppContainer
 {
+    private static bool $initialized = false;
+
     private static ?self $appContainer = null;
 
     private function __construct(public readonly Container $container) {}
+
+    public static function init(): void
+    {
+        if (!self::$initialized) {
+            // Проставляем часовой пояс.
+            self::setDefaultTimeZone();
+
+            self::$initialized = true;
+        }
+    }
 
     /** Создаём di-контейнер. */
     public static function create(?string $logFile = null): self
@@ -36,8 +48,8 @@ final class AppContainer
             return self::$appContainer;
         }
 
-        // Указываем временную зону, в т.ч. для корректной записи логов.
-        App::init();
+        // Указываем часовой пояс, в т.ч. для корректной записи логов.
+        self::init();
 
         // Создаём di-контейнер и включаем auto wiring.
         $container = new Container();
@@ -176,5 +188,15 @@ final class AppContainer
     public function getClientFactory(): ClientFactory
     {
         return $this->get(ClientFactory::class);
+    }
+
+    /**
+     * Установить часовой пояс по-умолчанию.
+     */
+    private static function setDefaultTimeZone(): void
+    {
+        if (!ini_get('date.timezone')) {
+            date_default_timezone_set(getenv('TZ') ?: 'Europe/Moscow');
+        }
     }
 }
