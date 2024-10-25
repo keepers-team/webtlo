@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Traits;
+namespace KeepersTeam\Webtlo\Storage\Traits;
 
 trait DbDataSet
 {

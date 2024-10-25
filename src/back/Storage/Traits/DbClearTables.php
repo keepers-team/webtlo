@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Traits;
+namespace KeepersTeam\Webtlo\Storage\Traits;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\TIniFileEx;
 
-trait DbClearTablesTrait
+trait DbClearTables
 {
     /**
      * Очистка таблиц от неактуальных данных.

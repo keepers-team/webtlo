@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Traits;
+namespace KeepersTeam\Webtlo\Storage\Traits;
 
 use KeepersTeam\Webtlo\Backup;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use RuntimeException;
 
-trait DbMigrationTrait
+trait DbMigration
 {
     /**
      * Проверить текущую версию БД и, при необходимости, выполнить инициализацию/миграцию.

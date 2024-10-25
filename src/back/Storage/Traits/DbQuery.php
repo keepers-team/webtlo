@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Traits;
+namespace KeepersTeam\Webtlo\Storage\Traits;
 
 use KeepersTeam\Webtlo\Legacy\Log;
 use PDO;
@@ -11,7 +11,7 @@ use PDOStatement;
 use RuntimeException;
 use Throwable;
 
-trait DbQueryTrait
+trait DbQuery
 {
     /**
      * Подготовить запрос и выполнить с параметрами.

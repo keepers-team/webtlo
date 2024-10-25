@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-use KeepersTeam\Webtlo\Traits\DbClearTablesTrait;
-use KeepersTeam\Webtlo\Traits\DbDataSet;
-use KeepersTeam\Webtlo\Traits\DbMigrationTrait;
-use KeepersTeam\Webtlo\Traits\DbQueryTrait;
+use KeepersTeam\Webtlo\Storage\Traits;
 use PDO;
 use PDOException;
 use RuntimeException;
 
 final class DB
 {
-    use DbClearTablesTrait;
-    use DbDataSet;
-    use DbMigrationTrait;
-    use DbQueryTrait;
+    use Traits\DbClearTables;
+    use Traits\DbDataSet;
+    use Traits\DbMigration;
+    use Traits\DbQuery;
 
     /** Актуальная версия БД */
     private const DATABASE_VERSION = 13;
