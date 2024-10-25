@@ -138,10 +138,12 @@ if ($sendReport->isEnable()) {
 
             unset($topicsToReport, $apiResult);
         } catch (Exception $e) {
-            $log->notice(
-                'Попытка отправки отчёта через API для подраздела {forum_id} не удалась. Причина {error}',
-                ['forum_id' => $forum_id, 'error' => $e->getMessage()]
-            );
+            $log->notice('API. Отчёт не отправлен [{current}/{total}]. Причина: "{error}"', [
+                'forumId' => $forum_id,
+                'error'   => $e->getMessage(),
+                'current' => ++$apiReportCount,
+                'total'   => $forumCount,
+            ]);
         }
 
         $forumReports->clearCache($forum_id);
