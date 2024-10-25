@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\ReportSend;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -14,7 +14,7 @@ use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
-$app = AppContainer::create('reports.log');
+$app = App::create('reports.log');
 $log = $app->getLogger();
 
 Timers::start('send_reports');

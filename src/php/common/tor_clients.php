@@ -2,7 +2,7 @@
 
 include_once dirname(__FILE__) . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -17,7 +17,7 @@ use KeepersTeam\Webtlo\Storage\Clone\Torrents;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
-$app = AppContainer::create();
+$app = App::create();
 $db  = $app->getDataBase();
 
 // получение настроек

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Update\ForumTree;
 
@@ -13,7 +13,7 @@ try {
         return false;
     }
 
-    $app = AppContainer::create();
+    $app = App::create();
 
     /** @var DB $db */
     $db = $app->get(DB::class);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\HighPriority;
@@ -21,7 +21,7 @@ $update_result = [
 ];
 
 // Создаём контейнер и пишем в лог.
-$app = AppContainer::create('update.log');
+$app = App::create('update.log');
 $log = $app->getLogger();
 try {
     // Список задач, которых можно запустить.

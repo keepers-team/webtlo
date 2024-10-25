@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -19,7 +19,7 @@ $result = [
 
 try {
     // Подключаем контейнер.
-    $app = AppContainer::create();
+    $app = App::create();
 
     parse_str($_POST['cfg'], $config);
 

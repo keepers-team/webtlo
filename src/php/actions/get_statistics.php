@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Helper;
 
@@ -11,7 +11,7 @@ $statistics_result = [
     'tfoot' => '',
 ];
 try {
-    $app = AppContainer::create();
+    $app = App::create();
     $db  = $app->getDataBase();
 
     // получение настроек

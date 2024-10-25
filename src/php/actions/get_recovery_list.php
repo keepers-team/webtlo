@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    $app = AppContainer::create();
+    $app = App::create();
     $db  = $app->getDataBase();
 
     // получение настроек

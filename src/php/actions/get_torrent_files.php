@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -19,7 +19,7 @@ try {
         throw new RuntimeException('Выберите раздачи');
     }
 
-    $app = AppContainer::create();
+    $app = App::create();
     $cfg = $app->getLegacyConfig();
     $log = $app->getLogger();
 

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
     // Подключаем контейнер.
-    $app = AppContainer::create();
+    $app = App::create();
     $log = $app->getLogger();
 
     // 0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd

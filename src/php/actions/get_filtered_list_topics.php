@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
@@ -24,7 +24,7 @@ $returnObject = [
 
 try {
 
-    $app = AppContainer::create();
+    $app = App::create();
 
     $forum_id = $_POST['forum_id'] ?? null;
     if (!is_numeric($forum_id)) {

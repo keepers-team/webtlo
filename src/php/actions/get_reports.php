@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Legacy\Log;
@@ -22,7 +22,7 @@ try {
     }
 
     // Инициализация и получение конфига.
-    $app = AppContainer::create();
+    $app = App::create();
     $cfg = $app->getLegacyConfig();
     $log = $app->getLogger();
 

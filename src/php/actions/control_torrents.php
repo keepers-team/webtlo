@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\TopicControl;
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 $control_result = [
@@ -15,7 +15,7 @@ $control_result = [
 
 try {
     // Инициализируем контейнер.
-    $app = AppContainer::create('control.log');
+    $app = App::create('control.log');
     $log = $app->getLogger();
 
     $config = $app->getLegacyConfig();

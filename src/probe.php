@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Module\ProbeChecker;
 
 Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
 
-AppContainer::init();
+App::init();
 
 $proxies = [
     null,

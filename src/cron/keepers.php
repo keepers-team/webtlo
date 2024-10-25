@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 
@@ -16,7 +16,7 @@ use KeepersTeam\Webtlo\Update\KeepersReports;
 
 try {
     // Инициализируем контейнер.
-    $app = AppContainer::create('keepers.log');
+    $app = App::create('keepers.log');
     $log = $app->getLogger();
 
     $config = $app->getLegacyConfig();

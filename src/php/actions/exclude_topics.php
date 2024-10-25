@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 
 try {
@@ -11,7 +11,7 @@ try {
         throw new Exception();
     }
 
-    $app = AppContainer::create();
+    $app = App::create();
     $db  = $app->getDataBase();
 
     parse_str($_POST['topic_hashes'], $topicHashes);

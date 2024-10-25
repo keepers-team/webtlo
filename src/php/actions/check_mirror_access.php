@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\CheckMirrorAccess;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 // Получаем контейнер.
-$app = AppContainer::create();
+$app = App::create();
 $log = $app->getLogger();
 
 $result = false;

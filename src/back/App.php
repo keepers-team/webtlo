@@ -22,7 +22,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
-final class AppContainer
+final class App
 {
     private static bool $initialized = false;
 

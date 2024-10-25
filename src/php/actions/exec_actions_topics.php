@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Storage\Table\Torrents;
@@ -34,7 +34,7 @@ try {
         throw new Exception('В настройках не найдены торрент-клиенты');
     }
 
-    $app = AppContainer::create();
+    $app = App::create();
     $db  = $app->getDataBase();
 
     // получение настроек

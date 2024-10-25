@@ -1,6 +1,6 @@
 <?php
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\WebTLO;
@@ -12,7 +12,7 @@ mb_internal_encoding("UTF-8");
 try {
     include_once dirname(__FILE__) . '/vendor/autoload.php';
 
-    AppContainer::create();
+    App::create();
     DB::create();
 } catch (Exception $e) {
     $initError = $e->getMessage();
@@ -20,7 +20,7 @@ try {
 
 // 2. Загружаем конфиг и рисуем селекторы.
 try {
-    $app = AppContainer::create();
+    $app = App::create();
     $cfg = $app->getLegacyConfig();
 
     // Callback для чекбоксов.

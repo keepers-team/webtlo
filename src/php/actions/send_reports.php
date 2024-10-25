@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 $reports_result = [
@@ -12,7 +12,7 @@ $reports_result = [
 ];
 
 // Создаём контейнер и пишем в лог.
-$app = AppContainer::create('reports.log');
+$app = App::create('reports.log');
 $log = $app->getLogger();
 
 try {

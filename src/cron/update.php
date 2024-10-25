@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\AppContainer;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Update\ForumTree;
@@ -20,7 +20,7 @@ use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 try {
     // Инициализируем контейнер.
-    $app = AppContainer::create('update.log');
+    $app = App::create('update.log');
     $log = $app->getLogger();
 
     $config = $app->getLegacyConfig();
