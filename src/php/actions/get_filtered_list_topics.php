@@ -7,7 +7,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Tables\Forums;
+use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;

@@ -5,7 +5,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Tables\Torrents;
+use KeepersTeam\Webtlo\Storage\Table\Torrents;
 
 try {
     $result = '';

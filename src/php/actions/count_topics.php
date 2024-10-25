@@ -4,7 +4,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 
 $result = [];
 try {

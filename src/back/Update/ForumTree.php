@@ -8,7 +8,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
-use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

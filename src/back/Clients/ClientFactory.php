@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Clients;
 
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Tables\Topics;
-use KeepersTeam\Webtlo\Tables\Torrents;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 

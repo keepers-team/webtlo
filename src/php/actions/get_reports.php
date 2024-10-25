@@ -6,7 +6,7 @@ use KeepersTeam\Webtlo\AppContainer;
 use KeepersTeam\Webtlo\Forum\Report\CreationMode;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Tables\Forums;
+use KeepersTeam\Webtlo\Storage\Table\Forums;
 
 $reports_result = [
     'report' => '',

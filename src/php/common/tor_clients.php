@@ -14,7 +14,7 @@ use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
 use KeepersTeam\Webtlo\Storage\Clone\Torrents;
-use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
 $app = AppContainer::create();

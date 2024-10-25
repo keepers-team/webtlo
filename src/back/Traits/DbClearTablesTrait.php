@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Traits;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\TIniFileEx;
 
 trait DbClearTablesTrait

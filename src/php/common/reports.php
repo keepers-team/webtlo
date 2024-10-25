@@ -11,7 +11,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Forum\SendReport;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 
 $app = AppContainer::create('reports.log');

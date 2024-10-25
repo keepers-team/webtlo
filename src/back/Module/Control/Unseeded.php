@@ -9,7 +9,7 @@ use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Tables\UpdateTime;
+use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use Psr\Log\LoggerInterface;
 
 /**

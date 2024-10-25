@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 use Psr\Log\LoggerInterface;
 
 /**

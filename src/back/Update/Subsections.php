@@ -15,8 +15,8 @@ use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\UpdateTime;
-use KeepersTeam\Webtlo\Tables\Seeders;
-use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Seeders;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 
 /**
  * Временная таблица с данными об обновлённых раздачах высокого приоритета, по данным API форума.

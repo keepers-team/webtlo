@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
-use KeepersTeam\Webtlo\Tables\Topics;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
