@@ -40,10 +40,14 @@ final class ProbeChecker
     public function printProbe(): string
     {
         $allUrls   = array_merge(...array_values($this->urls));
-        $urlLength = (int) max(array_map('strlen', $allUrls));
+        $urlLength = count($allUrls) > 0
+            ? (int) max(array_map('strlen', $allUrls))
+            : 0;
 
         $proxyNames  = array_map(fn($proxy) => $this->getNullSafeProxy($proxy), $this->proxies);
-        $proxyLength = (int) max(array_map('strlen', $proxyNames));
+        $proxyLength = count($proxyNames) > 0
+            ? (int) max(array_map('strlen', $proxyNames))
+            : 0;
 
         $output = str_pad('Domain', $urlLength);
         foreach ($proxyNames as $proxy) {

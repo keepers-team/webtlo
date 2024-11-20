@@ -22,7 +22,7 @@ final class ApiCredentials
      *
      * @param array<string, mixed> $cfg
      *
-     * @throws RuntimeException()
+     * @throws RuntimeException
      */
     public static function fromLegacy(array $cfg): self
     {
