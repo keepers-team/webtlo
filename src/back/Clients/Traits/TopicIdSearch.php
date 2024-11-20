@@ -27,13 +27,21 @@ trait TopicIdSearch
     {
         Timers::start('db_topics_search');
 
-        $emptyHashed = self::getEmptyTopicsHashes($torrents);
+        $emptyHashed = self::getEmptyTopicsHashes(torrents: $torrents);
         if (count($emptyHashed)) {
             $this->logger->debug('Start search torrents in Topics table', ['empty' => count($emptyHashed)]);
 
-            $topics = $this->tableTopics->getTopicsIdsByHashes($emptyHashed);
+            $topics = $this->tableTopics->getTopicsIdsByHashes(hashes: $emptyHashed);
+
+            // Дописываем topic_id в данные раздачи.
             if (count($topics)) {
-                $torrents = array_replace_recursive($torrents, $topics);
+                foreach ($topics as $hash => $topic) {
+                    if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
+                        $torrents[$hash] = array_merge($torrents[$hash], $topic);
+                    } else {
+                        $torrents[$hash] = $topic;
+                    }
+                }
             }
 
             Timers::stash('db_topics_search');
@@ -50,13 +58,21 @@ trait TopicIdSearch
     {
         Timers::start('db_torrents_search');
 
-        $emptyHashed = self::getEmptyTopicsHashes($torrents);
+        $emptyHashed = self::getEmptyTopicsHashes(torrents: $torrents);
         if (count($emptyHashed)) {
             $this->logger->debug('Start search torrents in Torrents table', ['empty' => count($emptyHashed)]);
 
-            $topics = $this->tableTorrents->getTopicsIdsByHashes($emptyHashed);
+            $topics = $this->tableTorrents->getTopicsIdsByHashes(hashes: $emptyHashed);
+
+            // Дописываем topic_id в данные раздачи.
             if (count($topics)) {
-                $torrents = array_replace_recursive($torrents, $topics);
+                foreach ($topics as $hash => $topic) {
+                    if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
+                        $torrents[$hash] = array_merge($torrents[$hash], $topic);
+                    } else {
+                        $torrents[$hash] = $topic;
+                    }
+                }
             }
 
             Timers::stash('db_torrents_search');
