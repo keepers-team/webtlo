@@ -53,9 +53,19 @@ SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
 
 # install composer
-FROM composer AS builder
+FROM base AS builder
+
+# Install Composer prerequisites
+RUN apk add --no-cache php81-phar
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
+
+WORKDIR /app
 COPY src/composer.* ./
 COPY src/back back
+
+# Run composer install
 RUN composer install --no-dev --no-progress && composer dump-autoload -o
 
 # image for development
@@ -63,7 +73,7 @@ FROM base AS dev
 RUN apk add --update --no-cache git php81-phar php81-pecl-xdebug php81-tokenizer
 COPY /docker/debug /etc/php81/conf.d
 # copy composer parts
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+COPY --from=builder /usr/bin/composer /usr/bin/composer
 
 # image for production
 FROM base AS prod
