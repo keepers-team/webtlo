@@ -40,13 +40,13 @@ jobs:
             Composer-${{ runner.os }}-
 
       - name: Install dependencies
-        uses: php-actions/composer@v6
+        uses: MilesChou/composer-action/8.1@master
         with:
-          args: --ignore-platform-reqs
-          working_dir: src
+          args: install --working-dir=src --ignore-platform-reqs
+        env:
+          COMPOSER_CACHE_DIR: /tmp/composer-cache
 
       - name: PHPStan Static Analysis
-        uses: php-actions/phpstan@v3
+        uses: MilesChou/composer-action/8.1@master
         with:
-          php_version: 8.1
-          memory_limit: 512M
+          args: src/vendor/bin/phpstan --memory-limit=512M
