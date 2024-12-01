@@ -62,7 +62,7 @@ trait SummaryReport
      *
      * @return ?int Идентификатор сообщения, если найден, иначе null
      */
-    private static function parsePostIdFromReportSearch(string $page): ?int
+    private function parsePostIdFromReportSearch(string $page): ?int
     {
         $dom = self::parseDOM(page: $page);
 
@@ -86,8 +86,11 @@ trait SummaryReport
             if (2 === count($matches)) {
                 return (int) $matches[1];
             }
+            $this->logger->debug('parsePostIdFromReportSearch', ['$postLink' => $postLink]);
+
         }
 
+        $this->logger->debug('parsePostIdFromReportSearch', ['$xpathQuery' => $xpathQuery, 'nodes' => $nodes]);
         return null;
     }
 }
