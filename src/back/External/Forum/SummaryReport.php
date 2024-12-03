@@ -86,11 +86,12 @@ trait SummaryReport
             if (2 === count($matches)) {
                 return (int) $matches[1];
             }
-            $this->logger->debug('parsePostIdFromReportSearch', ['$postLink' => $postLink]);
 
+            $this->logger->debug('parsePostIdFromReportSearch', ['postLink' => $postLink, 'matches' => $matches]);
         }
 
-        $this->logger->debug('parsePostIdFromReportSearch', ['$xpathQuery' => $xpathQuery, 'nodes' => $nodes]);
+        $this->logger->debug('parsePostIdFromReportSearch', ['xpathQuery' => $xpathQuery, 'nodes' => $nodes]);
+
         return null;
     }
 }
