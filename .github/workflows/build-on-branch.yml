@@ -6,10 +6,16 @@ on:
     branches:
       - '**'
 
+concurrency:
+  group: build-branch-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
 
   validate:
     name: Check
+    concurrency:
+      group: sub-check-validate
     uses: ./.github/workflows/sub-check.yml
 
   metadata:

@@ -1,0 +1,19 @@
+name: Check pull request
+run-name: Build on pull request, branch '${{ github.head_ref }}'
+
+on:
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: check-pull-request-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  validate:
+    name: Check
+    concurrency:
+      group: sub-check-validate
+    uses: ./.github/workflows/sub-check.yml
