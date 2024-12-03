@@ -28,9 +28,10 @@ jobs:
       - name: Install dependencies
         uses: php-actions/composer@v6
         with:
-          working_dir: src
-          args: --ignore-platform-reqs
+          php_version: "8.1"
           dev: no
+          args: --ignore-platform-reqs
+          working_dir: "src"
 
       - name: Write version
         run: |
