@@ -14,8 +14,6 @@ jobs:
 
   validate:
     name: Check
-    concurrency:
-      group: sub-check-validate
     uses: ./.github/workflows/sub-check.yml
 
   metadata:
