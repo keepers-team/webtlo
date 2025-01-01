@@ -41,4 +41,19 @@ trait DomHelper
     {
         return (!empty($list)) ? (string) $list->item(0)?->nodeValue : '';
     }
+
+    /**
+     * Получает значение n-ного узла из списка узлов DOM.
+     * В отличие от getFirstNodeValue, этот метод не проверяет, находится ли запрашиваемый
+     * узел в списке, есть ли у узла nodeValue, и т.п., а просто пытается возвратить значение.
+     *
+     * @param mixed|DOMNodeList<DOMNode> $list Список узлов DOM
+     * @param int                        $n    индекс запрашиваемого узла DOM, zero-based (0-первый, 1-второй, 2-третий, и т.п.)
+     *
+     * @return string Значение n-ного узла в списке
+     */
+    protected static function getNthNodeValue(mixed $list, int $n): string
+    {
+        return $list->item($n)->nodeValue;
+    }
 }
