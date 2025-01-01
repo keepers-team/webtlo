@@ -77,20 +77,33 @@ trait SummaryReport
             '//a[contains(@class, "small")]/@href'
         );
 
-        $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && 1 === count($nodes)) {
-            $postLink = self::getFirstNodeValue(list: $nodes);
-
-            $matches = [];
-            preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
-            if (2 === count($matches)) {
-                return (int) $matches[1];
+        $nodes      = $dom->query(expression: $xpathQuery);
+        $nodesCount = 0;
+        if (!empty($nodes)) {
+            $nodesCount = count($nodes);
+            if (1 === $nodesCount) {
+                $postLink = self::getFirstNodeValue(list: $nodes);
+                $matches  = [];
+                preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
+                if (2 === count($matches)) {
+                    return (int) $matches[1];
+                }
+                $this->logger->debug('parsePostIdFromReportSearch', ['postLink' => $postLink, 'matches' => $matches]);
             }
-
-            $this->logger->debug('parsePostIdFromReportSearch', ['postLink' => $postLink, 'matches' => $matches]);
         }
 
-        $this->logger->debug('parsePostIdFromReportSearch', ['xpathQuery' => $xpathQuery, 'nodes' => $nodes]);
+        if ($nodesCount > 1) {
+            $this->logger->warning('На форуме найдено {count} сообщений с отчётами, а ожидалось 1.', [
+                'count'   => $nodesCount,
+            ]);
+            for ($i = 0; $i < $nodesCount; ++$i) {
+                $this->logger->warning('Сообщение {index}/{count}: {link}', [
+                    'index'  => $i + 1,
+                    'count'  => $nodesCount,
+                    'link'   => self::getNthNodeValue($nodes, $i),
+                ]);
+            }
+        }
 
         return null;
     }
