@@ -84,16 +84,10 @@ trait SummaryReport
         if (1 === $nodesCount) {
             $postLink = self::getFirstNodeValue(list: $nodes);
 
-            $matches = [];
-            preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
-            if (2 === count($matches)) {
-                return (int) $matches[1];
+            $postId = $this->parsePostIdFromPostLink(postLink: $postLink);
+            if (null !== $postId) {
+                return $postId;
             }
-
-            $this->logger->warning(
-                'Не удалось определить ид сообщения со сводным отчётом.',
-                ['postLink' => $postLink, 'matches' => $matches]
-            );
         }
 
         if ($nodesCount > 1) {
@@ -102,14 +96,41 @@ trait SummaryReport
                 ['count' => $nodesCount]
             );
 
+            $postIds = [];
             for ($i = 0; $i < $nodesCount; ++$i) {
+                $postLink = self::getNthNodeValue($nodes, $i);
+
                 $this->logger->warning('Сообщение {index}/{count}: {link}', [
                     'index' => $i + 1,
                     'count' => $nodesCount,
-                    'link'  => self::getNthNodeValue($nodes, $i),
+                    'link'  => $postLink,
                 ]);
+
+                // Пробуем найти ид сообщения и записать его в список.
+                $postId = $this->parsePostIdFromPostLink(postLink: (string) $postLink);
+                if (null !== $postId) {
+                    $postIds[] = $postId;
+                }
+            }
+
+            // Если удалось найти несколько сообщений, то используем самое первое сообщение в теме.
+            if (count($postIds) > 0) {
+                return min($postIds);
             }
         }
+
+        return null;
+    }
+
+    private function parsePostIdFromPostLink(string $postLink): ?int
+    {
+        $matches = [];
+        preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
+        if (2 === count($matches)) {
+            return (int) $matches[1];
+        }
+
+        $this->logger->debug('parsePostIdFromPostLink', ['postLink' => $postLink, 'matches' => $matches]);
 
         return null;
     }
