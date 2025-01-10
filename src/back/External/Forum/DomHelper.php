@@ -35,25 +35,27 @@ trait DomHelper
      *
      * @param mixed|DOMNodeList<DOMNode> $list Список узлов DOM
      *
-     * @return string Значение первого узла в списке, или пустая строка, если узел не найден
+     * @return string Значение первого узла в списке или пустая строка, если узел не найден
      */
     protected static function getFirstNodeValue(mixed $list): string
     {
-        return (!empty($list)) ? (string) $list->item(0)?->nodeValue : '';
+        return (string) self::getNthNodeValue(list: $list, n: 0);
     }
 
     /**
      * Получает значение n-ного узла из списка узлов DOM.
-     * В отличие от getFirstNodeValue, этот метод не проверяет, находится ли запрашиваемый
-     * узел в списке, есть ли у узла nodeValue, и т.п., а просто пытается возвратить значение.
      *
      * @param mixed|DOMNodeList<DOMNode> $list Список узлов DOM
-     * @param int                        $n    индекс запрашиваемого узла DOM, zero-based (0-первый, 1-второй, 2-третий, и т.п.)
+     * @param int                        $n    Индекс запрашиваемого узла DOM, zero-based (0-первый, 1-второй, 2-третий, и т.п.)
      *
-     * @return string Значение n-ного узла в списке
+     * @return ?string Значение n-ного узла в списке или null, если не найден
      */
-    protected static function getNthNodeValue(mixed $list, int $n): string
+    protected static function getNthNodeValue(mixed $list, int $n): ?string
     {
-        return $list->item($n)->nodeValue;
+        if ($list instanceof DOMNodeList) {
+            return $list->item($n)?->nodeValue;
+        }
+
+        return null;
     }
 }
