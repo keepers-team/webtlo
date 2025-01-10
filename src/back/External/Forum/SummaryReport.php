@@ -77,30 +77,36 @@ trait SummaryReport
             '//a[contains(@class, "small")]/@href'
         );
 
-        $nodes      = $dom->query(expression: $xpathQuery);
-        $nodesCount = 0;
-        if (!empty($nodes)) {
-            $nodesCount = count($nodes);
-            if (1 === $nodesCount) {
-                $postLink = self::getFirstNodeValue(list: $nodes);
-                $matches  = [];
-                preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
-                if (2 === count($matches)) {
-                    return (int) $matches[1];
-                }
-                $this->logger->debug('parsePostIdFromReportSearch', ['postLink' => $postLink, 'matches' => $matches]);
+        $nodes = $dom->query(expression: $xpathQuery);
+
+        /** Количество найденных сообщений в теме со сводными отчётами. */
+        $nodesCount = $nodes ? $nodes->length : 0;
+        if (1 === $nodesCount) {
+            $postLink = self::getFirstNodeValue(list: $nodes);
+
+            $matches = [];
+            preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
+            if (2 === count($matches)) {
+                return (int) $matches[1];
             }
+
+            $this->logger->warning(
+                'Не удалось определить ид сообщения со сводным отчётом.',
+                ['postLink' => $postLink, 'matches' => $matches]
+            );
         }
 
         if ($nodesCount > 1) {
-            $this->logger->warning('На форуме найдено {count} сообщений с отчётами, а ожидалось 1.', [
-                'count'   => $nodesCount,
-            ]);
+            $this->logger->warning(
+                'На форуме найдено {count} сообщений со сводными отчётами, а ожидалось 1.',
+                ['count' => $nodesCount]
+            );
+
             for ($i = 0; $i < $nodesCount; ++$i) {
                 $this->logger->warning('Сообщение {index}/{count}: {link}', [
-                    'index'  => $i + 1,
-                    'count'  => $nodesCount,
-                    'link'   => self::getNthNodeValue($nodes, $i),
+                    'index' => $i + 1,
+                    'count' => $nodesCount,
+                    'link'  => self::getNthNodeValue($nodes, $i),
                 ]);
             }
         }
