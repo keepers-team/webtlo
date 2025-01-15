@@ -185,24 +185,6 @@ final class Helper
     }
 
     /**
-     * Найти используемый домен трекера в настройках.
-     *
-     * @param array<string, mixed> $cfg
-     */
-    public static function getForumDomain(array $cfg): ?string
-    {
-        if (!empty($cfg['forum_url'] && 'custom' !== $cfg['forum_url'])) {
-            return $cfg['forum_url'];
-        }
-
-        if (!empty($cfg['forum_url_custom'])) {
-            return $cfg['forum_url_custom'];
-        }
-
-        return null;
-    }
-
-    /**
      * Разбиение строки по символу с приведением значений к int.
      *
      * @param non-empty-string $separator
