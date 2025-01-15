@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Action;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
@@ -14,32 +15,38 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
+/**
+ * Отправка всех возможных отчётов во всё возможные места их размещения.
+ */
 final class SendKeeperReports
 {
+    /**
+     * Дата полного обновления сведений.
+     * Она же считается датой каждого из отправляемых отчётов.
+     */
+    private DateTimeImmutable $fullUpdateTime;
+
     /**
      * @param ConfigReport  $configReport настройки отправки отчётов
      * @param ReportCreator $creator      Создание отчётов
      */
     public function __construct(
         private readonly ConfigReport    $configReport,
-        private readonly SendReport      $sendReport,
         private readonly ReportCreator   $creator,
+        private readonly SendReport      $sendReport,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
     ) {}
 
+    /**
+     * @param ?bool $reportOverride признак принудительной отправки "чистых" отчётов (Зажать CTRL при нажатии на кнопку отправки)
+     */
     public function process(?bool $reportOverride = null): bool
     {
         Timers::start('send_reports');
         $this->logger->info('Начат процесс отправки отчётов...');
 
-        // Подключаемся к API отчётов.
-        Timers::start('init_api_report');
-
-        $report     = $this->sendReport;
-        $updateTime = $this->updateTime;
-
-        // Признак необходимости отправки "чистых" отчётов из настроек.
+        /** Признак необходимости отправки "чистых" отчётов из настроек. */
         $reportRewrite = $this->configReport->unsetOtherTopics;
         if (true === $reportOverride) {
             $reportRewrite = true;
@@ -47,127 +54,22 @@ final class SendKeeperReports
             $this->logger->notice('Получен сигнал для отправки "чистых" отчётов.');
         }
 
-        // Желание отправить отчёт через API.
-        $report->setApiEnable($this->configReport->sendReports);
+        // Проверка доступности API.
+        $this->checkApiReportAccess();
 
-        // Проверяем доступность API.
-        if ($report->isApiEnable()) {
-            $report->checkApiAccess();
-        }
-
-        if (!$report->isApiEnable()) {
-            $this->logger->notice('Отправка отчёта в API невозможна или отключена');
-        }
-        $this->logger->debug('init api report {sec}', ['sec' => Timers::getExecTime('init_api_report')]);
-
+        // Инициализация переменных для создания отчётов.
         Timers::start('create_report');
-
-        $creator = $this->creator;
-        $creator->initConfig();
-
+        $this->creator->initConfig();
         $this->logger->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
-        // Проверим полное обновление.
-        $fullUpdateTime = $this->updateTime->checkReportsSendAvailable(
-            markers: $creator->getForums(),
-            logger : $this->logger
-        );
-        if (null === $fullUpdateTime) {
+        // Проверим факт полного обновления сведений.
+        if (false === $this->checkFullUpdateTime()) {
             return false;
         }
 
-        // Перезапишем актуальную дату отчётности, после проверки.
-        $creator->setFullUpdateTime(updateTime: $fullUpdateTime);
-
         // Если API доступно - отправляем отчёты.
-        if ($report->isApiEnable()) {
-            $Timers = [];
-
-            // Задаём ид тем, с отчётами по хранимым подразделам.
-            $creator->setForumTopics(reportTopics: $report->getReportTopics());
-
-            $forumCount = $creator->getForumCount();
-
-            $apiReportCount = 0;
-            $forumsToReport = [];
-            foreach ($creator->getForums() as $forumId) {
-                // Пропускаем исключённые подразделы.
-                if ($creator->isForumExcluded(forumId: $forumId)) {
-                    continue;
-                }
-
-                $timer = [];
-
-                // Пробуем отправить отчёт по API.
-                $forumsToReport[] = $forumId;
-
-                Timers::start("send_api_$forumId");
-
-                try {
-                    Timers::start("search_db_$forumId");
-
-                    // Получаем раздачи, которые нужно отправить.
-                    $topicsToReport = $creator->getStoredForumTopics(forum_id: $forumId);
-
-                    $timer['search_db'] = Timers::getExecTime("search_db_$forumId");
-
-                    // Пробуем отправить отчёт по API.
-                    $apiResult = $report->sendForumTopics(
-                        forumId       : $forumId,
-                        topicsToReport: $topicsToReport,
-                        reportDate    : $fullUpdateTime,
-                        reportRewrite : $reportRewrite,
-                    );
-
-                    $timer['send_api'] = Timers::getExecTime("send_api_$forumId");
-
-                    $this->logger->debug(
-                        'API. Отчёт отправлен [{current}/{total}] {sec}',
-                        [
-                            'current' => ++$apiReportCount,
-                            'total'   => $forumCount,
-                            'sec'     => $timer['send_api'],
-                            ...$apiResult,
-                        ]
-                    );
-
-                    unset($topicsToReport, $apiResult);
-                } catch (Throwable $e) {
-                    $this->logger->notice('API. Отчёт не отправлен [{current}/{total}]. Причина: "{error}"', [
-                        'forumId' => $forumId,
-                        'error'   => $e->getMessage(),
-                        'current' => ++$apiReportCount,
-                        'total'   => $forumCount,
-                    ]);
-                }
-
-                $creator->clearCache($forumId);
-                $Timers[] = ['forum' => $forumId, ...$timer];
-
-                unset($forumId, $timer);
-            }
-
-            // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
-            if (count($forumsToReport)) {
-                // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
-                $setStatus = $report->setForumsStatus(
-                    forumIds        : $forumsToReport,
-                    unsetOtherForums: $this->configReport->unsetOtherSubForums
-                );
-                $this->logger->debug('kept forums setStatus', $setStatus);
-            }
-
-            // Запишем таймеры в журнал.
-            if (count($Timers)) {
-                $this->logger->debug((string) json_encode($Timers));
-            }
-
-            if ($apiReportCount > 0) {
-                $this->logger->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
-
-                // Запишем время отправки отчётов.
-                $updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
-            }
+        if ($this->sendReport->isApiEnable()) {
+            $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
         }
 
         // Желание отправить сводный отчёт на форум.
@@ -185,6 +87,149 @@ final class SendKeeperReports
         return true;
     }
 
+    /**
+     * Проверка доступности API отчётов и установка необходимых признаков.
+     */
+    private function checkApiReportAccess(): void
+    {
+        $report = $this->sendReport;
+
+        // Желание отправить отчёт через API.
+        $report->setApiEnable($this->configReport->sendReports);
+
+        // Проверяем доступность API.
+        if ($report->isApiEnable()) {
+            $report->checkApiAccess();
+        }
+
+        if (!$report->isApiEnable()) {
+            $this->logger->notice('Отправка отчёта в API невозможна или отключена.');
+        }
+    }
+
+    /**
+     * Проверка наличия даты полного обновления сведений и запись этой даты в локальные переменные.
+     */
+    private function checkFullUpdateTime(): bool
+    {
+        $fullUpdateTime = $this->updateTime->checkReportsSendAvailable(
+            markers: $this->creator->getForums(),
+            logger : $this->logger
+        );
+
+        if (null === $fullUpdateTime) {
+            return false;
+        }
+
+        // Перезапишем актуальную дату отчётности.
+        $this->fullUpdateTime = $fullUpdateTime;
+        $this->creator->setFullUpdateTime(updateTime: $fullUpdateTime);
+
+        return true;
+    }
+
+    /**
+     * Отправка отчётов по каждому хранимому подразделу в API отчётов.
+     *
+     * @param bool $reportRewrite признак отправки "чистых" отчётов
+     */
+    private function sendSubsectionsReports(bool $reportRewrite): void
+    {
+        $creator = $this->creator;
+        $report  = $this->sendReport;
+
+        $Timers = [];
+
+        // Задаём ид тем, с отчётами по хранимым подразделам.
+        $creator->setForumTopics(reportTopics: $report->getReportTopics());
+
+        $forumCount = $creator->getForumCount();
+
+        $apiReportCount = 0;
+        $forumsToReport = [];
+        foreach ($creator->getForums() as $forumId) {
+            // Пропускаем исключённые подразделы.
+            if ($creator->isForumExcluded(forumId: $forumId)) {
+                continue;
+            }
+
+            $timer = [];
+
+            // Пробуем отправить отчёт по API.
+            $forumsToReport[] = $forumId;
+
+            Timers::start("send_api_$forumId");
+
+            try {
+                Timers::start("search_db_$forumId");
+
+                // Получаем раздачи, которые нужно отправить.
+                $topicsToReport = $creator->getStoredForumTopics(forum_id: $forumId);
+
+                $timer['search_db'] = Timers::getExecTime("search_db_$forumId");
+
+                // Пробуем отправить отчёт по API.
+                $apiResult = $report->sendForumTopics(
+                    forumId       : $forumId,
+                    topicsToReport: $topicsToReport,
+                    reportDate    : $this->fullUpdateTime,
+                    reportRewrite : $reportRewrite,
+                );
+
+                $timer['send_api'] = Timers::getExecTime("send_api_$forumId");
+
+                $this->logger->debug(
+                    'API. Отчёт отправлен [{current}/{total}] {sec}',
+                    [
+                        'current' => ++$apiReportCount,
+                        'total'   => $forumCount,
+                        'sec'     => $timer['send_api'],
+                        ...$apiResult,
+                    ]
+                );
+
+                unset($topicsToReport, $apiResult);
+            } catch (Throwable $e) {
+                $this->logger->notice('API. Отчёт не отправлен [{current}/{total}]. Причина: "{error}"', [
+                    'forumId' => $forumId,
+                    'error'   => $e->getMessage(),
+                    'current' => ++$apiReportCount,
+                    'total'   => $forumCount,
+                ]);
+            }
+
+            $creator->clearCache(forumId: $forumId);
+            $Timers[] = ['forum' => $forumId, ...$timer];
+
+            unset($forumId, $timer);
+        }
+
+        // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
+        if (count($forumsToReport)) {
+            // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
+            $setStatus = $report->setForumsStatus(
+                forumIds        : $forumsToReport,
+                unsetOtherForums: $this->configReport->unsetOtherSubForums
+            );
+            $this->logger->debug('kept forums setStatus', $setStatus);
+        }
+
+        // Запишем таймеры в журнал.
+        if (count($Timers)) {
+            $this->logger->debug((string) json_encode($Timers));
+        }
+
+        if ($apiReportCount > 0) {
+            $this->logger->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
+
+            // Запишем время отправки отчётов.
+            $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+        }
+    }
+
+    /**
+     * Отправка "сводного" отчёта на форум и в API отчётов.
+     */
     private function sendForumSummaryReport(): void
     {
         $creator = $this->creator;
