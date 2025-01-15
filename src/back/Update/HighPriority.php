@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopic;
 use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Table\Seeders;
@@ -30,6 +31,7 @@ final class HighPriority
 
     public function __construct(
         private readonly ApiClient          $apiClient,
+        private readonly Settings           $settings,
         private readonly DB                 $db,
         private readonly Topics             $topics,
         private readonly HighPriorityInsert $cloneInsert,
@@ -40,11 +42,12 @@ final class HighPriority
 
     /**
      * Выполнить обновление раздач с высоким приоритетом всего форума.
-     *
-     * @param array<string, mixed> $config
      */
-    public function update(array $config): void
+    public function update(): void
     {
+        // Получаем параметры.
+        $config = $this->settings->get();
+
         // Хранимые подразделы.
         $this->subsections = array_map(
             'intval',

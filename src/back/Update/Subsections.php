@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
@@ -30,6 +31,7 @@ final class Subsections
 
     public function __construct(
         private readonly ApiClient       $apiClient,
+        private readonly Settings        $settings,
         private readonly DB              $db,
         private readonly Topics          $topics,
         private readonly TopicsInsert    $tableInsert,
@@ -41,11 +43,12 @@ final class Subsections
 
     /**
      * Выполнить обновление раздач в хранимых подразделах.
-     *
-     * @param array<string, mixed> $config
      */
-    public function update(array $config): void
+    public function update(): void
     {
+        // Получаем параметры.
+        $config = $this->settings->get();
+
         // Проверяем наличие хранимых подразделов.
         $subsections = array_keys($config['subsections'] ?? []);
         if (!count($subsections)) {
