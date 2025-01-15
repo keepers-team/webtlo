@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\Action\SendReports;
+use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
@@ -29,8 +29,8 @@ try {
     unset($postData);
 
 
-    /** @var SendReports $action Отправка отчётов. */
-    $action = $app->get(SendReports::class);
+    /** @var SendKeeperReports $action Отправка отчётов. */
+    $action = $app->get(SendKeeperReports::class);
     $action->process(reportOverride: $reportOverride);
 } catch (Throwable $e) {
     $log->error($e->getMessage());
