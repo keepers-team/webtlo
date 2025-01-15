@@ -10,6 +10,7 @@ use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 use KeepersTeam\Webtlo\Update\Subsections;
+use KeepersTeam\Webtlo\Update\TorrentsClients;
 
 /**
  * Выполнение обновления сведений из разных источников.
@@ -23,25 +24,28 @@ $update_result = [
 // Создаём контейнер и пишем в лог.
 $app = App::create('update.log');
 $log = $app->getLogger();
+
 try {
     // Список задач, которых можно запустить.
     $pairs = [
-        // списки раздач в хранимых подразделах
-        'subsections' => 'runClass',
-        // список высокоприоритетных раздач
-        'priority'    => 'runClass',
-        // отчёты других хранителей
-        'keepers'     => 'runClass',
-        // раздачи в торрент-клиентах
-        'clients'     => 'tor_clients',
+        'subsections' => Subsections::class,
+        'priority'    => HighPriority::class,
+        'keepers'     => KeepersReports::class,
+        'clients'     => TorrentsClients::class,
     ];
 
     // Процессы, которым нужно обновление дерева подразделов.
     $topicsRelated = ['subsections', 'priority'];
 
-    $process = $_GET['process'] ?: null;
+    // Получение запрашиваемого процесса.
+    $process = $_GET['process'] ?? null;
+
     if (null !== $process && 'all' !== $process) {
-        $pairs = array_filter($pairs, fn($el) => $el === $process, ARRAY_FILTER_USE_KEY);
+        $pairs = array_filter(
+            $pairs,
+            static fn($key) => $key === $process,
+            ARRAY_FILTER_USE_KEY
+        );
     }
 
     $updateForumTree = false;
@@ -60,38 +64,18 @@ try {
         $forumTree->update();
     }
 
-    $config = $app->getLegacyConfig();
     // Запускаем задачи по очереди.
-    foreach ($pairs as $process => $fileName) {
-        // Новые классы вызываем через контейнер.
-        if ($process === 'subsections') {
-            /**
-             * Обновляем раздачи в хранимых подразделах.
-             *
-             * @var Subsections $updateSubsections
-             */
-            $updateSubsections = $app->get(Subsections::class);
-            $updateSubsections->update(config: $config);
-        } elseif ($process === 'priority') {
-            /**
-             * Обновляем список высокоприоритетных раздач.
-             *
-             * @var HighPriority $highPriority
-             */
-            $highPriority = $app->get(HighPriority::class);
-            $highPriority->update(config: $config);
-        } elseif ($process === 'keepers') {
-            /**
-             * Обновляем списки хранителей.
-             *
-             * @var KeepersReports $keepersReports
-             */
-            $keepersReports = $app->get(KeepersReports::class);
-            $keepersReports->updateReports(config: $config);
+    foreach ($pairs as $process => $className) {
+        /** @var object|null $instance */
+        $instance = $app->get($className);
+
+        if ($instance && method_exists($instance, 'update')) {
+            $instance->update();
         } else {
-            include_once sprintf('%s/../common/%s.php', dirname(__FILE__), $fileName);
+            $log->notice('Неизвестный тип обновления данных', ['process' => $process]);
         }
     }
+
     $log->info('-- DONE --');
 } catch (Throwable $e) {
     $update_result['result'] = 'В процессе обновления сведений были ошибки. '
