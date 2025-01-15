@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
@@ -24,18 +25,22 @@ final class KeepersReports
     public function __construct(
         private readonly ApiClient       $apiClient,
         private readonly ApiReportClient $apiReport,
+        private readonly Settings        $settings,
         private readonly KeepersLists    $keepersLists,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
     ) {}
 
     /**
-     * @param array<string, mixed>[] $config
+     * Обновление списков хранимых раздач других хранителей.
      *
      * @return bool - true, если обновление выполнено успешно
      */
-    public function updateReports(array $config): bool
+    public function update(): bool
     {
+        // Получаем параметры.
+        $config = $this->settings->get();
+
         // Список ид хранимых подразделов.
         $keptForums = array_keys($config['subsections'] ?? []);
         if (!count($keptForums)) {
