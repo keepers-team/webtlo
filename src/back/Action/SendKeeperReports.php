@@ -14,7 +14,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
-final class SendReports
+final class SendKeeperReports
 {
     /**
      * @param ConfigReport  $configReport настройки отправки отчётов

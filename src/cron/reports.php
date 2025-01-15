@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\Action\SendReports;
+use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 
@@ -22,8 +22,8 @@ try {
         return;
     }
 
-    /** @var SendReports $action Отправка отчётов. */
-    $action = $app->get(SendReports::class);
+    /** @var SendKeeperReports $action Отправка отчётов. */
+    $action = $app->get(SendKeeperReports::class);
     $action->process();
 } catch (RuntimeException $e) {
     if (isset($log)) {
