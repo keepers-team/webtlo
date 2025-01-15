@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Action;
 
-use KeepersTeam\Webtlo\Config\ApiCredentials as ConfigCredentials;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
 use KeepersTeam\Webtlo\Forum\SendReport;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -19,21 +17,18 @@ use Throwable;
 final class SendReports
 {
     /**
-     * @param ConfigCredentials $configCredentials хранительские ключи
-     * @param ConfigReport      $configReport      настройки отправки отчётов
-     * @param ReportCreator     $creator           Создание отчётов
+     * @param ConfigReport  $configReport настройки отправки отчётов
+     * @param ReportCreator $creator      Создание отчётов
      */
     public function __construct(
-        private readonly ConfigCredentials $configCredentials,
-        private readonly ConfigReport      $configReport,
-        private readonly ForumClient       $forumClient,
-        private readonly SendReport        $sendReport,
-        private readonly ReportCreator     $creator,
-        private readonly UpdateTime        $updateTime,
-        private readonly LoggerInterface   $logger,
+        private readonly ConfigReport    $configReport,
+        private readonly SendReport      $sendReport,
+        private readonly ReportCreator   $creator,
+        private readonly UpdateTime      $updateTime,
+        private readonly LoggerInterface $logger,
     ) {}
 
-    public function process(): bool
+    public function process(?bool $reportOverride = null): bool
     {
         Timers::start('send_reports');
         $this->logger->info('Начат процесс отправки отчётов...');
@@ -41,32 +36,26 @@ final class SendReports
         // Подключаемся к API отчётов.
         Timers::start('init_api_report');
 
-        $sendReport   = $this->sendReport;
-        $reportConfig = $this->configReport;
-        $updateTime   = $this->updateTime;
+        $report     = $this->sendReport;
+        $updateTime = $this->updateTime;
 
         // Признак необходимости отправки "чистых" отчётов из настроек.
-        $reportRewrite = $reportConfig->unsetOtherTopics;
-
-        // TODO вычленить это наружу.
-        // Проверяем наличие запроса фронта о необходимости отправки чистых отчётов.
-        $postData = json_decode((string) file_get_contents('php://input'), true);
-        if (!empty($postData['cleanOverride']) && true === $postData['cleanOverride']) {
+        $reportRewrite = $this->configReport->unsetOtherTopics;
+        if (true === $reportOverride) {
             $reportRewrite = true;
 
             $this->logger->notice('Получен сигнал для отправки "чистых" отчётов.');
         }
-        unset($postData);
 
         // Желание отправить отчёт через API.
-        $sendReport->setEnable($reportConfig->sendReports);
+        $report->setApiEnable($this->configReport->sendReports);
 
         // Проверяем доступность API.
-        if ($sendReport->isEnable()) {
-            $sendReport->checkAccess();
+        if ($report->isApiEnable()) {
+            $report->checkApiAccess();
         }
 
-        if (!$sendReport->isEnable()) {
+        if (!$report->isApiEnable()) {
             $this->logger->notice('Отправка отчёта в API невозможна или отключена');
         }
         $this->logger->debug('init api report {sec}', ['sec' => Timers::getExecTime('init_api_report')]);
@@ -91,11 +80,11 @@ final class SendReports
         $creator->setFullUpdateTime(updateTime: $fullUpdateTime);
 
         // Если API доступно - отправляем отчёты.
-        if ($sendReport->isEnable()) {
+        if ($report->isApiEnable()) {
             $Timers = [];
 
             // Задаём ид тем, с отчётами по хранимым подразделам.
-            $creator->setForumTopics(reportTopics: $sendReport->getReportTopics());
+            $creator->setForumTopics(reportTopics: $report->getReportTopics());
 
             $forumCount = $creator->getForumCount();
 
@@ -123,7 +112,7 @@ final class SendReports
                     $timer['search_db'] = Timers::getExecTime("search_db_$forumId");
 
                     // Пробуем отправить отчёт по API.
-                    $apiResult = $sendReport->sendForumTopics(
+                    $apiResult = $report->sendForumTopics(
                         forumId       : $forumId,
                         topicsToReport: $topicsToReport,
                         reportDate    : $fullUpdateTime,
@@ -161,9 +150,9 @@ final class SendReports
             // Отправка статуса хранимых подразделов и снятие галки с не хранимых.
             if (count($forumsToReport)) {
                 // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
-                $setStatus = $sendReport->setForumsStatus(
+                $setStatus = $report->setForumsStatus(
                     forumIds        : $forumsToReport,
-                    unsetOtherForums: $reportConfig->unsetOtherSubForums
+                    unsetOtherForums: $this->configReport->unsetOtherSubForums
                 );
                 $this->logger->debug('kept forums setStatus', $setStatus);
             }
@@ -182,8 +171,8 @@ final class SendReports
         }
 
         // Желание отправить сводный отчёт на форум.
-        if ($reportConfig->sendSummary) {
-            $this->sendSummaryReport();
+        if ($this->configReport->sendSummary) {
+            $this->sendForumSummaryReport();
         } else {
             $this->logger->notice('Отправка сводного отчёта на форум отключена в настройках.');
         }
@@ -196,34 +185,33 @@ final class SendReports
         return true;
     }
 
-    private function sendSummaryReport(): void
+    private function sendForumSummaryReport(): void
     {
-        $creator     = $this->creator;
-        $apiClient   = $this->sendReport;
-        $forumClient = $this->forumClient;
+        $creator = $this->creator;
+        $report  = $this->sendReport;
 
         try {
-            if ($apiClient->isEnable()) {
+            if ($report->isApiEnable()) {
                 // Формируем сводный для API.
                 $customApiReport = $creator->getConfigTelemetry();
 
                 $customApiReport['summary_report'] = $creator->getSummaryReport();
 
                 // Отправляем Сводный отчёт и телеметрию в API.
-                $apiClient->sendCustomReport(apiCustom: $customApiReport);
+                $report->sendCustomReport(apiCustom: $customApiReport);
             }
 
             // Проверяем доступ к форуму.
-            if (!$forumClient->checkConnection()) {
+            if (!$report->checkForumAccess()) {
                 throw new RuntimeException('Ошибка подключения к форуму.');
             }
 
             Timers::start('send_summary');
             // Формируем сводный отчёт.
-            $forumSummary = $creator->getSummaryReport(withTelemetry: true);
+            $summaryReport = $creator->getSummaryReport(withTelemetry: true);
 
             // Отправляем сводный отчёт.
-            $forumClient->sendSummaryReport(userId: $this->configCredentials->userId, message: $forumSummary);
+            $report->sendForumSummaryReport(report: $summaryReport);
 
             // Запишем время отправки отчётов.
             $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);

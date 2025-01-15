@@ -5,23 +5,33 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Forum;
 
 use DateTimeInterface;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\WebTLO;
 
 final class SendReport
 {
     private bool $enabled = true;
 
+    /**
+     * @param ApiCredentials  $apiCredentials хранительские ключи
+     * @param ApiReportClient $apiReport      подключение к API отчётов
+     * @param ForumClient     $forumClient    подключение к форуму
+     * @param WebTLO          $webtlo         основные параметры приложения
+     */
     public function __construct(
+        private readonly ApiCredentials  $apiCredentials,
         private readonly ApiReportClient $apiReport,
+        private readonly ForumClient     $forumClient,
         private readonly WebTLO          $webtlo,
     ) {}
 
-    public function checkAccess(): void
+    public function checkApiAccess(): void
     {
-        $this->setEnable($this->apiReport->checkAccess());
+        $this->setApiEnable($this->apiReport->checkAccess());
     }
 
     /**
@@ -101,12 +111,12 @@ final class SendReport
         );
     }
 
-    public function setEnable(bool $enabled): void
+    public function setApiEnable(bool $enabled): void
     {
         $this->enabled = $enabled;
     }
 
-    public function isEnable(): bool
+    public function isApiEnable(): bool
     {
         return $this->enabled;
     }
@@ -127,5 +137,15 @@ final class SendReport
     public function sendCustomReport(array $apiCustom): void
     {
         $this->apiReport->sendCustomData($apiCustom);
+    }
+
+    public function checkForumAccess(): bool
+    {
+        return $this->forumClient->checkConnection();
+    }
+
+    public function sendForumSummaryReport(string $report): void
+    {
+        $this->forumClient->sendSummaryReport(userId: $this->apiCredentials->userId, message: $report);
     }
 }

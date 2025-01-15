@@ -17,9 +17,21 @@ $app = App::create('reports.log');
 $log = $app->getLogger();
 
 try {
+    // Проверяем наличие запроса фронта о необходимости отправки чистых отчётов.
+    $postData = json_decode((string) file_get_contents('php://input'), true);
+
+    $reportOverride = null;
+    if (isset($postData['cleanOverride']) && true === $postData['cleanOverride']) {
+        $reportOverride = true;
+
+        $log->notice('Получен сигнал для отправки "чистых" отчётов.');
+    }
+    unset($postData);
+
+
     /** @var SendReports $action Отправка отчётов. */
     $action = $app->get(SendReports::class);
-    $action->process();
+    $action->process(reportOverride: $reportOverride);
 } catch (Throwable $e) {
     $log->error($e->getMessage());
 
