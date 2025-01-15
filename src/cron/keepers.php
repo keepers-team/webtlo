@@ -32,7 +32,7 @@ try {
 
     /** @var KeepersReports $keepersReports */
     $keepersReports = $app->get(KeepersReports::class);
-    $keepersReports->updateReports(config: $config);
+    $keepersReports->update();
 } catch (RuntimeException $e) {
     if (isset($log)) {
         $log->warning($e->getMessage());

@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\Subsections;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
+use KeepersTeam\Webtlo\Update\TorrentsClients;
 
 /**
  * Запуск обновления списка хранителей строго из планировщика.
@@ -50,7 +51,7 @@ try {
      * @var Subsections $updateSubsections
      */
     $updateSubsections = $app->get(Subsections::class);
-    $updateSubsections->update(config: $config);
+    $updateSubsections->update();
 
     /**
      * Обновляем список высокоприоритетных раздач.
@@ -58,7 +59,7 @@ try {
      * @var HighPriority $highPriority
      */
     $highPriority = $app->get(HighPriority::class);
-    $highPriority->update(config: $config);
+    $highPriority->update();
 
     /**
      * Обновляем дополнительные сведения о раздачах (названия раздач).
@@ -68,8 +69,13 @@ try {
     $detailsClass = $app->get(TopicsDetails::class);
     $detailsClass->update();
 
-    // обновляем списки раздач в торрент-клиентах
-    include_once dirname(__FILE__) . '/../php/common/tor_clients.php';
+    /**
+     * Обновляем списки раздач в торрент-клиентах.
+     *
+     * @var TorrentsClients $torrentsClients
+     */
+    $torrentsClients = $app->get(TorrentsClients::class);
+    $torrentsClients->update();
 
     $log->info('Обновление всех данных завершено за {sec}', ['sec' => Timers::getExecTime('full_update')]);
 } catch (RuntimeException $e) {
