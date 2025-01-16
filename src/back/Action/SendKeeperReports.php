@@ -7,8 +7,8 @@ namespace KeepersTeam\Webtlo\Action;
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
-use KeepersTeam\Webtlo\Forum\SendReport;
+use KeepersTeam\Webtlo\Module\Report\CreateReport;
+use KeepersTeam\Webtlo\Module\Report\SendReport;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -27,12 +27,12 @@ final class SendKeeperReports
     private DateTimeImmutable $fullUpdateTime;
 
     /**
-     * @param ConfigReport  $configReport настройки отправки отчётов
-     * @param ReportCreator $creator      Создание отчётов
+     * @param ConfigReport $configReport настройки отправки отчётов
+     * @param CreateReport $createReport Создание отчётов
      */
     public function __construct(
         private readonly ConfigReport    $configReport,
-        private readonly ReportCreator   $creator,
+        private readonly CreateReport    $createReport,
         private readonly SendReport      $sendReport,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
@@ -59,7 +59,7 @@ final class SendKeeperReports
 
         // Инициализация переменных для создания отчётов.
         Timers::start('create_report');
-        $this->creator->initConfig();
+        $this->createReport->initConfig();
         $this->logger->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
         // Проверим факт полного обновления сведений.
@@ -113,7 +113,7 @@ final class SendKeeperReports
     private function checkFullUpdateTime(): bool
     {
         $fullUpdateTime = $this->updateTime->checkReportsSendAvailable(
-            markers: $this->creator->getForums(),
+            markers: $this->createReport->getForums(),
             logger : $this->logger
         );
 
@@ -123,7 +123,7 @@ final class SendKeeperReports
 
         // Перезапишем актуальную дату отчётности.
         $this->fullUpdateTime = $fullUpdateTime;
-        $this->creator->setFullUpdateTime(updateTime: $fullUpdateTime);
+        $this->createReport->setFullUpdateTime(updateTime: $fullUpdateTime);
 
         return true;
     }
@@ -135,7 +135,7 @@ final class SendKeeperReports
      */
     private function sendSubsectionsReports(bool $reportRewrite): void
     {
-        $creator = $this->creator;
+        $creator = $this->createReport;
         $report  = $this->sendReport;
 
         $Timers = [];
@@ -232,7 +232,7 @@ final class SendKeeperReports
      */
     private function sendForumSummaryReport(): void
     {
-        $creator = $this->creator;
+        $creator = $this->createReport;
         $report  = $this->sendReport;
 
         try {

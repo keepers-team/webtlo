@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Forum;
+namespace KeepersTeam\Webtlo\Module\Report;
 
 use DateTimeInterface;
 use KeepersTeam\Webtlo\Config\ApiCredentials;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Forum\Report;
+namespace KeepersTeam\Webtlo\Module\Report;
 
 /** Тип формирования отчёта. */
 enum CreationMode

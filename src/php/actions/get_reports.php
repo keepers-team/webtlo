@@ -3,8 +3,8 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Forum\Report\CreationMode;
-use KeepersTeam\Webtlo\Forum\Report\Creator as ReportCreator;
+use KeepersTeam\Webtlo\Module\Report\CreationMode;
+use KeepersTeam\Webtlo\Module\Report\CreateReport;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 
@@ -29,13 +29,13 @@ try {
     /** @var Forums $forums */
     $forums = $app->get(Forums::class);
 
-    /** @var ReportCreator $forumReports Создание отчётов */
-    $forumReports = $app->get(ReportCreator::class);
-    $forumReports->initConfig(CreationMode::UI);
+    /** @var CreateReport $createReport Создание отчётов */
+    $createReport = $app->get(CreateReport::class);
+    $createReport->initConfig(CreationMode::UI);
 
     if ($forumId === 0) {
         // Сводный отчёт
-        $output = $forumReports->getSummaryReport(true);
+        $output = $createReport->getSummaryReport(true);
     } else {
         // Хранимые подразделы
         try {
@@ -44,10 +44,10 @@ try {
                 throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
             }
 
-            $forumReports->fillStoredValues(forumId: $forumId);
-            $reportMessages = $forumReports->getForumReport(forum: $forum);
+            $createReport->fillStoredValues(forumId: $forumId);
+            $reportMessages = $createReport->getForumReport(forum: $forum);
 
-            $output = $forumReports->prepareReportsMessages($reportMessages);
+            $output = $createReport->prepareReportsMessages($reportMessages);
         } catch (RuntimeException $e) {
             $log->notice(
                 'Формирование отчёта для подраздела {forum} прекращено. Причина {error}',
