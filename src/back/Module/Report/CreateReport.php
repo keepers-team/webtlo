@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Forum\Report;
+namespace KeepersTeam\Webtlo\Module\Report;
 
 use DateTimeImmutable;
 use Exception;
@@ -25,7 +25,7 @@ use RuntimeException;
 /**
  * Объект для создания новых отчётов.
  */
-final class Creator
+final class CreateReport
 {
     /** @var int[] */
     public ?array $forums = null;
