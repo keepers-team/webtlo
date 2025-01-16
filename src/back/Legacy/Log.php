@@ -2,8 +2,6 @@
 
 namespace KeepersTeam\Webtlo\Legacy;
 
-use KeepersTeam\Webtlo\Helper;
-
 final class Log
 {
     /** @var string[] */
@@ -11,7 +9,7 @@ final class Log
 
     public static function append(string $message = ''): void
     {
-        if (!empty($message)) {
+        if ('' !== $message) {
             self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
         }
     }
@@ -48,40 +46,10 @@ final class Log
 
     public static function get(string $break = '<br />'): string
     {
-        if (!empty(self::$log)) {
+        if (count(self::$log)) {
             return self::formatRows(rows: self::$log, break: $break);
         }
 
         return '';
-    }
-
-    public static function write(string $logFile): void
-    {
-        $dir = Helper::getLogDir();
-
-        $result = is_writable($dir) || mkdir($dir);
-        if (!$result) {
-            echo 'Нет или недостаточно прав для доступа к каталогу logs';
-        }
-
-        $logFile = "$dir/$logFile";
-        self::move($logFile);
-        if ($logFile = fopen($logFile, 'a')) {
-            fwrite($logFile, self::get("\n"));
-            fwrite($logFile, " -- DONE --\n");
-            fclose($logFile);
-        } else {
-            echo 'Не удалось создать файл лога.';
-        }
-    }
-
-    private static function move(string $logFile): void
-    {
-        // переименовываем файл лога, если он больше 5 Мб
-        if (file_exists($logFile) && filesize($logFile) >= 5242880) {
-            if (!rename($logFile, (string) preg_replace('|.log$|', '.1.log', $logFile))) {
-                echo 'Не удалось переименовать файл лога.';
-            }
-        }
     }
 }
