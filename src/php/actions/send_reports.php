@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+use KeepersTeam\Webtlo\Action\SendReports;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 
@@ -16,15 +17,16 @@ $app = App::create('reports.log');
 $log = $app->getLogger();
 
 try {
-    // дёргаем скрипт
-    include_once dirname(__FILE__) . '/../common/reports.php';
-
-    $log->info('-- DONE --');
+    /** @var SendReports $action Отправка отчётов. */
+    $action = $app->get(SendReports::class);
+    $action->process();
 } catch (Throwable $e) {
     $log->error($e->getMessage());
 
     $reports_result['result'] = 'В процессе отправки отчётов были ошибки. ' .
         'Для получения подробностей обратитесь к журналу событий.';
+} finally {
+    $log->info('-- DONE --');
 }
 
 // Выводим лог.
