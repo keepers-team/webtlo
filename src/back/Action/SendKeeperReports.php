@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\Report\CreateReport;
+use KeepersTeam\Webtlo\Module\Report\EmptyFoundTopicsException;
 use KeepersTeam\Webtlo\Module\Report\SendReport;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
@@ -156,17 +157,18 @@ final class SendKeeperReports
             $timer = [];
 
             // Пробуем отправить отчёт по API.
-            $forumsToReport[] = $forumId;
-
             Timers::start("send_api_$forumId");
 
             try {
                 Timers::start("search_db_$forumId");
 
                 // Получаем раздачи, которые нужно отправить.
-                $topicsToReport = $creator->getStoredForumTopics(forum_id: $forumId);
+                $topicsToReport = $creator->getStoredForumTopics(forumId: $forumId);
 
                 $timer['search_db'] = Timers::getExecTime("search_db_$forumId");
+
+                // Записываем ид подраздела, раздачи которого удалось найти для отчёта.
+                $forumsToReport[] = $forumId;
 
                 // Пробуем отправить отчёт по API.
                 $apiResult = $report->sendForumTopics(
@@ -190,6 +192,11 @@ final class SendKeeperReports
 
                 unset($topicsToReport, $apiResult);
             } catch (Throwable $e) {
+                // Если отправка отчёта провалилась не по причине отсутствия хранимых раздач - записываем ид подраздела.
+                if (!$e instanceof EmptyFoundTopicsException) {
+                    $forumsToReport[] = $forumId;
+                }
+
                 $this->logger->notice('API. Отчёт не отправлен [{current}/{total}]. Причина: "{error}"', [
                     'forumId' => $forumId,
                     'error'   => $e->getMessage(),
@@ -208,7 +215,7 @@ final class SendKeeperReports
         if (count($forumsToReport)) {
             // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
             $setStatus = $report->setForumsStatus(
-                forumIds        : $forumsToReport,
+                forumIds        : array_unique($forumsToReport),
                 unsetOtherForums: $this->configReport->unsetOtherSubForums
             );
             $this->logger->debug('kept forums setStatus', $setStatus);

@@ -591,10 +591,10 @@ final class CreateReport
      *
      * @return array<string, mixed>[]
      */
-    public function getStoredForumTopics(int $forum_id): array
+    public function getStoredForumTopics(int $forumId): array
     {
-        if (!empty($this->cache[$forum_id])) {
-            return $this->cache[$forum_id];
+        if (!empty($this->cache[$forumId])) {
+            return $this->cache[$forumId];
         }
 
         // Получение данных о раздачах подраздела.
@@ -616,14 +616,14 @@ final class CreateReport
                 GROUP BY tp.id, tp.info_hash, tp.forum_id, tp.name, tp.size, tp.status
                 ORDER BY tp.id
             ",
-            array_merge([$forum_id], $excludeClients->values),
+            array_merge([$forumId], $excludeClients->values),
         );
 
-        if (empty($topics)) {
-            throw new RuntimeException("Не получены данные о хранимых раздачах для подраздела № $forum_id");
+        if (!count($topics)) {
+            throw new EmptyFoundTopicsException('В БД не найдены хранимые раздачи подраздела.', $forumId);
         }
 
-        $this->cache[$forum_id] = $topics;
+        $this->cache[$forumId] = $topics;
 
         return $topics;
     }
