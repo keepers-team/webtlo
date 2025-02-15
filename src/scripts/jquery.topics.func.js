@@ -102,6 +102,30 @@ let filter_delay = makeDelay(1500);
 // подавление срабатывания фильтрации раздач
 let filter_hold = false;
 
+/**
+ * Текущий выбранный в фильтре подраздел.
+ * @returns {number}
+ */
+function getCurrentSubsection() {
+    return +$('#main-subsections').val();
+}
+
+/**
+ * Метка для раздач, в зависимости от подраздела.
+ *
+ * @param {number} subsection
+ * @returns {string}
+ */
+function getLabelBySubsection(subsection) {
+    if (subsection > 0) {
+        const forumData = $(`#list-forums [value=${subsection}]`).data();
+
+        return '' + forumData.label;
+    }
+
+    return '';
+}
+
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
     // Ставим в "очередь" поиск раздач при выполнении тяжелых запросов.
@@ -290,32 +314,28 @@ function showCountSizeSelectedTopics(count = 0, size = 0.00) {
 }
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
-function execActionTopics(topic_hashes, tor_clients, action, label, force_start, remove_data) {
-    $("#dialog").dialog("close");
-    processStatus.set("Управление раздачами...");
+function execActionTopics(params) {
+    processStatus.set('Управление раздачами...');
+
     $.ajax({
-        type: "POST",
+        type: 'POST',
         context: this,
-        url: "php/actions/exec_actions_topics.php",
-        data: {
-            topic_hashes: topic_hashes,
-            tor_clients: tor_clients,
-            action: action,
-            remove_data: remove_data,
-            force_start: force_start,
-            label: label
-        },
+        url: 'php/actions/exec_actions_topics.php',
+        data: params,
         beforeSend: function () {
             block_actions();
         },
         complete: function () {
             block_actions();
         },
-        success: function (response) {
+        success: function(response) {
             response = $.parseJSON(response);
+
             addDefaultLog(response.log ?? '');
             showResultTopics(response.result);
-            if (action == 'remove') {
+
+            // После удаления раздач, перезагрузим список.
+            if (params.action === 'remove') {
                 getFilteredTopics();
             }
         }
