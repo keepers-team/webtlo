@@ -19,7 +19,7 @@ trait DbMigration
         // Определим текущую версию БД.
         $currentVersion = (int) ($this->queryColumn('PRAGMA user_version') ?? 0);
 
-        if (self::DATABASE_VERSION === $currentVersion) {
+        if ($currentVersion === self::DATABASE_VERSION) {
             // БД актуальна, делать ничего не нужно.
             return;
         }
@@ -34,7 +34,7 @@ trait DbMigration
             );
         }
 
-        if (0 === $currentVersion) {
+        if ($currentVersion === 0) {
             // Создание БД с нуля
             $this->initTables();
         } elseif ($currentVersion > 0) {
@@ -104,7 +104,7 @@ trait DbMigration
 
         // Use scandir and check if it's not false
         $files = scandir($sqlPath);
-        if (false === $files) {
+        if ($files === false) {
             // Return an empty array if scandir fails
             return [];
         }

@@ -62,7 +62,7 @@ final class Subsections
 
         // Получаем список хранителей.
         $keepersList = $this->getKeepersList();
-        if (null === $keepersList) {
+        if ($keepersList === null) {
             return;
         }
         $this->keepersSeeders->withKeepers(keepers: $keepersList);

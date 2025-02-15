@@ -73,7 +73,7 @@ final class Output
             'client' => Helper::getClientName($this->cfg, $topic->clientId),
         ];
 
-        if (null !== $filter) {
+        if ($filter !== null) {
             $options = array_intersect_key(
                 $options,
                 array_flip($filter)

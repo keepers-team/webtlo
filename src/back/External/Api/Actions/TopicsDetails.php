@@ -105,7 +105,7 @@ trait TopicsDetails
 
             foreach ($result['result'] as $id => $payload) {
                 $topicId = (int) $id;
-                if (null !== $payload) {
+                if ($payload !== null) {
                     $knownTopics[] = self::parseDynamicTopicDetails($topicId, $payload);
                 }
             }

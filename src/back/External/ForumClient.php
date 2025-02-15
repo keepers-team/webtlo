@@ -165,7 +165,7 @@ final class ForumClient
      */
     public function __destruct()
     {
-        if (null !== $this->updatedCookie) {
+        if ($this->updatedCookie !== null) {
             $this->logger->debug('call settings set cookie', ['cookie' => $this->updatedCookie]);
 
             $this->settings->setForumCookie($this->updatedCookie);

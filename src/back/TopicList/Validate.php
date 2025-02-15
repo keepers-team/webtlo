@@ -26,7 +26,7 @@ final class Validate
     public static function sortFilter(array $filter): Sort
     {
         $sortRule = SortRule::tryFrom((string) ($filter['filter_sort'] ?? null));
-        if (null === $sortRule) {
+        if ($sortRule === null) {
             throw new ValidationException(
                 'Не выбрано или неизвестное поле для сортировки.',
                 'filter-exception-sort-rule'
@@ -34,7 +34,7 @@ final class Validate
         }
 
         $sortDirection = SortDirection::tryFrom((int) ($filter['filter_sort_direction'] ?? null));
-        if (null === $sortDirection) {
+        if ($sortDirection === null) {
             throw new ValidationException(
                 'Не выбрано или неизвестное направление сортировки.',
                 'filter-exception-sort-direction'
@@ -145,7 +145,7 @@ final class Validate
     public static function checkKeepingPriority(array $filter, int $forumId): array
     {
         if (empty($filter['keeping_priority'])) {
-            if (-5 === $forumId) {
+            if ($forumId === -5) {
                 return [2];
             }
 
@@ -310,23 +310,23 @@ final class Validate
     {
         $filter = [];
         // Фильтр "Хранитель с отчётом" = "да"/"нет"
-        if (1 === $keptStatus->hasKeeper) {
+        if ($keptStatus->hasKeeper === 1) {
             $filter[] = 'AND Keepers.max_posted IS NOT NULL';
-        } elseif (0 === $keptStatus->hasKeeper) {
+        } elseif ($keptStatus->hasKeeper === 0) {
             $filter[] = 'AND Keepers.max_posted IS NULL';
         }
 
         // Фильтр "Хранитель раздаёт" = "да"/"нет"
-        if (1 === $keptStatus->hasSeeder) {
+        if ($keptStatus->hasSeeder === 1) {
             $filter[] = 'AND Keepers.has_seeding = 1';
-        } elseif (0 === $keptStatus->hasSeeder) {
+        } elseif ($keptStatus->hasSeeder === 0) {
             $filter[] = 'AND (Keepers.has_seeding = 0 OR Keepers.has_seeding IS NULL)';
         }
 
         // Фильтр "Хранитель скачивает" = "да"/"нет"
-        if (1 === $keptStatus->hasDownloader) {
+        if ($keptStatus->hasDownloader === 1) {
             $filter[] = 'AND Keepers.has_download = 1';
-        } elseif (0 === $keptStatus->hasDownloader) {
+        } elseif ($keptStatus->hasDownloader === 0) {
             $filter[] = 'AND (Keepers.has_download = 0 OR Keepers.has_download IS NULL)';
         }
 
@@ -346,7 +346,7 @@ final class Validate
         $filterType = (int) $filter['filter_by_phrase'];
         if (!empty($filter['filter_phrase'])) {
             // В имени хранителя.
-            if (0 === $filterType) {
+            if ($filterType === 0) {
                 // Список ников режем по запятой, убираем пробелы и заменяем спецсимволы.
                 $values = explode(',', $filter['filter_phrase']);
                 $values = array_filter($values);
@@ -354,7 +354,7 @@ final class Validate
             }
 
             // В названии раздачи.
-            if (1 === $filterType) {
+            if ($filterType === 1) {
                 $pattern = (string) preg_replace(
                     '/[её]/ui',
                     '(е|ё)',
@@ -367,7 +367,7 @@ final class Validate
             }
 
             // В номере темы.
-            if (2 === $filterType) {
+            if ($filterType === 2) {
                 // Удалим лишние пробелы из поисковой строки.
                 $values = explode(',', preg_replace('/\s+/', '', $filter['filter_phrase']));
                 $values = array_filter($values);

@@ -61,7 +61,7 @@ enum TorrentStatus: int
     public static function isValidStatusLabel(string $label): bool
     {
         $case = self::tryFromLabel($label);
-        if (null === $case) {
+        if ($case === null) {
             return false;
         }
 

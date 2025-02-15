@@ -36,7 +36,7 @@ final class Settings
     {
         $config = $this->populate();
 
-        if (!empty($config['forum_url'] && 'custom' !== $config['forum_url'])) {
+        if (!empty($config['forum_url'] && $config['forum_url'] !== 'custom')) {
             return (string) $config['forum_url'];
         }
 
@@ -52,7 +52,7 @@ final class Settings
      */
     public function populate(): array
     {
-        if (null !== self::$config) {
+        if (self::$config !== null) {
             return self::$config;
         }
 
@@ -109,7 +109,7 @@ final class Settings
             foreach ($subsections as $id) {
                 $forum_client = $ini->read($id, 'client', 0);
 
-                $config['subsections'][$id]['cl']            = '' !== $forum_client ? $forum_client : 0;
+                $config['subsections'][$id]['cl']            = $forum_client !== '' ? $forum_client : 0;
                 $config['subsections'][$id]['lb']            = $ini->read("$id", 'label');
                 $config['subsections'][$id]['df']            = $ini->read("$id", 'data-folder');
                 $config['subsections'][$id]['sub_folder']    = $ini->read($id, 'data-sub-folder', 0);
@@ -174,7 +174,7 @@ final class Settings
         $config['forum_ssl']        = $ini->read('torrent-tracker', 'forum_ssl', 1);
 
         $forum_schema = $config['forum_ssl'] ? 'https' : 'http';
-        $forum_url    = 'custom' === $config['forum_url'] ? $config['forum_url_custom'] : $config['forum_url'];
+        $forum_url    = $config['forum_url'] === 'custom' ? $config['forum_url_custom'] : $config['forum_url'];
 
         $config['forum_base_url'] = $forum_url;
         $config['forum_address']  = $forum_schema . '://' . $forum_url;
@@ -187,7 +187,7 @@ final class Settings
         $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
         $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
 
-        $config['api_base_url'] = 'custom' === $config['api_url']
+        $config['api_base_url'] = $config['api_url'] === 'custom'
             ? $config['api_url_custom']
             : $config['api_url'];
 
@@ -199,7 +199,7 @@ final class Settings
         $config['report_url_custom'] = basename($ini->read('torrent-tracker', 'report_url_custom'));
         $config['report_ssl']        = $ini->read('torrent-tracker', 'report_ssl', 1);
 
-        $config['report_base_url'] = 'custom' === $config['report_url']
+        $config['report_base_url'] = $config['report_url'] === 'custom'
             ? $config['report_url_custom']
             : $config['report_url'];
 

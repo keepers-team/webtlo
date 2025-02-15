@@ -108,7 +108,7 @@ final class Utorrent implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if (false === $content) {
+        if ($content === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -140,7 +140,7 @@ final class Utorrent implements ClientInterface
         try {
             $response = $this->client->post('', ['query' => $query, 'multipart' => $fields]);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
             $this->logger->warning(
                 'Failed to add torrent',
@@ -208,7 +208,7 @@ final class Utorrent implements ClientInterface
             } catch (ClientException $e) {
                 $response = $e->getResponse();
 
-                if (401 === $response->getStatusCode()) {
+                if ($response->getStatusCode() === 401) {
                     $this->logger->error('Failed to authenticate');
                 } else {
                     $this->logger->warning(
@@ -276,7 +276,7 @@ final class Utorrent implements ClientInterface
         try {
             $response = $this->request(action: $action, params: $params, method: $method);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -384,7 +384,7 @@ final class Utorrent implements ClientInterface
         $result = true;
         foreach ($hashesChunks as $hashesChunk) {
             $response = $this->sendRequest(action: 'setprops', params: ['hashes' => $hashesChunk]);
-            if (false === $response) {
+            if ($response === false) {
                 $result = false;
             }
         }

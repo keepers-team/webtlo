@@ -53,7 +53,7 @@ final class KeepersSeeders
             }
 
             $keeper = $this->keepers->getKeeperInfo(keeperId: $keeperId);
-            if (null !== $keeper) {
+            if ($keeper !== null) {
                 $this->keptTopics[] = [$topicId, $keeper->keeperId, $keeper->keeperName];
             }
         }

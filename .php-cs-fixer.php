@@ -10,6 +10,8 @@ $rules = [
     '@PER-CS'     => true,
     '@PhpCsFixer' => true,
 
+    'yoda_style' => ['equal' => false, 'identical' => false],
+
     'global_namespace_import' => ['import_classes' => true],
     'function_declaration'    => [
         'closure_fn_spacing'       => 'none',

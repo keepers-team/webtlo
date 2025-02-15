@@ -49,7 +49,7 @@ final class SendKeeperReports
 
         /** Признак необходимости отправки "чистых" отчётов из настроек. */
         $reportRewrite = $this->configReport->unsetOtherTopics;
-        if (true === $reportOverride) {
+        if ($reportOverride === true) {
             $reportRewrite = true;
 
             $this->logger->notice('Получен сигнал для отправки "чистых" отчётов.');
@@ -64,7 +64,7 @@ final class SendKeeperReports
         $this->logger->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
         // Проверим факт полного обновления сведений.
-        if (false === $this->checkFullUpdateTime()) {
+        if ($this->checkFullUpdateTime() === false) {
             return false;
         }
 
@@ -118,7 +118,7 @@ final class SendKeeperReports
             logger : $this->logger
         );
 
-        if (null === $fullUpdateTime) {
+        if ($fullUpdateTime === null) {
             return false;
         }
 

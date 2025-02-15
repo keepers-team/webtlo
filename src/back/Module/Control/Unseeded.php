@@ -104,7 +104,7 @@ final class Unseeded
 
     private function isEnable(): bool
     {
-        if (null !== $this->moduleEnable) {
+        if ($this->moduleEnable !== null) {
             return $this->moduleEnable;
         }
 

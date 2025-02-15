@@ -86,7 +86,7 @@ trait LegacyHelper
         ];
 
         // Если есть сохраненный токен авторизации, пробуем использовать его.
-        if (null !== $forumAuth->session) {
+        if ($forumAuth->session !== null) {
             $cookie = SetCookie::fromString($forumAuth->session);
             if (empty($cookie->getDomain())) {
                 $cookie->setDomain($forumDomain);
@@ -101,7 +101,7 @@ trait LegacyHelper
             $forumDomain,
         );
 
-        $proxyConfig = null !== $proxy ? $proxy->getOptions() : [];
+        $proxyConfig = $proxy !== null ? $proxy->getOptions() : [];
 
         $clientProperties = [
             'base_uri'        => $baseUrl,
@@ -119,7 +119,7 @@ trait LegacyHelper
         $client = new Client($clientProperties);
 
         $log = ['base' => $forumDomain];
-        if (null !== $proxy) {
+        if ($proxy !== null) {
             $log['proxy'] = $proxy->log();
         }
         $logger->info('Подключение к Форуму (ForumClient)', $log);

@@ -21,7 +21,7 @@ final class Forums
     {
         $forum = self::$forums[$forumId] ?? null;
 
-        if (null === $forum) {
+        if ($forum === null) {
             $sql = '
                 SELECT f.id, f.name, f.quantity, f.size
                 FROM Forums f
@@ -52,7 +52,7 @@ final class Forums
      */
     public function getForumName(?int $forumId): string
     {
-        if (null === $forumId) {
+        if ($forumId === null) {
             return '';
         }
 

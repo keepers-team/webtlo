@@ -38,7 +38,7 @@ final class KeeperUnseededResponse
             $topic = array_combine($this->columns, $release);
 
             // Если даты нет, значит её очень давно не сидировали, добавляем в список.
-            if (null === $topic['last_seeded_time']) {
+            if ($topic['last_seeded_time'] === null) {
                 $hashes[] = $topic['info_hash'];
 
                 continue;

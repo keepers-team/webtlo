@@ -43,7 +43,7 @@ final class MarkersUpdate
     {
         $this->checkMarkersCount();
 
-        if (null === $this->status) {
+        if ($this->status === null) {
             $min = $this->getMinUpdate();
             if (time() - $min->getTimestamp() < $seconds) {
                 $this->status = UpdateStatus::EXPIRED;
@@ -58,7 +58,7 @@ final class MarkersUpdate
     {
         $this->checkMarkersCount();
 
-        if (null === $this->status) {
+        if ($this->status === null) {
             $min = $this->getMinUpdate();
             if (time() - $min->getTimestamp() > $seconds) {
                 $this->status = UpdateStatus::EXPIRED;
@@ -68,7 +68,7 @@ final class MarkersUpdate
 
     public function getMinUpdate(): DateTimeImmutable
     {
-        if (null !== $this->min) {
+        if ($this->min !== null) {
             return $this->min;
         }
 
@@ -97,7 +97,7 @@ final class MarkersUpdate
             'updates'      => $this->timestamps,
         ];
 
-        if (UpdateStatus::MISSED === $this->status) {
+        if ($this->status === UpdateStatus::MISSED) {
             $missed = array_keys(
                 array_diff_key(
                     array_fill_keys($this->markers, 0),
@@ -121,14 +121,14 @@ final class MarkersUpdate
     private function checkMarkersCount(): void
     {
         // Если не заданы маркеры - считаем, что ошибка.
-        if (null === $this->status) {
+        if ($this->status === null) {
             if (!count($this->markers)) {
                 $this->status = UpdateStatus::MISSED;
             }
         }
 
         // Проверим наличие всех маркеров.
-        if (null === $this->status) {
+        if ($this->status === null) {
             if (count($this->markers) !== count($this->timestamps)) {
                 $this->status = UpdateStatus::MISSED;
             }

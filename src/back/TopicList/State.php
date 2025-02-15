@@ -73,21 +73,21 @@ final class State
         }
 
         $topicDone = $topic['done'] ?? null;
-        if (1 == $topicDone) {
+        if ($topicDone == 1) {
             // Раздаётся.
             $topicState = 'arrow-circle-o-up';
-        } elseif (null === $topicDone) {
+        } elseif ($topicDone === null) {
             // Нет в клиенте.
             $topicState = 'circle';
         } else {
             // Скачивается.
             $topicState = 'arrow-circle-o-down';
         }
-        if (1 === (int) ($topic['paused'] ?? 0)) {
+        if ((int) ($topic['paused'] ?? 0) === 1) {
             // Приостановлена.
             $topicState = 'pause-circle-o';
         }
-        if (1 === (int) ($topic['error'] ?? 0)) {
+        if ((int) ($topic['error'] ?? 0) === 1) {
             // С ошибкой в клиенте.
             $topicState = 'times-circle-o';
         }
@@ -103,7 +103,7 @@ final class State
     public static function getClientColor(?array $topic = null): string
     {
         $color = 'success';
-        if (empty($topic) || 1 != $topic['done'] || 1 == $topic['error']) {
+        if (empty($topic) || $topic['done'] != 1 || $topic['error'] == 1) {
             $color = 'danger';
         }
 

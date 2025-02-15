@@ -23,7 +23,7 @@ trait UnregisteredTopic
     public function getUnregisteredTopic(int $topicId): ?array
     {
         $page = $this->fetchTopicPage(topicId: $topicId);
-        if (null === $page) {
+        if ($page === null) {
             return null;
         }
 
@@ -68,7 +68,7 @@ trait UnregisteredTopic
         // Кто и откуда перенёс тему.
         $transferredByWhom = $transferredFrom = '';
 
-        $isTopicInArchive = false !== mb_strpos($currentForumName, 'Архив');
+        $isTopicInArchive = mb_strpos($currentForumName, 'Архив') !== false;
         if (!empty($currentForumName) && $isTopicInArchive) {
             // Переходим на последнюю страницу темы, если она есть.
             $list = $dom->query(expression: '//table[@id="pagination"]//a[@class="pg"]');
@@ -76,7 +76,7 @@ trait UnregisteredTopic
                 $lastPage = (int) $list->item($list->length - 2)?->textContent;
 
                 $topicPage = $this->fetchTopicPage(topicId: $topicId, offset: ($lastPage - 1) * 30);
-                if (null !== $topicPage) {
+                if ($topicPage !== null) {
                     $dom = self::parseDom(page: $topicPage);
                 }
                 unset($lastPage, $topicPage);
@@ -86,14 +86,14 @@ trait UnregisteredTopic
 
             // Ищем последнее сообщение в теме.
             $lastMessage = !empty($node) ? $node->item(0) : null;
-            if (null !== $lastMessage) {
+            if ($lastMessage !== null) {
                 $avatarList = $dom->query(expression: '*//p[@class="avatar"]/img/@src', contextNode: $lastMessage);
                 $avatarLink = self::getFirstNodeValue(list: $avatarList);
 
                 // Если последнее сообщение принадлежит боту, ищем того, кто это сделал.
                 if (preg_match('/17561.gif$/i', $avatarLink)) {
                     $list = $dom->query(expression: '*//a[@class="postLink"]', contextNode: $lastMessage);
-                    if (!empty($list) && 3 === $list->count()) {
+                    if (!empty($list) && $list->count() === 3) {
                         // Откуда перенесена раздача.
                         $transferredFrom = $list->item(0)?->nodeValue;
 
@@ -141,7 +141,7 @@ trait UnregisteredTopic
     private function fetchTopicPage(int $topicId, ?int $offset = null): ?string
     {
         $query = ['t' => $topicId];
-        if (null !== $offset) {
+        if ($offset !== null) {
             $query['start'] = $offset;
         }
 

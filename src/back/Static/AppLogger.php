@@ -58,13 +58,13 @@ final class AppLogger
         $logger->pushProcessor(new PsrLogMessageProcessor(null, true));
 
         // Добавим в данные об использовании памяти.
-        if (Level::Debug === $logLevel) {
+        if ($logLevel === Level::Debug) {
             $logger->pushProcessor(new MemoryPeakUsageProcessor());
             $logger->pushProcessor(new MemoryUsageProcessor());
         }
 
         // Запись в заданный файл.
-        if (null !== $logFile) {
+        if ($logFile !== null) {
             $logger->pushHandler(self::getFileHandler($logFile, $logLevel));
         }
 

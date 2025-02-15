@@ -104,14 +104,14 @@ final class UpdateTime
     {
         $update = self::checkFullUpdate($markers);
 
-        if (UpdateStatus::MISSED === $update->getLastCheckStatus()) {
+        if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
             $update->addLogRecord($logger);
             $logger->error('Отправка отчётов невозможна. Данные в локальной БД неполные. Выполните полное обновление сведений.');
 
             return null;
         }
 
-        if (UpdateStatus::EXPIRED === $update->getLastCheckStatus()) {
+        if ($update->getLastCheckStatus() === UpdateStatus::EXPIRED) {
             $update->addLogRecord($logger);
             $logger->error(
                 'Отправка отчётов невозможна. Данные в локальной БД устарели ({date}).',

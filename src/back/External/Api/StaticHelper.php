@@ -34,7 +34,7 @@ trait StaticHelper
             self::$apiVersion
         );
 
-        $proxyConfig = null !== $proxy ? $proxy->getOptions() : [];
+        $proxyConfig = $proxy !== null ? $proxy->getOptions() : [];
 
         $clientProperties = [
             'base_uri'        => $baseUrl,
@@ -51,7 +51,7 @@ trait StaticHelper
         $client = new Client($clientProperties);
 
         $log = ['base' => $baseUrl];
-        if (null !== $proxy) {
+        if ($proxy !== null) {
             $log['proxy'] = $proxy->log();
         }
         $logger->info('Подключение к API форума (ApiClient)', $log);

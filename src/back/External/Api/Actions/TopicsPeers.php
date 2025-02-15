@@ -105,7 +105,7 @@ trait TopicsPeers
             }
 
             foreach ($result['result'] as $identifier => $payload) {
-                if (null === $payload) {
+                if ($payload === null) {
                     $missingTopics[] = $identifier;
                 } else {
                     $knownPeers[] = self::parseDynamicPeer($identifier, $payload);

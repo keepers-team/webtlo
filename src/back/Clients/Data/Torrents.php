@@ -46,6 +46,6 @@ final class Torrents implements Countable
 
     public function empty(): bool
     {
-        return [] === $this->torrents;
+        return $this->torrents === [];
     }
 }

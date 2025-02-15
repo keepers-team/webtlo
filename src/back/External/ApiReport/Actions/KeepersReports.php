@@ -19,7 +19,7 @@ trait KeepersReports
         $reportColumns = ['status', 'last_update_time', 'last_seeded_time'];
 
         $reports = $this->getForumReports($forumId, $reportColumns);
-        if (null === $reports) {
+        if ($reports === null) {
             throw new RuntimeException("API. Не удалось получить данные для раздела $forumId.");
         }
 
@@ -35,7 +35,7 @@ trait KeepersReports
 
                 // Пропускаем раздачи, у которых нет даты.
                 $posted = max($release['last_update_time'], $release['last_seeded_time']);
-                if (null === $posted) {
+                if ($posted === null) {
                     continue;
                 }
 

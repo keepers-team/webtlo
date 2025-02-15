@@ -9,7 +9,7 @@ final class Log
 
     public static function append(string $message = ''): void
     {
-        if ('' !== $message) {
+        if ($message !== '') {
             self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
         }
     }

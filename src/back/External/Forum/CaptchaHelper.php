@@ -24,7 +24,7 @@ trait CaptchaHelper
     public function fetchCaptchaImage(string $imageLink): ?string
     {
         $sourceData = $this->request(method: 'GET', url: $imageLink, validate: false);
-        if (null === $sourceData) {
+        if ($sourceData === null) {
             return null;
         }
 

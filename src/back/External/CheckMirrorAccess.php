@@ -23,7 +23,7 @@ final class CheckMirrorAccess
     public function checkAddress(string $type, string $url, bool $ssl, ?Proxy $proxy): bool
     {
         $timeout     = new Timeout(10, 10);
-        $proxyConfig = null !== $proxy ? $proxy->getOptions() : [];
+        $proxyConfig = $proxy !== null ? $proxy->getOptions() : [];
 
         $clientHeaders = [
             'User-Agent' => Defaults::userAgent,
@@ -67,7 +67,7 @@ final class CheckMirrorAccess
             return !empty($result);
         } catch (ClientException $e) {
             $statusCode = $e->getCode();
-            if (401 === $statusCode) {
+            if ($statusCode === 401) {
                 $this->logger->debug('Ответ получен', $log);
 
                 return true;

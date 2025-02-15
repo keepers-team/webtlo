@@ -125,7 +125,7 @@ final class DefaultTopics implements ListInterface
             }
 
             // Фильтрация раздач по своим спискам.
-            if (-6 == $this->forumId) {
+            if ($this->forumId == -6) {
                 $excludeSelfKeep = false;
 
                 if (!FilterApply::isUserInKeepers($topicKeepers, $userId)) {
@@ -171,7 +171,7 @@ final class DefaultTopics implements ListInterface
     {
         if ($this->forumId > 0) {
             $forumsIDs = [$this->forumId];
-        } elseif (-5 === $this->forumId) {
+        } elseif ($this->forumId === -5) {
             // Высокий приоритет.
             $forumsIDs = $this->getHighPriorityForums();
         } else {

@@ -57,7 +57,7 @@ trait Authentication
             $token = self::parseFormToken(page: $page);
 
             // Если токена нет, значит что-то не так.
-            if (null === $token) {
+            if ($token === null) {
                 return self::parseCaptchaCodes(authPage: $page, logger: $this->logger);
             }
 
@@ -116,7 +116,7 @@ trait Authentication
         if (!empty($page)) {
             // После авторизации, пробуем получить токен.
             $token = self::parseFormToken(page: $page);
-            if (null === $token) {
+            if ($token === null) {
                 return false;
             }
 
@@ -146,7 +146,7 @@ trait Authentication
             'login_password' => mb_convert_encoding($this->cred->auth->password, 'Windows-1251', 'UTF-8'),
             'login'          => mb_convert_encoding(self::loginAction, 'Windows-1251', 'UTF-8'),
         ];
-        if (null !== $captcha) {
+        if ($captcha !== null) {
             $form += $captcha;
         }
 

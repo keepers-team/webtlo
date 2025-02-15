@@ -76,7 +76,7 @@ final class SendReport
             $reportDate,
             $reportRewrite,
         );
-        if (null !== $completeReport) {
+        if ($completeReport !== null) {
             $result['reportComplete'] = $completeReport;
         }
 
@@ -88,7 +88,7 @@ final class SendReport
                 KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
                 $reportDate,
             );
-            if (null !== $downloadingReport) {
+            if ($downloadingReport !== null) {
                 $result['reportDownloading'] = $downloadingReport;
             }
         }

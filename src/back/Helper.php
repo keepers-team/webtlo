@@ -110,7 +110,7 @@ final class Helper
             return unlink($path);
         }
         foreach ((array) scandir($path) as $next_path) {
-            if ('.' === $next_path || '..' === $next_path) {
+            if ($next_path === '.' || $next_path === '..') {
                 continue;
             }
             if (is_dir("$path/$next_path")) {
@@ -132,7 +132,7 @@ final class Helper
     public static function getStorageDir(): string
     {
         $directory = getenv('WEBTLO_DIR');
-        if (false === $directory) {
+        if ($directory === false) {
             // Default path is /webtlo/data
             return self::normalizePath(
                 __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'data'
@@ -156,7 +156,7 @@ final class Helper
         // webtlo/sql
         $path = __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'sql';
 
-        if (null !== $file) {
+        if ($file !== null) {
             $path .= DIRECTORY_SEPARATOR . $file;
         }
 
@@ -169,13 +169,13 @@ final class Helper
     public static function normalizePath(string $path): string
     {
         return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function($left, $right) {
-            if (null === $left) {
+            if ($left === null) {
                 return $right;
             }
-            if ('' === $right || '.' === $right) {
+            if ($right === '' || $right === '.') {
                 return $left;
             }
-            if ('..' === $right) {
+            if ($right === '..') {
                 return dirname($left);
             }
             $pattern = sprintf('/\%s+/', DIRECTORY_SEPARATOR);

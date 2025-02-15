@@ -23,12 +23,12 @@ trait GetCredentials
     public function getApiCredentials(): ?ApiCredentials
     {
         $userId = self::parseUserId(cookieJar: $this->cookie, logger: $this->logger);
-        if (null === $userId) {
+        if ($userId === null) {
             return null;
         }
 
         $profilePage = $this->getProfile(userId: $userId);
-        if (null === $profilePage) {
+        if ($profilePage === null) {
             return null;
         }
 
@@ -46,14 +46,14 @@ trait GetCredentials
     private static function parseUserId(CookieJar $cookieJar, LoggerInterface $logger): ?int
     {
         $userCookie = $cookieJar->getCookieByName(name: self::$authCookieName);
-        if (null === $userCookie) {
+        if ($userCookie === null) {
             $logger->error('No user cookie found');
 
             return null;
         }
 
         $rawValue = $userCookie->getValue();
-        if (null === $rawValue) {
+        if ($rawValue === null) {
             $logger->error('Empty user cookie');
 
             return null;
@@ -61,7 +61,7 @@ trait GetCredentials
 
         $matches = [];
         preg_match('|[^-]*-([0-9]*)-.*|', $rawValue, $matches);
-        if (2 !== count($matches) || false === filter_var($matches[1], FILTER_SANITIZE_NUMBER_INT)) {
+        if (count($matches) !== 2 || filter_var($matches[1], FILTER_SANITIZE_NUMBER_INT) === false) {
             $logger->error('Malformed cookie', $userCookie->toArray());
 
             return null;
@@ -102,7 +102,7 @@ trait GetCredentials
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && 3 === count($nodes)) {
+        if (!empty($nodes) && count($nodes) === 3) {
             return new ApiCredentials(
                 userId: (int) $nodes->item(2)?->nodeValue,
                 btKey : (string) $nodes->item(0)?->nodeValue,

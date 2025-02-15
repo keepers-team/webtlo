@@ -33,7 +33,7 @@ final class DB
     {
         $databasePath = self::getDatabasePath();
 
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             try {
                 // Подключаемся к БД. Создаём кастомную функцию like.
                 $pdo = new PDO('sqlite:' . $databasePath);
@@ -62,7 +62,7 @@ final class DB
 
     public static function getInstance(): self
     {
-        if (null === self::$instance) {
+        if (self::$instance === null) {
             return self::create();
         }
 

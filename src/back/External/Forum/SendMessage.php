@@ -48,7 +48,7 @@ trait SendMessage
                 $this->blockingReason = $unavailable->value;
             }
         }
-        if ($this->blockingSend && null !== $this->blockingReason) {
+        if ($this->blockingSend && $this->blockingReason !== null) {
             throw new RuntimeException($this->blockingReason);
         }
 
@@ -56,7 +56,7 @@ trait SendMessage
         $message = str_replace('<br />', '', $message);
         $message = str_replace('[br]', "\n", $message);
 
-        $editMode = null === $postId ? self::replyAction : self::editAction;
+        $editMode = $postId === null ? self::replyAction : self::editAction;
 
         $form = [
             't'           => $topicId,
@@ -66,16 +66,16 @@ trait SendMessage
             'message'     => mb_convert_encoding($message, 'Windows-1251', 'UTF-8'),
         ];
 
-        if (null !== $postId) {
+        if ($postId !== null) {
             $form['p'] = $postId;
         }
         $response = $this->post(url: self::postUrl, params: ['form_params' => $form]);
-        if (null === $response) {
+        if ($response === null) {
             return null;
         }
 
         $postId = self::parseTopicIdFromPostResponse(page: $response);
-        if (null === $postId) {
+        if ($postId === null) {
             $error = self::parseTopicEditErrorFromPostResponse(page: $response);
 
             $this->logger->warning('Ошибка отправки сообщения на форум: {error}', ['error' => $error]);
@@ -92,7 +92,7 @@ trait SendMessage
     private function checkAccess(): ?AccessCheck
     {
         $response = $this->post(url: self::topicURL, params: ['query' => ['t' => self::$appTopicId]]);
-        if (null === $response) {
+        if ($response === null) {
             return AccessCheck::NOT_AUTHORIZED;
         }
 
@@ -100,12 +100,12 @@ trait SendMessage
 
         $list = $dom->query(expression: '//h1[contains(@class, "pagetitle")]/text()');
 
-        if ('Вход' === self::getFirstNodeValue(list: $list)) {
+        if (self::getFirstNodeValue(list: $list) === 'Вход') {
             return AccessCheck::NOT_AUTHORIZED;
         }
 
         $list = $dom->query(expression: '//div[contains(@class, "mrg_16")]/text()');
-        if ('Тема не найдена' === self::getFirstNodeValue(list: $list)) {
+        if (self::getFirstNodeValue(list: $list) === 'Тема не найдена') {
             return AccessCheck::USER_CANDIDATE;
         }
 
@@ -147,12 +147,12 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && 1 === count($nodes)) {
+        if (!empty($nodes) && count($nodes) === 1) {
             $postLink = (string) $nodes->item(0)?->nodeValue;
 
             $matches = [];
             preg_match('|.*viewtopic\.php\?p=(\d+)|si', $postLink, $matches);
-            if (2 === count($matches)) {
+            if (count($matches) === 2) {
                 return (int) $matches[1];
             }
         }
@@ -181,7 +181,7 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && 1 === count($nodes)) {
+        if (!empty($nodes) && count($nodes) === 1) {
             $result = $nodes->item(0)?->textContent;
         }
 
@@ -193,12 +193,12 @@ trait SendMessage
         $dom = self::parseDOM($page);
 
         $nodes = $dom->query(expression: '/html/head/script[1]');
-        if (!empty($nodes) && 1 === count($nodes)) {
+        if (!empty($nodes) && count($nodes) === 1) {
             $script = self::getFirstNodeValue(list: $nodes);
 
             $matches = [];
             preg_match("|.*form_token[^']*'([^,]*)',.*|si", $script, $matches);
-            if (2 === count($matches) && !empty($matches[1])) {
+            if (count($matches) === 2 && !empty($matches[1])) {
                 return self::$formToken = (string) $matches[1];
             }
         }

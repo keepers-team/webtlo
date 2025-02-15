@@ -18,7 +18,7 @@ final class PeerInterval
      */
     private function parseIntervals(): array
     {
-        if (null !== $this->intervals) {
+        if ($this->intervals !== null) {
             return $this->intervals;
         }
 

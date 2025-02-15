@@ -133,7 +133,7 @@ final class Qbittorrent implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if (false === $content) {
+        if ($content === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -162,9 +162,9 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->client->post('torrents/add', ['multipart' => $fields]);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
-            if (415 === $e->getCode()) {
+            if ($e->getCode() === 415) {
                 $this->logger->error('Torrent file is not valid');
             } else {
                 $this->logger->warning(
@@ -189,9 +189,9 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->request(url: 'torrents/setCategory', params: $fields);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
-            if (409 === $e->getCode()) {
+            if ($e->getCode() === 409) {
                 $this->logger->error('Category name does not exist', ['name' => $label]);
             } else {
                 $this->logger->warning(
@@ -215,9 +215,9 @@ final class Qbittorrent implements ClientInterface
             $this->request(url: 'torrents/createCategory', params: $fields);
         } catch (GuzzleException $e) {
             $statusCode = $e->getCode();
-            if (400 === $statusCode) {
+            if ($statusCode === 400) {
                 $this->logger->error('Category name is empty');
-            } elseif (409 === $statusCode) {
+            } elseif ($statusCode === 409) {
                 $this->logger->error('Category name is invalid', ['name' => $categoryName]);
             }
         }
@@ -274,16 +274,16 @@ final class Qbittorrent implements ClientInterface
 
                 // Проверяем наличие куки авторизации.
                 $this->authenticated =
-                    200 === $response->getStatusCode()
+                    $response->getStatusCode() === 200
                     && $this->checkSID();
 
-                if (!$this->authenticated && null === $this->options->credentials) {
+                if (!$this->authenticated && $this->options->credentials === null) {
                     $this->logger->warning('Не указаны логин и пароль для авторизации в торрент-клиенте.');
                 }
 
                 return $this->authenticated;
             } catch (GuzzleException $e) {
-                if (403 === $e->getCode()) {
+                if ($e->getCode() === 403) {
                     $this->logger->error("User's IP is banned for too many failed login attempts");
                 } else {
                     $this->logger->warning(
@@ -313,7 +313,7 @@ final class Qbittorrent implements ClientInterface
             try {
                 $response = $this->client->post('auth/logout', ['form_params' => []]);
 
-                $this->authenticated = !(200 === $response->getStatusCode());
+                $this->authenticated = !($response->getStatusCode() === 200);
 
                 return !$this->authenticated;
             } catch (Throwable) {
@@ -331,7 +331,7 @@ final class Qbittorrent implements ClientInterface
     private function checkSID(): bool
     {
         $sid = $this->jar->getCookieByName('SID');
-        if (null !== $sid) {
+        if ($sid !== null) {
             $this->logger->debug('Got qbittorrent auth token', $sid->toArray());
 
             return true;
@@ -376,7 +376,7 @@ final class Qbittorrent implements ClientInterface
         try {
             $response = $this->request(url: $url, params: $params);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -389,7 +389,7 @@ final class Qbittorrent implements ClientInterface
      */
     private function getApiVersion(): string
     {
-        if (null !== $this->apiVersion) {
+        if ($this->apiVersion !== null) {
             return $this->apiVersion;
         }
 
@@ -481,18 +481,18 @@ final class Qbittorrent implements ClientInterface
 
             // Процент загрузки торрента.
             $progress = $torrent['progress'];
-            if (1 === $progress && !empty($torrent['availability'])) {
+            if ($progress === 1 && !empty($torrent['availability'])) {
                 if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
                     $progress = (float) $torrent['availability'];
                 }
             }
 
             // Получение ошибок трекера.
-            if (null !== $callback) {
+            if ($callback !== null) {
                 // Для раздач на паузе, нет рабочих трекеров и смысла их проверять тоже нет.
                 if (!$torrentPaused && empty($torrent['tracker'])) {
                     $trackerError = $callback($clientHash);
-                    if (null !== $trackerError) {
+                    if ($trackerError !== null) {
                         $torrentError = true;
                     }
                 }
@@ -549,7 +549,7 @@ final class Qbittorrent implements ClientInterface
 
         if (!empty($trackers)) {
             foreach ($trackers as $tracker) {
-                if (4 === $tracker['status']) {
+                if ($tracker['status'] === 4) {
                     return (string) $tracker['message'];
                 }
             }
@@ -577,7 +577,7 @@ final class Qbittorrent implements ClientInterface
             return;
         }
 
-        if (null === $this->categories) {
+        if ($this->categories === null) {
             $this->categories = Helper::convertKeysToString(
                 array: $this->makeRequest(url: 'torrents/categories')
             );

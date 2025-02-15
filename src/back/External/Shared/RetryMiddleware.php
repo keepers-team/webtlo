@@ -16,7 +16,7 @@ trait RetryMiddleware
     protected static function getDefaultHandler(LoggerInterface $logger, ?callable $handle = null): HandlerStack
     {
         $stack = HandlerStack::create();
-        if (null !== $handle) {
+        if ($handle !== null) {
             $stack->push($handle);
         }
         $stack->push(self::getRetryMiddleware($logger));
@@ -33,7 +33,7 @@ trait RetryMiddleware
             array              $options,
             ?ResponseInterface $response,
         ) use ($logger): void {
-            $reason = null !== $response ? $response->getStatusCode() : 'timeout';
+            $reason = $response !== null ? $response->getStatusCode() : 'timeout';
 
             $attempts = $options['max_retry_attempts'];
             $delay    = number_format($delay, 2);

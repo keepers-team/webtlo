@@ -59,12 +59,12 @@ final class KeepersReports
         $updateStatus->checkMarkersLess(15 * 60);
 
         // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
-        if (UpdateStatus::MISSED === $updateStatus->getLastCheckStatus()) {
+        if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
             $this->keepersLists->clearLists();
         }
 
         // Проверим минимальную дату обновления данных других хранителей.
-        if (UpdateStatus::EXPIRED === $updateStatus->getLastCheckStatus()) {
+        if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
             $this->logger->notice(
                 'ApiReport. Обновление отчётов хранителей не требуется. Дата последнего выполнения {date}',
                 ['date' => $updateStatus->getMinUpdate()->format('d.m.Y H:i')]
@@ -80,7 +80,7 @@ final class KeepersReports
 
         // Получаем список хранителей.
         $keepersList = $this->getKeepersList();
-        if (null === $keepersList) {
+        if ($keepersList === null) {
             return false;
         }
 
@@ -122,7 +122,7 @@ final class KeepersReports
                     $keeper = $keepersList->getKeeperInfo($keeperReport->keeperId);
 
                     // Пропускаем раздачи несуществующих хранителей.
-                    if (null === $keeper) {
+                    if ($keeper === null) {
                         continue;
                     }
 

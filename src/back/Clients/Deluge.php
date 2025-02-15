@@ -85,7 +85,7 @@ final class Deluge implements ClientInterface
         foreach ($response as $torrentHash => $torrent) {
             $torrentHash = strtoupper((string) $torrentHash);
 
-            $torrentError = 'OK' !== $torrent['message'];
+            $torrentError = $torrent['message'] !== 'OK';
             preg_match('/.*Error: (.*)/', $torrent['tracker_status'], $matches);
             $trackerError = $matches[1] ?? '';
 
@@ -122,7 +122,7 @@ final class Deluge implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if (false === $content) {
+        if ($content === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -168,7 +168,7 @@ final class Deluge implements ClientInterface
             ];
 
             $response = $this->sendRequest(method: 'label.set_torrent', params: $fields);
-            if (false === $response) {
+            if ($response === false) {
                 $result = false;
             }
         }
@@ -200,7 +200,7 @@ final class Deluge implements ClientInterface
             ];
 
             $response = $this->sendRequest(method: 'core.remove_torrent', params: $fields);
-            if (false === $response) {
+            if ($response === false) {
                 $result = false;
             }
         }
@@ -226,8 +226,8 @@ final class Deluge implements ClientInterface
                 $this->request('auth.login', [$this->options->credentials->password ?? '']);
 
                 // Проверяем успешность и наличие куки авторизации.
-                if (0 === $this->jar->count()) {
-                    if (null === $this->options->credentials) {
+                if ($this->jar->count() === 0) {
+                    if ($this->options->credentials === null) {
                         $this->logger->warning('Не указан пароль для авторизации в торрент-клиенте.');
                     }
                     $this->logger->error('Failed to obtain session identifier');
@@ -243,7 +243,7 @@ final class Deluge implements ClientInterface
                     $hosts = $this->makeRequest('web.get_hosts');
 
                     $webUiHost = $hosts[0][0] ?? null;
-                    if (null === $webUiHost) {
+                    if ($webUiHost === null) {
                         $this->logger->error('Empty webUI host', $hosts);
 
                         return false;
@@ -321,7 +321,7 @@ final class Deluge implements ClientInterface
         try {
             $response = $this->request(method: $method, params: $params);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -341,9 +341,9 @@ final class Deluge implements ClientInterface
 
     private function checkLabelExists(string $labelName): bool
     {
-        if (null === $this->labels) {
+        if ($this->labels === null) {
             $enablePlugin = $this->enablePlugin('Label');
-            if (false === $enablePlugin) {
+            if ($enablePlugin === false) {
                 return false;
             }
             $this->labels = $this->makeRequest(method: 'label.get_labels');

@@ -150,7 +150,7 @@ final class HighPriority
                 $isTopicInsert = empty($previousTopic) // Нет данных о раздаче.
                     || $topicRegistered !== (int) ($previousTopic['reg_time'] ?? 0) // Изменилась дата регистрации.
                     || empty($previousTopic['name']) // Пустое название.
-                    || 0 === (int) $previousTopic['poster']; // Нет автора раздачи/
+                    || (int) $previousTopic['poster'] === 0; // Нет автора раздачи/
 
                 if (!$isTopicInsert) {
                     // Обновление существующей в БД раздачи.

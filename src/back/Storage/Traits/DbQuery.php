@@ -22,7 +22,7 @@ trait DbQuery
     {
         try {
             $sth = $this->db->prepare($sql);
-            if (false === $sth) {
+            if ($sth === false) {
                 throw new PDOException('Cant create PDOStatement');
             }
 

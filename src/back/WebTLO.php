@@ -35,7 +35,7 @@ final class WebTLO
 
     public static function loadFromFile(?string $file = null): self
     {
-        if (null === $file) {
+        if ($file === null) {
             $file = __DIR__ . '/../version.json';
         }
 
@@ -52,7 +52,7 @@ final class WebTLO
         // Если нет данных о версии, то пробуем их найти в Git.
         if (empty($result['sha'])) {
             $git = self::getGitInfo();
-            if (null !== $git) {
+            if ($git !== null) {
                 $result['version'] .= '-br-' . $git['branch'];
                 $result['sha']     = $git['sha'];
             }
@@ -222,7 +222,7 @@ final class WebTLO
      */
     private static function getGitInfo(): ?array
     {
-        if (null !== self::$git) {
+        if (self::$git !== null) {
             return self::$git;
         }
 
@@ -245,7 +245,7 @@ final class WebTLO
         }
 
         $branches = shell_exec('git branch -v --no-abbrev');
-        if (is_string($branches) && 1 === preg_match('{^\* (.+?)\s+([a-f0-9]{40})(?:\s|$)}m', $branches, $matches)) {
+        if (is_string($branches) && preg_match('{^\* (.+?)\s+([a-f0-9]{40})(?:\s|$)}m', $branches, $matches) === 1) {
             return self::$git = [
                 'branch' => $matches[1],
                 'commit' => $matches[2],

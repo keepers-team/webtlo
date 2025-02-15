@@ -43,12 +43,12 @@ trait SummaryReport
             ],
         ];
         $response = $this->get(url: self::searchUrl, params: $options);
-        if (null === $response) {
+        if ($response === null) {
             return null;
         }
 
         $postId = self::parsePostIdFromReportSearch(page: $response);
-        if (null === $postId) {
+        if ($postId === null) {
             $this->logger->debug('No reports found for given user', ['userId' => $userId]);
         }
 
@@ -81,11 +81,11 @@ trait SummaryReport
 
         /** Количество найденных сообщений в теме со сводными отчётами. */
         $nodesCount = $nodes ? $nodes->length : 0;
-        if (1 === $nodesCount) {
+        if ($nodesCount === 1) {
             $postLink = self::getFirstNodeValue(list: $nodes);
 
             $postId = $this->parsePostIdFromPostLink(postLink: $postLink);
-            if (null !== $postId) {
+            if ($postId !== null) {
                 return $postId;
             }
         }
@@ -108,7 +108,7 @@ trait SummaryReport
 
                 // Пробуем найти ид сообщения и записать его в список.
                 $postId = $this->parsePostIdFromPostLink(postLink: (string) $postLink);
-                if (null !== $postId) {
+                if ($postId !== null) {
                     $postIds[] = $postId;
                 }
             }
@@ -126,7 +126,7 @@ trait SummaryReport
     {
         $matches = [];
         preg_match('|viewtopic\.php\?p=(\d+)#.*|si', $postLink, $matches);
-        if (2 === count($matches)) {
+        if (count($matches) === 2) {
             return (int) $matches[1];
         }
 

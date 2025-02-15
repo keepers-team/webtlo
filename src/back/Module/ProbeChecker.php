@@ -61,7 +61,7 @@ final class ProbeChecker
                 foreach ($this->proxies as $proxy) {
                     $uri   = $this->getUrl((string) $type, $url);
                     $code  = $this->getUrlHttpCode($uri, $proxy);
-                    $emoji = (($code < 300 && $code > 0) || 401 === $code) ? '✅' : '❌';
+                    $emoji = (($code < 300 && $code > 0) || $code === 401) ? '✅' : '❌';
 
                     $output .= ' | ' . str_pad($emoji . ' ' . $code, $proxyLength);
                 }
@@ -84,17 +84,17 @@ final class ProbeChecker
         $webtlo = WebTLO::getVersion();
 
         $parsed = [
-            'forum_url' => 'custom' == $config['torrent-tracker']['forum_url']
+            'forum_url' => $config['torrent-tracker']['forum_url'] == 'custom'
                 ? $config['torrent-tracker']['forum_url_custom']
                 : $config['torrent-tracker']['forum_url'],
             'forum_ssl' => $config['torrent-tracker']['forum_ssl'],
-            'api_url'   => 'custom' == $config['torrent-tracker']['api_url']
+            'api_url'   => $config['torrent-tracker']['api_url'] == 'custom'
                 ? $config['torrent-tracker']['api_url_custom']
                 : $config['torrent-tracker']['api_url'],
             'api_ssl'   => $config['torrent-tracker']['api_ssl'],
         ];
 
-        if (1 == $config['proxy']['activate_forum'] || 1 == $config['proxy']['activate_api']) {
+        if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_api'] == 1) {
             $parsed['proxy']['url']  = $config['proxy']['hostname'] . ':' . $config['proxy']['port'];
             $parsed['proxy']['type'] = $config['proxy']['type'];
         }
@@ -136,7 +136,7 @@ final class ProbeChecker
     {
         try {
             $options = [];
-            if (null !== $proxy) {
+            if ($proxy !== null) {
                 $options['proxy'] = [
                     'https' => sprintf('socks5://%s:%d', $proxy[0], $proxy[1]),
                 ];

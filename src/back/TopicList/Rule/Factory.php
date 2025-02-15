@@ -23,21 +23,21 @@ final class Factory
     public function getRule(int $forumId): ListInterface
     {
         // Хранимые раздачи из других подразделов.
-        if (0 === $forumId) {
+        if ($forumId === 0) {
             return new UntrackedTopics($this->db, $this->forums, $this->output);
         }
 
-        if (-1 === $forumId) {
+        if ($forumId === -1) {
             // Хранимые раздачи незарегистрированные на форуме.
             return new UnregisteredTopics($this->db, $this->output);
         }
 
-        if (-2 === $forumId) {
+        if ($forumId === -2) {
             // Раздачи из "Черного списка".
             return new BlackListedTopics($this->db, $this->forums, $this->output);
         }
 
-        if (-4 === $forumId) {
+        if ($forumId === -4) {
             // Хранимые дублирующиеся раздачи.
             return new DuplicatedTopics($this->db, $this->cfg, $this->output);
         }
@@ -45,9 +45,9 @@ final class Factory
         if (
             // Основной поиск раздач.
             $forumId > 0        // Заданный раздел.
-            || -3 === $forumId  // Все хранимые подразделы.
-            || -5 === $forumId  // Высокий приоритет.
-            || -6 === $forumId  // Все хранимые подразделы по спискам.
+            || $forumId === -3  // Все хранимые подразделы.
+            || $forumId === -5  // Высокий приоритет.
+            || $forumId === -6  // Все хранимые подразделы по спискам.
         ) {
             return new DefaultTopics($this->db, $this->cfg, $this->output, $forumId);
         }

@@ -56,7 +56,7 @@ final class TopicControl
             $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
 
             $clientControlPeers = PeerCalc::getClientLimit($torrentClientData);
-            if (-1 === $clientControlPeers) {
+            if ($clientControlPeers === -1) {
                 $this->logger->notice("Для клиента $clientTag отключена регулировка.");
 
                 continue;
@@ -65,12 +65,12 @@ final class TopicControl
             Timers::start("control_client_$clientId");
             // Подключаемся к торрент-клиенту.
             $client = $this->getTorrentClient(clientTag: $clientTag, clientProps: $torrentClientData);
-            if (null === $client) {
+            if ($client === null) {
                 continue;
             }
             // Получаем раздачи из него.
             $torrents = $this->getClientTorrents($client, $clientTag);
-            if (null === $torrents) {
+            if ($torrents === null) {
                 continue;
             }
 
@@ -87,13 +87,13 @@ final class TopicControl
             $controlTopics = ['stop' => [], 'start' => []];
             foreach ($topicsHashes as $group => $hashes) {
                 // Пропустим регулировку "прочих", если она отключена.
-                if (ConfigControl::UnknownHashes === $group && !$topicControl->manageOtherSubsections) {
+                if ($group === ConfigControl::UnknownHashes && !$topicControl->manageOtherSubsections) {
                     continue;
                 }
 
                 $subControlPeers = PeerCalc::getForumLimit(config: $config, group: $group);
                 // Пропускаем исключённые из регулировки подразделы.
-                if (-1 === $subControlPeers) {
+                if ($subControlPeers === -1) {
                     $this->excludedForums[] = $group;
 
                     continue;
@@ -124,7 +124,7 @@ final class TopicControl
                     $torrent = $torrents->getTorrent(hash: $topic->hash);
                     if (
                         // пропускаем отсутствующий торрент
-                        null === $torrent
+                        $torrent === null
                         // пропускаем торрент с ошибкой
                         || $torrent->error
                         // пропускаем торрент на загрузке
@@ -141,7 +141,7 @@ final class TopicControl
                         unseededHashes: $forumUnseededTopics,
                     );
                     // Если не входит, то вычисляем по общему алгоритму.
-                    if (null === $desiredChange) {
+                    if ($desiredChange === null) {
                         $desiredChange = $this->calc->determineDesiredState(
                             topic    : $topic,
                             peerLimit: $peerLimit,
@@ -205,7 +205,7 @@ final class TopicControl
                 // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
                 foreach (array_chunk($controlTopics['start'], 100) as $hashes) {
                     $response = $client->startTorrents(torrentHashes: $hashes);
-                    if (false === $response) {
+                    if ($response === false) {
                         $this->logger->error('Возникли проблемы при отправке запроса на запуск раздач.');
                     }
                 }
@@ -216,7 +216,7 @@ final class TopicControl
                 // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
                 foreach (array_chunk($controlTopics['stop'], 100) as $hashes) {
                     $response = $client->stopTorrents(torrentHashes: $hashes);
-                    if (false === $response) {
+                    if ($response === false) {
                         $this->logger->error('Возникли проблемы при отправке запроса на остановку раздач.');
                     }
                 }
@@ -286,7 +286,7 @@ final class TopicControl
             $client = $this->clientFactory->fromConfigProperties(options: $clientProps);
 
             // Проверка доступности торрент-клиента.
-            if (false === $client->isOnline()) {
+            if ($client->isOnline() === false) {
                 $this->logger->notice('Клиент {tag} в данный момент недоступен.', ['tag' => $clientTag]);
 
                 return null;

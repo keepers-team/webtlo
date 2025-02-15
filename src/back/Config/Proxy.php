@@ -22,7 +22,7 @@ final class Proxy
     {
         $curlOptions = [CURLOPT_PROXYTYPE => $this->type->value];
 
-        if (null !== $this->credentials) {
+        if ($this->credentials !== null) {
             $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf(
                 '%s:%s',
                 $this->credentials->username,
@@ -45,7 +45,7 @@ final class Proxy
             'hostname'      => $this->hostname,
             'port'          => $this->port,
             'type'          => $this->type->name,
-            'authenticated' => null !== $this->credentials,
+            'authenticated' => $this->credentials !== null,
         ];
     }
 
@@ -55,7 +55,7 @@ final class Proxy
     public static function fromLegacy(array $cfg): self
     {
         $proxyType = ProxyType::tryFromName(strtoupper((string) $cfg['proxy_type']));
-        if (null === $proxyType) {
+        if ($proxyType === null) {
             throw new RuntimeException("Unknown proxy type '{$cfg['proxy_type']}'");
         }
 

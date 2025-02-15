@@ -80,7 +80,7 @@ final class ApiSearch
             return $this->getSubForumTopics(forumId: $group)->filterReleases(hashes: $hashes);
         }
 
-        if (TopicControl::UnknownHashes === $group) {
+        if ($group === TopicControl::UnknownHashes) {
             // Получаем только искомые раздачи, т.к. не знаем ид подраздела (долго).
             return $this->getApiForumPeers(hashes: $hashes);
         }

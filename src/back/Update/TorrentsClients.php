@@ -75,7 +75,7 @@ final class TorrentsClients
         $this->updateUnregistered($doUpdateUnregistered);
 
         $log = json_encode($this->timers);
-        if (false !== $log) {
+        if ($log !== false) {
             $this->logger->debug($log);
         }
     }
@@ -272,13 +272,13 @@ final class TorrentsClients
 
                     foreach ($unregisteredTopics as $topicId => $infoHash) {
                         $topicData = $this->forumClient->getUnregisteredTopic((int) $topicId);
-                        if (null === $topicData) {
+                        if ($topicData === null) {
                             continue;
                         }
 
                         // Если о раздаче есть данные в API, то дописываем их, как более верные.
                         $topic = $this->getApiTopicInfo($infoHash);
-                        if (null !== $topic) {
+                        if ($topic !== null) {
                             $topicData['name']   = $topic->title;
                             $topicData['status'] = $topic->status->label();
                             if (empty($topicData['priority'])) {

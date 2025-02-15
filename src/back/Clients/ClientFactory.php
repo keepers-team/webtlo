@@ -45,7 +45,7 @@ final class ClientFactory
     {
         $type = ClientType::tryFrom((string) $options['cl']);
 
-        if (null === $type) {
+        if ($type === null) {
             $this->logger->error('Unknown client type.', $options);
 
             throw new RuntimeException('Unknown client type');
@@ -63,7 +63,7 @@ final class ClientFactory
     {
         $type = ClientType::tryFrom((string) $options['type']);
 
-        if (null === $type) {
+        if ($type === null) {
             $this->logger->error('Unknown client type.', $options);
 
             throw new RuntimeException('Unknown client type');

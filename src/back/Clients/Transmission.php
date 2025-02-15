@@ -107,11 +107,11 @@ final class Transmission implements ClientInterface
         Timers::start('processing');
         foreach ($response['torrents'] as $torrent) {
             $torrentHash  = strtoupper($torrent['hashString']);
-            $trackerError = 2 === (int) $torrent['error'] ? $torrent['errorString'] : null;
+            $trackerError = (int) $torrent['error'] === 2 ? $torrent['errorString'] : null;
 
             $progress = $torrent['percentDone'];
             // Если торрент скачан полностью, проверив выбраны ли все файлы раздачи.
-            if (1 === (int) $progress && count($torrent['files']) > 1) {
+            if ((int) $progress === 1 && count($torrent['files']) > 1) {
                 $progress = array_sum(array_column($torrent['files'], 'bytesCompleted')) / (int) $torrent['totalSize'];
             }
 
@@ -123,8 +123,8 @@ final class Transmission implements ClientInterface
                 size        : (int) $torrent['totalSize'],
                 added       : Helper::makeDateTime((int) $torrent['addedDate']),
                 done        : $progress,
-                paused      : 0 === (int) $torrent['status'],
-                error       : 0 !== (int) $torrent['error'],
+                paused      : (int) $torrent['status'] === 0,
+                error       : (int) $torrent['error'] !== 0,
                 trackerError: $trackerError,
                 comment     : $torrent['comment'] ?: null,
                 storagePath : $torrent['downloadDir'] ?? null
@@ -142,7 +142,7 @@ final class Transmission implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if (false === $content) {
+        if ($content === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -256,7 +256,7 @@ final class Transmission implements ClientInterface
                 $response = $e->getResponse();
 
                 $statusCode = $response->getStatusCode();
-                if (401 === $statusCode) {
+                if ($statusCode === 401) {
                     $this->logger->error('Failed to authenticate');
                 } else {
                     $this->logger->warning(
@@ -323,7 +323,7 @@ final class Transmission implements ClientInterface
         try {
             $response = $this->request($method, $params);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -339,13 +339,13 @@ final class Transmission implements ClientInterface
         $body  = $response->getBody()->getContents();
         $array = json_decode($body, true);
 
-        if (null === $array) {
+        if ($array === null) {
             $this->logger->error('Fail to decode api response', [$body]);
 
             throw new RuntimeException('Unsuccessful api request');
         }
 
-        if ('success' !== $array['result']) {
+        if ($array['result'] !== 'success') {
             $this->logger->error('Unsuccessful api request', $array);
 
             throw new RuntimeException('Unsuccessful api request');

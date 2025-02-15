@@ -21,7 +21,7 @@ final class PeerCalc
      */
     public static function getClientLimit(array $clientProps): int
     {
-        return ('' !== $clientProps['control_peers']) ? (int) $clientProps['control_peers'] : -2;
+        return ($clientProps['control_peers'] !== '') ? (int) $clientProps['control_peers'] : -2;
     }
 
     /**
@@ -31,7 +31,7 @@ final class PeerCalc
     {
         $subControlPeers = $config['subsections'][$group]['control_peers'] ?? -2;
 
-        return ('' !== $subControlPeers) ? (int) $subControlPeers : -2;
+        return ($subControlPeers !== '') ? (int) $subControlPeers : -2;
     }
 
     /**
@@ -44,7 +44,7 @@ final class PeerCalc
 
         // Задан лимит для клиента и для раздела.
         if ($clientControlPeers > -1 && $subsectionControlPeers > -1) {
-            if (ControlPeerLimitPriority::Subsection === $this->config->peerLimitPriority) {
+            if ($this->config->peerLimitPriority === ControlPeerLimitPriority::Subsection) {
                 $peerLimit = $subsectionControlPeers;
             } else {
                 $peerLimit = $clientControlPeers;
@@ -138,7 +138,7 @@ final class PeerCalc
      */
     private function getPeerLimit(): int
     {
-        if (null !== $this->peerLimit) {
+        if ($this->peerLimit !== null) {
             return $this->peerLimit;
         }
 
@@ -160,6 +160,6 @@ final class PeerCalc
      */
     private static function shouldSkipSeeding(TopicControl $control, TopicPeers $topic): bool
     {
-        return !$control->seedingWithoutLeechers && 0 === $topic->leechers && $topic->seeders > 1;
+        return !$control->seedingWithoutLeechers && $topic->leechers === 0 && $topic->seeders > 1;
     }
 }

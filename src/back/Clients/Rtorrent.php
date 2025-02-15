@@ -98,7 +98,7 @@ final class Rtorrent implements ClientInterface
 
             // Если "осталось скачать" == 0, то выводим статус.
             // Если "осталось скачать" != 0, то делим остаток на общий размер.
-            $progress = 0 === $torrent[8] ? $torrent[1] : ($torrent[5] - $torrent[8]) / $torrent[5];
+            $progress = $torrent[8] === 0 ? $torrent[1] : ($torrent[5] - $torrent[8]) / $torrent[5];
 
             // Если файл один, то просто путь. Если файлов несколько, то dirname.
             $storagePath = !$torrent[9] ? $torrent[11] : dirname($torrent[11]);
@@ -127,7 +127,7 @@ final class Rtorrent implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $contents = file_get_contents($torrentFilePath, false, stream_context_create());
-        if (false === $contents) {
+        if ($contents === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -226,7 +226,7 @@ final class Rtorrent implements ClientInterface
             ];
 
             $response = $this->makeMultiCall($chainCalls);
-            if (false === $response) {
+            if ($response === false) {
                 $result = false;
             }
         }
@@ -256,12 +256,12 @@ final class Rtorrent implements ClientInterface
 
                 // Проверяем статус авторизации.
                 $this->authenticated =
-                    200 === $response->getStatusCode()
+                    $response->getStatusCode() === 200
                     && !empty($result);
 
                 return $this->authenticated;
             } catch (GuzzleException $e) {
-                if (401 === $e->getCode()) {
+                if ($e->getCode() === 401) {
                     $this->logger->error(
                         'Failed to authenticate',
                         ['code' => $e->getCode(), 'message' => $e->getMessage()]
@@ -325,7 +325,7 @@ final class Rtorrent implements ClientInterface
         try {
             $response = $this->request(command: $command, params: $params);
 
-            if (200 !== $response->getStatusCode()) {
+            if ($response->getStatusCode() !== 200) {
                 return false;
             }
 
@@ -377,7 +377,7 @@ final class Rtorrent implements ClientInterface
         $result = true;
         foreach ($callsChunks as $callsChain) {
             $response = $this->makeMultiCall($callsChain);
-            if (false === $response) {
+            if ($response === false) {
                 $result = false;
             }
         }

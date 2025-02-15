@@ -102,7 +102,7 @@ final class Flood implements ClientInterface
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
     {
         $content = file_get_contents($torrentFilePath);
-        if (false === $content) {
+        if ($content === false) {
             $this->logger->error('Failed to upload file', ['filename' => basename($torrentFilePath)]);
 
             return false;
@@ -180,7 +180,7 @@ final class Flood implements ClientInterface
     {
         if (!$this->authenticated) {
             try {
-                if (null === $this->options->credentials) {
+                if ($this->options->credentials === null) {
                     $this->logger->warning('Не указаны логин и пароль для авторизации в торрент-клиенте.');
 
                     return false;
@@ -195,7 +195,7 @@ final class Flood implements ClientInterface
 
                 // Проверяем наличие куки авторизации.
                 $this->authenticated =
-                    200 === $response->getStatusCode()
+                    $response->getStatusCode() === 200
                     && $this->checkSID();
 
                 return $this->authenticated;
@@ -203,9 +203,9 @@ final class Flood implements ClientInterface
                 $response = $e->getResponse();
 
                 $statusCode = $response->getStatusCode();
-                if (401 == $statusCode) {
+                if ($statusCode == 401) {
                     $this->logger->error('Incorrect login/password', ['response' => $response->getReasonPhrase()]);
-                } elseif (422 == $statusCode) {
+                } elseif ($statusCode == 422) {
                     $this->logger->error('Malformed request', ['response' => $response->getReasonPhrase()]);
                 } else {
                     $this->logger->error('Failed to authenticate', ['response' => $response->getReasonPhrase()]);
@@ -231,7 +231,7 @@ final class Flood implements ClientInterface
     private function request(string $uri, string $method = 'GET', array $params = []): ResponseInterface
     {
         $options = ['json' => $params];
-        if ('GET' === $method) {
+        if ($method === 'GET') {
             $options = [];
         }
 
@@ -264,18 +264,18 @@ final class Flood implements ClientInterface
         try {
             $response = $this->request(uri: $uri, method: $method, params: $params);
 
-            return 200 === $response->getStatusCode();
+            return $response->getStatusCode() === 200;
         } catch (ClientException $e) {
             $response = $e->getResponse();
 
             $statusCode = $response->getStatusCode();
-            if (400 === $statusCode) {
+            if ($statusCode === 400) {
                 $this->logger->error('Malformed request', ['code' => $statusCode]);
             }
-            if (403 === $statusCode) {
+            if ($statusCode === 403) {
                 $this->logger->error('Invalid destination', ['code' => $statusCode]);
             }
-            if (500 === $statusCode) {
+            if ($statusCode === 500) {
                 $this->logger->error('Malformed request', ['code' => $statusCode]);
             } else {
                 $this->logger->error($response->getReasonPhrase(), ['code' => $statusCode]);
@@ -293,7 +293,7 @@ final class Flood implements ClientInterface
     private function checkSID(): bool
     {
         $sid = $this->jar->getCookieByName('jwt');
-        if (null !== $sid) {
+        if ($sid !== null) {
             $this->logger->debug('Got flood auth token', $sid->toArray());
 
             return true;

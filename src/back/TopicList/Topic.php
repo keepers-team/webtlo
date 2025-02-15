@@ -52,7 +52,7 @@ final class Topic
 
     public function getIcon(): string
     {
-        if (null === $this->state) {
+        if ($this->state === null) {
             return '';
         }
 
@@ -77,7 +77,7 @@ final class Topic
 
     public function getAverageSeed(): string
     {
-        if (null === $this->averageSeed || $this->averageSeed < 0) {
+        if ($this->averageSeed === null || $this->averageSeed < 0) {
             return '';
         }
 

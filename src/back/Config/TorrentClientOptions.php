@@ -38,7 +38,7 @@ final class TorrentClientOptions
      */
     public function getBasicAuth(): array
     {
-        if (null === $this->credentials) {
+        if ($this->credentials === null) {
             return [];
         }
 

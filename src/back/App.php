@@ -44,7 +44,7 @@ final class App
     public static function create(?string $logFile = null): self
     {
         // Если контейнер уже создан, новый не создаём.
-        if (null !== self::$appContainer) {
+        if (self::$appContainer !== null) {
             return self::$appContainer;
         }
 

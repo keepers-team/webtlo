@@ -90,7 +90,7 @@ final class CreateReport
 
     public function getForumCount(): int
     {
-        if (null === $this->forums) {
+        if ($this->forums === null) {
             return 0;
         }
 
@@ -102,7 +102,7 @@ final class CreateReport
      */
     public function getForums(): array
     {
-        if (null === $this->forums) {
+        if ($this->forums === null) {
             throw new RuntimeException('No forums found');
         }
 
@@ -193,7 +193,7 @@ final class CreateReport
 
     public function initConfig(?CreationMode $mode = null): void
     {
-        if (null !== $mode) {
+        if ($mode !== null) {
             $this->mode = $mode;
 
             $this->implodeGlue = '<br />';
@@ -211,7 +211,7 @@ final class CreateReport
      */
     public function getConfigTelemetry(): array
     {
-        if (null !== $this->telemetry) {
+        if ($this->telemetry !== null) {
             return $this->telemetry;
         }
 
@@ -296,15 +296,15 @@ final class CreateReport
     private function collectSummaryInfo(): array
     {
         // Если данные уже собраны - возвращаем готовый набор.
-        if (null !== $this->summary) {
+        if ($this->summary !== null) {
             return $this->summary;
         }
 
         // Собираем данные для сводного отчёта.
-        if (null === $this->stored) {
+        if ($this->stored === null) {
             $this->fillStoredValues();
         }
-        if (null === $this->stored) {
+        if ($this->stored === null) {
             throw new RuntimeException('Нет данных для построения сводного отчёта.');
         }
 
@@ -327,14 +327,14 @@ final class CreateReport
             }
 
             $forum = $this->tableForums->getForum(forumId: $forumId);
-            if (null === $forum) {
+            if ($forum === null) {
                 throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
             }
 
             $topicId = $this->getReportTopicId(forum: $forum);
 
             // Ссылка на тему с отчётами подраздела.
-            $leftPart = null !== $topicId ?
+            $leftPart = $topicId !== null ?
                 sprintf($urlPattern, 't', $topicId, $forum->name) :
                 sprintf('[b]%s[/b]', $forum->name);
 
@@ -406,27 +406,27 @@ final class CreateReport
     {
         $topicUrl = '';
         // #dl - скачивание, :!: - смайлик.
-        $downloadIcon = 1 != $topic['done'] ? ' :!: ' : '';
+        $downloadIcon = $topic['done'] != 1 ? ' :!: ' : '';
 
-        if (CreationMode::UI === $this->mode) {
+        if ($this->mode === CreationMode::UI) {
             // [url=viewtopic.php?t=topic_id#dl]topic_name[/url] 842 GB :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s[/url] %s%s';
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
+                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
                 $topic['topic_name'],
                 $this->bytes($topic['topic_size']),
                 $downloadIcon
             );
         }
-        if (CreationMode::CRON === $this->mode) {
+        if ($this->mode === CreationMode::CRON) {
             // [url=viewtopic.php?t=topic_id#dl]topic_hash|topic_id[/url] :!:
             $pattern_topic = '[url=viewtopic.php?t=%s]%s|%d[/url]%s';
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . (1 != $topic['done'] ? '#dl' : ''),
+                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
                 $topic['topic_hash'],
                 $topic['id'],
                 $downloadIcon
@@ -514,7 +514,7 @@ final class CreateReport
      */
     public function fillStoredValues(?int $forumId = null): void
     {
-        if (null !== $forumId) {
+        if ($forumId !== null) {
             $forumIds = [$forumId];
         } else {
             $forumIds = $this->getForums();
@@ -647,13 +647,13 @@ final class CreateReport
     {
         $lastTimestamp = $this->tableUpdate->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
 
-        if (0 === $lastTimestamp) {
+        if ($lastTimestamp === 0) {
             $update = $this->tableUpdate->checkFullUpdate(
                 markers         : $this->getForums(),
                 daysUpdateExpire: $this->reportSend->daysUpdateExpire
             );
 
-            if (UpdateStatus::MISSED === $update->getLastCheckStatus()) {
+            if ($update->getLastCheckStatus() === UpdateStatus::MISSED) {
                 $update->addLogRecord($this->logger);
 
                 throw new RuntimeException(
@@ -676,7 +676,7 @@ final class CreateReport
 
     private function getFormattedUpdateTime(): string
     {
-        $dateString = null === $this->updateTime ? 'никогда' : $this->updateTime->format('d.m.Y');
+        $dateString = $this->updateTime === null ? 'никогда' : $this->updateTime->format('d.m.Y');
 
         return sprintf('Актуально на: [color=darkblue][b]%s[/b][/color]', $dateString);
     }

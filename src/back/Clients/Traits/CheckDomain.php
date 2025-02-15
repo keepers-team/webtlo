@@ -34,7 +34,7 @@ trait CheckDomain
         }
 
         // Если комментарий содержит подходящий домен
-        $isCustom = null !== $this->customDomain && str_contains($comment, $this->customDomain);
+        $isCustom = $this->customDomain !== null && str_contains($comment, $this->customDomain);
         if ($isCustom || str_contains($comment, $this->defaultDomain)) {
             $topicID = preg_replace('/.*?([0-9]*)$/', '$1', $comment);
             $topicID = (int) $topicID;
