@@ -109,6 +109,8 @@ function getFilteredTopics() {
         return filter_delay(getFilteredTopics);
     }
 
+    const filterStart = performance.now();
+
     const forum_id = +$("#main-subsections").val();
     $("#excluded_topics_size").parent().hide();
 
@@ -145,10 +147,12 @@ function getFilteredTopics() {
             $('#load_error').html('');
         },
         success: function (response) {
+            let messageResult = '';
             response = $.parseJSON(response);
+
             // Если есть ошибка - выводим её текст.
             if (response.log.length) {
-                showResultTopics(response.log);
+                messageResult = response.log;
 
                 // Если указан элемент, вызывающий ошибку - покажем его.
                 if (response.validate) {
@@ -165,6 +169,13 @@ function getFilteredTopics() {
                 $("#excluded_topics_size").text(convertBytes(response.ex_size));
             }
             showCountSizeSelectedTopics();
+
+            // Допишем время выполнения.
+            const timeTaken = ((performance.now() - filterStart) / 1000).toFixed(1);
+            messageResult += ` [${timeTaken}s]`;
+
+            // Выводим сообщение, если есть что.
+            showResultTopics(messageResult);
         }
     });
 }
@@ -259,25 +270,23 @@ function blockTopicsFilters(forum_id) {
     $('#tor_download_options').selectmenu('refresh');
 }
 
-// вывод на экран кол-во, объём выделенных раздач
-function showCountSizeSelectedTopics(count = 0, size = 0.00) {
-    $("#topics_count").text(count);
-    $("#topics_size").text(convertBytes(size));
-}
-
 // получение кол-ва, объёма выделенных раздач
 function getCountSizeSelectedTopics() {
-    var count = 0;
-    var size = 0.00;
-    var topics = $("#topics").find(".topic[type=checkbox]:checked");
-    if (!$.isEmptyObject(topics)) {
-        topics.each(function () {
-            var data = this.dataset;
-            size += parseInt(data.size);
-            count++;
-        });
-    }
+    let count = 0;
+    let size = 0.00;
+
+    $('#topics .topic[type=checkbox]:checked').each(function () {
+        size += Number(this.dataset.size) || 0;
+        count++;
+    });
+
     showCountSizeSelectedTopics(count, size);
+}
+
+// вывод на экран кол-во, объём выделенных раздач
+function showCountSizeSelectedTopics(count = 0, size = 0.00) {
+    $('#topics_count').text(count);
+    $('#topics_size').text(convertBytes(size));
 }
 
 // действия с выбранными раздачами (старт, стоп, метка, удалить)
