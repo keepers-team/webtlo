@@ -44,6 +44,7 @@ interface ClientInterface
      * Запуск раздач перечисленных в $torrentHashes.
      *
      * @param string[] $torrentHashes
+     * @param bool     $forceStart    - принудительный запуск (используется только uTorrent и Transmission)
      */
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool;
 

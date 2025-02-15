@@ -62,4 +62,24 @@ final class Torrents
             );
         }
     }
+
+    /**
+     * Изменить статус раздач в БД по хешу.
+     *
+     * @param string[] $hashes
+     */
+    public function setTorrentsStatusByHashes(array $hashes, bool $paused): void
+    {
+        $paused = (int) $paused;
+
+        $hashes = array_chunk($hashes, 500);
+        foreach ($hashes as $chunk) {
+            $search = KeysObject::create($chunk);
+
+            $this->db->executeStatement(
+                "UPDATE Torrents SET paused = ? WHERE info_hash IN ($search->keys)",
+                [$paused, ...$search->values]
+            );
+        }
+    }
 }
