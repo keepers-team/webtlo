@@ -301,7 +301,7 @@ function cfg_numeric_value($cfg): Closure
                             <button type="button" class="tor_select" value="1" title="Выделить все раздачи текущего подраздела">
                                 <i class="fa fa-check-square-o" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="tor_select" title="Снять выделение всех раздач текущего подраздела">
+                            <button type="button" class="tor_select" value="0" title="Снять выделение всех раздач текущего подраздела">
                                 <i class="fa fa-square-o" aria-hidden="true"></i>
                             </button>
                         </div>

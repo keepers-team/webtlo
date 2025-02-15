@@ -5,6 +5,15 @@ $(document).ready(function () {
 
     const topicsForm = $('#topics');
 
+    // кнопка выделить все / отменить выделение
+    $('.tor_select').on('click', function () {
+        const doSelectAllTopics = Boolean(+$(this).val());
+
+        $('#topics .topic[type=checkbox]').prop('checked', doSelectAllTopics);
+
+        getCountSizeSelectedTopics();
+    });
+
     $(".tor_download").on("click", function () {
         downloadTorrents($(this).val());
     });
@@ -172,13 +181,6 @@ $(document).ready(function () {
             force_start,
             remove_data
         );
-    });
-
-    // кнопка выделить все / отменить выделение
-    $(".tor_select").on("click", function () {
-        var value = $(this).val();
-        $("#topics").find(".topic[type=checkbox]").prop("checked", Boolean(value));
-        getCountSizeSelectedTopics();
     });
 
     // Изменение выбранных статусов хранения раздачи.

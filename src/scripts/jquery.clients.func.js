@@ -30,23 +30,26 @@ function refreshListTorrentClients() {
 
 // получение списка торрент-клиентов
 function getListTorrentClients() {
-    var torrentClients = {};
-    $("#list-torrent-clients li").each(function () {
-        var torrentClientID = $(this).val();
-        if (torrentClientID != 0) {
-            var torrentClientData = this.dataset;
-            torrentClients[torrentClientID] = {
-                "comment": torrentClientData.comment,
-                "type": torrentClientData.type,
-                "hostname": torrentClientData.hostname,
-                "port": torrentClientData.port,
-                "login": torrentClientData.login,
-                "password": torrentClientData.password,
-                "ssl": torrentClientData.ssl,
-                "control_peers": torrentClientData.peers,
-                "exclude": torrentClientData.exclude
+    let torrentClients = {};
+
+    $('#list-torrent-clients li').each(function () {
+        const clientId = +$(this).val();
+        if (clientId !== 0) {
+            const client = this.dataset;
+
+            torrentClients[clientId] = {
+                'comment'      : client.comment,
+                'type'         : client.type,
+                'hostname'     : client.hostname,
+                'port'         : client.port,
+                'login'        : client.login,
+                'password'     : client.password,
+                'ssl'          : client.ssl,
+                'control_peers': client.peers,
+                'exclude'      : client.exclude
             };
         }
     });
+
     return torrentClients;
 }
