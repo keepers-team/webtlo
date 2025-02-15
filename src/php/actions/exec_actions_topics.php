@@ -14,7 +14,10 @@ try {
     $actionType  = $_POST['action'] ?? '';
     $labelName   = $_POST['label'] ?? '';
     $removeFiles = $_POST['remove_data'] ?? '';
-    $forceStart  = $_POST['force_start'] ?? '';
+    $forceStart  = (bool)($_POST['force_start'] ?? '');
+
+    // Выбранный торрент клиент.
+    $selectedClient = (int) ($_POST['sel_client'] ?? 0);
 
     // поддерживаемые действия
     $supportedActions = [
@@ -88,12 +91,24 @@ try {
     $localTable = $app->get(Torrents::class);
 
     $log->info('Количество затрагиваемых торрент-клиентов: {client}', ['client' => count($torrentHashesByClient)]);
+    if ($actionType === 'remove' && $selectedClient === 0) {
+        $log->notice('Не задан фильтр по торрент-клиенту. Выбранные раздачи будут удалены во всех торрент-клиентах.');
+    }
+    if ($selectedClient > 0) {
+        $log->info('Задан фильтр по торрент-клиенту с идентификатором [{filter}].', ['filter' => $selectedClient]);
+    }
+
     foreach ($torrentHashesByClient as $clientID => $torrentHashes) {
         if (empty($torrentHashes)) {
             continue;
         }
         if (empty($torrentClients[$clientID])) {
-            $log->warning("В настройках нет данных о торрент-клиенте с идентификатором '$clientID'");
+            $log->warning('В настройках нет данных о торрент-клиенте с идентификатором [{client}]', ['client' => $clientID]);
+            continue;
+        }
+
+        // Пропускаем раздачи в других клиентах, если задан фильтр.
+        if ($selectedClient > 0 && $selectedClient !== (int) $clientID) {
             continue;
         }
 
@@ -121,25 +136,37 @@ try {
         $response = false;
         switch ($actionType) {
             case 'set_label':
-                $response = $client->setLabel($torrentHashes, $labelName);
+                $response = $client->setLabel(torrentHashes: $torrentHashes, label: $labelName);
                 break;
             case 'stop':
-                $response = $client->stopTorrents($torrentHashes);
+                $response = $client->stopTorrents(torrentHashes: $torrentHashes);
+
+                // Отмечаем в БД изменение статуса раздач.
+                if ($response !== false) {
+                    $localTable->setTorrentsStatusByHashes(hashes: $torrentHashes, paused: true);
+                }
                 break;
             case 'start':
-                $response = $client->startTorrents($torrentHashes, $forceStart);
+                $response = $client->startTorrents(torrentHashes: $torrentHashes, forceStart: $forceStart);
+
+                // Отмечаем в БД изменение статуса раздач.
+                if ($response !== false) {
+                    $localTable->setTorrentsStatusByHashes(hashes: $torrentHashes, paused: false);
+                }
                 break;
             case 'remove':
-                $response = $client->removeTorrents($torrentHashes, $removeFiles);
+                $response = $client->removeTorrents(torrentHashes: $torrentHashes, deleteFiles: $removeFiles);
+
+                // Отмечаем в БД удаление раздач.
                 if ($response !== false) {
-                    // помечаем в базе удаление
-                    $localTable->deleteTorrentsByHashes($torrentHashes);
+                    $localTable->deleteTorrentsByHashes(hashes: $torrentHashes);
                 }
                 break;
         }
+
         if ($response === false) {
             $log->warning(
-                "Возникли проблемы при отправке запроса '{action}' для торрент-клиента '{tag}'",
+                "Возникли проблемы при выполнении действия '{action}' для торрент-клиента '{tag}'",
                 [...$logRecord, 'action' => $actionType]
             );
         } else {

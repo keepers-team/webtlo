@@ -78,109 +78,106 @@ $(document).ready(function () {
     });
 
     // управление раздачами (старт, стоп и т.п.)
-    $(".torrent_action").on("click", function (e) {
-        var topic_hashes = $("#topics").serialize();
+    $('.torrent_action').on('click', function (e) {
+        const topic_hashes = topicsForm.serialize();
         if ($.isEmptyObject(topic_hashes)) {
-            showResultTopics("Выберите раздачи");
+            showResultTopics('Выберите раздачи');
+
             return false;
         }
-        var tor_clients = getListTorrentClients();
+
+        const tor_clients = getListTorrentClients();
         if ($.isEmptyObject(tor_clients)) {
-            showResultTopics("В настройках не найдены торрент-клиенты");
+            showResultTopics('В настройках не найдены торрент-клиенты');
+
             return false;
         }
-        var action = $(this).val();
-        var subsection = $("#main-subsections").val();
-        var label = "";
-        var remove_data = "";
-        var force_start = "";
-        if (subsection > 0) {
-            var forumData = $("#list-forums [value=" + subsection + "]").data();
-            label = forumData.label;
+
+        // Текущий выбранный "разворот раздач"/ подраздел.
+        const subsection = getCurrentSubsection();
+
+        const action = $(this).val();
+
+        // Разворот, при котором можно установить произвольную метку.
+        const labelSubsections = [0, -3, -4, -5];
+        const allowCustomLabel = e.ctrlKey || ~$.inArray(subsection, labelSubsections);
+
+        let params = {
+            action      : action,
+            subsection  : subsection,
+            label       : getLabelBySubsection(subsection),
+            tor_clients : tor_clients,
+            sel_client  : $('#filter_client_id').val(),
+            topic_hashes: topic_hashes,
+            // Принудительный запуск раздач, только uTorrent и Transmission.
+            force_start: (action === 'start' && e.ctrlKey),
+            remove_data: false,
         }
-        if (action == "remove") {
-            $("#dialog").dialog(
-                {
-                    buttons: [
-                        {
-                            text: "Да",
-                            click: function () {
-                                remove_data = true;
-                                execActionTopics(
-                                    topic_hashes,
-                                    tor_clients,
-                                    action,
-                                    label,
-                                    force_start,
-                                    remove_data
-                                );
-                            }
-                        },
-                        {
-                            text: "Нет",
-                            click: function () {
-                                execActionTopics(
-                                    topic_hashes,
-                                    tor_clients,
-                                    action,
-                                    label,
-                                    force_start,
-                                    remove_data
-                                );
-                            }
+
+        const dialog = $('#dialog');
+
+        // Удаление раздач.
+        if (action === 'remove') {
+            dialog.html(
+                'Удалить загруженные файлы раздач с диска?'
+                + '<br><br>'
+                + 'Внимание, если в фильтре не выбран клиент, то раздачи будут удалены из всех клиентов!'
+            );
+            dialog.dialog({
+                buttons  : [
+                    {
+                        text : 'Да',
+                        click: function() {
+                            params.remove_data = true;
+
+                            dialog.dialog('close');
+
+                            execActionTopics(params);
                         }
-                    ],
-                    modal: true,
-                    resizable: false,
-                    // position: [ 'center', 200 ]
-                }
-            ).text('Удалить загруженные файлы раздач с диска ?');
-            $("#dialog").dialog("open");
+                    },
+                    {
+                        text : 'Нет',
+                        click: function() {
+                            dialog.dialog('close');
+
+                            execActionTopics(params);
+                        }
+                    }
+                ],
+                modal    : true,
+                resizable: false,
+            });
+            dialog.dialog("open");
+
             return true;
         }
-        if (
-            action == "set_label"
-            && (
-                e.ctrlKey
-                || subsection == 0
-                || subsection == -4
-                || subsection == -5
-            )
-        ) {
-            $("#dialog").dialog(
-                {
-                    buttons: [
-                        {
-                            text: "ОК",
-                            click: function () {
-                                label = $("#any_label").val();
-                                execActionTopics(
-                                    topic_hashes,
-                                    tor_clients,
-                                    action,
-                                    label,
-                                    force_start,
-                                    remove_data
-                                );
-                            }
+
+        // Присвоение метки.
+        if (action === 'set_label' && allowCustomLabel) {
+            dialog.html('<label>Установить метку: <input id="any_label" size="27" />');
+            dialog.dialog({
+                buttons  : [
+                    {
+                        text : 'ОК',
+                        click: function() {
+                            params.label = $('#any_label').val();
+
+                            dialog.dialog('close');
+
+                            execActionTopics(params);
                         }
-                    ],
-                    modal: true,
-                    resizable: false,
-                    // position: [ 'center', 200 ]
-                }
-            ).html('<label>Установить метку: <input id="any_label" size="27" />');
-            $("#dialog").dialog("open");
+                    }
+                ],
+                modal    : true,
+                resizable: false,
+            });
+            dialog.dialog("open");
+
             return true;
         }
-        execActionTopics(
-            topic_hashes,
-            tor_clients,
-            action,
-            label,
-            force_start,
-            remove_data
-        );
+
+        // else (default)
+        execActionTopics(params);
     });
 
     // Изменение выбранных статусов хранения раздачи.
