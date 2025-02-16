@@ -11,6 +11,9 @@ use KeepersTeam\Webtlo\Clients\ClientType;
  */
 final class TorrentClientOptions
 {
+    /**
+     * @param array<string ,mixed> $extra
+     */
     public function __construct(
         public readonly ClientType $type,
         public readonly string     $host,
@@ -18,7 +21,6 @@ final class TorrentClientOptions
         public readonly bool       $secure = false,
         public readonly ?BasicAuth $credentials = null,
         public readonly Timeout    $timeout = new Timeout(),
-        /** @var array<string ,mixed> $extra */
         public readonly array      $extra = [],
     ) {}
 
@@ -74,12 +76,16 @@ final class TorrentClientOptions
         }
 
         return new self(
-            ClientType::from((string) $options['cl']),
-            (string) $options['ht'],
-            (int) $options['pt'],
-            $ssl,
-            $auth,
-            $timeout
+            type       : ClientType::from((string) $options['cl']),
+            host       : (string) $options['ht'],
+            port       : (int) $options['pt'],
+            secure     : $ssl,
+            credentials: $auth,
+            timeout    : $timeout,
+            extra      : [
+                'id'      => $options['id'] ?? 0,
+                'comment' => $options['cm'] ?? '',
+            ],
         );
     }
 
@@ -102,11 +108,12 @@ final class TorrentClientOptions
         }
 
         return new self(
-            ClientType::from((string) $options['type']),
-            (string) $options['hostname'],
-            (int) $options['port'],
-            $ssl,
-            $auth
+            type       : ClientType::from((string) $options['type']),
+            host       : (string) $options['hostname'],
+            port       : (int) $options['port'],
+            secure     : $ssl,
+            credentials: $auth,
+            extra      : ['comment' => $options['comment']],
         );
     }
 }

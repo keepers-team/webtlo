@@ -27,10 +27,7 @@ use Throwable;
  */
 final class Transmission implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
 
     private const TOKEN = 'X-Transmission-Session-Id';
 

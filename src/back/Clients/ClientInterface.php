@@ -17,6 +17,11 @@ interface ClientInterface
     public function isOnline(): bool;
 
     /**
+     * Описание текущего экземпляра торрент клиента.
+     */
+    public function getClientTag(): string;
+
+    /**
      * Получение сведений о раздачах от торрент-клиента.
      *
      * @param array<string, mixed> $filter

@@ -25,10 +25,7 @@ use Throwable;
  */
 final class Flood implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
     private bool $categoryAddingAllowed = true;
