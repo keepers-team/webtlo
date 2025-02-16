@@ -1083,6 +1083,11 @@ function cfg_numeric_value($cfg): Closure
                                 Снимать отметку хранения с не хранимых раздач
                             </label>
                             <hr>
+                            <label class="label" title="Авторской является раздача, автором которой является текущий авторизованный в программе хранитель.">
+                                <input name="exclude_authored" type="checkbox" size="24" <?= $checkbox_check ('reports', 'exclude_authored') ?? '' ?> />
+                                Исключить авторские (свои) раздачи из отчётов
+                            </label>
+                            <hr>
                             <h3>Список исключённых из отчётов групп, см. настройки торрент-клиентов/подразделов:</h3>
                             <label class="label">
                                 Исключенные клиенты

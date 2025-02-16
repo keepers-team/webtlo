@@ -280,6 +280,7 @@ final class CreateReport
             'enabled'             => (bool) $config['automation']['reports'],
             'send_report_api'     => (bool) $config['reports']['send_report_api'],
             'send_summary_report' => (bool) $config['reports']['send_summary_report'],
+            'exclude_authored'    => (bool) $config['reports']['exclude_authored'],
             'unset_other_forums'  => (bool) $config['reports']['unset_other_forums'],
             'unset_other_topics'  => (bool) $config['reports']['unset_other_topics'],
         ];
@@ -619,6 +620,7 @@ final class CreateReport
                     tp.name topic_name,
                     tp.size topic_size,
                     tp.status topic_status,
+                    tp.poster topic_author,
                     MAX(tr.done) AS done
                 FROM Topics tp
                 INNER JOIN Torrents tr ON tr.info_hash = tp.info_hash
@@ -626,11 +628,18 @@ final class CreateReport
                 GROUP BY tp.id, tp.info_hash, tp.forum_id, tp.name, tp.size, tp.status
                 ORDER BY tp.id
             ",
-            array_merge([$forumId], $excludeClients->values),
+            [$forumId, ...$excludeClients->values],
         );
 
         if (!count($topics)) {
             throw new EmptyFoundTopicsException('В БД не найдены хранимые раздачи подраздела.', $forumId);
+        }
+
+        // Если включена опция исключения авторских раздач, фильтруем раздачи.
+        if ($this->reportSend->excludeAuthored) {
+            $topics = array_filter($topics, function($topic) {
+                return $topic['topic_author'] !== $this->cred->userId;
+            });
         }
 
         $this->cache[$forumId] = $topics;
