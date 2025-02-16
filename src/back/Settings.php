@@ -71,6 +71,7 @@ final class Settings
 
             $torrentClient = [];
 
+            $torrentClient['id']  = $id;
             $torrentClient['cm']  = $cm ?: $id;
             $torrentClient['cl']  = $ini->read($sectionName, 'client', 'utorrent');
             $torrentClient['ht']  = $ini->read($sectionName, 'hostname');

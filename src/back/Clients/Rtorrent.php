@@ -25,10 +25,7 @@ use Throwable;
  */
 final class Rtorrent implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
 
     private const MultiCallCount = 32;
 

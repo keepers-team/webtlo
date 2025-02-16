@@ -29,10 +29,7 @@ use Throwable;
  */
 final class Utorrent implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
     use Traits\TopicIdSearch;
 
     private const HashesPerRequest = 32;

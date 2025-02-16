@@ -28,10 +28,7 @@ use Throwable;
  */
 final class Qbittorrent implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
     use Traits\TopicIdSearch;
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */

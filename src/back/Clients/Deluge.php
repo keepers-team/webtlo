@@ -25,10 +25,7 @@ use Throwable;
  */
 final class Deluge implements ClientInterface
 {
-    use Traits\AllowedFunctions;
-    use Traits\AuthClient;
-    use Traits\CheckDomain;
-    use Traits\RetryMiddleware;
+    use Traits\BasicClientTrait;
 
     /** Счетчик запросов API. */
     private int $counter = 1;
