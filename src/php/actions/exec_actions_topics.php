@@ -51,44 +51,19 @@ try {
 
     $torrentClients = $_POST['tor_clients'];
     parse_str($_POST['topic_hashes'], $topicHashes);
+
+    /** @var Torrents $localTable Локальная БД хранения данных о раздачах. */
+    $localTable = $app->get(Torrents::class);
+
     $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
 
-    $topicHashesChunks = array_chunk($topicHashes, 499);
-    foreach ($topicHashesChunks as $topicHashes) {
-        $placeholders = str_repeat('?,', count($topicHashes) - 1) . '?';
+    $torrentHashesByClient = $localTable->getGroupedByClientTopics(hashes: $topicHashes);
 
-        $data = $db->query(
-            'SELECT
-                client_id,
-                info_hash
-            FROM Torrents
-            WHERE info_hash IN (' . $placeholders . ')',
-            $topicHashes,
-            PDO::FETCH_GROUP | PDO::FETCH_COLUMN
-        );
-        unset($placeholders);
-
-        foreach ($data as $clientID => $clientTorrentHashes) {
-            if (isset($torrentHashesByClient[$clientID])) {
-                $torrentHashesByClient[$clientID] = array_merge(
-                    $torrentHashesByClient[$clientID],
-                    $clientTorrentHashes
-                );
-            } else {
-                $torrentHashesByClient[$clientID] = $clientTorrentHashes;
-            }
-            unset($clientID, $clientTorrentHashes);
-        }
-        unset($data);
-    }
     unset($topicHashes);
 
     if (empty($torrentHashesByClient)) {
         throw new Exception('Не получены данные о выбранных раздачах');
     }
-
-    /** @var Torrents $localTable Локальная БД хранения данных о раздачах. */
-    $localTable = $app->get(Torrents::class);
 
     $log->info('Количество затрагиваемых торрент-клиентов: {client}', ['client' => count($torrentHashesByClient)]);
     if ($actionType === 'remove' && $selectedClient === 0) {

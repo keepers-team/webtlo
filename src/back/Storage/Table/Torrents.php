@@ -46,6 +46,47 @@ final class Torrents
     }
 
     /**
+     * Найти список раздач, сгруппировав их по ид клиента.
+     *
+     * @param string[] $hashes
+     *
+     * @return array<int, string[]>
+     */
+    public function getGroupedByClientTopics(array $hashes, int $chunkSize = 499): array
+    {
+        $result = [];
+
+        $hashes = array_chunk(
+            array_unique($hashes),
+            max(1, $chunkSize)
+        );
+
+        foreach ($hashes as $chunk) {
+            $search = KeysObject::create($chunk);
+
+            $stm = $this->db->executeStatement(
+                "
+                    SELECT client_id, info_hash FROM Torrents
+                    WHERE info_hash IN ($search->keys)
+                ",
+                $search->values,
+            );
+
+            $topics = $stm->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
+
+            foreach ($topics as $clientId => $clientHashes) {
+                $clientId = (int) $clientId;
+
+                $result[$clientId] = isset($result[$clientId])
+                    ? array_merge($result[$clientId], $clientHashes)
+                    : $clientHashes;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Удалить раздачи в БД по хешу.
      *
      * @param string[] $hashes
