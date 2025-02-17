@@ -91,6 +91,7 @@ try {
     ksort($output, SORT_NATURAL);
 
     foreach ($output as $categoryName => $categoryData) {
+        $categoryData = array_unique($categoryData);
         asort($categoryData, SORT_NATURAL);
 
         echo '[b]' . $categoryName . '[/b][hr]</br>';
