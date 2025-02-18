@@ -47,7 +47,7 @@ try {
     $in = str_repeat('?,', count($allowedStatuses) - 1) . '?';
 
     $topics = $db->query(
-        'SELECT
+        'SELECT DISTINCT
             tr.topic_id,
             tu.status,
             tu.transferred_from,
