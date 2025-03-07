@@ -321,7 +321,7 @@ function execActionTopics(params) {
         type: 'POST',
         context: this,
         url: 'php/actions/exec_actions_topics.php',
-        data: params,
+        data: JSON.stringify(params),
         beforeSend: function () {
             block_actions();
         },

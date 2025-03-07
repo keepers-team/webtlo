@@ -12,29 +12,31 @@ use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
 try {
     $result = '';
 
-    $action = ClientAction::tryFrom($_POST['action'] ?? '');
+    $request = json_decode((string)file_get_contents('php://input'), true);
+
+    $action = ClientAction::tryFrom($request['action'] ?? '');
     if ($action === null) {
         throw new Exception('Попытка выполнить неизвестное действие');
     }
 
-    if (empty($_POST['topic_hashes'])) {
+    if (empty($request['topic_hashes'])) {
         throw new Exception('Выберите раздачи');
     }
-    if (empty($_POST['tor_clients'])) {
+    if (empty($request['tor_clients'])) {
         throw new Exception('В настройках не найдены торрент-клиенты');
     }
 
     // Выбранный торрент клиент.
-    $selectedClient = (int) ($_POST['sel_client'] ?? 0);
+    $selectedClient = (int) ($request['sel_client'] ?? 0);
 
     // Дополнительные параметры.
     $actionOptions = new ClientApplyOptions(
-        label      : (string) ($_POST['label'] ?? ''),
-        forceStart : (bool) ($_POST['remove_data'] ?? 0),
-        removeFiles: (bool) ($_POST['force_start'] ?? 0),
+        label      : (string) ($request['label'] ?? ''),
+        forceStart : (bool) ($request['force_start'] ?? 0),
+        removeFiles : (bool) ($request['remove_data'] ?? 0),
     );
 
-    parse_str($_POST['topic_hashes'], $topicHashes);
+    parse_str($request['topic_hashes'], $topicHashes);
     $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
 
     $app = App::create();
