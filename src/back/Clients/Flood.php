@@ -28,7 +28,7 @@ final class Flood implements ClientInterface
     use Traits\BasicClientTrait;
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    private bool $categoryAddingAllowed = true;
+    protected bool $categoryAddingAllowed = true;
 
     /** @var string[] */
     private const trackerErrorStates = [

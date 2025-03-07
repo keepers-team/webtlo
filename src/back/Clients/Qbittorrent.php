@@ -32,10 +32,10 @@ final class Qbittorrent implements ClientInterface
     use Traits\TopicIdSearch;
 
     /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    private bool $categoryAddingAllowed = true;
+    protected bool $categoryAddingAllowed = true;
 
     /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
-    private int $torrentAddingSleep = 100;
+    protected int $torrentAddingSleep = 100;
 
     /** Версия webApi. */
     private ?string $apiVersion = null;
