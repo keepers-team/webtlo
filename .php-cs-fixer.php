@@ -31,6 +31,8 @@ $rules = [
     'blank_line_before_statement' => true,
     'type_declaration_spaces'     => false,
 
+    'operator_linebreak' => ['only_booleans' => true],
+
     'binary_operator_spaces' => [
         'default'   => 'at_least_single_space',
         'operators' => ['=' => 'align'],

@@ -337,9 +337,9 @@ final class CreateReport
             $topicId = $this->getReportTopicId(forum: $forum);
 
             // Ссылка на тему с отчётами подраздела.
-            $leftPart = $topicId !== null ?
-                sprintf($urlPattern, 't', $topicId, $forum->name) :
-                sprintf('[b]%s[/b]', $forum->name);
+            $leftPart = $topicId !== null
+                ? sprintf($urlPattern, 't', $topicId, $forum->name)
+                : sprintf('[b]%s[/b]', $forum->name);
 
             // Ссылка на свой пост(отчёт) и количество + объём раздач.
             $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
@@ -676,9 +676,9 @@ final class CreateReport
                 $update->addLogRecord($this->logger);
 
                 throw new RuntimeException(
-                    'Сформировать отчёт невозможно. ' .
-                    'Данные в локальной БД неполные. ' .
-                    'Выполните полное обновление данных и попробуйте снова.'
+                    'Сформировать отчёт невозможно. '
+                    . 'Данные в локальной БД неполные. '
+                    . 'Выполните полное обновление данных и попробуйте снова.'
                 );
             }
 

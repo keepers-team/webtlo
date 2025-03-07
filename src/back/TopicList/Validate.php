@@ -223,8 +223,7 @@ final class Validate
             $sum_se = implode('+', $temp['sum_se']);
 
             $fields[] = "$qt AS days_seed";
-            $fields[] =
-                "CASE WHEN $qt IS 0 THEN (seeders * 1.) / seeders_updates_today ELSE ( seeders * 1. + $sum_se) / ( seeders_updates_today + $sum_qt) END AS seed";
+            $fields[] = "CASE WHEN $qt IS 0 THEN (seeders * 1.) / seeders_updates_today ELSE ( seeders * 1. + $sum_se) / ( seeders_updates_today + $sum_qt) END AS seed";
 
             $joins[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
         } else {
