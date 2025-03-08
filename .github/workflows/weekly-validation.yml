@@ -1,0 +1,17 @@
+name: Weekly Validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Запускать каждую неделю в понедельник в 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  validate:
+    name: Check PHP ${{ matrix.php-version }}
+    uses: ./.github/workflows/sub-check.yml
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3']
+    with:
+      PHP_VERSION: ${{ matrix.php-version }}
