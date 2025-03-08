@@ -20,10 +20,27 @@ jobs:
     name: Meta
     uses: ./.github/workflows/sub-metadata.yml
 
+  check-secrets:
+    name: Check Docker Hub secrets
+    runs-on: ubuntu-latest
+    outputs:
+      valid: ${{ steps.check-secrets.outputs.valid }}
+    steps:
+      - name: Check Docker Hub secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.DOCKER_HUB_USERNAME }}" ] || [ -z "${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}" ]; then
+            echo "::warning::Docker Hub secrets are not set. Skipping Docker image build."
+            echo "valid=false" >> $GITHUB_OUTPUT
+          else
+            echo "Docker Hub secrets are set"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          fi
+
   docker:
     name: Build
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    needs: [ validate, metadata ]
+    if: ${{ needs.check-secrets.outputs.valid == 'true' }}
+    needs: [ validate, metadata, check-secrets ]
     uses: ./.github/workflows/sub-build-docker.yml
     with:
       REGISTRY_IMAGE: ${{ vars.REGISTRY_IMAGE || 'berkut174/webtlo' }}

@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+      - main
 
 concurrency:
   group: check-pull-request-${{ github.head_ref }}
@@ -15,3 +16,8 @@ jobs:
   validate:
     name: Check
     uses: ./.github/workflows/sub-check.yml
+    strategy:
+      matrix:
+        php-version: [ '8.1', '8.2', '8.3' ]
+    with:
+      PHP_VERSION: ${{ matrix.php-version }}

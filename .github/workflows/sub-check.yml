@@ -2,53 +2,60 @@ name: Sub. Check code style
 
 on:
   workflow_call:
+    inputs:
+      PHP_VERSION:
+        type: string
+        default: '8.1'
 
 jobs:
 
-  php-cs-fixer:
-    name: code style
+  setup-and-check:
+    name: Setup and check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v4
-        with:
-          path: .php-cs-fixer.cache
-          key: PhpCsFixer-${{ github.repository }}-${{ github.sha }}
-          restore-keys: |
-            PhpCsFixer-${{ github.repository }}-
 
-      - name: PHP-CS-Fixer
-        uses: docker://oskarstark/php-cs-fixer-ga
+      - name: Set up PHP ${{ inputs.PHP_VERSION }}
+        uses: shivammathur/setup-php@v2
         with:
-          args: -v --dry-run
-
-  phpstan:
-    name: code quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+          php-version: ${{ inputs.PHP_VERSION }}
+          tools: composer
 
       - name: Validate composer.json
         run: cd src && composer validate --strict
 
-      - name: Cache Composer dependencies
+      - name: Get composer cache directory
+        id: composer-cache
+        run: cd src && echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
         uses: actions/cache@v4
         with:
-          path: /tmp/composer-cache
+          path: ${{ steps.composer-cache.outputs.dir }}
           key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: Composer-${{ runner.os }}-
+
+      - name: Install composer dependencies
+        run: composer install --working-dir=src --ignore-platform-reqs --prefer-dist
+
+      - name: Restore tools cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache
+          key: cache-tools-${{ github.repository }}-${{ inputs.PHP_VERSION }}-${{ github.sha }}
           restore-keys: |
-            Composer-${{ runner.os }}-
+            cache-tools-${{ github.repository }}-${{ inputs.PHP_VERSION }}-
+            cache-tools-${{ github.repository }}-
 
-      - name: Install dependencies
-        uses: php-actions/composer@v6
-        with:
-          php_version: "8.1"
-          args: --ignore-platform-reqs
-          working_dir: "src"
+      - name: Run PHP-CS-Fixer
+        run: src/vendor/bin/php-cs-fixer fix --dry-run --verbose
 
-      - name: PHPStan Static Analysis
-        uses: php-actions/phpstan@v3
+      - name: Run PHPStan
+        run: src/vendor/bin/phpstan analyse -vv --memory-limit=512M
+
+      - name: Save tools cache
+        uses: actions/cache/save@v4
+        if: ${{ !cancelled() }}
         with:
-          php_version: "8.1"
-          version: latest
-          memory_limit: 512M
+          path: .cache
+          key: cache-tools-${{ github.repository }}-${{ inputs.PHP_VERSION }}-${{ github.sha }}
