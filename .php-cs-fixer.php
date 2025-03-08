@@ -42,6 +42,7 @@ $rules = [
 ];
 
 return $config
+    ->setCacheFile('.cache/php-cs-fixer.cache')
     ->setRules($rules)->setFinder($finder)
     ->setRiskyAllowed(true)
     ->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect())
