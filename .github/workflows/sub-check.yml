@@ -39,6 +39,7 @@ jobs:
         run: composer install --working-dir=src --ignore-platform-reqs --prefer-dist
 
       - name: Restore tools cache
+        id: cache-tools
         uses: actions/cache/restore@v4
         with:
           path: .cache
@@ -55,7 +56,7 @@ jobs:
 
       - name: Save tools cache
         uses: actions/cache/save@v4
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.cache-tools.outputs.cache-hit != 'true' }}
         with:
           path: .cache
           key: cache-tools-${{ github.repository }}-${{ inputs.PHP_VERSION }}-${{ github.sha }}
