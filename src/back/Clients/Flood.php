@@ -27,9 +27,6 @@ final class Flood implements ClientInterface
 {
     use Traits\BasicClientTrait;
 
-    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    protected bool $categoryAddingAllowed = true;
-
     /** @var string[] */
     private const trackerErrorStates = [
         '/.*Couldn\'t connect.*/',
@@ -46,6 +43,9 @@ final class Flood implements ClientInterface
         private readonly LoggerInterface      $logger,
         private readonly TorrentClientOptions $options
     ) {
+        /** Клиент позволяет присваивать раздаче категорию при добавлении. */
+        $this->categoryAddingAllowed = true;
+
         $this->jar = new CookieJar();
 
         // Параметры клиента.

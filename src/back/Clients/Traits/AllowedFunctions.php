@@ -6,11 +6,11 @@ namespace KeepersTeam\Webtlo\Clients\Traits;
 
 trait AllowedFunctions
 {
-    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    protected bool $categoryAddingAllowed = false;
-
     /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
     protected int $torrentAddingSleep = 500;
+
+    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
+    protected bool $categoryAddingAllowed = false;
 
     public function getTorrentAddingSleep(): int
     {
