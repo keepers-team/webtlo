@@ -25,12 +25,13 @@ use Throwable;
  */
 final class Rtorrent implements ClientInterface
 {
-    use Traits\BasicClientTrait;
+    use Traits\AllowedFunctions;
+    use Traits\AuthClient;
+    use Traits\CheckDomain;
+    use Traits\ClientTag;
+    use Traits\RetryMiddleware;
 
     private const MultiCallCount = 32;
-
-    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    protected bool $categoryAddingAllowed = true;
 
     private Client $client;
 
@@ -38,6 +39,9 @@ final class Rtorrent implements ClientInterface
         private readonly LoggerInterface      $logger,
         private readonly TorrentClientOptions $options
     ) {
+        /** Клиент позволяет присваивать раздаче категорию при добавлении. */
+        $this->categoryAddingAllowed = true;
+
         // Параметры клиента.
         $clientOptions = [
             'base_uri' => $this->getClientBase($this->options, 'RPC2'),

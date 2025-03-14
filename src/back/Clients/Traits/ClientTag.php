@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients\Traits;
 
-trait BasicClientTrait
+trait ClientTag
 {
-    use AllowedFunctions;
-    use AuthClient;
-    use CheckDomain;
-    use RetryMiddleware;
-
     public function getClientTag(): string
     {
         $tag = $this->options->type->value;

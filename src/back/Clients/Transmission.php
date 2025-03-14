@@ -27,7 +27,11 @@ use Throwable;
  */
 final class Transmission implements ClientInterface
 {
-    use Traits\BasicClientTrait;
+    use Traits\AllowedFunctions;
+    use Traits\AuthClient;
+    use Traits\CheckDomain;
+    use Traits\ClientTag;
+    use Traits\RetryMiddleware;
 
     private const TOKEN = 'X-Transmission-Session-Id';
 
@@ -40,9 +44,6 @@ final class Transmission implements ClientInterface
      */
     private array $headers = [];
 
-    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    protected bool $categoryAddingAllowed = true;
-
     private int $rpcVersion = 0;
 
     private Client $client;
@@ -51,6 +52,9 @@ final class Transmission implements ClientInterface
         private readonly LoggerInterface      $logger,
         private readonly TorrentClientOptions $options
     ) {
+        /** Клиент позволяет присваивать раздаче категорию при добавлении. */
+        $this->categoryAddingAllowed = true;
+
         // Обработчик для получения токена авторизации.
         $authMiddleware = GuzzleRetryMiddleware::factory([
             'max_retry_attempts' => 1,

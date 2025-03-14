@@ -28,14 +28,12 @@ use Throwable;
  */
 final class Qbittorrent implements ClientInterface
 {
-    use Traits\BasicClientTrait;
+    use Traits\AllowedFunctions;
+    use Traits\AuthClient;
+    use Traits\CheckDomain;
+    use Traits\ClientTag;
+    use Traits\RetryMiddleware;
     use Traits\TopicIdSearch;
-
-    /** Позволяет ли клиент присваивать раздаче категорию при добавлении. */
-    protected bool $categoryAddingAllowed = true;
-
-    /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
-    protected int $torrentAddingSleep = 100;
 
     /** Версия webApi. */
     private ?string $apiVersion = null;
@@ -77,6 +75,11 @@ final class Qbittorrent implements ClientInterface
         private readonly TableTopics          $tableTopics,
         private readonly TableTorrents        $tableTorrents,
     ) {
+        /** Пауза между добавлением раздач в торрент-клиент, миллисекунды. */
+        $this->torrentAddingSleep = 100;
+        /** Клиент позволяет присваивать раздаче категорию при добавлении. */
+        $this->categoryAddingAllowed = true;
+
         $this->jar = new CookieJar();
 
         // Параметры клиента.
