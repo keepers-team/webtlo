@@ -38,6 +38,7 @@ final class UntrackedTopics implements ListInterface
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
+                Torrents.tracker_error AS error_message,
                 Torrents.client_id AS client_id
             FROM TopicsUntracked
             LEFT JOIN Torrents ON Torrents.info_hash = TopicsUntracked.info_hash

@@ -345,6 +345,11 @@ final class DefaultTopics implements ListInterface
             $where[] = sprintf('AND Torrents.client_id = %d', (int) $filter['filter_client_id']);
         }
 
+        // Поиск раздач с ошибкой в клиенте.
+        if (!empty($filter['filter_topic_has_client_error'])) {
+            $where[] = 'AND Torrents.error = 1';
+        }
+
         $where = implode(' ', $where);
 
         // Собираем запрос целиком.
@@ -360,6 +365,7 @@ final class DefaultTopics implements ListInterface
                 Torrents.done,
                 Torrents.paused,
                 Torrents.error,
+                Torrents.tracker_error AS error_message,
                 Torrents.client_id AS client_id,
                 {$averageSeed->getFields()}
             FROM temp.DefaultRuleTopics AS Topics

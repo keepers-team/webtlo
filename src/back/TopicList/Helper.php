@@ -26,21 +26,6 @@ final class Helper
     }
 
     /**
-     * Собрать заголовок для хранителя в зависимости от его связи с раздачей.
-     */
-    public static function getKeeperTitle(string $state): string
-    {
-        $keeperBullets = [
-            'upload'              => 'Есть в списке и раздаёт',
-            'hard-drive'          => 'Есть в списке, не раздаёт',
-            'arrow-circle-o-up'   => 'Нет в списке и раздаёт',
-            'arrow-circle-o-down' => 'Скачивает',
-        ];
-
-        return $keeperBullets[$state] ?? '';
-    }
-
-    /**
      * Хранители раздачи в виде списка.
      *
      * @param array<string, mixed>[] $topicKeepers
@@ -61,19 +46,25 @@ final class Helper
         $keepersNames = array_map(function($e) use ($user_id, $format) {
             if ($e['complete']) {
                 if (!$e['posted']) {
-                    $stateIcon = 'arrow-circle-o-up';
+                    $keeperIcon = StateKeeperIcon::NotListedSeeding;
                 } else {
-                    $stateIcon = $e['seeding'] ? 'upload' : 'hard-drive';
+                    $keeperIcon = $e['seeding']
+                        ? StateKeeperIcon::Seeding
+                        : StateKeeperIcon::Inactive;
                 }
-                $stateColor = 'success';
+
+                $stateColor = StateColor::Success;
             } else {
-                $stateIcon  = 'arrow-circle-o-down';
-                $stateColor = 'danger';
+                $keeperIcon = StateKeeperIcon::Downloading;
+                $stateColor = StateColor::Danger;
             }
+
             if ($user_id === (int) $e['keeper_id']) {
-                $stateColor = 'self';
+                $stateColor = StateColor::Self;
             }
-            $state = new State($stateIcon, $stateColor, self::getKeeperTitle($stateIcon));
+
+            // Собрать заголовок для хранителя в зависимости от его связи с раздачей.
+            $state = new State($keeperIcon, $stateColor, $keeperIcon->label());
 
             return $format($state, (string) $e['keeper_name']);
         }, $topicKeepers);

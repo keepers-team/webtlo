@@ -37,6 +37,7 @@ final class UnregisteredTopics implements ListInterface
                 Torrents.client_id AS client_id,
                 Torrents.paused,
                 Torrents.error,
+                Torrents.tracker_error AS error_message,
                 Torrents.done
             FROM TopicsUnregistered
             INNER JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash

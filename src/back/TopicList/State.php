@@ -7,14 +7,20 @@ namespace KeepersTeam\Webtlo\TopicList;
 final class State
 {
     public function __construct(
-        public readonly string $icon,
-        public readonly string $color,
-        public readonly string $title
+        public readonly StateClientIcon|StateKeeperIcon $icon,
+        public readonly StateColor                      $color,
+        public readonly string                          $title
     ) {}
 
     public function getIconElem(string $classes = ''): string
     {
-        $classes = ['fa', 'fa-size', "fa-$this->icon", "text-$this->color", $classes];
+        $classes = [
+            'fa',
+            'fa-size',
+            "fa-{$this->icon->value}",
+            "text-{$this->color->value}",
+            $classes,
+        ];
         $classes = implode(' ', array_filter($classes));
 
         return sprintf("<i class='%s' title='%s'></i>", $classes, $this->title);
@@ -22,7 +28,7 @@ final class State
 
     public function getStringElem(string $text, string $classes = ''): string
     {
-        $classes = ["text-$this->color", $classes];
+        $classes = ["text-{$this->color->value}", $classes];
         $classes = implode(' ', array_filter($classes));
 
         return sprintf("<i class='%s' title='%s'>%s</i>", $classes, $this->title, $text);
@@ -35,7 +41,11 @@ final class State
     {
         $icon  = self::getClientState($topicData);
         $color = self::getSeedColor($daysRequire, $daysUpdate);
-        $title = self::getClientTitle($icon, $color);
+        $title = self::getClientTitle(
+            state: $icon,
+            color: $color,
+            error: self::checkErrorMessage($topicData),
+        );
 
         return new self($icon, $color, $title);
     }
@@ -47,7 +57,10 @@ final class State
     {
         $icon  = self::getClientState($topicData);
         $color = self::getClientColor($topicData);
-        $title = self::getClientTitle($icon);
+        $title = self::getClientTitle(
+            state: $icon,
+            error: self::checkErrorMessage($topicData),
+        );
 
         return new self($icon, $color, $title);
     }
@@ -56,7 +69,7 @@ final class State
     {
         $icon  = self::getClientState();
         $color = self::getSeedColor($daysRequire, $daysUpdate);
-        $title = self::getClientTitle('', $color);
+        $title = self::getClientTitle(color: $color);
 
         return new self($icon, $color, $title);
     }
@@ -66,30 +79,32 @@ final class State
      *
      * @param ?array<string, mixed> $topic
      */
-    public static function getClientState(?array $topic = null): string
+    public static function getClientState(?array $topic = null): StateClientIcon
     {
         if (empty($topic)) {
-            return 'circle';
+            return StateClientIcon::NotAdded;
         }
 
         $topicDone = $topic['done'] ?? null;
-        if ($topicDone == 1) {
-            // Раздаётся.
-            $topicState = 'arrow-circle-o-up';
-        } elseif ($topicDone === null) {
+        if ($topicDone === null) {
             // Нет в клиенте.
-            $topicState = 'circle';
+            $topicState = StateClientIcon::NotAdded;
+        } elseif ($topicDone == 1) {
+            // Раздаётся.
+            $topicState = StateClientIcon::Seeding;
         } else {
             // Скачивается.
-            $topicState = 'arrow-circle-o-down';
+            $topicState = StateClientIcon::Downloading;
         }
+
         if ((int) ($topic['paused'] ?? 0) === 1) {
             // Приостановлена.
-            $topicState = 'pause-circle-o';
+            $topicState = StateClientIcon::Paused;
         }
+
         if ((int) ($topic['error'] ?? 0) === 1) {
             // С ошибкой в клиенте.
-            $topicState = 'times-circle-o';
+            $topicState = StateClientIcon::Error;
         }
 
         return $topicState;
@@ -100,26 +115,26 @@ final class State
      *
      * @param ?array<string, mixed> $topic
      */
-    public static function getClientColor(?array $topic = null): string
+    public static function getClientColor(?array $topic = null): StateColor
     {
-        $color = 'success';
+        $color = StateColor::Success;
         if (empty($topic) || $topic['done'] != 1 || $topic['error'] == 1) {
-            $color = 'danger';
+            $color = StateColor::Danger;
         }
 
         return $color;
     }
 
     /** Определить наличие информации о средних сидах в локальной БД. */
-    private static function getSeedColor(int $daysRequire = 14, int $daysUpdate = -1): string
+    private static function getSeedColor(int $daysRequire = 14, int $daysUpdate = -1): StateColor
     {
-        $color = 'info';
+        $color = StateColor::Info;
 
         // Количество дней, в которые набирались данные о средних сидах.
         if ($daysUpdate > -1) {
-            $color = 'success';
+            $color = StateColor::Success;
             if ($daysUpdate < $daysRequire) {
-                $color = ($daysUpdate >= $daysRequire / 2) ? 'warning' : 'danger';
+                $color = ($daysUpdate >= $daysRequire / 2) ? StateColor::Warning : StateColor::Danger;
             }
         }
 
@@ -127,27 +142,43 @@ final class State
     }
 
     /** Описание состояния раздачи в клиенте + наличие средних сидов. */
-    public static function getClientTitle(string $state = '', string $color = ''): string
-    {
-        $topicStates = [
-            'circle'              => 'нет в клиенте',
-            'arrow-circle-o-up'   => 'раздаётся',
-            'arrow-circle-o-down' => 'скачивается',
-            'pause-circle-o'      => 'приостановлена',
-            'times-circle-o'      => 'с ошибкой в клиенте',
-        ];
+    public static function getClientTitle(
+        ?StateClientIcon $state = null,
+        ?StateColor      $color = null,
+        ?string          $error = null
+    ): string {
+        $bulletTitles = [];
 
-        $topicColors = [
-            'success' => 'полные данные о средних сидах',
-            'warning' => 'неполные данные о средних сидах',
-            'danger'  => 'отсутствуют данные о средних сидах',
-        ];
+        if ($state !== null) {
+            $bulletTitles[] = $state->label();
+        }
 
-        $bulletTitle[] = $topicStates[$state] ?? null;
-        $bulletTitle[] = $topicColors[$color] ?? null;
+        if ($color !== null) {
+            $bulletTitles[] = $color->label();
+        }
 
-        $title = implode(', ', array_filter($bulletTitle));
+        if ($error !== null) {
+            $bulletTitles[] = "[$error]";
+        }
+
+        if (!count($bulletTitles)) {
+            return '';
+        }
+
+        $title = implode(', ', array_filter($bulletTitles));
 
         return mb_strtoupper(mb_substr($title, 0, 1)) . mb_substr($title, 1, null);
+    }
+
+    /**
+     * @param array<string, mixed> $topic
+     */
+    public static function checkErrorMessage(array $topic): ?string
+    {
+        if (!empty($topic['error_message'])) {
+            return (string) $topic['error_message'];
+        }
+
+        return null;
     }
 }

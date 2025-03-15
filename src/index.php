@@ -614,6 +614,11 @@ function cfg_numeric_value($cfg): Closure
 <!--                                    <i class="fa fa-circle text-danger" title="Отсутствуют данные о средних сидах"></i>-->
                                     "зелёные"
                                 </label>
+                                <label title="Раздачи у которых есть ошибка из клиента. Такие раздачи не учитываются в отчётах.">
+                                    <input type="checkbox" name="filter_topic_has_client_error"/>
+                                    <i class="fa fa-times-circle-o text-danger" title="С ошибкой в клиенте, [Текст ошибки]"></i>
+                                    с ошибкой в клиенте
+                                </label>
                                 <hr/>
                                 <label title="Использовать интервал сидов">
                                     <input type="checkbox" name="filter_interval" />
