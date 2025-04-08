@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Clients;
 
+ХУЙ!
 use Generator;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
