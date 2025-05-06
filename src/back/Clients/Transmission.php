@@ -57,7 +57,7 @@ final class Transmission implements ClientInterface
 
         // Обработчик для получения токена авторизации.
         $authMiddleware = GuzzleRetryMiddleware::factory([
-            'max_retry_attempts' => 1,
+            'max_retry_attempts' => 2,
             'on_retry_callback'  => $this->getLoginHandler($this->headers),
             'retry_on_status'    => [405, 409],
         ]);
@@ -243,6 +243,11 @@ final class Transmission implements ClientInterface
 
                 // Если получили ответ, значит авторизация успешна.
                 if (!empty($result['rpc-version'])) {
+                    $this->logger->debug(
+                        'Got transmission version: {version}, rpc-version: {rpc}',
+                        ['version' => $result['version'], 'rpc' => $result['rpc-version']]
+                    );
+
                     $this->rpcVersion    = $result['rpc-version'];
                     $this->authenticated = true;
                 }
@@ -374,7 +379,7 @@ final class Transmission implements ClientInterface
                 $sid = $response->getHeaderLine($tokenName);
 
                 // Дописываем токен авторизации в текущий запрос.
-                $request = $request->withAddedHeader($tokenName, $sid);
+                $request = $request->withHeader($tokenName, $sid);
 
                 // Записываем токен авторизации в заголовки.
                 $headers[$tokenName] = $sid;
