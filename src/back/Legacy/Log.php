@@ -33,6 +33,9 @@ final class Log
             }
         }
 
+        // Оставляем последние 25 блоков записей.
+        $output = array_slice($output, -25);
+
         // Переворачиваем порядок процессов. Последний - вверху.
         $output = array_merge(...array_reverse($output));
 
