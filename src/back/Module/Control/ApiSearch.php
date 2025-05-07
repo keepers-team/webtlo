@@ -37,6 +37,8 @@ final class ApiSearch
     ) {}
 
     /**
+     * Получить список давно не сидируемых раздач по заданному подразделу.
+     *
      * @return array{}|string[]
      */
     public function getUnseededHashes(int|string $group, int $days): array
@@ -45,14 +47,14 @@ final class ApiSearch
             return [];
         }
 
-        $response = $this->apiReport->getKeeperUnseededTopics(forumId: $group);
+        $response = $this->apiReport->getKeeperUnseededTopics(forumId: $group, notSeedingDays: $days);
         if ($response instanceof ApiError) {
             $this->logger->error(sprintf('%d %s', $response->code, $response->text));
 
             return [];
         }
 
-        return $response->getHashes(notSeedingDays: $days);
+        return $response->getHashes();
     }
 
     /**
