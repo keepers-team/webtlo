@@ -18,14 +18,24 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
+/**
+ * Действие регулировки (остановка/запуск) раздач в торрент-клиентах.
+ *
+ * - ручной запуск, см. php/actions/control_torrents.php
+ * - автоматический запуск, см. cron/control.php
+ */
 final class TopicControl
 {
-    /** @var array{}|int[]|string[] Исключённые из регулировки подразделов. */
+    /**
+     * Исключённые из регулировки подразделы.
+     *
+     * @var array{}|int[]|string[]
+     */
     private array $excludedForums = [];
 
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly ConfigControl   $topicControl,
+        private readonly ConfigControl   $configControl,
         private readonly PeerCalc        $calc,
         private readonly ClientFactory   $clientFactory,
         private readonly ApiSearch       $api,
@@ -46,7 +56,7 @@ final class TopicControl
         $this->findRepeatedSubForums();
         $this->unseeded->init();
 
-        $topicControl = $this->topicControl;
+        $configControl = $this->configControl;
 
         // Хранимые подразделы.
         $forums = $this->getKeptForumIds(config: $config);
@@ -87,7 +97,7 @@ final class TopicControl
             $controlTopics = ['stop' => [], 'start' => []];
             foreach ($topicsHashes as $group => $hashes) {
                 // Пропустим регулировку "прочих", если она отключена.
-                if ($group === ConfigControl::UnknownHashes && !$topicControl->manageOtherSubsections) {
+                if ($group === ConfigControl::UnknownHashes && !$configControl->manageOtherSubsections) {
                     continue;
                 }
 
@@ -105,7 +115,7 @@ final class TopicControl
                 if ($this->unseeded->checkLimit()) {
                     $forumUnseededTopics = $this->api->getUnseededHashes(
                         group: $group,
-                        days : $topicControl->daysUntilUnseeded
+                        days : $configControl->daysUntilUnseeded
                     );
 
                     $this->unseeded->updateTotal(count: count($forumUnseededTopics));
