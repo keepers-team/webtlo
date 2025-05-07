@@ -13,14 +13,18 @@ use Psr\Log\LoggerInterface;
 
 trait KeeperUnseededTopics
 {
-    public function getKeeperUnseededTopics(int $forumId): KeeperUnseededResponse|ApiError
+    public function getKeeperUnseededTopics(int $forumId, int $notSeedingDays): KeeperUnseededResponse|ApiError
     {
         $dataProcessor = self::getStaticUnseededProcessor($this->logger);
 
         try {
+            // Новая возможность в API - фильтр по дате последнего сидирования.
+            $dateFilter = "last_seeded_time<{$notSeedingDays}d";
+
             $params = [
                 'subforum_id' => $forumId,
                 'columns'     => 'info_hash,last_seeded_time',
+                'conditions'  => $dateFilter,
             ];
 
             $response = $this->client->get(uri: "keeper/{$this->cred->userId}/reports", options: ['query' => $params]);
