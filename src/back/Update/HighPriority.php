@@ -9,6 +9,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\HighPriorityTopic;
 use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
+use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
@@ -123,6 +124,8 @@ final class HighPriority
      */
     private function processSubsectionTopics(array $topics, callable $avgProcessor): void
     {
+        $config = $this->settings->get();
+
         $topics = $this->chunkTopics($topics);
 
         // Перебираем группы раздач.
@@ -195,8 +198,12 @@ final class HighPriority
 
             // Поиск нужных данных о новых раздачах.
             if (count($topicsInsert)) {
-                // Получить описание новых раздач.
-                $response = $this->apiClient->getTopicsDetails(array_keys($topicsInsert));
+                $this->logger->notice(
+                    'Получаем дополнительные сведения для новых раздач ({count} шт.) через API...',
+                    ['count' => count($topicsInsert)]
+                );
+
+                $response = $this->apiClient->getTopicsDetails(array_keys($topicsInsert), TopicSearchMode::ID);
                 if ($response instanceof ApiError) {
                     $this->logger->error(sprintf('%d %s', $response->code, $response->text));
 

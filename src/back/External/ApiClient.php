@@ -30,6 +30,7 @@ final class ApiClient
     public function __construct(
         private readonly array           $defaultParams,
         private readonly Client          $client,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly float           $minRequestThreshold,
     ) {}
 }

@@ -216,11 +216,18 @@ final class TorrentsClients
 
                 if ($countUntracked > 150) {
                     $this->logger->notice(
-                        'Хранится много сторонних раздач. Рекомендуется отключить поиск сторонних раздач или добавить подразделы в хранимые.'
+                        'Хранится много сторонних раздач ({count} шт.). Рекомендуется отключить поиск сторонних раздач или добавить подразделы в хранимые.',
+                        ['count' => $countUntracked]
                     );
                 }
 
                 // Пробуем найти в API раздачи по их хешам из клиента.
+
+                $this->logger->debug(
+                    'Получаем сведения о сторонних раздачах ({count} шт.) по их хешам через API...',
+                    ['count' => $countUntracked]
+                );
+
                 $response = $this->apiClient->getTopicsDetails($untrackedTorrentHashes, TopicSearchMode::HASH);
 
                 if ($response instanceof ApiError) {

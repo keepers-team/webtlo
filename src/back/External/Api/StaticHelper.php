@@ -20,7 +20,7 @@ trait StaticHelper
         string          $baseUrl,
         bool            $ssl,
         ?Proxy          $proxy,
-        Timeout         $timeout = new Timeout(),
+        Timeout         $timeout,
     ): Client {
         $clientHeaders = [
             'User-Agent' => Defaults::userAgent,

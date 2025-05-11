@@ -184,9 +184,10 @@ final class Settings
         $config['forum_connect_timeout'] = $ini->read('curl_setopt', 'forum_connecttimeout', 40);
 
         // Апи для получения сведений о раздачах
-        $config['api_url']        = basename($ini->read('torrent-tracker', 'api_url', 'api.rutracker.cc'));
-        $config['api_url_custom'] = basename($ini->read('torrent-tracker', 'api_url_custom'));
-        $config['api_ssl']        = $ini->read('torrent-tracker', 'api_ssl', 1);
+        $config['api_url']               = basename($ini->read('torrent-tracker', 'api_url', 'api.rutracker.cc'));
+        $config['api_url_custom']        = basename($ini->read('torrent-tracker', 'api_url_custom'));
+        $config['api_ssl']               = $ini->read('torrent-tracker', 'api_ssl', 1);
+        $config['api_request_threshold'] = $ini->read('torrent-tracker', 'api_request_threshold', 0.5);
 
         $config['api_base_url'] = $config['api_url'] === 'custom'
             ? $config['api_url_custom']

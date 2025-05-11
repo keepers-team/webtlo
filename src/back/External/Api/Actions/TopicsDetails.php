@@ -26,24 +26,35 @@ trait TopicsDetails
      */
     public function getTopicsDetails(
         array           $topics,
-        TopicSearchMode $searchMode = TopicSearchMode::ID
+        TopicSearchMode $searchMode,
     ): ApiError|TopicsDetailsResponse {
         /** @var TopicDetails[] $knownTopics */
         $knownTopics = [];
 
         $client = $this->client;
 
-        $chunkErrorHandler = self::getChunkErrorHandler($this->logger);
-        $topicProcessor    = self::getTopicDetailsProcessor($this->logger, $knownTopics);
+        $chunkErrorHandler   = self::getChunkErrorHandler($this->logger);
+        $topicProcessor      = self::getTopicDetailsProcessor($this->logger, $knownTopics);
+        $minRequestThreshold = $this->minRequestThreshold;
 
         /**
          * @param array[][] $optionsChunks
          *
          * @return Generator
          */
-        $requests = function(array $optionsChunks) use (&$client) {
+        $requests = function(array $optionsChunks) use (&$client, $minRequestThreshold) {
+            $lastRequestTime = 0;
             foreach ($optionsChunks as $chunk) {
-                yield function(array $options) use (&$client, &$chunk) {
+                yield function(array $options) use (&$client, &$chunk, &$lastRequestTime, $minRequestThreshold) {
+                    if ($minRequestThreshold > 0) {
+                        $now     = microtime(true);
+                        $elapsed = $now - $lastRequestTime;
+                        if ($elapsed < $minRequestThreshold) {
+                            usleep((int) (($minRequestThreshold - $elapsed) * 1_000_000));
+                        }
+                        $lastRequestTime = microtime(true);
+                    }
+
                     return $client->getAsync(
                         uri    : 'get_tor_topic_data',
                         options: ['query' => ['val' => implode(',', $chunk), ...$options]]

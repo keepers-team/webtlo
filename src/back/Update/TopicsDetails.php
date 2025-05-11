@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
@@ -65,6 +66,10 @@ final class TopicsDetails
 
             $topics = $this->topics->getUnnamedTopics($perRun);
             if (count($topics)) {
+                $this->logger->debug(
+                    'Запрашиваем сведения о раздачах ({count} шт.) через API (запрос {run}/{runs})...',
+                    ['count' => count($topics), 'run' => $run, 'runs' => $runs]
+                );
                 $details = $this->getDetails($topics);
                 if (count($details)) {
                     $tab->cloneFillChunk(dataSet: $details);
@@ -91,7 +96,7 @@ final class TopicsDetails
      */
     private function getDetails(array $topics): array
     {
-        $response = $this->apiClient->getTopicsDetails($topics);
+        $response = $this->apiClient->getTopicsDetails($topics, TopicSearchMode::ID);
         if ($response instanceof ApiError) {
             throw new RuntimeException(sprintf('Ошибка получения данных (%s).', $response->text), $response->code);
         }

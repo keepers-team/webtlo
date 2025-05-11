@@ -112,7 +112,8 @@ final class App
             return new ApiClient(
                 ApiClient::getDefaultParams($config),
                 ApiClient::apiClientFromLegacy($config, $logger, $proxy),
-                $logger
+                $logger,
+                $config['api_request_threshold'],
             );
         });
 
