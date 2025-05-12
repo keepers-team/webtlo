@@ -141,9 +141,6 @@ final class SendKeeperReports
 
         $Timers = [];
 
-        // Задаём ид тем, с отчётами по хранимым подразделам.
-        $creator->setForumTopics(reportTopics: $report->getReportTopics());
-
         $forumCount = $creator->getForumCount();
 
         $apiReportCount = 0;

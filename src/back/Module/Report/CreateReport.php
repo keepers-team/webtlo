@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
-use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
@@ -53,8 +52,6 @@ final class CreateReport
 
     /** @var array<int, mixed> Хранимые раздачи по каждому подразделу. */
     private array $cache = [];
-
-    private ?ReportForumResponse $reportTopics = null;
 
     public function __construct(
         private readonly DB              $db,
@@ -314,7 +311,7 @@ final class CreateReport
         // Вытаскиваем из базы хранимое
         $total = $this->calcSummary($this->stored);
 
-        $urlPattern = '[url=viewtopic.php?%s=%s][u]%s[/u][/url]';
+        static $urlPattern = '[url=viewforum.php?f=%s&keeper_info=&report=%s][u]%s[/u][/url]';
 
         // Разбираем хранимое
         $savedSubsections = [];
@@ -334,12 +331,8 @@ final class CreateReport
                 throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
             }
 
-            $topicId = $this->getReportTopicId(forum: $forum);
-
-            // Ссылка на тему с отчётами подраздела.
-            $leftPart = $topicId !== null
-                ? sprintf($urlPattern, 't', $topicId, $forum->name)
-                : sprintf('[b]%s[/b]', $forum->name);
+            // Ссылка на отчёт подраздела.
+            $leftPart = sprintf($urlPattern, $forumId, $this->cred->userId, $forum->name);
 
             // Ссылка на свой пост(отчёт) и количество + объём раздач.
             $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
@@ -347,7 +340,7 @@ final class CreateReport
             // Записываем данные о подразделе в сводный отчёт.
             $savedSubsections[] = "[*]$leftPart - $rightPart";
 
-            unset($forumId, $forumValues, $topicId, $leftPart, $rightPart);
+            unset($forumId, $forumValues, $leftPart, $rightPart);
         }
 
         // формируем сводный отчёт
@@ -645,16 +638,6 @@ final class CreateReport
         $this->cache[$forumId] = $topics;
 
         return $topics;
-    }
-
-    public function setForumTopics(ReportForumResponse $reportTopics): void
-    {
-        $this->reportTopics = $reportTopics;
-    }
-
-    private function getReportTopicId(ForumObject $forum): ?int
-    {
-        return $this->reportTopics?->getReportTopicId($forum->id);
     }
 
     public function clearCache(int $forumId): void
