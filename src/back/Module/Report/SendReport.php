@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\Module\Report;
 use DateTimeInterface;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
-use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\WebTLO;
@@ -119,16 +118,6 @@ final class SendReport
     public function isApiEnable(): bool
     {
         return $this->enabled;
-    }
-
-    public function getReportTopics(): ReportForumResponse
-    {
-        $response = $this->apiReport->getForumsReportTopics();
-        if ($response instanceof ReportForumResponse) {
-            return $response;
-        }
-
-        return new ReportForumResponse([]);
     }
 
     /**

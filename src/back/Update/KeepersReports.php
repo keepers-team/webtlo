@@ -9,7 +9,6 @@ use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
-use KeepersTeam\Webtlo\External\ApiReport\V1\ReportForumResponse;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
@@ -168,21 +167,6 @@ final class KeepersReports
         );
 
         return true;
-    }
-
-    public function getReportTopics(): ?ReportForumResponse
-    {
-        $response = $this->apiReport->getForumsReportTopics();
-        if ($response instanceof ApiError) {
-            $this->logger->error(
-                'Не удалось получить список тем с отчётами',
-                ['code' => $response->code, 'text' => $response->text]
-            );
-
-            return null;
-        }
-
-        return $response;
     }
 
     /**

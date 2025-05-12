@@ -22,7 +22,6 @@ final class ApiReportClient
     use Actions\KeepersReports;
     use Actions\KeeperUnseededTopics;
     use Actions\Processor;
-    use Actions\ReportForumTopics;
     use StaticHelper;
 
     public function __construct(
