@@ -22,7 +22,7 @@ final class ApiClient
     use StaticHelper;
 
     protected static string $apiVersion  = 'v1';
-    protected static int    $concurrency = 4;
+    protected static int    $concurrency = 2;
 
     /**
      * @param array<string, string> $defaultParams

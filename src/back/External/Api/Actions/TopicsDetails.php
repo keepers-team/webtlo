@@ -37,16 +37,16 @@ trait TopicsDetails
         $topicProcessor    = self::getTopicDetailsProcessor($this->logger, $knownTopics);
 
         /**
-         * @param array[][] $optionsChunks
+         * @param array[][] $topicsChunks Раздачи разделённые на группы по $requestLimit штук в одном запросе
          *
          * @return Generator
          */
-        $requests = function(array $optionsChunks) use (&$client) {
-            foreach ($optionsChunks as $chunk) {
-                yield function(array $options) use (&$client, &$chunk) {
+        $requests = static function(array $topicsChunks) use (&$client) {
+            foreach ($topicsChunks as $requestTopics) {
+                yield static function(array $options) use (&$client, &$requestTopics) {
                     return $client->getAsync(
                         uri    : 'get_tor_topic_data',
-                        options: ['query' => ['val' => implode(',', $chunk), ...$options]]
+                        options: ['query' => ['val' => implode(',', $requestTopics), ...$options]]
                     );
                 };
             }
@@ -69,7 +69,7 @@ trait TopicsDetails
         try {
             $pool->promise()->wait();
 
-            $identifiers = array_map(function($el) use ($searchMode) {
+            $identifiers = array_map(static function($el) use ($searchMode) {
                 return match ($searchMode) {
                     TopicSearchMode::ID   => $el->id,
                     TopicSearchMode::HASH => $el->hash,
@@ -92,7 +92,7 @@ trait TopicsDetails
         LoggerInterface $logger,
         array           &$knownTopics,
     ): callable {
-        return function(ResponseInterface $response, int $index) use (
+        return static function(ResponseInterface $response, int $index) use (
             &$logger,
             &$knownTopics,
         ): void {
