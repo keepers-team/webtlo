@@ -31,7 +31,7 @@ trait DbHelperTrait
     /**
      * @param (int|string)[] $params
      *
-     * @return array<int, mixed>[]|array<never>
+     * @return array<int, mixed>[]|array{}
      */
     public function queryStatement(string $statement, array $params = []): array
     {
@@ -45,12 +45,14 @@ trait DbHelperTrait
     /**
      * @param (int|string)[] $params
      *
-     * @return array<int, mixed>|array<never>
+     * @return array<string, mixed>|array{}
      */
     public function queryStatementRow(string $statement, array $params = []): array
     {
         try {
-            return (array) $this->db->queryRow($statement, $params);
+            $result = $this->db->queryRow($statement, $params);
+
+            return $result ?? [];
         } catch (Exception $e) {
             throw new RuntimeException($e->getMessage());
         }
@@ -59,7 +61,7 @@ trait DbHelperTrait
     /**
      * @param (int|string)[] $params
      *
-     * @return array<int|string, mixed>[]|array<never>
+     * @return array<int|string, mixed>[]|array{}
      */
     public function queryStatementGroup(string $statement, array $params = []): array
     {

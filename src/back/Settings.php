@@ -400,7 +400,7 @@ final class Settings
     }
 
     /**
-     * @param array<int|string, mixed>|array<never> $torrentClients
+     * @param array<int|string, mixed>|array{} $torrentClients
      *
      * @return int[]
      */
@@ -413,6 +413,8 @@ final class Settings
         $excludeClientsIDs   = [];
         if (count($torrentClients)) {
             foreach ($torrentClients as $torrentClientID => $torrentClientData) {
+                $torrentClientID = (int) $torrentClientID;
+
                 ++$torrentClientNumber;
                 $torrentClientSection = 'torrent-client-' . $torrentClientNumber;
                 $ini->write($torrentClientSection, 'id', $torrentClientID);
@@ -454,7 +456,7 @@ final class Settings
     }
 
     /**
-     * @param array<int|string, mixed>|array<never> $forums
+     * @param array<int|string, mixed>|array{} $forums
      *
      * @return int[]
      */
@@ -720,7 +722,7 @@ final class Settings
      *
      * @param int[] $subsections
      *
-     * @return string[]|array<never>
+     * @return string[]|array{}
      */
     private function getSubsectionsTitles(array $subsections): array
     {

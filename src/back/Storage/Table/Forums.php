@@ -30,7 +30,7 @@ final class Forums
 
             $res = $this->db->queryRow($sql, ['forum_id' => $forumId]);
 
-            if (empty($res)) {
+            if ($res === null || !count($res)) {
                 return null;
             }
 

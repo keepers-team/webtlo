@@ -57,13 +57,18 @@ trait DbQuery
      *
      * @param (int|string)[] $param
      *
-     * @return array<string, mixed>
+     * @return ?array<string, mixed>
      */
-    public function queryRow(string $sql, array $param = []): array
+    public function queryRow(string $sql, array $param = []): ?array
     {
         $sth = $this->executeStatement($sql, $param);
 
-        return $sth->fetch(PDO::FETCH_ASSOC);
+        $result = $sth->fetch(PDO::FETCH_ASSOC);
+        if ($result === false) {
+            return null;
+        }
+
+        return $result;
     }
 
     /**
