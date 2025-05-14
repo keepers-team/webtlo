@@ -78,9 +78,7 @@ final class Helper
     public static function makeDirRecursive(string $path): bool
     {
         // Не уверен, что эта конвертация нужна, но пусть пока будет.
-        if (PHP_OS === 'WINNT') {
-            $path = mb_convert_encoding($path, 'Windows-1251', 'UTF-8');
-        }
+        $path = self::normalizePathEncoding($path);
 
         if (is_dir($path) && is_writable($path)) {
             return true;
@@ -182,6 +180,20 @@ final class Helper
 
             return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . DIRECTORY_SEPARATOR . $right);
         });
+    }
+
+    public static function normalizePathEncoding(string $path): string
+    {
+        if (PHP_OS == 'WINNT') {
+            return self::encodeCyrillicString(string: $path);
+        }
+
+        return $path;
+    }
+
+    public static function encodeCyrillicString(string $string): string
+    {
+        return (string) mb_convert_encoding($string, 'Windows-1251', 'UTF-8');
     }
 
     /**

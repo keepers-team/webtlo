@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Forum;
 
+use KeepersTeam\Webtlo\Helper;
 use RuntimeException;
 
 /**
@@ -63,7 +64,7 @@ trait SendMessage
             'mode'        => $editMode,
             'submit_mode' => 'submit',
             'form_token'  => self::$formToken,
-            'message'     => mb_convert_encoding($message, 'Windows-1251', 'UTF-8'),
+            'message'     => Helper::encodeCyrillicString($message),
         ];
 
         if ($postId !== null) {

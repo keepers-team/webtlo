@@ -62,14 +62,7 @@ try {
     Helper::makeDirRecursive($torrent_files_path);
 
     // шаблон для сохранения
-    $torrent_files_path_pattern = "$torrent_files_path/[webtlo].h%s.torrent";
-    if (PHP_OS == 'WINNT') {
-        $torrent_files_path_pattern = mb_convert_encoding(
-            $torrent_files_path_pattern,
-            'Windows-1251',
-            'UTF-8'
-        );
-    }
+    $torrent_files_path_pattern = Helper::normalizePathEncoding("$torrent_files_path/[webtlo].h%s.torrent");
 
     $forumClient = $app->getForumClient();
     if (!$forumClient->checkConnection()) {

@@ -87,11 +87,9 @@ try {
     Helper::removeDirRecursive($localPath);
     // создаём каталог для торрент-файлов
     Helper::checkDirRecursive($localPath);
+
     // шаблон для сохранения
-    $formatPathTorrentFile = $localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent';
-    if (PHP_OS == 'WINNT') {
-        $formatPathTorrentFile = mb_convert_encoding($formatPathTorrentFile, 'Windows-1251', 'UTF-8');
-    }
+    $formatPathTorrentFile = Helper::normalizePathEncoding($localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent');
 
     $clientFactory = $app->getClientFactory();
 

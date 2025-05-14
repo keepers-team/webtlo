@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Forum;
 
+use KeepersTeam\Webtlo\Helper;
+
 /**
  * Авторизация на форуме и проверка наличия доступа.
  */
@@ -142,9 +144,9 @@ trait Authentication
         $this->cookie->clear(name: self::$authCookieName);
 
         $form = [
-            'login_username' => mb_convert_encoding($this->cred->auth->username, 'Windows-1251', 'UTF-8'),
-            'login_password' => mb_convert_encoding($this->cred->auth->password, 'Windows-1251', 'UTF-8'),
-            'login'          => mb_convert_encoding(self::loginAction, 'Windows-1251', 'UTF-8'),
+            'login_username' => Helper::encodeCyrillicString($this->cred->auth->username),
+            'login_password' => Helper::encodeCyrillicString($this->cred->auth->password),
+            'login'          => Helper::encodeCyrillicString(self::loginAction),
         ];
         if ($captcha !== null) {
             $form += $captcha;
