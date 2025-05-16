@@ -44,6 +44,7 @@ trait StaticHelper
             middleware: new RateLimiterMiddleware(
                 frameSize   : self::$rateFrameSize,
                 requestLimit: self::$rateRequestLimit,
+                logger: $logger,
             )
         );
 
