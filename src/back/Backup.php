@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo;
 /**
  * Бекапим конфиг.
  */
-class Backup
+final class Backup
 {
     /** Максимальное кол-во бекапов каждого вида. */
     private const MAX_BACKUPS = 5;
