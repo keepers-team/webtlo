@@ -26,7 +26,9 @@
         "league/container": "^4.2",
         "monolog/monolog": "^3.5",
         "phpxmlrpc/polyfill-xmlrpc": "^1.0",
-        "psr/log": "^3.0"
+        "psr/log": "^3.0",
+        "react/async": "^4.3",
+        "react/event-loop": "^1.5"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.13",
