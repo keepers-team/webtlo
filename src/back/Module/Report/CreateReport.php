@@ -64,6 +64,21 @@ final class CreateReport
         private readonly LoggerInterface $logger,
     ) {}
 
+    public function initConfig(?CreationMode $mode = null): void
+    {
+        if ($mode !== null) {
+            $this->mode = $mode;
+
+            $this->implodeGlue = '<br />';
+            $this->topicGlue   = '<br />';
+        }
+
+        // Проверяем настройки.
+        $this->setForums();
+        $this->checkExcluded();
+        $this->getLastUpdateTime();
+    }
+
     /**
      * Сводный отчёт.
      *
@@ -188,21 +203,6 @@ final class CreateReport
         $topicMessages[0] = $messageHeader . $this->implodeGlue . $topicMessages[0];
 
         return $topicMessages;
-    }
-
-    public function initConfig(?CreationMode $mode = null): void
-    {
-        if ($mode !== null) {
-            $this->mode = $mode;
-
-            $this->implodeGlue = '<br />';
-            $this->topicGlue   = '<br />';
-        }
-
-        // Проверяем настройки.
-        $this->setForums();
-        $this->checkExcluded();
-        $this->getLastUpdateTime();
     }
 
     /**
@@ -494,8 +494,8 @@ final class CreateReport
         $total = array_fill_keys($sumKeys, 0);
 
         foreach ($stored as $forum_id => $forumData) {
-            // исключаем подразделы
-            if (in_array((int) $forum_id, $this->reportSend->excludedSubForums, true)) {
+            // Не учитываем исключённые подразделы.
+            if ($this->isForumExcluded(forumId: (int) $forum_id)) {
                 continue;
             }
 
@@ -630,9 +630,8 @@ final class CreateReport
 
         // Если включена опция исключения авторских раздач, фильтруем раздачи.
         if ($this->reportSend->excludeAuthored) {
-            $topics = array_filter($topics, function($topic) {
-                return $topic['topic_author'] !== $this->cred->userId;
-            });
+            $userId = $this->cred->userId;
+            $topics = array_filter($topics, static fn($topic): bool => $topic['topic_author'] !== $userId);
         }
 
         $this->cache[$forumId] = $topics;
@@ -705,13 +704,12 @@ final class CreateReport
      */
     private function checkExcluded(): void
     {
-        $excludedClients = $this->reportSend->excludedClients;
-        if (!empty($excludedClients)) {
+        if (count($this->reportSend->excludedClients)) {
             $config = $this->settings->populate();
 
             $names = [];
             foreach ($config['clients'] as $id => $client) {
-                if (in_array((int) $id, $excludedClients, true)) {
+                if ($this->isForumExcluded(forumId: (int) $id)) {
                     $names[] = sprintf('%s[%d](%s)', $client['cm'], (int) $id, $client['cl']);
                 }
 

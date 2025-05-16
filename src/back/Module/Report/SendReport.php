@@ -34,6 +34,8 @@ final class SendReport
     }
 
     /**
+     * Формирование и отправка списка хранимых раздач подраздела.
+     *
      * @param array<string, mixed>[] $topicsToReport
      *
      * @return array<string, mixed>
@@ -46,9 +48,9 @@ final class SendReport
     ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
-            $forumId,
-            KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
-            $this->webtlo->appVersionLine(),
+            forumId   : $forumId,
+            status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            appVersion: $this->webtlo->appVersionLine(),
         );
 
         $result = [
@@ -69,11 +71,11 @@ final class SendReport
 
         // Отправляем отчёт о скачанных раздачах.
         $completeReport = $this->apiReport->reportKeptReleases(
-            $forumId,
-            $downloadedTopics,
-            KeepingStatuses::ReportedByApi->value,
-            $reportDate,
-            $reportRewrite,
+            forumId             : $forumId,
+            topicIds            : $downloadedTopics,
+            status              : KeepingStatuses::ReportedByApi->value,
+            reportDate          : $reportDate,
+            excludeOtherReleases: $reportRewrite,
         );
         if ($completeReport !== null) {
             $result['reportComplete'] = $completeReport;
@@ -82,10 +84,10 @@ final class SendReport
         // Отправляем отчёт о качаемых раздачах.
         if (count($downloadingTopics)) {
             $downloadingReport = $this->apiReport->reportKeptReleases(
-                $forumId,
-                $downloadingTopics,
-                KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
-                $reportDate,
+                forumId   : $forumId,
+                topicIds  : $downloadingTopics,
+                status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
+                reportDate: $reportDate,
             );
             if ($downloadingReport !== null) {
                 $result['reportDownloading'] = $downloadingReport;
@@ -96,17 +98,21 @@ final class SendReport
     }
 
     /**
+     * Отмечаем в API подразделы как хранимые.
+     * И снятие отметки с прочих подразделов.
+     *
      * @param int[] $forumIds
+     * @param bool  $unsetOtherForums - снять отметку хранения, если true
      *
      * @return array<string, mixed>
      */
     public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array
     {
         return $this->apiReport->setForumsStatus(
-            $forumIds,
-            KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
-            $this->webtlo->appVersionLine(),
-            $unsetOtherForums
+            forumIds        : $forumIds,
+            status          : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            appVersion      : $this->webtlo->appVersionLine(),
+            unsetOtherForums: $unsetOtherForums
         );
     }
 
