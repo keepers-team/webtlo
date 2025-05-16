@@ -24,6 +24,9 @@ final class ApiClient
     protected static string $apiVersion  = 'v1';
     protected static int    $concurrency = 2;
 
+    protected static int $rateFrameSize    = 1000;
+    protected static int $rateRequestLimit = 2;
+
     /**
      * @param array<string, string> $defaultParams
      */

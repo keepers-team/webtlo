@@ -8,6 +8,7 @@ use GuzzleHttp\Client;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
+use KeepersTeam\Webtlo\External\Shared\RateLimiterMiddleware;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
 use Psr\Log\LoggerInterface;
 
@@ -36,14 +37,23 @@ trait StaticHelper
 
         $proxyConfig = $proxy !== null ? $proxy->getOptions() : [];
 
+        // RetryMiddleware
+        $handlerStack = self::getDefaultHandler($logger);
+        // RateLimiterMiddleware
+        $handlerStack->push(
+            middleware: new RateLimiterMiddleware(
+                frameSize   : self::$rateFrameSize,
+                requestLimit: self::$rateRequestLimit,
+            )
+        );
+
         $clientProperties = [
             'base_uri'        => $baseUrl,
             'headers'         => $clientHeaders,
             'timeout'         => $timeout->request,
             'connect_timeout' => $timeout->connection,
             'allow_redirects' => true,
-            // RetryMiddleware
-            'handler'         => self::getDefaultHandler($logger),
+            'handler'         => $handlerStack,
             // Proxy options
             ...$proxyConfig,
         ];
