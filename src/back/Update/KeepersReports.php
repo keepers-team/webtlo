@@ -10,6 +10,7 @@ use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
@@ -20,8 +21,6 @@ use Throwable;
 
 final class KeepersReports
 {
-    use ExcludedKeepersTrait;
-
     public function __construct(
         private readonly ApiClient       $apiClient,
         private readonly ApiReportClient $apiReport,
@@ -85,13 +84,8 @@ final class KeepersReports
             return false;
         }
 
-        $this->keepersSeeders->withKeepers(keepers: $keepersList);
-
         // Находим список игнорируемых хранителей.
         $excludedKeepers = self::getExcludedKeepersList($config);
-
-        $this->setExcludedKeepers(excluded: $excludedKeepers);
-        $this->keepersSeeders->setExcludedKeepers(excluded: $this->excludedKeepers);
 
         if (count($excludedKeepers)) {
             $this->logger->debug('ApiReport. Исключены хранители', $excludedKeepers);
@@ -117,7 +111,7 @@ final class KeepersReports
 
             foreach ($forumReports->keepers as $keeperReport) {
                 // Пропускаем игнорируемых хранителей.
-                if (in_array($keeperReport->keeperId, $this->excludedKeepers, true)) {
+                if (in_array($keeperReport->keeperId, $excludedKeepers, true)) {
                     continue;
                 }
 
@@ -196,5 +190,17 @@ final class KeepersReports
         }
 
         return $response;
+    }
+
+    /**
+     * @param array<string, mixed>[] $config
+     *
+     * @return int[]
+     */
+    public static function getExcludedKeepersList(array $config): array
+    {
+        $excludedKeepers = preg_replace('/[^0-9]/', '|', $config['reports']['exclude_keepers_ids'] ?? '');
+
+        return Helper::explodeInt(string: $excludedKeepers, separator: '|');
     }
 }

@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
-use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use KeepersTeam\Webtlo\Update\ExcludedKeepersTrait;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -16,8 +14,6 @@ use Psr\Log\LoggerInterface;
  */
 final class KeepersSeeders
 {
-    use ExcludedKeepersTrait;
-
     // Параметры таблицы.
     public const TABLE   = 'KeepersSeeders';
     public const PRIMARY = 'topic_id';
@@ -30,36 +26,10 @@ final class KeepersSeeders
     /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
-    /** Данные о хранителях. */
-    private KeepersResponse $keepers;
-
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly CloneTable      $clone,
     ) {}
-
-    public function withKeepers(KeepersResponse $keepers): void
-    {
-        $this->keepers = $keepers;
-    }
-
-    /**
-     * @param int[] $topicKeepers
-     */
-    public function addKeptTopic(int $topicId, array $topicKeepers): void
-    {
-        foreach ($topicKeepers as $keeperId) {
-            // Пропускаем игнорируемых хранителей.
-            if (in_array($keeperId, $this->excludedKeepers, true)) {
-                continue;
-            }
-
-            $keeper = $this->keepers->getKeeperInfo(keeperId: $keeperId);
-            if ($keeper !== null) {
-                $this->keptTopics[] = [$topicId, $keeper->keeperId, $keeper->keeperName];
-            }
-        }
-    }
 
     /**
      * Записать хранителя, если он сидирует раздачу.
