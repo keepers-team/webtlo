@@ -8,6 +8,7 @@ final class KeeperTopics
 {
     public function __construct(
         public readonly int   $keeperId,
+        public readonly int   $topicsCount,
         /** @var KeptTopic[] */
         public readonly array $topics
     ) {}
