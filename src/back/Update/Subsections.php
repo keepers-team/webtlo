@@ -8,7 +8,7 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
@@ -28,7 +28,7 @@ final class Subsections
     private array $skipSubsections = [];
 
     public function __construct(
-        private readonly ApiClient       $apiClient,
+        private readonly ApiReportClient $apiReport,
         private readonly Settings        $settings,
         private readonly DB              $db,
         private readonly Topics          $topics,
@@ -75,7 +75,7 @@ final class Subsections
 
             // Получаем данные о раздачах.
             Timers::start("update_forum_$forumId");
-            $topicResponse = $this->apiClient->getForumTopicsData(forumId: $forumId);
+            $topicResponse = $this->apiReport->getForumTopicsData(forumId: $forumId);
             if ($topicResponse instanceof ApiError) {
                 $this->skipSubsections[] = $forumId;
 
@@ -87,18 +87,25 @@ final class Subsections
                 continue;
             }
 
+            // Если дата прошлого обновления совпадает с датой в ответе API, то обновлять нечего.
+            if ($forumLastUpdated === $topicResponse->updateTime) {
+                $this->skipSubsections[] = $forumId;
+
+                continue;
+            }
+
             // Запоминаем время обновления подраздела.
             $this->updateTime->addMarkerUpdate(marker: $forumId, updateTime: $topicResponse->updateTime);
 
             // Получение данных о сидах, в зависимости от дат обновления.
             $avgProcessor = Seeders::AverageProcessor(
-                (bool) $config['avg_seeders'],
-                $forumLastUpdated,
-                $topicResponse->updateTime
+                calcAverage: (bool) $config['avg_seeders'],
+                lastUpdated: $forumLastUpdated,
+                updateTime : $topicResponse->updateTime
             );
 
             // Обрабатываем полученные раздачи, и записываем во временную таблицу.
-            $this->processSubsectionTopics($topicResponse->topics, $avgProcessor);
+            $this->processSubsectionTopics(topics: $topicResponse->topics, avgProcessor: $avgProcessor);
 
             $this->logger->debug(
                 sprintf(
@@ -114,7 +121,7 @@ final class Subsections
         $this->checkSkippedSubsections();
 
         // Успешно обновлённые подразделы.
-        $this->moveUpdatedTopics($subsections);
+        $this->moveUpdatedTopics(subsections: $subsections);
 
         $this->logger->info(
             'Завершено обновление сведений о раздачах в хранимых подразделах за {sec}.',
@@ -139,7 +146,7 @@ final class Subsections
 
         foreach ($topicsChunks as $topicsChunk) {
             // Получаем прошлые данные о раздачах.
-            $previousTopicsData = $this->getPreviousTopics($topicsChunk);
+            $previousTopicsData = $this->getPreviousTopics(topics: $topicsChunk);
 
             // Перебираем раздачи.
             foreach ($topicsChunk as $topic) {
@@ -183,7 +190,7 @@ final class Subsections
                     $this->tableInsert->addTopic([
                         $topic->id,
                         $topic->forumId,
-                        '',
+                        $topic->name,
                         $topic->hash,
                         $topic->seeders,
                         $topic->size,
@@ -214,7 +221,7 @@ final class Subsections
      */
     private function getPreviousTopics(array $topics): array
     {
-        return $this->topics->searchPrevious(array_map(fn($tp) => $tp->id, $topics));
+        return $this->topics->searchPrevious(array_map(static fn($tp) => $tp->id, $topics));
     }
 
     /**
@@ -243,7 +250,7 @@ final class Subsections
             $this->deleteTopics();
 
             // Записываем раздачи в БД.
-            $this->writeTopicsToOrigin($updatedSubsections);
+            $this->writeTopicsToOrigin(updatedSubsections: $updatedSubsections);
 
             // Записываем время обновления подразделов.
             $this->updateTime->addMarkerUpdate(marker: UpdateMark::SUBSECTIONS);
@@ -261,7 +268,7 @@ final class Subsections
         $countTopicsInsert = $this->tableInsert->writeTable();
 
         // Удаляем ненужные раздачи.
-        $this->clearUnusedTopics($updatedSubsections);
+        $this->clearUnusedTopics(updatedSubsections: $updatedSubsections);
 
         $this->logger->info('Обработано хранимых подразделов: {count} шт, уникальных раздач в них {topics} шт.', [
             'count'  => count($updatedSubsections),

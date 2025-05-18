@@ -13,6 +13,7 @@ final class ForumTopic
         public readonly int               $id,
         public readonly string            $hash,
         public readonly TorrentStatus     $status,
+        public readonly string            $name,
         public readonly int               $forumId,
         public readonly DateTimeImmutable $registered,
         public readonly KeepingPriority   $priority,
