@@ -8,11 +8,9 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
-use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
-use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\UpdateTime;
@@ -36,7 +34,6 @@ final class Subsections
         private readonly Topics          $topics,
         private readonly TopicsInsert    $tableInsert,
         private readonly TopicsUpdate    $tableUpdate,
-        private readonly KeepersSeeders  $keepersSeeders,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger
     ) {}
@@ -59,21 +56,6 @@ final class Subsections
 
         Timers::start('topics_update');
         $this->logger->info('Начато обновление сведений о раздачах в хранимых подразделах...');
-
-        // Получаем список хранителей.
-        $keepersList = $this->getKeepersList();
-        if ($keepersList === null) {
-            return;
-        }
-        $this->keepersSeeders->withKeepers(keepers: $keepersList);
-
-        // Находим список игнорируемых хранителей.
-        $excludedKeepers = KeepersSeeders::getExcludedKeepersList($config);
-
-        $this->keepersSeeders->setExcludedKeepers($excludedKeepers);
-        if (count($excludedKeepers)) {
-            $this->logger->debug('KeepersSeeders. Исключены хранители', $excludedKeepers);
-        }
 
         /** @var int[] $subsections */
         $subsections = array_map('intval', $subsections);
@@ -141,24 +123,6 @@ final class Subsections
     }
 
     /**
-     * Загрузить список всех хранителей.
-     */
-    private function getKeepersList(): ?KeepersResponse
-    {
-        $response = $this->apiClient->getKeepersList();
-        if ($response instanceof ApiError) {
-            $this->logger->error(
-                'Не получены данные о хранителях',
-                ['code' => $response->code, 'text' => $response->text]
-            );
-
-            return null;
-        }
-
-        return $response;
-    }
-
-    /**
      * Обработать раздачи подраздела.
      *
      * @param ForumTopic[] $topics       раздачи подраздела
@@ -182,11 +146,6 @@ final class Subsections
                 // Пропускаем раздачи в невалидных статусах.
                 if (!$topic->status->isValid()) {
                     continue;
-                }
-
-                // Записываем хранителей раздачи.
-                if (!empty($topic->keepers)) {
-                    $this->keepersSeeders->addKeptTopic($topic->id, $topic->keepers);
                 }
 
                 // запоминаем имеющиеся данные о раздаче в локальной базе
@@ -242,9 +201,6 @@ final class Subsections
             }
             unset($topicsChunk, $previousTopicsData);
 
-            // Запись сидов-хранителей во временную таблицу.
-            $this->keepersSeeders->cloneFill();
-
             // Запись раздач во временную таблицу.
             $this->tableUpdate->cloneFill();
             $this->tableInsert->cloneFill();
@@ -288,9 +244,6 @@ final class Subsections
 
             // Записываем раздачи в БД.
             $this->writeTopicsToOrigin($updatedSubsections);
-
-            // Записываем данные о сидах-хранителях в БД.
-            $this->keepersSeeders->moveToOrigin();
 
             // Записываем время обновления подразделов.
             $this->updateTime->addMarkerUpdate(marker: UpdateMark::SUBSECTIONS);
