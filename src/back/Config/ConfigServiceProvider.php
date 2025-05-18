@@ -91,11 +91,18 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 connection: (int) $ini->read('curl_setopt', 'api_connecttimeout', Defaults::timeout),
             );
 
+            $concurrency = (int) $ini->read('torrent-tracker', 'api_concurrency', 4);
+            $frameSize   = (int) $ini->read('torrent-tracker', 'api_rate_frame_size', 1000);
+            $frameLimit  = (int) $ini->read('torrent-tracker', 'api_rate_frame_limit', 2);
+
             return new ApiForumConnect(
-                baseUrl : $url,
-                ssl     : $ssl,
-                useProxy: $useProxy,
-                timeout : $timeout,
+                baseUrl         : $url,
+                ssl             : $ssl,
+                useProxy        : $useProxy,
+                timeout         : $timeout,
+                concurrency     : $concurrency,
+                rateFrameSize   : $frameSize,
+                rateRequestLimit: $frameLimit,
             );
         });
 
