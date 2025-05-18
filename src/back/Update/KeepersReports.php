@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
+use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -26,6 +27,7 @@ final class KeepersReports
         private readonly ApiReportClient $apiReport,
         private readonly Settings        $settings,
         private readonly KeepersLists    $keepersLists,
+        private readonly KeepersSeeders  $keepersSeeders,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger,
     ) {}
@@ -40,8 +42,8 @@ final class KeepersReports
         // Получаем параметры.
         $config = $this->settings->get();
 
-        // Список ид хранимых подразделов.
-        $keptForums = array_keys($config['subsections'] ?? []);
+        /** @var int[] $keptForums ИД хранимых подразделов. */
+        $keptForums = array_map('intval', array_keys($config['subsections'] ?? []));
         if (!count($keptForums)) {
             $this->logger->warning('Выполнить обновление сведений невозможно. Отсутствуют хранимые подразделы.');
 
@@ -52,10 +54,10 @@ final class KeepersReports
         $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид обновлений подразделов.
-        $keptForumsUpdate = array_map(fn($el) => 100000 + (int) $el, $keptForums);
+        $keptForumsUpdate = array_map(static fn($el) => 100000 + $el, $keptForums);
 
-        $updateStatus = $this->updateTime->getMarkersObject($keptForumsUpdate);
-        $updateStatus->checkMarkersLess(15 * 60);
+        $updateStatus = $this->updateTime->getMarkersObject(markers: $keptForumsUpdate);
+        $updateStatus->checkMarkersLess(seconds: 15 * 60);
 
         // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
         if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
@@ -83,9 +85,14 @@ final class KeepersReports
             return false;
         }
 
+        $this->keepersSeeders->withKeepers(keepers: $keepersList);
+
         // Находим список игнорируемых хранителей.
         $excludedKeepers = self::getExcludedKeepersList($config);
-        $this->setExcludedKeepers($excludedKeepers);
+
+        $this->setExcludedKeepers(excluded: $excludedKeepers);
+        $this->keepersSeeders->setExcludedKeepers(excluded: $this->excludedKeepers);
+
         if (count($excludedKeepers)) {
             $this->logger->debug('ApiReport. Исключены хранители', $excludedKeepers);
         }
@@ -93,64 +100,65 @@ final class KeepersReports
         $forumsScanned = 0;
         $keeperIds     = [];
 
-        if (isset($config['subsections'])) {
-            $apiReportCount = 0;
+        $apiReportCount = 0;
 
-            $forumCount = count($config['subsections']);
+        $forumCount = count($keptForums);
 
-            foreach ($config['subsections'] as $forumId => $subsection) {
-                Timers::start("get_report_api_$forumId");
+        foreach ($keptForums as $forumId) {
+            Timers::start("get_report_api_$forumId");
 
-                $forumId = (int) $forumId;
+            try {
+                $forumReports = $this->apiReport->getKeepersReports(forumId: $forumId);
+            } catch (Throwable $e) {
+                $this->logger->warning($e->getMessage());
 
-                try {
-                    $forumReports = $this->apiReport->getKeepersReports($forumId);
-                } catch (Throwable $e) {
-                    $this->logger->warning($e->getMessage());
+                continue;
+            }
 
+            foreach ($forumReports->keepers as $keeperReport) {
+                // Пропускаем игнорируемых хранителей.
+                if (in_array($keeperReport->keeperId, $this->excludedKeepers, true)) {
                     continue;
                 }
 
-                foreach ($forumReports->keepers as $keeperReport) {
-                    // Пропускаем игнорируемых хранителей.
-                    if (in_array($keeperReport->keeperId, $this->excludedKeepers, true)) {
-                        continue;
-                    }
+                /** Данные о хранителе. */
+                $keeper = $keepersList->getKeeperInfo(keeperId: $keeperReport->keeperId);
 
-                    /** Данные о хранителе. */
-                    $keeper = $keepersList->getKeeperInfo($keeperReport->keeperId);
-
-                    // Пропускаем раздачи несуществующих хранителей.
-                    if ($keeper === null) {
-                        continue;
-                    }
-
-                    // Пропускаем раздачи кандидатов в хранители.
-                    if ($keeper->isCandidate) {
-                        continue;
-                    }
-
-                    // Считаем уникальных хранителей.
-                    $keeperIds[] = $keeper->keeperId;
-
-                    // Записываем раздачи хранителя во временную таблицу.
-                    $this->keepersLists->addKeptTopics($keeper, $keeperReport->topics);
-                    $this->keepersLists->fillTempTable();
+                // Пропускаем раздачи несуществующих хранителей.
+                if ($keeper === null) {
+                    continue;
                 }
 
-                // Считаем обновлённые подразделы.
-                ++$forumsScanned;
+                // Записываем сидов-хранителей раздачи, не зависимо от статуса.
+                $this->keepersSeeders->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
+                // Запись сидов-хранителей во временную таблицу.
+                $this->keepersSeeders->cloneFill();
 
-                // Пометим факт обновления отчётов хранителей подраздела.
-                $this->updateTime->setMarkerTime(100000 + $forumId);
+                // Пропускаем раздачи кандидатов в хранители.
+                if ($keeper->isCandidate) {
+                    continue;
+                }
 
-                $this->logger->debug('Отчёт получен [{current}/{total}] {sec}', [
-                    'forumId' => $forumId,
-                    'current' => ++$apiReportCount,
-                    'total'   => $forumCount,
-                    'sec'     => Timers::getExecTime("get_report_api_$forumId"),
-                ]);
+                // Считаем уникальных хранителей.
+                $keeperIds[] = $keeper->keeperId;
+
+                // Записываем раздачи хранителя во временную таблицу.
+                $this->keepersLists->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
+                $this->keepersLists->fillTempTable();
             }
+
+            // Считаем обновлённые подразделы.
+            ++$forumsScanned;
+
+            // Пометим факт обновления отчётов хранителей подраздела.
+            $this->updateTime->setMarkerTime(marker: 100000 + $forumId);
+
+            $this->logger->debug('Отчёт получен [{current}/{total}] {sec}', [
+                'forumId' => $forumId,
+                'current' => ++$apiReportCount,
+                'total'   => $forumCount,
+                'sec'     => Timers::getExecTime("get_report_api_$forumId"),
+            ]);
         }
 
         // Записываем изменения в локальную таблицу.
@@ -159,8 +167,11 @@ final class KeepersReports
             keepersCount : count(array_unique($keeperIds))
         );
 
+        // Записываем данные о сидах-хранителях в БД.
+        $this->keepersSeeders->moveToOrigin();
+
         // Записываем дату получения списков.
-        $this->updateTime->setMarkerTime(UpdateMark::KEEPERS->value);
+        $this->updateTime->setMarkerTime(marker: UpdateMark::KEEPERS);
         $this->logger->info(
             'ApiReport. Обновление отчётов хранителей завершено за {sec}',
             ['sec' => Timers::getExecTime('update_keepers')]

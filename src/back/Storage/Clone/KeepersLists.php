@@ -78,14 +78,14 @@ final class KeepersLists
                 'keepers' => $keepersCount,
                 'topics'  => $keepersSeedersCount,
             ]);
-            $this->logger->info('Запись в базу данных списков раздач хранителей...');
+            $this->logger->info('KeepersLists. Запись в базу данных списков раздач хранителей...');
 
             $tab->moveToOrigin();
 
             // Удаляем неактуальные записи списков.
             $tab->removeUnusedKeepersRows();
 
-            $this->logger->info('Записано {topics} хранимых раздач.', ['topics' => $keepersSeedersCount]);
+            $this->logger->info('KeepersLists. Записано {topics} хранимых раздач.', ['topics' => $keepersSeedersCount]);
         }
     }
 

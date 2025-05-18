@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
+use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
+use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 use KeepersTeam\Webtlo\Update\ExcludedKeepersTrait;
 use Psr\Log\LoggerInterface;
@@ -56,6 +58,27 @@ final class KeepersSeeders
             if ($keeper !== null) {
                 $this->keptTopics[] = [$topicId, $keeper->keeperId, $keeper->keeperName];
             }
+        }
+    }
+
+    /**
+     * Записать хранителя, если он сидирует раздачу.
+     *
+     * @param KeptTopic[] $topics
+     */
+    public function addKeptTopics(KeeperData $keeper, array $topics): void
+    {
+        foreach ($topics as $topic) {
+            // Исключаем не сидируемые раздачи хранителя.
+            if (!$topic->seeding) {
+                continue;
+            }
+
+            $this->keptTopics[] = [
+                $topic->id,
+                $keeper->keeperId,
+                $keeper->keeperName,
+            ];
         }
     }
 
