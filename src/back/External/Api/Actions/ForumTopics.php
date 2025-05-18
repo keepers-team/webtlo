@@ -70,6 +70,7 @@ trait ForumTopics
             id        : $topicId,
             hash      : $payload['info_hash'],
             status    : TorrentStatus::from($payload['tor_status']),
+            name      : '',
             forumId   : $forumId,
             registered: self::dateTimeFromTimestamp($payload['reg_time']),
             priority  : KeepingPriority::from($payload['keeping_priority']),
