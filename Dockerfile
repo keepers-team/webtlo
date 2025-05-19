@@ -19,6 +19,8 @@ RUN apk add --update --no-cache \
     # php interpreter
     php81 php81-fpm php81-curl php81-openssl php81-sqlite3 php81-pdo_sqlite \
     php81-xml php81-mbstring php81-dom \
+    # php tar decompress
+    php81-phar \
     && rm -rf /var/cache/apk/*
 
 
@@ -54,9 +56,6 @@ ENTRYPOINT ["/s6-init"]
 
 # install composer
 FROM base AS builder
-
-# Install Composer prerequisites
-RUN apk add --no-cache php81-phar
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
