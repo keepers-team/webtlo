@@ -12,7 +12,6 @@ use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
-use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Settings;
@@ -233,7 +232,7 @@ final class TorrentsClients
                 } elseif (count($response->topics)) {
                     foreach ($response->topics as $topicData) {
                         // Пропускаем раздачи в невалидных статусах.
-                        if (!TorrentStatus::isValidStatus($topicData->status)) {
+                        if (!$topicData->status->isValid()) {
                             $this->unregisteredApiTopics[$topicData->hash] = $topicData;
 
                             continue;

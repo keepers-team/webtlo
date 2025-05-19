@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Storage\Table;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\DTO\KeysObject;
-use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
 use PDO;
 
 /** Таблица с данным о раздачах. */
@@ -31,15 +30,7 @@ final class Topics
         'seeder_last_seen',
     ];
 
-    /** Допустимые статусы раздач. */
-    public const VALID_STATUSES = [0, 2, 3, 8, 10];
-
     public function __construct(private readonly DB $db) {}
-
-    public function isValidTopic(TorrentStatus $topicStatus): bool
-    {
-        return in_array($topicStatus->value, self::VALID_STATUSES);
-    }
 
     /** Сколько раздач без названия. */
     public function countUnnamed(): int

@@ -21,7 +21,7 @@ enum TorrentStatus: int
     case PreModeration = 11;
 
     /** @var TorrentStatus[] Валидные статусы раздач. */
-    public const VALID = [
+    private const VALID = [
         self::NotChecked,
         self::Checked,
         self::Malformed,
@@ -50,9 +50,9 @@ enum TorrentStatus: int
     /**
      * Валидный ли статус раздачи.
      */
-    public static function isValidStatus(self $status): bool
+    public function isValid(): bool
     {
-        return in_array($status, self::VALID, true);
+        return in_array($this, self::VALID, true);
     }
 
     /**
@@ -65,7 +65,7 @@ enum TorrentStatus: int
             return false;
         }
 
-        return self::isValidStatus($case);
+        return $case->isValid();
     }
 
     /**

@@ -180,7 +180,7 @@ final class Subsections
             // Перебираем раздачи.
             foreach ($topicsChunk as $topic) {
                 // Пропускаем раздачи в невалидных статусах.
-                if (!$this->topics->isValidTopic($topic->status)) {
+                if (!$topic->status->isValid()) {
                     continue;
                 }
 
