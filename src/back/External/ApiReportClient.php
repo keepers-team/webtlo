@@ -189,28 +189,6 @@ final class ApiReportClient
     }
 
     /**
-     * @param string[] $columns
-     *
-     * @return ?array<string, mixed>
-     */
-    public function getForumReports(int $forumId, array $columns = []): ?array
-    {
-        $params = ['columns' => implode(',', $columns)];
-
-        try {
-            $response = $this->client->get("subforum/$forumId/reports", ['query' => $params]);
-        } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $params);
-
-            return null;
-        }
-
-        $body = $response->getBody()->getContents();
-
-        return json_decode($body, true);
-    }
-
-    /**
      * Записать ошибку в лог.
      *
      * @param array<string, mixed> $params
