@@ -31,6 +31,11 @@ final class KeepersReports
         private readonly LoggerInterface $logger,
     ) {}
 
+    public function __destruct()
+    {
+        $this->apiReport->cleanupReports();
+    }
+
     /**
      * Обновление списков хранимых раздач других хранителей.
      *
@@ -97,6 +102,11 @@ final class KeepersReports
         $apiReportCount = 0;
 
         $forumCount = count($keptForums);
+
+        // Если хранимых подразделов много, пробуем загрузить статический архив.
+        if ($forumCount > 10) {
+            $this->apiReport->downloadReportsArchive();
+        }
 
         foreach ($keptForums as $forumId) {
             Timers::start("get_report_api_$forumId");
