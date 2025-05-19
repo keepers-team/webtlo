@@ -140,6 +140,30 @@ final class Helper
         return $directory;
     }
 
+    public static function getStorageSubFolderPath(?string $subFolder = null, ?string $file = null): string
+    {
+        $path = self::getStorageDir();
+
+        if ($subFolder !== null) {
+            $path .= DIRECTORY_SEPARATOR . $subFolder;
+
+            self::makeDirRecursive(path: $path);
+        }
+
+        if ($file !== null) {
+            $path .= DIRECTORY_SEPARATOR . $file;
+        }
+
+        return self::normalizePath(path: $path);
+    }
+
+    public static function getPathWithFile(string $path, string $file): string
+    {
+        $path = $path . DIRECTORY_SEPARATOR . $file;
+
+        return self::normalizePath(path: $path);
+    }
+
     /**
      * @return string The log directory for the application
      */
