@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
+use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
@@ -32,6 +33,7 @@ final class CloneServiceProvider extends AbstractServiceProvider
             TopicsUpdate::class,
             TopicsUntracked::class,
             TopicsUnregistered::class,
+            SeedersInsert::class,
             Torrents::class,
             UpdateTime::class,
         ];
@@ -97,6 +99,13 @@ final class CloneServiceProvider extends AbstractServiceProvider
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTopicsUnregistered();
+        });
+
+        $container->addShared(SeedersInsert::class, function() use ($container) {
+            /** @var CloneFactory $factory */
+            $factory = $container->get(CloneFactory::class);
+
+            return $factory->cloneSeeders();
         });
 
         $container->addShared(Torrents::class, function() use ($container) {
