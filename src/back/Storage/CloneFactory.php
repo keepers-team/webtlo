@@ -10,6 +10,7 @@ use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
+use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
@@ -165,6 +166,19 @@ final class CloneFactory
         return new TopicsUnregistered(
             db    : $this->db,
             logger: $this->logger,
+            clone : $table,
+        );
+    }
+
+    public function cloneSeeders(): SeedersInsert
+    {
+        $table = $this->makeClone(
+            table  : SeedersInsert::TABLE,
+            keys   : SeedersInsert::makeKeysList(),
+            primary: SeedersInsert::PRIMARY,
+        );
+
+        return new SeedersInsert(
             clone : $table,
         );
     }
