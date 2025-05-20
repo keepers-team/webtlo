@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Api\Actions;
 
+use Generator;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
@@ -45,18 +46,34 @@ trait ForumTopics
                 return $result;
             }
 
+            $topicsCount = count($result['result']);
+
             $format = $result['format']['topic_id'];
 
-            $topics = [];
-            foreach ($result['result'] as $id => $data) {
-                $payload  = array_combine($format, $data);
-                $topics[] = self::parseStaticForumTopics($forumId, (int) $id, $payload);
-            }
+            // Разбиваем раздачи по 500шт и лениво обрабатываем через Generator.
+            $chunks = array_chunk($result['result'], 500, true);
+            unset($result['result']);
+
+            $topicGenerator = function() use ($chunks, $format, $forumId): Generator {
+                foreach ($chunks as $chunk) {
+                    $topics = [];
+                    foreach ($chunk as $id => $data) {
+                        $topics[] = self::parseStaticForumTopics(
+                            forumId: $forumId,
+                            topicId: (int) $id,
+                            payload: array_combine($format, $data)
+                        );
+                    }
+
+                    yield $topics;
+                }
+            };
 
             return new ForumTopicsResponse(
-                updateTime: self::dateTimeFromTimestamp($result['update_time']),
-                totalSize : $result['total_size_bytes'],
-                topics    : $topics
+                updateTime  : self::dateTimeFromTimestamp($result['update_time']),
+                totalCount  : $topicsCount,
+                totalSize   : $result['total_size_bytes'],
+                topicsChunks: $topicGenerator()
             );
         };
     }

@@ -9,10 +9,13 @@ use DateTimeImmutable;
 /** Данные раздач подраздела. */
 final class ForumTopicsResponse
 {
+    /**
+     * @param iterable<ForumTopic[]> $topicsChunks генератор для ленивой обработки раздач, по 500шт
+     */
     public function __construct(
         public readonly DateTimeImmutable $updateTime,
+        public readonly int               $totalCount,
         public readonly int               $totalSize,
-        /** @var ForumTopic[] */
-        public readonly array             $topics,
+        public readonly iterable          $topicsChunks,
     ) {}
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
+use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
@@ -11,10 +12,10 @@ use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
+use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\UpdateTime;
-use KeepersTeam\Webtlo\Storage\Table\Seeders;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -34,6 +35,7 @@ final class Subsections
         private readonly Topics          $topics,
         private readonly TopicsInsert    $tableInsert,
         private readonly TopicsUpdate    $tableUpdate,
+        private readonly SeedersInsert   $seedersInsert,
         private readonly UpdateTime      $updateTime,
         private readonly LoggerInterface $logger
     ) {}
@@ -61,6 +63,9 @@ final class Subsections
         $subsections = array_map('intval', $subsections);
         sort($subsections);
 
+        // Выбрана опция накапливать данные о средних сидах.
+        $doCollectAverageSeeds = (bool) $config['avg_seeders'];
+
         // Обновим каждый хранимый подраздел.
         foreach ($subsections as $forumId) {
             // Получаем дату предыдущего обновления подраздела.
@@ -75,7 +80,10 @@ final class Subsections
 
             // Получаем данные о раздачах.
             Timers::start("update_forum_$forumId");
-            $topicResponse = $this->apiReport->getForumTopicsData(forumId: $forumId);
+            $topicResponse = $this->apiReport->getForumTopicsData(
+                forumId         : $forumId,
+                loadAverageSeeds: $doCollectAverageSeeds
+            );
             if ($topicResponse instanceof ApiError) {
                 $this->skipSubsections[] = $forumId;
 
@@ -87,9 +95,21 @@ final class Subsections
                 continue;
             }
 
-            // Если дата прошлого обновления совпадает с датой в ответе API, то обновлять нечего.
-            if ($forumLastUpdated === $topicResponse->updateTime) {
+            // Если дата прошлого обновления больше или равна дате в ответе API, то обновлять нечего.
+            if ($forumLastUpdated >= $topicResponse->updateTime) {
                 $this->skipSubsections[] = $forumId;
+
+                continue;
+            }
+
+            // Проверим наличие раздач в подразделе.
+            if ($topicResponse->totalCount === 0) {
+                $this->skipSubsections[] = $forumId;
+
+                $this->logger->warning(
+                    'Отсутствуют раздачи в подразделе №{forumId}. Вероятно он не существует.',
+                    ['forumId' => $forumId]
+                );
 
                 continue;
             }
@@ -97,24 +117,23 @@ final class Subsections
             // Запоминаем время обновления подраздела.
             $this->updateTime->addMarkerUpdate(marker: $forumId, updateTime: $topicResponse->updateTime);
 
-            // Получение данных о сидах, в зависимости от дат обновления.
-            $avgProcessor = Seeders::AverageProcessor(
-                calcAverage: (bool) $config['avg_seeders'],
-                lastUpdated: $forumLastUpdated,
-                updateTime : $topicResponse->updateTime
+            $isDateChanged = self::isNewCalendarDay(
+                lastUpdate   : $forumLastUpdated,
+                currentUpdate: $topicResponse->updateTime
             );
 
             // Обрабатываем полученные раздачи, и записываем во временную таблицу.
-            $this->processSubsectionTopics(topics: $topicResponse->topics, avgProcessor: $avgProcessor);
+            foreach ($topicResponse->topicsChunks as $topics) {
+                $this->processSubsectionTopics(topics: $topics, isDateChanged: $isDateChanged);
+            }
 
             $this->logger->debug(
-                sprintf(
-                    'Список раздач подраздела № %-4d (%d шт. %s) обновлён за %2s.',
-                    $forumId,
-                    count($topicResponse->topics),
-                    Helper::convertBytes($topicResponse->totalSize, 9),
-                    Timers::getExecTime("update_forum_$forumId")
-                )
+                sprintf('Список раздач подраздела № %-4d ({count} шт.{size}) обновлён за {sec}.', $forumId),
+                [
+                    'count' => $topicResponse->totalCount,
+                    'size'  => Helper::convertBytes($topicResponse->totalSize, 9),
+                    'sec'   => Timers::getExecTime("update_forum_$forumId"),
+                ],
             );
         }
 
@@ -132,86 +151,103 @@ final class Subsections
     /**
      * Обработать раздачи подраздела.
      *
-     * @param ForumTopic[] $topics       раздачи подраздела
-     * @param callable     $avgProcessor расчёт средних сидов
+     * @param ForumTopic[] $topics раздачи подраздела
      */
-    private function processSubsectionTopics(array $topics, callable $avgProcessor): void
+    private function processSubsectionTopics(array $topics, bool $isDateChanged): void
     {
-        /**
-         * Разбиваем result по 500 раздач.
-         *
-         * @var ForumTopic[][] $topicsChunks
-         */
-        $topicsChunks = array_chunk($topics, 500);
+        // Получаем прошлые данные о раздачах.
+        $previousTopicsData = $this->getPreviousTopics(topics: $topics);
 
-        foreach ($topicsChunks as $topicsChunk) {
-            // Получаем прошлые данные о раздачах.
-            $previousTopicsData = $this->getPreviousTopics(topics: $topicsChunk);
-
-            // Перебираем раздачи.
-            foreach ($topicsChunk as $topic) {
-                // Пропускаем раздачи в невалидных статусах.
-                if (!$topic->status->isValid()) {
-                    continue;
-                }
-
-                // запоминаем имеющиеся данные о раздаче в локальной базе
-                $previousTopic = $previousTopicsData[$topic->id] ?? [];
-
-                // Алгоритм нахождения среднего значения сидов.
-                $average = $avgProcessor($topic->seeders, $previousTopic);
-
-                $topicRegistered = $topic->registered->getTimestamp();
-
-                // Обновление данных или запись с нуля?
-                $doTopicUpdate = $topic->hash === ($previousTopic['info_hash'] ?? null)
-                    && $topicRegistered === (int) ($previousTopic['reg_time'] ?? 0);
-
-                if ($doTopicUpdate) {
-                    // Обновление существующей в БД раздачи.
-                    $this->tableUpdate->addTopic([
-                        $topic->id,
-                        $topic->forumId,
-                        $topic->status->value,
-                        $topic->averageSeeds?->sum ?? $topic->seeders, // Сумма сидов за сегодня или их количество
-                        $topic->averageSeeds?->count ?? 1, // Количество обновлений за сегодня
-                        $average->daysUpdate, // День обновления, если изменился, значит новые сутки и цифры сдвигаются
-                        $topic->priority->value,
-                        $topic->poster,
-                        $topic->lastSeeded->getTimestamp(),
-                    ]);
-                } else {
-                    // Удаляем прошлый вариант раздачи, если он есть.
-                    if (!empty($previousTopic)) {
-                        $this->markTopicDelete($topic->id);
-                    }
-
-                    // Новая или обновлённая раздача.
-                    $this->tableInsert->addTopic([
-                        $topic->id,
-                        $topic->forumId,
-                        $topic->status->value,
-                        $topic->name,
-                        $topic->hash,
-                        $topic->size,
-                        $topicRegistered,
-                        $topic->averageSeeds?->sum ?? $topic->seeders, // Сумма сидов за сегодня или их количество
-                        $topic->averageSeeds?->count ?? 1, // Количество обновлений за сегодня
-                        $average->daysUpdate, // День обновления, если изменился, значит новые сутки и цифры сдвигаются
-                        $topic->priority->value,
-                        $topic->poster,
-                        $topic->lastSeeded->getTimestamp(),
-                    ]);
-                }
-
-                unset($topic, $previousTopic, $topicRegistered);
+        // Перебираем раздачи.
+        foreach ($topics as $topic) {
+            // Пропускаем раздачи в невалидных статусах.
+            if (!$topic->status->isValid()) {
+                continue;
             }
-            unset($topicsChunk, $previousTopicsData);
 
-            // Запись раздач во временную таблицу.
-            $this->tableUpdate->cloneFill();
-            $this->tableInsert->cloneFill();
+            // Запоминаем имеющиеся данные о раздаче в локальной базе
+            $previousTopic = $previousTopicsData[$topic->id] ?? [];
+
+            // Количество дней обновлений. Если сутки сменились - увеличиваем
+            $daysUpdate = $previousTopic['seeders_updates_days'] ?? 0;
+            if ($isDateChanged) {
+                ++$daysUpdate;
+            }
+
+            $topicRegistered = $topic->registered->getTimestamp();
+
+            // Обновление данных или запись с нуля?
+            $doTopicUpdate = $topic->hash === ($previousTopic['info_hash'] ?? null)
+                && $topicRegistered === (int) ($previousTopic['reg_time'] ?? 0);
+
+            if ($doTopicUpdate) {
+                // Обновление существующей в БД раздачи.
+                $this->tableUpdate->addTopic([
+                    $topic->id,
+                    $topic->forumId,
+                    $topic->status->value,
+                    $topic->todaySeeders(),
+                    $topic->todayUpdates(),
+                    $daysUpdate,
+                    $topic->priority->value,
+                    $topic->poster,
+                    $topic->lastSeeded->getTimestamp(),
+                ]);
+
+                // Если сменились сутки и есть данные о СС, обновляем их в БД.
+                if ($isDateChanged && $topic->averageSeeds !== null) {
+                    $this->seedersInsert->addTopic(topicId: $topic->id, seeds: $topic->averageSeeds);
+                }
+            } else {
+                // Удаляем прошлый вариант раздачи, если он есть.
+                if (!empty($previousTopic)) {
+                    $this->markTopicDelete($topic->id);
+                }
+
+                // Новая или обновлённая раздача.
+                $this->tableInsert->addTopic([
+                    $topic->id,
+                    $topic->forumId,
+                    $topic->status->value,
+                    $topic->name,
+                    $topic->hash,
+                    $topic->size,
+                    $topicRegistered,
+                    $topic->todaySeeders(),
+                    $topic->todayUpdates(),
+                    $daysUpdate, // День обновления, если изменился, значит новые сутки и цифры сдвигаются
+                    $topic->priority->value,
+                    $topic->poster,
+                    $topic->lastSeeded->getTimestamp(),
+                ]);
+
+                // Если есть данные о СС, записываем их в БД.
+                if ($topic->averageSeeds !== null) {
+                    $this->seedersInsert->addTopic(topicId: $topic->id, seeds: $topic->averageSeeds);
+                }
+            }
+
+            unset($topic, $previousTopic, $topicRegistered);
         }
+
+        // Запись раздач во временную таблицу.
+        $this->tableUpdate->cloneFill();
+        $this->tableInsert->cloneFill();
+        $this->seedersInsert->cloneFill();
+    }
+
+    /**
+     * Сменились ли сутки, относительно прошлого обновления сведений.
+     */
+    private static function isNewCalendarDay(DateTimeImmutable $lastUpdate, DateTimeImmutable $currentUpdate): bool
+    {
+        // Полночь дня последнего обновления сведений.
+        $lastUpdated = $lastUpdate->setTime(hour: 0, minute: 0);
+
+        // Сменились ли сутки, относительно прошлого обновления сведений.
+        $diffInDays = (int) $currentUpdate->diff($lastUpdated)->format('%d');
+
+        return $diffInDays > 0;
     }
 
     /**
@@ -263,17 +299,32 @@ final class Subsections
      */
     private function writeTopicsToOrigin(array $updatedSubsections): void
     {
+        Timers::start('writeTopicsToOrigin');
         // Переносим данные в основную таблицу.
         $countTopicsUpdate = $this->tableUpdate->writeTable();
         $countTopicsInsert = $this->tableInsert->writeTable();
 
+        $seedersTopicsCount = $this->seedersInsert->writeTable();
+
         // Удаляем ненужные раздачи.
         $this->clearUnusedTopics(updatedSubsections: $updatedSubsections);
+
+        $this->logger->debug(
+            'Перенос данных из временной таблицы выполнен за {sec}',
+            ['sec' => Timers::getExecTime('writeTopicsToOrigin')]
+        );
 
         $this->logger->info('Обработано хранимых подразделов: {count} шт, уникальных раздач в них {topics} шт.', [
             'count'  => count($updatedSubsections),
             'topics' => $countTopicsUpdate + $countTopicsInsert,
         ]);
+
+        if ($seedersTopicsCount > 0) {
+            $this->logger->debug(
+                'Выполнено заполнение истории средних сидов для {count} раздач.',
+                ['count' => $seedersTopicsCount]
+            );
+        }
     }
 
     /**
@@ -281,6 +332,7 @@ final class Subsections
      */
     private function clearUnusedTopics(array $updatedSubsections): void
     {
+        Timers::start('clearUnusedTopics');
         $in = implode(',', $updatedSubsections);
 
         $query = "
@@ -297,7 +349,10 @@ final class Subsections
 
         $unused = $this->db->queryChanges();
         if ($unused > 0) {
-            $this->logger->debug("Удалено лишних раздач $unused шт.");
+            $this->logger->debug(
+                'Удалено лишних раздач {count} шт. за {sec}',
+                ['count' => $unused, 'sec' => Timers::getExecTime('clearUnusedTopics')]
+            );
         }
     }
 

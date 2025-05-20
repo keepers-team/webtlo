@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use DateTimeImmutable;
 use Exception;
+use Generator;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\AverageSeeds;
@@ -21,7 +22,7 @@ trait ForumTopics
     /**
      * Получить список раздач подраздела.
      */
-    public function getForumTopicsData(int $forumId): ForumTopicsResponse|ApiError
+    public function getForumTopicsData(int $forumId, bool $loadAverageSeeds = false): ForumTopicsResponse|ApiError
     {
         $dataProcessor = self::getForumTopicsProcessor($this->logger, $forumId);
 
@@ -35,9 +36,12 @@ trait ForumTopics
             'topic_poster',
             'seeders',
             'seeder_last_seen',
-            'average_seeds_sum',
-            'average_seeds_count',
         ];
+
+        // Если нужна история сидов, добавляем искомые поля.
+        if ($loadAverageSeeds) {
+            $columns = [...$columns, 'average_seeds_sum', 'average_seeds_count'];
+        }
 
         try {
             $params = [
@@ -64,17 +68,37 @@ trait ForumTopics
 
             $format = $result['columns'];
 
-            $topics = [];
-            foreach ($result['releases'] as $data) {
-                $payload  = array_combine($format, $data);
-                $topics[] = self::parseStaticForumTopics(forumId: $forumId, payload: $payload);
-            }
+            // TODO Заменить на значение из выдачи.
+            $totalSize = array_sum(
+                array_column(
+                    $result['releases'],
+                    array_flip($format)['tor_size_bytes']
+                )
+            );
+
+            // Разбиваем раздачи по 500шт и лениво обрабатываем через Generator.
+            $chunks = array_chunk($result['releases'], 500);
+            unset($result['releases']);
+
+            $topicGenerator = function() use ($chunks, $format, $forumId): Generator {
+                foreach ($chunks as $chunk) {
+                    $topics = [];
+                    foreach ($chunk as $data) {
+                        $topics[] = self::parseStaticForumTopics(
+                            forumId: $forumId,
+                            payload: array_combine($format, $data)
+                        );
+                    }
+
+                    yield $topics;
+                }
+            };
 
             return new ForumTopicsResponse(
-                updateTime: new DateTimeImmutable($result['pvc_update_time']),
-                // TODO Заменить на значение из выдачи.
-                totalSize : array_sum(array_column($topics, 'size')),
-                topics    : $topics,
+                updateTime  : new DateTimeImmutable($result['pvc_update_time'] ?? $result['cache_time']),
+                totalCount  : $result['total_count'],
+                totalSize   : $totalSize,
+                topicsChunks: $topicGenerator(),
             );
         };
     }
@@ -86,16 +110,19 @@ trait ForumTopics
      */
     private static function parseStaticForumTopics(int $forumId, array $payload): ForumTopic
     {
-        $count = array_map('intval', $payload['average_seeds_count'] ?? []);
-        $sum   = array_map('intval', $payload['average_seeds_sum'] ?? []);
+        $averageSeeds = null;
+        if (!empty($payload['average_seeds_sum'])) {
+            $sum   = array_map('intval', $payload['average_seeds_sum']);
+            $count = array_map('intval', $payload['average_seeds_count']);
 
-        // Данные о средних сидах
-        $averageSeeds = new AverageSeeds(
-            sum         : $sum[0],
-            count       : $count[0],
-            sumHistory  : array_slice($sum, 1, 30),
-            countHistory: array_slice($count, 1, 30)
-        );
+            // Данные о средних сидах
+            $averageSeeds = new AverageSeeds(
+                sum         : $sum[0],
+                count       : $count[0],
+                sumHistory  : array_slice($sum, 1, 30),
+                countHistory: array_slice($count, 1, 30)
+            );
+        }
 
         return new ForumTopic(
             id          : (int) $payload['topic_id'],

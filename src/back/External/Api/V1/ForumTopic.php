@@ -25,4 +25,20 @@ final class ForumTopic
         public readonly DateTimeImmutable $lastSeeded,
         public readonly ?AverageSeeds     $averageSeeds = null,
     ) {}
+
+    /**
+     * Сумма измерений сидов за сегодня.
+     */
+    public function todaySeeders(): int
+    {
+        return $this->averageSeeds->sum ?? $this->seeders;
+    }
+
+    /**
+     * Количество измерений сидов за сегодня.
+     */
+    public function todayUpdates(): int
+    {
+        return $this->averageSeeds->count ?? 1;
+    }
 }
