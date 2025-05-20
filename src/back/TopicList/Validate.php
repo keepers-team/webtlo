@@ -200,39 +200,68 @@ final class Validate
         // Жёсткое ограничение от 1 до 30 дней для средних сидов.
         $seedPeriod = min(max((int) $filter['avg_seeders_period'], 1), 30);
 
-        $fields = $joins = [];
-        if ($useAvgSeeders) {
-            // Проверка периода средних сидов.
-            if (!is_numeric($filter['avg_seeders_period'])) {
-                throw new ValidationException(
-                    'В фильтре введено некорректное значение для периода средних сидов.',
-                    'filter-exception-seeders-period'
-                );
-            }
+        // Расчёт СС отключён в настройках.
+        if (!$useAvgSeeders) {
+            $fields = [
+                '-1 AS days_seed',
+                'Topics.seeders * 1. / MAX(1, Topics.seeders_updates_today) AS seed',
+            ];
 
-            // Применить фильтр средних сидов.
-            $temp = [];
-            for ($i = 0; $i < $seedPeriod; ++$i) {
-                $temp['sum_se'][] = "CASE WHEN d$i IS '' OR d$i IS NULL THEN 0 ELSE d$i END";
-                $temp['sum_qt'][] = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE q$i END";
-                $temp['qt'][]     = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE 1 END";
-            }
-
-            $qt     = implode('+', $temp['qt']);
-            $sum_qt = implode('+', $temp['sum_qt']);
-            $sum_se = implode('+', $temp['sum_se']);
-
-            $fields[] = "$qt AS days_seed";
-            $fields[] = "CASE WHEN $qt IS 0 THEN (seeders * 1.) / seeders_updates_today ELSE ( seeders * 1. + $sum_se) / ( seeders_updates_today + $sum_qt) END AS seed";
-
-            $joins[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
-        } else {
-            $fields[] = '-1 AS days_seed';
-            $fields[] = 'Topics.seeders / MAX(seeders_updates_today, 1) AS seed';
+            return new AverageSeed(
+                enabled   : false,
+                checkGreen: $greenSeeders,
+                seedPeriod: 1,
+                fields    : $fields,
+                joins     : []
+            );
         }
 
+        // Валидация периода средних сидов.
+        if (!is_numeric($filter['avg_seeders_period'] ?? null)) {
+            throw new ValidationException(
+                'В фильтре введено некорректное значение для периода средних сидов.',
+                'filter-exception-seeders-period'
+            );
+        }
+
+        // Для выполнения расчёта за один день таблица Seeders не нужна.
+        if ($seedPeriod === 1) {
+            $fields = [
+                '1 AS days_seed',
+                'Topics.seeders * 1. / MAX(1, Topics.seeders_updates_today) AS seed',
+            ];
+
+            return new AverageSeed(
+                enabled   : true,
+                checkGreen: $greenSeeders,
+                seedPeriod: $seedPeriod,
+                fields    : $fields,
+                joins     : []
+            );
+        }
+
+        $fields = $joins = [];
+        // Применить фильтр средних сидов.
+        $temp = array_fill_keys(['days_seed', 'average_sum', 'average_count'], []);
+
+        // Сдвигаем счётчик $seedPeriod на один день, т.к. значения за "сегодня" считаются отдельно.
+        for ($i = 0; $i < $seedPeriod - 1; ++$i) {
+            $temp['days_seed'][]     = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE 1 END";
+            $temp['average_sum'][]   = "COALESCE(d$i, 0)"; // sum - сумма измерений в заданный день.
+            $temp['average_count'][] = "COALESCE(q$i, 0)"; // count - количество измерений в заданный день.
+        }
+
+        $days_seed     = implode(' + ', $temp['days_seed']);
+        $average_sum   = implode(' + ', $temp['average_sum']);
+        $average_count = implode(' + ', $temp['average_count']);
+
+        $fields[] = "(1 + $days_seed) AS days_seed";
+        $fields[] = "(Topics.seeders * 1. + $average_sum) / (MAX(1, Topics.seeders_updates_today) + $average_count) AS seed";
+
+        $joins[] = 'LEFT JOIN Seeders ON Topics.id = Seeders.id';
+
         return new AverageSeed(
-            $useAvgSeeders,
+            true,
             $greenSeeders,
             $seedPeriod,
             $fields,
