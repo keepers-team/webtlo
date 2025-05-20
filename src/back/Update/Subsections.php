@@ -172,10 +172,10 @@ final class Subsections
                     $this->tableUpdate->addTopic([
                         $topic->id,
                         $topic->forumId,
-                        $average->sumSeeders,
                         $topic->status->value,
-                        $average->sumUpdates,
-                        $average->daysUpdate,
+                        $topic->averageSeeds?->sum ?? $topic->seeders, // Сумма сидов за сегодня или их количество
+                        $topic->averageSeeds?->count ?? 1, // Количество обновлений за сегодня
+                        $average->daysUpdate, // День обновления, если изменился, значит новые сутки и цифры сдвигаются
                         $topic->priority->value,
                         $topic->poster,
                         $topic->lastSeeded->getTimestamp(),
@@ -190,14 +190,14 @@ final class Subsections
                     $this->tableInsert->addTopic([
                         $topic->id,
                         $topic->forumId,
+                        $topic->status->value,
                         $topic->name,
                         $topic->hash,
-                        $topic->seeders,
                         $topic->size,
-                        $topic->status->value,
                         $topicRegistered,
-                        $average->sumUpdates,
-                        $average->daysUpdate,
+                        $topic->averageSeeds?->sum ?? $topic->seeders, // Сумма сидов за сегодня или их количество
+                        $topic->averageSeeds?->count ?? 1, // Количество обновлений за сегодня
+                        $average->daysUpdate, // День обновления, если изменился, значит новые сутки и цифры сдвигаются
                         $topic->priority->value,
                         $topic->poster,
                         $topic->lastSeeded->getTimestamp(),
