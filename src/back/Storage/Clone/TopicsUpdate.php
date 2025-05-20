@@ -18,8 +18,8 @@ final class TopicsUpdate
     public const KEYS    = [
         self::PRIMARY,
         'forum_id',
-        'seeders',
         'status',
+        'seeders',
         'seeders_updates_today',
         'seeders_updates_days',
         'keeping_priority',

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Api\V1\AverageSeeds;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
 use KeepersTeam\Webtlo\External\Api\V1\ForumTopicsResponse;
 use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
@@ -34,6 +35,8 @@ trait ForumTopics
             'topic_poster',
             'seeders',
             'seeder_last_seen',
+            'average_seeds_sum',
+            'average_seeds_count',
         ];
 
         try {
@@ -83,19 +86,31 @@ trait ForumTopics
      */
     private static function parseStaticForumTopics(int $forumId, array $payload): ForumTopic
     {
+        $count = array_map('intval', $payload['average_seeds_count'] ?? []);
+        $sum   = array_map('intval', $payload['average_seeds_sum'] ?? []);
+
+        // Данные о средних сидах
+        $averageSeeds = new AverageSeeds(
+            sum         : $sum[0],
+            count       : $count[0],
+            sumHistory  : array_slice($sum, 1, 30),
+            countHistory: array_slice($count, 1, 30)
+        );
+
         return new ForumTopic(
-            id        : (int) $payload['topic_id'],
-            hash      : (string) $payload['info_hash'],
-            status    : TorrentStatus::from((int) $payload['tor_status']),
-            name      : (string) $payload['topic_title'],
-            forumId   : $forumId,
-            registered: new DateTimeImmutable($payload['reg_time']),
-            priority  : KeepingPriority::from((int) $payload['keeping_priority']),
-            size      : (int) $payload['tor_size_bytes'],
-            poster    : (int) $payload['topic_poster'],
-            seeders   : (int) $payload['seeders'],
-            keepers   : [], // TODO УБрать хранителей.
-            lastSeeded: new DateTimeImmutable($payload['seeder_last_seen']),
+            id          : (int) $payload['topic_id'],
+            hash        : (string) $payload['info_hash'],
+            status      : TorrentStatus::from((int) $payload['tor_status']),
+            name        : (string) $payload['topic_title'],
+            forumId     : $forumId,
+            registered  : new DateTimeImmutable($payload['reg_time']),
+            priority    : KeepingPriority::from((int) $payload['keeping_priority']),
+            size        : (int) $payload['tor_size_bytes'],
+            poster      : (int) $payload['topic_poster'],
+            seeders     : (int) $payload['seeders'],
+            keepers     : [], // TODO УБрать хранителей.
+            lastSeeded  : new DateTimeImmutable($payload['seeder_last_seen']),
+            averageSeeds: $averageSeeds,
         );
     }
 }
