@@ -8,12 +8,12 @@ use DateTimeImmutable;
 use Exception;
 use Generator;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
-use KeepersTeam\Webtlo\External\Api\V1\AverageSeeds;
-use KeepersTeam\Webtlo\External\Api\V1\ForumTopic;
-use KeepersTeam\Webtlo\External\Api\V1\ForumTopicsResponse;
-use KeepersTeam\Webtlo\External\Api\V1\KeepingPriority;
-use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
+use KeepersTeam\Webtlo\Enum\TorrentStatus;
+use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\External\Data\AverageSeeds;
+use KeepersTeam\Webtlo\External\Data\ForumTopic;
+use KeepersTeam\Webtlo\External\Data\ForumTopicsResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 

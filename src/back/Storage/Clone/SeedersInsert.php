@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
-use KeepersTeam\Webtlo\External\Api\V1\AverageSeeds;
+use KeepersTeam\Webtlo\External\Data\AverageSeeds;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 
 /**

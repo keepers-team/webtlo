@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External\Api\V1;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Enum\TorrentStatus;
 
 /** Дополнительные сведения о раздаче. */
 final class TopicDetails

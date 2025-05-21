@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External\Api\V1;
+namespace KeepersTeam\Webtlo\External\Data;
 
 /** Ошибка при работе с Api. */
 final class ApiError

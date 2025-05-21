@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External\Api\V1;
+namespace KeepersTeam\Webtlo\External\Data;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
+use KeepersTeam\Webtlo\Enum\TorrentStatus;
 
 /** Данные раздачи подраздела. */
 final class ForumTopic

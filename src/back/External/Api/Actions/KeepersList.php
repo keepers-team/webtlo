@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External\Api\Actions;
 
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
-use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
+use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -57,7 +57,7 @@ trait KeepersList
         foreach ($result['result'] as $keeperId => $keeper) {
             $keeperId = (int) $keeperId;
 
-            $keepers[$keeperId] = new KeeperData(
+            $keepers[$keeperId] = new Keeper(
                 keeperId   : $keeperId,
                 keeperName : $keeper[$format['username']],
                 isCandidate: (bool) $keeper[$format['is_candidate']],

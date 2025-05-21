@@ -6,10 +6,10 @@ namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Forum;
 
-use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
+use KeepersTeam\Webtlo\Enum\TorrentStatus;
 
 /**
  * Работа с темами раздач.

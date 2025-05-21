@@ -6,9 +6,9 @@ namespace KeepersTeam\Webtlo\External\Api\Actions;
 
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\Utils;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
-use KeepersTeam\Webtlo\External\Api\V1\ForumDetails;
+use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\External\Api\V1\ForumsResponse;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -77,7 +77,7 @@ trait ForumTree
     {
         $updateTime = self::dateTimeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
 
-        /** @var ForumDetails[] $forums */
+        /** @var Forum[] $forums */
         $forums = [];
         /** @var int[][][] $categoriesHierarchy */
         $categoriesHierarchy = $trees['result']['tree'];
@@ -92,7 +92,7 @@ trait ForumTree
             if (isset($sizes['result'][$forumId])) {
                 [$count, $size] = $sizes['result'][$forumId];
 
-                $forums[] = new ForumDetails(
+                $forums[] = new Forum(
                     id   : $forumId,
                     name : implode(' » ', $parts),
                     count: $count,

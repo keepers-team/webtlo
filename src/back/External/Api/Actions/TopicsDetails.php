@@ -7,11 +7,11 @@ namespace KeepersTeam\Webtlo\External\Api\Actions;
 use Generator;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\RejectionException;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\Enum\TorrentStatus;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\External\Api\V1\TopicsDetailsResponse;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
-use KeepersTeam\Webtlo\External\Api\V1\TorrentStatus;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 

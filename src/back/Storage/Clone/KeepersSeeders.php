@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
-use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
+use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 use Psr\Log\LoggerInterface;
@@ -36,7 +36,7 @@ final class KeepersSeeders
      *
      * @param KeptTopic[] $topics
      */
-    public function addKeptTopics(KeeperData $keeper, array $topics): void
+    public function addKeptTopics(Keeper $keeper, array $topics): void
     {
         foreach ($topics as $topic) {
             // Исключаем не сидируемые раздачи хранителя.

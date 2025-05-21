@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;

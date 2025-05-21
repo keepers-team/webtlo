@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicsPeers;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;

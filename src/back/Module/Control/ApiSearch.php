@@ -6,9 +6,9 @@ namespace KeepersTeam\Webtlo\Module\Control;
 
 use Generator;
 use KeepersTeam\Webtlo\Config\TopicControl;
-use KeepersTeam\Webtlo\External\Api\V1\ApiError;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicsPeers;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
+use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\External\Api\V1\KeeperData;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 use Psr\Log\LoggerInterface;
@@ -38,7 +38,7 @@ final class KeepersLists
     /**
      * @param KeptTopic[] $topics
      */
-    public function addKeptTopics(KeeperData $keeper, array $topics): void
+    public function addKeptTopics(Keeper $keeper, array $topics): void
     {
         foreach ($topics as $topic) {
             $this->keptTopics[] = [
