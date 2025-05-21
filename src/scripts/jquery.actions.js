@@ -23,10 +23,14 @@ $(document).ready(function () {
                     filter_hold = false;
                     response = $.parseJSON(response);
                     addDefaultLog(response.log ?? '');
-                    showResultTopics(response.result);
 
-                    checkEmptyTitleTopics(true);
-                    getFilteredTopics();
+                    if (response.result) {
+                        showResultTopics(response.result);
+                    } else {
+                        checkEmptyTitleTopics(true);
+                        getFilteredTopics();
+                    }
+
                 },
                 complete: function () {
                     filter_hold = false;
