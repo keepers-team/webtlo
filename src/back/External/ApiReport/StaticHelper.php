@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport;
 
-use Exception;
 use GuzzleHttp\Client;
-use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
-use KeepersTeam\Webtlo\Config\Validate;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
 use Psr\Log\LoggerInterface;
 
@@ -22,7 +20,7 @@ trait StaticHelper
         LoggerInterface $logger,
         string          $baseUrl,
         bool            $ssl,
-        Credentials     $cred,
+        ApiCredentials  $auth,
         ?Proxy          $proxy,
         Timeout         $timeout = new Timeout(),
     ): Client {
@@ -46,8 +44,8 @@ trait StaticHelper
             'timeout'         => $timeout->request,
             'connect_timeout' => $timeout->connection,
             'auth'            => [
-                $cred->userId,
-                $cred->apiKey,
+                $auth->userId,
+                $auth->apiKey,
             ],
             'allow_redirects' => true,
             // RetryMiddleware
@@ -72,29 +70,19 @@ trait StaticHelper
      */
     public static function apiClientFromLegacy(
         array           $cfg,
-        Credentials     $cred,
+        ApiCredentials  $auth,
         LoggerInterface $logger,
         Proxy           $proxy
     ): Client {
         $useProxy = (bool) $cfg['proxy_activate_report'];
 
         return self::createApiReportClient(
-            $logger,
-            (string) $cfg['report_base_url'],
-            (bool) $cfg['report_ssl'],
-            $cred,
-            $useProxy ? $proxy : null,
-            new Timeout((int) $cfg['api_timeout'], (int) $cfg['api_connect_timeout']),
+            logger : $logger,
+            baseUrl: (string) $cfg['report_base_url'],
+            ssl    : (bool) $cfg['report_ssl'],
+            auth   : $auth,
+            proxy  : $useProxy ? $proxy : null,
+            timeout: new Timeout((int) $cfg['api_timeout'], (int) $cfg['api_connect_timeout']),
         );
-    }
-
-    /**
-     * @param array<string, mixed> $cfg
-     *
-     * @throws Exception
-     */
-    public static function apiCredentials(array $cfg): Credentials
-    {
-        return Validate::checkUser($cfg);
     }
 }

@@ -27,7 +27,7 @@ trait KeeperUnseededTopics
                 'conditions'  => $dateFilter,
             ];
 
-            $response = $this->client->get(uri: "keeper/{$this->cred->userId}/reports", options: ['query' => $params]);
+            $response = $this->client->get(uri: "keeper/{$this->auth->userId}/reports", options: ['query' => $params]);
         } catch (GuzzleException $error) {
             $code = $error->getCode();
 

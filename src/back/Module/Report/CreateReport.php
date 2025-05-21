@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Module\Report;
 
 use DateTimeImmutable;
 use Exception;
-use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\ReportSend;
 use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DB;
@@ -56,7 +56,7 @@ final class CreateReport
     public function __construct(
         private readonly DB              $db,
         private readonly Settings        $settings,
-        private readonly Credentials     $cred,
+        private readonly ApiCredentials     $auth,
         private readonly ReportSend      $reportSend,
         private readonly UpdateTime      $tableUpdate,
         private readonly Forums          $tableForums,
@@ -332,7 +332,7 @@ final class CreateReport
             }
 
             // Ссылка на отчёт подраздела.
-            $leftPart = sprintf($urlPattern, $forumId, $this->cred->userId, $forum->name);
+            $leftPart = sprintf($urlPattern, $forumId, $this->auth->userId, $forum->name);
 
             // Ссылка на свой пост(отчёт) и количество + объём раздач.
             $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
@@ -556,7 +556,7 @@ final class CreateReport
                 WHERE tp.forum_id IN ($includeForums->keys)
             )
             GROUP BY forum_id",
-            [$this->cred->userId, ...$excludeClients->values, ...$includeForums->values],
+            [$this->auth->userId, ...$excludeClients->values, ...$includeForums->values],
             PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE
         );
 
@@ -630,7 +630,7 @@ final class CreateReport
 
         // Если включена опция исключения авторских раздач, фильтруем раздачи.
         if ($this->reportSend->excludeAuthored) {
-            $userId = $this->cred->userId;
+            $userId = $this->auth->userId;
             $topics = array_filter($topics, static fn($topic): bool => $topic['topic_author'] !== $userId);
         }
 

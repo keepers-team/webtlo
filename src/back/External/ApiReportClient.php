@@ -8,7 +8,7 @@ use DateTimeInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\External\ApiReport\Actions;
 use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
 use Psr\Log\LoggerInterface;
@@ -27,7 +27,7 @@ final class ApiReportClient
 
     public function __construct(
         private readonly Client          $client,
-        private readonly Credentials     $cred,
+        private readonly ApiCredentials  $auth,
         private readonly LoggerInterface $logger,
     ) {}
 
@@ -67,7 +67,7 @@ final class ApiReportClient
         bool              $excludeOtherReleases = false,
     ): ?array {
         $params = [
-            'keeper_id'                           => $this->cred->userId,
+            'keeper_id'                           => $this->auth->userId,
             'topic_ids'                           => $topicIds,
             'status'                              => $status,
             'last_update_time'                    => $reportDate->format(DateTimeInterface::ATOM),
@@ -101,7 +101,7 @@ final class ApiReportClient
         ];
 
         try {
-            $response = $this->client->get("keeper/{$this->cred->userId}/reports", ['query' => $params]);
+            $response = $this->client->get("keeper/{$this->auth->userId}/reports", ['query' => $params]);
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $params);
 
@@ -126,7 +126,7 @@ final class ApiReportClient
     public function setForumStatus(int $forumId, int $status, string $appVersion = ''): bool
     {
         $params = [
-            'keeper_id'   => $this->cred->userId,
+            'keeper_id'   => $this->auth->userId,
             'status'      => $status,
             'subforum_id' => $forumId,
             'comment'     => $appVersion,
@@ -155,7 +155,7 @@ final class ApiReportClient
     public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): array
     {
         $params = [
-            'keeper_id'             => $this->cred->userId,
+            'keeper_id'             => $this->auth->userId,
             'status'                => $status,
             'subforum_id'           => implode(',', array_filter($forumIds)),
             'comment'               => $appVersion,
@@ -182,7 +182,7 @@ final class ApiReportClient
     public function sendCustomData(array $data): void
     {
         try {
-            $this->client->post("custom_data/{$this->cred->userId}", ['json' => $data]);
+            $this->client->post("custom_data/{$this->auth->userId}", ['json' => $data]);
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $data);
         }
