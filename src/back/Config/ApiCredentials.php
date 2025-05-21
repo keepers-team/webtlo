@@ -15,25 +15,12 @@ final class ApiCredentials
         public readonly int    $userId,
         public readonly string $btKey,
         public readonly string $apiKey,
-    ) {}
-
-    /**
-     * Проверим наличие нужных значений в настройках.
-     *
-     * @param array<string, mixed> $cfg
-     *
-     * @throws RuntimeException
-     */
-    public static function fromLegacy(array $cfg): self
-    {
-        if (empty($cfg['user_id']) || empty($cfg['bt_key']) || empty($cfg['api_key'])) {
+    ) {
+        if ($this->userId <= 0) {
+            throw new RuntimeException('Отсутствует ид пользователя. Пройдите авторизацию.');
+        }
+        if ($this->btKey === '' || $this->apiKey === '') {
             throw new RuntimeException('Отсутствуют ключи пользователя для доступа к API. Пройдите авторизацию.');
         }
-
-        return new self(
-            (int) $cfg['user_id'],
-            (string) $cfg['bt_key'],
-            (string) $cfg['api_key'],
-        );
     }
 }
