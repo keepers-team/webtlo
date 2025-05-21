@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
@@ -18,6 +17,7 @@ use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
 use KeepersTeam\Webtlo\Storage\Clone\Torrents;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;

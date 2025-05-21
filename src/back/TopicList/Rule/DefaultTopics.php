@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use DateTimeImmutable;
 use Generator;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Excluded;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;

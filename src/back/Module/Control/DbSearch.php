@@ -8,7 +8,7 @@ use Generator;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Timers;
 use PDO;
 use Psr\Log\LoggerInterface;

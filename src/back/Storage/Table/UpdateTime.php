@@ -6,11 +6,11 @@ namespace KeepersTeam\Webtlo\Storage\Table;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\MarkersUpdate;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
 use Psr\Log\LoggerInterface;
 

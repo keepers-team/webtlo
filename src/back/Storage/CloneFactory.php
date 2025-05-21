@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\TableCloneObject;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
 use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
@@ -42,7 +41,7 @@ final class CloneFactory
         $cloneName  = $prefix . $table;
         $cloneTable = "temp.$cloneName";
 
-        $cloneObject = new TableCloneObject(
+        $cloneObject = new CloneTableObject(
             origin : $table,
             clone  : $cloneTable,
             keys   : $keys,

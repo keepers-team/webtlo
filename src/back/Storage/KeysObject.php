@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\DTO;
+namespace KeepersTeam\Webtlo\Storage;
 
 final class KeysObject
 {

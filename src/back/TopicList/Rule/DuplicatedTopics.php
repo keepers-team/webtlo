@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Helper;
 use KeepersTeam\Webtlo\TopicList\Output;

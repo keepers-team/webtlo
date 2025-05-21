@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Table;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
 
 /** Таблица с данным о раздачах. */

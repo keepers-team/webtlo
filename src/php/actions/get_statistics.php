@@ -3,7 +3,7 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\DTO\KeysObject;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Helper;
 
 $statistics_result = [

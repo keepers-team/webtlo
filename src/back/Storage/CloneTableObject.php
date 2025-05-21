@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\DTO;
+namespace KeepersTeam\Webtlo\Storage;
 
-final class TableCloneObject
+final class CloneTableObject
 {
     /**
      * @param string           $origin  название оригинальной таблицы

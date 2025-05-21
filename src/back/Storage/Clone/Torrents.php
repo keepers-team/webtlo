@@ -6,8 +6,8 @@ namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Storage\CloneTable;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
 
 /**

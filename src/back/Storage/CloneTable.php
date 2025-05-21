@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\TableCloneObject;
 
 final class CloneTable
 {
     public function __construct(
-        private readonly DB              $db,
-        private readonly TableCloneObject $table,
+        private readonly DB               $db,
+        private readonly CloneTableObject $table,
     ) {}
 
     /**
@@ -22,7 +21,7 @@ final class CloneTable
         return $this->table->keys;
     }
 
-    public function getTableObject(): TableCloneObject
+    public function getTableObject(): CloneTableObject
     {
         return $this->table;
     }
