@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Table;
 
+use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\ForumObject;
 
 final class Forums
 {
-    /** @var ForumObject[] */
+    /** @var Forum[] */
     private static array $forums = [];
 
     public function __construct(private readonly DB $db) {}
@@ -17,7 +17,7 @@ final class Forums
     /**
      * Получить параметры заданного подраздела.
      */
-    public function getForum(int $forumId): ?ForumObject
+    public function getForum(int $forumId): ?Forum
     {
         $forum = self::$forums[$forumId] ?? null;
 
@@ -34,11 +34,11 @@ final class Forums
                 return null;
             }
 
-            $forum = new ForumObject(
-                id      : (int) $res['id'],
-                name    : (string) $res['name'],
-                quantity: (int) $res['quantity'],
-                size    : (int) $res['size'],
+            $forum = new Forum(
+                id   : (int) $res['id'],
+                name : (string) $res['name'],
+                count: (int) $res['quantity'],
+                size : (int) $res['size'],
             );
 
             self::$forums[$forumId] = $forum;
@@ -56,7 +56,7 @@ final class Forums
             return '';
         }
 
-        $forum = self::getForum($forumId);
+        $forum = self::getForum(forumId: $forumId);
 
         return $forum->name ?? '';
     }

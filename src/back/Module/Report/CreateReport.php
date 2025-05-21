@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use Exception;
 use KeepersTeam\Webtlo\Config\Credentials;
 use KeepersTeam\Webtlo\Config\ReportSend;
+use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\DTO\ForumObject;
 use KeepersTeam\Webtlo\DTO\KeysObject;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
@@ -133,7 +133,7 @@ final class CreateReport
      *
      * @return string[]
      */
-    public function getForumReport(ForumObject $forum): array
+    public function getForumReport(Forum $forum): array
     {
         // исключаем подразделы
         if ($this->isForumExcluded($forum->id)) {
