@@ -14,7 +14,6 @@ final class ApiClient
 {
     use Actions\ForumTopics;
     use Actions\ForumTree;
-    use Actions\HighPriorityTopics;
     use Actions\KeepersList;
     use Actions\Processor;
     use Actions\TopicsDetails;

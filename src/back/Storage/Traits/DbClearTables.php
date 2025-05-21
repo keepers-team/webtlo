@@ -20,7 +20,7 @@ trait DbClearTables
         $updateTime = new UpdateTime($this);
 
         // Проверяем необходимость выполнения очистки БД (раз в день).
-        $isCleanNeeded = $updateTime->checkUpdateAvailable(UpdateMark::DB_CLEAN->value, 86400);
+        $isCleanNeeded = $updateTime->checkUpdateAvailable(UpdateMark::DB_CLEAN, 86400);
         if (!$isCleanNeeded) {
             return;
         }
@@ -36,28 +36,11 @@ trait DbClearTables
         $this->executeStatement(
             '
                 DELETE FROM Topics
-                WHERE keeping_priority <> 2
-                    AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+                WHERE forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
             '
         );
 
-        // Если используется алгоритм получения раздач высокого приоритета - их тоже нужно чистить.
-        $updatePriority = (bool) TIniFileEx::read('update', 'priority', 0);
-        if ($updatePriority) {
-            // Удалим устаревшие раздачи высокого приоритета.
-            $highPriorityUpdate = $updateTime->getMarkerTime(UpdateMark::HIGH_PRIORITY->value);
-            if ($highPriorityUpdate < $outdatedDate) {
-                $this->executeStatement(
-                    '
-                        DELETE FROM Topics
-                        WHERE keeping_priority = 2
-                            AND forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-                    '
-                );
-            }
-        }
-
         // Записываем дату последней очистки.
-        $updateTime->setMarkerTime(UpdateMark::DB_CLEAN->value);
+        $updateTime->setMarkerTime(UpdateMark::DB_CLEAN);
     }
 }

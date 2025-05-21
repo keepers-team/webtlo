@@ -7,7 +7,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\ForumTree;
-use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 use KeepersTeam\Webtlo\Update\Subsections;
 use KeepersTeam\Webtlo\Update\TorrentsClients;
@@ -29,13 +28,12 @@ try {
     // Список задач, которых можно запустить.
     $pairs = [
         'subsections' => Subsections::class,
-        'priority'    => HighPriority::class,
         'keepers'     => KeepersReports::class,
         'clients'     => TorrentsClients::class,
     ];
 
     // Процессы, которым нужно обновление дерева подразделов.
-    $topicsRelated = ['subsections', 'priority'];
+    $topicsRelated = ['subsections'];
 
     // Получение запрашиваемого процесса.
     $process = $_GET['process'] ?? null;

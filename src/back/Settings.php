@@ -243,7 +243,6 @@ final class Settings
 
         // Обновление список раздач
         $config['update'] = [
-            'priority'     => $ini->read('update', 'priority', 0),
             'untracked'    => $ini->read('update', 'untracked', 1),
             'unregistered' => $ini->read('update', 'unregistered', 1),
         ];
@@ -702,7 +701,6 @@ final class Settings
     {
         $ini = $this->ini;
 
-        $ini->write('update', 'priority', isset($cfg['update_priority']) ? 1 : 0);
         $ini->write('update', 'untracked', isset($cfg['update_untracked']) ? 1 : 0);
         $ini->write('update', 'unregistered', isset($cfg['update_unregistered']) ? 1 : 0);
     }

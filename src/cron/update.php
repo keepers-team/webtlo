@@ -8,7 +8,6 @@ use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Update\ForumTree;
-use KeepersTeam\Webtlo\Update\HighPriority;
 use KeepersTeam\Webtlo\Update\Subsections;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 use KeepersTeam\Webtlo\Update\TorrentsClients;
@@ -52,14 +51,6 @@ try {
      */
     $updateSubsections = $app->get(Subsections::class);
     $updateSubsections->update();
-
-    /**
-     * Обновляем список высокоприоритетных раздач.
-     *
-     * @var HighPriority $highPriority
-     */
-    $highPriority = $app->get(HighPriority::class);
-    $highPriority->update();
 
     /**
      * Обновляем дополнительные сведения о раздачах (названия раздач).

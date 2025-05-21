@@ -1127,10 +1127,6 @@ function cfg_numeric_value($cfg): Closure
                             <hr>
                             <h3>Дополнительные настройки обновления сведений</h3>
                             <label class="label">
-                                <input name="update_priority" type="checkbox" size="24" <?= $checkbox_check('update', 'priority') ?> />
-                                Обновлять списки раздач с высоким приоритетом хранения всего трекера
-                            </label>
-                            <label class="label">
                                 <input name="update_untracked" type="checkbox" size="24" <?= $checkbox_check('update', 'untracked') ?> />
                                 Поиск хранимых раздач из других подразделов
                             </label>
