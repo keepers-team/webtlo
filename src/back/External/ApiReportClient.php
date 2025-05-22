@@ -10,7 +10,6 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\External\ApiReport\Actions;
-use KeepersTeam\Webtlo\External\ApiReport\StaticHelper;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -23,7 +22,6 @@ final class ApiReportClient
     use Actions\KeepersReports;
     use Actions\KeeperUnseededTopics;
     use Actions\Processor;
-    use StaticHelper;
 
     public function __construct(
         private readonly Client          $client,

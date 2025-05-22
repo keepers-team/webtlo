@@ -21,7 +21,6 @@ final class ForumClient
     use Forum\CaptchaHelper;
     use Forum\DomHelper;
     use Forum\GetCredentials;
-    use Forum\LegacyHelper;
     use Forum\SendMessage;
     use Forum\SummaryReport;
     use Forum\TorrentDownload;
@@ -72,10 +71,10 @@ final class ForumClient
 
     /**
      * @param Client           $client   HTTP-клиент для запросов
-     * @param ForumCredentials $cred     Учетные данные форума
-     * @param CookieJar        $cookie   CookieJar для управления cookies
-     * @param LoggerInterface  $logger   Интерфейс для записи журнала
-     * @param Settings         $settings Настройки приложения
+     * @param ForumCredentials $cred     учетные данные форума
+     * @param CookieJar        $cookie   cookieJar для управления cookies
+     * @param LoggerInterface  $logger   интерфейс для записи журнала
+     * @param Settings         $settings настройки приложения
      */
     public function __construct(
         private readonly Client           $client,
