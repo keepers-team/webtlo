@@ -18,7 +18,10 @@ final class ConfigServiceProvider extends AbstractServiceProvider
     public function provides(string $id): bool
     {
         $services = [
+            ForumConnect::class,
             ForumCredentials::class,
+            ApiForumConnect::class,
+            ApiReportConnect::class,
             ApiCredentials::class,
             Proxy::class,
             ReportSend::class,
@@ -32,6 +35,31 @@ final class ConfigServiceProvider extends AbstractServiceProvider
     {
         $container = $this->getContainer();
 
+        // Параметры подключения к форуму.
+        $container->addShared(ForumConnect::class, function() {
+            $ini = $this->getIni();
+
+            $url       = basename((string) $ini->read('torrent-tracker', 'forum_url', Defaults::forumUrl));
+            $urlCustom = basename((string) $ini->read('torrent-tracker', 'forum_url_custom'));
+
+            $url = $url === 'custom' ? $urlCustom : $url;
+
+            $ssl      = (bool) $ini->read('torrent-tracker', 'forum_ssl', 1);
+            $useProxy = (bool) $ini->read('proxy', 'activate_forum', 1);
+
+            $timeout = new Timeout(
+                request   : (int) $ini->read('curl_setopt', 'forum_timeout', Defaults::timeout),
+                connection: (int) $ini->read('curl_setopt', 'forum_connecttimeout', Defaults::timeout),
+            );
+
+            return new ForumConnect(
+                baseUrl : $url,
+                ssl     : $ssl,
+                useProxy: $useProxy,
+                timeout : $timeout,
+            );
+        });
+
         // Авторизация на форуме.
         $container->addShared(ForumCredentials::class, function() {
             $ini = $this->getIni();
@@ -43,6 +71,56 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             return new ForumCredentials(
                 auth   : new BasicAuth(username: $tracker_login, password: $tracker_paswd),
                 session: $user_session ?: null,
+            );
+        });
+
+        // Параметры подключения к API форума.
+        $container->addShared(ApiForumConnect::class, function() {
+            $ini = $this->getIni();
+
+            $url       = basename((string) $ini->read('torrent-tracker', 'api_url', Defaults::apiForumUrl));
+            $urlCustom = basename((string) $ini->read('torrent-tracker', 'api_url_custom'));
+
+            $url = $url === 'custom' ? $urlCustom : $url;
+
+            $ssl      = (bool) $ini->read('torrent-tracker', 'api_ssl', 1);
+            $useProxy = (bool) $ini->read('proxy', 'activate_api', 0);
+
+            $timeout = new Timeout(
+                request   : (int) $ini->read('curl_setopt', 'api_timeout', Defaults::timeout),
+                connection: (int) $ini->read('curl_setopt', 'api_connecttimeout', Defaults::timeout),
+            );
+
+            return new ApiForumConnect(
+                baseUrl : $url,
+                ssl     : $ssl,
+                useProxy: $useProxy,
+                timeout : $timeout,
+            );
+        });
+
+        // Параметры подключения к API отчётов.
+        $container->addShared(ApiReportConnect::class, function() {
+            $ini = $this->getIni();
+
+            $url       = basename((string) $ini->read('torrent-tracker', 'report_url', Defaults::apiReportUrl));
+            $urlCustom = basename((string) $ini->read('torrent-tracker', 'report_url_custom'));
+
+            $url = $url === 'custom' ? $urlCustom : $url;
+
+            $ssl      = (bool) $ini->read('torrent-tracker', 'report_ssl', 1);
+            $useProxy = (bool) $ini->read('proxy', 'activate_report', 0);
+
+            $timeout = new Timeout(
+                request   : (int) $ini->read('curl_setopt', 'report_timeout', Defaults::timeout),
+                connection: (int) $ini->read('curl_setopt', 'report_connecttimeout', Defaults::timeout),
+            );
+
+            return new ApiReportConnect(
+                baseUrl : $url,
+                ssl     : $ssl,
+                useProxy: $useProxy,
+                timeout : $timeout,
             );
         });
 

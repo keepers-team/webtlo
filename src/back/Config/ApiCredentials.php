@@ -23,4 +23,12 @@ final class ApiCredentials
             throw new RuntimeException('Отсутствуют ключи пользователя для доступа к API. Пройдите авторизацию.');
         }
     }
+
+    /**
+     * @return array{api_key: string}
+     */
+    public function getApiKey(): array
+    {
+        return ['api_key' => $this->apiKey];
+    }
 }
