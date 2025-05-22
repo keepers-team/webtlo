@@ -6,11 +6,9 @@ namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
-use KeepersTeam\Webtlo\Config\Credentials;
+use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
 use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\Config\Proxy;
-use KeepersTeam\Webtlo\Config\ReportSend;
-use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -56,11 +54,12 @@ final class App
         $container->defaultToShared();
         $container->delegate(new ReflectionContainer(true));
 
+        // Основные классы для работы.
+        $container->addServiceProvider(new AppServiceProvider());
+        // Добавляем обработчик классов конфига.
+        $container->addServiceProvider(new ConfigServiceProvider());
         // Добавляем создание таблиц-клонов.
         $container->addServiceProvider(new CloneServiceProvider());
-
-        // Подключаем описание версии WebTLO.
-        $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
 
         // Подключаем файл конфига, 'config.ini' по-умолчанию.
         $container->add(Settings::class, fn() => new Settings(
@@ -76,20 +75,6 @@ final class App
 
             return AppLogger::create($logFile, $level);
         });
-
-        // Получение данных авторизации
-        $container->add(Credentials::class, fn() => Credentials::fromLegacy($container->get('config')));
-        $container->add(ApiCredentials::class, fn() => ApiCredentials::fromLegacy($container->get('config')));
-        $container->add(ForumCredentials::class, fn() => ForumCredentials::fromLegacy($container->get('config')));
-
-        // Опции получения и отправки отчётов.
-        $container->add(ReportSend::class, fn() => ReportSend::getReportSend($container->get('config')));
-
-        // Опции регулировки раздач.
-        $container->add(TopicControl::class, fn() => TopicControl::getTopicControl($container->get('config')));
-
-        // Получаем настройки прокси.
-        $container->add(Proxy::class, fn() => Proxy::fromLegacy($container->get('config')));
 
         // Добавляем клиент для работы с Форумом.
         $container->add(ForumClient::class, function() use ($container) {
@@ -122,12 +107,11 @@ final class App
 
             $proxy  = $container->get(Proxy::class);
             $config = $container->get('config');
-
-            $cred = ApiReportClient::apiCredentials($config);
+            $auth   = $container->get(ApiCredentials::class);
 
             return new ApiReportClient(
-                ApiReportClient::apiClientFromLegacy($config, $cred, $logger, $proxy),
-                $cred,
+                ApiReportClient::apiClientFromLegacy($config, $auth, $logger, $proxy),
+                $auth,
                 $logger
             );
         });
