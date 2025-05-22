@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Module\Report;
 
 use DateTimeInterface;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
+use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -31,6 +32,14 @@ final class SendReport
     public function checkApiAccess(): void
     {
         $this->setApiEnable($this->apiReport->checkAccess());
+    }
+
+    /**
+     * Ограничения доступа для кандидатов в хранители.
+     */
+    public function getKeeperPermissions(): KeeperPermissions
+    {
+        return $this->apiReport->getKeeperPermissions();
     }
 
     /**

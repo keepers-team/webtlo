@@ -63,11 +63,20 @@ final class Subsections
         $subsections = array_map('intval', $subsections);
         sort($subsections);
 
+        // Ограничения доступа для кандидатов в хранители.
+        $user = $this->apiReport->getKeeperPermissions();
+
         // Выбрана опция накапливать данные о средних сидах.
         $doCollectAverageSeeds = (bool) $config['avg_seeders'];
 
         // Обновим каждый хранимый подраздел.
         foreach ($subsections as $forumId) {
+            if ($user->isCandidate && !$user->checkSubsectionAccess(forumId: $forumId)) {
+                $this->skipSubsections[] = $forumId;
+
+                continue;
+            }
+
             // Получаем дату предыдущего обновления подраздела.
             $forumLastUpdated = $this->updateTime->getMarkerTime(marker: $forumId);
 
@@ -134,6 +143,13 @@ final class Subsections
                     'size'  => Helper::convertBytes($topicResponse->totalSize, 9),
                     'sec'   => Timers::getExecTime("update_forum_$forumId"),
                 ],
+            );
+        }
+
+        if (count($skipped = $user->getSkippedSubsections())) {
+            $this->logger->notice(
+                'У кандидата в хранители нет доступа к указанным подразделам. Обратитесь к куратору.',
+                ['skipped' => $skipped]
             );
         }
 

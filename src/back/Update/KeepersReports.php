@@ -103,12 +103,19 @@ final class KeepersReports
 
         $forumCount = count($keptForums);
 
+        // Ограничения доступа для кандидатов в хранители.
+        $user = $this->apiReport->getKeeperPermissions();
+
         // Если хранимых подразделов много, пробуем загрузить статический архив.
-        if ($forumCount > 10) {
+        if (!$user->isCandidate && $forumCount > 10) {
             $this->apiReport->downloadReportsArchive();
         }
 
         foreach ($keptForums as $forumId) {
+            if ($user->isCandidate && !$user->checkSubsectionAccess(forumId: $forumId)) {
+                continue;
+            }
+
             Timers::start("get_report_api_$forumId");
 
             try {
@@ -163,6 +170,13 @@ final class KeepersReports
                 'total'   => $forumCount,
                 'sec'     => Timers::getExecTime("get_report_api_$forumId"),
             ]);
+        }
+
+        if (count($skipped = $user->getSkippedSubsections())) {
+            $this->logger->notice(
+                'У кандидата в хранители нет доступа к указанным подразделам. Обратитесь к куратору.',
+                ['skipped' => $skipped]
+            );
         }
 
         // Записываем изменения в локальную таблицу.

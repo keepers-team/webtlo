@@ -143,11 +143,18 @@ final class SendKeeperReports
 
         $forumCount = $creator->getForumCount();
 
+        // Ограничения доступа для кандидатов в хранители.
+        $user = $this->sendReport->getKeeperPermissions();
+
         $apiReportCount = 0;
         $forumsToReport = [];
         foreach ($creator->getForums() as $forumId) {
             // Пропускаем исключённые подразделы.
             if ($creator->isForumExcluded(forumId: $forumId)) {
+                continue;
+            }
+
+            if ($user->isCandidate && !$user->checkSubsectionAccess(forumId: $forumId)) {
                 continue;
             }
 
@@ -206,6 +213,13 @@ final class SendKeeperReports
             $Timers[] = ['forum' => $forumId, ...$timer];
 
             unset($forumId, $timer);
+        }
+
+        if (count($skipped = $user->getSkippedSubsections())) {
+            $this->logger->notice(
+                'У кандидата в хранители нет доступа к указанным подразделам. Обратитесь к куратору.',
+                ['skipped' => $skipped]
+            );
         }
 
         // Отправка статуса хранимых подразделов и снятие галки с не хранимых.

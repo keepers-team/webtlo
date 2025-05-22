@@ -9,6 +9,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
+use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiReport\Actions;
 use Psr\Log\LoggerInterface;
 
@@ -50,6 +51,46 @@ final class ApiReportClient
         }
 
         return false;
+    }
+
+    /**
+     * Проверим статус хранителя.
+     * Если хранитель - кандидат, значит ему доступны только отмеченные в профиле подразделы.
+     */
+    public function getKeeperPermissions(): KeeperPermissions
+    {
+        try {
+            $response = $this->client->get("keeper/{$this->auth->userId}/check_full_permissions");
+            $result   = json_decode($response->getBody()->getContents(), true);
+
+            $isCurator   = (bool) ($result['is_curator'] ?? false);
+            $isCandidate = (bool) ($result['is_candidate'] ?? false);
+
+            // Если не кандидат, то и ограничений нет.
+            if ($isCandidate) {
+                $response = $this->client->get("keeper/{$this->auth->userId}/list_subforums");
+                $result   = json_decode($response->getBody()->getContents(), true);
+
+                $columns = array_flip($result['columns']);
+
+                $allowed = array_column($result['result'], $columns['subforum_id']);
+
+                $this->logger->info(
+                    'Обнаружены ограничения доступа к API отчётов.',
+                    ['allowed_subforums' => $allowed]
+                );
+            }
+
+            return new KeeperPermissions(
+                isCurator         : $isCurator,
+                isCandidate       : $isCandidate,
+                allowedSubsections: $allowed ?? null,
+            );
+        } catch (GuzzleException $e) {
+            $this->logException($e->getCode(), $e->getMessage());
+        }
+
+        return new KeeperPermissions(isCurator: false, isCandidate: false);
     }
 
     /**
