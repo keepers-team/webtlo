@@ -20,7 +20,7 @@ try {
 
     $patterns = is_array($_GET['term'])
         ? $_GET['term']
-        : explode(';', (string)$_GET['term']);
+        : explode(';', (string) $_GET['term']);
 
     if (empty($db->selectRowsCount('Forums'))) {
         /** @var ForumTree $forumTree Обновляем дерево подразделов. */
@@ -30,18 +30,18 @@ try {
 
     $forums = [];
     foreach ($patterns as $pattern) {
-        $pattern = trim((string)$pattern);
+        $pattern = trim((string) $pattern);
 
         if (!is_numeric($pattern)) {
             $pattern = '%' . str_replace(' ', '%', $pattern) . '%';
         }
 
         $data = $db->query(
-            sql  : "
+            sql  : '
                 SELECT id AS value, name AS label FROM Forums
                 WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)
-             ",
-            param: ['term' => (string)$pattern],
+             ',
+            param: ['term' => (string) $pattern],
         );
 
         $forums = array_merge_recursive($forums, $data);

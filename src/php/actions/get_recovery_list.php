@@ -27,7 +27,7 @@ try {
     if (count($counters)) {
         $table = '';
         foreach ($counters as $row) {
-            $table.= vsprintf("<tr><td>%s</td><td>%s</td></tr>", $row);
+            $table .= vsprintf('<tr><td>%s</td><td>%s</td></tr>', $row);
         }
         echo "<table><thead><th>Статус</th><th>Количество</th></thead>$table</table></br>";
     }
@@ -67,7 +67,6 @@ try {
         return;
     }
 
-
     $output = [];
     foreach ($topics as $topic) {
         $categoryTitle = empty($topic['transferred_from']) ? $topic['transferred_to'] : $topic['transferred_from'];
@@ -76,10 +75,10 @@ try {
         $currentCategory = $currentCategory[0];
 
         $output[$currentCategory][] = sprintf(
-            "%s | [url=viewtopic.php?t=%d]%d[/url] | %s | %s",
+            '%s | [url=viewtopic.php?t=%d]%d[/url] | %s | %s',
             $categoryTitle,
-            (int)$topic['topic_id'],
-            (int)$topic['topic_id'],
+            (int) $topic['topic_id'],
+            (int) $topic['topic_id'],
             $topic['status'],
             $topic['transferred_by_whom']
         );

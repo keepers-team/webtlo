@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\Helper;
  *
  * На возможность выполнения влияет опция "Автоматизация и дополнительные настройки" > "[control.php]".
  */
-
 try {
     // Инициализируем контейнер.
     $app = App::create('control.log');

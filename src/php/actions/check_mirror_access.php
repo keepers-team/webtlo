@@ -14,6 +14,7 @@ $app = App::create();
 $log = $app->getLogger();
 
 $result = false;
+
 try {
     // Получаем настройки.
     if (isset($_POST['cfg'])) {
@@ -52,7 +53,7 @@ try {
     /** @var CheckMirrorAccess $check */
     $check = $app->get(CheckMirrorAccess::class);
 
-    $result = $check->checkAddress($url_type, basename($url), $_POST['ssl'] === "true", $proxy);
+    $result = $check->checkAddress($url_type, basename($url), $_POST['ssl'] === 'true', $proxy);
 } catch (Throwable $e) {
     $log->error($e->getMessage());
 }

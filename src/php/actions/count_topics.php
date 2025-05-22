@@ -7,6 +7,7 @@ use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 
 $result = [];
+
 try {
     $app = App::create();
     $log = $app->getLogger();

@@ -3,9 +3,9 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Module\Report\CreationMode;
-use KeepersTeam\Webtlo\Module\Report\CreateReport;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Module\Report\CreateReport;
+use KeepersTeam\Webtlo\Module\Report\CreationMode;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 
 $reports_result = [
@@ -13,9 +13,10 @@ $reports_result = [
 ];
 
 $output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />';
+
 try {
     // идентификатор подраздела
-    $forumId = (int)($_POST['forum_id'] ?? -1);
+    $forumId = (int) ($_POST['forum_id'] ?? -1);
 
     if ($forumId < 0) {
         throw new Exception("ERROR: Неправильный идентификатор подраздела ($forumId).");
@@ -40,7 +41,7 @@ try {
         // Хранимые подразделы
         try {
             $forum = $forums->getForum(forumId: $forumId);
-            if (null === $forum) {
+            if ($forum === null) {
                 throw new RuntimeException("Нет данных о хранимом подразделе №$forumId");
             }
 
@@ -68,7 +69,7 @@ try {
         $log->info('-- DONE --');
     }
 
-    $output.= '<br />' . $message;
+    $output .= '<br />' . $message;
 }
 
 $reports_result['report'] = $output;

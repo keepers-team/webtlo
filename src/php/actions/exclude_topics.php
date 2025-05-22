@@ -7,7 +7,8 @@ use KeepersTeam\Webtlo\Helper;
 
 try {
     if (empty($_POST['topic_hashes'])) {
-        $result = "Выберите раздачи";
+        $result = 'Выберите раздачи';
+
         throw new Exception();
     }
 
@@ -15,7 +16,7 @@ try {
     $db  = $app->getDataBase();
 
     parse_str($_POST['topic_hashes'], $topicHashes);
-    $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
 
     $value = empty($_POST['value']) ? 0 : 1;
 

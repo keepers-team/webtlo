@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\Update\KeepersReports;
  *
  * На возможность выполнения влияет опция "Автоматизация и дополнительные настройки" > "[update.php, keepers.php]".
  */
-
 try {
     // Инициализируем контейнер.
     $app = App::create('keepers.log');

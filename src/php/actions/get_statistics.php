@@ -3,13 +3,14 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 
 $statistics_result = [
     'tbody' => '',
     'tfoot' => '',
 ];
+
 try {
     $app = App::create();
     $db  = $app->getDataBase();
@@ -18,17 +19,17 @@ try {
     $cfg = $app->getLegacyConfig();
 
     if (empty($cfg['subsections'])) {
-        throw new Exception("Не выбраны хранимые подразделы");
+        throw new Exception('Не выбраны хранимые подразделы');
     }
 
-    $statistics = [];
+    $statistics      = [];
     $forumsIDsChunks = array_chunk(array_keys($cfg['subsections']), 499);
 
     $days30 = 30 * 24 * 60 * 60; // seconds
     foreach ($forumsIDsChunks as $forumsIDs) {
         $forumChunk = KeysObject::create($forumsIDs);
 
-        $sql = "
+        $sql = '
             SELECT
             f.id AS forum_id,
             f.name AS forum_name,
@@ -57,16 +58,16 @@ try {
                 LEFT JOIN Seeders s ON t.id = s.id
                 LEFT JOIN Torrents ON t.info_hash = Torrents.info_hash
                 LEFT JOIN (SELECT topic_id, MAX(posted) as posted FROM KeepersLists WHERE complete = 1 GROUP BY topic_id) k ON t.id = k.topic_id
-                WHERE t.forum_id IN (" . $forumChunk->keys . ")
+                WHERE t.forum_id IN (' . $forumChunk->keys . ")
                     AND t.keeping_priority IN (1,2)
                     AND Torrents.info_hash IS NULL
                     AND t.reg_time <= unixepoch() - $days30
                     AND (k.topic_id IS NULL OR k.posted <= unixepoch() - $days30)
             ) AS seeds ON seeds.forum_id = f.id
-            WHERE f.id IN (" . $forumChunk->keys . ")
+            WHERE f.id IN (" . $forumChunk->keys . ')
             GROUP BY f.id, f.name
             ORDER BY LOWER(f.name)
-        ";
+        ';
 
         $data = $db->query(
             sql  : $sql,
@@ -82,9 +83,9 @@ try {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    $size4 = (int)pow(1024, 4);
+    $size4 = (int) pow(1024, 4);
 
-    $tbody = implode("", array_map(function ($e) use ($size4, &$tfoot) {
+    $tbody = implode('', array_map(function($e) use ($size4, &$tfoot) {
         // всего
         $tfoot[0][0] += $e['Count0'];
         $tfoot[0][1] += $e['Size0'];
@@ -111,11 +112,11 @@ try {
         // состояние раздела (цвет)
         $state = '';
 
-        $sizeSum50  = (int)($e['Size5'] + $e['Size0']);
-        $countSum50 = (int)($e['Count5'] + $e['Count0']);
+        $sizeSum50  = (int) ($e['Size5'] + $e['Size0']);
+        $countSum50 = (int) ($e['Count5'] + $e['Count0']);
         if (preg_match('/DVD|HD/', $e['forum_name'])) {
             if ($sizeSum50 < $size4) {
-                if ($sizeSum50 >= (int)($size4 * 3 / 4)) {
+                if ($sizeSum50 >= (int) ($size4 * 3 / 4)) {
                     $state = 'ui-state-highlight';
                 }
             } else {
@@ -133,11 +134,11 @@ try {
         }
 
         // байты
-        $e['Size0']  = Helper::convertBytes((int)$e['Size0']);
-        $e['Size5']  = Helper::convertBytes((int)$e['Size5']);
-        $e['Size10'] = Helper::convertBytes((int)$e['Size10']);
-        $e['Size15'] = Helper::convertBytes((int)$e['Size15']);
-        $e['size']   = Helper::convertBytes((int)$e['size']);
+        $e['Size0']  = Helper::convertBytes((int) $e['Size0']);
+        $e['Size5']  = Helper::convertBytes((int) $e['Size5']);
+        $e['Size10'] = Helper::convertBytes((int) $e['Size10']);
+        $e['Size15'] = Helper::convertBytes((int) $e['Size15']);
+        $e['size']   = Helper::convertBytes((int) $e['size']);
 
         $e = implode('', array_map(fn($col) => "<td>$col</td>", $e));
 
@@ -145,10 +146,10 @@ try {
     }, $statistics));
 
     // всего/всего (от нуля)
-    $tfoot = array_map(function ($row) {
-        foreach ([1,3,5,7,9] as $i) {
+    $tfoot = array_map(function($row) {
+        foreach ([1, 3, 5, 7, 9] as $i) {
             // байты
-            $row[$i] = Helper::convertBytes((int)$row[$i]);
+            $row[$i] = Helper::convertBytes((int) $row[$i]);
         }
 
         return implode('', array_map(fn($col) => "<th>$col</th>", $row));

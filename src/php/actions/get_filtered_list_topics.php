@@ -23,7 +23,6 @@ $returnObject = [
 ];
 
 try {
-
     $app = App::create();
 
     $forum_id = $_POST['forum_id'] ?? null;
@@ -67,7 +66,7 @@ try {
     // -6 - раздачи своим по спискам
 
     // Получаем нужные правила поиска раздач.
-    $module = $ruleFactory->getRule((int)$forum_id);
+    $module = $ruleFactory->getRule((int) $forum_id);
 
     // Ищем раздачи.
     $topics = $module->getTopics($filter, $sorting);

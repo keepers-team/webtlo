@@ -18,6 +18,7 @@ try {
     $clientFactory = $app->getClientFactory();
 
     $isOnline = false;
+
     try {
         $client   = $clientFactory->fromFrontProperties($params);
         $isOnline = $client->isOnline();

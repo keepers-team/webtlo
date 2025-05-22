@@ -12,7 +12,7 @@ try {
     $log = $app->getLogger();
 
     // идентификатор подраздела
-    $subForumId = (int)($_POST['forum_id'] ?? -1);
+    $subForumId = (int) ($_POST['forum_id'] ?? -1);
     if ($subForumId < 0) {
         throw new RuntimeException("Error: Неправильный идентификатор подраздела ($subForumId)");
     }
@@ -23,7 +23,7 @@ try {
     // Запрашиваем список хранимых раздач в заданном подразделе.
     $result = $apiReport->getUserKeptReleases($subForumId);
 
-    if (null !== $result) {
+    if ($result !== null) {
         $columns   = array_flip($result['columns']);
         $hashIndex = $columns['info_hash'];
 

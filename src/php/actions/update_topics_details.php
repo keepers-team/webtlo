@@ -9,6 +9,7 @@ use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 $result = [];
+
 try {
     $app = App::create('update.log');
     $log = $app->getLogger();

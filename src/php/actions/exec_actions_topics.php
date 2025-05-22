@@ -4,15 +4,15 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\ClientApplyAction;
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
 
 try {
     $result = '';
 
-    $request = json_decode((string)file_get_contents('php://input'), true);
+    $request = json_decode((string) file_get_contents('php://input'), true);
 
     $action = ClientAction::tryFrom($request['action'] ?? '');
     if ($action === null) {
@@ -51,7 +51,6 @@ try {
         selectedClient: $selectedClient,
         params        : $actionOptions,
     );
-
 
     $result = "Действие '$action->value' выполнено. За подробностями обратитесь к журналу";
 } catch (Exception $e) {

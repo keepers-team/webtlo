@@ -21,13 +21,12 @@ try {
     $postData = json_decode((string) file_get_contents('php://input'), true);
 
     $reportOverride = null;
-    if (isset($postData['cleanOverride']) && true === $postData['cleanOverride']) {
+    if (isset($postData['cleanOverride']) && $postData['cleanOverride'] === true) {
         $reportOverride = true;
 
         $log->notice('Получен сигнал для отправки "чистых" отчётов.');
     }
     unset($postData);
-
 
     /** @var SendKeeperReports $action Отправка отчётов. */
     $action = $app->get(SendKeeperReports::class);

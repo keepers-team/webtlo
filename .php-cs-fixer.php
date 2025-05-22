@@ -1,7 +1,11 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in(['src/back'])
+    ->in([
+        'src/back',
+        'src/php',
+        'src/cron',
+    ])
 ;
 
 $config = new PhpCsFixer\Config();

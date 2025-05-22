@@ -13,7 +13,7 @@ if (empty($log_file)) {
     return;
 }
 
-$log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . ".log";
+$log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . '.log';
 
 if (file_exists($log_file)) {
     if ($data = file($log_file)) {

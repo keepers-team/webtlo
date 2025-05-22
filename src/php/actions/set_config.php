@@ -10,7 +10,7 @@ try {
     $app = App::create();
     $log = $app->getLogger();
 
-    $request = json_decode((string)file_get_contents('php://input'), true);
+    $request = json_decode((string) file_get_contents('php://input'), true);
 
     // парсим настройки
     $cfg = [];

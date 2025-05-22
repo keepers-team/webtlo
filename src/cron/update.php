@@ -17,7 +17,6 @@ use KeepersTeam\Webtlo\Update\TorrentsClients;
  *
  * На возможность выполнения влияет опция "Автоматизация и дополнительные настройки" > "[update.php, keepers.php]".
  */
-
 try {
     // Инициализируем контейнер.
     $app = App::create('update.log');

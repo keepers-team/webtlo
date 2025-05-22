@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\WebTLO;
@@ -18,13 +19,14 @@ try {
     }
 
     try {
-        $client   = new GuzzleHttp\Client();
+        $client   = new Client();
         $response = $client->get($wbtApi->releaseApi, [
             'timeout'         => 40,
             'connect_timeout' => 40,
         ]);
     } catch (GuzzleException $e) {
         Log::append('CURL ошибка: ' . $e->getMessage());
+
         throw new Exception('Невозможно связаться с api.github.com');
     }
 
@@ -38,7 +40,7 @@ try {
 
     $result['newVersionNumber'] = $latestRelease['name'];
     $result['newVersionLink']   = $link;
-    $result['whatsNew']         = getReleaseDescription((string)$latestRelease['body']);
+    $result['whatsNew']         = getReleaseDescription((string) $latestRelease['body']);
 } catch (Exception $e) {
     Log::append($e->getMessage());
 }
@@ -47,9 +49,7 @@ $result['log'] = Log::get();
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
 
 /**
- * @param string               $install
  * @param array<string, mixed> $release
- * @return string
  */
 function getReleaseLink(string $install, array $release): string
 {
@@ -59,16 +59,16 @@ function getReleaseLink(string $install, array $release): string
     $assets = $release['assets'] ?? [];
     // Пробуем найти ссылку на конкретный zip.
     if (count($assets)) {
-        if ('standalone' === $install) {
+        if ($install === 'standalone') {
             foreach ($assets as $asset) {
                 if (preg_match('/webtlo-win-.*\.zip/', $asset['name'])) {
                     return $asset['browser_download_url'];
                 }
             }
         }
-        if ('zip' === $install) {
+        if ($install === 'zip') {
             foreach ($assets as $asset) {
-                if ('webtlo.zip' === $asset['name']) {
+                if ($asset['name'] === 'webtlo.zip') {
                     return $asset['browser_download_url'];
                 }
             }

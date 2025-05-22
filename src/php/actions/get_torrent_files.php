@@ -30,16 +30,16 @@ try {
     $forum_id = $_POST['forum_id'] ?? 0;
 
     // нужна ли замена passkey
-    $replace_passkey = (bool)($_POST['replace_passkey'] ?? false);
+    $replace_passkey = (bool) ($_POST['replace_passkey'] ?? false);
 
-    $passkeyValue   = (string)$cfg['user_passkey'];
-    $forRegularUser = (bool)($cfg['tor_for_user'] ?? false);
+    $passkeyValue   = (string) $cfg['user_passkey'];
+    $forRegularUser = (bool) ($cfg['tor_for_user'] ?? false);
 
     // парсим список выбранных раздач
     parse_str($_POST['topic_hashes'], $topicHashes);
 
     /** @var string[] $topicHashes */
-    $topicHashes = array_map('strval', (array)$topicHashes['topic_hashes']);
+    $topicHashes = array_map('strval', (array) $topicHashes['topic_hashes']);
 
     // выбор каталога
     $torrent_files_path = !$replace_passkey ? $cfg['save_dir'] : $cfg['dir_torrents'];
@@ -82,12 +82,12 @@ try {
     }
     $log->info($log_string);
 
-    $addRetracker = (bool)($cfg['retracker'] ?? false);
+    $addRetracker = (bool) ($cfg['retracker'] ?? false);
 
     $torrent_files_downloaded = [];
     foreach ($topicHashes as $topicHash) {
         $data = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $addRetracker);
-        if (null === $data) {
+        if ($data === null) {
             continue;
         }
 
@@ -109,7 +109,7 @@ try {
             $data = $data->getContents();
         }
 
-        if (empty($data)){
+        if (empty($data)) {
             continue;
         }
 

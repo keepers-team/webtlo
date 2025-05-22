@@ -15,7 +15,6 @@ use KeepersTeam\Webtlo\Update\TorrentsClients;
  * Выполнение обновления сведений из разных источников.
  * Либо полное обновление всего, либо конкретный модуль.
  */
-
 $update_result = [
     'result' => '',
 ];
@@ -38,7 +37,7 @@ try {
     // Получение запрашиваемого процесса.
     $process = $_GET['process'] ?? null;
 
-    if (null !== $process && 'all' !== $process) {
+    if ($process !== null && $process !== 'all') {
         $pairs = array_filter(
             $pairs,
             static fn($key) => $key === $process,
@@ -64,7 +63,7 @@ try {
 
     // Запускаем задачи по очереди.
     foreach ($pairs as $process => $className) {
-        /** @var object|null $instance */
+        /** @var null|object $instance */
         $instance = $app->get($className);
 
         if ($instance && method_exists($instance, 'update')) {

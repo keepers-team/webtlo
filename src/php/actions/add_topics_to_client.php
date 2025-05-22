@@ -8,16 +8,17 @@ use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
 
 try {
-    $result = '';
+    $result    = '';
     $starttime = microtime(true);
 
     // список ID раздач
     if (empty($_POST['topic_hashes'])) {
         $result = 'Выберите раздачи';
+
         throw new Exception();
     }
     parse_str($_POST['topic_hashes'], $topicHashes);
-    $topicHashes = Helper::convertKeysToString((array)$topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
 
     $app = App::create();
     $log = $app->getLogger();
@@ -29,10 +30,12 @@ try {
 
     if (empty($cfg['subsections'])) {
         $result = 'В настройках не найдены хранимые подразделы';
+
         throw new Exception();
     }
     if (empty($cfg['clients'])) {
         $result = 'В настройках не найдены торрент-клиенты';
+
         throw new Exception();
     }
 
@@ -47,7 +50,6 @@ try {
     // Записываем ключи доступа к API.
     $forumClient->setApiCredentials(apiCredentials: $apiCredentials);
 
-
     $log->info('Запущен процесс добавления раздач в торрент-клиенты...');
     // получение ID раздач с привязкой к подразделу
     $topicHashesByForums = [];
@@ -55,6 +57,7 @@ try {
     $topicHashes = array_chunk($topicHashes, 999);
     foreach ($topicHashes as $topicHashesChunk) {
         $placeholders = str_repeat('?,', count($topicHashesChunk) - 1) . '?';
+
         $data = $db->query(
             'SELECT forum_id, info_hash FROM Topics WHERE info_hash IN (' . $placeholders . ')',
             $topicHashesChunk,
@@ -79,8 +82,10 @@ try {
 
     if (empty($topicHashesByForums)) {
         $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
+
         throw new Exception();
     }
+
     // полный путь до каталога для сохранения торрент-файлов
     $localPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
     // очищаем каталог от старых торрент-файлов
@@ -93,16 +98,17 @@ try {
 
     $clientFactory = $app->getClientFactory();
 
-    $addRetracker = (bool)($cfg['retracker'] ?? false);
+    $addRetracker = (bool) ($cfg['retracker'] ?? false);
 
     $totalTorrentFilesAdded = 0;
-    $usedTorrentClientsIDs = [];
+    $usedTorrentClientsIDs  = [];
     foreach ($topicHashesByForums as $forumID => $topicHashes) {
         if (empty($topicHashes)) {
             continue;
         }
         if (!isset($cfg['subsections'][$forumID])) {
             $log->warning('В настройках нет данных о подразделе с идентификатором "' . $forumID . '"');
+
             continue;
         }
         // данные текущего подраздела
@@ -110,28 +116,31 @@ try {
 
         if (empty($forumData['cl'])) {
             $log->warning('К подразделу "' . $forumID . '" не привязан торрент-клиент');
+
             continue;
         }
         // идентификатор торрент-клиента
         $torrentClientID = $forumData['cl'];
         if (empty($cfg['clients'][$torrentClientID])) {
             $log->warning('В настройках нет данных о торрент-клиенте с идентификатором "' . $torrentClientID . '"');
+
             continue;
         }
         // данные текущего торрент-клиента
         $torrentClient = $cfg['clients'][$torrentClientID];
 
         foreach ($topicHashes as $topicHash) {
-            $topicHash = (string)$topicHash;
+            $topicHash = (string) $topicHash;
 
             $torrentFile = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $addRetracker);
-            if (null === $torrentFile) {
+            if ($torrentFile === null) {
                 $log->error('Не удалось скачать торрент-файл (' . $topicHash . ')');
+
                 continue;
             }
 
             $torrentFile = $torrentFile->getContents();
-            if (empty($torrentFile)){
+            if (empty($torrentFile)) {
                 continue;
             }
 
@@ -142,16 +151,19 @@ try {
             );
             if ($response === false) {
                 $log->error('Произошла ошибка при сохранении торрент-файла (' . $topicHash . ')');
+
                 continue;
             }
             $downloadedTorrentFiles[] = $topicHash;
         }
         if (empty($downloadedTorrentFiles)) {
             $log->notice('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $torrentClient['cm'] . '"');
+
             continue;
         }
 
         $numberDownloadedTorrentFiles = count($downloadedTorrentFiles);
+
         // подключаемся к торрент-клиенту
         try {
             $client = $clientFactory->fromConfigProperties($torrentClient);
@@ -159,17 +171,19 @@ try {
             // проверяем доступность торрент-клиента
             if (!$client->isOnline()) {
                 $log->error('Торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен');
+
                 continue;
             }
         } catch (RuntimeException $e) {
-            $log->error('Торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен '. $e->getMessage());
+            $log->error('Торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен ' . $e->getMessage());
+
             continue;
         }
 
         $clientAddingSleep = $client->getTorrentAddingSleep();
 
         // убираем последний слэш в пути каталога для данных
-        if (preg_match('/(\/|\\\\)$/', $forumData['df'])) {
+        if (preg_match('/(\/|\\\)$/', $forumData['df'])) {
             $forumData['df'] = substr($forumData['df'], 0, -1);
         }
         // определяем направление слэша в пути каталога для данных
@@ -180,7 +194,7 @@ try {
         $downloadedTorrentFiles = array_chunk($downloadedTorrentFiles, 999);
         foreach ($downloadedTorrentFiles as $downloadedTorrentFilesChunk) {
             // получаем идентификаторы раздач
-            $placeholders = str_repeat('?,', count($downloadedTorrentFilesChunk) - 1) . '?';
+            $placeholders   = str_repeat('?,', count($downloadedTorrentFilesChunk) - 1) . '?';
             $topicIDsByHash = $db->query(
                 'SELECT info_hash, id FROM Topics WHERE info_hash IN (' . $placeholders . ')',
                 $downloadedTorrentFilesChunk,
@@ -222,6 +236,7 @@ try {
 
         if (empty($addedTorrentFiles)) {
             $log->warning('Не удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
+
             continue;
         }
         $numberAddedTorrentFiles = count($addedTorrentFiles);
@@ -229,7 +244,7 @@ try {
         // Указываем раздачам метку, если она не выставлена при добавлении раздач.
         if ($forumLabel !== '' && !$client->isLabelAddingAllowed()) {
             // ждём добавления раздач, чтобы проставить метку
-            sleep((int)round(count($addedTorrentFiles) / 20) + 1);
+            sleep((int) round(count($addedTorrentFiles) / 20) + 1);
 
             // устанавливаем метку
             $response = $client->setLabel($addedTorrentFiles, $forumLabel);
@@ -277,10 +292,11 @@ try {
         unset($torrentClient, $forumData, $client);
     }
     $totalTorrentClients = count($usedTorrentClientsIDs);
-    $result = 'Задействовано торрент-клиентов — ' . $totalTorrentClients . ', добавлено раздач всего — ' . $totalTorrentFilesAdded . ' шт.';
+
+    $result  = 'Задействовано торрент-клиентов — ' . $totalTorrentClients . ', добавлено раздач всего — ' . $totalTorrentFilesAdded . ' шт.';
     $endtime = microtime(true);
 
-    $log->info('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds((int)($endtime - $starttime)));
+    $log->info('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds((int) ($endtime - $starttime)));
 
     $log->info($result);
     $log->info('-- DONE --');
