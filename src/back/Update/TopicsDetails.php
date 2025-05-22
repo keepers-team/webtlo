@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
@@ -24,7 +24,7 @@ final class TopicsDetails
     ];
 
     public function __construct(
-        private readonly ApiClient       $apiClient,
+        private readonly ApiForumClient  $apiClient,
         private readonly Topics          $topics,
         private readonly CloneFactory    $cloneFactory,
         private readonly LoggerInterface $logger,

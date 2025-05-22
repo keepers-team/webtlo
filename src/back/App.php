@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -109,9 +109,9 @@ final class App
         return $this->get(ForumClient::class);
     }
 
-    public function getApiClient(): ApiClient
+    public function getApiForumClient(): ApiForumClient
     {
-        return $this->get(ApiClient::class);
+        return $this->get(ApiForumClient::class);
     }
 
     public function getApiReportClient(): ApiReportClient

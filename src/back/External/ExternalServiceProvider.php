@@ -15,7 +15,7 @@ final class ExternalServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ForumClient::class,
-            ApiClient::class,
+            ApiForumClient::class,
             ApiReportClient::class,
         ];
 
@@ -35,7 +35,7 @@ final class ExternalServiceProvider extends AbstractServiceProvider
         });
 
         // Добавляем клиент для работы с API форума.
-        $container->add(ApiClient::class, function() use ($container) {
+        $container->add(ApiForumClient::class, function() use ($container) {
             /** @var ApiForumConstructor $helper */
             $helper = $container->get(ApiForumConstructor::class);
 

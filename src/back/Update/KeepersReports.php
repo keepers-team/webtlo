@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Helper;
@@ -22,7 +22,7 @@ use Throwable;
 final class KeepersReports
 {
     public function __construct(
-        private readonly ApiClient       $apiClient,
+        private readonly ApiForumClient  $apiClient,
         private readonly ApiReportClient $apiReport,
         private readonly Settings        $settings,
         private readonly KeepersLists    $keepersLists,

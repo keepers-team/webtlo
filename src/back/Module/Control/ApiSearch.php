@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Module\Control;
 
 use Generator;
 use KeepersTeam\Webtlo\Config\TopicControl;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicsPeers;
@@ -31,7 +31,7 @@ final class ApiSearch
     private array $cachedResponse = [];
 
     public function __construct(
-        private readonly ApiClient       $apiForum,
+        private readonly ApiForumClient  $apiForum,
         private readonly ApiReportClient $apiReport,
         private readonly LoggerInterface $logger,
     ) {}

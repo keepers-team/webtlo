@@ -8,7 +8,7 @@ use GuzzleHttp\Client;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\ApiForumConnect;
 use KeepersTeam\Webtlo\Config\Proxy;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\Shared\RateLimiterMiddleware;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
 use Psr\Log\LoggerInterface;
@@ -24,11 +24,11 @@ final class ApiForumConstructor
         private readonly Proxy           $proxy,
     ) {}
 
-    public function createRequestClient(): ApiClient
+    public function createRequestClient(): ApiForumClient
     {
         $client = $this->createGuzzleClient();
 
-        return new ApiClient(
+        return new ApiForumClient(
             client : $client,
             auth   : $this->auth,
             connect: $this->connect,

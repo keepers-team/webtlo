@@ -10,7 +10,7 @@ use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
-use KeepersTeam\Webtlo\External\ApiClient;
+use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Settings;
@@ -38,7 +38,7 @@ final class TorrentsClients
      * @param TopicsUnregistered $cloneUnregistered таблица хранимых раздач, которые разрегистрированы на форуме
      */
     public function __construct(
-        private readonly ApiClient          $apiClient,
+        private readonly ApiForumClient     $apiClient,
         private readonly ForumClient        $forumClient,
         private readonly Settings           $settings,
         private readonly DB                 $db,

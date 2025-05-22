@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Подключение к API форума и получение данных.
  */
-final class ApiClient
+final class ApiForumClient
 {
     use Actions\ForumTopics;
     use Actions\ForumTree;
