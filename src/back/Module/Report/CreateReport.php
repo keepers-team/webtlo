@@ -704,12 +704,13 @@ final class CreateReport
      */
     private function checkExcluded(): void
     {
-        if (count($this->reportSend->excludedClients)) {
+        $excludedClients = $this->reportSend->excludedClients;
+        if (count($excludedClients)) {
             $config = $this->settings->populate();
 
             $names = [];
             foreach ($config['clients'] as $id => $client) {
-                if ($this->isForumExcluded(forumId: (int) $id)) {
+                if (in_array((int) $id, $excludedClients, true)) {
                     $names[] = sprintf('%s[%d](%s)', $client['cm'], (int) $id, $client['cl']);
                 }
 
