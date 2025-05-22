@@ -26,6 +26,12 @@ trait TorrentDownload
      */
     public function downloadTorrent(string $infoHash, bool $addRetracker = false): ?StreamInterface
     {
+        if (!isset($this->apiCredentials)) {
+            $this->logger->warning('Загрузка торрент-файла невозможна. Отсутствуют ключи доступа к API.');
+
+            return null;
+        }
+
         $options = [
             'form_params' => [
                 'keeper_user_id'    => $this->apiCredentials->userId,

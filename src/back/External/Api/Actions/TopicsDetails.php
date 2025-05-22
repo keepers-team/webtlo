@@ -54,8 +54,8 @@ trait TopicsDetails
 
         $requestLimit  = self::getRequestLimit($searchMode);
         $requestConfig = [
-            'concurrency' => self::$concurrency,
-            'options'     => ['by' => $searchMode->value, ...$this->defaultParams],
+            'concurrency' => $this->connect->concurrency,
+            'options'     => ['by' => $searchMode->value, ...$this->auth->getApiKey()],
             'fulfilled'   => $topicProcessor,
             'rejected'    => $chunkErrorHandler,
         ];
