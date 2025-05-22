@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
-use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
-use KeepersTeam\Webtlo\Config\ForumCredentials;
-use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\ApiClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
+use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
@@ -60,6 +58,8 @@ final class App
         $container->addServiceProvider(new ConfigServiceProvider());
         // Добавляем создание таблиц-клонов.
         $container->addServiceProvider(new CloneServiceProvider());
+        // Добавляем подключение к внешним ресурсам.
+        $container->addServiceProvider(new ExternalServiceProvider());
 
         // Подключаем файл конфига, 'config.ini' по-умолчанию.
         $container->add(Settings::class, fn() => new Settings(
@@ -74,46 +74,6 @@ final class App
             $level  = AppLogger::getLogLevel($config['log_level'] ?? '');
 
             return AppLogger::create($logFile, $level);
-        });
-
-        // Добавляем клиент для работы с Форумом.
-        $container->add(ForumClient::class, function() use ($container) {
-            $logger = $container->get(LoggerInterface::class);
-
-            $settings = $container->get(Settings::class);
-            $proxy    = $container->get(Proxy::class);
-            $cred     = $container->get(ForumCredentials::class);
-
-            return ForumClient::createFromLegacy($settings, $cred, $logger, $proxy);
-        });
-
-        // Добавляем клиент для работы с API.
-        $container->add(ApiClient::class, function() use ($container) {
-            $logger = $container->get(LoggerInterface::class);
-
-            $proxy  = $container->get(Proxy::class);
-            $config = $container->get('config');
-
-            return new ApiClient(
-                ApiClient::getDefaultParams($config),
-                ApiClient::apiClientFromLegacy($config, $logger, $proxy),
-                $logger
-            );
-        });
-
-        // Добавляем клиент для работы с API отчётов.
-        $container->add(ApiReportClient::class, function() use ($container) {
-            $logger = $container->get(LoggerInterface::class);
-
-            $proxy  = $container->get(Proxy::class);
-            $config = $container->get('config');
-            $auth   = $container->get(ApiCredentials::class);
-
-            return new ApiReportClient(
-                ApiReportClient::apiClientFromLegacy($config, $auth, $logger, $proxy),
-                $auth,
-                $logger
-            );
         });
 
         // Подключаем БД.
