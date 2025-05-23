@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\External;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\External\Shared\Validation;
 use KeepersTeam\Webtlo\Settings;
@@ -79,6 +80,7 @@ final class ForumClient
     public function __construct(
         private readonly Client           $client,
         private readonly ForumCredentials $cred,
+        private readonly ForumConnect     $connect,
         private readonly CookieJar        $cookie,
         private readonly LoggerInterface  $logger,
         private readonly Settings         $settings,
@@ -108,6 +110,14 @@ final class ForumClient
     public function post(string $url, array $params = []): ?string
     {
         return $this->request(method: 'POST', url: $url, params: $params);
+    }
+
+    /**
+     * Получить используемый домен трекера.
+     */
+    public function getForumDomain(): string
+    {
+        return $this->connect->baseUrl;
     }
 
     /**
