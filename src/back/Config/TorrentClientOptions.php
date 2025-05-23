@@ -11,18 +11,34 @@ use KeepersTeam\Webtlo\Clients\ClientType;
  */
 final class TorrentClientOptions
 {
+    public readonly string $name;
+
     /**
-     * @param array<string ,mixed> $extra
+     * @param array<string, mixed> $extra
      */
     public function __construct(
+        public readonly int        $id,
         public readonly ClientType $type,
         public readonly string     $host,
         public readonly int        $port,
         public readonly bool       $secure = false,
         public readonly ?BasicAuth $credentials = null,
         public readonly Timeout    $timeout = new Timeout(),
+        public readonly bool       $exclude = false,
+        public readonly int        $controlPeers = -2,
         public readonly array      $extra = [],
-    ) {}
+    ) {
+        $name = $this->type->name;
+        if (!empty($extra['comment'])) {
+            $name = (string) $extra['comment'];
+        }
+
+        if ($this->id > 0) {
+            $name .= "($this->id)";
+        }
+
+        $this->name = $name;
+    }
 
     /**
      * @return array{timeout: int, connect_timeout: int}
@@ -108,6 +124,7 @@ final class TorrentClientOptions
         }
 
         return new self(
+            id         : 0,
             type       : ClientType::from((string) $options['type']),
             host       : (string) $options['hostname'],
             port       : (int) $options['port'],
