@@ -6,6 +6,21 @@ namespace KeepersTeam\Webtlo\Config;
 
 final class ApiForumConnect
 {
+    /**
+     * Количество возможны одновременных запросов к API.
+     */
+    final public const concurrency = 4;
+
+    /**
+     * Временной интервал, в который не должно отправлять более rateFrameLimit запросов, в мс.
+     */
+    final public const rateFrameSize  = 1000;
+
+    /**
+     * Количество запросов, не более которого должно отправляться за rateFrameSize.
+     */
+    final public const rateFrameLimit = 2;
+
     private static string $apiVersion = 'v1';
 
     public function __construct(
@@ -13,10 +28,10 @@ final class ApiForumConnect
         public readonly bool    $ssl,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
+        public readonly int     $concurrency,
+        public readonly int     $rateFrameSize,
+        public readonly int     $rateRequestLimit,
         public readonly string  $userAgent = Defaults::userAgent,
-        public readonly int     $concurrency = 4,
-        public readonly int     $rateFrameSize = 1000,
-        public readonly int     $rateRequestLimit = 2,
     ) {}
 
     public function getApiUrl(): string
