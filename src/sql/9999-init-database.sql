@@ -19,31 +19,6 @@ BEGIN
     SELECT RAISE(IGNORE);
 END;
 
--- Создадим таблицу дополнительных сведений о хранимых подразделах.
-CREATE TABLE IF NOT EXISTS ForumsOptions
-(
-    forum_id       INT PRIMARY KEY,
-    topic_id       INT,
-    author_id      INT,
-    author_name    VARCHAR,
-    author_post_id INT,
-    post_ids       JSON
-);
-
-CREATE TRIGGER IF NOT EXISTS forums_options_exists
-    BEFORE INSERT ON ForumsOptions
-    WHEN EXISTS (SELECT forum_id FROM ForumsOptions WHERE forum_id = NEW.forum_id)
-BEGIN
-    UPDATE ForumsOptions
-    SET topic_id       = CASE WHEN NEW.topic_id       IS NULL THEN topic_id       ELSE NEW.topic_id END,
-        author_id      = CASE WHEN NEW.author_id      IS NULL THEN author_id      ELSE NEW.author_id END,
-        author_name    = CASE WHEN NEW.author_name    IS NULL THEN author_name    ELSE NEW.author_name END,
-        author_post_id = CASE WHEN NEW.author_post_id IS NULL THEN author_post_id ELSE NEW.author_post_id END,
-        post_ids       = CASE WHEN NEW.post_ids       IS NULL THEN post_ids       ELSE NEW.post_ids END
-    WHERE forum_id = NEW.forum_id;
-    SELECT RAISE(IGNORE);
-END;
-
 -- Список хранителей по спискам.
 CREATE TABLE IF NOT EXISTS KeepersLists
 (
@@ -280,74 +255,6 @@ BEGIN
 END;
 
 
-CREATE TRIGGER IF NOT EXISTS seeders_transfer
-    AFTER UPDATE ON Topics WHEN NEW.seeders_updates_days <> OLD.seeders_updates_days
-BEGIN
-    UPDATE Seeders
-    SET d0  = OLD.seeders,
-        d1  = d0,
-        d2  = d1,
-        d3  = d2,
-        d4  = d3,
-        d5  = d4,
-        d6  = d5,
-        d7  = d6,
-        d8  = d7,
-        d9  = d8,
-        d10 = d9,
-        d11 = d10,
-        d12 = d11,
-        d13 = d12,
-        d14 = d13,
-        d15 = d14,
-        d16 = d15,
-        d17 = d16,
-        d18 = d17,
-        d19 = d18,
-        d20 = d19,
-        d21 = d20,
-        d22 = d21,
-        d23 = d22,
-        d24 = d23,
-        d25 = d24,
-        d26 = d25,
-        d27 = d26,
-        d28 = d27,
-        d29 = d28,
-        q0  = OLD.seeders_updates_today,
-        q1  = q0,
-        q2  = q1,
-        q3  = q2,
-        q4  = q3,
-        q5  = q4,
-        q6  = q5,
-        q7  = q6,
-        q8  = q7,
-        q9  = q8,
-        q10 = q9,
-        q11 = q10,
-        q12 = q11,
-        q13 = q12,
-        q14 = q13,
-        q15 = q14,
-        q16 = q15,
-        q17 = q16,
-        q18 = q17,
-        q19 = q18,
-        q20 = q19,
-        q21 = q20,
-        q22 = q21,
-        q23 = q22,
-        q24 = q23,
-        q25 = q24,
-        q26 = q25,
-        q27 = q26,
-        q28 = q27,
-        q29 = q28
-    WHERE id = NEW.id;
-END;
-
-
 -- Исключённые раздачи, чёрный список.
 CREATE TABLE IF NOT EXISTS TopicsExcluded
 (
@@ -455,4 +362,4 @@ BEGIN
 END;
 
 -- Запишем текущую версию БД.
-PRAGMA user_version = 13;
+PRAGMA user_version = 15;

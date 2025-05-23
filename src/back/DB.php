@@ -17,7 +17,7 @@ final class DB
     use Traits\DbQuery;
 
     /** Актуальная версия БД */
-    private const DATABASE_VERSION = 14;
+    private const DATABASE_VERSION = 15;
 
     /** Инициализация таблиц актуальной версии. */
     private const INIT_FILE = '9999-init-database.sql';
