@@ -15,7 +15,7 @@ updates:
     commit-message:
       prefix: "[github-actions] "
     rebase-strategy: "auto"
-    milestone: 12
+    milestone: 13
     open-pull-requests-limit: 3
     labels:
       - "C: Distribution"
@@ -32,7 +32,7 @@ updates:
       prefix: "[composer] "
     rebase-strategy: "auto"
     versioning-strategy: "lockfile-only"
-    milestone: 12
+    milestone: 13
     open-pull-requests-limit: 10
     labels:
       - "C: Backend"
