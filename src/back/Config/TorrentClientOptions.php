@@ -71,43 +71,6 @@ final class TorrentClientOptions
      *
      * @param array<string, mixed> $options
      */
-    public static function fromConfigProperties(array $options): self
-    {
-        $auth = null;
-        if (!empty($options['lg']) && !empty($options['pw'])) {
-            $auth = new BasicAuth((string) $options['lg'], (string) $options['pw']);
-        }
-
-        $timeout = new Timeout(
-            (int) ($options['request_timeout'] ?? Defaults::timeout),
-            (int) ($options['connect_timeout'] ?? Defaults::timeout),
-        );
-
-        // Если не передан порт подключения к клиенту, добавляем порт по умолчанию.
-        $ssl = (bool) $options['ssl'];
-        if (empty($options['pt'])) {
-            $options['pt'] = $ssl ? 443 : 80;
-        }
-
-        return new self(
-            type       : ClientType::from((string) $options['cl']),
-            host       : (string) $options['ht'],
-            port       : (int) $options['pt'],
-            secure     : $ssl,
-            credentials: $auth,
-            timeout    : $timeout,
-            extra      : [
-                'id'      => $options['id'] ?? 0,
-                'comment' => $options['cm'] ?? '',
-            ],
-        );
-    }
-
-    /**
-     * Параметры клиента из данных в конфиге.
-     *
-     * @param array<string, mixed> $options
-     */
     public static function fromFrontProperties(array $options): self
     {
         $auth = null;

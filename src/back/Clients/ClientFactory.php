@@ -77,24 +77,6 @@ final class ClientFactory
     }
 
     /**
-     * Коннект с клиентом, из параметров клиента в конфиге.
-     *
-     * @param array<string, mixed> $options
-     */
-    public function fromConfigProperties(array $options): ClientInterface
-    {
-        $type = ClientType::tryFrom((string) $options['cl']);
-
-        if ($type === null) {
-            $this->logger->error('Unknown client type.', $options);
-
-            throw new RuntimeException('Unknown client type');
-        }
-
-        return $this->getClient(TorrentClientOptions::fromConfigProperties($options));
-    }
-
-    /**
      * Коннект с клиентом, из параметров клиента из UI.
      *
      * @param array<string, mixed> $options
