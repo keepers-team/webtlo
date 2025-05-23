@@ -32,6 +32,7 @@ trait TopicsDetails
         $knownTopics = [];
 
         $client = $this->client;
+        $logger = $this->logger;
 
         $chunkErrorHandler = self::getChunkErrorHandler($this->logger);
         $topicProcessor    = self::getTopicDetailsProcessor($this->logger, $knownTopics);
@@ -41,12 +42,23 @@ trait TopicsDetails
          *
          * @return Generator
          */
-        $requests = static function(array $topicsChunks) use (&$client) {
-            foreach ($topicsChunks as $requestTopics) {
-                yield static function(array $options) use (&$client, &$requestTopics) {
+        $requests = static function(array $topicsChunks) use (&$client, $logger) {
+            foreach ($topicsChunks as $i => $requestTopics) {
+                yield static function(array $query) use (&$client, &$requestTopics, $i, $logger) {
+                    $logger->debug('send request ' . $i);
+
+                    $options = [
+                        'query' => [
+                            'val' => implode(',', $requestTopics),
+                            ...$query,
+                        ],
+                    ];
+
+                    $options['request_query_number'] = $i;
+
                     return $client->getAsync(
                         uri    : 'get_tor_topic_data',
-                        options: ['query' => ['val' => implode(',', $requestTopics), ...$options]]
+                        options: $options
                     );
                 };
             }
@@ -109,6 +121,7 @@ trait TopicsDetails
                     $knownTopics[] = self::parseDynamicTopicDetails($topicId, $payload);
                 }
             }
+            $logger->debug('Done chunk request', ['index' => $index]);
         };
     }
 

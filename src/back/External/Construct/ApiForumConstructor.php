@@ -57,6 +57,7 @@ final class ApiForumConstructor
             middleware: new RateLimiterMiddleware(
                 frameSize   : $this->connect->rateFrameSize,
                 requestLimit: $this->connect->rateRequestLimit,
+                logger      : $this->logger
             )
         );
 

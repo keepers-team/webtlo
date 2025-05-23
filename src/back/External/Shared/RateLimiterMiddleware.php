@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\External\Shared;
 
 use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\Promise\Promise;
 use Throwable;
@@ -23,6 +24,7 @@ final class RateLimiterMiddleware
     public function __construct(
         private readonly int $frameSize,
         private readonly int $requestLimit,
+        private readonly LoggerInterface $logger,
     ) {}
 
     public function __invoke(callable $handler): callable
@@ -100,7 +102,8 @@ final class RateLimiterMiddleware
         try {
             $promise = new Promise(function($resolve) use ($seconds) {
                 // resolve the promise when the timer fires in $time seconds
-                Loop::addTimer($seconds, function() use ($resolve) {
+                Loop::addTimer($seconds, function() use ($resolve, $seconds) {
+                    $this->logger->debug("Done sleeping for {$seconds} seconds.");
                     $resolve(null);
                 });
             });
