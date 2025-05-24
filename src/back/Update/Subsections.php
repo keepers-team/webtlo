@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
-use DateTimeImmutable;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
@@ -126,10 +125,16 @@ final class Subsections
             // Запоминаем время обновления подраздела.
             $this->updateTime->addMarkerUpdate(marker: $forumId, updateTime: $topicResponse->updateTime);
 
-            $isDateChanged = self::isNewCalendarDay(
-                lastUpdate   : $forumLastUpdated,
-                currentUpdate: $topicResponse->updateTime
+            $isDateChanged = Helper::isUtcDayChanged(
+                prevDate: $forumLastUpdated,
+                newDate : $topicResponse->updateTime
             );
+
+            $this->logger->debug('debug dates', [
+                'isDateChanged' => $isDateChanged,
+                'prev' => $forumLastUpdated->format(DATE_ATOM),
+                'new' => $topicResponse->updateTime->format(DATE_ATOM),
+            ]);
 
             // Обрабатываем полученные раздачи, и записываем во временную таблицу.
             foreach ($topicResponse->topicsChunks as $topics) {
@@ -250,20 +255,6 @@ final class Subsections
         $this->tableUpdate->cloneFill();
         $this->tableInsert->cloneFill();
         $this->seedersInsert->cloneFill();
-    }
-
-    /**
-     * Сменились ли сутки, относительно прошлого обновления сведений.
-     */
-    private static function isNewCalendarDay(DateTimeImmutable $lastUpdate, DateTimeImmutable $currentUpdate): bool
-    {
-        // Полночь дня последнего обновления сведений.
-        $lastUpdated = $lastUpdate->setTime(hour: 0, minute: 0);
-
-        // Сменились ли сутки, относительно прошлого обновления сведений.
-        $diffInDays = (int) $currentUpdate->diff($lastUpdated)->format('%d');
-
-        return $diffInDays > 0;
     }
 
     /**

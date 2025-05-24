@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use RuntimeException;
 
 final class Helper
@@ -261,6 +262,17 @@ final class Helper
     public static function makeDateTime(int $timestamp): DateTimeImmutable
     {
         return (new DateTimeImmutable())->setTimestamp($timestamp);
+    }
+
+    /**
+     * Сменились ли сутки, между двумя датами по UTC.
+     */
+    public static function isUtcDayChanged(DateTimeImmutable $prevDate, DateTimeImmutable $newDate): bool
+    {
+        $prevDate = $prevDate->setTimezone(new DateTimeZone('UTC'));
+        $newDate  = $newDate->setTimezone(new DateTimeZone('UTC'));
+
+        return $newDate > $prevDate && $newDate->format('Y-m-d') !== $prevDate->format('Y-m-d');
     }
 
     /**
