@@ -23,8 +23,10 @@ trait KeepersReports
 
     /**
      * Загрузка и распаковка статичного архива со всеми хранимыми раздачами всех хранителей.
+     *
+     * @param ?int[] $subforums
      */
-    public function downloadReportsArchive(): void
+    public function downloadReportsArchive(?array $subforums = null): void
     {
         // Проверяем наличие PharData
         if (!class_exists('PharData')) {
@@ -51,7 +53,23 @@ trait KeepersReports
             );
 
             Timers::start('unpack');
-            (new PharData(filename: $archive))->extractTo(directory: $tempDir, overwrite: true);
+
+            $files = null;
+            // Если заданы подразделы, собираем ожидаемый список файлов.
+            if ($subforums !== null) {
+                // Файлы внутри архива имеют путь вида "./313.csv.gz" и без полного пути - не распаковываются.
+                $files = array_map(static fn($el) => sprintf('./%d.csv.gz', $el), $subforums);
+            }
+
+            $phar = new PharData(filename: $archive);
+
+            try {
+                // Пробуем распаковать только реально нужные файлы.
+                $phar->extractTo(directory: $tempDir, files: $files, overwrite: true);
+            } catch (Throwable) {
+                // Если не получилось - распакуем все.
+                $phar->extractTo(directory: $tempDir, overwrite: true);
+            }
 
             $this->logger->debug(
                 'Распаковка статичного архива с отчётами завершена за {sec}',

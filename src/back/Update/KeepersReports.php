@@ -108,7 +108,7 @@ final class KeepersReports
 
         // Если хранимых подразделов много, пробуем загрузить статический архив.
         if (!$user->isCandidate && $forumCount > 10) {
-            $this->apiReport->downloadReportsArchive();
+            $this->apiReport->downloadReportsArchive(subforums: $keptForums);
         }
 
         foreach ($keptForums as $forumId) {
