@@ -19,6 +19,36 @@ use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Обновляем списки раздач (topic) в каждом хранимом подразделе (subsection).
+ *
+ * "Подраздел" (subsection) форума является частью большего "форума" (forum).
+ * Однако по историческим причинам, эти два понятия смешиваются.
+ *
+ * Forum, forumId, subforumId, subsection, subsectionId - это всё одно и тоже в рамках текущего проекта.
+ * TODO стандартизировать используемые названия переменных в subforumId, как в API отчётов.
+ *
+ * AverageSeeds - история средних сидов.
+ * Это два массива данных из 31 элемента каждый:
+ *  - count: int<1, 24> - количество обновлений в день (24 раза в день максимум), т.е. [1,24,24...]
+ *  - sum: int[] - сумма сидов из всех обновлений за день, т.е. [4,83,136...]
+ *
+ * Первое число каждого из массивов - это цифры за сегодня.
+ * Эти два значения записываются в БД ТЛО в таблицу Topics, где count0 => seeders_updates_today и sum0 => seeders
+ *
+ * Остальные значения - это вчера, позавчера и т.д. до (-30 дней от сегодня).
+ * Эти значения записываются в таблицу в Seeders, где countN => qN (quantity_update) и sumN => dN (day_sum).
+ *
+ *  Запись в БД см. KeepersTeam\Webtlo\Storage\Clone\SeedersInsert
+ *
+ * Таким образом, вычислить значение средних сидов за 14 дней можно по формуле:
+ * - (sum0 + ... + sum13) / (count0 + ... count13)
+ *
+ * Что в рамках БД ТЛО превращается в:
+ * - (Topics.seeders + Seeders.d0 ... + Seeders.d12) / (Topics.seeders_updates_today + Seeders.q0 + ... Seeders.q12)
+ *
+ * Поиск в БД см. KeepersTeam\Webtlo\TopicList\Validate::prepareAverageSeedFilter
+ */
 final class Subsections
 {
     /** @var int[] */
@@ -136,7 +166,7 @@ final class Subsections
             }
 
             $this->logger->debug(
-                sprintf('Список раздач подраздела № %-4d ({count} шт.{size}) обновлён за {sec}.', $forumId),
+                sprintf('Список раздач подраздела № %-4d ({count} шт. {size}) обновлён за {sec}.', $forumId),
                 [
                     'count' => $topicResponse->totalCount,
                     'size'  => Helper::convertBytes($topicResponse->totalSize, 9),
