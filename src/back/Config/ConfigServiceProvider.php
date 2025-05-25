@@ -78,12 +78,14 @@ final class ConfigServiceProvider extends AbstractServiceProvider
         $container->addShared(ApiForumConnect::class, function() {
             $ini = $this->getIni();
 
-            $url       = basename((string) $ini->read('torrent-tracker', 'api_url', Defaults::apiForumUrl));
-            $urlCustom = basename((string) $ini->read('torrent-tracker', 'api_url_custom'));
+            $section  = 'torrent-tracker';
+
+            $url       = basename((string) $ini->read($section, 'api_url', Defaults::apiForumUrl));
+            $urlCustom = basename((string) $ini->read($section, 'api_url_custom'));
 
             $url = $url === 'custom' ? $urlCustom : $url;
 
-            $ssl      = (bool) $ini->read('torrent-tracker', 'api_ssl', 1);
+            $ssl      = (bool) $ini->read($section, 'api_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_api', 0);
 
             $timeout = new Timeout(
@@ -91,9 +93,9 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 connection: (int) $ini->read('curl_setopt', 'api_connecttimeout', Defaults::timeout),
             );
 
-            $concurrency = (int) $ini->read('torrent-tracker', 'api_concurrency', ApiForumConnect::concurrency);
-            $frameSize   = (int) $ini->read('torrent-tracker', 'api_rate_frame_size', ApiForumConnect::rateFrameSize);
-            $frameLimit  = (int) $ini->read('torrent-tracker', 'api_rate_frame_limit', ApiForumConnect::rateFrameLimit);
+            $concurrency = (int) $ini->read($section, 'api_concurrency', ApiForumConnect::concurrency);
+            $rateSize    = (int) $ini->read($section, 'api_rate_frame_size', ApiForumConnect::rateFrameSize);
+            $rateLimit   = (int) $ini->read($section, 'api_rate_request_limit', ApiForumConnect::rateRequestLimit);
 
             return new ApiForumConnect(
                 baseUrl         : $url,
@@ -101,8 +103,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 useProxy        : $useProxy,
                 timeout         : $timeout,
                 concurrency     : $concurrency,
-                rateFrameSize   : $frameSize,
-                rateRequestLimit: $frameLimit,
+                rateFrameSize   : $rateSize,
+                rateRequestLimit: $rateLimit,
             );
         });
 

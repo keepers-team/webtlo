@@ -19,7 +19,7 @@ final class ApiForumConnect
     /**
      * Количество запросов, не более которого должно отправляться за rateFrameSize.
      */
-    final public const rateFrameLimit = 2;
+    final public const rateRequestLimit = 2;
 
     private static string $apiVersion = 'v1';
 
