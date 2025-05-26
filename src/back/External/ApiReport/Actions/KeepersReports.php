@@ -10,9 +10,6 @@ use DateTimeZone;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeepersResponse;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Timers;
-use League\Csv\Reader;
-use PharData;
 use RuntimeException;
 use Throwable;
 
@@ -28,61 +25,10 @@ trait KeepersReports
      */
     public function downloadReportsArchive(?array $subforums = null): void
     {
-        // Проверяем наличие PharData
-        if (!class_exists('PharData')) {
-            $this->logger->notice('Для загрузки статических архивов требуется расширение PHP "php-phar".');
-
-            return;
-        }
-
-        // Определяем пути хранения временных файлов.
-        $fileName = 'public_reports-all.tar';
-        $tempDir  = Helper::getStorageSubFolderPath(subFolder: 'gzip_keepers_reports');
-        $archive  = Helper::getPathWithFile(path: $tempDir, file: $fileName);
-
-        try {
-            $response = $this->client->get(uri: 'get_stats_file', options: [
-                'query'   => ['file_name' => $fileName],
-                'headers' => ['Accept' => 'application/gzip'],
-                'sink'    => $archive,
-            ]);
-
-            $this->logger->debug(
-                'Распаковка статичного архива с отчётами...',
-                ['gzip' => $archive, 'size' => Helper::convertBytes(size: $response->getBody()->getSize() ?? 0)]
-            );
-
-            Timers::start('unpack');
-
-            $files = null;
-            // Если заданы подразделы, собираем ожидаемый список файлов.
-            if ($subforums !== null) {
-                // Файлы внутри архива имеют путь вида "./313.csv.gz" и без полного пути - не распаковываются.
-                $files = array_map(static fn($el) => sprintf('./%d.csv.gz', $el), $subforums);
-            }
-
-            $phar = new PharData(filename: $archive);
-
-            try {
-                // Пробуем распаковать только реально нужные файлы.
-                $phar->extractTo(directory: $tempDir, files: $files, overwrite: true);
-            } catch (Throwable) {
-                // Если не получилось - распакуем все.
-                $phar->extractTo(directory: $tempDir, overwrite: true);
-            }
-
-            $this->logger->debug(
-                'Распаковка статичного архива с отчётами завершена за {sec}',
-                ['sec' => Timers::getExecTime('unpack')]
-            );
-
-            $this->gzipReportsFolder = $tempDir;
-        } catch (Throwable $e) {
-            $this->logger->error('Failed to download reports archive: ' . $e->getMessage());
-        } finally {
-            // Удаляем файл архива.
-            unlink($archive);
-        }
+        $this->gzipReportsFolder = $this->downloadStaticFile(
+            filename : 'public_reports-all.tar',
+            subforums: $subforums,
+        );
     }
 
     /**
@@ -104,7 +50,7 @@ trait KeepersReports
         }
 
         try {
-            if ($csv = $this->getCsvReader(forumId: $forumId)) {
+            if ($csv = $this->getCsvReader(folderPath: $this->gzipReportsFolder, forumId: $forumId)) {
                 return new CsvReportProcessor(csv: $csv, seedingChecker: self::createSeedingChecker());
             }
         } catch (Throwable $e) {
@@ -122,32 +68,6 @@ trait KeepersReports
         }
 
         return new ApiReportProcessor(reports: $reports, seedingChecker: self::createSeedingChecker());
-    }
-
-    /**
-     * Обработать статичный csv-файл с отчётом по подразделу.
-     *
-     * @return ?Reader<array<string, string>>
-     */
-    private function getCsvReader(int $forumId): ?Reader
-    {
-        $csvPath = sprintf('%s/%d.csv.gz', $this->gzipReportsFolder, $forumId);
-        if (!file_exists($csvPath)) {
-            return null;
-        }
-
-        try {
-            /** @var Reader<array<string, string>> $reader */
-            $reader = Reader::createFromPath(path: 'compress.zlib://' . $csvPath);
-
-            $reader->setHeaderOffset(offset: 0);
-
-            return $reader;
-        } catch (Throwable $e) {
-            $this->logger->warning('Failed to read CSV: ' . $e->getMessage());
-
-            return null;
-        }
     }
 
     /**
@@ -196,8 +116,8 @@ trait KeepersReports
      */
     public function cleanupReports(): void
     {
-        if ($this->gzipReportsFolder) {
-            Helper::removeDirRecursive($this->gzipReportsFolder);
+        if ($this->gzipReportsFolder !== null) {
+            Helper::removeDirRecursive(path: $this->gzipReportsFolder);
 
             $this->gzipReportsFolder = null;
         }
