@@ -30,24 +30,6 @@ final class Settings
     }
 
     /**
-     * Найти используемый домен трекера.
-     */
-    public function getForumDomain(): ?string
-    {
-        $config = $this->populate();
-
-        if (!empty($config['forum_url'] && $config['forum_url'] !== 'custom')) {
-            return (string) $config['forum_url'];
-        }
-
-        if (!empty($config['forum_url_custom'])) {
-            return (string) $config['forum_url_custom'];
-        }
-
-        return null;
-    }
-
-    /**
      * @return array<string, mixed>
      */
     public function populate(): array

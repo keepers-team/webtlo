@@ -107,7 +107,7 @@ final class TorrentsClients
         );
 
         /** Используемый домен трекера. */
-        $forumDomain = $this->settings->getForumDomain();
+        $forumDomain = $this->forumClient->getForumDomain();
 
         /** Клиенты, данные от которых получить не удалось */
         $failedClients = [];
