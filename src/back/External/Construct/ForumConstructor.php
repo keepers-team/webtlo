@@ -47,6 +47,7 @@ final class ForumConstructor
         return new ForumClient(
             client  : $client,
             cred    : $this->auth,
+            connect : $this->connect,
             cookie  : $this->cookieJar,
             logger  : $this->logger,
             settings: $this->settings,
