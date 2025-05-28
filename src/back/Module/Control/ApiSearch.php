@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module\Control;
 
-use Generator;
 use KeepersTeam\Webtlo\Config\TopicControl;
+use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiForumClient;
+use KeepersTeam\Webtlo\External\ApiReport\Actions\TopicPeersProcessorInterface;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
-use KeepersTeam\Webtlo\External\Data\TopicsPeers;
+use KeepersTeam\Webtlo\External\Data\TopicPeers;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -18,6 +19,8 @@ use RuntimeException;
  */
 final class ApiSearch
 {
+    private const downloadArchiveThreshold = 20;
+
     /**
      * Ид подразделов, данные которых нужно сохранить.
      *
@@ -26,7 +29,7 @@ final class ApiSearch
     private array $cacheSubForums = [];
 
     /**
-     * @var array<int, TopicsPeers>
+     * @var array<int, TopicPeersProcessorInterface>
      */
     private array $cachedResponse = [];
 
@@ -35,6 +38,16 @@ final class ApiSearch
         private readonly ApiReportClient $apiReport,
         private readonly LoggerInterface $logger,
     ) {}
+
+    public function __destruct()
+    {
+        $this->apiReport->cleanupTopicPeersFolder();
+    }
+
+    public function getPermissions(): KeeperPermissions
+    {
+        return $this->apiReport->getKeeperPermissions();
+    }
 
     /**
      * Получить список давно не сидируемых раздач по заданному подразделу.
@@ -58,6 +71,17 @@ final class ApiSearch
     }
 
     /**
+     * @param int[] $subforums
+     */
+    public function tryDownloadStaticArchive(array $subforums): void
+    {
+        // Если хранимых подразделов много, загружаем готовый архив.
+        if (count($subforums) > self::downloadArchiveThreshold) {
+            $this->apiReport->downloadTopicPeersArchive(subforums: $subforums);
+        }
+    }
+
+    /**
      * @param int[] $forums
      */
     public function setCachedSubForums(array $forums): void
@@ -74,17 +98,19 @@ final class ApiSearch
      *
      * @param int|string $group  Группа искомых раздач. Ид подраздела или "прочие"
      * @param string[]   $hashes Хеши искомых раздач
+     *
+     * @return iterable<TopicPeers>
      */
-    public function getTopicsPeersGenerator(int|string $group, array $hashes): Generator
+    public function getGroupTopicPeersIterator(int|string $group, array $hashes): iterable
     {
         if (is_int($group)) {
             // Получаем раздачи всего подраздела, кешируем ответ, фильтруем только нужные (быстро).
-            return $this->getSubForumTopics(forumId: $group)->filterReleases(hashes: $hashes);
+            return $this->getApiReportTopicPeers(forumId: $group)->process(hashes: $hashes);
         }
 
         if ($group === TopicControl::UnknownHashes) {
             // Получаем только искомые раздачи, т.к. не знаем ид подраздела (долго).
-            return $this->getApiForumPeers(hashes: $hashes);
+            return $this->getApiForumTopicPeers(hashes: $hashes);
         }
 
         throw new RuntimeException("Неизвестный подраздел: $group");
@@ -93,14 +119,14 @@ final class ApiSearch
     /**
      * Запросить в API отчётов раздачи всего подраздела.
      */
-    private function getSubForumTopics(int $forumId): TopicsPeers
+    private function getApiReportTopicPeers(int $forumId): TopicPeersProcessorInterface
     {
         $topics = $this->cachedResponse[$forumId] ?? null;
-        if ($topics instanceof TopicsPeers) {
+        if ($topics instanceof TopicPeersProcessorInterface) {
             return $topics;
         }
 
-        $response = $this->apiReport->getForumTopicsPeers($forumId);
+        $response = $this->apiReport->getSubForumTopicPeers(subForumId: $forumId);
         if ($response instanceof ApiError) {
             $this->logger->error(sprintf('%d %s', $response->code, $response->text));
 
@@ -119,10 +145,12 @@ final class ApiSearch
      * Запросить в API форума искомые раздачи.
      *
      * @param string[] $hashes
+     *
+     * @return iterable<TopicPeers>
      */
-    private function getApiForumPeers(array $hashes): Generator
+    private function getApiForumTopicPeers(array $hashes): iterable
     {
-        $response = $this->apiForum->getPeerStats($hashes);
+        $response = $this->apiForum->getPeerStats(topics: $hashes);
 
         if ($response instanceof ApiError) {
             $this->logger->error(sprintf('%d %s', $response->code, $response->text));

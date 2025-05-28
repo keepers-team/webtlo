@@ -53,6 +53,16 @@ final class TopicControl
 
         $this->validateConfig(config: $config);
 
+        // Ограничения доступа для кандидатов в хранители.
+        $user = $this->api->getPermissions();
+
+        if (!$user->isCandidate) {
+            /** @var int[] $subforums */
+            $subforums = array_map('intval', array_keys($config['subsections']));
+
+            $this->api->tryDownloadStaticArchive(subforums: $subforums);
+        }
+
         $this->findRepeatedSubForums();
         $this->unseeded->init();
 
@@ -109,6 +119,11 @@ final class TopicControl
                     continue;
                 }
 
+                // Проверяем доступ хранителя к подразделу.
+                if (is_int($group) && !$user->checkSubsectionAccess($group)) {
+                    continue;
+                }
+
                 Timers::start("subsection_$group");
 
                 $forumUnseededTopics = [];
@@ -128,7 +143,7 @@ final class TopicControl
                 );
 
                 // Получаем данные о пирах искомых раздач и перебираем их.
-                $topicsPeers = $this->api->getTopicsPeersGenerator(group: $group, hashes: $hashes);
+                $topicsPeers = $this->api->getGroupTopicPeersIterator(group: $group, hashes: $hashes);
                 foreach ($topicsPeers as $topic) {
                     // Проверяем наличие и статус раздачи в клиенте.
                     $torrent = $torrents->getTorrent(hash: $topic->hash);
@@ -251,6 +266,13 @@ final class TopicControl
 
         $this->unseeded->close();
         $this->printExcludedForums();
+
+        if (count($skipped = $user->getSkippedSubsections())) {
+            $this->logger->notice(
+                'У кандидата в хранители нет доступа к указанным подразделам. Обратитесь к куратору.',
+                ['skipped' => $skipped]
+            );
+        }
 
         $this->logger->info('[Control] Регулировка раздач в торрент-клиентах завершена за {sec}.', [
             'sec' => Timers::getExecTime('control'),
