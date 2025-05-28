@@ -5,5 +5,6 @@ parameters:
     - src/
   excludePaths:
     analyse:
+      - src/php/debug (?)
       - src/index.php
       - src/vendor
