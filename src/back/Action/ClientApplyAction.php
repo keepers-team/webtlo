@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
-use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
-use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Table\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -19,7 +17,6 @@ use RuntimeException;
 final class ClientApplyAction
 {
     public function __construct(
-        private readonly Settings        $settings,
         private readonly LoggerInterface $logger,
         private readonly ClientFactory   $clientFactory,
         private readonly Torrents        $tableTorrents,
@@ -65,13 +62,15 @@ final class ClientApplyAction
                 continue;
             }
 
+            $clientId = (int) $clientId;
+
             // Пропускаем раздачи в других клиентах, если задан фильтр.
-            if ($selectedClient > 0 && $selectedClient !== (int) $clientId) {
+            if ($selectedClient > 0 && $selectedClient !== $clientId) {
                 continue;
             }
 
             // Получаем и проверяем доступность клиента.
-            $client = $this->getClientById(clientId: $clientId);
+            $client = $this->clientFactory->getClientById(clientId: $clientId);
 
             // Если клиент недоступен, пропускаем.
             if ($client === null) {
@@ -131,42 +130,5 @@ final class ClientApplyAction
 
         $this->logger->info("Выполнение действия '$action->value' завершено.");
         $this->logger->info('-- DONE --');
-    }
-
-    private function getClientById(int $clientId): ?ClientInterface
-    {
-        $config = $this->settings->get();
-
-        if (empty($config['clients'][$clientId])) {
-            $this->logger->warning(
-                'В настройках нет данных о торрент-клиенте с идентификатором [{tag}]',
-                ['tag' => $clientId]
-            );
-
-            return null;
-        }
-
-        $options = $config['clients'][$clientId];
-
-        try {
-            $client    = $this->clientFactory->fromConfigProperties(options: $options);
-            $clientTag = $client->getClientTag();
-
-            // проверка доступности торрент-клиента
-            if (!$client->isOnline()) {
-                $this->logger->error('Торрент-клиент {tag} в данный момент недоступен', ['tag' => $clientTag]);
-
-                return null;
-            }
-
-            return $client;
-        } catch (RuntimeException $e) {
-            $this->logger->error(
-                'Торрент-клиент {tag} в данный момент недоступен. {error}',
-                ['tag' => $clientTag ?? $clientId, 'error' => $e->getMessage()]
-            );
-
-            return null;
-        }
     }
 }
