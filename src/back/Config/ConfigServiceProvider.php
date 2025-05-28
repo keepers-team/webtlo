@@ -27,6 +27,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             Proxy::class,
             ReportSend::class,
             TopicControl::class,
+            Subsections::class,
             TorrentClients::class,
         ];
 
@@ -195,6 +196,37 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 daysUntilUnseeded     : (int) $ini->read('topics_control', 'days_until_unseeded', 21),
                 maxUnseededCount      : (int) $ini->read('topics_control', 'max_unseeded_count', 100),
             );
+        });
+
+        // Хранимые подразделы.
+        $container->add(Subsections::class, function() {
+            $ini = $this->getIni();
+
+            $subsections = $ini->read('sections', 'subsections');
+
+            $list = [];
+            if (!empty($subsections)) {
+                $subsections = array_filter(explode(',', $subsections));
+                sort($subsections);
+
+                foreach ($subsections as $section) {
+                    $subForumId = (int) $section;
+
+                    $list[$subForumId] = new SubForum(
+                        id           : $subForumId,
+                        name         : (string) $ini->read($section, 'title', $section),
+                        clientId     : (int) $ini->read($section, 'client', 0),
+                        label        : (string) $ini->read($section, 'label'),
+                        dataFolder   : (string) $ini->read($section, 'data-folder'),
+                        subFolderType: SubFolderType::tryFrom((int) $ini->read($section, 'data-sub-folder')),
+                        hideTopics   : (bool) $ini->read($section, 'hide-topics'),
+                        reportExclude: (bool) $ini->read($section, 'exclude'),
+                        controlPeers : (int) ($ini->read($section, 'control-peers') ?: -2)
+                    );
+                }
+            }
+
+            return new Subsections(ids: array_keys($list), params: $list);
         });
 
         // Используемые торрент-клиенты и их параметры подключения.
