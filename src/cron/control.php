@@ -29,7 +29,7 @@ try {
 
     /** @var TopicControl $topicControl */
     $topicControl = $app->get(TopicControl::class);
-    $topicControl->process(config: $config);
+    $topicControl->process();
 } catch (RuntimeException $e) {
     if (isset($log)) {
         $log->warning($e->getMessage());

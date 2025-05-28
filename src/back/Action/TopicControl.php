@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\Action;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
+use KeepersTeam\Webtlo\Config\Subsections;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
 use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Module\Control\ApiSearch;
@@ -30,7 +31,7 @@ final class TopicControl
     /**
      * Исключённые из регулировки подразделы.
      *
-     * @var array{}|int[]|string[]
+     * @var array{}|int[]
      */
     private array $excludedForums = [];
 
@@ -38,6 +39,7 @@ final class TopicControl
         private readonly LoggerInterface $logger,
         private readonly ConfigControl   $configControl,
         private readonly PeerCalc        $calc,
+        private readonly Subsections     $subsections,
         private readonly TorrentClients  $torrentClients,
         private readonly ClientFactory   $clientFactory,
         private readonly ApiSearch       $api,
@@ -45,24 +47,18 @@ final class TopicControl
         private readonly Unseeded        $unseeded,
     ) {}
 
-    /**
-     * @param array<string, mixed>[] $config
-     */
-    public function process(array $config): void
+    public function process(): void
     {
         Timers::start('control');
         $this->logger->info('[Control] Начат процесс регулировки раздач в торрент-клиентах...');
 
-        $this->validateConfig(config: $config);
+        $this->validateConfig();
 
         // Ограничения доступа для кандидатов в хранители.
         $user = $this->api->getPermissions();
 
         if (!$user->isCandidate) {
-            /** @var int[] $subforums */
-            $subforums = array_map('intval', array_keys($config['subsections']));
-
-            $this->api->tryDownloadStaticArchive(subforums: $subforums);
+            $this->api->tryDownloadStaticArchive(subforums: $this->subsections->ids);
         }
 
         $this->findRepeatedSubForums();
@@ -71,7 +67,7 @@ final class TopicControl
         $configControl = $this->configControl;
 
         // Хранимые подразделы.
-        $forums = $this->getKeptForumIds(config: $config);
+        $subForumsObject = $this->getKeptForumIds();
         foreach ($this->torrentClients->clients as $clientOptions) {
             $clientId  = $clientOptions->id;
             $clientTag = $clientOptions->name;
@@ -100,7 +96,7 @@ final class TopicControl
 
             // Получаем раздачи из БД.
             $topicsHashes = $this->db->getStoredHashes(
-                forums  : $forums,
+                forums  : $subForumsObject,
                 torrents: $torrents,
                 timer   : "get_topics_$clientId",
             );
@@ -110,22 +106,31 @@ final class TopicControl
 
             $controlTopics = ['stop' => [], 'start' => []];
             foreach ($topicsHashes as $group => $hashes) {
-                // Пропустим регулировку "прочих", если она отключена.
-                if ($group === ConfigControl::UnknownHashes && !$configControl->manageOtherSubsections) {
-                    continue;
+                // Если это группа "прочих" раздач.
+                if ($group === ConfigControl::UnknownHashes) {
+                    // Пропустим регулировку "прочих", если она отключена.
+                    if (!$configControl->manageOtherSubsections) {
+                        continue;
+                    }
                 }
 
-                $subControlPeers = PeerCalc::getForumLimit(config: $config, group: $group);
-                // Пропускаем исключённые из регулировки подразделы.
-                if ($subControlPeers === -1) {
-                    $this->excludedForums[] = $group;
+                // Для "прочих" значение всегда одно.
+                $subControlPeers = -2;
+                if (is_int($group)) {
+                    // $subControlPeers = PeerCalc::getForumLimit(config: $config, group: $group);
+                    $subControlPeers = $this->subsections->getControlPeers(subForumId: $group);
 
-                    continue;
-                }
+                    // Пропускаем исключённые из регулировки подразделы.
+                    if ($subControlPeers === -1) {
+                        $this->excludedForums[] = $group;
 
-                // Проверяем доступ хранителя к подразделу.
-                if (is_int($group) && !$user->checkSubsectionAccess($group)) {
-                    continue;
+                        continue;
+                    }
+
+                    // Проверяем доступ хранителя к подразделу.
+                    if (!$user->checkSubsectionAccess(forumId: $group)) {
+                        continue;
+                    }
                 }
 
                 Timers::start("subsection_$group");
@@ -284,26 +289,20 @@ final class TopicControl
         ]);
     }
 
-    /**
-     * @param array<string, mixed>[] $config
-     */
-    private function validateConfig(array $config): void
+    private function validateConfig(): void
     {
         if (!$this->torrentClients->count()) {
             throw new RuntimeException('Список торрент-клиентов пуст. Проверьте настройки.');
         }
 
-        if (empty($config['subsections'])) {
+        if (!$this->subsections->count()) {
             throw new RuntimeException('Нет хранимых подразделов. Проверьте настройки.');
         }
     }
 
-    /**
-     * @param array<string, mixed>[] $config
-     */
-    private function getKeptForumIds(array $config): KeysObject
+    private function getKeptForumIds(): KeysObject
     {
-        return KeysObject::create(array_keys($config['subsections']));
+        return KeysObject::create($this->subsections->ids);
     }
 
     /**
