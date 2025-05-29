@@ -30,13 +30,8 @@ final class KeeperUnseededResponse
      */
     public function getHashes(): array
     {
-        $hashes = [];
-        foreach ($this->releases as $release) {
-            $topic = array_combine($this->columns, $release);
+        $hashColumn = array_flip($this->columns)['info_hash'];
 
-            $hashes[] = strtoupper((string) $topic['info_hash']);
-        }
-
-        return $hashes;
+        return array_column($this->releases, $hashColumn);
     }
 }

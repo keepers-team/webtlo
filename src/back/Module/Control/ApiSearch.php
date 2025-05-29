@@ -54,13 +54,17 @@ final class ApiSearch
      *
      * @return array{}|string[]
      */
-    public function getUnseededHashes(int|string $group, int $days): array
+    public function getUnseededHashes(int|string $group, int $days, int $limit): array
     {
         if (is_string($group)) {
             return [];
         }
 
-        $response = $this->apiReport->getKeeperUnseededTopics(forumId: $group, notSeedingDays: $days);
+        $response = $this->apiReport->getKeeperUnseededTopics(
+            forumId       : $group,
+            notSeedingDays: max(1, $days),
+            limitTopics   : max(1, $limit),
+        );
         if ($response instanceof ApiError) {
             $this->logger->error(sprintf('%d %s', $response->code, $response->text));
 

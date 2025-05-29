@@ -130,7 +130,8 @@ final class TopicControl
                 if ($this->unseeded->checkLimit()) {
                     $forumUnseededTopics = $this->api->getUnseededHashes(
                         group: $group,
-                        days : $configControl->daysUntilUnseeded
+                        days : $configControl->daysUntilUnseeded,
+                        limit: $configControl->maxUnseededCount,
                     );
 
                     $this->unseeded->updateTotal(count: count($forumUnseededTopics));

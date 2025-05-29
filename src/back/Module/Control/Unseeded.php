@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module\Control;
 
-use DateTimeImmutable;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use Psr\Log\LoggerInterface;
 
@@ -121,6 +121,6 @@ final class Unseeded
     {
         $lastCheck = $this->updateTime->getMarkerTime(marker: UpdateMark::UNSEEDED);
 
-        return (new DateTimeImmutable())->setTime(0, 0) > $lastCheck;
+        return Helper::isUtcDayChanged(prevDate: $lastCheck);
     }
 }

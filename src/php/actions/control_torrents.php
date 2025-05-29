@@ -13,11 +13,11 @@ $control_result = [
         'Для получения подробностей обратитесь к журналу событий.',
 ];
 
-try {
-    // Инициализируем контейнер.
-    $app = App::create('control.log');
-    $log = $app->getLogger();
+// Инициализируем контейнер.
+$app = App::create('control.log');
+$log = $app->getLogger();
 
+try {
     $config = $app->getLegacyConfig();
 
     /** @var TopicControl $topicControl */
@@ -27,13 +27,11 @@ try {
 
     $control_result['result'] = 'Регулировка раздач выполнена.';
 } catch (RuntimeException $e) {
-    if (isset($log)) {
-        $log->warning($e->getMessage());
-    }
+    $log->warning($e->getMessage());
 } catch (Throwable $e) {
-    if (isset($log)) {
-        $log->error($e->getMessage());
-    }
+    $log->error($e->getMessage());
+} finally {
+    $log->info('-- DONE --');
 }
 
 // Добавляем записанный журнал.

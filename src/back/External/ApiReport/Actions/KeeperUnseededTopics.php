@@ -8,22 +8,37 @@ use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeeperUnseededResponse;
 use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 trait KeeperUnseededTopics
 {
-    public function getKeeperUnseededTopics(int $forumId, int $notSeedingDays): KeeperUnseededResponse|ApiError
+    /**
+     * @param positive-int $notSeedingDays количество дней, которое раздачи не сидировались
+     * @param positive-int $limitTopics    максимальное желаемое количество раздач в выдаче
+     */
+    public function getKeeperUnseededTopics(int $forumId, int $notSeedingDays, int $limitTopics): KeeperUnseededResponse|ApiError
     {
         $dataProcessor = self::getStaticUnseededProcessor($this->logger);
 
         try {
-            // Новая возможность в API - фильтр по дате последнего сидирования.
-            $dateFilter = "last_seeded_time<{$notSeedingDays}d";
+            // Вычитаем один день, чтобы компенсирование "вытекание" даты сидирования по часам.
+            --$notSeedingDays;
+
+            // Приводим значения к валидным.
+            $notSeedingDays = max(0, $notSeedingDays);
+            $limitTopics    = max(1, $limitTopics);
+
+            $cutoffDate = Helper::getCurrentUtcDateTime()->modify("- $notSeedingDays days");
+
+            // Фильтр по дате последнего сидирования.
+            $dateFilter = "last_seeded_time<{$cutoffDate->format('Y-m-d')}";
 
             $params = [
                 'subforum_id' => $forumId,
-                'columns'     => 'info_hash,last_seeded_time',
+                'columns'     => 'info_hash',
+                'limit'       => $limitTopics,
                 'conditions'  => $dateFilter,
             ];
 

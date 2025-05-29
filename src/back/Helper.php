@@ -264,11 +264,18 @@ final class Helper
         return (new DateTimeImmutable())->setTimestamp($timestamp);
     }
 
+    public static function getCurrentUtcDateTime(): DateTimeImmutable
+    {
+        return (new DateTimeImmutable())->setTimezone(new DateTimeZone('UTC'));
+    }
+
     /**
      * Сменились ли сутки, между двумя датами по UTC.
      */
-    public static function isUtcDayChanged(DateTimeImmutable $prevDate, DateTimeImmutable $newDate): bool
-    {
+    public static function isUtcDayChanged(
+        DateTimeImmutable $prevDate,
+        DateTimeImmutable $newDate = new DateTimeImmutable(),
+    ): bool {
         $prevDate = $prevDate->setTimezone(new DateTimeZone('UTC'));
         $newDate  = $newDate->setTimezone(new DateTimeZone('UTC'));
 
