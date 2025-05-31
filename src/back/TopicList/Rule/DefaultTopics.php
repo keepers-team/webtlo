@@ -7,14 +7,15 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use DateTimeImmutable;
 use Generator;
 use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\KeysObject;
+use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Excluded;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
-use KeepersTeam\Webtlo\TopicList\Helper;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -25,17 +26,16 @@ final class DefaultTopics implements ListInterface
 {
     use DbHelperTrait;
     use FilterTrait;
+    use FormatKeepersTrait;
 
-    private int $userId;
     /** @var array<string, mixed>[][] */
     private array $keepers = [];
 
     public function __construct(
-        private readonly DB     $db,
-        /** @var array<string, mixed> */
-        private readonly array  $cfg,
-        private readonly Output $output,
-        private readonly int    $forumId
+        private readonly DB           $db,
+        private readonly ConfigFilter $configFilter,
+        private readonly Formatter    $formatter,
+        private readonly int          $forumId
     ) {}
 
     /**
@@ -62,7 +62,7 @@ final class DefaultTopics implements ListInterface
         $filterSeed = Validate::prepareSeedFilter($filter);
 
         // Данные для фильтрации по средним сидам.
-        $filterAverageSeed = Validate::prepareAverageSeedFilter($filter, $this->cfg);
+        $filterAverageSeed = Validate::prepareAverageSeedFilter($filter, $this->configFilter->enableAverageHistory);
 
         // Фильтры связанные со статусом хранения и количеством хранителей.
         $filterKeepers = Validate::prepareKeepersFilter($filter);
@@ -71,12 +71,10 @@ final class DefaultTopics implements ListInterface
         $filterStrings = Validate::prepareFilterStrings($filter);
 
         // Исключить себя из списка хранителей.
-        $excludeSelfKeep = (bool) $this->cfg['exclude_self_keep'];
+        $excludeSelfKeep = $this->configFilter->excludeSelf;
 
         // Текущий пользователь.
-        $userId = (int) $this->cfg['user_id'];
-
-        $this->userId = $userId;
+        $userId = $this->configFilter->userId;
 
         // Хранимые подразделы.
         $forum = $this->getForumIdList();
@@ -135,7 +133,7 @@ final class DefaultTopics implements ListInterface
 
             // Исключим себя из списка хранителей раздачи.
             if ($excludeSelfKeep) {
-                $topicKeepers = $this->excludeUserFromKeepers($topicKeepers, $userId);
+                $topicKeepers = self::excludeUserFromKeepers($topicKeepers, $userId);
             }
 
             // Фильтрация по фразе.
@@ -152,9 +150,9 @@ final class DefaultTopics implements ListInterface
             $totalSize += $topic->size;
 
             // Выводим строку с данными раздачи.
-            $topicRows[] = $this->output->formatTopic(
-                $topic,
-                Helper::getFormattedKeepersList($topicKeepers, $userId)
+            $topicRows[] = $this->formatter->formatTopic(
+                topic  : $topic,
+                details: self::getFormattedKeepersList($topicKeepers, $userId)
             );
 
             unset($daysSeed, $topicState, $topicKeepers, $topic);
@@ -175,16 +173,11 @@ final class DefaultTopics implements ListInterface
             // Высокий приоритет.
             $forumsIDs = $this->getHighPriorityForums();
         } else {
-            $forumsIDs = [];
             // -3 Все хранимые подразделы.
             // -6 Все хранимые подразделы по спискам.
-            $subsections = (array) ($this->cfg['subsections'] ?? []);
-            foreach ($subsections as $sub_forum_id => $subsection) {
-                if (!$subsection['hide_topics']) {
-                    $forumsIDs[] = $sub_forum_id;
-                }
-            }
+            $forumsIDs = $this->configFilter->notHiddenSubForums;
         }
+
         if (empty($forumsIDs)) {
             $forumsIDs = [0];
         }
@@ -218,7 +211,7 @@ final class DefaultTopics implements ListInterface
 
         // Хранители всех раздач из искомых подразделов.
         $this->fillKeepersByForumList(
-            \KeepersTeam\Webtlo\Helper::convertKeysToInt($forum->values)
+            Helper::convertKeysToInt($forum->values)
         );
 
         // Собрать общий запрос к базе.
@@ -298,7 +291,7 @@ final class DefaultTopics implements ListInterface
 
     private function createTempKeepersFilter(bool $excludeSelf): void
     {
-        $selfFilter = $excludeSelf ? "WHERE keeper_id != '$this->userId'" : '';
+        $selfFilter = $excludeSelf ? "WHERE keeper_id != '{$this->configFilter->userId}'" : '';
 
         // Данный запрос, для каждой раздачи, определяет наличие:
         // max_posted - хранителя включившего раздачу в отчёт, по данным форума (KeepersLists);
@@ -428,7 +421,7 @@ final class DefaultTopics implements ListInterface
 
             $keepers += $this->queryStatementGroup(
                 $statement,
-                [...$chunk->values, $this->userId]
+                [...$chunk->values, $this->configFilter->userId]
             );
         }
 
@@ -450,9 +443,9 @@ final class DefaultTopics implements ListInterface
      *
      * @return array<string, mixed>[]
      */
-    private function excludeUserFromKeepers(array $topicKeepers, int $userId): array
+    private static function excludeUserFromKeepers(array $topicKeepers, int $userId): array
     {
-        return array_filter($topicKeepers, function($e) use ($userId) {
+        return array_filter($topicKeepers, static function($e) use ($userId) {
             return $userId !== (int) $e['keeper_id'];
         });
     }

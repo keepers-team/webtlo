@@ -7,8 +7,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Storage\Table\Forums;
-use KeepersTeam\Webtlo\TopicList\Output;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
@@ -41,21 +39,8 @@ try {
     // Проверяем наличие сортировки.
     $sorting = Validate::sortFilter($filter);
 
-    // Получаем настройки.
-    $cfg = $app->getLegacyConfig();
-
-    $db = $app->getDataBase();
-
-    /** @var Forums $forums */
-    $forums = $app->get(Forums::class);
-
-    // Собираем фабрику.
-    $ruleFactory = new Factory(
-        db    : $db,
-        cfg   : $cfg,
-        forums: $forums,
-        output: new Output($cfg, $cfg['forum_address'] ?? '')
-    );
+    /** @var Factory $ruleFactory */
+    $ruleFactory = $app->get(Factory::class);
 
     //  0 - из других подразделов
     // -1 - незарегистрированные
@@ -66,10 +51,10 @@ try {
     // -6 - раздачи своим по спискам
 
     // Получаем нужные правила поиска раздач.
-    $module = $ruleFactory->getRule((int) $forum_id);
+    $ruleSet = $ruleFactory->getRule(forumId: (int) $forum_id);
 
     // Ищем раздачи.
-    $topics = $module->getTopics($filter, $sorting);
+    $topics = $ruleSet->getTopics(filter: $filter, sort: $sorting);
 
     $returnObject['topics']   = $topics->mergeList();
     $returnObject['size']     = $topics->size;
@@ -82,6 +67,7 @@ try {
 } catch (Exception $e) {
     $returnObject['log'] = $e->getMessage();
 }
+
 $returnObject['details'] = Log::get();
 
 echo json_encode($returnObject, JSON_UNESCAPED_UNICODE);
