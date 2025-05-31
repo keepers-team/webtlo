@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
+use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Module\Control\ApiSearch;
 use KeepersTeam\Webtlo\Module\Control\DbSearch;
 use KeepersTeam\Webtlo\Module\Control\PeerCalc;
@@ -37,6 +38,7 @@ final class TopicControl
         private readonly LoggerInterface $logger,
         private readonly ConfigControl   $configControl,
         private readonly PeerCalc        $calc,
+        private readonly TorrentClients  $torrentClients,
         private readonly ClientFactory   $clientFactory,
         private readonly ApiSearch       $api,
         private readonly DbSearch        $db,
@@ -70,12 +72,11 @@ final class TopicControl
 
         // Хранимые подразделы.
         $forums = $this->getKeptForumIds(config: $config);
-        foreach ($config['clients'] as $clientId => $torrentClientData) {
-            $clientId = (int) $clientId;
+        foreach ($this->torrentClients->clients as $clientOptions) {
+            $clientId  = $clientOptions->id;
+            $clientTag = $clientOptions->name;
 
-            $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
-
-            $clientControlPeers = PeerCalc::getClientLimit($torrentClientData);
+            $clientControlPeers = $clientOptions->controlPeers;
             if ($clientControlPeers === -1) {
                 $this->logger->notice("Для клиента $clientTag отключена регулировка.");
 
@@ -84,12 +85,15 @@ final class TopicControl
 
             Timers::start("control_client_$clientId");
             // Подключаемся к торрент-клиенту.
-            $client = $this->getTorrentClient(clientTag: $clientTag, clientProps: $torrentClientData);
+            $client = $this->clientFactory->getClientById(clientId: $clientId);
+
+            // Если клиент недоступен, пропускаем.
             if ($client === null) {
                 continue;
             }
+
             // Получаем раздачи из него.
-            $torrents = $this->getClientTorrents($client, $clientTag);
+            $torrents = $this->getClientTorrents($client);
             if ($torrents === null) {
                 continue;
             }
@@ -285,7 +289,7 @@ final class TopicControl
      */
     private function validateConfig(array $config): void
     {
-        if (empty($config['clients'])) {
+        if (!$this->torrentClients->count()) {
             throw new RuntimeException('Список торрент-клиентов пуст. Проверьте настройки.');
         }
 
@@ -310,34 +314,10 @@ final class TopicControl
         $this->api->setCachedSubForums(forums: $this->db->getRepeatedSubForums());
     }
 
-    /**
-     * @param array<string, mixed> $clientProps
-     */
-    private function getTorrentClient(string $clientTag, array $clientProps): ?ClientInterface
+    private function getClientTorrents(ClientInterface $client): ?Torrents
     {
-        try {
-            $client = $this->clientFactory->fromConfigProperties(options: $clientProps);
+        $clientTag = $client->getClientTag();
 
-            // Проверка доступности торрент-клиента.
-            if ($client->isOnline() === false) {
-                $this->logger->notice('Клиент {tag} в данный момент недоступен.', ['tag' => $clientTag]);
-
-                return null;
-            }
-
-            return $client;
-        } catch (Throwable $e) {
-            $this->logger->warning('Торрент-клиент {tag} в данный момент недоступен: {error}', [
-                'tag'   => $clientTag,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
-    }
-
-    private function getClientTorrents(ClientInterface $client, string $clientTag): ?Torrents
-    {
         $this->logger->info('Получаем раздачи торрент-клиента {tag}.', ['tag' => $clientTag]);
 
         Timers::start("get_client_$clientTag");
