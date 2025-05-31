@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -18,7 +18,7 @@ final class UnregisteredTopics implements ListInterface
 
     public function __construct(
         private readonly DB     $db,
-        private readonly Output $output
+        private readonly Formatter $output
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -44,13 +44,13 @@ final class UnregisteredTopics implements ListInterface
             ORDER BY {$sort->fieldDirection()}
         ";
 
-        $topics = $this->selectTopics($statement);
+        $topics = $this->selectTopics(statement: $statement);
 
         $counter = new Topics();
         foreach ($topics as $topicData) {
             $topicStatus = $topicData['status'];
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
-            $topicState = State::clientOnly($topicData);
+            $topicState = State::clientOnly(topicData: $topicData);
 
             $details = '';
             // Если имя раздачи отличается от имени в клиенте - выводим оба имени.
@@ -59,7 +59,7 @@ final class UnregisteredTopics implements ListInterface
             }
 
             // Типизируем данные раздачи в объект.
-            $topic = Topic::fromTopicData($topicData, $topicState);
+            $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
             unset($topicData);
 
             ++$counter->count;
@@ -70,7 +70,7 @@ final class UnregisteredTopics implements ListInterface
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topicStatus] .= $this->output->formatTopic($topic, $details);
+            $counter->list[$topicStatus] .= $this->output->formatTopic(topic: $topic, details: $details);
 
             unset($topicStatus, $topicState, $topic, $details);
         }

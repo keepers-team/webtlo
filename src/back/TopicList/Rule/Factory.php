@@ -6,40 +6,48 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\ConfigFilter;
+use KeepersTeam\Webtlo\TopicList\Formatter;
 use RuntimeException;
 
 final class Factory
 {
     public function __construct(
-        private readonly DB     $db,
-        /** @var array<string, mixed> */
-        private readonly array  $cfg,
-        private readonly Forums $forums,
-        private readonly Output $output,
+        private readonly DB           $db,
+        private readonly Forums       $forums,
+        private readonly ConfigFilter $configFilter,
+        private readonly Formatter    $formatter,
     ) {}
 
-    /** Получить соответствующий класс для поиска раздач. */
-    public function getRule(int $forumId): ListInterface
+    /**
+     * Получить соответствующий класс для поиска раздач.
+     *
+     * @param ?string[] $filter
+     */
+    public function getRule(int $forumId, ?array $filter = null): ListInterface
     {
+        if ($filter !== null) {
+            $this->formatter->setFilter(filter: $filter);
+        }
+
         // Хранимые раздачи из других подразделов.
         if ($forumId === 0) {
-            return new UntrackedTopics($this->db, $this->forums, $this->output);
+            return new UntrackedTopics($this->db, $this->forums, $this->formatter);
         }
 
         if ($forumId === -1) {
             // Хранимые раздачи незарегистрированные на форуме.
-            return new UnregisteredTopics($this->db, $this->output);
+            return new UnregisteredTopics($this->db, $this->formatter);
         }
 
         if ($forumId === -2) {
             // Раздачи из "Черного списка".
-            return new BlackListedTopics($this->db, $this->forums, $this->output);
+            return new BlackListedTopics($this->db, $this->forums, $this->formatter);
         }
 
         if ($forumId === -4) {
             // Хранимые дублирующиеся раздачи.
-            return new DuplicatedTopics($this->db, $this->cfg, $this->output);
+            return new DuplicatedTopics($this->db, $this->formatter, $this->configFilter);
         }
 
         if (
@@ -49,7 +57,12 @@ final class Factory
             || $forumId === -5  // Высокий приоритет.
             || $forumId === -6  // Все хранимые подразделы по спискам.
         ) {
-            return new DefaultTopics($this->db, $this->cfg, $this->output, $forumId);
+            return new DefaultTopics(
+                db          : $this->db,
+                configFilter: $this->configFilter,
+                formatter   : $this->formatter,
+                forumId     : $forumId
+            );
         }
 
         throw new RuntimeException('Неизвестный ид подраздела.');
