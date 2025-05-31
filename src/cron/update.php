@@ -5,7 +5,6 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Timers;
 use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\Subsections;
@@ -22,10 +21,8 @@ try {
     $app = App::create('update.log');
     $log = $app->getLogger();
 
-    $config = $app->getLegacyConfig();
-
     // Проверяем возможность запуска обновления.
-    if (!Helper::isScheduleActionEnabled($config, 'update')) {
+    if (!$app->getAutomation()->isActionEnabled(action: 'update')) {
         $log->notice(
             '[Subsections] Автоматическое обновление сведений о раздачах в хранимых подразделах отключено в настройках.'
         );
