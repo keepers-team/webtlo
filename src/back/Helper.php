@@ -226,11 +226,13 @@ final class Helper
      *
      * @param non-empty-string $separator
      *
-     * @return int[]|array{}
+     * @return array{}|int[]
      */
-    public static function explodeInt(string $string, string $separator = ','): array
+    public static function explodeInt(string $string, string $separator = '|'): array
     {
-        $values = explode($separator, trim($string));
+        $string = preg_replace('/[^0-9]/', $separator, trim($string));
+
+        $values = explode($separator, trim((string) $string));
 
         return array_map('intval', array_filter($values));
     }
