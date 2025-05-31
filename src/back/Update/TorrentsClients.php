@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
@@ -44,6 +45,7 @@ final class TorrentsClients
         private readonly DB                 $db,
         private readonly UpdateTime         $updateTime,
         private readonly ClientFactory      $clientFactory,
+        private readonly TorrentClients     $torrentClients,
         private readonly Torrents           $cloneTorrents,
         private readonly TopicsUntracked    $cloneUntracked,
         private readonly TopicsUnregistered $cloneUnregistered,
@@ -84,14 +86,11 @@ final class TorrentsClients
      */
     private function checkClientsCount(): bool
     {
-        // Получаем параметры.
-        $config = $this->settings->get();
-
         // Если нет настроенных торрент-клиентов, удалим все раздачи и отметку.
-        if (empty($config['clients'])) {
+        if (!$this->torrentClients->count()) {
             $this->logger->notice('Торрент-клиенты не найдены.');
 
-            $this->updateTime->setMarkerTime(UpdateMark::CLIENTS->value, 0);
+            $this->updateTime->setMarkerTime(marker: UpdateMark::CLIENTS, updateTime: 0);
             $this->db->executeStatement('DELETE FROM Torrents WHERE TRUE');
 
             return false;
@@ -102,12 +101,9 @@ final class TorrentsClients
 
     private function updateClients(): void
     {
-        // Получаем параметры.
-        $config = $this->settings->get();
-
         $this->logger->info(
             'Сканирование торрент-клиентов... Найдено {count} шт.',
-            ['count' => count($config['clients'])]
+            ['count' => $this->torrentClients->count()]
         );
 
         /** Используемый домен трекера. */
@@ -119,20 +115,20 @@ final class TorrentsClients
         $excludedClients = [];
 
         Timers::start('update_clients');
-        foreach ($config['clients'] as $torrentClientId => $torrentClientData) {
-            $torrentClientId = (int) $torrentClientId;
+        foreach ($this->torrentClients->clients as $clientOptions) {
+            $clientId  = $clientOptions->id;
+            $clientTag = $clientOptions->name;
 
-            Timers::start("update_client_$torrentClientId");
-            $clientTag = sprintf('%s (%s)', $torrentClientData['cm'], $torrentClientData['cl']);
+            Timers::start("update_client_$clientId");
 
             // Признак исключения раздач клиента из формируемых отчётов.
-            if ($torrentClientData['exclude'] ?? false) {
-                $excludedClients[] = $torrentClientId;
+            if ($clientOptions->exclude) {
+                $excludedClients[] = $clientId;
             }
 
             try {
                 // Подключаемся к торрент-клиенту.
-                $client = $this->clientFactory->fromConfigProperties(options: $torrentClientData);
+                $client = $this->clientFactory->getClient(clientOptions: $clientOptions);
 
                 // Меняем домен трекера, для корректного поиска раздач.
                 $client->setDomain(domain: $forumDomain);
@@ -141,7 +137,7 @@ final class TorrentsClients
                     'Клиент {client} в данный момент недоступен',
                     ['client' => $clientTag, 'error' => $e->getMessage()]
                 );
-                $failedClients[] = $torrentClientId;
+                $failedClients[] = $clientId;
 
                 continue;
             }
@@ -154,14 +150,14 @@ final class TorrentsClients
                     'Не удалось получить данные о раздачах от торрент-клиента {client}',
                     ['client' => $clientTag, 'error' => $e->getMessage()]
                 );
-                $failedClients[] = $torrentClientId;
+                $failedClients[] = $clientId;
 
                 continue;
             }
 
             $countTorrents = count($torrents);
             foreach ($torrents->getGenerator() as $torrent) {
-                $this->cloneTorrents->addTorrent($torrentClientId, $torrent);
+                $this->cloneTorrents->addTorrent($clientId, $torrent);
             }
             unset($torrents);
 
@@ -171,10 +167,10 @@ final class TorrentsClients
             $this->logger->info('{client} получено раздач: {count} шт за {sec}', [
                 'client' => $clientTag,
                 'count'  => $countTorrents,
-                'sec'    => Timers::getExecTime("update_client_$torrentClientId"),
+                'sec'    => Timers::getExecTime("update_client_$clientId"),
             ]);
 
-            unset($torrentClientId, $torrentClientData, $countTorrents);
+            unset($clientId, $clientOptions, $countTorrents);
         }
         $this->timers['update_clients'] = Timers::getExecTime('update_clients');
 
