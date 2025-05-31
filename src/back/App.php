@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
+use KeepersTeam\Webtlo\Config\Other as ConfigOther;
 use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
@@ -70,10 +72,12 @@ final class App
 
         // Добавляем интерфейс для записи логов.
         $container->add(LoggerInterface::class, function() use ($container, $logFile) {
-            $config = $container->get('config');
-            $level  = AppLogger::getLogLevel($config['log_level'] ?? '');
+            /** @var ConfigOther $params */
+            $params = $container->get(ConfigOther::class);
 
-            return AppLogger::create($logFile, $level);
+            $level = AppLogger::getLogLevel(logLevel: $params->logLevel);
+
+            return AppLogger::create(logFile: $logFile, logLevel: $level);
         });
 
         // Подключаем БД.
@@ -102,6 +106,11 @@ final class App
     public function getDataBase(): DB
     {
         return $this->get(DB::class);
+    }
+
+    public function getAutomation(): Automation
+    {
+        return $this->get(Automation::class);
     }
 
     public function getForumClient(): ForumClient
