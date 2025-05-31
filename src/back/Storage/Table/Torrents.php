@@ -123,4 +123,23 @@ final class Torrents
             );
         }
     }
+
+    /**
+     * @return array<int, array<string, int>>
+     */
+    public function getClientsTopics(): array
+    {
+        $query = '
+            SELECT client_id,
+                   COUNT(1) AS topics,
+                   SUM(CASE WHEN done = 1 THEN 1 ELSE 0 END) AS done,
+                   SUM(CASE WHEN done < 1 THEN 1 ELSE 0 END) AS downloading,
+                   SUM(paused) AS paused, SUM(error) AS error
+            FROM Torrents t
+            GROUP BY client_id
+            ORDER BY topics DESC
+        ';
+
+        return $this->db->query($query, [], PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
+    }
 }
