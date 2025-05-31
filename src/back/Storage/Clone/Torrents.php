@@ -124,4 +124,9 @@ final class Torrents
 
         return $stm->fetchAll(PDO::FETCH_COLUMN);
     }
+
+    public function clearOriginTable(): void
+    {
+        $this->db->executeStatement('DELETE FROM Torrents WHERE TRUE');
+    }
 }
