@@ -6,17 +6,14 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Helper;
 
 try {
     // Инициализируем контейнер.
     $app = App::create('reports.log');
     $log = $app->getLogger();
 
-    $config = $app->getLegacyConfig();
-
     // Проверяем возможность запуска обновления.
-    if (!Helper::isScheduleActionEnabled(config: $config, action: 'reports')) {
+    if (!$app->getAutomation()->isActionEnabled(action: 'reports')) {
         $log->notice('[Reports] Автоматическая отправка отчётов отключена в настройках.');
 
         return;
