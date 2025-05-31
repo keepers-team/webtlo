@@ -187,21 +187,19 @@ final class Validate
     /**
      * Собрать параметры для работы со средними сидами.
      *
-     * @param array<string, mixed>      $filter
-     * @param array<string, int|string> $cfg
+     * @param array<string, mixed> $filter
      *
      * @throws ValidationException
      */
-    public static function prepareAverageSeedFilter(array $filter, array $cfg): AverageSeed
+    public static function prepareAverageSeedFilter(array $filter, bool $averageEnabled): AverageSeed
     {
-        $useAvgSeeders = (bool) ($cfg['avg_seeders'] ?? false);
-        $greenSeeders  = (bool) ($filter['avg_seeders_complete'] ?? false);
+        $greenSeeders = (bool) ($filter['avg_seeders_complete'] ?? false);
 
         // Жёсткое ограничение от 1 до 30 дней для средних сидов.
         $seedPeriod = min(max((int) $filter['avg_seeders_period'], 1), 30);
 
         // Расчёт СС отключён в настройках.
-        if (!$useAvgSeeders) {
+        if (!$averageEnabled) {
             $fields = [
                 '-1 AS days_seed',
                 'Topics.seeders * 1. / MAX(1, Topics.seeders_updates_today) AS seed',
