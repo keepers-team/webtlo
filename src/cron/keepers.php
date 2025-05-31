@@ -5,7 +5,6 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 
 /**
@@ -18,10 +17,8 @@ try {
     $app = App::create('keepers.log');
     $log = $app->getLogger();
 
-    $config = $app->getLegacyConfig();
-
     // Проверяем возможность запуска обновления.
-    if (!Helper::isScheduleActionEnabled(config: $config, action: 'update')) {
+    if (!$app->getAutomation()->isActionEnabled(action: 'update')) {
         $log->notice(
             '[KeepersLists]. Автоматическое обновление списков раздач других хранителей отключено в настройках.'
         );

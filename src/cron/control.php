@@ -6,7 +6,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\TopicControl;
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Helper;
 
 /**
  * Запуск регулировки раздач в торрент-клиентах.
@@ -18,10 +17,8 @@ try {
     $app = App::create('control.log');
     $log = $app->getLogger();
 
-    $config = $app->getLegacyConfig();
-
     // Проверяем возможность запуска регулировки.
-    if (!Helper::isScheduleActionEnabled(config: $config, action: 'control')) {
+    if (!$app->getAutomation()->isActionEnabled(action: 'control')) {
         $log->notice('[Control] Автоматическая регулировка раздач отключена в настройках.');
 
         return;
@@ -29,7 +26,7 @@ try {
 
     /** @var TopicControl $topicControl */
     $topicControl = $app->get(TopicControl::class);
-    $topicControl->process(config: $config);
+    $topicControl->process();
 } catch (RuntimeException $e) {
     if (isset($log)) {
         $log->warning($e->getMessage());
