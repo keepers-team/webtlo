@@ -18,12 +18,10 @@ $app = App::create('control.log');
 $log = $app->getLogger();
 
 try {
-    $config = $app->getLegacyConfig();
-
     /** @var TopicControl $topicControl */
     $topicControl = $app->get(TopicControl::class);
     // Запускаем регулировку раздач.
-    $topicControl->process(config: $config);
+    $topicControl->process();
 
     $control_result['result'] = 'Регулировка раздач выполнена.';
 } catch (RuntimeException $e) {
