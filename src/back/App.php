@@ -14,6 +14,7 @@ use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
+use KeepersTeam\Webtlo\TopicList\TopicListServiceProvider;
 use League\Container\Container;
 use League\Container\ReflectionContainer;
 use Psr\Log\LoggerInterface;
@@ -62,6 +63,8 @@ final class App
         $container->addServiceProvider(new CloneServiceProvider());
         // Добавляем подключение к внешним ресурсам.
         $container->addServiceProvider(new ExternalServiceProvider());
+        // Добавляем классы для фильтрации раздач.
+        $container->addServiceProvider(new TopicListServiceProvider());
 
         // Подключаем файл конфига, 'config.ini' по-умолчанию.
         $container->add(Settings::class, fn() => new Settings(
