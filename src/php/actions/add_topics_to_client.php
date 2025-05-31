@@ -39,13 +39,17 @@ try {
         throw new Exception();
     }
 
-    // Ключи для скачивания файлов.
-    $apiCredentials = $app->get(ApiCredentials::class);
-
     $forumClient = $app->getForumClient();
     if (!$forumClient->checkConnection()) {
         throw new RuntimeException('Ошибка подключения к форуму.');
     }
+
+    /**
+     * Ключи для скачивания файлов.
+     *
+     * @var ApiCredentials $apiCredentials
+     */
+    $apiCredentials = $app->get(ApiCredentials::class);
 
     // Записываем ключи доступа к API.
     $forumClient->setApiCredentials(apiCredentials: $apiCredentials);
@@ -87,7 +91,7 @@ try {
     }
 
     // полный путь до каталога для сохранения торрент-файлов
-    $localPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . 'tfiles';
+    $localPath = Helper::getStorageSubFolderPath(subFolder: 'tfiles');
     // очищаем каталог от старых торрент-файлов
     Helper::removeDirRecursive($localPath);
     // создаём каталог для торрент-файлов
@@ -119,15 +123,17 @@ try {
 
             continue;
         }
-        // идентификатор торрент-клиента
-        $torrentClientID = $forumData['cl'];
-        if (empty($cfg['clients'][$torrentClientID])) {
-            $log->warning('В настройках нет данных о торрент-клиенте с идентификатором "' . $torrentClientID . '"');
 
+        // идентификатор торрент-клиента
+        $torrentClientId = (int) $forumData['cl'];
+
+        // Подключаемся к торрент-клиенту
+        $client = $clientFactory->getClientById(clientId: $torrentClientId);
+
+        // Если клиент недоступен, пропускаем.
+        if ($client === null) {
             continue;
         }
-        // данные текущего торрент-клиента
-        $torrentClient = $cfg['clients'][$torrentClientID];
 
         foreach ($topicHashes as $topicHash) {
             $topicHash = (string) $topicHash;
@@ -156,29 +162,14 @@ try {
             }
             $downloadedTorrentFiles[] = $topicHash;
         }
+
         if (empty($downloadedTorrentFiles)) {
-            $log->notice('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $torrentClient['cm'] . '"');
+            $log->notice('Нет скачанных торрент-файлов для добавления их в торрент-клиент "' . $client->getClientTag() . '"');
 
             continue;
         }
 
         $numberDownloadedTorrentFiles = count($downloadedTorrentFiles);
-
-        // подключаемся к торрент-клиенту
-        try {
-            $client = $clientFactory->fromConfigProperties($torrentClient);
-
-            // проверяем доступность торрент-клиента
-            if (!$client->isOnline()) {
-                $log->error('Торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен');
-
-                continue;
-            }
-        } catch (RuntimeException $e) {
-            $log->error('Торрент-клиент "' . $torrentClient['cm'] . '" в данный момент недоступен ' . $e->getMessage());
-
-            continue;
-        }
 
         $clientAddingSleep = $client->getTorrentAddingSleep();
 
@@ -235,7 +226,7 @@ try {
         unset($downloadedTorrentFiles);
 
         if (empty($addedTorrentFiles)) {
-            $log->warning('Не удалось добавить раздачи в торрент-клиент "' . $torrentClient['cm'] . '"');
+            $log->warning('Не удалось добавить раздачи в торрент-клиент "' . $client->getClientTag() . '"');
 
             continue;
         }
@@ -275,23 +266,22 @@ try {
                     Topics.size
                 FROM Topics
                 WHERE info_hash IN (' . $placeholders . ')',
-                array_merge([$torrentClientID], $addedTorrentFilesChunk)
+                array_merge([$torrentClientId], $addedTorrentFilesChunk)
             );
 
             unset($placeholders, $addedTorrentFilesChunk);
         }
         unset($addedTorrentFilesChunks);
 
-        $log->info('Добавлено раздач в торрент-клиент "' . $torrentClient['cm'] . '": ' . $numberAddedTorrentFiles . ' шт.');
+        $log->info('Добавлено раздач в торрент-клиент "' . $client->getClientTag() . '": ' . $numberAddedTorrentFiles . ' шт.');
 
-        if (!in_array($torrentClientID, $usedTorrentClientsIDs)) {
-            $usedTorrentClientsIDs[] = $torrentClientID;
-        }
-        $totalTorrentFilesAdded += $numberAddedTorrentFiles;
+        $usedTorrentClientsIDs[] = $torrentClientId;
+        $totalTorrentFilesAdded  += $numberAddedTorrentFiles;
 
-        unset($torrentClient, $forumData, $client);
+        unset($forumData, $client);
     }
-    $totalTorrentClients = count($usedTorrentClientsIDs);
+
+    $totalTorrentClients = count(array_unique($usedTorrentClientsIDs));
 
     $result  = 'Задействовано торрент-клиентов — ' . $totalTorrentClients . ', добавлено раздач всего — ' . $totalTorrentFilesAdded . ' шт.';
     $endtime = microtime(true);
