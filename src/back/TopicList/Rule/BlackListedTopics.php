@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
 
@@ -17,9 +17,9 @@ final class BlackListedTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
-        private readonly DB     $db,
-        private readonly Forums $forums,
-        private readonly Output $output,
+        private readonly DB        $db,
+        private readonly Forums    $forums,
+        private readonly Formatter $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -42,10 +42,10 @@ final class BlackListedTopics implements ListInterface
             ORDER BY {$sort->fieldDirection()}
         ";
 
-        $topics = $this->selectTopics($statement);
+        $topics = $this->selectTopics(statement: $statement);
 
         // Типизируем данные раздач в объекты.
-        $topics = array_map(fn($row) => Topic::fromTopicData($row), $topics);
+        $topics = array_map(static fn($row) => Topic::fromTopicData(topicData: $row), $topics);
 
         $counter = new Topics();
         foreach ($topics as $topic) {
@@ -61,7 +61,7 @@ final class BlackListedTopics implements ListInterface
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topic->forumId] .= $this->output->formatTopic($topic);
+            $counter->list[$topic->forumId] .= $this->output->formatTopic(topic: $topic);
         }
         unset($topics);
 

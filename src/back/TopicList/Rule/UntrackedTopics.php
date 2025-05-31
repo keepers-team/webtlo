@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Output;
+use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -18,9 +18,9 @@ final class UntrackedTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
-        private readonly DB     $db,
-        private readonly Forums $forums,
-        private readonly Output $output,
+        private readonly DB        $db,
+        private readonly Forums    $forums,
+        private readonly Formatter $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -46,7 +46,7 @@ final class UntrackedTopics implements ListInterface
             ORDER BY {$sort->fieldDirection()}
         ";
 
-        $topics = $this->selectTopics($statement);
+        $topics = $this->selectTopics(statement: $statement);
 
         $getForumHeader = function(?int $id): string {
             $name  = $this->forums->getForumName(forumId: $id);
@@ -58,9 +58,9 @@ final class UntrackedTopics implements ListInterface
         // Типизируем данные раздач в объекты.
         $topics = array_map(function($topicData) {
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
-            $topicState = State::clientOnly($topicData);
+            $topicState = State::clientOnly(topicData: $topicData);
 
-            return Topic::fromTopicData($topicData, $topicState);
+            return Topic::fromTopicData(topicData: $topicData, state: $topicState);
         }, $topics);
 
         $counter = new Topics();
@@ -73,7 +73,7 @@ final class UntrackedTopics implements ListInterface
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topic->forumId] .= $this->output->formatTopic($topic);
+            $counter->list[$topic->forumId] .= $this->output->formatTopic(topic: $topic);
         }
 
         natcasesort($counter->list);
