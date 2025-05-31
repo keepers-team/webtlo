@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
+use KeepersTeam\Webtlo\Config\AverageSeeds;
+use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\ForumTopic;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
@@ -59,7 +60,8 @@ final class Subsections
 
     public function __construct(
         private readonly ApiReportClient $apiReport,
-        private readonly Settings        $settings,
+        private readonly AverageSeeds    $averageSeeds,
+        private readonly SubForums       $subForums,
         private readonly DB              $db,
         private readonly Topics          $topics,
         private readonly TopicsInsert    $tableInsert,
@@ -74,12 +76,9 @@ final class Subsections
      */
     public function update(): void
     {
-        // Получаем параметры.
-        $config = $this->settings->get();
-
         // Проверяем наличие хранимых подразделов.
-        $subsections = array_keys($config['subsections'] ?? []);
-        if (!count($subsections)) {
+        $subForums = $this->subForums->ids;
+        if (!count($subForums)) {
             $this->logger->warning('Выполнить обновление сведений невозможно. Отсутствуют хранимые подразделы.');
 
             return;
@@ -88,46 +87,42 @@ final class Subsections
         Timers::start('topics_update');
         $this->logger->info('Начато обновление сведений о раздачах в хранимых подразделах...');
 
-        /** @var int[] $subsections */
-        $subsections = array_map('intval', $subsections);
-        sort($subsections);
-
         // Ограничения доступа для кандидатов в хранители.
         $user = $this->apiReport->getKeeperPermissions();
 
         // Выбрана опция накапливать данные о средних сидах.
-        $doCollectAverageSeeds = (bool) $config['avg_seeders'];
+        $doCollectAverageSeeds = $this->averageSeeds->enableHistory;
 
         // Обновим каждый хранимый подраздел.
-        foreach ($subsections as $forumId) {
-            if ($user->isCandidate && !$user->checkSubsectionAccess(forumId: $forumId)) {
-                $this->skipSubsections[] = $forumId;
+        foreach ($subForums as $subForumId) {
+            if ($user->isCandidate && !$user->checkSubsectionAccess(forumId: $subForumId)) {
+                $this->skipSubsections[] = $subForumId;
 
                 continue;
             }
 
             // Получаем дату предыдущего обновления подраздела.
-            $forumLastUpdated = $this->updateTime->getMarkerTime(marker: $forumId);
+            $forumLastUpdated = $this->updateTime->getMarkerTime(marker: $subForumId);
 
             // Если не прошёл час с прошлого обновления - пропускаем подраздел.
             if (time() - $forumLastUpdated->getTimestamp() < 3600) {
-                $this->skipSubsections[] = $forumId;
+                $this->skipSubsections[] = $subForumId;
 
                 continue;
             }
 
             // Получаем данные о раздачах.
-            Timers::start("update_forum_$forumId");
+            Timers::start("update_forum_$subForumId");
             $topicResponse = $this->apiReport->getForumTopicsData(
-                forumId         : $forumId,
+                forumId         : $subForumId,
                 loadAverageSeeds: $doCollectAverageSeeds
             );
             if ($topicResponse instanceof ApiError) {
-                $this->skipSubsections[] = $forumId;
+                $this->skipSubsections[] = $subForumId;
 
                 $this->logger->error(
-                    'Не получены данные о подразделе №{forumId}',
-                    ['forumId' => $forumId, 'code' => $topicResponse->code, 'text' => $topicResponse->text]
+                    'Не получены данные о подразделе №{forum}',
+                    ['forum' => $subForumId, 'code' => $topicResponse->code, 'text' => $topicResponse->text]
                 );
 
                 continue;
@@ -135,25 +130,25 @@ final class Subsections
 
             // Если дата прошлого обновления больше или равна дате в ответе API, то обновлять нечего.
             if ($forumLastUpdated >= $topicResponse->updateTime) {
-                $this->skipSubsections[] = $forumId;
+                $this->skipSubsections[] = $subForumId;
 
                 continue;
             }
 
             // Проверим наличие раздач в подразделе.
             if ($topicResponse->totalCount === 0) {
-                $this->skipSubsections[] = $forumId;
+                $this->skipSubsections[] = $subForumId;
 
                 $this->logger->warning(
-                    'Отсутствуют раздачи в подразделе №{forumId}. Вероятно он не существует.',
-                    ['forumId' => $forumId]
+                    'Отсутствуют раздачи в подразделе №{forum}. Вероятно он не существует.',
+                    ['forum' => $subForumId]
                 );
 
                 continue;
             }
 
             // Запоминаем время обновления подраздела.
-            $this->updateTime->addMarkerUpdate(marker: $forumId, updateTime: $topicResponse->updateTime);
+            $this->updateTime->addMarkerUpdate(marker: $subForumId, updateTime: $topicResponse->updateTime);
 
             $isDateChanged = Helper::isUtcDayChanged(
                 prevDate: $forumLastUpdated,
@@ -166,11 +161,11 @@ final class Subsections
             }
 
             $this->logger->debug(
-                sprintf('Список раздач подраздела № %-4d ({count} шт. {size}) обновлён за {sec}.', $forumId),
+                sprintf('Список раздач подраздела № %-4d ({count} шт. {size}) обновлён за {sec}.', $subForumId),
                 [
                     'count' => $topicResponse->totalCount,
                     'size'  => Helper::convertBytes($topicResponse->totalSize, 9),
-                    'sec'   => Timers::getExecTime("update_forum_$forumId"),
+                    'sec'   => Timers::getExecTime("update_forum_$subForumId"),
                 ],
             );
         }
@@ -185,7 +180,7 @@ final class Subsections
         $this->checkSkippedSubsections();
 
         // Успешно обновлённые подразделы.
-        $this->moveUpdatedTopics(subsections: $subsections);
+        $this->moveUpdatedTopics(subForums: $subForums);
 
         $this->logger->info(
             'Завершено обновление сведений о раздачах в хранимых подразделах за {sec}.',
@@ -246,7 +241,7 @@ final class Subsections
             } else {
                 // Удаляем прошлый вариант раздачи, если он есть.
                 if (!empty($previousTopic)) {
-                    $this->markTopicDelete($topic->id);
+                    $this->markTopicDelete(topicId: $topic->id);
                 }
 
                 // Новая или обновлённая раздача.
@@ -307,17 +302,17 @@ final class Subsections
     /**
      * Переносим обработанные сведения из временных таблицы в БД, фиксируем обновление.
      *
-     * @param int[] $subsections
+     * @param int[] $subForums
      */
-    private function moveUpdatedTopics(array $subsections): void
+    private function moveUpdatedTopics(array $subForums): void
     {
-        $updatedSubsections = array_diff($subsections, $this->skipSubsections);
+        $updatedSubsections = array_diff($subForums, $this->skipSubsections);
         if (count($updatedSubsections)) {
             // Удаляем перерегистрированные раздачи, чтобы очистить значения сидов для старой раздачи.
             $this->deleteTopics();
 
             // Записываем раздачи в БД.
-            $this->writeTopicsToOrigin(updatedSubsections: $updatedSubsections);
+            $this->writeTopicsToOrigin(updatedSubForums: $updatedSubsections);
 
             // Записываем время обновления подразделов.
             $this->updateTime->addMarkerUpdate(marker: UpdateMark::SUBSECTIONS);
@@ -326,9 +321,9 @@ final class Subsections
     }
 
     /**
-     * @param int[] $updatedSubsections
+     * @param int[] $updatedSubForums
      */
-    private function writeTopicsToOrigin(array $updatedSubsections): void
+    private function writeTopicsToOrigin(array $updatedSubForums): void
     {
         Timers::start('writeTopicsToOrigin');
         // Переносим данные в основную таблицу.
@@ -338,7 +333,7 @@ final class Subsections
         $seedersTopicsCount = $this->seedersInsert->writeTable();
 
         // Удаляем ненужные раздачи.
-        $this->clearUnusedTopics(updatedSubsections: $updatedSubsections);
+        $this->clearUnusedTopics(updatedSubForums: $updatedSubForums);
 
         $this->logger->debug(
             'Перенос данных из временной таблицы выполнен за {sec}',
@@ -346,7 +341,7 @@ final class Subsections
         );
 
         $this->logger->info('Обработано хранимых подразделов: {count} шт, уникальных раздач в них {topics} шт.', [
-            'count'  => count($updatedSubsections),
+            'count'  => count($updatedSubForums),
             'topics' => $countTopicsUpdate + $countTopicsInsert,
         ]);
 
@@ -359,12 +354,12 @@ final class Subsections
     }
 
     /**
-     * @param int[] $updatedSubsections
+     * @param int[] $updatedSubForums
      */
-    private function clearUnusedTopics(array $updatedSubsections): void
+    private function clearUnusedTopics(array $updatedSubForums): void
     {
         Timers::start('clearUnusedTopics');
-        $in = implode(',', $updatedSubsections);
+        $in = implode(',', $updatedSubForums);
 
         $query = "
             DELETE
@@ -376,7 +371,7 @@ final class Subsections
                     {$this->tableUpdate->querySelectPrimaryClone()}
                 )
         ";
-        $this->db->executeStatement($query);
+        $this->db->executeStatement(sql: $query);
 
         $unused = $this->db->queryChanges();
         if ($unused > 0) {
@@ -398,7 +393,7 @@ final class Subsections
             $topics = array_unique($this->topicsDelete);
 
             $this->logger->debug('Удалено перезалитых раздач {count} шт.', ['count' => count($topics)]);
-            $this->topics->deleteTopicsByIds($topics);
+            $this->topics->deleteTopicsByIds(topics: $topics);
         }
     }
 }
