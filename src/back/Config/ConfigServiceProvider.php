@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\Config;
 use KeepersTeam\Webtlo\Clients\ClientType;
 use KeepersTeam\Webtlo\Enum\ControlPeerLimitPriority as PeerPriority;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Module\TelemetryConstruct;
 use KeepersTeam\Webtlo\TIniFileEx;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Psr\Container\ContainerExceptionInterface;
@@ -25,9 +26,16 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             ApiReportConnect::class,
             ApiCredentials::class,
             Proxy::class,
+            Automation::class,
+            Other::class,
+            AverageSeeds::class,
             ReportSend::class,
             TopicControl::class,
+            TopicSearch::class,
+            SubForums::class,
             TorrentClients::class,
+            Telemetry::class,
+            UserInfo::class,
         ];
 
         return in_array($id, $services, true);
@@ -36,6 +44,17 @@ final class ConfigServiceProvider extends AbstractServiceProvider
     public function register(): void
     {
         $container = $this->getContainer();
+
+        // Данные текущего пользователя.
+        $container->addShared(UserInfo::class, function() {
+            $ini = $this->getIni();
+
+            return new UserInfo(
+                userId     : (int) $ini->read('torrent-tracker', 'user_id'),
+                userName   : (string) $ini->read('torrent-tracker', 'login'),
+                excludeSelf: (bool) $ini->read('sections', 'exclude_self_keep', 1),
+            );
+        });
 
         // Параметры подключения к форуму.
         $container->addShared(ForumConnect::class, function() {
@@ -161,6 +180,17 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             return Proxy::fromLegacy($proxy);
         });
 
+        // Опции набора истории средних сидов.
+        $container->addShared(AverageSeeds::class, function() {
+            $ini = $this->getIni();
+
+            return new AverageSeeds(
+                enableHistory    : (bool) $ini->read('sections', 'avg_seeders', 1),
+                historyDays      : (int) $ini->read('sections', 'avg_seeders_period', 14),
+                historyExpiryDays: (int) $ini->read('sections', 'avg_seeders_period_outdated', 7),
+            );
+        });
+
         // Опции получения и отправки отчётов.
         $container->addShared(ReportSend::class, function() {
             $ini = $this->getIni();
@@ -195,6 +225,47 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 daysUntilUnseeded     : (int) $ini->read('topics_control', 'days_until_unseeded', 21),
                 maxUnseededCount      : (int) $ini->read('topics_control', 'max_unseeded_count', 100),
             );
+        });
+
+        // Опции расширенного поиска раздач.
+        $container->addShared(TopicSearch::class, function() {
+            $ini = $this->getIni();
+
+            return new TopicSearch(
+                untracked   : (bool) $ini->read('update', 'untracked', 1),
+                unregistered: (bool) $ini->read('update', 'unregistered', 1),
+            );
+        });
+
+        // Хранимые подразделы.
+        $container->add(SubForums::class, function() {
+            $ini = $this->getIni();
+
+            $subsections = $ini->read('sections', 'subsections');
+
+            $list = [];
+            if (!empty($subsections)) {
+                $subsections = array_filter(explode(',', $subsections));
+                sort($subsections);
+
+                foreach ($subsections as $section) {
+                    $subForumId = (int) $section;
+
+                    $list[$subForumId] = new SubForum(
+                        id           : $subForumId,
+                        name         : (string) $ini->read($section, 'title', $section),
+                        clientId     : (int) $ini->read($section, 'client', 0),
+                        label        : (string) $ini->read($section, 'label'),
+                        dataFolder   : (string) $ini->read($section, 'data-folder'),
+                        subFolderType: SubFolderType::tryFrom((int) $ini->read($section, 'data-sub-folder')),
+                        hideTopics   : (bool) $ini->read($section, 'hide-topics'),
+                        reportExclude: (bool) $ini->read($section, 'exclude'),
+                        controlPeers : (int) ($ini->read($section, 'control-peers') ?: -2)
+                    );
+                }
+            }
+
+            return new SubForums(ids: array_keys($list), params: $list);
         });
 
         // Используемые торрент-клиенты и их параметры подключения.
@@ -268,6 +339,42 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             }
 
             return new TorrentClients(clients: $clients);
+        });
+
+        // Параметры автоматического запуска задач по-расписанию.
+        $container->addShared(Automation::class, function() {
+            $ini = $this->getIni();
+
+            return new Automation(
+                update : (bool) $ini->read('automation', 'update', 1),
+                control: (bool) $ini->read('automation', 'control', 0),
+                reports: (bool) $ini->read('automation', 'reports', 0),
+            );
+        });
+
+        // Прочие параметры.
+        $container->addShared(Other::class, function() {
+            $ini = $this->getIni();
+
+            return new Other(
+                logLevel: (string) $ini->read('other', 'log_level', 'Info'),
+            );
+        });
+
+        // Телеметрия - публичные данные об используемом ПО.
+        $container->addShared(Telemetry::class, function() use ($container) {
+            /** @var ReportSend $report */
+            $report = $container->get(ReportSend::class);
+
+            $info = [];
+            if ($report->sendTelemetry) {
+                /** @var TelemetryConstruct $constructor */
+                $constructor = $container->get(TelemetryConstruct::class);
+
+                $info = $constructor->getInfo();
+            }
+
+            return new Telemetry(info: $info);
         });
     }
 
