@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Update;
 
+use KeepersTeam\Webtlo\Config\ReportSend;
+use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
-use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -24,7 +24,8 @@ final class KeepersReports
     public function __construct(
         private readonly ApiForumClient  $apiClient,
         private readonly ApiReportClient $apiReport,
-        private readonly Settings        $settings,
+        private readonly ReportSend      $configReport,
+        private readonly SubForums       $configSubForums,
         private readonly KeepersLists    $keepersLists,
         private readonly KeepersSeeders  $keepersSeeders,
         private readonly UpdateTime      $updateTime,
@@ -43,11 +44,8 @@ final class KeepersReports
      */
     public function update(): bool
     {
-        // Получаем параметры.
-        $config = $this->settings->get();
-
-        /** @var int[] $keptForums ИД хранимых подразделов. */
-        $keptForums = array_map('intval', array_keys($config['subsections'] ?? []));
+        // Список хранимых подразделов.
+        $keptForums = $this->configSubForums->ids;
         if (!count($keptForums)) {
             $this->logger->warning('Выполнить обновление сведений невозможно. Отсутствуют хранимые подразделы.');
 
@@ -90,8 +88,7 @@ final class KeepersReports
         }
 
         // Находим список игнорируемых хранителей.
-        $excludedKeepers = self::getExcludedKeepersList($config);
-
+        $excludedKeepers = $this->configReport->excludedKeepers;
         if (count($excludedKeepers)) {
             $this->logger->debug('ApiReport. Исключены хранители', $excludedKeepers);
         }
@@ -214,17 +211,5 @@ final class KeepersReports
         }
 
         return $response;
-    }
-
-    /**
-     * @param array<string, mixed>[] $config
-     *
-     * @return int[]
-     */
-    public static function getExcludedKeepersList(array $config): array
-    {
-        $excludedKeepers = preg_replace('/[^0-9]/', '|', $config['reports']['exclude_keepers_ids'] ?? '');
-
-        return Helper::explodeInt(string: $excludedKeepers, separator: '|');
     }
 }
