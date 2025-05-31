@@ -8,12 +8,14 @@ use DateTimeImmutable;
 use Exception;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\ReportSend;
+use KeepersTeam\Webtlo\Config\SubForums;
+use KeepersTeam\Webtlo\Config\Telemetry;
+use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Settings;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -37,9 +39,6 @@ final class CreateReport
     /** @var ?string[] Сводный отчёт. */
     private ?array $summary = null;
 
-    /** @var ?array<string, mixed> */
-    private ?array $telemetry = null;
-
     private string $implodeGlue = '[br]';
     private string $topicGlue   = '';
 
@@ -55,9 +54,11 @@ final class CreateReport
 
     public function __construct(
         private readonly DB              $db,
-        private readonly Settings        $settings,
-        private readonly ApiCredentials     $auth,
+        private readonly SubForums       $subForums,
+        private readonly TorrentClients  $clients,
+        private readonly ApiCredentials  $auth,
         private readonly ReportSend      $reportSend,
+        private readonly Telemetry       $telemetry,
         private readonly UpdateTime      $tableUpdate,
         private readonly Forums          $tableForums,
         private readonly WebTLO          $webtlo,
@@ -212,82 +213,7 @@ final class CreateReport
      */
     public function getConfigTelemetry(): array
     {
-        if ($this->telemetry !== null) {
-            return $this->telemetry;
-        }
-
-        $config = $this->settings->populate();
-
-        // Если отправка отключена в настройках, то ничего не собираем.
-        if (!$this->reportSend->sendTelemetry) {
-            return $this->telemetry = [];
-        }
-
-        $shared = [
-            'software' => $this->webtlo->getSoftwareInfo(),
-            'proxy'    => [
-                'activate_forum'  => (bool) $config['proxy_activate_forum'],
-                'activate_api'    => (bool) $config['proxy_activate_api'],
-                'activate_report' => (bool) $config['proxy_activate_report'],
-            ],
-        ];
-
-        // Количество и тип используемых торрент клиентов.
-        $clients = array_filter($config['clients'], fn($el) => !$el['exclude']);
-
-        // Тип и количество используемых торрент-клиентов.
-        $distribution = array_count_values(array_map(fn($el) => $el['cl'], $clients));
-
-        // Количество раздач в используемых торрент-клиентах.
-        $clientTopics = [];
-        foreach ($this->getClientsTopics() as $clientId => $topics) {
-            if (!empty($clients[$clientId])) {
-                $clientName = sprintf('%s-%d', $clients[$clientId]['cl'], $clientId);
-
-                $clientTopics[$clientName] = array_filter($topics);
-            }
-        }
-
-        // Данные о торрент-клиентах.
-        $shared['clients'] = [
-            'distribution' => $distribution,
-            'topics'       => $clientTopics,
-        ];
-
-        // Регулировка по подразделам.
-        $subsections = array_filter($config['subsections'], fn($el) => !empty($el['control_peers']));
-        $subsections = array_map(fn($el) => (int) $el['control_peers'], $subsections);
-
-        ksort($subsections);
-
-        // Параметры регулировки.
-        $shared['control'] = [
-            'enabled'     => (bool) $config['automation']['control'],
-            'peers'       => (int) $config['topics_control']['peers'],
-            'intervals'   => (string) $config['topics_control']['intervals'],
-            'keepers'     => (int) $config['topics_control']['keepers'],
-            'random'      => (int) $config['topics_control']['random'],
-            'unseeded'    => [
-                'days'  => (int) $config['topics_control']['days_until_unseeded'],
-                'count' => (int) $config['topics_control']['max_unseeded_count'],
-            ],
-            'subsections' => $subsections,
-        ];
-
-        // Параметры отправки отчётов.
-        $shared['reports'] = [
-            'enabled'             => (bool) $config['automation']['reports'],
-            'send_report_api'     => (bool) $config['reports']['send_report_api'],
-            'send_summary_report' => (bool) $config['reports']['send_summary_report'],
-            'exclude_authored'    => (bool) $config['reports']['exclude_authored'],
-            'unset_other_forums'  => (bool) $config['reports']['unset_other_forums'],
-            'unset_other_topics'  => (bool) $config['reports']['unset_other_topics'],
-        ];
-
-        // Локальные даты обновления сведений.
-        $shared['markers'] = $this->tableUpdate->getMainMarkers()->getFormattedMarkers();
-
-        return $this->telemetry = $shared;
+        return $this->telemetry->info;
     }
 
     /**
@@ -435,25 +361,6 @@ final class CreateReport
         }
 
         return $topicUrl;
-    }
-
-    /**
-     * @return array<int, array<string, int>>
-     */
-    private function getClientsTopics(): array
-    {
-        $query = '
-            SELECT client_id,
-                   COUNT(1) AS topics,
-                   SUM(CASE WHEN done = 1 THEN 1 ELSE 0 END) AS done,
-                   SUM(CASE WHEN done < 1 THEN 1 ELSE 0 END) AS downloading,
-                   SUM(paused) AS paused, SUM(error) AS error
-            FROM Torrents t
-            GROUP BY client_id
-            ORDER BY topics DESC
-        ';
-
-        return $this->db->query($query, [], PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
     }
 
     /**
@@ -689,16 +596,13 @@ final class CreateReport
      */
     private function setForums(): void
     {
-        $config = $this->settings->populate();
-
-        if (empty($config['subsections'])) {
+        $subForums = $this->subForums->ids;
+        if (!count($subForums)) {
             throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
         }
 
-        // Идентификаторы хранимых подразделов.
-        $forums = array_keys($config['subsections']);
-
-        $this->forums = array_map('intval', $forums);
+        // Записываем идентификаторы хранимых подразделов.
+        $this->forums = $subForums;
     }
 
     /**
@@ -706,17 +610,12 @@ final class CreateReport
      */
     private function checkExcluded(): void
     {
-        $excludedClients = $this->reportSend->excludedClients;
-        if (count($excludedClients)) {
-            $config = $this->settings->populate();
-
+        if (count($this->reportSend->excludedClients)) {
             $names = [];
-            foreach ($config['clients'] as $id => $client) {
-                if (in_array((int) $id, $excludedClients, true)) {
-                    $names[] = sprintf('%s[%d](%s)', $client['cm'], (int) $id, $client['cl']);
+            foreach ($this->clients->clients as $client) {
+                if ($client->exclude) {
+                    $names[] = $client->name;
                 }
-
-                unset($id, $client);
             }
 
             $this->logger->notice(
