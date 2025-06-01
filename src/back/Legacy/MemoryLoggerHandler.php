@@ -9,8 +9,10 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Level;
 use Monolog\LogRecord;
 
-/** Запись журнала в legacy логгер. */
-final class LogHandler extends AbstractProcessingHandler implements HandlerInterface
+/**
+ * Хранение журнала в памяти приложения.
+ */
+final class MemoryLoggerHandler extends AbstractProcessingHandler implements HandlerInterface
 {
     public function __construct(int|string|Level $level = Level::Debug, bool $bubble = true)
     {
