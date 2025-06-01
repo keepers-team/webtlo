@@ -17,6 +17,7 @@ use Monolog\Processor\MemoryPeakUsageProcessor;
 use Monolog\Processor\MemoryUsageProcessor;
 use Monolog\Processor\PsrLogMessageProcessor;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Интерфейс для записи журнала выполнения.
@@ -48,24 +49,36 @@ final class AppLogger
         // Автоматическая подстановка значений, согласно PSR-3.
         $logger->pushProcessor(new PsrLogMessageProcessor(removeUsedContextFields: true));
 
-        // Добавим в данные об использовании памяти.
-        if ($level === Level::Debug) {
-            $logger->pushProcessor(new MemoryPeakUsageProcessor());
-            $logger->pushProcessor(new MemoryUsageProcessor());
-        }
-
-        // Запись в единый файл всего webtlo.
-        $logger->pushHandler(new StreamHandler(self::getLogFile(filename: 'webtlo.log')));
-
-        // Запись в error_log.
-        $logger->pushHandler(new ErrorLogHandler(level: Level::Error));
-
         // Запись в legacy-logger для вывода на фронт.
         $logger->pushHandler(self::getLegacyLogger(level: $level));
 
-        // Запись в заданный файл.
-        if ($logFile !== null) {
-            $logger->pushHandler(self::getFileHandler(filename: $logFile, level: $level));
+        // Пробуем создать файлы журналов и писать в них.
+        // Если не удалось, то пишем всё в ErrorLogHandler => error_log.
+        try {
+            // Запись в единый файл всего webtlo.
+            $logger->pushHandler(
+                new StreamHandler(self::getLogFile(filename: 'webtlo.log'))
+            );
+
+            // Запись в заданный файл.
+            if ($logFile !== null) {
+                $logger->pushHandler(
+                    self::getFileHandler(filename: $logFile, level: $level)
+                );
+            }
+
+            // Запись в error_log.
+            $logger->pushHandler(new ErrorLogHandler(level: Level::Error));
+
+            // Добавим в данные об использовании памяти.
+            if ($level === Level::Debug) {
+                $logger->pushProcessor(new MemoryPeakUsageProcessor());
+                $logger->pushProcessor(new MemoryUsageProcessor());
+            }
+        } catch (Throwable $e) {
+            // Пишем всё в error_log и выводим ошибку доступа.
+            $logger->pushHandler(new ErrorLogHandler(level: Level::Debug));
+            $logger->error($e->getMessage());
         }
 
         return $logger;
@@ -98,7 +111,7 @@ final class AppLogger
     private static function getLogFile(string $filename): string
     {
         // Путь к файлу журнала, с созданием каталогов.
-        $filePath = Helper::getLogDir(file: $filename);
+        $filePath = Helper::getStorageLogsPath(file: $filename);
 
         // Ротация файла журнала, если нужна.
         self::logRotate(filename: $filePath);

@@ -87,7 +87,7 @@ final class Helper
             return true;
         }
 
-        return !file_exists($path) && mkdir($path, 0o777, true);
+        return !file_exists($path) && @mkdir($path, 0o777, true);
     }
 
     /**
@@ -96,7 +96,7 @@ final class Helper
     public static function checkDirRecursive(string $path): void
     {
         if (!self::makeDirRecursive(path: $path)) {
-            throw new RuntimeException("Не удалось создать каталог '$path'");
+            throw new RuntimeException("Не удалось создать каталог '$path'. Проверьте права на запись.");
         }
     }
 
@@ -150,7 +150,7 @@ final class Helper
         if ($subFolder !== null) {
             $path .= DIRECTORY_SEPARATOR . $subFolder;
 
-            self::makeDirRecursive(path: $path);
+            self::checkDirRecursive(path: $path);
         }
 
         if ($file !== null) {
@@ -170,7 +170,7 @@ final class Helper
     /**
      * @return string The log directory for the application
      */
-    public static function getLogDir(?string $file = null): string
+    public static function getStorageLogsPath(?string $file = null): string
     {
         return self::getStorageSubFolderPath(subFolder: self::LOG_DIR, file: $file);
     }

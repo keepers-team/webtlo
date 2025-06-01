@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Helper;
@@ -12,12 +14,16 @@ if (empty($log_file)) {
     return;
 }
 
-$log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . '.log';
+try {
+    $logPath = Helper::getStorageLogsPath($log_file . '.log');
 
-if (file_exists($log_file)) {
-    $fh = fopen($log_file, 'w');
+    if (file_exists($logPath)) {
+        $fh = fopen($logPath, 'w');
 
-    if ($fh !== false) {
-        fclose($fh);
+        if ($fh !== false) {
+            fclose($fh);
+        }
     }
+} catch (Throwable $e) {
+    echo $e->getMessage();
 }

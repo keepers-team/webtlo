@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Helper;
@@ -13,15 +15,19 @@ if (empty($log_file)) {
     return;
 }
 
-$log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . '.log';
+try {
+    $logPath = Helper::getStorageLogsPath($log_file . '.log');
 
-if (file_exists($log_file)) {
-    if ($data = file($log_file)) {
-        // Последние 3000 строк.
-        $data = array_slice($data, -3000);
+    if (file_exists($logPath)) {
+        if ($data = file($logPath)) {
+            // Последние 3000 строк.
+            $data = array_slice($data, -3000);
 
-        $data = Log::formatRows(rows: $data, replace: true);
+            $data = Log::formatRows(rows: $data, replace: true);
 
-        echo $data;
+            echo $data;
+        }
     }
+} catch (Throwable $e) {
+    echo $e->getMessage();
 }
