@@ -3,15 +3,15 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 
 $result = [];
 
-try {
-    $app = App::create();
-    $log = $app->getLogger();
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
+try {
     /** @var Topics $topics */
     $topics = $app->get(Topics::class);
 
@@ -21,13 +21,9 @@ try {
 
     $result['current'] = $result['total'] - $result['unnamed'];
 } catch (Exception $e) {
-    if (isset($log)) {
-        $log->error($e->getMessage());
-    } else {
-        Log::append($e->getMessage());
-    }
+    $log->error($e->getMessage());
 }
 
-$result['log'] = Log::get();
+$result['log'] = $app->getLoggerRecords();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);

@@ -6,7 +6,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
 
 $reports_result = [
     'result' => '',
@@ -41,6 +40,6 @@ try {
 }
 
 // Выводим лог.
-$reports_result['log'] = Log::get();
+$reports_result['log'] = $app->getLoggerRecords();
 
 echo json_encode($reports_result, JSON_UNESCAPED_UNICODE);

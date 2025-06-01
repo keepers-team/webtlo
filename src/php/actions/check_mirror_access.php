@@ -7,7 +7,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\CheckMirrorAccess;
-use KeepersTeam\Webtlo\Legacy\Log;
 
 // Получаем контейнер.
 $app = App::create();
@@ -60,5 +59,5 @@ try {
 
 echo json_encode([
     'result' => $result ? '1' : '0',
-    'log'    => Log::get(),
+    'log'    => $app->getLoggerRecords(),
 ], JSON_UNESCAPED_UNICODE);
