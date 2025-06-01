@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Static;
+namespace KeepersTeam\Webtlo\Logger;
 
 use Cesargb\Log\Rotation;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\MemoryLoggerHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\HandlerInterface;
@@ -22,7 +21,7 @@ use Throwable;
 /**
  * Интерфейс для записи журнала выполнения.
  */
-final class AppLogger
+final class LoggerConstructor
 {
     /** @var Level[] Уровни ведения журнала. */
     private const Levels = [
