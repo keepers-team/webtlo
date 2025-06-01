@@ -2,7 +2,7 @@
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\Static\AppLogger;
+use KeepersTeam\Webtlo\Logger\LoggerConstructor;
 use KeepersTeam\Webtlo\WebTLO;
 
 header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
@@ -214,7 +214,7 @@ try {
     }
 
     // Уровни ведения журнала.
-    $selectLogLevel = AppLogger::getSelectOptions($optionFormat, $cfg['log_level'] ?? '');
+    $selectLogLevel = LoggerConstructor::getSelectOptions($optionFormat, $cfg['log_level'] ?? '');
 
     $webtlo = WebTLO::getVersion();
 } catch (Exception $e) {
