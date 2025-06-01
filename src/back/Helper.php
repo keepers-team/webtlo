@@ -283,24 +283,4 @@ final class Helper
 
         return $newDate > $prevDate && $newDate->format('Y-m-d') !== $prevDate->format('Y-m-d');
     }
-
-    /**
-     * Проверить включена ли опция автоматического запуска действия.
-     *
-     * @param array<string, mixed> $config
-     */
-    public static function isScheduleActionEnabled(array $config, string $action): bool
-    {
-        return (bool) ($config['automation'][$action] ?? 0);
-    }
-
-    /**
-     * Проверить включена ли дополнительная опция обновления раздач.
-     *
-     * @param array<string, mixed> $config
-     */
-    public static function isUpdatePropertyEnabled(array $config, string $property): bool
-    {
-        return (bool) ($config['update'][$property] ?? 0);
-    }
 }
