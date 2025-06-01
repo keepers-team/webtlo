@@ -5,13 +5,26 @@ namespace KeepersTeam\Webtlo\Legacy;
 final class Log
 {
     /** @var string[] */
-    private static array $log = [];
+    private static array $records = [];
 
     public static function append(string $message = ''): void
     {
         if ($message !== '') {
-            self::$log[] = date('d.m.Y H:i:s') . ' ' . $message;
+            self::$records[] = date('d.m.Y H:i:s') . ' ' . $message;
         }
+    }
+
+    public static function getRecords(string $break = '<br />'): string
+    {
+        if (count(self::$records)) {
+            $formatted = self::formatRows(rows: self::$records, break: $break);
+
+            self::$records = [];
+
+            return $formatted;
+        }
+
+        return '';
     }
 
     /**
@@ -45,14 +58,5 @@ final class Log
         }
 
         return implode($break, $output) . $break;
-    }
-
-    public static function get(string $break = '<br />'): string
-    {
-        if (count(self::$log)) {
-            return self::formatRows(rows: self::$log, break: $break);
-        }
-
-        return '';
     }
 }
