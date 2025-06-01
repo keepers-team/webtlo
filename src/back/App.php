@@ -7,13 +7,12 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
-use KeepersTeam\Webtlo\Config\Other as ConfigOther;
 use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Legacy\Log;
-use KeepersTeam\Webtlo\Static\AppLogger;
+use KeepersTeam\Webtlo\Logger\LoggerServiceProvider;
 use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
 use KeepersTeam\Webtlo\TopicList\TopicListServiceProvider;
 use League\Container\Container;
@@ -60,6 +59,8 @@ final class App
         $container->addServiceProvider(new AppServiceProvider());
         // Добавляем обработчик классов конфига.
         $container->addServiceProvider(new ConfigServiceProvider());
+        // Подключаем интерфейс для ведения журнала.
+        $container->addServiceProvider(new LoggerServiceProvider(logFile: $logFile));
         // Добавляем создание таблиц-клонов.
         $container->addServiceProvider(new CloneServiceProvider());
         // Добавляем подключение к внешним ресурсам.
@@ -73,16 +74,6 @@ final class App
             db : $container->get(DB::class),
         ));
         $container->add('config', fn() => $container->get(Settings::class)->populate());
-
-        // Добавляем интерфейс для записи логов.
-        $container->add(LoggerInterface::class, function() use ($container, $logFile) {
-            /** @var ConfigOther $params */
-            $params = $container->get(ConfigOther::class);
-
-            $level = AppLogger::getLogLevel(level: $params->logLevel);
-
-            return AppLogger::create(logFile: $logFile, level: $level);
-        });
 
         // Подключаем БД.
         $container->add(DB::class, fn() => DB::create());
