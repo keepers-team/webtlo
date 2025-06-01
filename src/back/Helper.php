@@ -10,6 +10,8 @@ use RuntimeException;
 
 final class Helper
 {
+    private const LOG_DIR = 'logs';
+
     /**
      * Сортировка массива по заданному ключу, с учётом кириллицы.
      *
@@ -79,7 +81,7 @@ final class Helper
     public static function makeDirRecursive(string $path): bool
     {
         // Не уверен, что эта конвертация нужна, но пусть пока будет.
-        $path = self::normalizePathEncoding($path);
+        $path = self::normalizePathEncoding(path: $path);
 
         if (is_dir($path) && is_writable($path)) {
             return true;
@@ -93,7 +95,7 @@ final class Helper
      */
     public static function checkDirRecursive(string $path): void
     {
-        if (!self::makeDirRecursive($path)) {
+        if (!self::makeDirRecursive(path: $path)) {
             throw new RuntimeException("Не удалось создать каталог '$path'");
         }
     }
@@ -168,9 +170,9 @@ final class Helper
     /**
      * @return string The log directory for the application
      */
-    public static function getLogDir(): string
+    public static function getLogDir(?string $file = null): string
     {
-        return self::getStorageDir() . DIRECTORY_SEPARATOR . 'logs';
+        return self::getStorageSubFolderPath(subFolder: self::LOG_DIR, file: $file);
     }
 
     /** Получить путь к каталогу/файлу миграций. */
