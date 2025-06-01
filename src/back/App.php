@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
+use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
 use KeepersTeam\Webtlo\TopicList\TopicListServiceProvider;
@@ -144,6 +145,11 @@ final class App
     public function getClientFactory(): ClientFactory
     {
         return $this->get(ClientFactory::class);
+    }
+
+    public function getLoggerRecords(): string
+    {
+        return Log::getRecords();
     }
 
     /**

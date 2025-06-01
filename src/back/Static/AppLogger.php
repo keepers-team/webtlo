@@ -6,7 +6,7 @@ namespace KeepersTeam\Webtlo\Static;
 
 use Cesargb\Log\Rotation;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\LogHandler;
+use KeepersTeam\Webtlo\Legacy\MemoryLoggerHandler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\HandlerInterface;
@@ -102,7 +102,7 @@ final class AppLogger
         $formatter = new LineFormatter(format: '%level_name%: %message% %context%');
         $formatter->ignoreEmptyContextAndExtra();
 
-        return (new LogHandler(level: $level))->setFormatter(formatter: $formatter);
+        return (new MemoryLoggerHandler(level: $level))->setFormatter(formatter: $formatter);
     }
 
     /**
