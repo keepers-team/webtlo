@@ -5,12 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
-    $app = App::create();
-    $log = $app->getLogger();
-
     // идентификатор подраздела
     $subForumId = (int) ($_POST['forum_id'] ?? -1);
     if ($subForumId < 0) {
@@ -32,14 +32,12 @@ try {
     }
 } catch (Throwable $e) {
     $error = $e->getMessage();
-    if (isset($log)) {
-        $log->warning($error);
-    }
+    $log->warning($error);
 }
 
 $result = [
     'error'  => $error ?? '',
     'hashes' => $output ?? [],
-    'log'    => Log::get(),
+    'log'    => $app->getLoggerRecords(),
 ];
 echo json_encode($result, JSON_UNESCAPED_UNICODE);

@@ -5,9 +5,12 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\TorrentEditor;
 use KeepersTeam\Webtlo\Timers;
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
     Timers::start('download');
@@ -19,9 +22,7 @@ try {
         throw new RuntimeException('Выберите раздачи');
     }
 
-    $app = App::create();
     $cfg = $app->getLegacyConfig();
-    $log = $app->getLogger();
 
     // Ключи для скачивания файлов.
     $apiCredentials = $app->get(ApiCredentials::class);
@@ -141,13 +142,14 @@ try {
     );
 
     $log->info($result);
-    $log->info('-- DONE --');
 } catch (Exception $e) {
     $result = $e->getMessage();
-    Log::append($result);
+    $log->error($result);
+} finally {
+    $log->info('-- DONE --');
 }
 
 echo json_encode([
-    'log' => Log::get(),
+    'log' => $app->getLoggerRecords(),
     'result' => $result,
 ], JSON_UNESCAPED_UNICODE);
