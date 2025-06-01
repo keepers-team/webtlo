@@ -78,9 +78,9 @@ final class App
             /** @var ConfigOther $params */
             $params = $container->get(ConfigOther::class);
 
-            $level = AppLogger::getLogLevel(logLevel: $params->logLevel);
+            $level = AppLogger::getLogLevel(level: $params->logLevel);
 
-            return AppLogger::create(logFile: $logFile, logLevel: $level);
+            return AppLogger::create(logFile: $logFile, level: $level);
         });
 
         // Подключаем БД.
