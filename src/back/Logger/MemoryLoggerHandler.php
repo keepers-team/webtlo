@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Legacy;
+namespace KeepersTeam\Webtlo\Logger;
 
+use KeepersTeam\Webtlo\Legacy\Log;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Level;
