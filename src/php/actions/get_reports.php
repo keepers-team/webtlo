@@ -3,7 +3,6 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Report\CreateReport;
 use KeepersTeam\Webtlo\Module\Report\CreationMode;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
@@ -14,6 +13,10 @@ $reports_result = [
 
 $output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />';
 
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
+
 try {
     // идентификатор подраздела
     $forumId = (int) ($_POST['forum_id'] ?? -1);
@@ -22,10 +25,7 @@ try {
         throw new Exception("ERROR: Неправильный идентификатор подраздела ($forumId).");
     }
 
-    // Инициализация и получение конфига.
-    $app = App::create();
     $cfg = $app->getLegacyConfig();
-    $log = $app->getLogger();
 
     /** @var Forums $forums */
     $forums = $app->get(Forums::class);
@@ -61,18 +61,16 @@ try {
             );
         }
     }
-    $log->info('-- DONE --');
 } catch (Throwable $e) {
     $message = $e->getMessage();
-    if (isset($log)) {
-        $log->error($message);
-        $log->info('-- DONE --');
-    }
+    $log->error($message);
 
     $output .= '<br />' . $message;
+} finally {
+    $log->info('-- DONE --');
 }
 
 $reports_result['report'] = $output;
-$reports_result['log']    = Log::get();
+$reports_result['log']    = $app->getLoggerRecords();
 
 echo json_encode($reports_result, JSON_UNESCAPED_UNICODE);

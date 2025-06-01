@@ -7,7 +7,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\External\Construct\ForumConstructor;
-use KeepersTeam\Webtlo\Legacy\Log;
 
 $result = [
     'bt_key'       => '',
@@ -18,10 +17,11 @@ $result = [
     'captcha_path' => '',
 ];
 
-try {
-    // Подключаем контейнер.
-    $app = App::create();
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
+try {
     parse_str($_POST['cfg'], $config);
 
     if (
@@ -56,8 +56,6 @@ try {
         unset($captchaCode, $fields);
     }
 
-    $logger = $app->getLogger();
-
     /** @var ForumConstructor $helper */
     $helper = $app->get(ForumConstructor::class);
     $helper->setForumCredentials(credentials: $forumAuth);
@@ -81,20 +79,17 @@ try {
         }
     } else {
         // Получили CAPTCHA с ошибкой авторизации.
-        $logger->warning($captchaRequest->message);
+        $log->warning($captchaRequest->message);
 
         $result['captcha']      = $captchaRequest->codes;
         $result['captcha_path'] = $forumClient->fetchCaptchaImage(imageLink: $captchaRequest->image);
     }
-
-    $logger->info('-- DONE --');
 } catch (Exception $e) {
-    $mess = $e->getMessage();
-    if (!empty($mess)) {
-        Log::append($e->getMessage());
-    }
+    $log->error($e->getMessage());
+} finally {
+    $log->info('-- DONE --');
 }
 
-$result['log'] = Log::get();
+$result['log'] = $app->getLoggerRecords();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
