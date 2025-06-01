@@ -97,20 +97,30 @@ final class AppLogger
      */
     private static function getLogFile(string $filename): string
     {
-        $logDir = Helper::getLogDir();
-        Helper::makeDirRecursive(path: $logDir);
+        // Путь к файлу журнала, с созданием каталогов.
+        $filePath = Helper::getLogDir(file: $filename);
 
-        $filePath = $logDir . DIRECTORY_SEPARATOR . $filename;
+        // Ротация файла журнала, если нужна.
         self::logRotate(filename: $filePath);
+
+        // Создаём файл, если его нет.
+        if (!file_exists($filePath)) {
+            touch($filePath);
+        }
 
         return $filePath;
     }
 
     private static function logRotate(string $filename): void
     {
+        if (!file_exists($filename)) {
+            return;
+        }
+
         $rotation = new Rotation(options: [
             'files'    => self::$logMaxCount,
             'min-size' => self::$logMaxSize,
+            'then'     => static fn(string $rotated, string $origin): bool => touch($origin),
         ]);
 
         $rotation->rotate(filename: $filename);
