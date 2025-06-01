@@ -5,15 +5,14 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 $result = [];
 
-try {
-    $app = App::create('update.log');
-    $log = $app->getLogger();
+$app = App::create('update.log');
+$log = $app->getLogger();
 
+try {
     // Обновление раздач за раз. Меньшее число, для наглядности.
     $updateDetailsPerRun = 1500;
 
@@ -22,16 +21,12 @@ try {
 
     // Заполняем данные о раздачах.
     $detailsClass->update($updateDetailsPerRun);
-
-    $log->info('-- DONE --');
 } catch (Throwable $e) {
-    if (isset($log)) {
-        $log->error($e->getMessage());
-    } else {
-        Log::append($e->getMessage());
-    }
+    $log->error($e->getMessage());
+} finally {
+    $log->info('-- DONE --');
 }
 
-$result['log'] = Log::get();
+$result['log'] = $app->getLoggerRecords();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);

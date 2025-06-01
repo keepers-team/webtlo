@@ -6,7 +6,6 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
@@ -20,9 +19,10 @@ $returnObject = [
     'validate' => '',
 ];
 
-try {
-    $app = App::create();
+// Подключаем контейнер.
+$app = App::create();
 
+try {
     $forum_id = $_POST['forum_id'] ?? null;
     if (!is_numeric($forum_id)) {
         throw new Exception("Некорректный идентификатор подраздела: $forum_id");
@@ -68,6 +68,6 @@ try {
     $returnObject['log'] = $e->getMessage();
 }
 
-$returnObject['details'] = Log::get();
+$returnObject['details'] = $app->getLoggerRecords();
 
 echo json_encode($returnObject, JSON_UNESCAPED_UNICODE);

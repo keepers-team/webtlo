@@ -5,13 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
-    // Подключаем контейнер.
-    $app = App::create();
-    $log = $app->getLogger();
-
     // 0 - comment, 1 - type_client, 2 - host, 3 - port, 4 - login, 5 - passwd
     $params = $_POST['tor_client'];
 
@@ -35,6 +34,6 @@ try {
 }
 
 echo json_encode([
-    'log'    => Log::get(),
+    'log'    => $app->getLoggerRecords(),
     'status' => $status,
 ]);

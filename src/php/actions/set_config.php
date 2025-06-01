@@ -4,12 +4,11 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
+
+$app = App::create();
+$log = $app->getLogger();
 
 try {
-    $app = App::create();
-    $log = $app->getLogger();
-
     $request = json_decode((string) file_get_contents('php://input'), true);
 
     // парсим настройки
@@ -42,14 +41,13 @@ try {
     } else {
         $log->warning('Не удалось сохранить публичную копию настроек.');
     }
-
-    $log->info('-- DONE --');
 } catch (Throwable $e) {
-    if (isset($log)) {
-        $log->error($e->getMessage());
-    } else {
-        Log::append($e->getMessage());
-    }
+    $log->error($e->getMessage());
+} finally {
+    $log->info('-- DONE --');
 }
 
-echo json_encode(['log' => Log::get()], JSON_UNESCAPED_UNICODE);
+echo json_encode(
+    ['log' => $app->getLoggerRecords()],
+    JSON_UNESCAPED_UNICODE
+);

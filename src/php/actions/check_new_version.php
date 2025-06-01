@@ -6,10 +6,14 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\WebTLO;
 
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
     $wbtApi = WebTLO::getVersion();
@@ -25,7 +29,7 @@ try {
             'connect_timeout' => 40,
         ]);
     } catch (GuzzleException $e) {
-        Log::append('CURL ошибка: ' . $e->getMessage());
+        $log->warning('CURL ошибка: ' . $e->getMessage());
 
         throw new Exception('Невозможно связаться с api.github.com');
     }
@@ -42,9 +46,10 @@ try {
     $result['newVersionLink']   = $link;
     $result['whatsNew']         = getReleaseDescription((string) $latestRelease['body']);
 } catch (Exception $e) {
-    Log::append($e->getMessage());
+    $log->error($e->getMessage());
 }
-$result['log'] = Log::get();
+
+$result['log'] = $app->getLoggerRecords();
 
 echo json_encode($result, JSON_UNESCAPED_UNICODE);
 

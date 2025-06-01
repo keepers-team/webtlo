@@ -5,7 +5,10 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
     $result    = '';
@@ -19,9 +22,6 @@ try {
     }
     parse_str($_POST['topic_hashes'], $topicHashes);
     $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
-
-    $app = App::create();
-    $log = $app->getLogger();
 
     $db = $app->getDataBase();
 
@@ -289,13 +289,16 @@ try {
     $log->info('Процесс добавления раздач в торрент-клиенты завершён за ' . Helper::convertSeconds((int) ($endtime - $starttime)));
 
     $log->info($result);
-    $log->info('-- DONE --');
 } catch (Exception $e) {
     $result = $e->getMessage();
-    Log::append($result);
+    if ($result) {
+        $log->error($result);
+    }
+} finally {
+    $log->info('-- DONE --');
 }
 
 echo json_encode([
-    'log'    => Log::get(),
+    'log'    => $app->getLoggerRecords(),
     'result' => $result,
 ], JSON_UNESCAPED_UNICODE);
