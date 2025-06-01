@@ -5,9 +5,12 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\Action\ClientApplyAction;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
+
+// Подключаем контейнер.
+$app = App::create();
+$log = $app->getLogger();
 
 try {
     $result = '';
@@ -39,9 +42,6 @@ try {
     parse_str($request['topic_hashes'], $topicHashes);
     $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
 
-    $app = App::create();
-    $log = $app->getLogger();
-
     /** @var ClientApplyAction $actionApply */
     $actionApply = $app->get(ClientApplyAction::class);
 
@@ -55,14 +55,10 @@ try {
     $result = "Действие '$action->value' выполнено. За подробностями обратитесь к журналу";
 } catch (Exception $e) {
     $result = $e->getMessage();
-    if (isset($log)) {
-        $log->error($result);
-    } else {
-        Log::append($result);
-    }
+    $log->error($result);
 }
 
 echo json_encode([
-    'log'    => Log::get(),
+    'log'    => $app->getLoggerRecords(),
     'result' => $result,
 ], JSON_UNESCAPED_UNICODE);

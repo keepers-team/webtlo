@@ -5,7 +5,6 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Legacy\Log;
 use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 use KeepersTeam\Webtlo\Update\Subsections;
@@ -72,15 +71,15 @@ try {
             $log->notice('Неизвестный тип обновления данных', ['process' => $process]);
         }
     }
-
-    $log->info('-- DONE --');
 } catch (Throwable $e) {
     $update_result['result'] = 'В процессе обновления сведений были ошибки. '
         . 'Для получения подробностей обратитесь к журналу событий.';
     $log->error($e->getMessage());
+} finally {
+    $log->info('-- DONE --');
 }
 
 // Выводим лог
-$update_result['log'] = Log::get();
+$update_result['log'] = $app->getLoggerRecords();
 
 echo json_encode($update_result, JSON_UNESCAPED_UNICODE);
