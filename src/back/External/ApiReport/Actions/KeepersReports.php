@@ -21,9 +21,9 @@ trait KeepersReports
     /**
      * Загрузка и распаковка статичного архива со всеми хранимыми раздачами всех хранителей.
      *
-     * @param ?int[] $subforums
+     * @param int[] $subforums
      */
-    public function downloadReportsArchive(?array $subforums = null): void
+    public function downloadReportsArchive(array $subforums): void
     {
         $this->gzipReportsFolder = $this->downloadStaticFile(
             filename : 'public_reports-all.tar',

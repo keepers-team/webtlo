@@ -19,7 +19,7 @@ use RuntimeException;
  */
 final class ApiSearch
 {
-    private const downloadArchiveThreshold = 20;
+    private const downloadArchiveThreshold = 10;
 
     /**
      * Ид подразделов, данные которых нужно сохранить.

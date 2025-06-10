@@ -19,11 +19,11 @@ trait DownloadStaticFile
      * Скачать и распаковать архив с данными.
      *
      * @param string $filename  имя статичного файла, который нужно скачать
-     * @param ?int[] $subforums опциональный набор ид искомых подразделов
+     * @param int[]  $subforums список ид искомых подразделов
      *
      * @return ?string путь к каталогу с распакованными файлами, если удалось распаковать
      */
-    protected function downloadStaticFile(string $filename, ?array $subforums): ?string
+    protected function downloadStaticFile(string $filename, array $subforums): ?string
     {
         // Проверяем наличие PharData
         if (!class_exists('PharData')) {
@@ -42,7 +42,10 @@ trait DownloadStaticFile
         try {
             Timers::start('download_static_file');
             $response = $this->client->get(uri: 'get_stats_file', options: [
-                'query'   => ['file_name' => $filename],
+                'query'   => [
+                    'file_name'   => $filename,
+                    'subforum_id' => implode(',', $subforums),
+                ],
                 'headers' => ['Accept' => 'application/gzip'],
                 'sink'    => $filePath,
             ]);
@@ -55,22 +58,9 @@ trait DownloadStaticFile
 
             Timers::start('unpack');
 
-            $files = null;
-            // Если заданы подразделы, собираем ожидаемый список файлов.
-            if ($subforums !== null) {
-                // Файлы внутри архива имеют путь вида "./313.csv.gz" и без полного пути - не распаковываются.
-                $files = array_map(static fn($el) => sprintf('./%d.csv.gz', $el), $subforums);
-            }
-
+            // Распаковываем файл.
             $phar = new PharData(filename: $filePath);
-
-            try {
-                // Пробуем распаковать только реально нужные файлы.
-                $phar->extractTo(directory: $tempDirPath, files: $files, overwrite: true);
-            } catch (Throwable) {
-                // Если не получилось - распакуем все.
-                $phar->extractTo(directory: $tempDirPath, overwrite: true);
-            }
+            $phar->extractTo(directory: $tempDirPath, overwrite: true);
 
             $this->logger->debug(
                 'Распаковка архива завершена за {sec}',

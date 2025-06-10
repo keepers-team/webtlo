@@ -17,9 +17,9 @@ trait ForumTopicsPeers
     /**
      * Загрузка и распаковка статичного архива со всеми хранимыми раздачами всех хранителей.
      *
-     * @param ?int[] $subforums
+     * @param int[] $subforums
      */
-    public function downloadTopicPeersArchive(?array $subforums = null): void
+    public function downloadTopicPeersArchive(array $subforums): void
     {
         $this->gzipTopicPeersFolder = $this->downloadStaticFile(
             filename : 'public_seeding-control.tar',
