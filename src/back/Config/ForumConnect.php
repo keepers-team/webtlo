@@ -12,4 +12,13 @@ final class ForumConnect
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
     ) {}
+
+    public function buildUrl(): string
+    {
+        return sprintf(
+            '%s://%s',
+            $this->ssl ? 'https' : 'http',
+            $this->baseUrl
+        );
+    }
 }
