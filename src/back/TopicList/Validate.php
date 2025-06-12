@@ -246,7 +246,7 @@ final class Validate
 
         // Сдвигаем счётчик $seedPeriod на один день, т.к. значения за "сегодня" считаются отдельно.
         for ($i = 0; $i < $seedPeriod - 1; ++$i) {
-            $temp['days_seed'][]     = "CASE WHEN q$i IS '' OR q$i IS NULL THEN 0 ELSE 1 END";
+            $temp['days_seed'][]     = "CASE WHEN q$i IS '' OR q$i > 0 THEN 1 ELSE 0 END";
             $temp['average_sum'][]   = "COALESCE(d$i, 0)"; // sum - сумма измерений в заданный день.
             $temp['average_count'][] = "COALESCE(q$i, 0)"; // count - количество измерений в заданный день.
         }
