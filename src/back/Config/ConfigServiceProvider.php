@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use KeepersTeam\Webtlo\Clients\ClientType;
 use KeepersTeam\Webtlo\Enum\ControlPeerLimitPriority as PeerPriority;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\TIniFileEx;
@@ -26,6 +27,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             Proxy::class,
             ReportSend::class,
             TopicControl::class,
+            TorrentClients::class,
         ];
 
         return in_array($id, $services, true);
@@ -78,7 +80,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
         $container->addShared(ApiForumConnect::class, function() {
             $ini = $this->getIni();
 
-            $section  = 'torrent-tracker';
+            $section = 'torrent-tracker';
 
             $url       = basename((string) $ini->read($section, 'api_url', Defaults::apiForumUrl));
             $urlCustom = basename((string) $ini->read($section, 'api_url_custom'));
@@ -193,6 +195,79 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 daysUntilUnseeded     : (int) $ini->read('topics_control', 'days_until_unseeded', 21),
                 maxUnseededCount      : (int) $ini->read('topics_control', 'max_unseeded_count', 100),
             );
+        });
+
+        // Используемые торрент-клиенты и их параметры подключения.
+        $container->addShared(TorrentClients::class, function() {
+            $ini = $this->getIni();
+
+            $clients = [];
+
+            $clientMaxId = (int) $ini->read('other', 'qt', 0);
+            for ($i = 1; $i <= $clientMaxId; ++$i) {
+                $section = "torrent-client-$i";
+
+                // Ид торрент-клиента.
+                $clientId   = (int) $ini->read($section, 'id', $i);
+                $clientType = ClientType::from(
+                    (string) $ini->read($section, 'client', 'utorrent')
+                );
+
+                $clientHost = (string) $ini->read($section, 'hostname');
+                $clientPort = (int) $ini->read($section, 'port');
+                $ssl        = (bool) $ini->read($section, 'ssl', 0);
+
+                // Если не указан порт подключения к клиенту, добавляем порт по умолчанию.
+                if (empty($clientPort)) {
+                    $clientPort = $ssl ? 443 : 80;
+                }
+
+                // Авторизация в торрент-клиенте.
+                $login    = (string) $ini->read($section, 'login');
+                $password = (string) $ini->read($section, 'password');
+
+                $credentials = null;
+                if ($login !== '' && $password !== '') {
+                    $credentials = new BasicAuth(username: $login, password: $password);
+                }
+
+                $timeout = new Timeout(
+                    request   : (int) $ini->read($section, 'request_timeout', Defaults::timeout),
+                    connection: (int) $ini->read($section, 'connect_timeout', Defaults::timeout),
+                );
+
+                $comment = (string) $ini->read($section, 'comment');
+
+                /**
+                 * Регулировка раздач в торрент-клиенте.
+                 *
+                 * - -1 - регулировка подраздела отключена;
+                 * - -2 == пустая строка - пустое значение ~= не учитывать значение.
+                 */
+                $controlPeers = (int) ($ini->read($section, 'control_peers') ?: -2);
+
+                // Исключение раздач торрент-клиента при отправке отчётов.
+                $exclude = (bool) $ini->read($section, 'exclude', 0);
+
+                $clients[$clientId] = new TorrentClientOptions(
+                    id          : $clientId,
+                    type        : $clientType,
+                    name        : $comment,
+                    host        : $clientHost,
+                    port        : $clientPort,
+                    secure      : $ssl,
+                    credentials : $credentials,
+                    timeout     : $timeout,
+                    exclude     : $exclude,
+                    controlPeers: $controlPeers,
+                    extra       : [
+                        'id'      => $clientId,
+                        'comment' => $comment,
+                    ],
+                );
+            }
+
+            return new TorrentClients(clients: $clients);
         });
     }
 
