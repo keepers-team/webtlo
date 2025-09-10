@@ -84,7 +84,6 @@ try {
             'forum'  => [
                 'rutracker.org',
                 'rutracker.net',
-                'rutracker.nl',
             ],
             'api'    => [
                 'api.rutracker.cc',
