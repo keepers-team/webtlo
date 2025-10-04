@@ -25,8 +25,6 @@ try {
         throw new Exception("ERROR: Неправильный идентификатор подраздела ($forumId).");
     }
 
-    $cfg = $app->getLegacyConfig();
-
     /** @var Forums $forums */
     $forums = $app->get(Forums::class);
 
