@@ -3,6 +3,7 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 
@@ -15,15 +16,15 @@ try {
     $app = App::create();
     $db  = $app->getDataBase();
 
-    // получение настроек
-    $cfg = $app->getLegacyConfig();
+    /** @var SubForums $subsections хранимые подразделы */
+    $subsections = $app->get(SubForums::class);
 
-    if (empty($cfg['subsections'])) {
-        throw new Exception('Не выбраны хранимые подразделы');
+    if (!$subsections->count()) {
+        throw new Exception('В настройках не найдены хранимые подразделы');
     }
 
     $statistics      = [];
-    $forumsIDsChunks = array_chunk(array_keys($cfg['subsections']), 499);
+    $forumsIDsChunks = array_chunk($subsections->ids, 499);
 
     $days30 = 30 * 24 * 60 * 60; // seconds
     foreach ($forumsIDsChunks as $forumsIDs) {
