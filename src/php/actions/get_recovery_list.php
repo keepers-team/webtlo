@@ -11,10 +11,7 @@ $app = App::create();
 $log = $app->getLogger();
 
 try {
-    $db  = $app->getDataBase();
-
-    // получение настроек
-    $cfg = $app->getLegacyConfig();
+    $db = $app->getDataBase();
 
     $counters = $db->query(
         'SELECT tu.status, COUNT(1) AS quantity
