@@ -20,7 +20,7 @@
         "ext-sqlite3": "*",
         "ext-xml": "*",
         "ext-zlib": "*",
-        "arokettu/torrent-file": "^5.2",
+        "arokettu/torrent-file": "^5.3",
         "caseyamcl/guzzle_retry_middleware": "^2.9",
         "cesargb/php-log-rotation": "^2.7",
         "guzzlehttp/guzzle": "^7.9",
