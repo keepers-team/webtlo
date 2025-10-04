@@ -21,7 +21,7 @@
         "ext-xml": "*",
         "ext-zlib": "*",
         "arokettu/torrent-file": "^5.3",
-        "caseyamcl/guzzle_retry_middleware": "^2.9",
+        "caseyamcl/guzzle_retry_middleware": "^2.13",
         "cesargb/php-log-rotation": "^2.7",
         "guzzlehttp/guzzle": "^7.9",
         "league/container": "^4.2",

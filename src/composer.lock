@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9130ffaf40b64bc9135a71a1d11354cf",
+    "content-hash": "b327a1d7ccce3cf6a95314a9163ee153",
     "packages": [
         {
             "name": "arokettu/bencode",
@@ -210,16 +210,16 @@
         },
         {
             "name": "caseyamcl/guzzle_retry_middleware",
-            "version": "v2.12.1",
+            "version": "v2.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/caseyamcl/guzzle_retry_middleware.git",
-                "reference": "362bdd5e6d19e54e1f4c8c27757e7598201efa3c"
+                "reference": "17c9299cde438b00bbeb099c6480319a81636a60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/362bdd5e6d19e54e1f4c8c27757e7598201efa3c",
-                "reference": "362bdd5e6d19e54e1f4c8c27757e7598201efa3c",
+                "url": "https://api.github.com/repos/caseyamcl/guzzle_retry_middleware/zipball/17c9299cde438b00bbeb099c6480319a81636a60",
+                "reference": "17c9299cde438b00bbeb099c6480319a81636a60",
                 "shasum": ""
             },
             "require": {
@@ -271,7 +271,7 @@
             ],
             "support": {
                 "issues": "https://github.com/caseyamcl/guzzle_retry_middleware/issues",
-                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.12.1"
+                "source": "https://github.com/caseyamcl/guzzle_retry_middleware/tree/v2.13.0"
             },
             "funding": [
                 {
@@ -279,7 +279,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-12-05T15:02:37+00:00"
+            "time": "2025-07-11T12:33:22+00:00"
         },
         {
             "name": "cesargb/php-log-rotation",
