@@ -4,6 +4,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
+use KeepersTeam\Webtlo\Config\TorrentDownload;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\TorrentEditor;
 use KeepersTeam\Webtlo\Timers;
@@ -22,10 +23,15 @@ try {
         throw new RuntimeException('Выберите раздачи');
     }
 
-    $cfg = $app->getLegacyConfig();
-
-    // Ключи для скачивания файлов.
+    /**
+     * Ключи для скачивания файлов.
+     *
+     * @var ApiCredentials $apiCredentials
+     */
     $apiCredentials = $app->get(ApiCredentials::class);
+
+    /** @var TorrentDownload $downloadOptions */
+    $downloadOptions = $app->get(TorrentDownload::class);
 
     // идентификатор подраздела
     $forum_id = $_POST['forum_id'] ?? 0;
@@ -33,8 +39,8 @@ try {
     // нужна ли замена passkey
     $replace_passkey = (bool) ($_POST['replace_passkey'] ?? false);
 
-    $passkeyValue   = (string) $cfg['user_passkey'];
-    $forRegularUser = (bool) ($cfg['tor_for_user'] ?? false);
+    $passkeyValue   = $downloadOptions->replacePassKey;
+    $forRegularUser = $downloadOptions->forRegularUser;
 
     // парсим список выбранных раздач
     parse_str($_POST['topic_hashes'], $topicHashes);
@@ -43,7 +49,9 @@ try {
     $topicHashes = array_map('strval', (array) $topicHashes['topic_hashes']);
 
     // выбор каталога
-    $torrent_files_path = !$replace_passkey ? $cfg['save_dir'] : $cfg['dir_torrents'];
+    $torrent_files_path = !$replace_passkey
+        ? $downloadOptions->folder
+        : $downloadOptions->folderReplace;
 
     if (empty($torrent_files_path)) {
         throw new Exception('В настройках не указан каталог для скачивания торрент-файлов');
@@ -55,7 +63,7 @@ try {
     }
 
     // создание подкаталога
-    if (!$replace_passkey && $cfg['savesub_dir']) {
+    if (!$replace_passkey && $downloadOptions->subFolder) {
         $torrent_files_path .= 'tfiles_' . $forum_id . '_' . time() . substr($torrent_files_path, -1);
     }
 
@@ -83,11 +91,9 @@ try {
     }
     $log->info($log_string);
 
-    $addRetracker = (bool) ($cfg['retracker'] ?? false);
-
     $torrent_files_downloaded = [];
     foreach ($topicHashes as $topicHash) {
-        $data = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $addRetracker);
+        $data = $forumClient->downloadTorrent(infoHash: $topicHash, addRetracker: $downloadOptions->addRetracker);
         if ($data === null) {
             continue;
         }
@@ -150,6 +156,6 @@ try {
 }
 
 echo json_encode([
-    'log' => $app->getLoggerRecords(),
+    'log'    => $app->getLoggerRecords(),
     'result' => $result,
 ], JSON_UNESCAPED_UNICODE);
