@@ -12,6 +12,5 @@ final class UserInfo
     public function __construct(
         public readonly int    $userId,
         public readonly string $userName,
-        public readonly bool   $excludeSelf,
     ) {}
 }
