@@ -75,9 +75,6 @@ final class App
         ));
         $container->add('config', fn() => $container->get(Settings::class)->populate());
 
-        // Подключаем БД.
-        $container->add(DB::class, fn() => DB::create());
-
         return self::$appContainer = new self($container);
     }
 
