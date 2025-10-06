@@ -51,9 +51,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $ini = $this->getIni();
 
             return new UserInfo(
-                userId     : (int) $ini->read('torrent-tracker', 'user_id'),
-                userName   : (string) $ini->read('torrent-tracker', 'login'),
-                excludeSelf: (bool) $ini->read('sections', 'exclude_self_keep', 1),
+                userId  : (int) $ini->read('torrent-tracker', 'user_id'),
+                userName: (string) $ini->read('torrent-tracker', 'login'),
             );
         });
 
