@@ -1,11 +1,7 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in([
-        'src/back',
-        'src/php',
-        'src/cron',
-    ])
+    ->in('src')
 ;
 
 $config = new PhpCsFixer\Config();
@@ -41,6 +37,8 @@ $rules = [
         'default'   => 'at_least_single_space',
         'operators' => ['=' => 'align'],
     ],
+
+    'echo_tag_syntax' => ['format' => 'short', 'shorten_simple_statements_only' => true],
 
     'concat_space' => ['spacing' => 'one'],
 ];
