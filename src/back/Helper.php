@@ -12,32 +12,6 @@ final class Helper
 {
     private const LOG_DIR = 'logs';
 
-    /**
-     * Сортировка массива по заданному ключу, с учётом кириллицы.
-     *
-     * @param array<int|string, mixed> $input
-     *
-     * @return array<int|string, mixed>
-     */
-    public static function natsortField(array $input, string $field, int $direct = 1): array
-    {
-        uasort($input, function($a, $b) use ($field, $direct) {
-            $a = $a[$field] ?? 0;
-            $b = $b[$field] ?? 0;
-
-            if (is_numeric($a) && is_numeric($b)) {
-                return ($a <=> $b) * $direct;
-            }
-
-            $a = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $a, 'UTF-8'));
-            $b = (string) mb_ereg_replace('ё', 'е', mb_strtolower((string) $b, 'UTF-8'));
-
-            return strnatcasecmp($a, $b) * $direct;
-        });
-
-        return $input;
-    }
-
     /** Конвертация размера в строку. */
     public static function convertBytes(int $size, int $maxPow = 3): string
     {
@@ -289,25 +263,5 @@ final class Helper
         $newDate  = $newDate->setTimezone(new DateTimeZone('UTC'));
 
         return $newDate > $prevDate && $newDate->format('Y-m-d') !== $prevDate->format('Y-m-d');
-    }
-
-    /**
-     * Проверить включена ли опция автоматического запуска действия.
-     *
-     * @param array<string, mixed> $config
-     */
-    public static function isScheduleActionEnabled(array $config, string $action): bool
-    {
-        return (bool) ($config['automation'][$action] ?? 0);
-    }
-
-    /**
-     * Проверить включена ли дополнительная опция обновления раздач.
-     *
-     * @param array<string, mixed> $config
-     */
-    public static function isUpdatePropertyEnabled(array $config, string $property): bool
-    {
-        return (bool) ($config['update'][$property] ?? 0);
     }
 }
