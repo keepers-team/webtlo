@@ -14,6 +14,7 @@ final class AppServiceProvider extends AbstractServiceProvider
     public function provides(string $id): bool
     {
         $services = [
+            DB::class,
             TIniFileEx::class,
             WebTLO::class,
         ];
@@ -24,6 +25,9 @@ final class AppServiceProvider extends AbstractServiceProvider
     public function register(): void
     {
         $container = $this->getContainer();
+
+        // Подключаем БД.
+        $container->add(DB::class, fn() => DB::create());
 
         // Обработчик ini-файла с конфигом.
         $container->addShared(TIniFileEx::class, fn() => new TIniFileEx());
