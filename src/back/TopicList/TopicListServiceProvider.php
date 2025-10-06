@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList;
 
 use KeepersTeam\Webtlo\Config\AverageSeeds;
+use KeepersTeam\Webtlo\Config\FilterRules;
 use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Config\TorrentClients;
@@ -34,6 +35,9 @@ final class TopicListServiceProvider extends AbstractServiceProvider
             /** @var AverageSeeds $average */
             $average = $container->get(AverageSeeds::class);
 
+            /** @var FilterRules $filterRules */
+            $filterRules = $container->get(FilterRules::class);
+
             /** @var SubForums $subForums */
             $subForums = $container->get(SubForums::class);
 
@@ -44,7 +48,7 @@ final class TopicListServiceProvider extends AbstractServiceProvider
 
             return new ConfigFilter(
                 userId              : $user->userId,
-                excludeSelf         : $user->excludeSelf,
+                excludeSelf         : $filterRules->excludeSelf,
                 enableAverageHistory: $average->enableHistory,
                 notHiddenSubForums  : array_column($notHidden, 'id')
             );
