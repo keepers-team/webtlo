@@ -25,12 +25,17 @@ final class SubForums
         return count($this->ids);
     }
 
+    public function getSubForum(int $subForumId): ?SubForum
+    {
+        return $this->params[$subForumId] ?? null;
+    }
+
     /**
      * Найти значение лимита пиров для регулировки по ид подраздела.
      */
     public function getControlPeers(int $subForumId): int
     {
-        return $this->params[$subForumId]->controlPeers ?? -2;
+        return $this->getSubForum(subForumId: $subForumId)->controlPeers ?? -2;
     }
 
     public function getKeyObject(): KeysObject
