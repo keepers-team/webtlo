@@ -127,4 +127,18 @@ final class Topics
             );
         }
     }
+
+    /**
+     * Удаление раздач из подразделов,
+     * для которых нет актуальных меток обновления.
+     */
+    public function removeOutdatedRows(): void
+    {
+        $query = '
+            DELETE FROM Topics
+            WHERE forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
+        ';
+
+        $this->db->executeStatement(sql: $query);
+    }
 }

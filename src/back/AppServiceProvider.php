@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use KeepersTeam\Webtlo\Config\AverageSeeds;
 use KeepersTeam\Webtlo\Config\ConfigMigration;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Psr\Log\LoggerInterface;
@@ -30,7 +31,13 @@ final class AppServiceProvider extends AbstractServiceProvider
 
         // Подключаем БД.
         $container->add(DB::class, function() use ($container) {
-            return DB::create(logger: $container->get(LoggerInterface::class));
+            /** @var LoggerInterface $logger */
+            $logger = $container->get(LoggerInterface::class);
+
+            /** @var AverageSeeds $average */
+            $average = $container->get(AverageSeeds::class);
+
+            return DB::connect(logger: $logger, averageSeeds: $average);
         });
 
         // Обработчик ini-файла с конфигом.

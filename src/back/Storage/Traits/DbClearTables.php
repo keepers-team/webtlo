@@ -6,41 +6,40 @@ namespace KeepersTeam\Webtlo\Storage\Traits;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
-use KeepersTeam\Webtlo\TIniFileEx;
 
 trait DbClearTables
 {
     /**
      * Очистка таблиц от неактуальных данных.
-     * TODO Изменить работу с конфигом.
      */
-    protected function clearTables(): void
+    protected function clearTables(int $keepDataPeriod = 7): void
     {
-        $updateTime = new UpdateTime($this);
+        // Вручную создаём экземпляр UpdateTime.
+        $updateTime = new UpdateTime(db: $this);
 
         // Проверяем необходимость выполнения очистки БД (раз в день).
-        $isCleanNeeded = $updateTime->checkUpdateAvailable(UpdateMark::DB_CLEAN, 86400);
+        $isCleanNeeded = $updateTime->checkUpdateAvailable(marker: UpdateMark::DB_CLEAN, seconds: 86400);
         if (!$isCleanNeeded) {
             return;
         }
 
+        $this->logger->debug('Выполняем очистку устаревших данных, записи старше {days} дней.', ['days' => $keepDataPeriod]);
+
         // Данные о сидах устарели
-        $keepDataPeriod = (int) TIniFileEx::read('sections', 'avg_seeders_period_outdated', 7);
-        $outdatedDate   = (new DateTimeImmutable())->modify("- $keepDataPeriod day");
+        $outdatedDate = (new DateTimeImmutable())->modify("- $keepDataPeriod day");
 
         // Удалим устаревшие метки обновлений.
-        $updateTime->removeOutdatedRows($outdatedDate);
+        $updateTime->removeOutdatedRows(outdatedDate: $outdatedDate);
 
         // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
-        $this->executeStatement(
-            '
-                DELETE FROM Topics
-                WHERE forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
-            '
-        );
+        $topics = new Topics(db: $this);
+        $topics->removeOutdatedRows();
 
         // Записываем дату последней очистки.
-        $updateTime->setMarkerTime(UpdateMark::DB_CLEAN);
+        $updateTime->setMarkerTime(marker: UpdateMark::DB_CLEAN);
+
+        $this->logger->debug('Очистка выполнена. Записываем маркер.');
     }
 }
