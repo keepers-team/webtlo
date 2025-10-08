@@ -48,8 +48,8 @@ final class LoggerConstructor
         // Автоматическая подстановка значений, согласно PSR-3.
         $logger->pushProcessor(new PsrLogMessageProcessor(removeUsedContextFields: true));
 
-        // Запись в legacy-logger для вывода на фронт.
-        $logger->pushHandler(self::getLegacyLogger(level: $level));
+        // Запись в memory-logger для вывода на фронт.
+        $logger->pushHandler(self::getMemoryLogger(level: $level));
 
         // Пробуем создать файлы журналов и писать в них.
         // Если не удалось, то пишем всё в ErrorLogHandler => error_log.
@@ -96,7 +96,7 @@ final class LoggerConstructor
         return (new StreamHandler(stream: $logFile, level: $level))->setFormatter(formatter: $formatter);
     }
 
-    private static function getLegacyLogger(Level $level): HandlerInterface
+    private static function getMemoryLogger(Level $level): HandlerInterface
     {
         $formatter = new LineFormatter(format: '%level_name%: %message% %context%');
         $formatter->ignoreEmptyContextAndExtra();
