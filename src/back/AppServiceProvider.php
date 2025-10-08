@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Config\ConfigMigration;
 use League\Container\ServiceProvider\AbstractServiceProvider;
+use Psr\Log\LoggerInterface;
 
 /**
  * Предоставляет ключевые классы для работы приложения.
@@ -28,7 +29,9 @@ final class AppServiceProvider extends AbstractServiceProvider
         $container = $this->getContainer();
 
         // Подключаем БД.
-        $container->add(DB::class, fn() => DB::create());
+        $container->add(DB::class, function() use ($container) {
+            return DB::create(logger: $container->get(LoggerInterface::class));
+        });
 
         // Обработчик ini-файла с конфигом.
         $container->addShared(TIniFileEx::class, function() {

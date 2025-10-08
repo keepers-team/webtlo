@@ -1,8 +1,8 @@
 <?php
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Front\Render;
+use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
 
 header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
 mb_internal_encoding('UTF-8');
@@ -19,19 +19,13 @@ if (!file_exists($autoloader)) {
 
 include_once $autoloader;
 
-// 1. Подключаем общие настройки (запуск БД).
-try {
-    App::create();
-    DB::create();
-} catch (Exception $e) {
-    $initError = $e->getMessage();
-}
-
-// 2. Загружаем конфиг и рисуем селекторы.
+// Параметры для отрисовки селекторов и прочего.
 $config = [];
 
 try {
+    // Пробуем загрузить приложение и подключится к БД.
     $app = App::create();
+    $app->getDataBase();
 
     /** @var Render $render */
     $render = $app->get(Render::class);
@@ -39,7 +33,14 @@ try {
 
     // file_put_contents('example-config.json', json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 } catch (Exception $e) {
-    echo $e->getMessage();
+    echo '<b>Запуск невозможен.</b><br>';
+    echo 'Ошибка запуска программы. <br>';
+    echo htmlspecialchars($e->getMessage()) . '<br>';
+
+    echo '<br><b>Логи:</b><br>';
+    echo Log::getRecords();
+
+    exit;
 }
 
 /**
