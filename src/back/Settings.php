@@ -6,6 +6,30 @@ namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Config\Defaults;
 
+/**
+ * Класс для записи конфигурации WebTLO в .ini файл.
+ *
+ * Конфиг хранится в config.ini файле в каталоге по-умолчанию, см. \KeepersTeam\Webtlo\Helper::getStorageDir().
+ * Запись выполняется тут путём модификации TIniFileEx.
+ *
+ * Значения из конфига преобразуются в ряд DTO-классов в namespace KeepersTeam\Webtlo\Config
+ * с помощью \KeepersTeam\Webtlo\Config\ConfigServiceProvider.
+ *
+ * Обработанные значения из DTO преобразуются в Front-Config в \KeepersTeam\Webtlo\Front\Render.
+ * Front-Config - это двумерный массив, $config['section']['key'].
+ * Который в index.php распихивается по полям в html.
+ * После чего с помощью js+jquery наполняется различным функционалом.
+ *
+ *
+ * Жизненный цикл параметров:
+ * 1. Загрузка из config.ini в TIniFileEx, см.\KeepersTeam\Webtlo\AppServiceProvider.
+ * 2. Выполнение миграций конфига, если нужно, см. \KeepersTeam\Webtlo\Config\ConfigMigration.
+ * 3. Запись в DTO (обработка значений по умолчанию, в случае отсутствия фактических значений).
+ * 4. Рендер значений в index.php + инициализация фронта.
+ * 5. Изменение пользователем значений, см. \KeepersTeam\Webtlo\Front\Render.
+ * 6. Сохранение изменений => src/php/actions/set_config.php
+ * 7. Попадание сюда, Settings:update()
+ */
 final class Settings
 {
     /** Актуальная версия. */
