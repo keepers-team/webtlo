@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Storage\Traits;
 
 use KeepersTeam\Webtlo\Backup;
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
 use RuntimeException;
 
 trait DbMigration
@@ -28,7 +27,9 @@ trait DbMigration
             // Странный случай, вероятно, откат версии ТЛО.
             throw new RuntimeException(
                 sprintf(
-                    'Ваша версия БД (#%d), опережает указанную в настройках web-TLO. Вероятно, вы откатились на прошлую версию программы. Удалите файл БД и запустите обновление сведений.',
+                    'Ваша версия БД (#%d), опережает указанную в настройках web-TLO. '
+                    . 'Вероятно, вы откатились на прошлую версию программы. '
+                    . 'Удалите файл БД и перезапустите программу.',
                     $currentVersion
                 )
             );
@@ -42,7 +43,7 @@ trait DbMigration
             Backup::database($databasePath, $currentVersion);
 
             // Выполняем миграцию.
-            $this->migrateTables($currentVersion);
+            $this->migrateTables($currentVersion, self::DATABASE_VERSION);
         }
     }
 
@@ -55,6 +56,8 @@ trait DbMigration
 
         $query = file_get_contents($filePath);
         if (empty($query)) {
+            $this->logger->warning('Ошибка загрузки файла инициализации', ['file' => $filePath]);
+
             throw new RuntimeException('Не удалось загрузить файл инициализации таблиц БД.');
         }
 
@@ -64,9 +67,9 @@ trait DbMigration
     /**
      * Совместимость со старыми версиями базы данных.
      *
-     * @param int $version Текущая версия БД
+     * @param int $version версия БД до применения миграций (текущая)
      */
-    private function migrateTables(int $version): void
+    private function migrateTables(int $version, int $targetVersion): void
     {
         // Место хранения sql-файлов миграции/инициализации.
         $dir = Helper::getMigrationPath();
@@ -75,21 +78,40 @@ trait DbMigration
 
         // Все файлы должны соблюдать паттерн наименования: "0000-some-description.sql"
         // где 0000 - новая версия БД, после применения миграции.
-        foreach ($this->getFiles($dir) as $file) {
+        $files = $this->getFiles(sqlPath: $dir);
+        foreach ($files as $file) {
             [$pragmaVersion] = explode('-', $file);
 
             if ($currentVersion < (int) $pragmaVersion) {
-                $query = file_get_contents($dir . DIRECTORY_SEPARATOR . $file);
-                if (empty($query)) {
+                $filePath = $dir . DIRECTORY_SEPARATOR . $file;
+
+                $migration = file_get_contents($filePath);
+                if (empty($migration)) {
+                    $this->logger->warning('Ошибка загрузки файла инициализации', ['file' => $filePath]);
+
                     throw new RuntimeException(sprintf('Пустой файл миграции %s', $file));
                 }
 
                 ++$currentVersion;
-                $this->executeQuery($query);
+                $this->executeQuery(sql: $migration);
             }
         }
 
-        Log::append(sprintf('Бд обновлена, user_version %d => %d.', $version, $currentVersion));
+        // Проверим, а все ли миграции выполнились.
+        if ($currentVersion < $targetVersion) {
+            $this->logger->error(
+                'Миграция базы данных не завершена.',
+                ['before' => $version, 'after' => $currentVersion, 'target' => $targetVersion]
+            );
+            $this->logger->debug('migration files', $files);
+
+            throw new RuntimeException("Не удалось обновить БД до заданной версии ($targetVersion).");
+        }
+
+        $this->logger->info(
+            'Миграция базы данных завершена успешно, user_version {before} => {after}.',
+            ['before' => $version, 'after' => $currentVersion]
+        );
     }
 
     /**

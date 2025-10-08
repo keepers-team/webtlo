@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Storage\Traits;
 use PDO;
 use PDOException;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 final class DB
@@ -17,19 +18,22 @@ final class DB
     use Traits\DbQuery;
 
     /** Актуальная версия БД */
-    private const DATABASE_VERSION = 15;
+    protected const DATABASE_VERSION = 15;
 
     /** Инициализация таблиц актуальной версии. */
-    private const INIT_FILE = '9999-init-database.sql';
+    protected const INIT_FILE = '9999-init-database.sql';
 
     /** Название файла БД. */
     private const DATABASE_FILE = 'webtlo.db';
 
     private static ?self $instance = null;
 
-    public function __construct(public readonly PDO $db) {}
+    public function __construct(
+        public readonly PDO             $db,
+        public readonly LoggerInterface $logger,
+    ) {}
 
-    public static function create(): DB
+    public static function create(LoggerInterface $logger): DB
     {
         $databasePath = self::getDatabasePath();
 
@@ -40,10 +44,10 @@ final class DB
                 $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
 
                 // Создаём экземпляр класса.
-                $db = new DB($pdo);
+                $db = new DB(db: $pdo, logger: $logger);
 
                 // Инициализация/миграция таблиц БД.
-                $db->checkDatabaseVersion($databasePath);
+                $db->checkDatabaseVersion(databasePath: $databasePath);
 
                 self::$instance = $db;
             } catch (PDOException $e) {
@@ -58,15 +62,6 @@ final class DB
         $instance->clearTables();
 
         return $instance;
-    }
-
-    public static function getInstance(): self
-    {
-        if (self::$instance === null) {
-            return self::create();
-        }
-
-        return self::$instance;
     }
 
     private static function getDatabasePath(): string

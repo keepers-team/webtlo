@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Traits;
 
-use KeepersTeam\Webtlo\Legacy\Log;
 use PDO;
 use PDOException;
 use PDOStatement;
@@ -32,7 +31,10 @@ trait DbQuery
         } catch (Throwable $e) {
             $this->rollbackTransaction();
 
-            Log::append($sql);
+            $this->logger->error(
+                'SQL. Ошибка выполнения запроса',
+                ['method' => 'executeStatement', 'exception' => $e, 'query' => $sql, 'param' => $param]
+            );
 
             throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
@@ -138,7 +140,10 @@ trait DbQuery
         try {
             $this->db->exec($sql);
         } catch (Throwable $e) {
-            Log::append($sql);
+            $this->logger->error(
+                'SQL. Ошибка выполнения запроса',
+                ['method' => 'executeQuery', 'exception' => $e, 'query' => $sql]
+            );
 
             throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }

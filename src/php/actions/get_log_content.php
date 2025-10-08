@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Helper;
-use KeepersTeam\Webtlo\Legacy\Log;
+use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
 
 if (isset($_POST['log_file'])) {
     $log_file = $_POST['log_file'];
