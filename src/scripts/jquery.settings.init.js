@@ -42,6 +42,10 @@ $(document).ready(function() {
 
     // Переносим значения радио кнопок из скрытых элементов формы.
     $('#config .radio_from_input').each(function() {
+        if (this.value === '') {
+            return false;
+        }
+
         $(`input[type=radio][name='${this.id}'][value=${this.value}]`).prop('checked', true);
     });
 

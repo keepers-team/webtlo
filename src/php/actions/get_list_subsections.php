@@ -38,7 +38,8 @@ try {
 
         $data = $db->query(
             sql  : '
-                SELECT id AS value, name AS label FROM Forums
+                SELECT id AS value, name AS label
+                FROM Forums
                 WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)
              ',
             param: ['term' => (string) $pattern],
@@ -51,8 +52,8 @@ try {
 } catch (Exception $e) {
     echo json_encode([
         [
-            'label' => $e->getMessage(),
             'value' => -1,
+            'label' => $e->getMessage(),
         ],
     ]);
 }

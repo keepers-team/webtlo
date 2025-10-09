@@ -192,11 +192,25 @@ $(document).ready(function () {
         },
         response : function(event, ui) {
             $(this).closest('div').find('div').hide();
-            if ((ui.content.length) === 0) {
+
+            // Нет результатов, значит красим в ошибку.
+            if (ui.content.length === 0) {
                 $(this).addClass('ui-state-error');
+
+                return false;
             }
-            if ((ui.content.length) === 1) {
-                $(this).data('ui-autocomplete')._trigger('select', 'autocompleteselect', {item: ui.content[0]});
+
+            if (ui.content.length === 1) {
+                // Результат ровно один, но ид отрицательный, значит красим в ошибку.
+                let item = ui.content[0];
+                if (item.value < 0) {
+                    $(this).addClass('ui-state-error');
+
+                    return false;
+                }
+
+                // Автоматически выбираем найденный подраздел.
+                $(this).data('ui-autocomplete')._trigger('select', 'autocompleteselect', {item: item});
                 $('#list-forums-button').addClass('ui-state-highlight');
                 $(this).val('').autocomplete('close');
             }
