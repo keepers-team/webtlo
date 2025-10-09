@@ -223,6 +223,11 @@ final class Helper
         return (string) mb_convert_encoding($string, 'Windows-1251', 'UTF-8');
     }
 
+    public static function prepareCompareString(string $string): string
+    {
+        return (string) mb_ereg_replace('ё', 'е', mb_strtolower($string, 'UTF-8'));
+    }
+
     /**
      * Разбиение строки по символу с приведением значений к int.
      *
