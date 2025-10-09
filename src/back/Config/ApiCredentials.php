@@ -13,9 +13,12 @@ final class ApiCredentials
 {
     public function __construct(
         public readonly int    $userId,
-        public readonly string $btKey,
-        public readonly string $apiKey,
-    ) {
+        public readonly string $btKey = '',
+        public readonly string $apiKey = '',
+    ) {}
+
+    public function validate(): void
+    {
         if ($this->userId <= 0) {
             throw new RuntimeException('Отсутствует ид пользователя. Пройдите авторизацию.');
         }
@@ -29,6 +32,8 @@ final class ApiCredentials
      */
     public function getApiKey(): array
     {
+        $this->validate();
+
         return ['api_key' => $this->apiKey];
     }
 }

@@ -25,5 +25,7 @@ final class ApiForumClient
         private readonly ApiCredentials  $auth,
         private readonly ApiForumConnect $connect,
         private readonly LoggerInterface $logger
-    ) {}
+    ) {
+        $this->auth->validate();
+    }
 }

@@ -27,7 +27,9 @@ final class SendReport
         private readonly ApiReportClient $apiReport,
         private readonly ForumClient     $forumClient,
         private readonly WebTLO          $webtlo,
-    ) {}
+    ) {
+        $this->apiCredentials->validate();
+    }
 
     public function checkApiAccess(): void
     {

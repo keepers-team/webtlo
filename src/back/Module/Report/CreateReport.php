@@ -62,7 +62,9 @@ final class CreateReport
         private readonly Forums          $tableForums,
         private readonly WebTLO          $webtlo,
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+        $this->auth->validate();
+    }
 
     public function initConfig(?CreationMode $mode = null): void
     {

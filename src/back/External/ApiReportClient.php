@@ -29,7 +29,9 @@ final class ApiReportClient
         private readonly Client          $client,
         private readonly ApiCredentials  $auth,
         private readonly LoggerInterface $logger,
-    ) {}
+    ) {
+        $this->auth->validate();
+    }
 
     public function checkAccess(): bool
     {

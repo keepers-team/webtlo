@@ -14,6 +14,8 @@ trait TorrentDownload
 
     public function setApiCredentials(ApiCredentials $apiCredentials): void
     {
+        $apiCredentials->validate();
+
         $this->apiCredentials = $apiCredentials;
     }
 
