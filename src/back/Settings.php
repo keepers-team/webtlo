@@ -332,7 +332,7 @@ final class Settings
     public function update(array $cfg, array $forums, array $torrentClients): bool
     {
         // Уровень ведения журнала.
-        $this->ini->write('other', 'log_level', trim($cfg['log_level']));
+        $this->ini->write('other', 'log_level', trim($cfg['log_level'] ?? 'Info'));
 
         // Форум / api.
         $this->setForum($cfg);
