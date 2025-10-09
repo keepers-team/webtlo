@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 
 /**
@@ -23,6 +24,25 @@ final class SubForums
     public function count(): int
     {
         return count($this->ids);
+    }
+
+    /**
+     * Получить список клиентов, отсортированный по введённому имени (tag).
+     *
+     * @return SubForum[]
+     */
+    public function getNameSorted(): array
+    {
+        $list = $this->params;
+
+        uasort($list, static function(SubForum $a, SubForum $b) {
+            return strnatcasecmp(
+                Helper::prepareCompareString($a->name),
+                Helper::prepareCompareString($b->name),
+            );
+        });
+
+        return $list;
     }
 
     public function getSubForum(int $subForumId): ?SubForum

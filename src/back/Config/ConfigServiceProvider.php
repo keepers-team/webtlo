@@ -64,7 +64,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $url       = basename((string) $ini->read('torrent-tracker', 'forum_url', Defaults::forumUrl));
             $urlCustom = basename((string) $ini->read('torrent-tracker', 'forum_url_custom'));
 
-            $url = $url === 'custom' ? $urlCustom : $url;
+            $isCustomUrl = $url === 'custom';
 
             $ssl      = (bool) $ini->read('torrent-tracker', 'forum_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_forum', 1);
@@ -75,7 +75,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             );
 
             return new ForumConnect(
-                baseUrl : $url,
+                baseUrl : $isCustomUrl ? $urlCustom : $url,
+                isCustom: $isCustomUrl,
                 ssl     : $ssl,
                 useProxy: $useProxy,
                 timeout : $timeout,
@@ -105,7 +106,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $url       = basename((string) $ini->read($section, 'api_url', Defaults::apiForumUrl));
             $urlCustom = basename((string) $ini->read($section, 'api_url_custom'));
 
-            $url = $url === 'custom' ? $urlCustom : $url;
+            $isCustomUrl = $url === 'custom';
 
             $ssl      = (bool) $ini->read($section, 'api_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_api', 0);
@@ -120,7 +121,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $rateLimit   = (int) $ini->read($section, 'api_rate_request_limit', ApiForumConnect::rateRequestLimit);
 
             return new ApiForumConnect(
-                baseUrl         : $url,
+                baseUrl         : $isCustomUrl ? $urlCustom : $url,
+                isCustom        : $isCustomUrl,
                 ssl             : $ssl,
                 useProxy        : $useProxy,
                 timeout         : $timeout,
@@ -137,6 +139,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $url       = basename((string) $ini->read('torrent-tracker', 'report_url', Defaults::apiReportUrl));
             $urlCustom = basename((string) $ini->read('torrent-tracker', 'report_url_custom'));
 
+            $isCustomUrl = $url === 'custom';
+
             $url = $url === 'custom' ? $urlCustom : $url;
 
             $ssl      = (bool) $ini->read('torrent-tracker', 'report_ssl', 1);
@@ -148,7 +152,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             );
 
             return new ApiReportConnect(
-                baseUrl : $url,
+                baseUrl : $isCustomUrl ? $urlCustom : $url,
+                isCustom: $isCustomUrl,
                 ssl     : $ssl,
                 useProxy: $useProxy,
                 timeout : $timeout,
@@ -179,6 +184,17 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             ];
 
             return Proxy::fromLegacy($proxy);
+        });
+
+        // Параметры для фильтрации раздач.
+        $container->addShared(FilterRules::class, function() {
+            $ini = $this->getIni();
+
+            return new FilterRules(
+                ruleTopics     : (int) $ini->read('sections', 'rule_topics', 5),
+                ruleDateRelease: (int) $ini->read('sections', 'rule_date_release', 5),
+                excludeSelf    : (bool) $ini->read('sections', 'exclude_self_keep', 1),
+            );
         });
 
         // Опции набора истории средних сидов.
@@ -358,7 +374,10 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             $ini = $this->getIni();
 
             return new Other(
-                logLevel: (string) $ini->read('other', 'log_level', 'Info'),
+                logLevel             : (string) $ini->read('other', 'log_level', 'Info'),
+                uiSaveSelectedSection: (bool) $ini->read('sections', 'ui_save_selected_section', 1),
+                uiAutoApplyFilter    : (bool) $ini->read('sections', 'enable_auto_apply_filter', 1),
+                uiTheme              : (string) $ini->read('ui', 'theme', Defaults::uiTheme),
             );
         });
 
