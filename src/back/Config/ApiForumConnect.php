@@ -4,8 +4,17 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use KeepersTeam\Webtlo\Front\DefaultConnectTrait;
+
 final class ApiForumConnect
 {
+    use DefaultConnectTrait;
+
+    /** @var string[] */
+    final public const validUrl = [
+        Defaults::apiForumUrl,
+    ];
+
     /**
      * Количество возможны одновременных запросов к API.
      */
@@ -14,7 +23,7 @@ final class ApiForumConnect
     /**
      * Временной интервал, в который не должно отправлять более rateFrameLimit запросов, в мс.
      */
-    final public const rateFrameSize  = 1000;
+    final public const rateFrameSize = 1000;
 
     /**
      * Количество запросов, не более которого должно отправляться за rateFrameSize.
@@ -25,6 +34,7 @@ final class ApiForumConnect
 
     public function __construct(
         public readonly string  $baseUrl,
+        public readonly bool    $isCustom,
         public readonly bool    $ssl,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
