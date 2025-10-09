@@ -50,7 +50,14 @@ final class TIniFileEx
             self::loadFromFile();
         }
 
-        return self::$readConfig[$section][$key] ?? $def;
+        $value = self::$readConfig[$section][$key] ?? $def;
+
+        // Экранированные строки нужно дополнительно экранировать, для html.
+        if ($value !== '' && !is_numeric($value)) {
+            $value = htmlspecialchars($value, ENT_QUOTES);
+        }
+
+        return $value;
     }
 
     public static function write(int|string $section, int|string $key, mixed $value): void
@@ -76,10 +83,12 @@ final class TIniFileEx
         self::$readConfig = array_replace_recursive(self::$readConfig, self::$writeConfig);
 
         $result = '';
-        foreach (self::$readConfig as $secName => $section) {
-            $result .= '[' . $secName . ']' . $_BR_;
-            foreach ($section as $key => $value) {
-                $result .= sprintf('%s="%s"%s', $key, str_replace('\\', '\\\\', (string) $value), $_BR_);
+        foreach (self::$readConfig as $section => $values) {
+            $result .= '[' . $section . ']' . $_BR_;
+            foreach ($values as $key => $value) {
+                $value = self::prepare((string) $value);
+
+                $result .= sprintf('%s="%s"%s', $key, $value, $_BR_);
             }
             $result .= $_BR_;
         }
@@ -101,5 +110,23 @@ final class TIniFileEx
     {
         self::$writeConfig = self::$readConfig;
         self::setFile($filename);
+    }
+
+    /**
+     * Вручную экранируем double-quote и backslash.
+     *
+     * Встроенная методы не подходят,
+     * т.к. экранируют дополнительные специальные символы
+     * и ломают конфиг в другую строну.
+     */
+    private static function prepare(string $string): string
+    {
+        if ($string === '') {
+            return $string;
+        }
+
+        $string = str_replace('\\', '\\\\', $string);
+
+        return str_replace('"', '\"', $string);
     }
 }
