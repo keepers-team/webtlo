@@ -496,7 +496,7 @@ function cfg_numeric_value($cfg): Closure
                                 <span>Статус хранения раздачи</span>
                                 <hr/>
                                 <fieldset class="filter-topic-kept-status">
-                                    <fieldset title="Отобразить раздачи, у которых есть минимум однин хранитель, с полностью скачанной раздачей / раздачи, у которых нет хранителей.">
+                                    <fieldset title="Отобразить раздачи, у которых есть минимум один хранитель, с полностью скачанной раздачей / раздачи, у которых нет хранителей.">
                                         <legend>
                                             <i class="fa fa-upload text-success" title="Есть в списке и раздаёт"></i>
                                             <i class="fa fa-hard-drive text-success" title="Есть в списке, не раздаёт"></i>
@@ -816,7 +816,7 @@ function cfg_numeric_value($cfg): Closure
                                         Пароль:
                                         <input name="proxy_paswd" id="proxy_paswd" type="password"
                                                class="myinput user_protected" size="24"
-                                               title="Пароль для доступа к прокси-серверу (необязатально)."
+                                               title="Пароль для доступа к прокси-серверу (необязательно)."
                                                value="<?= $cfg['proxy_paswd'] ?>"/>
                                     </label>
                                 </div>
@@ -884,7 +884,7 @@ function cfg_numeric_value($cfg): Closure
                                     <label for="torrent-client-password" class="prop-inline-block">Пароль:</label>
                                     <input name="torrent-client-password" id="torrent-client-password"
                                            class="torrent-client-props" type="password" size="23"
-                                           title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязатально)."/>
+                                           title="Пароль для доступа к веб-интерфейсу торрент-клиента (необязательно)."/>
                                     <button type="button" class="torrent-client-password-toggle" title="Показать/скрыть пароль">
                                         <i class="fa fa-eye"></i>
                                     </button>
@@ -1155,7 +1155,7 @@ function cfg_numeric_value($cfg): Closure
                                 <input name="random" class="control-random-spinner" type="text" size="1" value="<?= $numeric_check('topics_control', 'random') ?>" />
                                 пиров в пограничных случаях
                             </label>
-                            <label class="label" title="Если лимит пиров задан и для подраздела и для торрент-клиента, нужно выбрать приоритет одного над другим.">
+                            <div class="label" title="Если лимит пиров задан и для подраздела и для торрент-клиента, нужно выбрать приоритет одного над другим.">
                                 Приоритет при вычислении лимита пиров
                                 <div class="config_controlgroup">
                                     <input type="hidden" id="peer_priority" class="radio_from_input" value="<?= $numeric_check('topics_control', 'priority') ?>">
@@ -1166,7 +1166,7 @@ function cfg_numeric_value($cfg): Closure
                                     <input type="radio" id="peer_priority_client" name="peer_priority" value="2">
                                     <label for="peer_priority_client">торрент-клиент</label>
                                 </div>
-                            </label>
+                            </div>
                             <label class="label" title="Установите, если необходимо регулировать раздачи, которые не попадают в хранимые разделы (по умолчанию: выключено)">
                                 <input name="unadded_subsections" type="checkbox" <?= $checkbox_check('topics_control', 'unadded_subsections') ?> />
                                 регулировать раздачи не из хранимых подразделов
