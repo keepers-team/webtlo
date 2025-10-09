@@ -5,13 +5,23 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\WebTLO;
 
-Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
-mb_internal_encoding("UTF-8");
+Header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+mb_internal_encoding('UTF-8');
+
+$autoloader = __DIR__ . '/vendor/autoload.php';
+
+if (!file_exists($autoloader)) {
+    echo 'Запуск невозможен. <br>';
+    echo "Отсутствует файл автозагрузки зависимостей: $autoloader. <br>";
+    echo 'Проверьте установку программы, выполните composer install. <br>';
+
+    exit;
+}
+
+include_once $autoloader;
 
 // 1. Подключаем общие настройки (запуск БД).
 try {
-    include_once dirname(__FILE__) . '/vendor/autoload.php';
-
     App::create();
     DB::create();
 } catch (Exception $e) {
