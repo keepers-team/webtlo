@@ -7,7 +7,8 @@ require __DIR__ . '/vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Module\ProbeChecker;
 
-Header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+mb_internal_encoding('UTF-8');
 
 App::init();
 
@@ -28,7 +29,6 @@ $urls = [
         'rep.rutracker.cc',
     ],
 ];
-
 
 $checker = new ProbeChecker($urls, $proxies);
 

@@ -5,7 +5,7 @@ use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Static\AppLogger;
 use KeepersTeam\Webtlo\WebTLO;
 
-Header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
 mb_internal_encoding('UTF-8');
 
 $autoloader = __DIR__ . '/vendor/autoload.php';
