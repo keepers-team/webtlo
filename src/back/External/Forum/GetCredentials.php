@@ -20,19 +20,28 @@ trait GetCredentials
      *
      * @return ?ApiCredentials объект API ключей или null в случае ошибки
      */
-    public function getApiCredentials(): ?ApiCredentials
+    public function searchApiCredentials(): ?ApiCredentials
     {
         $userId = self::parseUserId(cookieJar: $this->cookie, logger: $this->logger);
         if ($userId === null) {
             return null;
         }
 
-        $profilePage = $this->getProfile(userId: $userId);
+        $this->logger->info('Авторизация выполнена успешно, найден userId: {userId}', ['userId' => $userId]);
+
+        $profilePage = $this->requestProfilePage(userId: $userId);
         if ($profilePage === null) {
             return null;
         }
 
-        return self::parseApiCredentials(profilePage: $profilePage);
+        $parsedKeys = self::parseApiCredentials(profilePage: $profilePage);
+        if ($parsedKeys === null) {
+            $this->logger->notice('Не удалось получить Хранительские ключи. Вы точно хранитель?');
+
+            return new ApiCredentials(userId: $userId);
+        }
+
+        return $parsedKeys;
     }
 
     /**
@@ -77,7 +86,7 @@ trait GetCredentials
      *
      * @return ?string HTML-страница профиля или null в случае ошибки
      */
-    private function getProfile(int $userId): ?string
+    private function requestProfilePage(int $userId): ?string
     {
         $query = ['u' => $userId, 'mode' => self::profileAction];
 

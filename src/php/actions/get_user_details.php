@@ -39,7 +39,7 @@ try {
         ? implode('', $config['tracker_password'])
         : (string) $config['tracker_password'];
 
-    $auth = ForumCredentials::fromFrontProperties(login: $username, password: $password);
+    $forumAuth = ForumCredentials::fromFrontProperties(login: $username, password: $password);
 
     // Заполненный пользователем код CAPTCHA.
     $captchaFields = null;
@@ -60,7 +60,7 @@ try {
 
     /** @var ForumConstructor $helper */
     $helper = $app->get(ForumConstructor::class);
-    $helper->setForumCredentials(credentials: $auth);
+    $helper->setForumCredentials(credentials: $forumAuth);
 
     // Подключаемся к форуму.
     $forumClient = $helper->createRequestClient();
@@ -72,7 +72,7 @@ try {
         $result['user_session'] = $forumClient->getUpdatedCookie();
 
         // Получаем хранительские ключи для доступа к API.
-        $apiCred = $forumClient->getApiCredentials();
+        $apiCred = $forumClient->searchApiCredentials();
         if ($apiCred !== null) {
             $result['bt_key']  = $apiCred->btKey;
             $result['api_key'] = $apiCred->apiKey;

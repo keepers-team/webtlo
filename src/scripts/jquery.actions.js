@@ -254,6 +254,7 @@ $(document).ready(function () {
             success: function (response) {
                 response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
+
                 if (!$.isEmptyObject(response.captcha)) {
                     authResult.removeAttr("class").addClass("fa fa-circle text-danger");
 
@@ -294,17 +295,20 @@ $(document).ready(function () {
                     dialog.dialog("open");
                 } else {
                     authResult.removeAttr("class");
-                    if (
-                        !$.isEmptyObject(response.bt_key)
-                        && !$.isEmptyObject(response.api_key)
-                        && !$.isEmptyObject(response.user_id)
-                        && !$.isEmptyObject(response.user_session)
-                    ) {
+
+                    // Запишем данные о пользователе, если удалось их получить.
+                    if (!$.isEmptyObject(response.user_id)) {
+                        $("#user_id").val(response.user_id);
+                    }
+                    if (!$.isEmptyObject(response.user_session)) {
+                        $("#user_session").val(response.user_session);
+                    }
+
+                    // Проверим наличие API ключей.
+                    if (!$.isEmptyObject(response.bt_key) && !$.isEmptyObject(response.api_key)) {
                         // Записываем полученные значения ключей и сохраняем настройки.
                         $("#bt_key").val(response.bt_key);
                         $("#api_key").val(response.api_key);
-                        $("#user_id").val(response.user_id);
-                        $("#user_session").val(response.user_session);
 
                         authResult.addClass("fa fa-circle text-success");
                         setSettings();
