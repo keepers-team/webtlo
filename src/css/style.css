@@ -468,7 +468,7 @@ li.menu.ui-tabs-active {
     font-size: 1.1em;
 }
 
-.myinput {
+.inline-input {
     margin: 5px 0;
     display: inline-block;
     padding: 0 3px;
@@ -591,8 +591,8 @@ button.settings-button {
     margin: 5px 0;
 }
 
-.scriptname {
-    font-family: Consolas;
+.script-name {
+    font-family: Consolas, monospace;
     font-size: 11px;
 }
 

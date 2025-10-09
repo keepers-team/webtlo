@@ -463,7 +463,7 @@ function cfg_numeric_value($cfg): Closure
                                 <fieldset title="Клиент, в котором хранится раздача">
                                     <label>
                                         Клиент:
-                                        <select name="filter_client_id" id="filter_client_id" class="myinput">
+                                        <select name="filter_client_id" id="filter_client_id" class="inline-input">
                                             <?= $optionFilterClients ?? '' ?>
                                         </select>
                                     </label>
@@ -675,10 +675,10 @@ function cfg_numeric_value($cfg): Closure
                         <div>
                             <div id="forum_url_params">
                                 <label for="forum_url" class="param-name">Адрес форума:</label>
-                                <select name="forum_url" id="forum_url" class="myinput">
+                                <select name="forum_url" id="forum_url" class="inline-input">
                                     <?= $optionForumAddress ?? '' ?>
                                 </select>
-                                <input id="forum_url_custom" name="forum_url_custom" class="myinput" type="text"
+                                <input id="forum_url_custom" name="forum_url_custom" class="inline-input" type="text"
                                        size="14" value="<?= $cfg['forum_url_custom'] ?? '' ?>"/>
                                 <label>
                                     <input id="forum_ssl" name="forum_ssl" class="check_access_forum"
@@ -694,10 +694,10 @@ function cfg_numeric_value($cfg): Closure
                             </div>
                             <div id="api_url_params">
                                 <label for="api_url" class="param-name">API форума:</label>
-                                <select name="api_url" id="api_url" class="myinput">
+                                <select name="api_url" id="api_url" class="inline-input">
                                     <?= $optionApiAddress ?? '' ?>
                                 </select>
-                                <input id="api_url_custom" name="api_url_custom" class="myinput" type="text" size="14"
+                                <input id="api_url_custom" name="api_url_custom" class="inline-input" type="text" size="14"
                                        value="<?= $cfg['api_url_custom'] ?? '' ?>"/>
                                 <label>
                                     <input id="api_ssl" name="api_ssl" class="check_access_api"
@@ -713,10 +713,10 @@ function cfg_numeric_value($cfg): Closure
                             </div>
                             <div id="report_url_params">
                                 <label for="report_url" class="param-name">API отчётов:</label>
-                                <select name="report_url" id="report_url" class="myinput">
+                                <select name="report_url" id="report_url" class="inline-input">
                                     <?= $optionReportAddress ?? '' ?>
                                 </select>
-                                <input id="report_url_custom" name="report_url_custom" class="myinput" type="text" size="14"
+                                <input id="report_url_custom" name="report_url_custom" class="inline-input" type="text" size="14"
                                        value="<?= $cfg['report_url_custom'] ?? '' ?>"/>
                                 <label>
                                     <input id="report_ssl" name="report_ssl" class="check_access_api"
@@ -734,7 +734,7 @@ function cfg_numeric_value($cfg): Closure
                                 <div>
                                     <label for="tracker_username" class="param-name">Логин:</label>
                                     <input id="tracker_username" name="tracker_username" type="text"
-                                           class="myinput" size="25"
+                                           class="inline-input" size="25"
                                            placeholder="Логин на форуме" title="Логин на форуме"
                                            value="<?= $cfg['tracker_login'] ?>"/>
                                     <i class="fa fa-link forum-open-link" title="Открыть ссылку на профиль"></i>
@@ -742,14 +742,14 @@ function cfg_numeric_value($cfg): Closure
                                 <div>
                                     <label for="tracker_password" class="param-name">Пароль:</label>
                                     <input id="tracker_password" name="tracker_password" type="password"
-                                           class="myinput user_protected" size="25"
+                                           class="inline-input user_protected" size="25"
                                            placeholder="Пароль на форуме" title="Пароль на форуме"
                                            value="<?= $cfg['tracker_paswd'] ?>"/>
                                 </div>
                                 <div>
                                     <label for="user_session" class="param-name">Сессия:</label>
                                     <input id="user_session" name="user_session" type="password"
-                                           class="myinput user_protected" size="25" readonly
+                                           class="inline-input user_protected" size="25" readonly
                                            value="<?= $cfg['user_session'] ?>"/>
                                 </div>
                             </div>
@@ -767,9 +767,9 @@ function cfg_numeric_value($cfg): Closure
                                 <div>
                                     Полученные ключи:
                                     <label>
-                                        bt  <input id="bt_key" name="bt_key" class="myinput user_details user_protected" type="password" size="10" readonly value="<?= $cfg['bt_key'] ?>" />
-                                        api <input id="api_key" name="api_key" class="myinput user_details user_protected" type="password" size="10" readonly value="<?= $cfg['api_key'] ?>" />
-                                        id  <input id="user_id" name="user_id" class="myinput user_details" type="text" size="10" readonly value="<?= $cfg['user_id'] ?>" />
+                                        bt  <input id="bt_key" name="bt_key" class="inline-input user_details user_protected" type="password" size="10" readonly value="<?= $cfg['bt_key'] ?>" />
+                                        api <input id="api_key" name="api_key" class="inline-input user_details user_protected" type="password" size="10" readonly value="<?= $cfg['api_key'] ?>" />
+                                        id  <input id="user_id" name="user_id" class="inline-input user_details" type="text" size="10" readonly value="<?= $cfg['user_id'] ?>" />
                                     </label>
                                 </div>
                             </div>
@@ -779,7 +779,7 @@ function cfg_numeric_value($cfg): Closure
                                 <div>
                                     <label>
                                         Тип:
-                                        <select name="proxy_type" id="proxy_type" class="myinput" title="Тип прокси-сервера">
+                                        <select name="proxy_type" id="proxy_type" class="inline-input" title="Тип прокси-сервера">
                                             <option value="http" <?= ($cfg['proxy_type'] == 'http' ? "selected" : "") ?>>HTTP</option>
                                             <option value="socks4" <?= ($cfg['proxy_type'] == 'socks4' ? "selected" : "") ?>>SOCKS4</option>
                                             <option value="socks4a" <?= ($cfg['proxy_type'] == 'socks4a' ? "selected" : "") ?>>SOCKS4A</option>
@@ -792,14 +792,14 @@ function cfg_numeric_value($cfg): Closure
                                     <label>
                                         Адрес:
                                         <input name="proxy_hostname" id="proxy_hostname" type="text"
-                                               class="myinput" size="24"
+                                               class="inline-input" size="24"
                                                title="IP-адрес или сетевое/доменное имя прокси-сервера."
                                                value="<?= $cfg['proxy_hostname'] ?>"/>
                                     </label>
                                     <label>
                                         Порт:
                                         <input name="proxy_port" id="proxy_port" type="text"
-                                               class="myinput" size="6"
+                                               class="inline-input" size="6"
                                                title="Порт прокси-сервера."
                                                value="<?= $cfg['proxy_port'] ?>"/>
                                     </label>
@@ -808,14 +808,14 @@ function cfg_numeric_value($cfg): Closure
                                     <label>
                                         Логин:
                                         <input name="proxy_login" id="proxy_login" type="text"
-                                               class="myinput" size="24"
+                                               class="inline-input" size="24"
                                                title="Имя пользователя для доступа к прокси-серверу (необязательно)."
                                                value="<?= $cfg['proxy_login'] ?>"/>
                                     </label>
                                     <label>
                                         Пароль:
                                         <input name="proxy_paswd" id="proxy_paswd" type="password"
-                                               class="myinput user_protected" size="24"
+                                               class="inline-input user_protected" size="24"
                                                title="Пароль для доступа к прокси-серверу (необязательно)."
                                                value="<?= $cfg['proxy_paswd'] ?>"/>
                                     </label>
@@ -845,7 +845,7 @@ function cfg_numeric_value($cfg): Closure
                             <div id="torrent-client-props" class="block-settings">
                                 <div>
                                     <label for="torrent-client-comment" class="prop-inline-block">Название:</label>
-                                    <input name="torrent-client-comment" id="torrent-client-comment" class="myinput torrent-client-props" type="text" size="23" title="Произвольное название торрент-клиента (комментарий)" />
+                                    <input name="torrent-client-comment" id="torrent-client-comment" class="inline-input torrent-client-props" type="text" size="23" title="Произвольное название торрент-клиента (комментарий)" />
                                 </div>
                                 <div>
                                     <label for="torrent-client-type" class="prop-inline-block">Торрент-клиент:</label>
@@ -915,7 +915,7 @@ function cfg_numeric_value($cfg): Closure
                         <h2 id="sub_setting_forum">Сканируемые подразделы</h2>
                         <div>
                             <div class="input-container">
-                                <input id="add-forum" class="myinput" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
+                                <input id="add-forum" class="inline-input" type="text" size="100" placeholder="Для добавления подраздела начните вводить его индекс или название" title="Добавить новый подраздел" />
                                 <div class="spinner-container">
                                     <i class="spinner"></i>
                                 </div>
@@ -932,27 +932,27 @@ function cfg_numeric_value($cfg): Closure
                             <fieldset id="forum-props">
                                 <label title="Индекс подраздела">
                                     Индекс:
-                                    <input disabled size=10 id="forum-id" class="myinput forum-props ui-state-disabled" type="text" />
+                                    <input disabled size=10 id="forum-id" class="inline-input forum-props ui-state-disabled" type="text" />
                                     <i class="fa fa-link" title="Открыть ссылку на подраздел"></i>
                                 </label>
                                 <label title="Добавлять раздачи текущего подраздела в торрент-клиент">
                                     Торрент-клиент:
-                                    <select id="forum-client" class="myinput forum-props">
+                                    <select id="forum-client" class="inline-input forum-props">
                                         <option value=0>не выбран</option>
                                         <?= $optionTorrentClients ?? '' ?>
                                     </select>
                                 </label>
                                 <label title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent, Flood и uTorrent)">
                                     Метка:
-                                    <input id="forum-label" class="myinput forum-props" type="text" size="50" />
+                                    <input id="forum-label" class="inline-input forum-props" type="text" size="50" />
                                 </label>
                                 <label title="При добавлении раздачи данные сохранять в каталог">
                                     Каталог для данных:
-                                    <input id="forum-savepath" class="myinput forum-props" type="text" size="57" />
+                                    <input id="forum-savepath" class="inline-input forum-props" type="text" size="57" />
                                 </label>
                                 <label title="Создавать подкаталог для данных добавляемой раздачи">
                                     Создавать подкаталог для добавляемой раздачи:
-                                    <select id="forum-subdirectory" class="myinput forum-props">
+                                    <select id="forum-subdirectory" class="inline-input forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">номер темы</option>
                                         <option value="2">хэш раздачи</option>
@@ -961,7 +961,7 @@ function cfg_numeric_value($cfg): Closure
                                 <label title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
                                     <i class="fa fa-eye-slash" aria-hidden="true" title="Иконка скрытого подраздела"></i>
                                     Скрывать раздачи в общем списке:
-                                    <select id="forum-hide-topics" class="myinput forum-props">
+                                    <select id="forum-hide-topics" class="inline-input forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
@@ -969,7 +969,7 @@ function cfg_numeric_value($cfg): Closure
                                 <label title="Позволяет исключить все раздачи данного раздела из формируемых отчётов">
                                     <i class="fa fa-circle-minus" title="Иконка исключённого из отчётов подраздела"></i>
                                     Исключить раздачи из отчётов
-                                    <select id="forum-exclude" class="myinput forum-props">
+                                    <select id="forum-exclude" class="inline-input forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">да</option>
                                     </select>
@@ -977,7 +977,7 @@ function cfg_numeric_value($cfg): Closure
                                 <label title="Числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела. Значение равное -1 исключит раздачи подраздела из регулировки. См. подраздел 'Настройки управления раздачами.'">
                                     <i class="fa fa-bolt" aria-hidden="true" title="Иконка исключённого из регулировки подраздела"></i>
                                     Останавливать раздачи с количеством пиров более:
-                                    <input id="forum-control-peers" class="myinput forum-props spinner-peers" type="text" size="10" />
+                                    <input id="forum-control-peers" class="inline-input forum-props spinner-peers" type="text" size="10" />
                                 </label>
                             </fieldset>
                         </div>
@@ -1032,7 +1032,7 @@ function cfg_numeric_value($cfg): Closure
                         <div>
                             <h3>Каталог для скачиваемых *.torrent файлов</h3>
                             <div>
-                                <input id="savedir" name="savedir" class="myinput" type="text" size="53"
+                                <input id="savedir" name="savedir" class="inline-input" type="text" size="53"
                                        title="Каталог, куда будут сохраняться новые *.torrent-файлы."
                                        value="<?= $cfg['save_dir'] ?? '' ?>"/>
                             </div>
@@ -1048,13 +1048,13 @@ function cfg_numeric_value($cfg): Closure
                             <h3>Скачивание *.torrent файлов с заменой Passkey</h3>
                             <label class="label">
                                 Каталог:
-                                <input id="dir_torrents" name="dir_torrents" class="myinput" type="text" size="53"
+                                <input id="dir_torrents" name="dir_torrents" class="inline-input" type="text" size="53"
                                        title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey."
                                        value="<?= $cfg['dir_torrents'] ?? '' ?>"/>
                             </label>
                             <label class="label">
                                 Passkey:
-                                <input id="passkey" name="passkey" class="myinput" type="text" size="15"
+                                <input id="passkey" name="passkey" class="inline-input" type="text" size="15"
                                        title="Passkey, который необходимо вшить в скачиваемые торрент-файлы."
                                        value="<?= $cfg['user_passkey'] ?? '' ?>"/>
                             </label>
@@ -1110,17 +1110,17 @@ function cfg_numeric_value($cfg): Closure
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
                                 <input name="automation_update" type="checkbox" size="24" <?= $checkbox_check('automation', 'update')  ?> />
-                                <span class="scriptname">[update.php, keepers.php]</span>
+                                <span class="script-name">[update.php, keepers.php]</span>
                                 Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
                             <label class="label">
                                 <input name="automation_reports" type="checkbox" size="24" <?= $checkbox_check('automation', 'reports') ?> />
-                                <span class="scriptname">[reports.php]</span>
+                                <span class="script-name">[reports.php]</span>
                                 Отправка отчётов на форум
                             </label>
                             <label class="label">
                                 <input name="automation_control" type="checkbox" size="24" <?= $checkbox_check('automation', 'control') ?> />
-                                <span class="scriptname">[control.php]</span>
+                                <span class="script-name">[control.php]</span>
                                 Регулировка раздач в торрент-клиентах
                             </label>
                             <hr>
@@ -1203,7 +1203,7 @@ function cfg_numeric_value($cfg): Closure
                             <input type="hidden" id="config_selected_theme" value="<?= $cfg['ui']['theme'] ?? '' ?>" />
                             <label class="label">
                                 Цветовая схема интерфейса:
-                                <select id="theme_selector" name="theme_selector" class="myinput">
+                                <select id="theme_selector" name="theme_selector" class="inline-input">
                                     <option value="black-tie">Black Tie</option>
                                     <option value="blitzer">Blitzer</option>
                                     <option value="cupertino">Cupertino</option>
@@ -1233,7 +1233,7 @@ function cfg_numeric_value($cfg): Closure
                             <hr>
                             <label class="label">
                                 Уровень ведения журнала:
-                                <select name="log_level" id="log_level" class="myinput" title="Записи с выбранным уровнем и ниже - попадут в журнал. Не все записи в журнале имеют указание уровня.">
+                                <select name="log_level" id="log_level" class="inline-input" title="Записи с выбранным уровнем и ниже - попадут в журнал. Не все записи в журнале имеют указание уровня.">
                                     <?= $selectLogLevel ?>
                                 </select>
                             </label>
@@ -1354,13 +1354,13 @@ function cfg_numeric_value($cfg): Closure
         Введите правильные данные для авторизации и нажмите "ОК"
         <br/><br/>
         <label class="param-name" for="tracker_username_correct">Логин:</label>
-        <input type="text" class="myinput" id="tracker_username_correct"/>
+        <input type="text" class="inline-input" id="tracker_username_correct"/>
         <br/>
         <label class="param-name" for="tracker_password_correct">Пароль:</label>
-        <input type="text" class="myinput" id="tracker_password_correct" />
+        <input type="text" class="inline-input" id="tracker_password_correct" />
         <br/><br/>
         <div>
-            <input class="myinput" type="hidden" id="cap_fields" />
+            <input class="inline-input" type="hidden" id="cap_fields" />
             Введите текст с картинки (латиницей):
             <img class="captcha-image" src="" alt="Если вы видите данный текст, то загрузить изображение капчи не удалось"/>
         </div>
