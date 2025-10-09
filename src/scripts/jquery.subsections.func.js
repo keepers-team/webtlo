@@ -47,15 +47,18 @@ function addUnsavedSubsection(forum_id, forum_title) {
                 text : 'Да, добавить',
                 click: function() {
                     // Открываем вкладку настроек, настройки хранимых подразделов и вставляем ид раздела
-                    $('#menutabs').tabs('option', 'active', $("#menu_settings").index());
-                    $('div.sub_settings #sub_setting_forum').click();
-                    $('#add-forum').val(forum_id).autocomplete("search", forum_id);
+                    $('#menutabs').tabs('option', 'active', $('#menu_settings').index());
+
+                    let target_settings_tab = $('div.sub_settings > h2').index($('#sub_setting_forum'));
+                    $('div.sub_settings').accordion('option', 'active', target_settings_tab);
+
+                    $('#add-forum').val(forum_id).autocomplete('search', forum_id);
 
                     $(this).dialog('close');
                 },
             },
             {
-                text : "Нет",
+                text : 'Нет',
                 click: function() {
                     $(this).dialog('close');
                 }
