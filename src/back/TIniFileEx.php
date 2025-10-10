@@ -69,6 +69,13 @@ final class TIniFileEx
         self::$writeConfig[(string) $section][(string) $key] = $value;
     }
 
+    public function deleteKey(int|string $section, int|string $key): void
+    {
+        if (isset(self::$readConfig[$section][$key])) {
+            unset(self::$readConfig[$section][$key]);
+        }
+    }
+
     public static function writeFile(): bool
     {
         if (empty(self::$writeConfig)) {

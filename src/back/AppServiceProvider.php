@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use KeepersTeam\Webtlo\Config\ConfigMigration;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 
 /**
@@ -30,7 +31,14 @@ final class AppServiceProvider extends AbstractServiceProvider
         $container->add(DB::class, fn() => DB::create());
 
         // Обработчик ini-файла с конфигом.
-        $container->addShared(TIniFileEx::class, fn() => new TIniFileEx());
+        $container->addShared(TIniFileEx::class, function() {
+            $ini = new TIniFileEx();
+
+            // Мигрируем, если есть что.
+            (new ConfigMigration($ini))->run();
+
+            return $ini;
+        });
 
         // Подключаем описание версии WebTLO.
         $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
