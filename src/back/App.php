@@ -68,13 +68,6 @@ final class App
         // Добавляем классы для фильтрации раздач.
         $container->addServiceProvider(new TopicListServiceProvider());
 
-        // Подключаем файл конфига, 'config.ini' по-умолчанию.
-        $container->add(Settings::class, fn() => new Settings(
-            ini: new TIniFileEx(),
-            db : $container->get(DB::class),
-        ));
-        $container->add('config', fn() => $container->get(Settings::class)->populate());
-
         return self::$appContainer = new self($container);
     }
 
@@ -85,14 +78,6 @@ final class App
         } catch (Throwable $e) {
             throw new RuntimeException($e->getMessage(), $e->getCode());
         }
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getLegacyConfig(): array
-    {
-        return $this->get('config');
     }
 
     public function getDataBase(): DB
