@@ -16,9 +16,15 @@ jobs:
     name: Meta
     uses: ./.github/workflows/sub-metadata.yml
 
+  check-secrets:
+    name: Check
+    uses: ./.github/workflows/sub-check-secrets.yml
+    secrets: inherit
+
   docker:
     name: Build
-    needs: [ validate, metadata ]
+    if: ${{ needs.check-secrets.outputs.valid == 'true' }}
+    needs: [ validate, metadata, check-secrets ]
     uses: ./.github/workflows/sub-build-docker.yml
     with:
       REGISTRY_IMAGE: ${{ vars.REGISTRY_IMAGE || 'berkut174/webtlo' }}
@@ -40,7 +46,6 @@ jobs:
     name: Make release
     runs-on: ubuntu-latest
     needs: [ docker, zip ]
-    if: ${{ github.ref_type == 'tag' }}
     steps:
       - name: Restore release
         id: restore-release

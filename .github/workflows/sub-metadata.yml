@@ -13,7 +13,7 @@ on:
 
 jobs:
   metadata:
-    name: get version
+    name: Get version
     runs-on: ubuntu-latest
     # Map a step output to a job output
     outputs:
@@ -21,6 +21,40 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v5
+
+      - name: Compare version and tag
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          # Pattern for stable versions (only numbers)
+          stablePattern="^[0-9]+\.[0-9]+\.[0-9]+$"
+          # Pattern for pre-release versions (alpha/beta)
+          preReleasePattern="^[0-9]+\.[0-9]+\.[0-9]+-(alpha|beta)[0-9]*$"
+
+          currentTag="${{ github.ref_name }}"
+
+          # Check if it's a stable version
+          if [[ "$currentTag" =~ $stablePattern ]]; then
+            echo "Detected stable version tag: $currentTag"
+
+            # Get version from file
+            fileVersion=$(cd src && cat version.json | jq -r '.version')
+            echo "Version from file: $fileVersion"
+
+            if [[ "$currentTag" != "$fileVersion" ]]; then
+              echo "::error file=src/version.json,title=Version Mismatch::Stable tag '$currentTag' doesn't match version in version.json '$fileVersion'"
+              exit 1
+            fi
+
+            echo "✓ Stable version check passed: $currentTag == $fileVersion"
+
+            elif [[ "$currentTag" =~ $preReleasePattern ]]; then
+              echo "Detected pre-release version tag: $currentTag"
+              echo "✓ Pre-release version, no strict check needed"
+
+            else
+              echo "::error file=,title=Invalid Tag Format::Tag '$currentTag' doesn't match expected patterns: Stable: $stablePattern or Pre-release: $preReleasePattern"
+              exit 1
+            fi
 
       - name: Get metadata
         id: meta
@@ -36,7 +70,7 @@ jobs:
           sha=${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           suffix=${{ fromJSON(steps.meta.outputs.json).tags[1] }}
           version=$( cd src && cat version.json | jq -r --arg V $suffix '.version + $V' )
-          [ ${{ github.ref_type }} == 'tag' ] && version=${{ github.ref_name }}
+          [ ${{ github.ref_type }} == 'tag' ] && version="${{ github.ref_name }}"
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
