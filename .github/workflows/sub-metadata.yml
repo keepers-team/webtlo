@@ -20,7 +20,7 @@ jobs:
       sha: ${{ steps.version.outputs.sha }}
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Compare version and tag
         if: ${{ github.ref_type == 'tag' }}
