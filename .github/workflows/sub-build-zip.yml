@@ -20,7 +20,7 @@ jobs:
           set-safe-directory: true
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/composer-cache
           key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
@@ -65,7 +65,7 @@ jobs:
 
       - name: Cache WebServer
         id: cache_web_server
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /tmp/server_dir
           key: WebServer-${{ runner.os }}-${{ vars.NGINX_VERSION || '1.24.0' }}-PHP-8.2
@@ -130,7 +130,7 @@ jobs:
 
       - name: Cache release
         if: ${{ github.ref_type == 'tag' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./release
           key: ${{ github.ref_type }}-${{ github.sha }}-release
