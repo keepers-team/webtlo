@@ -29,7 +29,7 @@ jobs:
         run: cd src && echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
@@ -40,7 +40,7 @@ jobs:
 
       - name: Restore tools cache
         id: cache-tools
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .cache
           key: cache-tools-${{ github.repository }}-${{ inputs.PHP_VERSION }}-${{ github.sha }}
@@ -55,7 +55,7 @@ jobs:
         run: src/vendor/bin/phpstan analyse -vv --memory-limit=512M
 
       - name: Save tools cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: ${{ !cancelled() && steps.cache-tools.outputs.cache-hit != 'true' }}
         with:
           path: .cache
