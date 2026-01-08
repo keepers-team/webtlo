@@ -54,9 +54,10 @@ try {
 
     $result = "Действие '$action->value' выполнено. За подробностями обратитесь к журналу";
 } catch (Exception $e) {
-    $result = $e->getMessage();
+    error_log('exec_actions_topics error: ' . $e->getMessage());
+    $result = 'An error occurred while executing the action';
     if (isset($log)) {
-        $log->error($result);
+        $log->error($e->getMessage());
     } else {
         Log::append($result);
     }

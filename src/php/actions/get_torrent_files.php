@@ -143,7 +143,8 @@ try {
     $log->info($result);
     $log->info('-- DONE --');
 } catch (Exception $e) {
-    $result = $e->getMessage();
+    error_log('get_torrent_files error: ' . $e->getMessage());
+    $result = 'An error occurred while downloading torrent files';
     Log::append($result);
 }
 

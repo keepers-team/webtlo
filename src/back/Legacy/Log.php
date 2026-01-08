@@ -50,7 +50,7 @@ final class Log
     public static function get(string $break = '<br />'): string
     {
         if (count(self::$log)) {
-            return self::formatRows(rows: self::$log, break: $break);
+            return self::formatRows(rows: self::$log, break: $break, replace: true);
         }
 
         return '';

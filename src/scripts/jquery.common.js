@@ -320,10 +320,19 @@ function setUITheme(){
     jqueryUIStyle.appendTo("head");
 }
 
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
+}
+
 function showNewVersion(newVersionNumber, newVersionLink, whatsNew) {
+    var safeVersion = escapeHtml(newVersionNumber);
+    var safeLink = encodeURI(newVersionLink);
+    var safeWhatsNew = escapeHtml(whatsNew);
     $("#new_version_description")
-        .attr("title", whatsNew)
-        .append(`(Доступно обновление: <a id="new_version_link" target="_blank" href="${newVersionLink}">v${newVersionNumber}</a>)`);
+        .attr("title", safeWhatsNew)
+        .append('(Доступно обновление: <a id="new_version_link" target="_blank" href="' + safeLink + '">v' + safeVersion + '</a>)');
 }
 
 // http://stackoverflow.com/a/6832721/50079

@@ -112,7 +112,11 @@ final class WebTLO
         $pattern = /** @lang text */
             'Web-TLO <a href="%s" target="_blank">%s</a>';
 
-        return sprintf($pattern, $this->versionUrl(), $this->version);
+        return sprintf(
+            $pattern,
+            htmlspecialchars($this->versionUrl(), ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($this->version, ENT_QUOTES, 'UTF-8')
+        );
     }
 
     public function getCommitLink(): string
@@ -124,7 +128,11 @@ final class WebTLO
         $pattern = /** @lang text */
             '<a class="version-sha" href="%s" target="_blank">#%s</a>';
 
-        return sprintf($pattern, $this->commitUrl(), $this->sha);
+        return sprintf(
+            $pattern,
+            htmlspecialchars($this->commitUrl(), ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($this->sha, ENT_QUOTES, 'UTF-8')
+        );
     }
 
     public function getWikiLink(): string
@@ -132,7 +140,7 @@ final class WebTLO
         $pattern = /** @lang text */
             '<a href="%s" target="_blank">Web-TLO wiki</a>';
 
-        return sprintf($pattern, $this->wiki);
+        return sprintf($pattern, htmlspecialchars($this->wiki, ENT_QUOTES, 'UTF-8'));
     }
 
     public function appVersionLine(): string
@@ -201,13 +209,16 @@ final class WebTLO
 
         $result = [];
         foreach ($about as $key => $value) {
+            $safeKey   = htmlspecialchars($key, ENT_QUOTES, 'UTF-8');
+            $safeValue = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+
             $requirement = self::REQUIREMENTS[$key] ?? null;
             if (!empty($requirement)) {
                 $isVersionValid = version_compare($value, $requirement, '>=');
 
-                $value = sprintf('<span class="%s">%s<span>', $isVersionValid ? 'text-success' : 'text-danger', $value);
+                $safeValue = sprintf('<span class="%s">%s</span>', $isVersionValid ? 'text-success' : 'text-danger', $safeValue);
             }
-            $result[] = sprintf('<li>%s: %s</li>', $key, $value);
+            $result[] = sprintf('<li>%s: %s</li>', $safeKey, $safeValue);
         }
 
         return implode('', $result);

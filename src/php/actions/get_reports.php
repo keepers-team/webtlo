@@ -63,13 +63,13 @@ try {
     }
     $log->info('-- DONE --');
 } catch (Throwable $e) {
-    $message = $e->getMessage();
+    error_log('get_reports error: ' . $e->getMessage());
     if (isset($log)) {
-        $log->error($message);
+        $log->error($e->getMessage());
         $log->info('-- DONE --');
     }
 
-    $output .= '<br />' . $message;
+    $output .= '<br />An error occurred while generating the report';
 }
 
 $reports_result['report'] = $output;

@@ -12,6 +12,12 @@ if (empty($log_file)) {
     return;
 }
 
+// Sanitize: use basename to prevent path traversal and validate allowed characters
+$log_file = basename($log_file);
+if (!preg_match('/^[a-zA-Z0-9_-]+$/', $log_file)) {
+    return;
+}
+
 $log_file = Helper::getLogDir() . DIRECTORY_SEPARATOR . $log_file . '.log';
 
 if (file_exists($log_file)) {

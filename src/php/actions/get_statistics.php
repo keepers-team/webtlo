@@ -165,7 +165,8 @@ try {
         'tfoot' => $tfoot,
     ];
 } catch (Exception $e) {
-    $statistics_result['tbody'] = '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>';
+    error_log('get_statistics error: ' . $e->getMessage());
+    $statistics_result['tbody'] = '<tr><th colspan="12">An error occurred while loading statistics</th></tr>';
 }
 
 echo json_encode($statistics_result, JSON_UNESCAPED_UNICODE);
