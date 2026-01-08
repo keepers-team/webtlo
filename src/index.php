@@ -20,7 +20,7 @@ if (!file_exists($autoloader)) {
 
 include_once $autoloader;
 
-// 1. Podkluchaem obshhie nastrojki (zapusk BD).
+// 1. Подключаем общие настройки (запуск БД).
 try {
     App::create();
     DB::create();
@@ -1204,7 +1204,7 @@ function cfg_numeric_value($cfg): Closure
                             <ol class="footnote">
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                     Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
-                                    Za podrobnostyami obratites' k <a target="_blank" href="<?= htmlspecialchars($webtlo->wiki . "/configuration/automation-scripts/", ENT_QUOTES, 'UTF-8') ?>">etoj</a> stranice.</li>
+                                    За подробностями обратитесь к <a target="_blank" href="<?= htmlspecialchars($webtlo->wiki . "/configuration/automation-scripts/", ENT_QUOTES, 'UTF-8') ?>">этой</a> странице.</li>
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
                         </div>

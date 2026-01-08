@@ -32,7 +32,7 @@ try {
     );
 } catch (Exception $e) {
     $status = sprintf(
-        'Ne udalos\' proverit\' dostupnost\' torrent-klienta "%s"',
+        'Не удалось проверить доступность торрент-клиента "%s"',
         htmlspecialchars($params['comment'] ?? 'unknown', ENT_QUOTES, 'UTF-8')
     );
 }

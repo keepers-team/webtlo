@@ -332,7 +332,7 @@ function showNewVersion(newVersionNumber, newVersionLink, whatsNew) {
     var safeWhatsNew = escapeHtml(whatsNew);
     $("#new_version_description")
         .attr("title", safeWhatsNew)
-        .append('(Dostupno obnovlenie: <a id="new_version_link" target="_blank" href="' + safeLink + '">v' + safeVersion + '</a>)');
+        .append('(Доступно обновление: <a id="new_version_link" target="_blank" href="' + safeLink + '">v' + safeVersion + '</a>)');
 }
 
 // http://stackoverflow.com/a/6832721/50079
