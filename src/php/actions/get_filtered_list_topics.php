@@ -80,7 +80,8 @@ try {
     $returnObject['log']      = $e->getMessage();
     $returnObject['validate'] = $e->getClass();
 } catch (Exception $e) {
-    $returnObject['log'] = $e->getMessage();
+    error_log('get_filtered_list_topics error: ' . $e->getMessage());
+    $returnObject['log'] = 'An error occurred while processing the request';
 }
 $returnObject['details'] = Log::get();
 

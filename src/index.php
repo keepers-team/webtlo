@@ -20,12 +20,13 @@ if (!file_exists($autoloader)) {
 
 include_once $autoloader;
 
-// 1. Подключаем общие настройки (запуск БД).
+// 1. Podkluchaem obshhie nastrojki (zapusk BD).
 try {
     App::create();
     DB::create();
 } catch (Exception $e) {
-    $initError = $e->getMessage();
+    $initError = 'Database initialization error. Check logs for details.';
+    error_log('WebTLO init error: ' . $e->getMessage());
 }
 
 // 2. Загружаем конфиг и рисуем селекторы.
@@ -243,7 +244,7 @@ function cfg_numeric_value($cfg): Closure
 
 <head>
     <meta charset="utf-8" />
-    <title>web-TLO-<?= $webtlo->version ?? 'unknown' ?></title>
+    <title>web-TLO-<?= htmlspecialchars($webtlo->version ?? 'unknown', ENT_QUOTES, 'UTF-8') ?></title>
 
     <script src="scripts/jquery.lib/js.cookie.min.js"></script>
     <script src="scripts/jquery.lib/jquery.1.12.4.min.js"></script>
@@ -270,7 +271,7 @@ function cfg_numeric_value($cfg): Closure
             <li id="menu_manual"     class="menu"><a href="#manual"     class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
-            <span id="current_version"><?= "v$webtlo->version" ?? '' ?></span>
+            <span id="current_version"><?= htmlspecialchars("v" . ($webtlo->version ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
             <span id="new_version_description"></span>
         </div>
         <div id="content">
@@ -1203,7 +1204,7 @@ function cfg_numeric_value($cfg): Closure
                             <ol class="footnote">
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                     Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
-                                    За подробностями обратитесь к <a target="_blank" href="<?= $webtlo->wiki . "/configuration/automation-scripts/" ?>">этой</a> странице.</li>
+                                    Za podrobnostyami obratites' k <a target="_blank" href="<?= htmlspecialchars($webtlo->wiki . "/configuration/automation-scripts/", ENT_QUOTES, 'UTF-8') ?>">etoj</a> stranice.</li>
                                 <li>Необходимо настроить автозапуск control.php</li>
                             </ol>
                         </div>

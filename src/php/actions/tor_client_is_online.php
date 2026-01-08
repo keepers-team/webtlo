@@ -31,7 +31,10 @@ try {
         $isOnline ? 'text-success' : 'text-danger'
     );
 } catch (Exception $e) {
-    $status = sprintf('Не удалось проверить доступность торрент-клиента "%s"', $params['comment'] ?? 'unknown');
+    $status = sprintf(
+        'Ne udalos\' proverit\' dostupnost\' torrent-klienta "%s"',
+        htmlspecialchars($params['comment'] ?? 'unknown', ENT_QUOTES, 'UTF-8')
+    );
 }
 
 echo json_encode([

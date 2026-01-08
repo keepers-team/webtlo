@@ -42,5 +42,5 @@ try {
 
     echo 'Обновление "чёрного списка" раздач успешно завершено';
 } catch (Exception $e) {
-    echo $e->getMessage();
+    echo $result ?? 'Error occurred';
 }

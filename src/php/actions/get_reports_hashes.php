@@ -31,9 +31,10 @@ try {
         $output = array_map(fn($el) => $el[$hashIndex], $result['kept_releases']);
     }
 } catch (Throwable $e) {
-    $error = $e->getMessage();
+    error_log('get_reports_hashes error: ' . $e->getMessage());
+    $error = 'An error occurred while fetching report hashes';
     if (isset($log)) {
-        $log->warning($error);
+        $log->warning($e->getMessage());
     }
 }
 

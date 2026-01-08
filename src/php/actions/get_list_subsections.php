@@ -50,10 +50,11 @@ try {
 
     echo json_encode($forums, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
+    error_log('get_list_subsections error: ' . $e->getMessage());
     echo json_encode([
         [
             'value' => -1,
-            'label' => $e->getMessage(),
+            'label' => 'An error occurred while loading subsections',
         ],
     ]);
 }

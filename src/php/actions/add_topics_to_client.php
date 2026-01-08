@@ -301,7 +301,8 @@ try {
     $log->info($result);
     $log->info('-- DONE --');
 } catch (Exception $e) {
-    $result = $e->getMessage();
+    error_log('add_topics_to_client error: ' . $e->getMessage());
+    $result = 'An error occurred while adding topics';
     Log::append($result);
 }
 
