@@ -112,7 +112,7 @@ trait SendMessage
 
         $list = $dom->query(expression: '//a[@id="topic-title"]');
         if (!empty($list) && $list->count() > 0) {
-            $topicTitle = (string) $list->item(0)?->textContent;
+            $topicTitle = $list->item(0)->textContent ?? '';
 
             $matches = [];
             if (preg_match('/#(\d+)$/', $topicTitle, $matches)) {
@@ -148,7 +148,7 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && $nodes->count() === 1) {
             $postLink = (string) $nodes->item(0)?->nodeValue;
 
             $matches = [];
@@ -182,8 +182,8 @@ trait SendMessage
         );
 
         $nodes = $dom->query(expression: $xpathQuery);
-        if (!empty($nodes) && count($nodes) === 1) {
-            $result = $nodes->item(0)?->textContent;
+        if (!empty($nodes) && $nodes->count() === 1) {
+            $result = $nodes->item(0)->textContent ?? null;
         }
 
         return trim($result ?? 'Неизвестная ошибка');
@@ -194,7 +194,7 @@ trait SendMessage
         $dom = self::parseDOM($page);
 
         $nodes = $dom->query(expression: '/html/head/script[1]');
-        if (!empty($nodes) && count($nodes) === 1) {
+        if (!empty($nodes) && $nodes->count() === 1) {
             $script = self::getFirstNodeValue(list: $nodes);
 
             $matches = [];

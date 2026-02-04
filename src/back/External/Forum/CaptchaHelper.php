@@ -47,6 +47,7 @@ trait CaptchaHelper
             'codes'       => '*//input',
         ];
         $logger->debug('Failed to login. Check message from forum.');
+
         $dom = self::parseDOM(page: $authPage);
 
         // Текст ошибки.
@@ -59,24 +60,27 @@ trait CaptchaHelper
         if (!empty($captchaNode)) {
             $captchaNode = $captchaNode->item(0);
 
-            // Ссылка на изображение с кодом.
-            $image = self::getFirstNodeValue(
-                list: $dom->query(
-                    expression : $xpathQuery['imageLink'],
-                    contextNode: $captchaNode
-                )
-            );
+            if ($captchaNode instanceof DOMElement) {
+                // Ссылка на изображение с кодом.
+                $image = self::getFirstNodeValue(
+                    list: $dom->query(
+                        expression : $xpathQuery['imageLink'],
+                        contextNode: $captchaNode
+                    )
+                );
 
-            $nodes = $dom->query(expression: $xpathQuery['codes'], contextNode: $captchaNode);
-            if (!empty($nodes)) {
-                foreach ($nodes as $node) {
-                    if ($node instanceof DOMElement) {
-                        $codes[] = $node->getAttribute('name');
-                        $codes[] = $node->getAttribute('value');
+                $nodes = $dom->query(expression: $xpathQuery['codes'], contextNode: $captchaNode);
+                if (!empty($nodes)) {
+                    foreach ($nodes as $node) {
+                        if ($node instanceof DOMElement) {
+                            $codes[] = $node->getAttribute('name');
+                            $codes[] = $node->getAttribute('value');
+                        }
                     }
                 }
+
+                $logger->debug('Found captcha', ['image' => $image, 'codes' => $codes]);
             }
-            $logger->debug('Found captcha codes', $codes);
         }
 
         return new Captcha($message, $image, $codes);

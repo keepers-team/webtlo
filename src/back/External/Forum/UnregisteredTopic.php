@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Forum;
 
+use DOMElement;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
 
 /**
@@ -61,7 +62,7 @@ trait UnregisteredTopic
         $currentForumName = '';
         if (!empty($currentForumQuery)) {
             $currentForumName = implode(' » ', array_map(function($node) {
-                return $node->textContent;
+                return $node->nodeValue;
             }, iterator_to_array($currentForumQuery)));
         }
 
@@ -73,7 +74,7 @@ trait UnregisteredTopic
             // Переходим на последнюю страницу темы, если она есть.
             $list = $dom->query(expression: '//table[@id="pagination"]//a[@class="pg"]');
             if (!empty($list) && $list->count() > 1) {
-                $lastPage = (int) $list->item($list->length - 2)?->textContent;
+                $lastPage = (int) ($list->item($list->length - 2)->textContent ?? 1);
 
                 $topicPage = $this->fetchTopicPage(topicId: $topicId, offset: ($lastPage - 1) * 30);
                 if ($topicPage !== null) {
@@ -86,7 +87,7 @@ trait UnregisteredTopic
 
             // Ищем последнее сообщение в теме.
             $lastMessage = !empty($node) ? $node->item(0) : null;
-            if ($lastMessage !== null) {
+            if ($lastMessage instanceof DOMElement) {
                 $avatarList = $dom->query(expression: '*//p[@class="avatar"]/img/@src', contextNode: $lastMessage);
                 $avatarLink = self::getFirstNodeValue(list: $avatarList);
 
@@ -98,13 +99,13 @@ trait UnregisteredTopic
                         $transferredFrom = $list->item(0)?->nodeValue;
 
                         $user = $list->item(2);
-                        $href = self::getFirstNodeValue(list: $dom->query(expression: '@href', contextNode: $user));
-                        if (preg_match('/^profile.php\?mode=viewprofile&u=[0-9]+$/', $href)) {
-                            // Кто перенёс раздачу.
-                            $transferredByWhom = $user?->nodeValue;
+                        if ($user instanceof DOMElement) {
+                            $href = self::getFirstNodeValue(list: $dom->query(expression: '@href', contextNode: $user));
+                            if (preg_match('/^profile.php\?mode=viewprofile&u=[0-9]+$/', $href)) {
+                                // Кто перенёс раздачу.
+                                $transferredByWhom = $user->nodeValue;
+                            }
                         }
-
-                        unset($user, $href);
                     }
                 }
 
