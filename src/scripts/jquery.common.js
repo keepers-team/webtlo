@@ -1,6 +1,16 @@
 
 /* вспомогательные функции */
 
+const COLLATOR_EN = new Intl.Collator('en', {numeric: true, sensitivity: 'base'});
+const COLLATOR_RU = new Intl.Collator('ru', {numeric: true, sensitivity: 'base'});
+
+/**
+ * EN → RU comparator
+ */
+const compareByLocale = (a, b) =>
+    COLLATOR_EN.compare(a, b) ||
+    COLLATOR_RU.compare(a, b);
+
 /* текущее время */
 function nowTime() {
     var now = new Date();
@@ -102,18 +112,26 @@ function functionDelay(callback, ms) {
     };
 }
 
-// сортировка в select
-function doSortSelect(selectID, sortElement = "option") {
-    $("#" + selectID).toggle();
-    var sortedVals = $.makeArray($("#" + selectID + " " + sortElement)).sort(function (a, b) {
-        if ($(a).val() == 0) {
-            return -1;
-        }
-        var textA = $(a).text().toUpperCase();
-        var textB = $(b).text().toUpperCase();
-        return textA.localeCompare(textB, undefined, { numeric: true, sensitivity: "base" });
+/**
+ * Сортировка элементов в select.
+ *
+ * @param {string} selectId
+ * @param {string} sortElement
+ */
+function doSortSelect(selectId, sortElement = 'option') {
+    const $select = $(`#${selectId}`);
+
+    const sorted = $select.find(sortElement).get().sort((a, b) => {
+        if (!a.value) return -1;
+        if (!b.value) return 1;
+
+        return compareByLocale(
+            $(a).text().toUpperCase(),
+            $(b).text().toUpperCase()
+        );
     });
-    $("#" + selectID).empty().html(sortedVals).toggle();
+
+    $select.empty().append(sorted);
 }
 
 function doSortSelectByValue(selectID, sortElement = "option") {
