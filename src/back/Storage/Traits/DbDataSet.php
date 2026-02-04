@@ -11,16 +11,18 @@ trait DbDataSet
      */
     public function combineDataSet(array $dataSet, string $primaryKey = 'id'): string
     {
-        foreach ($dataSet as $id => &$value) {
+        $rows = [];
+
+        foreach ($dataSet as $id => $value) {
             $value = array_map(function($elem) {
                 return is_numeric($elem)
                     ? $elem
-                    : $this->db->quote((string) ($elem ?? ''));
+                    : $this->db->quote((string) $elem);
             }, $value);
 
-            $value = (empty($value[$primaryKey]) ? "$id," : '') . implode(',', $value);
+            $rows[] = (empty($value[$primaryKey]) ? "$id," : '') . implode(',', $value);
         }
 
-        return 'SELECT ' . implode(' UNION ALL SELECT ', $dataSet);
+        return 'SELECT ' . implode(' UNION ALL SELECT ', $rows);
     }
 }

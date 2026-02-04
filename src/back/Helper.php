@@ -21,8 +21,8 @@ final class Helper
         if ($size <= 0) {
             $bytes = $pow = 0;
         } else {
-            $pow   = $size >= pow($base, $maxPow) ? $maxPow : floor(log($size, $base));
-            $bytes = round($size / pow($base, $pow), 2);
+            $pow   = ($size >= $base ** $maxPow) ? $maxPow : (int) floor(log($size, $base));
+            $bytes = (int) round($size / ($base ** $pow), 2);
         }
 
         return sprintf('%s %s', $bytes, $sizeName[$pow]);
