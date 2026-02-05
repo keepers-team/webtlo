@@ -31,7 +31,7 @@ updates:
     commit-message:
       prefix: "[composer] "
     rebase-strategy: "auto"
-    versioning-strategy: "lockfile-only"
+    versioning-strategy: "auto"
     milestone: 14
     open-pull-requests-limit: 10
     labels:

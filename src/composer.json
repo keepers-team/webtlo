@@ -5,13 +5,22 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "license": "GPL-3.0-only",
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.1.5"
+        },
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
     "autoload": {
         "psr-4": {
             "KeepersTeam\\Webtlo\\": "back/"
         }
     },
     "require": {
-        "php": "^8.1",
+        "php": "^8.1.5",
         "ext-curl": "*",
         "ext-dom": "*",
         "ext-libxml": "*",
@@ -39,11 +48,5 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "symfony/polyfill-iconv": "^1.30",
         "symfony/var-dumper": "^6.4"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
     }
 }
