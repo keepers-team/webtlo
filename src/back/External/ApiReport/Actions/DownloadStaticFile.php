@@ -92,7 +92,7 @@ trait DownloadStaticFile
 
         try {
             /** @var Reader<array<string, string>> $reader */
-            $reader = Reader::createFromPath(path: 'compress.zlib://' . $csvPath);
+            $reader = Reader::from(filename: 'compress.zlib://' . $csvPath);
 
             $reader->setHeaderOffset(offset: 0);
 
