@@ -18,7 +18,7 @@ RUN apk add --update --no-cache \
     nginx \
     # php interpreter
     php81 php81-fpm php81-curl php81-openssl php81-sqlite3 php81-pdo_sqlite \
-    php81-xml php81-mbstring php81-dom \
+    php81-xml php81-iconv php81-mbstring php81-dom \
     # php tar decompress
     php81-phar \
     && rm -rf /var/cache/apk/*
