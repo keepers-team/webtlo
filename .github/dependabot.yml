@@ -16,10 +16,10 @@ updates:
       prefix: "[github-actions] "
     rebase-strategy: "auto"
     milestone: 14
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     labels:
       - "C: Distribution"
-      - "T: Maintenance"
+      - "T: Dependencies"
 
   - package-ecosystem: "composer"
     directory: "/src"
@@ -36,4 +36,4 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "C: Backend"
-      - "T: Maintenance"
+      - "T: Dependencies"
