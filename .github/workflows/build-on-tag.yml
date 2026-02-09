@@ -1,5 +1,5 @@
 name: Build release
-run-name: Build on v${{ github.ref_name }} tag push  (${{ github.event.head_commit.message }})
+run-name: Build on v${{ github.ref_name }} tag push (${{ github.event.head_commit.message }})
 
 on:
   push:
@@ -60,3 +60,7 @@ jobs:
           files: release/*.zip
           draft: true
           generate_release_notes: true
+          body: |
+            ### Список изменений
+              * Рыба!
+            ---

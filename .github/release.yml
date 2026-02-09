@@ -1,0 +1,14 @@
+# Automatically generated release notes
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  categories:
+    - title: Изменения
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - 'T: Dependencies'
+    - title: Зависимости
+      labels:
+        - 'T: Dependencies'
