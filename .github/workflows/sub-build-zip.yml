@@ -62,7 +62,6 @@ jobs:
 
           echo "Done $zip_name"
 
-
       - name: Cache WebServer
         id: cache_web_server
         uses: actions/cache@v5
@@ -96,7 +95,7 @@ jobs:
         run: |
           server_dir=/tmp/server_dir
 
-          zip_name="webtlo-win-${{ inputs.WEBTLO_VERSION }}.zip"
+          zip_name="webtlo-win.zip"
           zip_dir=webtlo-win
           json_version="src/version.json"
 
