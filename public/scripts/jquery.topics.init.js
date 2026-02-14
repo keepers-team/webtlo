@@ -30,7 +30,7 @@ $(document).ready(function () {
         processStatus.set('Редактирование "чёрного списка" раздач...');
         $.ajax({
             type: "POST",
-            url: "php/actions/exclude_topics.php",
+            url: "php/exclude_topics.php",
             data: {
                 topic_hashes: topic_hashes,
                 value: value
@@ -58,7 +58,7 @@ $(document).ready(function () {
         processStatus.set("Добавление раздач в торрент-клиент...");
         $.ajax({
             type: "POST",
-            url: "php/actions/add_topics_to_client.php",
+            url: "php/add_topics_to_client.php",
             data: {
                 topic_hashes: topic_hashes
             },

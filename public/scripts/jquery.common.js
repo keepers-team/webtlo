@@ -133,7 +133,7 @@ function setSettings() {
     $.ajax({
         context: this,
         type: "POST",
-        url: "php/actions/set_config.php",
+        url: "php/set_config.php",
         dataType: 'json',
         data: JSON.stringify({
             cfg: $data,
@@ -187,7 +187,7 @@ function getLogContent(log_name) {
     // request
     $.ajax({
         type: "POST",
-        url: "php/actions/get_log_content.php",
+        url: "php/get_log_content.php",
         data: {
             log_file: log_name
         },
@@ -210,7 +210,7 @@ function getReport() {
     }
     $.ajax({
         type: "POST",
-        url: "php/actions/get_reports.php",
+        url: "php/get_reports.php",
         data: {
             forum_id: forum_id
         },
@@ -287,7 +287,7 @@ function checkNewVersion() {
 
     $.ajax({
         type: "POST",
-        url: "php/actions/check_new_version.php",
+        url: "php/check_new_version.php",
         success: function (response) {
             addDefaultLog(response.log ?? '');
             response = $.parseJSON(response);

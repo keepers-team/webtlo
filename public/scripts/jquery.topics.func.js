@@ -13,7 +13,7 @@ function downloadTorrents(replace_passkey) {
     processStatus.set("Скачивание торрент-файлов...");
     $.ajax({
         type: "POST",
-        url: "php/actions/get_torrent_files.php",
+        url: "php/get_torrent_files.php",
         data: {
             cfg: config,
             topic_hashes: topic_hashes,
@@ -45,7 +45,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
     processStatus.set('Получение списка раздач...');
     $.ajax({
         type: 'POST',
-        url: 'php/actions/get_reports_hashes.php',
+        url: 'php/get_reports_hashes.php',
         data: {
             forum_id: forum_id
         },
@@ -73,7 +73,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
             processStatus.set("Скачивание торрент-файлов...");
             $.ajax({
                 type: "POST",
-                url: "php/actions/get_torrent_files.php",
+                url: "php/get_torrent_files.php",
                 data: {
                     cfg: config,
                     topic_hashes: topic_hashes,
@@ -149,7 +149,7 @@ function getFilteredTopics() {
     processStatus.set("Получение данных о раздачах...");
     $.ajax({
         type: "POST",
-        url: "php/actions/get_filtered_list_topics.php",
+        url: "php/get_filtered_list_topics.php",
         data: {
             forum_id: forum_id,
             filter: $filter,
@@ -320,7 +320,7 @@ function execActionTopics(params) {
     $.ajax({
         type: 'POST',
         context: this,
-        url: 'php/actions/exec_actions_topics.php',
+        url: 'php/exec_actions_topics.php',
         data: JSON.stringify(params),
         beforeSend: function () {
             block_actions();
@@ -406,7 +406,7 @@ function checkEmptyTitleTopics(manualUpdate = false) {
     const bar = $('.process-bar');
 
     $.ajax({
-        url: 'php/actions/count_topics.php',
+        url: 'php/count_topics.php',
         beforeSend: () => refreshTopics.checkInProgress = true,
         complete: () => refreshTopics.checkInProgress = false,
         success: function (response) {
@@ -451,7 +451,7 @@ function updateEmptyTitleTopics() {
 
     processStatus.set('Обновляем имена раздач...');
     $.ajax({
-        url: 'php/actions/update_topics_details.php',
+        url: 'php/update_topics_details.php',
         beforeSend: () => refreshTopics.updateInProgress = true,
         success: function (response) {
             response = $.parseJSON(response);
