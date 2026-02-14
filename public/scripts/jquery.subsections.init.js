@@ -180,7 +180,7 @@ $(document).ready(function () {
 
     // добавить подраздел
     $('#add-forum').autocomplete({
-        source   : 'php/actions/get_list_subsections.php',
+        source   : 'php/get_list_subsections.php',
         delay    : 1000,
         minLength: 3,
         select   : addSubsection,
