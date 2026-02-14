@@ -1,5 +1,6 @@
-/.git
-/.idea
-/.vscode
+.git
+.idea
+.vscode
 /data
+vendor
 Dockerfile
