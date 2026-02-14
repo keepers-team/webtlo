@@ -247,7 +247,7 @@ $(document).ready(function () {
 
             $.ajax({
                 type: 'POST',
-                url: 'php/actions/tor_client_is_online.php',
+                url: 'php/tor_client_is_online.php',
                 context: this,
                 data: { tor_client: torrentClientData },
                 beforeSend: function () {

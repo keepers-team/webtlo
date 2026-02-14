@@ -7,7 +7,7 @@ $(document).ready(function () {
         let update_info_local = function () {
             $.ajax({
                 type: "GET",
-                url: "php/actions/update_info.php",
+                url: "php/update_info.php",
                 data: {
                     process: button.val() || 'all',
                 },
@@ -72,7 +72,7 @@ $(document).ready(function () {
         let icon = buttons.find("i.fa").toggleClass('fa-paper-plane-o fa-spinner');
         $.ajax({
             type: "POST",
-            url: "php/actions/send_reports.php",
+            url: "php/send_reports.php",
             contentType: "application/json",
             data: JSON.stringify({
                 cleanOverride : evt.ctrlKey
@@ -98,7 +98,7 @@ $(document).ready(function () {
     $('#control_torrents').on('click', function () {
         $.ajax({
             type: 'POST',
-            url: 'php/actions/control_torrents.php',
+            url: 'php/control_torrents.php',
             beforeSend: () => {
                 showResultTopics();
                 block_actions();
@@ -180,7 +180,7 @@ $(document).ready(function () {
 
             $.ajax({
                 type: 'POST',
-                url: 'php/actions/check_mirror_access.php',
+                url: 'php/check_mirror_access.php',
                 data: {
                     url_type  : value,
                     cfg       : $data,
@@ -244,7 +244,7 @@ $(document).ready(function () {
         let authResult = $('#forum_auth_result');
         $.ajax({
             type: "POST",
-            url: "php/actions/get_user_details.php",
+            url: "php/get_user_details.php",
             data: {
                 cfg: $data,
                 cap_code: cap_code,
@@ -375,7 +375,7 @@ $(document).ready(function () {
         $.ajax({
             context: this,
             type: 'POST',
-            url: 'php/actions/get_statistics.php',
+            url: 'php/get_statistics.php',
             beforeSend: function () {
                 $(this).toggleDisable(true);
             },
@@ -416,7 +416,7 @@ $(document).ready(function () {
         // request
         $.ajax({
             type: "POST",
-            url: "php/actions/clear_log_content.php",
+            url: "php/clear_log_content.php",
             data: {
                 log_file: log_file
             },
