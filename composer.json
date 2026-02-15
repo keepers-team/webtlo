@@ -16,7 +16,7 @@
     },
     "autoload": {
         "psr-4": {
-            "KeepersTeam\\Webtlo\\": "back/"
+            "KeepersTeam\\Webtlo\\": "src/back/"
         }
     },
     "require": {
@@ -48,5 +48,10 @@
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "symfony/polyfill-iconv": "^1.30",
         "symfony/var-dumper": "^6.4"
+    },
+    "scripts": {
+        "cs:check": "@php vendor/bin/php-cs-fixer fix --dry-run --verbose",
+        "cs:fix": "@php vendor/bin/php-cs-fixer fix",
+        "phpstan": "@php vendor/bin/phpstan analyse -vv --memory-limit=512M"
     }
 }
