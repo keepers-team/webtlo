@@ -1227,6 +1227,8 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                 <ul class="about-installation">
                     <?= $cs('webtlo', 'install'); ?>
                 </ul>
+
+                <hr />
                 <a href="/probe.php" target="_blank" style="font-size: small">Тест конфигурации</a>
 
                 <hr />

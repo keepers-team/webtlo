@@ -182,6 +182,8 @@ final class WebTLO
         $about['OS']     = PHP_OS;
         $about['system'] = implode(' + ', $system);
 
+        $about['storage_dir'] = (string) realpath(Helper::getStorageDir());
+
         $about['php_version']    = phpversion();
         $about['sqlite_version'] = SQLite3::version()['versionString'];
 
