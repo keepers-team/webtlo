@@ -36,7 +36,8 @@ final class WebTLO
     public static function loadFromFile(?string $file = null): self
     {
         if ($file === null) {
-            $file = __DIR__ . '/../version.json';
+            // project root.
+            $file = Helper::getProjectRoot() . '/version.json';
         }
 
         // Пробуем считать версию из файла.
@@ -182,6 +183,7 @@ final class WebTLO
         $about['OS']     = PHP_OS;
         $about['system'] = implode(' + ', $system);
 
+        $about['project_dir'] = (string) realpath(Helper::getProjectRoot());
         $about['storage_dir'] = (string) realpath(Helper::getStorageDir());
 
         $about['php_version']    = phpversion();
