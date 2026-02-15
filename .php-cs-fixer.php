@@ -1,7 +1,7 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in('src')
+    ->in(['src', 'public'])
 ;
 
 $config = new PhpCsFixer\Config();
