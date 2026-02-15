@@ -10,8 +10,6 @@ use RuntimeException;
 
 final class Helper
 {
-    private const LOG_DIR = 'logs';
-
     /** Конвертация размера в строку. */
     public static function convertBytes(int $size, int $maxPow = 3): string
     {
@@ -102,19 +100,27 @@ final class Helper
     }
 
     /**
+     * Путь к корню проекта.
+     *
+     * Этот файл расположен в /webtlo/src/back => /webtlo.
+     */
+    public static function getProjectRoot(): string
+    {
+        return dirname(__DIR__, 2);
+    }
+
+    /**
      * @return string Storage directory for application
      */
     public static function getStorageDir(): string
     {
-        $directory = getenv('WEBTLO_DIR');
-        if ($directory === false) {
-            // Default path is /webtlo/data
-            return self::normalizePath(
-                __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'data'
-            );
+        $storagePath = getenv('WEBTLO_DIR');
+        if ($storagePath !== false) {
+            return $storagePath;
         }
 
-        return $directory;
+        // Default path is /webtlo/data
+        return self::getProjectRoot() . '/data';
     }
 
     public static function getStorageSubFolderPath(?string $subFolder = null, ?string $file = null): string
@@ -122,21 +128,21 @@ final class Helper
         $path = self::getStorageDir();
 
         if ($subFolder !== null) {
-            $path .= DIRECTORY_SEPARATOR . $subFolder;
+            $path .= '/' . $subFolder;
 
             self::checkDirRecursive(path: $path);
         }
 
         if ($file !== null) {
-            $path .= DIRECTORY_SEPARATOR . $file;
+            $path .= '/' . $file;
         }
 
-        return self::normalizePath(path: $path);
+        return $path;
     }
 
     public static function getPathWithFile(string $path, string $file): string
     {
-        $path = $path . DIRECTORY_SEPARATOR . $file;
+        $path = $path . '/' . $file;
 
         return self::normalizePath(path: $path);
     }
@@ -146,20 +152,22 @@ final class Helper
      */
     public static function getStorageLogsPath(?string $file = null): string
     {
-        return self::getStorageSubFolderPath(subFolder: self::LOG_DIR, file: $file);
+        return self::getStorageSubFolderPath(subFolder: 'logs', file: $file);
     }
 
-    /** Получить путь к каталогу/файлу миграций. */
+    /**
+     * Получить путь к каталогу/файлу миграций.
+     */
     public static function getMigrationPath(?string $file = null): string
     {
-        // webtlo/sql
-        $path = __DIR__ . DIRECTORY_SEPARATOR . str_repeat('..' . DIRECTORY_SEPARATOR, 1) . 'sql';
+        // Default path is webtlo/src/sql
+        $path = self::getProjectRoot() . '/src/sql';
 
         if ($file !== null) {
-            $path .= DIRECTORY_SEPARATOR . $file;
+            $path .= '/' . $file;
         }
 
-        return self::normalizePath($path);
+        return $path;
     }
 
     /**
