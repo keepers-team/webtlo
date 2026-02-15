@@ -3,7 +3,7 @@ parameters:
   tmpDir: .cache
   paths:
     - src/
+    - public/
   excludePaths:
     analyse:
-      - src/php/debug (?)
-      - src/vendor
+      - public/php/debug (?)
