@@ -1,0 +1,16 @@
+# Конфиг по умолчанию для yamllint, см. https://yamllint.readthedocs.io
+
+extends: default
+
+rules:
+  anchors:
+    forbid-undeclared-aliases: true
+    forbid-duplicated-anchors: true
+    forbid-unused-anchors: true
+  document-start: disable
+  line-length: disable
+  truthy:
+    check-keys: false
+
+ignore:
+  - vendor
