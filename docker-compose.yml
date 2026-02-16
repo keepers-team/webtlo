@@ -1,27 +1,29 @@
-version: "3.9"
-
 services:
-  # Рабочая версия WebTLO
+  # Рабочая версия WebTLO.
   webtlo:
-    image: berkut174/webtlo:latest
+    # GitHub или DockerHub образ
+    image: ghcr.io/keepers-team/webtlo:latest
+    # image: berkut174/webtlo:latest
     container_name: webtlo-latest
     ports:
-        # Порт для доступа к UI
+      # Порт для доступа к UI.
       - "8080:80"
     environment:
-        # Часовой пояс
+      # Часовой пояс.
       - TZ=Europe/Moscow
-        # Стандартный пользователь внутри контейнера
+      # Стандартный пользователь внутри контейнера.
       - WEBTLO_UID=1000
       - WEBTLO_GID=1000
-        # Выполняемые внутри контейнера фоновые задачи планировщика
-      - WEBTLO_CRON=true # false - чтобы отключить планировщик
-        # Задать расписание для конкретной задачи. false - чтобы выключить
+      # Выполняемые внутри контейнера фоновые задачи планировщика.
+      # Указать "false" - чтобы отключить все задачи планировщика.
+      - WEBTLO_CRON=true
+      # Указать расписание для конкретной задачи.
+      # Или "false" - чтобы отключить эту задачу.
       - CRON_UPDATE=15 * * * *
       - CRON_CONTROL=25 * * * *
       - CRON_KEEPERS=0 6 * * *
       - CRON_REPORTS=0 5 * * *
     volumes:
-        # Проброшенный каталог с файлами конфигурации
+      # Проброшенный каталог с файлами конфигурации
       - "./webtlo-data:/data"
-    restart: on-failure
+    restart: unless-stopped
