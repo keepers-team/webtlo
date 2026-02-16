@@ -5,24 +5,19 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Config\AverageSeeds;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
+use KeepersTeam\Webtlo\Infrastructure\Database\MigrationRunner;
 use KeepersTeam\Webtlo\Storage\Traits;
 use PDO;
 use PDOException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-final class DB
+final class DB implements ConnectionInterface
 {
     use Traits\DbClearTables;
     use Traits\DbDataSet;
-    use Traits\DbMigration;
     use Traits\DbQuery;
-
-    /** Актуальная версия БД */
-    protected const DATABASE_VERSION = 15;
-
-    /** Инициализация таблиц актуальной версии. */
-    protected const INIT_FILE = '9999-init-database.sql';
 
     /** Название файла БД. */
     private const DATABASE_FILE = 'webtlo.db';
@@ -36,7 +31,7 @@ final class DB
         LoggerInterface $logger,
         AverageSeeds $averageSeeds,
     ): DB {
-        $databasePath = self::getDatabasePath();
+        $databasePath = Helper::getStorageSubFolderPath(file: self::DATABASE_FILE);
 
         try {
             // Подключаемся к БД. Создаём кастомную функцию like.
@@ -46,8 +41,15 @@ final class DB
             // Создаём экземпляр класса.
             $db = new DB(db: $pdo, logger: $logger);
 
+            $migrator = new MigrationRunner(
+                logger       : $logger,
+                targetVersion: MigrationRunner::DATABASE_VERSION,
+                databasePath : $databasePath,
+                filesPath    : Helper::getProjectRoot() . '/database',
+            );
+
             // Инициализация/миграция таблиц БД.
-            $db->checkDatabaseVersion(databasePath: $databasePath);
+            $migrator->migrate(con: $db);
         } catch (PDOException $e) {
             $logger->emergency('Ошибка инициализации БД.', ['path' => $databasePath, 'exception' => $e]);
 
@@ -66,12 +68,9 @@ final class DB
         return $db;
     }
 
-    private static function getDatabasePath(): string
+    public function getPdo(): PDO
     {
-        $databaseDirName = Helper::getStorageDir();
-        Helper::checkDirRecursive($databaseDirName);
-
-        return $databaseDirName . DIRECTORY_SEPARATOR . self::DATABASE_FILE;
+        return $this->db;
     }
 
     /**
