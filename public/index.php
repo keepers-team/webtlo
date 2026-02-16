@@ -7,7 +7,7 @@ use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
 header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
 mb_internal_encoding('UTF-8');
 
-$autoloader = __DIR__ . '/vendor/autoload.php';
+$autoloader = __DIR__ . '/../vendor/autoload.php';
 
 if (!file_exists($autoloader)) {
     echo 'Запуск невозможен. <br>';
@@ -1229,7 +1229,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                 </ul>
 
                 <hr />
-                <a href="/probe.php" target="_blank" style="font-size: small">Тест конфигурации</a>
+                <a href="probe.php" target="_blank" style="font-size: small">Тест конфигурации</a>
 
                 <hr />
                 <p>Copyright © 2016-2026 Alexander Shemetov</p>
