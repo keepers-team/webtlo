@@ -156,21 +156,6 @@ final class Helper
     }
 
     /**
-     * Получить путь к каталогу/файлу миграций.
-     */
-    public static function getMigrationPath(?string $file = null): string
-    {
-        // Default path is webtlo/src/sql
-        $path = self::getProjectRoot() . '/src/sql';
-
-        if ($file !== null) {
-            $path .= '/' . $file;
-        }
-
-        return $path;
-    }
-
-    /**
      * Get normalized path, like realpath() for non-existing path or file.
      */
     public static function normalizePath(string $path): string
