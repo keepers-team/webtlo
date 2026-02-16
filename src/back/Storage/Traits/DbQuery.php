@@ -13,6 +13,23 @@ use Throwable;
 trait DbQuery
 {
     /**
+     * Выполнить готовый запрос к БД.
+     */
+    public function executeQuery(string $sql): void
+    {
+        try {
+            $this->db->exec($sql);
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'SQL. Ошибка выполнения запроса',
+                ['method' => 'executeQuery', 'exception' => $e, 'query' => $sql]
+            );
+
+            throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
+        }
+    }
+
+    /**
      * Подготовить запрос и выполнить с параметрами.
      *
      * @param (int|string)[] $param
@@ -129,23 +146,6 @@ trait DbQuery
     {
         if ($this->db->inTransaction()) {
             $this->db->rollBack();
-        }
-    }
-
-    /**
-     * Выполнить готовый запрос к БД.
-     */
-    protected function executeQuery(string $sql): void
-    {
-        try {
-            $this->db->exec($sql);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                'SQL. Ошибка выполнения запроса',
-                ['method' => 'executeQuery', 'exception' => $e, 'query' => $sql]
-            );
-
-            throw new RuntimeException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 }
