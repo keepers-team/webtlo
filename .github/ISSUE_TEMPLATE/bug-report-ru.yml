@@ -1,7 +1,7 @@
 name: Сообщить о проблеме
 description: Сообщите нам о проблеме, неожиданном сбое или другой проблеме
 title: "Bug:"
-labels: [ "T: Bug", "R: Triage" ]
+labels: ["T: Bug", "R: Triage"]
 body:
   - type: markdown
     attributes:

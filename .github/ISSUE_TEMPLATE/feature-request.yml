@@ -1,12 +1,12 @@
 name: Feature request
 description: Suggest an idea for this project
 title: "New feature:"
-labels: [ "T: New feature", "R: Triage" ]
+labels: ["T: New feature", "R: Triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        We really appreciate a new ideas for improving webTLO. 
+        We really appreciate a new ideas for improving webTLO.
 
   - type: textarea
     id: solution

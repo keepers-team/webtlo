@@ -2,8 +2,8 @@ name: Update copyright years
 
 on:
   schedule:
-    - cron: '0 10 1 1 *' # 10:00 AM on January 1
-  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+    - cron: '0 10 1 1 *'  # 10:00 AM on January 1
+  workflow_dispatch:  # Allows you to run this workflow manually from the Actions tab
 
 jobs:
 

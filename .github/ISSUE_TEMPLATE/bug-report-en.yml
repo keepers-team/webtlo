@@ -1,7 +1,7 @@
 name: Bug Report
 description: Let us know about a problem, unexpected crash or other issue
 title: "Bug:"
-labels: [ "T: Bug", "R: Triage" ]
+labels: ["T: Bug", "R: Triage"]
 body:
   - type: markdown
     attributes:

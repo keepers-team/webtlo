@@ -31,7 +31,7 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: "8.1"
-          dev: no
+          dev: "no"
           args: --ignore-platform-reqs
           working_dir: "src"
 

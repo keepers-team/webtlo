@@ -24,7 +24,7 @@ jobs:
   docker:
     name: Build
     if: ${{ needs.check-secrets.outputs.valid == 'true' }}
-    needs: [ validate, metadata, check-secrets ]
+    needs: [validate, metadata, check-secrets]
     uses: ./.github/workflows/sub-build-docker.yml
     with:
       REGISTRY_IMAGE: ${{ vars.REGISTRY_IMAGE || 'berkut174/webtlo' }}
@@ -36,7 +36,7 @@ jobs:
 
   zip:
     name: Build
-    needs: [ validate, metadata ]
+    needs: [validate, metadata]
     uses: ./.github/workflows/sub-build-zip.yml
     with:
       WEBTLO_VERSION: ${{ needs.metadata.outputs.version }}
@@ -45,7 +45,7 @@ jobs:
   make-release:
     name: Make release
     runs-on: ubuntu-latest
-    needs: [ docker, zip ]
+    needs: [docker, zip]
     steps:
       - name: Restore release
         id: restore-release
