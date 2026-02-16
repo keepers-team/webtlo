@@ -10,30 +10,48 @@
 ### Основные функциональные возможности:
 - получение данных о раздачах из хранимых подразделов форума
 - получение сведений о хранимых раздачах в торрент-клиентах
-- формирование отчётов о хранимых раздачах
+- формирование и отправка отчётов о хранимых раздачах
 - управление раздачами в поддерживаемых торрент-клиентах
   - добавление
   - удаление
-  - остановка/запуск в т.ч. по расписанию
+  - остановка/запуск, в т.ч. по расписанию
   - добавление меток/категорий
 
+### Системные требования
+Любой веб-сервер с поддержкой PHP 8.1+ (Nginx/Apache2+) и SQLite 3.38+.
+
 ### Установка
-Перейдите на вкладку с последним [релизом](https://github.com/keepers-team/webtlo/releases/latest) и скачайте подходящий архив:
-- `webtlo-win.zip` - [standalone](https://github.com/keepers-team/webtlo/blob/master/win/README.md) архив для windows без необходимости устаналивать веб-сервер
-- `webtlo.zip` - для самостоятельной установки в любой подходящий веб-сервер
+[Последний релиз](https://github.com/keepers-team/webtlo/releases/latest)
 
-Или используйте docker образ, например:  
-`docker pull berkut174/webtlo:latest`  
-Примеры настройки docker-compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.yml)
+#### Docker
+Готовый docker образ:
+- `docker pull ghcr.io/keepers-team/webtlo:latest`
+- `docker pull berkut174/webtlo:latest`
 
-Или скачайте репозиторий:  
+Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.yml).
+
+Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.dev.yml).
+
+#### Windows
+- **Standalone** сборка (рекомендуется), скачать [webtlo-win.zip](https://github.com/keepers-team/webtlo/releases/latest/download/webtlo-win.zip), распаковать в желаемое место, запустить `Start.bat`.
+Подробности [тут](https://github.com/keepers-team/webtlo/blob/master/win/README.md).
+- Подготовленный [webtlo.zip](https://github.com/keepers-team/webtlo/releases/latest/download/webtlo.zip) для самостоятельной установки в любой подходящий веб-сервер.
+
+
+#### Из репозитория
 - клонировать репозиторий `git clone https://github.com/keepers-team/webtlo.git`
 - установить [composer](https://getcomposer.org)
 - установить зависимости `cd src && composer install --no-dev`
-- настроить желаемый веб-сервер 
+- настроить желаемый веб-сервер
 
-### Системные требования
-Любой веб-сервер с поддержкой PHP (Nginx/Apache2+), PHP 8.1+ и SQLite 3.38+.
 
-В случае самостоятельной настройки рекомендуется в php.ini добавить игнорирование ошибок:  
+### Важно
+В случае самостоятельной настройки рекомендуется в php.ini добавить игнорирование ошибок:
 `error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT`
+Увеличить лимиты памяти и используемых переменных:
+- `memory_limit = 2G`
+- `max_input_vars=100000`
+
+Пример настроек `php.ini`:
+[docker-php-ini](https://github.com/keepers-team/webtlo/blob/master/docker/rootfs/etc/php81/php.ini),
+[standalone-php-ini](https://github.com/keepers-team/webtlo/blob/master/win/overlay/php/php.ini)
