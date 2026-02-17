@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Table;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
 
@@ -30,12 +30,12 @@ final class Topics
         'seeder_last_seen',
     ];
 
-    public function __construct(private readonly DB $db) {}
+    public function __construct(private readonly ConnectionInterface $con) {}
 
     /** Сколько раздач без названия. */
     public function countUnnamed(): int
     {
-        return $this->db->queryCount("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
+        return $this->con->queryCount("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
     }
 
     /**
@@ -45,7 +45,7 @@ final class Topics
      */
     public function getUnnamedTopics(int $limit = 5000): array
     {
-        return $this->db->query(
+        return $this->con->query(
             "SELECT id FROM Topics WHERE name IS NULL OR name = '' LIMIT ?",
             [$limit],
             PDO::FETCH_COLUMN
@@ -55,7 +55,7 @@ final class Topics
     /** Сколько всего раздач в таблице. */
     public function countTotal(): int
     {
-        return $this->db->selectRowsCount('Topics');
+        return $this->con->selectRowsCount('Topics');
     }
 
     /**
@@ -69,7 +69,7 @@ final class Topics
     {
         $selectTopics = KeysObject::create($topicIds);
 
-        return $this->db->query(
+        return $this->con->query(
             "
                 SELECT id, info_hash, reg_time, seeders, seeders_updates_today, seeders_updates_days, poster, name
                 FROM Topics
@@ -95,7 +95,7 @@ final class Topics
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
-            $stm = $this->db->executeStatement(
+            $stm = $this->con->executeStatement(
                 "SELECT info_hash, id AS topic_id FROM Topics WHERE info_hash IN ($search->keys)",
                 $search->values,
             );
@@ -121,7 +121,7 @@ final class Topics
         foreach ($chunks as $chunk) {
             $delete = KeysObject::create($chunk);
 
-            $this->db->executeStatement(
+            $this->con->executeStatement(
                 "DELETE FROM Topics WHERE id IN ($delete->keys)",
                 $delete->values
             );
@@ -139,6 +139,6 @@ final class Topics
             WHERE forum_id NOT IN (SELECT id FROM UpdateTime WHERE id < 100000)
         ';
 
-        $this->db->executeStatement(sql: $query);
+        $this->con->executeStatement(sql: $query);
     }
 }
