@@ -19,48 +19,51 @@ jobs:
         with:
           set-safe-directory: true
 
-      - name: Cache Composer dependencies
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
         uses: actions/cache@v5
         with:
-          path: /tmp/composer-cache
+          path: ${{ steps.composer-cache.outputs.dir }}
           key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            Composer-${{ runner.os }}-
+          restore-keys: Composer-${{ runner.os }}-
 
-      - name: Install dependencies
-        uses: php-actions/composer@v6
-        with:
-          php_version: "8.1"
-          dev: "no"
-          args: --ignore-platform-reqs
-          working_dir: "src"
+      - name: Install composer dependencies
+        run: composer install --no-dev --ignore-platform-reqs --prefer-dist
 
-      - name: Write version
-        run: |
-          cd src
-          cat version.json \
-            | jq --arg V ${{ inputs.WEBTLO_VERSION }} '.version=$V' \
-            | jq --arg SH ${{ inputs.WEBTLO_SHA }} '.sha=$SH' \
-            > tmp.$$.json
-          mv tmp.$$.json version.json
+      - name: Make release dir
+        run: mkdir -p release
 
-      - run: mkdir -p release
       - name: Build webtlo.zip
         run: |
           zip_name=webtlo.zip
-          zip_dir=webtlo.local
-          json_version="$zip_dir/version.json"
+          tlo_dir=webtlo.local
 
-          cp -r "src" "$zip_dir"
+          mkdir "$tlo_dir"
+          cp -r bin cron database public src vendor "$tlo_dir/"
 
-          cat $json_version \
-            | jq '.installation="zip"' \
-            > tmp.$$.json
-          mv tmp.$$.json $json_version
+          # Write version
+          jq \
+            --arg V "$WEBTLO_VERSION" \
+            --arg SH "$WEBTLO_SHA" \
+            --arg INST "zip" \
+            '.version=$V | .sha=$SH | .installation=$INST' \
+            version.json > "$tlo_dir/version.json"
 
-          zip -rm -9 "release/$zip_name" "$zip_dir"
+
+          echo ""
+          echo "Show version"
+          cat "$tlo_dir/version.json"
+
+          # Make zip
+          zip -rm -9 --quiet "release/$zip_name" "$tlo_dir"
 
           echo "Done $zip_name"
+        env:
+          WEBTLO_VERSION: ${{ inputs.WEBTLO_VERSION }}
+          WEBTLO_SHA: ${{ inputs.WEBTLO_SHA }}
 
       - name: Cache WebServer
         id: cache_web_server
@@ -97,12 +100,7 @@ jobs:
 
           zip_name="webtlo-win.zip"
           zip_dir=webtlo-win
-          json_version="src/version.json"
-
-          cat $json_version \
-            | jq '.installation="standalone"' \
-            > tmp.$$.json
-          mv tmp.$$.json $json_version
+          tlo_dir="$zip_dir/nginx/wtlo"
 
           rm -rf $zip_dir
           cp -r $server_dir $zip_dir
@@ -115,10 +113,28 @@ jobs:
           cp -vr win/overlay/* $zip_dir/
 
           # Add webtlo
-          cp -r "src" "$zip_dir/nginx/wtlo"
-          zip -rm -9 "release/$zip_name" "$zip_dir"
+          mkdir "$tlo_dir"
+          cp -r bin cron database public src vendor "$tlo_dir"
+
+          # Write version
+          jq \
+            --arg V "$WEBTLO_VERSION" \
+            --arg SH "$WEBTLO_SHA" \
+            --arg INST "standalone" \
+            '.version=$V | .sha=$SH | .installation=$INST' \
+            version.json > "$tlo_dir/version.json"
+
+          echo ""
+          echo "Show version"
+          cat "$tlo_dir/version.json"
+
+          # Make zip
+          zip -rm -9 --quiet "release/$zip_name" "$zip_dir"
 
           echo "Done $zip_name"
+        env:
+          WEBTLO_VERSION: ${{ inputs.WEBTLO_VERSION }}
+          WEBTLO_SHA: ${{ inputs.WEBTLO_SHA }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v6
