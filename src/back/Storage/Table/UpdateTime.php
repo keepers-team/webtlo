@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Table;
 
 use DateTimeImmutable;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Module\MarkersUpdate;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
 final class UpdateTime
 {
     public function __construct(
-        private readonly DB           $db,
+        private readonly ConnectionInterface $con,
     ) {}
 
     /**
@@ -30,7 +30,7 @@ final class UpdateTime
             $marker = $marker->value;
         }
 
-        return (int) $this->db->queryColumn(
+        return (int) $this->con->queryColumn(
             'SELECT ud FROM UpdateTime WHERE id = ?',
             [$marker],
         );
@@ -58,7 +58,7 @@ final class UpdateTime
             $updateTime = $updateTime->getTimestamp();
         }
 
-        $this->db->executeStatement(
+        $this->con->executeStatement(
             'INSERT INTO UpdateTime (id, ud) SELECT ?,?',
             [$marker, $updateTime]
         );
@@ -86,7 +86,7 @@ final class UpdateTime
     {
         $mark = KeysObject::create($markers);
 
-        $updates = $this->db->query(
+        $updates = $this->con->query(
             "SELECT id, ud FROM UpdateTime WHERE id IN ($mark->keys)",
             $mark->values,
             PDO::FETCH_KEY_PAIR
@@ -163,6 +163,6 @@ final class UpdateTime
      */
     public function removeOutdatedRows(DateTimeImmutable $outdatedDate): void
     {
-        $this->db->executeStatement('DELETE FROM UpdateTime WHERE ud < ?', [$outdatedDate->getTimestamp()]);
+        $this->con->executeStatement('DELETE FROM UpdateTime WHERE ud < ?', [$outdatedDate->getTimestamp()]);
     }
 }

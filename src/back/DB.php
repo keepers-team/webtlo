@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Config\AverageSeeds;
+use KeepersTeam\Webtlo\Infrastructure\Database\Cleaner;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Infrastructure\Database\MigrationRunner;
 use KeepersTeam\Webtlo\Storage\Traits;
@@ -15,7 +16,6 @@ use RuntimeException;
 
 final class DB implements ConnectionInterface
 {
-    use Traits\DbClearTables;
     use Traits\DbDataSet;
     use Traits\DbQuery;
 
@@ -63,7 +63,11 @@ final class DB implements ConnectionInterface
         }
 
         // Очистка таблиц от неактуальных записей.
-        $db->clearTables($averageSeeds->historyExpiryDays);
+        $cleaner = new Cleaner(
+            logger        : $logger,
+            keepDataPeriod: $averageSeeds->historyExpiryDays
+        );
+        $cleaner->clearTables(con: $db);
 
         return $db;
     }
