@@ -20,5 +20,5 @@ jobs:
           commitTitle: 'Update copyright years'
           transform: (?<=Copyright © )(?<from>\d{4})?[-]?(\d{4})
           path: |
-            src/index.php
+            public/index.php
           labels: 'T: Maintenance'
