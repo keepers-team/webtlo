@@ -2,22 +2,28 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Storage\Traits;
+namespace KeepersTeam\Webtlo\Infrastructure\Database;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
+use Psr\Log\LoggerInterface;
 
-trait DbClearTables
+/**
+ * Очистка таблиц от неактуальных записей.
+ */
+final class Cleaner
 {
-    /**
-     * Очистка таблиц от неактуальных данных.
-     */
-    protected function clearTables(int $keepDataPeriod = 7): void
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly int             $keepDataPeriod,
+    ) {}
+
+    public function clearTables(ConnectionInterface $con): void
     {
         // Вручную создаём экземпляр UpdateTime.
-        $updateTime = new UpdateTime(db: $this);
+        $updateTime = new UpdateTime(con: $con);
 
         // Проверяем необходимость выполнения очистки БД (раз в день).
         $isCleanNeeded = $updateTime->checkUpdateAvailable(marker: UpdateMark::DB_CLEAN, seconds: 86400);
@@ -25,16 +31,19 @@ trait DbClearTables
             return;
         }
 
-        $this->logger->debug('Выполняем очистку устаревших данных, записи старше {days} дней.', ['days' => $keepDataPeriod]);
+        $this->logger->debug(
+            'Выполняем очистку устаревших данных, записи старше {days} дней.',
+            ['days' => $this->keepDataPeriod]
+        );
 
         // Данные о сидах устарели
-        $outdatedDate = (new DateTimeImmutable())->modify("- $keepDataPeriod day");
+        $outdatedDate = (new DateTimeImmutable())->modify("- $this->keepDataPeriod day");
 
         // Удалим устаревшие метки обновлений.
         $updateTime->removeOutdatedRows(outdatedDate: $outdatedDate);
 
         // Удалим раздачи из подразделов, для которых нет актуальных меток обновления.
-        $topics = new Topics(db: $this);
+        $topics = new Topics(con: $con);
         $topics->removeOutdatedRows();
 
         // Записываем дату последней очистки.
