@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use KeepersTeam\Webtlo\Console\ConsoleKernel;
+
+$kernel = new ConsoleKernel();
+
+exit($kernel->handle($argv));
