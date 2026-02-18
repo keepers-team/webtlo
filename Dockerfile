@@ -1,3 +1,6 @@
+###################################
+# Base
+###################################
 FROM alpine:3.17 AS base
 
 # environment
@@ -39,6 +42,7 @@ COPY docker/rootfs /
 # set application-specific environment
 ENV WEBTLO_UID=1000
 ENV WEBTLO_GID=1000
+
 # set cron environment
 ENV WEBTLO_DIR="/data/storage"
 ENV WEBTLO_CRON="true" \
@@ -54,29 +58,54 @@ WORKDIR /var/www/webtlo
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT ["/s6-init"]
 
-# install composer
+# =========================
+# Builder stage
+# =========================
 FROM base AS builder
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
 WORKDIR /app
-COPY src/composer.* ./
-COPY src/back back
+COPY composer.json composer.lock ./
+COPY src ./src
 
-# Run composer install
-RUN composer install --no-dev --no-progress && composer dump-autoload -o
+# Install dependencies (prod only)
+RUN composer install \
+    --no-dev \
+    --no-progress \
+    --no-interaction \
+    --optimize-autoloader \
+    --classmap-authoritative
 
-# image for development
+# =========================
+# Development image
+# =========================
 FROM base AS dev
-RUN apk add --update --no-cache git php81-phar php81-pecl-xdebug php81-tokenizer
+
 COPY /docker/debug /etc/php81/conf.d
-# copy composer parts
+
+RUN apk add --update --no-cache git php81-phar php81-pecl-xdebug php81-tokenizer
+RUN git config --global --add safe.directory "*"
+# Copy composer for dev
 COPY --from=builder /usr/bin/composer /usr/bin/composer
 
-# image for production
+# =========================
+# Production image
+# =========================
 FROM base AS prod
-# copy application to workdir
-COPY src .
-# copy composer parts
-COPY --from=builder /app/vendor vendor
+
+WORKDIR /var/www/webtlo
+
+# Copy bin and fix rights
+COPY bin ./bin
+RUN chmod +x bin/webtlo
+
+# Copy application to workdir
+COPY database ./database
+COPY public ./public
+COPY src ./src
+COPY version.json ./version.json
+
+# Copy vendor to workdir
+COPY --from=builder /app/vendor ./vendor

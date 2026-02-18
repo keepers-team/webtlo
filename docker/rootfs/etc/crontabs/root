@@ -1,7 +1,6 @@
 # Examples
 
-# 15 * * * * sleep $(shuf -i 1-360 -n 1)  && php /var/www/webtlo/cron/update.php
-# 25 * * * * sleep $(shuf -i 1-360 -n 1)  && php /var/www/webtlo/cron/control.php
-# 0 5 * * *  sleep $(shuf -i 1-1200 -n 1) && php /var/www/webtlo/cron/keepers.php
-# 0 6 * * *  sleep $(shuf -i 1-1200 -n 1) && php /var/www/webtlo/cron/reports.php
-
+# 15 * * * * sleep $(shuf -i 1-360 -n 1)  && /var/www/webtlo/bin/webtlo cron:update
+# 25 * * * * sleep $(shuf -i 1-360 -n 1)  && /var/www/webtlo/bin/webtlo cron:control
+# 0 5 * * *  sleep $(shuf -i 1-1200 -n 1) && /var/www/webtlo/bin/webtlo cron:keepers
+# 0 6 * * *  sleep $(shuf -i 1-1200 -n 1) && /var/www/webtlo/bin/webtlo cron:reports
