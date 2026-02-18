@@ -1,2 +1,1 @@
-cd php
-php.exe ..\nginx\wtlo\cron\keepers.php
+.\php\php.exe .\nginx\wtlo\bin\webtlo cron:keepers
