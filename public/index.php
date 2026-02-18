@@ -1232,7 +1232,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                 <a href="probe.php" target="_blank" style="font-size: small">Тест конфигурации</a>
 
                 <hr />
-                <p>Copyright © 2016-2026 Alexander Shemetov</p>
+                <p>Copyright © 2016-2026 Keepers Team</p>
             </div>
         </div>
     </div>
