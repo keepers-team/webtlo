@@ -16,7 +16,49 @@
   - удаление
   - остановка/запуск, в т.ч. по расписанию
   - добавление меток/категорий
+---
 
+## При обновлении с версии webTLO 3.x
+> [!NOTE]
+> Следует учесть изменение структуры проекта.  
+> Изменилось расположение кода относительно корня проекта,
+> см `src`, `public`, `bin`, `cron`, `composer.json`  
+> Добавлен файл `/bin/webtlo cron:{action}` для запуска задач по расписанию, вместо `/cron/{action}.php`
+
+#### Docker
+Если вы используете докер - для вас ничего не изменилось.  
+Готовый образ работает, как и ранее.
+Если вы не запускаете `cron` извне контейнера.
+
+#### Standalone / webtlo-win
+При обновлении рекомендуется удалить содержимое каталога `webtlo-win\nginx\wtlo`, КРОМЕ `data` - ЭТО ВАШ КОНФИГ !  
+Вставить с заменой новую сборку и запустить `Start.bat` как обычно.  
+Если использовался планировщик, то задания нужно пересоздать, по причине смены исполняемого файла.
+
+#### Самостоятельная настройка веб-сервера
+Изменить путь к файлу `/root/index.php` => `/root/public/index.php`  
+см
+[docker-nginx](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/nginx/nginx.conf)
+[win-nginx](https://github.com/keepers-team/webtlo/blob/4.x/win/overlay/nginx/conf/nginx.conf)
+
+Изменить путь к исполняемому файлу для автоматических задач:
+
+```bash
+# Было
+php /var/www/webtlo/cron/update.php
+
+# Стало
+php /var/www/webtlo/bin/webtlo cron:update
+
+# Можно без `php` если сделать файл исполняемым (chmod +x bin/webtlo)
+```
+см [docker-crontab](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/crontabs/root)
+
+[//]: # (@TODO Исправить ссылки на master)
+
+---
+
+[//]: # (@TODO Поднять до php8.2)
 ### Системные требования
 Любой веб-сервер с поддержкой PHP 8.1+ (Nginx/Apache2+) и SQLite 3.38+.
 
@@ -25,8 +67,8 @@
 
 #### Docker
 Готовый docker образ:
-- `docker pull ghcr.io/keepers-team/webtlo:latest`
-- `docker pull berkut174/webtlo:latest`
+- `docker pull ghcr.io/keepers-team/webtlo:4.x`
+- `docker pull berkut174/webtlo:4.x`
 
 Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.yml).
 
@@ -41,7 +83,7 @@
 #### Из репозитория
 - клонировать репозиторий `git clone https://github.com/keepers-team/webtlo.git`
 - установить [composer](https://getcomposer.org)
-- установить зависимости `cd src && composer install --no-dev`
+- установить зависимости `composer install --no-dev`
 - настроить желаемый веб-сервер
 
 
