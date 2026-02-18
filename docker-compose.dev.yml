@@ -12,10 +12,8 @@ services:
     volumes:
       # Проброшенный каталог с файлами конфигурации
       - "./webtlo-data-dev:/data"
-      # Проброшенный каталог WebTlo
-      - "./src:/var/www/webtlo"
       # Весь проект
-      - ".:/var/www"
+      - ".:/var/www/webtlo"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
