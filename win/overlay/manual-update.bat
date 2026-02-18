@@ -1,2 +1,1 @@
-cd php
-php.exe ..\nginx\wtlo\cron\update.php
+.\php\php.exe .\nginx\wtlo\bin\webtlo cron:update
