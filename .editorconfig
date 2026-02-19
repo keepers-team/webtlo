@@ -17,3 +17,6 @@ indent_size = 2
 
 [docker/**]
 insert_final_newline = false
+
+[*.md]
+trim_trailing_whitespace = false
