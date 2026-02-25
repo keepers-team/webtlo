@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
+use KeepersTeam\Webtlo\Console\CronCommand;
 use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
@@ -69,6 +70,11 @@ final class App
         $container->addServiceProvider(new TopicListServiceProvider());
 
         return self::$appContainer = new self($container);
+    }
+
+    public static function createConsole(CronCommand $command): self
+    {
+        return self::create($command->logFile());
     }
 
     public function get(string $id): mixed
