@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use KeepersTeam\Webtlo\Console\CronCommand;
+
 /**
  * Параметры автоматического запуска задач по-расписанию.
  */
@@ -15,13 +17,13 @@ final class Automation
         public readonly bool $reports,
     ) {}
 
-    public function isActionEnabled(string $action): bool
+    public function isCommandEnabled(CronCommand $command): bool
     {
-        return match ($action) {
-            'update'  => $this->update,
-            'control' => $this->control,
-            'reports' => $this->reports,
-            default   => false
+        return match ($command) {
+            CronCommand::Keepers,
+            CronCommand::Update  => $this->update,
+            CronCommand::Control => $this->control,
+            CronCommand::Reports => $this->reports,
         };
     }
 }
