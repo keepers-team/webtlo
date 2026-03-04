@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Console;
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Helper;
 use RuntimeException;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Lock\Store\FlockStore;
 use Throwable;
 
 final class ConsoleKernel
@@ -43,16 +46,29 @@ final class ConsoleKernel
             echo $notice . PHP_EOL;
         }
 
+        $automation = $app->getAutomation();
+
+        if (!$automation->isCommandEnabled(command: $command)) {
+            $message = sprintf('[%s] Автоматическое выполнение отключено в настройках.', $command->name);
+
+            $logger->notice($message);
+            echo $message . PHP_EOL;
+
+            return 0;
+        }
+
+        $lockPath = Helper::getStorageDir() . '/locks';
+        $factory  = new LockFactory(store: new FlockStore(lockPath: $lockPath));
+
+        $lock = $factory->createLock('webtlo-global', 1800);
+
         try {
-            $automation = $app->getAutomation();
-
-            if (!$automation->isCommandEnabled(command: $command)) {
-                $message = sprintf('[%s] Автоматическое выполнение отключено в настройках.', $command->name);
-
-                $logger->notice($message);
+            if (!$lock->acquire()) {
+                $message = sprintf('[%s]. Запуск невозможен. Запущен другой процесс.', $command->name);
+                $logger->warning($message, ['lockPath' => $lockPath]);
                 echo $message . PHP_EOL;
 
-                exit(0);
+                return 1;
             }
 
             $command->run(app: $app);
@@ -69,6 +85,7 @@ final class ConsoleKernel
 
             return 1;
         } finally {
+            $lock->release();
             $logger->info('-- DONE --');
         }
     }
