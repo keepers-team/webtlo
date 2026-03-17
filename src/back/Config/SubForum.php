@@ -31,4 +31,13 @@ final class SubForum
         public readonly bool           $reportExclude = false,
         public readonly int            $controlPeers = TopicControl::EmptyValue,
     ) {}
+
+    /**
+     * Имя подраздела с отображением emoji.
+     */
+    public function getHtmlName(): string
+    {
+        // Декодируем emoji символы.
+        return html_entity_decode($this->name, ENT_QUOTES, 'UTF-8');
+    }
 }

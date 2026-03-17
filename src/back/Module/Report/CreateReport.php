@@ -258,7 +258,12 @@ final class CreateReport
             }
 
             // Ссылка на отчёт подраздела.
-            $leftPart = sprintf($urlPattern, $subForum->id, $this->auth->userId, $subForum->name);
+            $leftPart = sprintf(
+                $urlPattern,
+                $subForum->id,
+                $this->auth->userId,
+                $subForum->getHtmlName()
+            );
 
             // Ссылка на свой пост(отчёт) и количество + объём раздач.
             $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
