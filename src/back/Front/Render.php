@@ -179,7 +179,7 @@ final class Render
                 self::optionTemplate,
                 $subForum->id,
                 '',
-                $subForum->name,
+                $subForum->getHtmlName(),
             );
 
             // Параметры подраздела в настройках.
@@ -198,7 +198,7 @@ final class Render
                 self::optionTemplate,
                 $subForum->id,
                 $datasetForum,
-                $subForum->name,
+                $subForum->getHtmlName(),
             );
         }
 
