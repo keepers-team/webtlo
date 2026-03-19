@@ -77,16 +77,46 @@ trait ForumTree
     {
         $updateTime = self::dateTimeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
 
-        /** @var Forum[] $forums */
-        $forums = [];
-        /** @var int[][][] $categoriesHierarchy */
-        $categoriesHierarchy = $trees['result']['tree'];
-        /** @var string[] $categoryNames */
+        /**
+         * Категории форума - основные группы.
+         *
+         * @var string[] $categoryNames
+         */
         $categoryNames = $trees['result']['c'];
-        /** @var string[] $forumNames */
-        $forumNames = $trees['result']['f'];
 
-        $hierarchyProcessor = function(int $forumId, array $parts) use (&$forums, $forumNames, $sizes): array {
+        /**
+         * Форумы - разделы и подразделы.
+         * Входят в категории.
+         *
+         * Декодируем html-сущности, в частности - emoji.
+         *
+         * @var string[] $forumNames
+         */
+        $forumNames = array_map(
+            static fn($name) => html_entity_decode($name, ENT_QUOTES, 'UTF-8'),
+            $trees['result']['f']
+        );
+
+        /**
+         * Дерево категорий, разделов и подразделов.
+         *
+         * @var int[][][] $categoriesHierarchy
+         */
+        $categoriesHierarchy = $trees['result']['tree'];
+
+        /**
+         * Обработанный справочник разделов и подразделов.
+         *
+         * @var Forum[] $forums
+         */
+        $forums = [];
+
+        /**
+         * @param string[] $parts
+         *
+         * @return string[]
+         */
+        $hierarchyProcessor = static function(int $forumId, array $parts) use (&$forums, $forumNames, $sizes): array {
             $parts[] = $forumNames[$forumId];
 
             if (isset($sizes['result'][$forumId])) {
