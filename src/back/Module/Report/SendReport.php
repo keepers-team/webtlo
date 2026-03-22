@@ -150,8 +150,8 @@ final class SendReport
         return $this->forumClient->checkConnection();
     }
 
-    public function sendForumSummaryReport(string $report): void
+    public function sendForumSummaryReport(string $report): ?string
     {
-        $this->forumClient->sendSummaryReport(userId: $this->apiCredentials->userId, message: $report);
+        return $this->forumClient->sendSummaryReport(userId: $this->apiCredentials->userId, message: $report);
     }
 }

@@ -274,14 +274,14 @@ final class SendKeeperReports
             $summaryReport = $creator->getSummaryReport(withTelemetry: true);
 
             // Отправляем сводный отчёт.
-            $report->sendForumSummaryReport(report: $summaryReport);
+            $postLink = $report->sendForumSummaryReport(report: $summaryReport);
 
             // Запишем время отправки отчётов.
             $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
 
             $this->logger->info(
-                'Отправка сводного отчёта завершена за {sec}',
-                ['sec' => Timers::getExecTime('send_summary')]
+                'Отправка сводного отчёта завершена за {sec} [{link}]',
+                ['sec' => Timers::getExecTime('send_summary'), 'link' => $postLink]
             );
         } catch (Throwable $e) {
             $this->logger->error($e->getMessage());

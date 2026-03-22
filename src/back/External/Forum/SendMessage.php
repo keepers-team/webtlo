@@ -57,29 +57,33 @@ trait SendMessage
         $message = str_replace('<br />', '', $message);
         $message = str_replace('[br]', "\n", $message);
 
-        $editMode = $postId === null ? self::replyAction : self::editAction;
-
+        // Публикуем новое сообщение, по умолчанию.
         $form = [
             't'           => $topicId,
-            'mode'        => $editMode,
+            'mode'        => self::replyAction,
             'submit_mode' => 'submit',
             'form_token'  => self::$formToken,
             'message'     => Helper::encodeCyrillicString($message),
         ];
 
+        // Если есть ид сообщения, то редактируем старое.
         if ($postId !== null) {
-            $form['p'] = $postId;
+            $form['mode'] = self::editAction;
+            $form['p']    = $postId;
         }
+
         $response = $this->post(url: self::postUrl, params: ['form_params' => $form]);
         if ($response === null) {
             return null;
         }
 
-        $postId = self::parseTopicIdFromPostResponse(page: $response);
+        // Пробуем найти ид сообщения, если его раньше не было.
+        $postId = self::parseTopicIdFromPostResponse(page: $response, postId: $postId);
         if ($postId === null) {
-            $error = self::parseTopicEditErrorFromPostResponse(page: $response);
-
-            $this->logger->warning('Ошибка отправки сообщения на форум: {error}', ['error' => $error]);
+            $this->logger->warning(
+                'Ошибка отправки сообщения на форум: {error}',
+                ['error' => self::parseTopicEditErrorFromPostResponse(page: $response)]
+            );
         }
 
         return $postId;
@@ -127,6 +131,11 @@ trait SendMessage
         return null;
     }
 
+    public function makePostLink(string $path, int $postId): string
+    {
+        return sprintf('%s%s?p=%d', $this->connect->buildUrl(), $path, $postId);
+    }
+
     /**
      * Извлечение идентификатора сообщения из ответа сервера.
      *
@@ -134,8 +143,12 @@ trait SendMessage
      *
      * @return ?int Идентификатор сообщения, если найден, иначе null
      */
-    private static function parseTopicIdFromPostResponse(string $page): ?int
+    private static function parseTopicIdFromPostResponse(string $page, ?int $postId): ?int
     {
+        if ($postId !== null) {
+            return $postId;
+        }
+
         $dom = self::parseDOM(page: $page);
 
         $xpathQuery = (

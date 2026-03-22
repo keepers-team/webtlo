@@ -17,13 +17,18 @@ trait SummaryReport
      * @param int    $userId  Идентификатор пользователя
      * @param string $message Текст сообщения
      *
-     * @return ?int Идентификатор сообщения, если отправка успешна, иначе null
+     * @return ?string Ссылка на пост, если отправка успешна
      */
-    public function sendSummaryReport(int $userId, string $message): ?int
+    public function sendSummaryReport(int $userId, string $message): ?string
     {
         $postId = $this->searchSummaryReportMessageId(userId: $userId);
 
-        return $this->sendMessage(topicId: self::reportsTopicId, message: $message, postId: $postId);
+        $postId = $this->sendMessage(topicId: self::reportsTopicId, message: $message, postId: $postId);
+        if ($postId !== null) {
+            return $this->makePostLink(path: self::topicURL, postId: $postId);
+        }
+
+        return null;
     }
 
     /**
