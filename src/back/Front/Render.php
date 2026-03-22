@@ -179,7 +179,7 @@ final class Render
                 self::optionTemplate,
                 $subForum->id,
                 '',
-                $subForum->getHtmlName(),
+                $subForum->name,
             );
 
             // Параметры подраздела в настройках.
@@ -194,11 +194,12 @@ final class Render
                 (int) $subForum->reportExclude,
             );
 
+            // TODO убрать html_entity_decode в следующей мажорной версии, когда все проскочат обновление БД.
             $optionForumsDataset .= sprintf(
                 self::optionTemplate,
                 $subForum->id,
                 $datasetForum,
-                $subForum->getHtmlName(),
+                html_entity_decode($subForum->name, ENT_QUOTES, 'UTF-8'),
             );
         }
 

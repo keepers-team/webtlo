@@ -262,7 +262,7 @@ final class CreateReport
                 $urlPattern,
                 $subForum->id,
                 $this->auth->userId,
-                $subForum->getHtmlName()
+                $this->encodeEmoji($subForum->name)
             );
 
             // Ссылка на свой пост(отчёт) и количество + объём раздач.
@@ -637,5 +637,19 @@ final class CreateReport
         $formatted = $this->bytes($bytes);
 
         return vsprintf('[b]%s[/b] %s', explode(' ', $formatted));
+    }
+
+    /**
+     * Замена emoji ню юникод строку (⚽ => &#9917;).
+     */
+    private function encodeEmoji(string $string): string
+    {
+        static $emojiMap = [
+            0x2600, 0x26FF, 0, ~0, // старые символы
+            0x1F000, 0x1FFFF, 0, ~0, // новые emoji
+        ];
+
+        // Декодируем emoji символы.
+        return mb_encode_numericentity($string, $emojiMap, 'UTF-8');
     }
 }
