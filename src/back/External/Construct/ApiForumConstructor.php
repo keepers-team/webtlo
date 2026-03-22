@@ -46,7 +46,7 @@ final class ApiForumConstructor
             'X-WebTLO'   => 'experimental',
         ];
 
-        $baseUrl     = $this->connect->getApiUrl();
+        $baseUrl     = $this->connect->url;
         $proxyConfig = $this->connect->useProxy ? $this->proxy->getOptions() : [];
         $timeout     = $this->connect->timeout;
 

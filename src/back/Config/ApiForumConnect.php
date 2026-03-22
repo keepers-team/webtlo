@@ -32,6 +32,8 @@ final class ApiForumConnect
 
     private static string $apiVersion = 'v1';
 
+    public readonly string $url;
+
     public function __construct(
         public readonly string  $baseUrl,
         public readonly bool    $isCustom,
@@ -42,11 +44,8 @@ final class ApiForumConnect
         public readonly int     $rateFrameSize,
         public readonly int     $rateRequestLimit,
         public readonly string  $userAgent = Defaults::userAgent,
-    ) {}
-
-    public function getApiUrl(): string
-    {
-        return sprintf(
+    ) {
+        $this->url = sprintf(
             '%s://%s/%s/',
             $this->ssl ? 'https' : 'http',
             $this->baseUrl,

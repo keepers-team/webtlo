@@ -133,7 +133,7 @@ trait SendMessage
 
     public function makePostLink(string $path, int $postId): string
     {
-        return sprintf('%s%s?p=%d', $this->connect->buildUrl(), $path, $postId);
+        return sprintf('%s%s?p=%d', $this->connect->url, $path, $postId);
     }
 
     /**

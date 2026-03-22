@@ -74,11 +74,7 @@ final class ForumConstructor
             $this->cookieJar->setCookie($cookie);
         }
 
-        $baseUrl = sprintf(
-            '%s://%s',
-            $this->connect->ssl ? 'https' : 'http',
-            $this->connect->baseUrl,
-        );
+        $baseUrl = $this->connect->url;
 
         $proxyConfig = $this->connect->useProxy ? $this->proxy->getOptions() : [];
 

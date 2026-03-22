@@ -63,7 +63,7 @@ final class TopicListServiceProvider extends AbstractServiceProvider
 
             return new Formatter(
                 clients : $clients->getClientsNames(),
-                forumUrl: $forum->buildUrl(),
+                forumUrl: $forum->url,
             );
         });
     }

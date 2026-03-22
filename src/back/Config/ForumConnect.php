@@ -16,17 +16,16 @@ final class ForumConnect
         'rutracker.net',
     ];
 
+    public readonly string $url;
+
     public function __construct(
         public readonly string  $baseUrl,
         public readonly bool    $isCustom,
         public readonly bool    $ssl,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
-    ) {}
-
-    public function buildUrl(): string
-    {
-        return sprintf(
+    ) {
+        $this->url = sprintf(
             '%s://%s',
             $this->ssl ? 'https' : 'http',
             $this->baseUrl

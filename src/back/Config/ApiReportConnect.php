@@ -17,6 +17,8 @@ final class ApiReportConnect
 
     private static string $apiVersion = 'krs/api/v1';
 
+    public readonly string $url;
+
     public function __construct(
         public readonly string  $baseUrl,
         public readonly bool    $isCustom,
@@ -24,11 +26,8 @@ final class ApiReportConnect
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
         public readonly string  $userAgent = Defaults::userAgent,
-    ) {}
-
-    public function getApiUrl(): string
-    {
-        return sprintf(
+    ) {
+        $this->url = sprintf(
             '%s://%s/%s/',
             $this->ssl ? 'https' : 'http',
             $this->baseUrl,
