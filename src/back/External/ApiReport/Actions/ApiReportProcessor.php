@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use Closure;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeeperTopics;
+use KeepersTeam\Webtlo\External\Contract\ReportProcessorInterface;
 
 final class ApiReportProcessor implements ReportProcessorInterface
 {
