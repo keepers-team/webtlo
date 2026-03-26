@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\External\Contract\TopicPeersProcessorInterface;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Helper;
 use Throwable;
