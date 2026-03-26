@@ -114,7 +114,7 @@ final class ApiSearch
 
         if ($group === TopicControl::UnknownHashes) {
             // Получаем только искомые раздачи, т.к. не знаем ид подраздела (долго).
-            return $this->getApiForumTopicPeers(hashes: $hashes);
+            return $this->getApiForumTopicPeers(hashes: $hashes)->process(hashes: $hashes);
         }
 
         throw new RuntimeException("Неизвестный подраздел: $group");
@@ -149,10 +149,8 @@ final class ApiSearch
      * Запросить в API форума искомые раздачи.
      *
      * @param string[] $hashes
-     *
-     * @return iterable<TopicPeers>
      */
-    private function getApiForumTopicPeers(array $hashes): iterable
+    private function getApiForumTopicPeers(array $hashes): TopicPeersProcessorInterface
     {
         $response = $this->apiForum->getPeerStats(topics: $hashes);
 
@@ -162,8 +160,6 @@ final class ApiSearch
             throw new RuntimeException('Не удалось получить данные о пирах раздач.');
         }
 
-        foreach ($response->peers as $topic) {
-            yield $topic;
-        }
+        return $response;
     }
 }
