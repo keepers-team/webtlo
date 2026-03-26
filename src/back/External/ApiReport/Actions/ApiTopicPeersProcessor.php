@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
+use KeepersTeam\Webtlo\External\Contract\TopicPeersProcessorInterface;
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
 final class ApiTopicPeersProcessor implements TopicPeersProcessorInterface

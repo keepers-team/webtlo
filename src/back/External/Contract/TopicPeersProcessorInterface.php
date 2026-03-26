@@ -2,10 +2,15 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
+namespace KeepersTeam\Webtlo\External\Contract;
 
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
+/**
+ * Интерфейс для ленивого перебора раздач с данными о пирах.
+ *
+ * @see TopicPeers
+ */
 interface TopicPeersProcessorInterface
 {
     /**
