@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 use Closure;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeeperTopics;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
+use KeepersTeam\Webtlo\External\Contract\ReportProcessorInterface;
 use League\Csv\Reader;
 
 final class CsvReportProcessor implements ReportProcessorInterface

@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\External\ApiReport\V1\KeepersResponse;
+use KeepersTeam\Webtlo\External\Contract\ReportProcessorInterface;
 use KeepersTeam\Webtlo\Helper;
 use RuntimeException;
 use Throwable;
