@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Api\V1;
 
+use KeepersTeam\Webtlo\External\ApiReport\Actions\TopicPeersProcessorInterface;
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
 /**
  * Список данных о пирах раздач.
  */
-final class TopicsPeersResponse
+final class TopicsPeersResponse implements TopicPeersProcessorInterface
 {
     /**
      * @param TopicPeers[]   $peers
@@ -22,4 +23,14 @@ final class TopicsPeersResponse
         public readonly array $peers,
         public readonly array $missingTopics
     ) {}
+
+    /**
+     * @return iterable<TopicPeers>
+     */
+    public function process(array $hashes): iterable
+    {
+        foreach ($this->peers as $topic) {
+            yield $topic;
+        }
+    }
 }

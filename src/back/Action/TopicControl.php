@@ -151,7 +151,18 @@ final class TopicControl
                 );
 
                 // Получаем данные о пирах искомых раздач и перебираем их.
-                $topicsPeers = $this->api->getGroupTopicPeersIterator(group: $group, hashes: $hashes);
+                try {
+                    $topicsPeers = $this->api->getGroupTopicPeersIterator(group: $group, hashes: $hashes);
+                } catch (RuntimeException $e) {
+                    $this->logger->warning('Обработка подраздела не удалась', [
+                        'forumId'  => $group,
+                        'error'    => $e->getMessage(),
+                        'execTime' => Timers::getExecTime("subsection_$group"),
+                    ]);
+
+                    continue;
+                }
+
                 foreach ($topicsPeers as $topic) {
                     // Проверяем наличие и статус раздачи в клиенте.
                     $torrent = $torrents->getTorrent(hash: $topic->hash);
