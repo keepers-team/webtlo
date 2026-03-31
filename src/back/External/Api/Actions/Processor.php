@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\Promise;
 use JsonException;
-use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Shared\Validation;
 use Psr\Http\Message\ResponseInterface;
@@ -21,23 +20,6 @@ trait Processor
     protected static function dateTimeFromTimestamp(int $timestamp): DateTimeImmutable
     {
         return (new DateTimeImmutable())->setTimestamp($timestamp);
-    }
-
-    /**
-     * Returns the request limit based on the search mode.
-     *
-     * @return int<1, max> the request limit, which is always a positive integer
-     */
-    protected static function getRequestLimit(TopicSearchMode $searchMode): int
-    {
-        return match ($searchMode) {
-            TopicSearchMode::ID   => 100,
-            /*
-             * Hashes are longer, so to avoid HTTP 414 in legacy API
-             * we're capping max identifiers per request.
-             */
-            TopicSearchMode::HASH => 32,
-        };
     }
 
     protected static function getChunkErrorHandler(LoggerInterface $logger): callable

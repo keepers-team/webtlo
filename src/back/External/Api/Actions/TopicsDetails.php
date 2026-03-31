@@ -52,7 +52,7 @@ trait TopicsDetails
             }
         };
 
-        $requestLimit  = self::getRequestLimit($searchMode);
+        $requestLimit  = $this->getParamsLimit(searchMode: $searchMode);
         $requestConfig = [
             'concurrency' => $this->connect->concurrency,
             'options'     => ['by' => $searchMode->value, ...$this->auth->getApiKey()],

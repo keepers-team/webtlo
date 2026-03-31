@@ -17,6 +17,7 @@ final class ApiForumClient
     use Actions\ForumTree;
     use Actions\KeepersList;
     use Actions\Processor;
+    use Actions\RequestLimit;
     use Actions\TopicsDetails;
     use Actions\TopicsPeers;
 
