@@ -216,9 +216,17 @@ final class Subsections
 
             $topicRegistered = $topic->registered->getTimestamp();
 
-            // Обновление данных или запись с нуля?
+            /**
+             * Обновление данных или запись с нуля?
+             *
+             * Считаем, что раздачу следует записать заново если:
+             *  - сменился хеш (обновление, смена торрент файла)
+             *  - изменилась дата регистрации (обновление, возможно без смены хеша)
+             *  - пустое имя раздачи (миграция с ранних версий)
+             */
             $doTopicUpdate = $topic->hash === ($previousTopic['info_hash'] ?? null)
-                && $topicRegistered === (int) ($previousTopic['reg_time'] ?? 0);
+                && $topicRegistered === (int) ($previousTopic['reg_time'] ?? 0)
+                && !empty($previousTopic['name']);
 
             if ($doTopicUpdate) {
                 // Обновление существующей в БД раздачи.
