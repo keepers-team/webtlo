@@ -35,8 +35,6 @@ final class Transmission implements ClientInterface
 
     private const TOKEN = 'X-Transmission-Session-Id';
 
-    private bool $authenticated = false;
-
     /**
      * Заголовки для хранения ключа авторизации.
      *

@@ -8,11 +8,11 @@ use KeepersTeam\Webtlo\Config\TorrentClientOptions;
 
 trait AuthClient
 {
-    private bool $authenticated = false;
+    protected bool $authenticated = false;
 
     public function isOnline(): bool
     {
-        return $this->authenticated ?? false;
+        return $this->authenticated;
     }
 
     protected function getClientBase(TorrentClientOptions $options, string $api = ''): string

@@ -38,8 +38,6 @@ final class Utorrent implements ClientInterface
 
     private const HashesPerRequest = 32;
 
-    private bool $authenticated = false;
-
     private string $token;
 
     private Client    $client;
