@@ -264,7 +264,7 @@ final class Utorrent implements ClientInterface
             throw new RuntimeException('Failed to make request');
         }
 
-        return json_decode($response->getBody()->getContents(), true);
+        return $this->validateResponse(response: $response);
     }
 
     /**
@@ -297,6 +297,23 @@ final class Utorrent implements ClientInterface
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateResponse(ResponseInterface $response): array
+    {
+        $body  = $response->getBody()->getContents();
+        $array = json_decode(json: $body, associative: true, flags: JSON_INVALID_UTF8_SUBSTITUTE);
+
+        if ($array === null) {
+            $this->logger->error('Fail to decode api response', [$body]);
+
+            throw new RuntimeException('Unsuccessful api request');
+        }
+
+        return $array;
+    }
+
     private function generateTorrentsList(bool $simpleRun): Generator
     {
         // Получаем и обрабатываем список раздач от клиента.
@@ -320,7 +337,7 @@ final class Utorrent implements ClientInterface
      */
     private function processTorrents(Generator $clientTorrents): array
     {
-        $torrents = [];
+        $torrents = $brokenFiles = [];
         Timers::start('processing');
         foreach ($clientTorrents as $torrent) {
             /* status reference
@@ -334,15 +351,21 @@ final class Utorrent implements ClientInterface
                 7 - started
             */
             $torrentState  = decbin((int) $torrent[1]);
+            $torrentName   = (string) $torrent[2];
             $torrentHash   = strtoupper((string) $torrent[0]);
             $torrentPaused = $torrentState[2] || !$torrentState[7];
+
+            // Проверим имя раздачи на наличие битых символов.
+            if (str_contains($torrentName, '�')) {
+                $brokenFiles[] = ['hash' => $torrentHash, 'name' => $torrentName];
+            }
 
             $torrents[$torrentHash] = [
                 'topic_id'      => null,
                 'comment'       => null,
                 'done'          => (int) $torrent[4] / 1000,
                 'error'         => (bool) $torrentState[3],
-                'name'          => (string) $torrent[2],
+                'name'          => $torrentName,
                 'paused'        => $torrentPaused,
                 'time_added'    => null,
                 'total_size'    => (int) $torrent[3],
@@ -350,6 +373,11 @@ final class Utorrent implements ClientInterface
             ];
         }
         Timers::stash('processing');
+
+        // Выведем список битых раздач в лог.
+        if (count($brokenFiles)) {
+            $this->logger->debug('Broken encoding detected.', $brokenFiles);
+        }
 
         return $torrents;
     }

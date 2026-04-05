@@ -102,9 +102,10 @@ final class Transmission implements ClientInterface
         $response = $this->makeRequest('torrent-get', $fields);
         Timers::stash('torrents_info');
 
-        $torrents = [];
+        $torrents = $brokenFiles = [];
         Timers::start('processing');
         foreach ($response['torrents'] as $torrent) {
+            $torrentName  = (string) $torrent['name'];
             $torrentHash  = strtoupper($torrent['hashString']);
             $trackerError = (int) $torrent['error'] === 2 ? $torrent['errorString'] : null;
 
@@ -114,10 +115,24 @@ final class Transmission implements ClientInterface
                 $progress = array_sum(array_column($torrent['files'], 'bytesCompleted')) / (int) $torrent['totalSize'];
             }
 
+            // Проверим имя раздачи на наличие битых символов.
+            if (str_contains($torrentName, '�')) {
+                $brokenFiles[$torrentHash]['hash'] = $torrentHash;
+                $brokenFiles[$torrentHash]['name'] = $torrentName;
+            }
+
+            // Проверим файлы раздачи на наличие битых символов.
+            foreach (array_column($torrent['files'], 'name') as $file) {
+                if (str_contains($file, '�')) {
+                    $brokenFiles[$torrentHash]['hash']    = $torrentHash;
+                    $brokenFiles[$torrentHash]['files'][] = $file;
+                }
+            }
+
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
-                name        : (string) $torrent['name'],
+                name        : $torrentName,
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
                 size        : (int) $torrent['totalSize'],
                 added       : Helper::makeDateTime((int) $torrent['addedDate']),
@@ -129,11 +144,16 @@ final class Transmission implements ClientInterface
                 storagePath : $torrent['downloadDir'] ?? null
             );
 
-            unset($torrent, $torrentHash, $trackerError, $progress);
+            unset($torrent, $torrentName, $torrentHash, $trackerError, $progress);
         }
         Timers::stash('processing');
 
         $this->logger->debug('Done processing', Timers::getStash());
+
+        // Выведем список битых раздач в лог.
+        if (count($brokenFiles)) {
+            $this->logger->debug('Broken encoding detected.', array_values($brokenFiles));
+        }
 
         return new Torrents($torrents);
     }
@@ -341,7 +361,7 @@ final class Transmission implements ClientInterface
     private function validateResponse(ResponseInterface $response): array
     {
         $body  = $response->getBody()->getContents();
-        $array = json_decode($body, true);
+        $array = json_decode(json: $body, associative: true, flags: JSON_INVALID_UTF8_SUBSTITUTE);
 
         if ($array === null) {
             $this->logger->error('Fail to decode api response', [$body]);
