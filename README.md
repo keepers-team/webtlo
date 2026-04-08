@@ -1,5 +1,14 @@
-![GitHub Release](https://img.shields.io/github/v/release/keepers-team/webtlo)
-![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/keepers-team/webtlo/latest/total?label=downloads)
+[![GitHub Release](https://img.shields.io/github/v/release/keepers-team/webtlo?style=flat-square&logo=github)][1]
+[![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/keepers-team/webtlo/latest/total?label=downloads&style=flat-square)][1]
+[![Docker Pulls](https://img.shields.io/docker/pulls/berkut174/webtlo?style=flat-square&logo=docker)](https://hub.docker.com/r/berkut174/webtlo)
+
+[![Docker](https://img.shields.io/badge/docker-darkgreen?style=flat-square)](https://github.com/keepers-team/webtlo/pkgs/container/webtlo)
+[![Web](https://img.shields.io/badge/web-darkgreen?style=flat-square)][2]
+[![Standalone](https://img.shields.io/badge/standalone-darkgreen?style=flat-square)][3]
+
+[1]: https://github.com/keepers-team/webtlo/releases/latest
+[2]: https://github.com/keepers-team/webtlo/releases/latest/download/webtlo.zip
+[3]: https://github.com/keepers-team/webtlo/releases/latest/download/webtlo-win.zip
 
 # web-TLO
 
@@ -21,7 +30,7 @@
 Любой веб-сервер с поддержкой PHP 8.1+ (Nginx/Apache2+) и SQLite 3.38+.
 
 ### Установка
-[Последний релиз](https://github.com/keepers-team/webtlo/releases/latest)
+[Последний релиз][1]
 
 #### Docker
 Готовый docker образ:
@@ -33,15 +42,16 @@
 Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.dev.yml).
 
 #### Windows
-- **Standalone** сборка (рекомендуется), скачать [webtlo-win.zip](https://github.com/keepers-team/webtlo/releases/latest/download/webtlo-win.zip), распаковать в желаемое место, запустить `Start.bat`.
+- **Standalone** сборка (рекомендуется), скачать [webtlo-win.zip][3], распаковать в желаемое место, запустить `Start.bat`.
 Подробности [тут](https://github.com/keepers-team/webtlo/blob/master/win/README.md).
-- Подготовленный [webtlo.zip](https://github.com/keepers-team/webtlo/releases/latest/download/webtlo.zip) для самостоятельной установки в любой подходящий веб-сервер.
+- Подготовленный [webtlo.zip][2] для самостоятельной установки в любой подходящий веб-сервер.
 
 
 #### Из репозитория
 - клонировать репозиторий `git clone https://github.com/keepers-team/webtlo.git`
 - установить [composer](https://getcomposer.org)
 - установить зависимости `cd src && composer install --no-dev`
+- использовать флаг `--ignore-platform-reqs` если не проходит валидацию зависимостей (опционально)
 - настроить желаемый веб-сервер
 
 
