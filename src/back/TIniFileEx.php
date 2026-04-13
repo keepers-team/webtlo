@@ -50,14 +50,7 @@ final class TIniFileEx
             self::loadFromFile();
         }
 
-        $value = self::$readConfig[$section][$key] ?? $def;
-
-        // Экранированные строки нужно дополнительно экранировать, для html.
-        if ($value !== '' && !is_numeric($value)) {
-            $value = htmlspecialchars($value, ENT_QUOTES);
-        }
-
-        return $value;
+        return self::$readConfig[$section][$key] ?? $def;
     }
 
     public static function write(int|string $section, int|string $key, mixed $value): void

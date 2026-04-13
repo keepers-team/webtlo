@@ -29,6 +29,11 @@ final class Reflection
                 $value = self::transformValueByType($type, $value);
             }
 
+            // Экранируем значения для html.
+            if (is_string($value)) {
+                $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+            }
+
             $data[$property->getName()] = $value;
         }
 
