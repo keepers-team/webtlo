@@ -68,9 +68,9 @@ final class Render
             ],
 
             'forumAuth' => [
-                'username' => $this->forumAuth->auth->username,
-                'password' => $this->forumAuth->auth->password,
-                'session'  => $this->forumAuth->session,
+                'username' => self::escape($this->forumAuth->auth->username),
+                'password' => self::escape($this->forumAuth->auth->password),
+                'session'  => self::escape($this->forumAuth->session),
             ],
 
             'apiAuth' => Reflection::reflect($this->apiAuth),
@@ -150,8 +150,8 @@ final class Render
         return [
             'hostname' => $proxy->hostname,
             'port'     => $proxy->port,
-            'username' => $proxy->credentials?->username,
-            'password' => $proxy->credentials?->password,
+            'username' => self::escape($proxy->credentials?->username),
+            'password' => self::escape($proxy->credentials?->password),
             'options'  => implode('', $options),
         ];
     }
@@ -179,15 +179,15 @@ final class Render
                 self::optionTemplate,
                 $subForum->id,
                 '',
-                $subForum->name,
+                self::escape($subForum->name),
             );
 
             // Параметры подраздела в настройках.
             $datasetForum = sprintf(
                 $datasetFormatForum,
                 $subForum->clientId,
-                $subForum->label,
-                $subForum->dataFolder,
+                self::escape($subForum->label),
+                self::escape($subForum->dataFolder),
                 $subForum->subFolderType?->value,
                 (int) $subForum->hideTopics,
                 TopicControl::renderPeersLimit($subForum->controlPeers),
@@ -239,27 +239,29 @@ final class Render
         );
 
         foreach ($this->torrentClients->getNameSorted() as $client) {
+            $comment = self::escape($client->extra['comment'] ?? '');
+
             // Список клиентов для выбора в фильтрах.
             $filterOptions[] = sprintf(
                 self::optionTemplate,
                 $client->id,
                 '',
-                $client->extra['comment'] ?? '',
+                $comment,
             );
 
             // Список исключённых клиентов.
             if ($client->exclude) {
-                $excludeClientsIDs[] = $client->tag;
+                $excludeClientsIDs[] = self::escape($client->tag);
             }
 
             $dataset = sprintf(
                 $datasetFormatTorrentClient,
-                $client->extra['comment'] ?? '',
+                $comment,
                 $client->type->value,
                 $client->host,
                 $client->port,
-                $client->credentials->username ?? '',
-                $client->credentials->password ?? '',
+                self::escape($client->credentials?->username),
+                self::escape($client->credentials?->password),
                 (int) $client->secure,
                 TopicControl::renderPeersLimit($client->controlPeers),
                 (int) $client->exclude,
@@ -269,7 +271,7 @@ final class Render
                 self::itemTemplate,
                 $client->id,
                 $dataset,
-                $client->extra['comment'] ?? '',
+                $comment,
             );
         }
 
@@ -293,5 +295,17 @@ final class Render
     private static function makeDatasetTemplate(array $keys): string
     {
         return implode(' ', array_map(static fn($el) => "data-$el=\"%s\"", $keys));
+    }
+
+    /**
+     * Экранируем значения для html.
+     */
+    private static function escape(null|int|string $value): string
+    {
+        if (empty($value)) {
+            return '';
+        }
+
+        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 }
