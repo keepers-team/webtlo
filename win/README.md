@@ -30,6 +30,5 @@
 
 Команда для запуска выглядит так:
 ```shell
-cd php
-php.exe ..\nginx\wtlo\cron\keepers.php
+.\php\php.exe .\nginx\wtlo\bin\webtlo cron:update
 ```

@@ -10,7 +10,7 @@
 [2]: https://github.com/keepers-team/webtlo/releases/latest/download/webtlo.zip
 [3]: https://github.com/keepers-team/webtlo/releases/latest/download/webtlo-win.zip
 
-# web-TLO v3.x.x
+# web-TLO v4.x.x
 
 Веб-приложение для управления торрентами.
 
@@ -25,7 +25,25 @@
   - удаление
   - остановка/запуск, в т.ч. по расписанию
   - добавление меток/категорий
+---
 
+## При обновлении с версии web-TLO 3.x
+> [!NOTE]
+> Следует учесть изменение структуры проекта.
+> Изменилось расположение кода относительно корня проекта,
+> см `src`, `public`, `bin`, `cron`, `composer.json`
+> 
+> Добавлен файл `/bin/webtlo cron:{action}` для запуска задач по расписанию, вместо `/cron/{action}.php`
+> 
+>`ctrl+ F5` - Обязательно!
+
+[Обновление Web-TLO с версии 3.x](https://github.com/keepers-team/webtlo/blob/4.x/docs/MIGRATE_FROM_3x.md)
+
+Описание версий 3.x доступно [по ссылке](https://github.com/keepers-team/webtlo/tree/3.x).
+
+---
+
+[//]: # (@TODO Поднять до php8.2)
 ### Системные требования
 Любой веб-сервер с поддержкой PHP 8.1+ (Nginx/Apache2+) и SQLite 3.38+.
 
@@ -34,16 +52,16 @@
 
 #### Docker
 Готовый docker образ:
-- `docker pull ghcr.io/keepers-team/webtlo:latest`
-- `docker pull berkut174/webtlo:latest`
+- `docker pull ghcr.io/keepers-team/webtlo:4.x`
+- `docker pull berkut174/webtlo:4.x`
 
-Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/3.x/docker-compose.yml).
+Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/4.x/docker-compose.yml).
 
-Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/3.x/docker-compose.dev.yml).
+Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/4.x/docker-compose.dev.yml).
 
 #### Windows
 - **Standalone** сборка (рекомендуется), скачать [webtlo-win.zip][3], распаковать в желаемое место, запустить `Start.bat`.
-Подробности [тут](https://github.com/keepers-team/webtlo/blob/3.x/win/README.md).
+Подробности [тут](https://github.com/keepers-team/webtlo/blob/4.x/win/README.md).
 - Подготовленный [webtlo.zip][2] для самостоятельной установки в любой подходящий веб-сервер.
 
 
@@ -64,5 +82,5 @@
 - `max_input_vars=100000`
 
 Пример настроек `php.ini`:
-[docker-php-ini](https://github.com/keepers-team/webtlo/blob/3.x/docker/rootfs/etc/php81/php.ini),
-[standalone-php-ini](https://github.com/keepers-team/webtlo/blob/3.x/win/overlay/php/php.ini)
+[docker-php-ini](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/php81/php.ini),
+[standalone-php-ini](https://github.com/keepers-team/webtlo/blob/4.x/win/overlay/php/php.ini)
