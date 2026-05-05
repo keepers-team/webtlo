@@ -24,7 +24,8 @@ use Throwable;
  * Class Qbittorrent
  * Supported by qBittorrent 4.1 and later.
  *
- * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
+ * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1) qBittorrent 4.1+ WebAPI 2.0+
+ * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0) qBittorrent 5.0+ WebAPI 2.9+
  */
 final class Qbittorrent implements ClientInterface
 {
@@ -273,9 +274,7 @@ final class Qbittorrent implements ClientInterface
                 ]);
 
                 // Проверяем наличие куки авторизации.
-                $this->authenticated =
-                    $response->getStatusCode() === 200
-                    && $this->checkSID();
+                $this->authenticated = $this->checkAuthCookie(response: $response);
 
                 if (!$this->authenticated && $this->options->credentials === null) {
                     $this->logger->warning('Не указаны логин и пароль для авторизации в торрент-клиенте.');
@@ -326,13 +325,42 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
-     * Проверяем наличие куки авторизации.
+     * Проверяем наличие куки авторизации в ответе.
      */
-    private function checkSID(): bool
+    private function checkAuthCookie(ResponseInterface $response): bool
     {
-        $sid = $this->jar->getCookieByName('SID');
-        if ($sid !== null) {
-            $this->logger->debug('Got qbittorrent auth token', $sid->toArray());
+        $statusCode = $response->getStatusCode();
+
+        /**
+         * Используем разные методы проверки авторизации.
+         *
+         * Для версий <5.2 статус 200 + SID.
+         *
+         * Для версии >=5.2 статус 204 + QBT_SID_{port}
+         * (Документация не обновлена на момент правки!)
+         *
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#login qBit 4.1+ login
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#login qBit 5.0+ login
+         */
+        $cookieName = match ($statusCode) {
+            200     => 'SID',
+            204     => sprintf('QBT_SID_%d', $this->options->port),
+            default => null,
+        };
+
+        // Если какой-то иной статус, прекращаем.
+        if ($cookieName === null) {
+            $this->logger->debug('Unhandled qbittorrent auth status', [
+                'status' => $statusCode,
+                'cookie' => $response->getHeader('set-cookie'),
+            ]);
+
+            return false;
+        }
+
+        $cookie = $this->jar->getCookieByName(name: $cookieName);
+        if ($cookie !== null) {
+            $this->logger->debug('Got qbittorrent auth token', $cookie->toArray());
 
             return true;
         }
@@ -417,13 +445,17 @@ final class Qbittorrent implements ClientInterface
         /**
          * Действия для запуска и остановки раздач по умолчанию (webApi < 2.11.0).
          *
-         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#pause-torrents
-         * https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#resume-torrents
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#pause-torrents qBit 4.1+ pause
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)#resume-torrents qBit 4.1+ resume
          */
         $actions = ['start' => 'resume', 'stop' => 'pause'];
 
-        // Для версий кубита 5.0.0 (webApi >= 2.11) и выше - новые пути.
-        // TODO добавить ссылку на описание, когда его сделают.
+        /**
+         * Для версий кубита 5.0.0 (webApi >= 2.11).
+         *
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#pause-torrents qBit 5.0+ pause
+         * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0)#resume-torrents qBit 5.0+ resume
+         */
         if (version_compare($this->getApiVersion(), '2.11.0') >= 0) {
             $actions = ['start' => 'start', 'stop' => 'stop'];
         }
