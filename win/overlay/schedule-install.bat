@@ -7,6 +7,10 @@ SCHTASKS /DELETE /TN "WebTLO\Keepers" /F
 SCHTASKS /DELETE /TN "WebTLO\Reports" /F
 
 echo Adding tasks...
+
+:: Move the working directory to the script's folder
+cd /d "%~dp0"
+
 SCHTASKS /CREATE /SC HOURLY /TN "WebTLO\Control" /TR "'%cd%\php\RunHiddenConsole.exe' '%cd%\php\php.exe' '%cd%\nginx\wtlo\bin\webtlo' 'cron:control'" /ST 00:25
 SCHTASKS /CREATE /SC HOURLY /TN "WebTLO\Update"  /TR "'%cd%\php\RunHiddenConsole.exe' '%cd%\php\php.exe' '%cd%\nginx\wtlo\bin\webtlo' 'cron:update'"  /ST 00:15
 SCHTASKS /CREATE /SC DAILY  /TN "WebTLO\Keepers" /TR "'%cd%\php\RunHiddenConsole.exe' '%cd%\php\php.exe' '%cd%\nginx\wtlo\bin\webtlo' 'cron:keepers'" /ST 05:00
