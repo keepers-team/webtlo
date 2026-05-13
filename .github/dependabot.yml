@@ -22,7 +22,7 @@ updates:
       - "T: Dependencies"
 
   - package-ecosystem: "composer"
-    directory: "/src"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "friday"
