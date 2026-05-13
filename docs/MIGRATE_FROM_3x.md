@@ -23,8 +23,17 @@
 #### Самостоятельная настройка веб-сервера
 Изменить путь к файлу `/root/index.php` => `/root/public/index.php`  
 см
-[docker-nginx](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/nginx/nginx.conf),
-[win-nginx](https://github.com/keepers-team/webtlo/blob/4.x/win/overlay/nginx/conf/nginx.conf)
+[docker-nginx](https://github.com/keepers-team/webtlo/blob/master/docker/rootfs/etc/nginx/nginx.conf),
+[win-nginx](https://github.com/keepers-team/webtlo/blob/master/win/overlay/nginx/conf/nginx.conf)
+
+Удалить старые зависимости `composer` в `webtlo/src` и установить их заново в `webtlo/`:
+```bash
+cd webtlo
+rm -rf src/vendor
+composer install --no-dev
+
+# Опционально добавить --ignore-platform-reqs
+```
 
 Изменить путь к исполняемому файлу для автоматических задач:
 
@@ -38,7 +47,7 @@ php /var/www/webtlo/bin/webtlo cron:update
 
 # Можно без `php` если сделать файл исполняемым (chmod +x bin/webtlo)
 ```
-см [docker-crontab](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/crontabs/root)
+см [docker-crontab](https://github.com/keepers-team/webtlo/blob/master/docker/rootfs/etc/crontabs/root)
 
 
 Пример для Windows
@@ -50,8 +59,6 @@ php /var/www/webtlo/bin/webtlo cron:update
 cd php
 php.exe ..\nginx\wtlo\bin\webtlo cron:update
 php.exe ..\nginx\wtlo\bin\webtlo cron:keepers
-# && etc
+# etc
 ```
-см [manual-update.bat](https://github.com/keepers-team/webtlo/blob/4.x/win/overlay/manual-update.bat)
-
-[//]: # (@TODO Исправить ссылки на master)
+см [manual-update.bat](https://github.com/keepers-team/webtlo/blob/master/win/overlay/manual-update.bat)
