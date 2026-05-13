@@ -37,7 +37,7 @@
 > 
 >`ctrl+ F5` - Обязательно!
 
-[Обновление Web-TLO с версии 3.x](https://github.com/keepers-team/webtlo/blob/4.x/docs/MIGRATE_FROM_3x.md)
+[Обновление Web-TLO с версии 3.x](https://github.com/keepers-team/webtlo/blob/master/docs/MIGRATE_FROM_3x.md)
 
 Описание версий 3.x доступно [по ссылке](https://github.com/keepers-team/webtlo/tree/3.x).
 
@@ -52,23 +52,23 @@
 
 #### Docker
 Готовый docker образ:
-- `docker pull ghcr.io/keepers-team/webtlo:4.x`
-- `docker pull berkut174/webtlo:4.x`
+- `docker pull ghcr.io/keepers-team/webtlo:latest`
+- `docker pull berkut174/webtlo:latest`
 
-Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/4.x/docker-compose.yml).
+Примеры docker compose можно посмотреть в [docker-compose.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.yml).
 
-Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/4.x/docker-compose.dev.yml).
+Сборка из исходников, например с помощью [docker-compose.dev.yml](https://github.com/keepers-team/webtlo/blob/master/docker-compose.dev.yml).
 
 #### Windows
 - **Standalone** сборка (рекомендуется), скачать [webtlo-win.zip][3], распаковать в желаемое место, запустить `Start.bat`.
-Подробности [тут](https://github.com/keepers-team/webtlo/blob/4.x/win/README.md).
+Подробности [тут](https://github.com/keepers-team/webtlo/blob/master/win/README.md).
 - Подготовленный [webtlo.zip][2] для самостоятельной установки в любой подходящий веб-сервер.
 
 
 #### Из репозитория
 - клонировать репозиторий `git clone https://github.com/keepers-team/webtlo.git`
 - установить [composer](https://getcomposer.org)
-- установить зависимости `cd src && composer install --no-dev`
+- установить зависимости `composer install --no-dev`
 - использовать флаг `--ignore-platform-reqs` если не проходит валидацию зависимостей (опционально)
 - настроить желаемый веб-сервер
 
@@ -82,5 +82,5 @@
 - `max_input_vars=100000`
 
 Пример настроек `php.ini`:
-[docker-php-ini](https://github.com/keepers-team/webtlo/blob/4.x/docker/rootfs/etc/php81/php.ini),
-[standalone-php-ini](https://github.com/keepers-team/webtlo/blob/4.x/win/overlay/php/php.ini)
+[docker-php-ini](https://github.com/keepers-team/webtlo/blob/master/docker/rootfs/etc/php81/php.ini),
+[standalone-php-ini](https://github.com/keepers-team/webtlo/blob/master/win/overlay/php/php.ini)
