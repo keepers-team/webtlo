@@ -187,57 +187,79 @@ final class TorrentsClients
      */
     private function updateUntracked(): void
     {
-        if ($this->topicSearch->untracked) {
+        try {
+            // Выключено - прекращаем работу.
+            if (!$this->topicSearch->untracked) {
+                return;
+            }
+
             Timers::start('search_untracked');
 
             $untrackedTorrentHashes = $this->cloneTorrents->selectUntrackedRows(
                 subsections: $this->subForums->getKeyObject()
             );
 
+            // Нет раздач - прекращаем работу.
             $countUntracked = count($untrackedTorrentHashes);
-            if ($countUntracked) {
-                $this->logger->info(
-                    'Найдено уникальных сторонних раздач в клиентах: {count} шт.',
-                    ['count' => $countUntracked]
+            if (!$countUntracked) {
+                return;
+            }
+
+            $this->logger->info(
+                'Найдено уникальных сторонних раздач в клиентах: {count} шт.',
+                ['count' => $countUntracked]
+            );
+
+            if ($countUntracked > 150) {
+                $this->logger->notice(
+                    'Хранится много сторонних раздач. Рекомендуется отключить поиск сторонних раздач или добавить подразделы в хранимые.'
+                );
+            }
+
+            // Проверим доступность API форума перед попыткой поиска раздач.
+            if (!$this->apiClient->checkAccess()) {
+                throw new RuntimeException('Ошибка доступа. Поиск прекращён.');
+            }
+
+            // Пробуем найти в API раздачи по их хешам из клиента.
+            $response = $this->apiClient->getTopicsDetails(
+                topics    : $untrackedTorrentHashes,
+                searchMode: TopicSearchMode::HASH
+            );
+
+            if ($response instanceof ApiError) {
+                $this->logger->debug(
+                    'Не удалось найти данные о раздачах в API. {code}: {text}',
+                    ['code' => $response->code, 'text' => $response->text]
                 );
 
-                if ($countUntracked > 150) {
-                    $this->logger->notice(
-                        'Хранится много сторонних раздач. Рекомендуется отключить поиск сторонних раздач или добавить подразделы в хранимые.'
-                    );
-                }
+                $this->logger->debug('hashes', $untrackedTorrentHashes);
+            } elseif (count($response->topics)) {
+                foreach ($response->topics as $topicData) {
+                    // Пропускаем раздачи в невалидных статусах.
+                    if (!$topicData->status->isValid()) {
+                        $this->unregisteredApiTopics[$topicData->hash] = $topicData;
 
-                // Пробуем найти в API раздачи по их хешам из клиента.
-                $response = $this->apiClient->getTopicsDetails($untrackedTorrentHashes, TopicSearchMode::HASH);
-
-                if ($response instanceof ApiError) {
-                    $this->logger->debug(
-                        'Не удалось найти данные о раздачах в API. {code}: {text}',
-                        ['code' => $response->code, 'text' => $response->text]
-                    );
-
-                    $this->logger->debug('hashes', $untrackedTorrentHashes);
-                } elseif (count($response->topics)) {
-                    foreach ($response->topics as $topicData) {
-                        // Пропускаем раздачи в невалидных статусах.
-                        if (!$topicData->status->isValid()) {
-                            $this->unregisteredApiTopics[$topicData->hash] = $topicData;
-
-                            continue;
-                        }
-
-                        $this->cloneUntracked->addTopic(topic: $topicData);
+                        continue;
                     }
 
-                    // Если нашлись существующие на форуме раздачи, то записываем их в БД.
-                    $this->cloneUntracked->moveToOrigin();
+                    $this->cloneUntracked->addTopic(topic: $topicData);
                 }
+
+                // Если нашлись существующие на форуме раздачи, то записываем их в БД.
+                $this->cloneUntracked->moveToOrigin();
             }
 
             $this->timers['search_untracked'] = Timers::getExecTime('search_untracked');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Ошибка при поиске сторонних раздач. {error}',
+                ['error' => $e->getMessage()]
+            );
+        } finally {
+            // Удалим лишние раздачи из БД прочих.
+            $this->cloneUntracked->clearUnusedRows();
         }
-        // Удалим лишние раздачи из БД прочих.
-        $this->cloneUntracked->clearUnusedRows();
     }
 
     /**
@@ -245,63 +267,66 @@ final class TorrentsClients
      */
     private function updateUnregistered(): void
     {
-        if ($this->topicSearch->untracked && $this->topicSearch->unregistered) {
-            Timers::start('search_unregistered');
-
-            try {
-                $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
-
-                // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
-                if (count($unregisteredTopics)) {
-                    if (!$this->forumClient->checkAccess()) {
-                        throw new RuntimeException('Ошибка подключения к форуму. Поиск прекращён.');
-                    }
-
-                    foreach ($unregisteredTopics as $topicId => $infoHash) {
-                        $topicData = $this->forumClient->getUnregisteredTopic((int) $topicId);
-                        if ($topicData === null) {
-                            continue;
-                        }
-
-                        // Если о раздаче есть данные в API, то дописываем их, как более верные.
-                        $topic = $this->getApiTopicInfo($infoHash);
-                        if ($topic !== null) {
-                            $topicData['name']   = $topic->title;
-                            $topicData['status'] = $topic->status->label();
-                            if (empty($topicData['priority'])) {
-                                $topicData['priority'] = KeepingPriority::Normal->label();
-                            }
-                        }
-
-                        // Записываем данные раздачи в буфер.
-                        $this->cloneUnregistered->addTopic([
-                            $infoHash,
-                            $topicData['name'],
-                            $topicData['status'],
-                            $topicData['priority'],
-                            $topicData['transferred_from'],
-                            $topicData['transferred_to'],
-                            $topicData['transferred_by_whom'],
-                        ]);
-
-                        unset($topicId, $topicData, $topic);
-                    }
-
-                    $this->cloneUnregistered->fillTempTable();
-                }
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    'Ошибка при поиске разрегистрированных раздач. {error}',
-                    ['error' => $e->getMessage()]
-                );
+        try {
+            // Выключено - прекращаем работу.
+            if (!$this->topicSearch->untracked || !$this->topicSearch->unregistered) {
+                return;
             }
+
+            Timers::start('search_unregistered');
+            $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
+
+            // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
+            if (count($unregisteredTopics)) {
+                if (!$this->forumClient->checkAccess()) {
+                    throw new RuntimeException('Ошибка подключения к форуму. Поиск прекращён.');
+                }
+
+                foreach ($unregisteredTopics as $topicId => $infoHash) {
+                    $topicData = $this->forumClient->getUnregisteredTopic(topicId: (int) $topicId);
+                    if ($topicData === null) {
+                        continue;
+                    }
+
+                    // Если о раздаче есть данные в API, то дописываем их, как более верные.
+                    $topic = $this->getApiTopicInfo(infoHash: $infoHash);
+                    if ($topic !== null) {
+                        $topicData['name']   = $topic->title;
+                        $topicData['status'] = $topic->status->label();
+                        if (empty($topicData['priority'])) {
+                            $topicData['priority'] = KeepingPriority::Normal->label();
+                        }
+                    }
+
+                    // Записываем данные раздачи в буфер.
+                    $this->cloneUnregistered->addTopic(topic: [
+                        $infoHash,
+                        $topicData['name'],
+                        $topicData['status'],
+                        $topicData['priority'],
+                        $topicData['transferred_from'],
+                        $topicData['transferred_to'],
+                        $topicData['transferred_by_whom'],
+                    ]);
+
+                    unset($topicId, $topicData, $topic);
+                }
+
+                $this->cloneUnregistered->fillTempTable();
+            }
+
             $this->cloneUnregistered->moveToOrigin();
 
             $this->timers['search_unregistered'] = Timers::getExecTime('search_unregistered');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Ошибка при поиске разрегистрированных раздач. {error}',
+                ['error' => $e->getMessage()]
+            );
+        } finally {
+            // Очищаем ненужные строки.
+            $this->cloneUnregistered->clearUnusedRows();
         }
-
-        // Очищаем ненужные строки.
-        $this->cloneUnregistered->clearUnusedRows();
     }
 
     private function getApiTopicInfo(string $infoHash): ?TopicDetails
