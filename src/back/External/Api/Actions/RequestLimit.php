@@ -38,7 +38,10 @@ trait RequestLimit
     private function getApiParamsLimit(): int
     {
         try {
-            $response = $this->client->get(uri: 'get_limit');
+            $response = $this->client->get(
+                uri: 'get_limit',
+                options: ['max_retry_attempts' => 1]
+            );
 
             $result = self::decodeResponse(logger: $this->logger, response: $response);
 

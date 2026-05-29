@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\External;
 
 use DateTimeInterface;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Data\KeeperPermissions;
@@ -18,6 +17,7 @@ use Psr\Log\LoggerInterface;
  */
 final class ApiReportClient
 {
+    use Actions\AccessCheck;
     use Actions\ForumTopicsPeers;
     use Actions\DownloadStaticFile;
     use Actions\ForumTopics;
@@ -26,34 +26,11 @@ final class ApiReportClient
     use Actions\Processor;
 
     public function __construct(
-        private readonly Client          $client,
-        private readonly ApiCredentials  $auth,
-        private readonly LoggerInterface $logger,
+        protected readonly Client          $client,
+        protected readonly ApiCredentials  $auth,
+        protected readonly LoggerInterface $logger,
     ) {
         $this->auth->validate();
-    }
-
-    public function checkAccess(): bool
-    {
-        try {
-            $response = $this->client->get('info/statuses');
-            $statuses = json_decode($response->getBody()->getContents(), true);
-
-            return !empty($statuses);
-        } catch (ClientException $e) {
-            $response = $e->getResponse();
-            $this->logger->error(
-                'Не удалось авторизоваться в report-api. Проверьте ключи доступа.',
-                ['code' => $response->getStatusCode(), 'error' => $response->getReasonPhrase()]
-            );
-        } catch (GuzzleException $e) {
-            $this->logger->error(
-                'Ошибка при попытке авторизации в report-api.',
-                ['code' => $e->getCode(), 'error' => $e->getMessage()]
-            );
-        }
-
-        return false;
     }
 
     /**
