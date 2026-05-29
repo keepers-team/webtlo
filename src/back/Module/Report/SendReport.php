@@ -145,9 +145,12 @@ final class SendReport
         $this->apiReport->sendCustomData($apiCustom);
     }
 
+    /**
+     * Проверка доступности форума.
+     */
     public function checkForumAccess(): bool
     {
-        return $this->forumClient->checkConnection();
+        return $this->forumClient->checkAccess();
     }
 
     public function sendForumSummaryReport(string $report): ?string
