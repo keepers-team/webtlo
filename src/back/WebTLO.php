@@ -248,6 +248,9 @@ final class WebTLO
             return null;
         }
 
+        // Меняем текущую директорию, для корректного выполнения git команды.
+        chdir(Helper::getProjectRoot());
+
         $branches = shell_exec('git branch -v --no-abbrev');
         if (is_string($branches) && preg_match('{^\* (.+?)\s+([a-f0-9]{40})(?:\s|$)}m', $branches, $matches) === 1) {
             return self::$git = [
