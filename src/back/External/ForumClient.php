@@ -18,7 +18,7 @@ use Psr\Log\LoggerInterface;
  */
 final class ForumClient
 {
-    use Forum\Authentication;
+    use Forum\AccessCheck;
     use Forum\CaptchaHelper;
     use Forum\DomHelper;
     use Forum\GetCredentials;
@@ -33,6 +33,9 @@ final class ForumClient
 
     /** @var int Ид темы для публикации сводных отчётов */
     protected const reportsTopicId = 4275633;
+
+    /** @var string URL для проверки доступа */
+    protected const accessURL = '/myip';
 
     /** @var string URL для входящих сообщений */
     protected const inboxURL = '/forum/privmsg.php';
