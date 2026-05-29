@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
  */
 final class ApiForumClient
 {
+    use Actions\AccessCheck;
     use Actions\ForumTopics;
     use Actions\ForumTree;
     use Actions\KeepersList;
@@ -22,10 +23,10 @@ final class ApiForumClient
     use Actions\TopicsPeers;
 
     public function __construct(
-        private readonly Client          $client,
-        private readonly ApiCredentials  $auth,
-        private readonly ApiForumConnect $connect,
-        private readonly LoggerInterface $logger
+        protected readonly Client          $client,
+        protected readonly ApiCredentials  $auth,
+        protected readonly ApiForumConnect $connect,
+        protected readonly LoggerInterface $logger
     ) {
         $this->auth->validate();
     }
