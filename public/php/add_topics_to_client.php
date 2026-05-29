@@ -42,7 +42,7 @@ try {
     $db = $app->getDataBase();
 
     $forumClient = $app->getForumClient();
-    if (!$forumClient->checkConnection()) {
+    if (!$forumClient->checkAccess()) {
         throw new RuntimeException('Ошибка подключения к форуму.');
     }
 
