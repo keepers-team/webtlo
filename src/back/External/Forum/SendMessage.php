@@ -44,7 +44,7 @@ trait SendMessage
         if (!isset($this->blockingSend)) {
             $this->blockingSend = false;
 
-            if ($unavailable = $this->checkAccess()) {
+            if ($unavailable = $this->checkAccessStatus()) {
                 $this->blockingSend   = true;
                 $this->blockingReason = $unavailable->value;
             }
@@ -92,13 +92,13 @@ trait SendMessage
     /**
      * Проверка доступа к отправке сообщений.
      *
-     * @return ?AccessCheck Результат проверки доступа (null если доступ есть)
+     * @return ?AccessStatus Результат проверки доступа (null если доступ есть)
      */
-    private function checkAccess(): ?AccessCheck
+    private function checkAccessStatus(): ?AccessStatus
     {
         $response = $this->post(url: self::topicURL, params: ['query' => ['t' => self::$appTopicId]]);
         if ($response === null) {
-            return AccessCheck::NOT_AUTHORIZED;
+            return AccessStatus::NOT_AUTHORIZED;
         }
 
         $dom = self::parseDom(page: $response);
@@ -106,12 +106,12 @@ trait SendMessage
         $list = $dom->query(expression: '//h1[contains(@class, "pagetitle")]/text()');
 
         if (self::getFirstNodeValue(list: $list) === 'Вход') {
-            return AccessCheck::NOT_AUTHORIZED;
+            return AccessStatus::NOT_AUTHORIZED;
         }
 
         $list = $dom->query(expression: '//div[contains(@class, "mrg_16")]/text()');
         if (self::getFirstNodeValue(list: $list) === 'Тема не найдена') {
-            return AccessCheck::USER_CANDIDATE;
+            return AccessStatus::USER_CANDIDATE;
         }
 
         $list = $dom->query(expression: '//a[@id="topic-title"]');
@@ -123,7 +123,7 @@ trait SendMessage
                 $allowed = (int) $matches[1];
 
                 if (!($allowed <= self::$appSendVersion)) {
-                    return AccessCheck::VERSION_OUTDATED;
+                    return AccessStatus::VERSION_OUTDATED;
                 }
             }
         }
