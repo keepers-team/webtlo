@@ -35,7 +35,7 @@ try {
 } catch (Exception $e) {
     echo '<b>Запуск невозможен.</b><br>';
     echo 'Ошибка запуска программы. <br>';
-    echo htmlspecialchars($e->getMessage()) . '<br>';
+    echo Render::escape($e->getMessage()) . '<br>';
 
     echo '<br><b>Логи:</b><br>';
     echo Log::getRecords();

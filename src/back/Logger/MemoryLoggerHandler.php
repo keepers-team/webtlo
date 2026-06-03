@@ -33,7 +33,7 @@ final class MemoryLoggerHandler extends AbstractProcessingHandler implements Han
     public static function getRecords(string $break = '<br />'): string
     {
         if (count(self::$records)) {
-            $formatted = self::formatRows(rows: self::$records, break: $break);
+            $formatted = self::formatRows(rows: self::$records, break: $break, replace: true);
 
             self::$records = [];
 

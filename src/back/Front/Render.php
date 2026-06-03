@@ -53,6 +53,18 @@ final class Render
     ) {}
 
     /**
+     * Экранируем значения для html.
+     */
+    public static function escape(null|int|string $value): string
+    {
+        if (empty($value)) {
+            return '';
+        }
+
+        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function getConfig(): array
@@ -295,17 +307,5 @@ final class Render
     private static function makeDatasetTemplate(array $keys): string
     {
         return implode(' ', array_map(static fn($el) => "data-$el=\"%s\"", $keys));
-    }
-
-    /**
-     * Экранируем значения для html.
-     */
-    private static function escape(null|int|string $value): string
-    {
-        if (empty($value)) {
-            return '';
-        }
-
-        return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 }
