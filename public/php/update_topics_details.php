@@ -5,11 +5,12 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\Update\TopicsDetails;
 
 $result = [];
 
-$app = App::create('update.log');
+$app = App::create(LogFile::Update);
 $log = $app->getLogger();
 
 try {

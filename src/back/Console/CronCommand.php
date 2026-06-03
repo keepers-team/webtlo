@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Console;
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Enum\LogFile;
 
 /**
  * Список доступных команд планировщика для запуска.
@@ -16,9 +17,14 @@ enum CronCommand: string
     case Reports = 'cron:reports';
     case Update  = 'cron:update';
 
-    public function logFile(): string
+    public function logFile(): LogFile
     {
-        return strtolower($this->name) . '.log';
+        return match ($this) {
+            self::Control => LogFile::Control,
+            self::Keepers => LogFile::Keepers,
+            self::Reports => LogFile::Reports,
+            self::Update  => LogFile::Update,
+        };
     }
 
     public function run(App $app): void

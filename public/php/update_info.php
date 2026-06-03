@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\Update\ForumTree;
 use KeepersTeam\Webtlo\Update\KeepersReports;
 use KeepersTeam\Webtlo\Update\Subsections;
@@ -19,7 +20,7 @@ $update_result = [
 ];
 
 // Создаём контейнер и пишем в лог.
-$app = App::create('update.log');
+$app = App::create(LogFile::Update);
 $log = $app->getLogger();
 
 try {

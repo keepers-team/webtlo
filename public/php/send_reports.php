@@ -6,13 +6,14 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Enum\LogFile;
 
 $reports_result = [
     'result' => '',
 ];
 
 // Создаём контейнер и пишем в лог.
-$app = App::create('reports.log');
+$app = App::create(LogFile::Reports);
 $log = $app->getLogger();
 
 try {

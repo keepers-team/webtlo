@@ -6,6 +6,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\Action\TopicControl;
 use KeepersTeam\Webtlo\App;
+use KeepersTeam\Webtlo\Enum\LogFile;
 
 $control_result = [
     'result' => 'В процессе регулировки раздач были ошибки. ' .
@@ -13,7 +14,7 @@ $control_result = [
 ];
 
 // Инициализируем контейнер.
-$app = App::create('control.log');
+$app = App::create(LogFile::Control);
 $log = $app->getLogger();
 
 try {

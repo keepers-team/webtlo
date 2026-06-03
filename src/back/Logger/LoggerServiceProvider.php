@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Logger;
 
 use KeepersTeam\Webtlo\Config\Other as ConfigOther;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Psr\Log\LoggerInterface;
 
 final class LoggerServiceProvider extends AbstractServiceProvider
 {
     public function __construct(
-        private readonly ?string $logFile = null,
+        private readonly ?LogFile $logFile = null,
     ) {}
 
     public function provides(string $id): bool

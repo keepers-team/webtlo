@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Logger;
 
 use Cesargb\Log\Rotation;
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\HandlerInterface;
@@ -41,9 +41,11 @@ final class LoggerConstructor
     private static int $logMaxSize  = 2097152;
     private static int $logMaxCount = 5;
 
-    public static function create(?string $logFile = null, Level $level = Level::Info): LoggerInterface
+    public static function create(?LogFile $logFile = null, Level $level = Level::Info): LoggerInterface
     {
-        $logger = new Logger(name: 'webtlo');
+        $appLogFile = LogFile::Main;
+
+        $logger = new Logger(name: $appLogFile->value);
 
         // Автоматическая подстановка значений, согласно PSR-3.
         $logger->pushProcessor(new PsrLogMessageProcessor(removeUsedContextFields: true));
@@ -56,13 +58,13 @@ final class LoggerConstructor
         try {
             // Запись в единый файл всего webtlo.
             $logger->pushHandler(
-                new StreamHandler(self::getLogFile(filename: 'webtlo.log'))
+                new StreamHandler(self::createLogFile(logFile: $appLogFile))
             );
 
             // Запись в заданный файл.
             if ($logFile !== null) {
                 $logger->pushHandler(
-                    self::getFileHandler(filename: $logFile, level: $level)
+                    self::getFileHandler(logFile: $logFile, level: $level)
                 );
             }
 
@@ -83,17 +85,19 @@ final class LoggerConstructor
         return $logger;
     }
 
-    /** Запись логов в конкретный файл. */
-    private static function getFileHandler(string $filename, Level $level): HandlerInterface
+    /**
+     * Запись логов в конкретный файл.
+     */
+    private static function getFileHandler(LogFile $logFile, Level $level): HandlerInterface
     {
-        $logFile = self::getLogFile(filename: $filename);
+        $logFilePath = self::createLogFile(logFile: $logFile);
 
         $format = "%datetime% %level_name%: %message% %context%\n";
 
         $formatter = new LineFormatter(format: $format, dateFormat: 'd.m.Y H:i:s');
         $formatter->ignoreEmptyContextAndExtra();
 
-        return (new StreamHandler(stream: $logFile, level: $level))->setFormatter(formatter: $formatter);
+        return (new StreamHandler(stream: $logFilePath, level: $level))->setFormatter(formatter: $formatter);
     }
 
     private static function getMemoryLogger(Level $level): HandlerInterface
@@ -107,10 +111,10 @@ final class LoggerConstructor
     /**
      * Создать файл для логов.
      */
-    private static function getLogFile(string $filename): string
+    private static function createLogFile(LogFile $logFile): string
     {
         // Путь к файлу журнала, с созданием каталогов.
-        $filePath = Helper::getStorageLogsPath(file: $filename);
+        $filePath = $logFile->getFilePath();
 
         // Ротация файла журнала, если нужна.
         self::logRotate(filename: $filePath);

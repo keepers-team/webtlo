@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
 use KeepersTeam\Webtlo\Console\CronCommand;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
@@ -41,7 +42,7 @@ final class App
     }
 
     /** Создаём di-контейнер. */
-    public static function create(?string $logFile = null): self
+    public static function create(?LogFile $logFile = null): self
     {
         // Если контейнер уже создан, новый не создаём.
         if (self::$appContainer !== null) {
