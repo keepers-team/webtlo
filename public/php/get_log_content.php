@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
 
-if (isset($_POST['log_file'])) {
-    $log_file = $_POST['log_file'];
+if (empty($_POST['log_file'])) {
+    return;
 }
 
-if (empty($log_file)) {
+/**
+ * Попытка получить записи журнала по названию лог-файла.
+ */
+$logFile = LogFile::tryFrom((string) $_POST['log_file']);
+if ($logFile === null) {
     return;
 }
 
 try {
-    $logPath = Helper::getStorageLogsPath($log_file . '.log');
+    $logPath = $logFile->getFilePath();
 
     if (file_exists($logPath)) {
         if ($data = file($logPath)) {
