@@ -49,9 +49,7 @@ try {
     $log->error($e->getMessage());
 }
 
-$result['log'] = $app->getLoggerRecords();
-
-echo json_encode($result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($result);
 
 /**
  * @param array<string, mixed> $release

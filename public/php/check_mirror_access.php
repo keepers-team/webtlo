@@ -22,7 +22,7 @@ try {
 
     // Нет конфига - нет проверки.
     if (empty($cfg)) {
-        throw new Exception('Пустой конфиг');
+        throw new RuntimeException('Пустой конфиг');
     }
 
     // Проверяемый url.
@@ -57,7 +57,4 @@ try {
     $log->error($e->getMessage());
 }
 
-echo json_encode([
-    'result' => $result ? '1' : '0',
-    'log'    => $app->getLoggerRecords(),
-], JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($result ? '1' : '0');

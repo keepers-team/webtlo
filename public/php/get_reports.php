@@ -7,10 +7,6 @@ use KeepersTeam\Webtlo\Module\Report\CreateReport;
 use KeepersTeam\Webtlo\Module\Report\CreationMode;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 
-$reports_result = [
-    'report' => '',
-];
-
 $output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />';
 
 // Подключаем контейнер.
@@ -22,7 +18,7 @@ try {
     $forumId = (int) ($_POST['forum_id'] ?? -1);
 
     if ($forumId < 0) {
-        throw new Exception("ERROR: Неправильный идентификатор подраздела ($forumId).");
+        throw new RuntimeException("Неправильный идентификатор подраздела ($forumId).");
     }
 
     /** @var Forums $forums */
@@ -68,7 +64,4 @@ try {
     $log->info('-- DONE --');
 }
 
-$reports_result['report'] = $output;
-$reports_result['log']    = $app->getLoggerRecords();
-
-echo json_encode($reports_result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse(['report' => $output]);

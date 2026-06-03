@@ -90,6 +90,4 @@ try {
     $log->info('-- DONE --');
 }
 
-$result['log'] = $app->getLoggerRecords();
-
-echo json_encode($result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($result);

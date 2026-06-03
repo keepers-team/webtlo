@@ -8,9 +8,7 @@ use KeepersTeam\Webtlo\Action\SendKeeperReports;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Enum\LogFile;
 
-$reports_result = [
-    'result' => '',
-];
+$reports_result = '';
 
 // Создаём контейнер и пишем в лог.
 $app = App::create(LogFile::Reports);
@@ -34,13 +32,10 @@ try {
 } catch (Throwable $e) {
     $log->error($e->getMessage());
 
-    $reports_result['result'] = 'В процессе отправки отчётов были ошибки. ' .
+    $reports_result = 'В процессе отправки отчётов были ошибки. ' .
         'Для получения подробностей обратитесь к журналу событий.';
 } finally {
     $log->info('-- DONE --');
 }
 
-// Выводим лог.
-$reports_result['log'] = $app->getLoggerRecords();
-
-echo json_encode($reports_result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($reports_result);

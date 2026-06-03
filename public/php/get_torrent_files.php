@@ -155,7 +155,4 @@ try {
     $log->info('-- DONE --');
 }
 
-echo json_encode([
-    'log'    => $app->getLoggerRecords(),
-    'result' => $result,
-], JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($result);
