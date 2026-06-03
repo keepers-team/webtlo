@@ -20,20 +20,21 @@ $(document).ready(function () {
 
     // "чёрный" список раздач
     $("#tor_blacklist").on("click", function () {
-        var topic_hashes = $("#topics").serialize();
+        const topic_hashes = $('#topics').serialize();
         if ($.isEmptyObject(topic_hashes)) {
-            showResultTopics("Выберите раздачи");
+            showResultTopics('Выберите раздачи');
             return false;
         }
-        var forum_id = $("#main-subsections").val();
-        var value = forum_id != -2 ? 1 : 0;
+
+        const forum_id = $("#main-subsections").val();
+        const exclude = forum_id != -2 ? 1 : 0;
         processStatus.set('Редактирование "чёрного списка" раздач...');
         $.ajax({
-            type: "POST",
-            url: "php/exclude_topics.php",
+            type: 'POST',
+            url: 'php/exclude_topics.php',
             data: {
                 topic_hashes: topic_hashes,
-                value: value
+                exclude: exclude
             },
             beforeSend: function () {
                 block_actions();
@@ -42,7 +43,9 @@ $(document).ready(function () {
                 block_actions();
             },
             success: function (response) {
-                showResultTopics(response);
+                response = $.parseJSON(response);
+                addDefaultLog(response.log ?? '');
+                showResultTopics(response.result);
                 getFilteredTopics();
             }
         });
