@@ -23,6 +23,8 @@ use Throwable;
  */
 final class LoggerConstructor
 {
+    private const LogDateFormat = 'd.m.Y H:i:s';
+
     /** @var Level[] Уровни ведения журнала. */
     private const Levels = [
         Level::Debug,
@@ -94,7 +96,7 @@ final class LoggerConstructor
 
         $format = "%datetime% %level_name%: %message% %context%\n";
 
-        $formatter = new LineFormatter(format: $format, dateFormat: 'd.m.Y H:i:s');
+        $formatter = new LineFormatter(format: $format, dateFormat: self::LogDateFormat);
         $formatter->ignoreEmptyContextAndExtra();
 
         return (new StreamHandler(stream: $logFilePath, level: $level))->setFormatter(formatter: $formatter);
@@ -102,7 +104,9 @@ final class LoggerConstructor
 
     private static function getMemoryLogger(Level $level): HandlerInterface
     {
-        $formatter = new LineFormatter(format: '%level_name%: %message% %context%');
+        $format = '%datetime% %level_name%: %message% %context%';
+
+        $formatter = new LineFormatter(format: $format, dateFormat: self::LogDateFormat);
         $formatter->ignoreEmptyContextAndExtra();
 
         return (new MemoryLoggerHandler(level: $level))->setFormatter(formatter: $formatter);

@@ -14,8 +14,6 @@ use Monolog\LogRecord;
  */
 final class MemoryLoggerHandler extends AbstractProcessingHandler implements HandlerInterface
 {
-    private const DATE_FORMAT = 'Y-m-d H:i:s';
-
     /** @var string[] */
     private static array $records = [];
 
@@ -28,7 +26,7 @@ final class MemoryLoggerHandler extends AbstractProcessingHandler implements Han
     {
         $message = trim((string) $record->formatted);
         if ($message !== '') {
-            self::$records[] = date(self::DATE_FORMAT) . ' ' . $message;
+            self::$records[] = $message;
         }
     }
 
