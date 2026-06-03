@@ -8,6 +8,10 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.0.1] - 2026-06-03
+- Дополнительная проверка доступности форума
+- Исправлено выполнение git команд для cron задач
+
 ### [4.0.0] - 2026-05-13
 - Изменена структура каталогов проекта, см [docs/MIGRATE_FROM_3x.md](https://github.com/keepers-team/webtlo/blob/4.x/docs/MIGRATE_FROM_3x.md)
 - Оптимизирован процесс создания, миграции и подключения к локальной БД
@@ -161,6 +165,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.0.1]: https://github.com/keepers-team/webtlo/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/keepers-team/webtlo/compare/3.8.2...4.0.0
 [3.8.2]: https://github.com/keepers-team/webtlo/compare/3.8.1...3.8.2
 [3.8.1]: https://github.com/keepers-team/webtlo/compare/3.8.0...3.8.1
