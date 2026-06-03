@@ -21,4 +21,9 @@ final class KeysObject
 
         return new self($keys, $values);
     }
+
+    public function getInsertPlaceholder(): string
+    {
+        return str_repeat('(?),', count($this->values) - 1) . '(?)';
+    }
 }
