@@ -133,6 +133,24 @@ final class App
     }
 
     /**
+     * Декорируем результат работы, добавляем логи и кодируем как JSON.
+     */
+    public static function decorateJsonResponse(mixed $result = null): string
+    {
+        $response = [];
+
+        if (is_array($result)) {
+            $response = $result;
+        } elseif (is_scalar($result)) {
+            $response['result'] = $result;
+        }
+
+        $response['log'] = Log::getRecords();
+
+        return (string) json_encode($response, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
      * Установить часовой пояс по-умолчанию.
      */
     private static function setDefaultTimeZone(): void

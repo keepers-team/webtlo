@@ -15,9 +15,7 @@ use KeepersTeam\Webtlo\Update\TorrentsClients;
  * Выполнение обновления сведений из разных источников.
  * Либо полное обновление всего, либо конкретный модуль.
  */
-$update_result = [
-    'result' => '',
-];
+$update_result = '';
 
 // Создаём контейнер и пишем в лог.
 $app = App::create(LogFile::Update);
@@ -73,14 +71,11 @@ try {
         }
     }
 } catch (Throwable $e) {
-    $update_result['result'] = 'В процессе обновления сведений были ошибки. '
+    $update_result = 'В процессе обновления сведений были ошибки. '
         . 'Для получения подробностей обратитесь к журналу событий.';
     $log->error($e->getMessage());
 } finally {
     $log->info('-- DONE --');
 }
 
-// Выводим лог
-$update_result['log'] = $app->getLoggerRecords();
-
-echo json_encode($update_result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($update_result);

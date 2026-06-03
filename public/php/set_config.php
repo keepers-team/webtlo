@@ -47,7 +47,4 @@ try {
     $log->info('-- DONE --');
 }
 
-echo json_encode(
-    ['log' => $app->getLoggerRecords()],
-    JSON_UNESCAPED_UNICODE
-);
+echo App::decorateJsonResponse();

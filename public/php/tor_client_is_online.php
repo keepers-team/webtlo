@@ -33,7 +33,4 @@ try {
     $status = sprintf('Не удалось проверить доступность торрент-клиента "%s"', $params['comment'] ?? 'unknown');
 }
 
-echo json_encode([
-    'log'    => $app->getLoggerRecords(),
-    'status' => $status,
-]);
+echo App::decorateJsonResponse(['status' => $status]);

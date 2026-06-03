@@ -90,9 +90,7 @@ try {
     unset($topicHashes);
 
     if (empty($topicHashesByForums)) {
-        $result = 'Не получены идентификаторы раздач с привязкой к подразделу';
-
-        throw new Exception();
+        throw new Exception('Не получены идентификаторы раздач с привязкой к подразделу');
     }
 
     // полный путь до каталога для сохранения торрент-файлов
@@ -296,14 +294,9 @@ try {
     $log->info($result);
 } catch (Exception $e) {
     $result = $e->getMessage();
-    if ($result) {
-        $log->error($result);
-    }
+    $log->error($result);
 } finally {
     $log->info('-- DONE --');
 }
 
-echo json_encode([
-    'log'    => $app->getLoggerRecords(),
-    'result' => $result,
-], JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($result);

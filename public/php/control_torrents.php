@@ -8,10 +8,8 @@ use KeepersTeam\Webtlo\Action\TopicControl;
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Enum\LogFile;
 
-$control_result = [
-    'result' => 'В процессе регулировки раздач были ошибки. ' .
-        'Для получения подробностей обратитесь к журналу событий.',
-];
+$control_result = 'В процессе регулировки раздач были ошибки. ' .
+    'Для получения подробностей обратитесь к журналу событий.';
 
 // Инициализируем контейнер.
 $app = App::create(LogFile::Control);
@@ -23,7 +21,7 @@ try {
     // Запускаем регулировку раздач.
     $topicControl->process();
 
-    $control_result['result'] = 'Регулировка раздач выполнена.';
+    $control_result = 'Регулировка раздач выполнена.';
 } catch (RuntimeException $e) {
     $log->warning($e->getMessage());
 } catch (Throwable $e) {
@@ -32,7 +30,4 @@ try {
     $log->info('-- DONE --');
 }
 
-// Добавляем записанный журнал.
-$control_result['log'] = $app->getLoggerRecords();
-
-echo json_encode($control_result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($control_result);

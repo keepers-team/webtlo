@@ -38,6 +38,6 @@ try {
 $result = [
     'error'  => $error ?? '',
     'hashes' => $output ?? [],
-    'log'    => $app->getLoggerRecords(),
 ];
-echo json_encode($result, JSON_UNESCAPED_UNICODE);
+
+echo App::decorateJsonResponse($result);

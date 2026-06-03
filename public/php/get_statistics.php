@@ -169,4 +169,4 @@ try {
     $statistics_result['tbody'] = '<tr><th colspan="12">' . $e->getMessage() . '</th></tr>';
 }
 
-echo json_encode($statistics_result, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($statistics_result);
