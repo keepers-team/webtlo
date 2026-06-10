@@ -146,10 +146,10 @@ function getFilteredTopics() {
 
     // Параметры фильтра в строку.
     let $filter = $("#topics_filter").serialize();
-    processStatus.set("Получение данных о раздачах...");
+    processStatus.set('Получение данных о раздачах...');
     $.ajax({
-        type: "POST",
-        url: "php/get_filtered_list_topics.php",
+        type: 'POST',
+        url: 'php/get_filtered_list_topics.php',
         data: {
             forum_id: forum_id,
             filter: $filter,
@@ -175,22 +175,24 @@ function getFilteredTopics() {
             response = $.parseJSON(response);
 
             // Если есть ошибка - выводим её текст.
-            if (response.log.length) {
-                messageResult = response.log;
+            if (response.result.length) {
+                messageResult = response.result;
 
                 // Если указан элемент, вызывающий ошибку - покажем его.
                 if (response.validate) {
                     $(`.${response.validate}`).highlight();
                 }
             }
+
+            // Если есть список раздач для отображения - показываем.
             if (response.topics != null) {
                 $("#topics").html(response.topics);
-                $("#filtered_topics_count").text(response.count);
-                $("#filtered_topics_size").text(convertBytes(response.size));
+                $("#filtered_topics_count").text(response.topics_count);
+                $("#filtered_topics_size").text(convertBytes(response.topics_size));
 
-                $("#excluded_topics_count").text(response.ex_count)
-                    .parent().toggle(!!response.ex_count);
-                $("#excluded_topics_size").text(convertBytes(response.ex_size));
+                $("#excluded_topics_count").text(response.excluded_count)
+                    .parent().toggle(!!response.excluded_count);
+                $("#excluded_topics_size").text(convertBytes(response.excluded_size));
             }
             showCountSizeSelectedTopics();
 
