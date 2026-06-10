@@ -10,13 +10,14 @@ use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
-$returnObject = [
-    'size'     => 0,
-    'count'    => 0,
-    'ex_count' => 0,
-    'ex_size'  => 0,
-    'log'      => '',
+$response = [
+    'result'   => '',
     'validate' => '',
+
+    'topics_size'    => 0,
+    'topics_count'   => 0,
+    'excluded_count' => 0,
+    'excluded_size'  => 0,
 ];
 
 // Подключаем контейнер.
@@ -56,18 +57,18 @@ try {
     // Ищем раздачи.
     $topics = $ruleSet->getTopics(filter: $filter, sort: $sorting);
 
-    $returnObject['topics']   = $topics->mergeList();
-    $returnObject['size']     = $topics->size;
-    $returnObject['count']    = $topics->count;
-    $returnObject['ex_count'] = $topics->excluded->count;
-    $returnObject['ex_size']  = $topics->excluded->size;
+    // Формируем ответ.
+    $response['topics'] = $topics->mergeList();
+
+    $response['topics_size']    = $topics->size;
+    $response['topics_count']   = $topics->count;
+    $response['excluded_count'] = $topics->excluded->count;
+    $response['excluded_size']  = $topics->excluded->size;
 } catch (ValidationException $e) {
-    $returnObject['log']      = $e->getMessage();
-    $returnObject['validate'] = $e->getClass();
+    $response['result']   = $e->getMessage();
+    $response['validate'] = $e->getClass();
 } catch (Exception $e) {
-    $returnObject['log'] = $e->getMessage();
+    $response['result'] = $e->getMessage();
 }
 
-$returnObject['details'] = $app->getLoggerRecords();
-
-echo json_encode($returnObject, JSON_UNESCAPED_UNICODE);
+echo App::decorateJsonResponse($response);
