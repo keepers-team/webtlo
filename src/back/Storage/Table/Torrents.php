@@ -48,7 +48,8 @@ final class Torrents
     /**
      * Найти список раздач, сгруппировав их по ид клиента.
      *
-     * @param string[] $hashes
+     * @param string[]     $hashes
+     * @param positive-int $chunkSize
      *
      * @return array<int, string[]>
      */
@@ -56,10 +57,7 @@ final class Torrents
     {
         $result = [];
 
-        $hashes = array_chunk(
-            array_unique($hashes),
-            max(1, $chunkSize)
-        );
+        $hashes = array_chunk(array_unique($hashes), $chunkSize);
 
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
@@ -84,6 +82,41 @@ final class Torrents
         }
 
         return $result;
+    }
+
+    /**
+     * @param string[]     $hashes
+     * @param positive-int $chunkSize
+     */
+    public function addDownloadedTorrents(array $hashes, int $clientId, int $chunkSize = 500): void
+    {
+        $chunks = array_chunk($hashes, $chunkSize);
+        foreach ($chunks as $chunk) {
+            $object = KeysObject::create($chunk);
+
+            $sql = "
+                INSERT INTO Torrents (
+                    info_hash,
+                    client_id,
+                    topic_id,
+                    name,
+                    total_size
+                )
+                SELECT
+                    Topics.info_hash,
+                    ?,
+                    Topics.id,
+                    Topics.name,
+                    Topics.size
+                FROM Topics
+                WHERE info_hash IN ($object->keys)
+            ";
+
+            $this->db->executeStatement(
+                sql  : $sql,
+                param: [$clientId, ...$object->values],
+            );
+        }
     }
 
     /**

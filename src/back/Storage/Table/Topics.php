@@ -83,7 +83,8 @@ final class Topics
     /**
      * Поиск в БД ид раздач, по хешу.
      *
-     * @param string[] $hashes
+     * @param string[]     $hashes
+     * @param positive-int $chunkSize
      *
      * @return array<string, array{topic_id:int}>
      */
@@ -91,7 +92,7 @@ final class Topics
     {
         $result = [];
 
-        $hashes = array_chunk($hashes, max(1, $chunkSize));
+        $hashes = array_chunk($hashes, $chunkSize);
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
@@ -108,6 +109,44 @@ final class Topics
         }
 
         return array_merge(...$result);
+    }
+
+    /**
+     * Найти в БД раздачи и сгруппировать по ид подраздела.
+     *
+     * @param string[]     $hashes
+     * @param positive-int $chunkSize
+     *
+     * @return array<array-key, array{topic_id: int, info_hash: string}[]>
+     */
+    public function getGroupedTopics(array $hashes, int $chunkSize = 500): array
+    {
+        if (!count($hashes)) {
+            return [];
+        }
+
+        $result = [];
+
+        $chunks = array_chunk(array_unique($hashes), $chunkSize);
+        foreach ($chunks as $chunk) {
+            $search = KeysObject::create($chunk);
+
+            $grouped = $this->con->query(
+                sql  : "SELECT forum_id, id AS topic_id, info_hash FROM Topics WHERE info_hash IN ($search->keys)",
+                param: $search->values,
+                pdo  : PDO::FETCH_GROUP | PDO::FETCH_ASSOC
+            );
+
+            if (empty($grouped)) {
+                continue;
+            }
+
+            foreach ($grouped as $forumId => $topics) {
+                $result[$forumId] = array_merge($result[$forumId] ?? [], $topics);
+            }
+        }
+
+        return $result;
     }
 
     /**
