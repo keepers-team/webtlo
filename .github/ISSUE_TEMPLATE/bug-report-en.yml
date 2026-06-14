@@ -22,6 +22,7 @@ body:
       options:
         - x.x.x (alpha)
         - x.x.x (beta)
+        - 4.x.x (Actual)
         - 3.x.x (Actual)
         - 2.6.x (Stable)
         - <2.5.x (Legacy)
