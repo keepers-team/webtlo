@@ -24,7 +24,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: Composer-${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Cache WebServer
         id: cache_web_server
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: /tmp/server_dir
           key: WebServer-${{ runner.os }}-${{ vars.NGINX_VERSION || '1.24.0' }}-PHP-8.2
@@ -145,7 +145,7 @@ jobs:
 
       - name: Cache release
         if: ${{ github.ref_type == 'tag' }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ./release
           key: ${{ github.ref_type }}-${{ github.sha }}-release
