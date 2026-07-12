@@ -17,4 +17,4 @@ use KeepersTeam\Webtlo\Console\ConsoleKernel;
  */
 $kernel = new ConsoleKernel();
 
-exit($kernel->handle([__FILE__, 'cron:update']));
+exit($kernel->handle([__FILE__, 'cron:control']));
