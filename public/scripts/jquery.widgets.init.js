@@ -10,11 +10,11 @@ $(document).ready(function () {
     // Скрываем прогресс загрузки.
     $(".process-loading, .process-bar").hide();
 
+    // Прогресс бар. Оставлю его тут, может пригодиться позже.
     $('.process-bar').progressbar({
         max: 0,
         complete : function () {
             $(this).hide();
-            showResultTopics();
         }
     });
 

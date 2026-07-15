@@ -32,32 +32,6 @@ final class Topics
 
     public function __construct(private readonly ConnectionInterface $con) {}
 
-    /** Сколько раздач без названия. */
-    public function countUnnamed(): int
-    {
-        return $this->con->queryCount("SELECT COUNT(1) FROM Topics WHERE name IS NULL OR name = ''");
-    }
-
-    /**
-     * Выбрать N раздач без названия.
-     *
-     * @return int[]
-     */
-    public function getUnnamedTopics(int $limit = 5000): array
-    {
-        return $this->con->query(
-            "SELECT id FROM Topics WHERE name IS NULL OR name = '' LIMIT ?",
-            [$limit],
-            PDO::FETCH_COLUMN
-        );
-    }
-
-    /** Сколько всего раздач в таблице. */
-    public function countTotal(): int
-    {
-        return $this->con->selectRowsCount('Topics');
-    }
-
     /**
      * Поиск существующих сведений о раздачах.
      *

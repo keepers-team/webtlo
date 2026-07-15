@@ -16,8 +16,6 @@ $(document).ready(function () {
                     block_actions();
                     processStatus.set(button.prop('title') + "...");
 
-                    // Остановить слежение за кол-вом требующих обновления раздач.
-                    clearRefreshTopicsInterval();
                 },
                 success: function (response) {
                     filter_hold = false;
@@ -25,9 +23,10 @@ $(document).ready(function () {
                     addDefaultLog(response.log ?? '');
 
                     if (response.result) {
+                        // Если есть текстовый результат, то это ошибка. Показываем её.
                         showResultTopics(response.result);
                     } else {
-                        checkEmptyTitleTopics(true);
+                        // Ошибки обновления нет, применяем фильтры.
                         getFilteredTopics();
                     }
 
@@ -39,31 +38,8 @@ $(document).ready(function () {
             });
         }
 
-        if (!refreshTopics.interval) {
-            update_info_local();
-        } else {
-            $("#dialog")
-                .text('Имеются раздачи, в процессе обновления дополнительных сведений. Вы уверены, что хотите запустить обновление сейчас?')
-                .dialog({
-                    modal: true,
-                    autoOpen: true,
-                    buttons: [
-                        {
-                            text: "Да, запустить",
-                            click: function () {
-                                $(this).dialog("close");
-                                update_info_local();
-                            },
-                        },
-                        {
-                            text: "Нет, подождём",
-                            click: function () {
-                                $(this).dialog("close");
-                            }
-                        }
-                    ],
-                });
-        }
+        // Выполняем обновление сведений.
+        update_info_local();
     });
 
     // отправка отчётов
@@ -443,7 +419,7 @@ $(document).ready(function () {
         if (element_old.hasClass("log_file")) {
             $("#log_" + name_old).text("");
         }
-        getLogContent(name_new);;
+        getLogContent(name_new);
     });
 
     $("#refresh_log").on("click", function () {
