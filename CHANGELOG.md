@@ -8,6 +8,9 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.1.1] - 2026-07-15
+- Исправлен путь выполнения legacy cron control
+
 ### [4.1.0] - 2026-06-17
 - Оптимизирована загрузка торрент-файлов при добавлении в клиент
 - Оптимизирована работа с лог-файлами
@@ -170,6 +173,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.1.1]: https://github.com/keepers-team/webtlo/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/keepers-team/webtlo/compare/4.0.1...4.1.0
 [4.0.1]: https://github.com/keepers-team/webtlo/compare/4.0.0...4.0.1
 [4.0.0]: https://github.com/keepers-team/webtlo/compare/3.8.2...4.0.0
