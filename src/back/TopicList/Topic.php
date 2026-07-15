@@ -9,6 +9,8 @@ use KeepersTeam\Webtlo\Helper;
 
 final class Topic
 {
+    private static string $emptyNameTemplate = '[[No Title]] %s';
+
     public function __construct(
         public readonly int               $id,
         public readonly string            $hash,
@@ -27,6 +29,15 @@ final class Topic
      */
     public static function fromTopicData(array $topicData, ?State $state = null): self
     {
+        /**
+         * Если у раздачи нет имени, подставим шаблон.
+         *
+         * Делается это тут, чтобы фильтры по имени раздачи тоже работали.
+         */
+        if (empty($topicData['name'])) {
+            $topicData['name'] = sprintf(self::$emptyNameTemplate, $topicData['info_hash']);
+        }
+
         return new self(
             id         : (int) $topicData['topic_id'],
             hash       : (string) $topicData['info_hash'],
