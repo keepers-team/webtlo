@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage;
 
-use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
-use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
@@ -25,8 +23,6 @@ final class CloneServiceProvider extends AbstractServiceProvider
     public function provides(string $id): bool
     {
         $services = [
-            HighPriorityInsert::class,
-            HighPriorityUpdate::class,
             KeepersLists::class,
             KeepersSeeders::class,
             TopicsInsert::class,
@@ -44,20 +40,6 @@ final class CloneServiceProvider extends AbstractServiceProvider
     public function register(): void
     {
         $container = $this->getContainer();
-
-        $container->addShared(HighPriorityInsert::class, function() use ($container) {
-            /** @var CloneFactory $factory */
-            $factory = $container->get(CloneFactory::class);
-
-            return $factory->cloneHighPriorityInsert();
-        });
-
-        $container->addShared(HighPriorityUpdate::class, function() use ($container) {
-            /** @var CloneFactory $factory */
-            $factory = $container->get(CloneFactory::class);
-
-            return $factory->cloneHighPriorityUpdate();
-        });
 
         $container->addShared(KeepersLists::class, function() use ($container) {
             /** @var CloneFactory $factory */

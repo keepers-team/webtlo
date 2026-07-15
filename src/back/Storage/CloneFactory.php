@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage;
 
 use KeepersTeam\Webtlo\DB;
-use KeepersTeam\Webtlo\Storage\Clone\HighPriorityInsert;
-use KeepersTeam\Webtlo\Storage\Clone\HighPriorityUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
@@ -53,34 +51,6 @@ final class CloneFactory
         $clone->createClone(cloneName: $cloneName);
 
         return $clone;
-    }
-
-    public function cloneHighPriorityInsert(): HighPriorityInsert
-    {
-        $table = $this->makeClone(
-            table  : HighPriorityInsert::TABLE,
-            keys   : HighPriorityInsert::KEYS,
-            primary: HighPriorityInsert::PRIMARY,
-            prefix: 'HighPriorityInsert',
-        );
-
-        return new HighPriorityInsert(
-            clone: $table,
-        );
-    }
-
-    public function cloneHighPriorityUpdate(): HighPriorityUpdate
-    {
-        $table = $this->makeClone(
-            table  : HighPriorityUpdate::TABLE,
-            keys   : HighPriorityUpdate::KEYS,
-            primary: HighPriorityUpdate::PRIMARY,
-            prefix: 'HighPriorityUpdate',
-        );
-
-        return new HighPriorityUpdate(
-            clone: $table,
-        );
     }
 
     public function cloneKeepersLists(): KeepersLists
