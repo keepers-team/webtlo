@@ -68,14 +68,6 @@ trait ForumTopics
 
             $format = $result['columns'];
 
-            // TODO Заменить на значение из выдачи.
-            $totalSize = array_sum(
-                array_column(
-                    $result['releases'],
-                    array_flip($format)['tor_size_bytes']
-                )
-            );
-
             // Разбиваем раздачи по 500шт и лениво обрабатываем через Generator.
             $chunks = array_chunk($result['releases'], 500);
             unset($result['releases']);
@@ -96,8 +88,8 @@ trait ForumTopics
 
             return new ForumTopicsResponse(
                 updateTime  : new DateTimeImmutable($result['pvc_update_time'] ?? $result['cache_time']),
-                totalCount  : $result['total_count'],
-                totalSize   : $totalSize,
+                totalCount  : (int) $result['total_count'],
+                totalSize   : (int) $result['total_size'],
                 topicsChunks: $topicGenerator(),
             );
         };
