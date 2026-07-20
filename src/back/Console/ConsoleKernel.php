@@ -19,32 +19,21 @@ final class ConsoleKernel
     public function handle(array $argv): int
     {
         if (empty($argv[1])) {
-            echo "Usage: php bin/webtlo cron:command\n";
+            echo 'Usage: php bin/webtlo cron:{command}' . PHP_EOL;
 
             return 1;
         }
 
         $command = CronCommand::tryFrom($argv[1]);
         if (!$command) {
-            echo "Unknown command: $argv[1]\n";
+            echo "Unknown command: $argv[1]" . PHP_EOL;
+            echo 'Usage: php bin/webtlo cron:{command}' . PHP_EOL;
 
             return 1;
         }
 
         $app    = App::createConsole(command: $command);
         $logger = $app->getLogger();
-
-        // @TODO remove in 4.2
-        if (basename($argv[0]) !== 'webtlo') {
-            $notice = sprintf(
-                '[DEPRECATED] Прямой запуск скрипта устарел. Используйте: "%s" вместо "%s"',
-                $command->cliUsage(),
-                $argv[0]
-            );
-
-            $logger->notice($notice);
-            echo $notice . PHP_EOL;
-        }
 
         $automation = $app->getAutomation();
 
