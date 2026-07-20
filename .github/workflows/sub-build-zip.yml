@@ -42,7 +42,7 @@ jobs:
           tlo_dir=webtlo.local
 
           mkdir "$tlo_dir"
-          cp -r bin cron database public src vendor "$tlo_dir/"
+          cp -r bin database public src vendor "$tlo_dir/"
 
           # Write version
           jq \
@@ -114,7 +114,7 @@ jobs:
 
           # Add webtlo
           mkdir "$tlo_dir"
-          cp -r bin cron database public src vendor "$tlo_dir"
+          cp -r bin database public src vendor "$tlo_dir"
 
           # Write version
           jq \
