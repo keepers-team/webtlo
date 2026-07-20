@@ -21,9 +21,6 @@ use Throwable;
 
 /**
  * Действие регулировки (остановка/запуск) раздач в торрент-клиентах.
- *
- * - ручной запуск, см. php/actions/control_torrents.php
- * - автоматический запуск, см. cron/control.php
  */
 final class TopicControl
 {

@@ -36,9 +36,4 @@ enum CronCommand: string
             self::Update  => $app->get(CronUpdate::class)->run(),
         };
     }
-
-    public function cliUsage(): string
-    {
-        return "php bin/webtlo {$this->value}";
-    }
 }

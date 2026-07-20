@@ -988,17 +988,17 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <h3>Задачи, запускаемые из планировщика<sup>1</sup></h3>
                             <label class="label">
                                 <input name="automation_update" type="checkbox" size="24" <?= $cs('automation', 'update'); ?> />
-                                <span class="script-name">[update.php, keepers.php]</span>
+                                <span class="script-name">[cron:update, cron:keepers]</span>
                                 Обновление списков раздач в хранимых подразделах, списков других хранителей, списков хранимых раздач в торрент-клиентах
                             </label>
                             <label class="label">
                                 <input name="automation_reports" type="checkbox" size="24" <?= $cs('automation', 'reports'); ?> />
-                                <span class="script-name">[reports.php]</span>
+                                <span class="script-name">[cron:reports]</span>
                                 Отправка отчётов на форум
                             </label>
                             <label class="label">
                                 <input name="automation_control" type="checkbox" size="24" <?= $cs('automation', 'control'); ?> />
-                                <span class="script-name">[control.php]</span>
+                                <span class="script-name">[cron:control]</span>
                                 Регулировка раздач в торрент-клиентах
                             </label>
                             <hr>
@@ -1084,7 +1084,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                     Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
                                     За подробностями обратитесь к <a target="_blank" href="<?= $cs('webtlo', 'wiki') . '/configuration/automation-scripts/'; ?>">этой</a> странице.</li>
-                                <li>Необходимо настроить автозапуск control.php</li>
+                                <li>Необходимо настроить автозапуск cron:control</li>
                             </ol>
                         </div>
 
