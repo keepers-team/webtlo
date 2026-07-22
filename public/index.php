@@ -1084,7 +1084,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 <li>Указанные настройки влияют исключительно на выполнение соответствующих фоновых задач. <br />
                                     Запуск задач должен быть настроен самостоятельно (cron или планировщик windows). <br />
                                     За подробностями обратитесь к <a target="_blank" href="<?= $cs('webtlo', 'wiki') . '/configuration/automation-scripts/'; ?>">этой</a> странице.</li>
-                                <li>Необходимо настроить автозапуск control.php</li>
+                                <li>Необходимо настроить автозапуск cron:control</li>
                             </ol>
                         </div>
 
