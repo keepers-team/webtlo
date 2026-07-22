@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\External\Api\Actions;
 use Generator;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\RejectionException;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\External\Api\V1\TopicsDetailsResponse;
@@ -125,6 +126,7 @@ trait TopicsDetails
             size      : (int) $payload['size'],
             registered: self::dateTimeFromTimestamp((int) $payload['reg_time']),
             status    : TorrentStatus::from($payload['tor_status']),
+            priority  : KeepingPriority::Normal,
             seeders   : (int) $payload['seeders'],
             title     : (string) $payload['topic_title'],
         );
