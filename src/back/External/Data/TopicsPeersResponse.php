@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External\Api\V1;
+namespace KeepersTeam\Webtlo\External\Data;
 
 use KeepersTeam\Webtlo\External\Contract\TopicPeersProcessorInterface;
-use KeepersTeam\Webtlo\External\Data\TopicPeers;
 
 /**
  * Список данных о пирах раздач.

@@ -8,10 +8,10 @@ use Generator;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\RejectionException;
-use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
-use KeepersTeam\Webtlo\External\Api\V1\TopicsPeersResponse;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicPeers;
+use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
+use KeepersTeam\Webtlo\External\Data\TopicsPeersResponse;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 

@@ -9,10 +9,10 @@ use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\RejectionException;
 use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
-use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
-use KeepersTeam\Webtlo\External\Api\V1\TopicsDetailsResponse;
-use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
 use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\External\Data\TopicDetails;
+use KeepersTeam\Webtlo\External\Data\TopicsDetailsResponse;
+use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
