@@ -8,7 +8,6 @@ use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Config\TopicSearch;
 use KeepersTeam\Webtlo\Config\TorrentClients;
-use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\Api\V1\TopicDetails;
 use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
@@ -321,12 +320,12 @@ final class TorrentsClients
                     }
 
                     // Если о раздаче есть данные в API, то дописываем их, как более верные.
-                    $topic = $this->getApiTopicInfo(infoHash: $infoHash);
-                    if ($topic !== null) {
-                        $topicData['name']   = $topic->title;
-                        $topicData['status'] = $topic->status->label();
+                    $apiTopicInfo = $this->getApiTopicInfo(infoHash: $infoHash);
+                    if ($apiTopicInfo !== null) {
+                        $topicData['name']   = $apiTopicInfo->title;
+                        $topicData['status'] = $apiTopicInfo->status->label();
                         if (empty($topicData['priority'])) {
-                            $topicData['priority'] = KeepingPriority::Normal->label();
+                            $topicData['priority'] = $apiTopicInfo->priority->label();
                         }
                     }
 
@@ -341,7 +340,7 @@ final class TorrentsClients
                         $topicData['transferred_by_whom'],
                     ]);
 
-                    unset($topicId, $topicData, $topic);
+                    unset($topicId, $topicData, $apiTopicInfo);
                 }
 
                 $this->cloneUnregistered->fillTempTable();

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External\Api\V1;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
 
 /** Дополнительные сведения о раздаче. */
@@ -18,6 +19,7 @@ final class TopicDetails
         public readonly int               $size,
         public readonly DateTimeImmutable $registered,
         public readonly TorrentStatus     $status,
+        public readonly KeepingPriority   $priority,
         public readonly int               $seeders,
         public readonly string            $title,
     ) {}
