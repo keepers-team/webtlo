@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Api\Actions;
 
-use KeepersTeam\Webtlo\External\Api\V1\TopicSearchMode;
+use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
 use Throwable;
 
 trait RequestLimit
