@@ -8,11 +8,13 @@ namespace KeepersTeam\Webtlo\External\Api\V1;
 final class TopicsDetailsResponse
 {
     /**
-     * @param TopicDetails[] $topics
+     * @param TopicDetails[] $actualTopics
+     * @param TopicDetails[] $oldTopics
      * @param (int|string)[] $missingTopics
      */
     public function __construct(
-        public readonly array $topics,
-        public readonly array $missingTopics
+        public readonly array $actualTopics,
+        public readonly array $oldTopics = [],
+        public readonly array $missingTopics = []
     ) {}
 }

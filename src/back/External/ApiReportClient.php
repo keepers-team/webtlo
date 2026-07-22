@@ -24,6 +24,7 @@ final class ApiReportClient
     use Actions\KeepersReports;
     use Actions\KeeperUnseededTopics;
     use Actions\Processor;
+    use Actions\TopicsDetails;
 
     public function __construct(
         protected readonly Client          $client,
