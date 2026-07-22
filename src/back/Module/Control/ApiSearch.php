@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Module\Control;
 
 use KeepersTeam\Webtlo\Config\TopicControl;
 use KeepersTeam\Webtlo\Data\KeeperPermissions;
-use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Contract\TopicPeersProcessorInterface;
 use KeepersTeam\Webtlo\External\Data\ApiError;
@@ -34,7 +33,6 @@ final class ApiSearch
     private array $cachedResponse = [];
 
     public function __construct(
-        private readonly ApiForumClient  $apiForum,
         private readonly ApiReportClient $apiReport,
         private readonly LoggerInterface $logger,
     ) {}
@@ -109,12 +107,12 @@ final class ApiSearch
     {
         if (is_int($group)) {
             // Получаем раздачи всего подраздела, кешируем ответ, фильтруем только нужные (быстро).
-            return $this->getApiReportTopicPeers(forumId: $group)->process(hashes: $hashes);
+            return $this->getApiTopicPeersBySubForum(forumId: $group)->process(hashes: $hashes);
         }
 
         if ($group === TopicControl::UnknownHashes) {
             // Получаем только искомые раздачи, т.к. не знаем ид подраздела (долго).
-            return $this->getApiForumTopicPeers(hashes: $hashes)->process(hashes: $hashes);
+            return $this->getApiTopicPeersByHashes(hashes: $hashes)->process(hashes: $hashes);
         }
 
         throw new RuntimeException("Неизвестный подраздел: $group");
@@ -123,7 +121,7 @@ final class ApiSearch
     /**
      * Запросить в API отчётов раздачи всего подраздела.
      */
-    private function getApiReportTopicPeers(int $forumId): TopicPeersProcessorInterface
+    private function getApiTopicPeersBySubForum(int $forumId): TopicPeersProcessorInterface
     {
         $topics = $this->cachedResponse[$forumId] ?? null;
         if ($topics instanceof TopicPeersProcessorInterface) {
@@ -150,9 +148,9 @@ final class ApiSearch
      *
      * @param string[] $hashes
      */
-    private function getApiForumTopicPeers(array $hashes): TopicPeersProcessorInterface
+    private function getApiTopicPeersByHashes(array $hashes): TopicPeersProcessorInterface
     {
-        $response = $this->apiForum->getPeerStats(topics: $hashes);
+        $response = $this->apiReport->getPeerStats(topics: $hashes);
 
         if ($response instanceof ApiError) {
             $this->logger->error(sprintf('%d %s', $response->code, $response->text));
