@@ -79,7 +79,7 @@ trait TopicsDetails
             /** @var (int|string)[] $missingTopics */
             $missingTopics = array_values(array_diff($topics, $identifiers));
 
-            return new TopicsDetailsResponse(topics: $knownTopics, missingTopics: $missingTopics);
+            return new TopicsDetailsResponse(actualTopics: $knownTopics, missingTopics: $missingTopics);
         } catch (RejectionException $rejectionException) {
             return $rejectionException->getReason();
         }
@@ -127,8 +127,6 @@ trait TopicsDetails
             status    : TorrentStatus::from($payload['tor_status']),
             seeders   : (int) $payload['seeders'],
             title     : (string) $payload['topic_title'],
-            lastSeeded: self::dateTimeFromTimestamp((int) $payload['seeder_last_seen']),
-            downloads : (int) $payload['dl_count']
         );
     }
 }

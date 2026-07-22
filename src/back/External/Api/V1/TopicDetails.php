@@ -20,7 +20,5 @@ final class TopicDetails
         public readonly TorrentStatus     $status,
         public readonly int               $seeders,
         public readonly string            $title,
-        public readonly DateTimeImmutable $lastSeeded,
-        public readonly int               $downloads,
     ) {}
 }
