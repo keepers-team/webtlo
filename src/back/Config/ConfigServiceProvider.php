@@ -21,7 +21,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ForumConnect::class,
-            ForumCredentials::class,
             ApiForumConnect::class,
             ApiReportConnect::class,
             ApiCredentials::class,
@@ -79,20 +78,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 ssl     : $ssl,
                 useProxy: $useProxy,
                 timeout : $timeout,
-            );
-        });
-
-        // Авторизация на форуме.
-        $container->addShared(ForumCredentials::class, function() {
-            $ini = $this->getIni();
-
-            $tracker_login = (string) $ini->read('torrent-tracker', 'login');
-            $tracker_paswd = (string) $ini->read('torrent-tracker', 'password');
-            $user_session  = (string) $ini->read('torrent-tracker', 'user_session');
-
-            return new ForumCredentials(
-                auth   : new BasicAuth(username: $tracker_login, password: $tracker_paswd),
-                session: $user_session ?: null,
             );
         });
 

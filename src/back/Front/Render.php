@@ -11,7 +11,6 @@ use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\AverageSeeds;
 use KeepersTeam\Webtlo\Config\FilterRules;
 use KeepersTeam\Webtlo\Config\ForumConnect;
-use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\Config\Other;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\ProxyType;
@@ -39,7 +38,6 @@ final class Render
         private readonly ApiForumConnect  $apiForumConnect,
         private readonly ApiReportConnect $apiReportConnect,
         private readonly ForumConnect     $forumConnect,
-        private readonly ForumCredentials $forumAuth,
         private readonly TorrentClients   $torrentClients,
         private readonly TorrentDownload  $torrentDownload,
         private readonly Proxy            $proxy,
@@ -77,12 +75,6 @@ final class Render
                 'release'  => $this->webtlo->getReleaseLink(),
                 'commit'   => $this->webtlo->getCommitLink(),
                 'install'  => $this->webtlo->getInstallation(),
-            ],
-
-            'forumAuth' => [
-                'username' => self::escape($this->forumAuth->auth->username),
-                'password' => self::escape($this->forumAuth->auth->password),
-                'session'  => self::escape($this->forumAuth->session),
             ],
 
             'apiAuth' => Reflection::reflect($this->apiAuth),
