@@ -70,6 +70,9 @@ final class SendKeeperReports
         // Если API доступно - отправляем отчёты.
         if ($this->sendReport->isApiEnable()) {
             $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+
+            // Сводный отчёт + телеметрия.
+            $this->sendSummaryReport();
         }
 
         $this->logger->info(
@@ -234,6 +237,25 @@ final class SendKeeperReports
 
             // Запишем время отправки отчётов.
             $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+        }
+    }
+
+    /**
+     * Отправка "сводного" отчёта в API отчётов.
+     */
+    private function sendSummaryReport(): void
+    {
+        $creator = $this->createReport;
+
+        try {
+            // Формируем сводный для API.
+            $customApiReport = $creator->getConfigTelemetry();
+
+            $customApiReport['summary_report'] = $creator->getSummaryReport();
+
+            $this->sendReport->sendCustomReport(apiCustom: $customApiReport);
+        } catch (Throwable $e) {
+            $this->logger->warning($e->getMessage());
         }
     }
 }
