@@ -35,7 +35,7 @@ trait TorrentDownload
         }
 
         $options = [
-            'form_params' => [
+            'query' => [
                 'keeper_user_id'    => $this->apiCredentials->userId,
                 'keeper_api_key'    => $this->apiCredentials->apiKey,
                 'add_retracker_url' => $addRetracker ? 1 : 0,
