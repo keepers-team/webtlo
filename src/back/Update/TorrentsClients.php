@@ -304,6 +304,12 @@ final class TorrentsClients
                 return;
             }
 
+            if ($this->isUnregisteredDisabled()) {
+                $this->logger->notice('Поиск разрегистрированных раздач временно отключён.');
+
+                return;
+            }
+
             Timers::start('search_unregistered');
             $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
 
@@ -363,5 +369,15 @@ final class TorrentsClients
         }
 
         return null;
+    }
+
+    /**
+     * Костыли.
+     *
+     * TODO Убрать когда будет ясно, что делать с разрегами.
+     */
+    private function isUnregisteredDisabled(): bool
+    {
+        return true;
     }
 }
