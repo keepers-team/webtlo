@@ -87,11 +87,9 @@ final class ProbeChecker
             'forum_url' => $config['torrent-tracker']['forum_url'] == 'custom'
                 ? $config['torrent-tracker']['forum_url_custom']
                 : $config['torrent-tracker']['forum_url'],
-            'forum_ssl' => $config['torrent-tracker']['forum_ssl'],
             'api_url'   => $config['torrent-tracker']['api_url'] == 'custom'
                 ? $config['torrent-tracker']['api_url_custom']
                 : $config['torrent-tracker']['api_url'],
-            'api_ssl'   => $config['torrent-tracker']['api_ssl'],
         ];
 
         if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_api'] == 1) {

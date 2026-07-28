@@ -20,7 +20,7 @@ final class CheckMirrorAccess
 
     public function __construct(private readonly LoggerInterface $logger) {}
 
-    public function checkAddress(string $type, string $url, bool $ssl, ?Proxy $proxy): bool
+    public function checkAddress(string $type, string $url, ?Proxy $proxy): bool
     {
         $timeout     = new Timeout(10, 10);
         $proxyConfig = $proxy !== null ? $proxy->getOptions() : [];
@@ -31,8 +31,7 @@ final class CheckMirrorAccess
         ];
 
         $baseUrl = sprintf(
-            '%s://%s/',
-            $ssl ? 'https' : 'http',
+            'https://%s/',
             basename($url)
         );
 

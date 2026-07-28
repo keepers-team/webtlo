@@ -162,7 +162,6 @@ $(document).ready(function () {
                     cfg       : $data,
                     url       : url,
                     url_custom: $(`${element}_custom`).val(),
-                    ssl       : $(`#${value}_ssl`).is(':checked'),
                     proxy     : $(`#proxy_activate_${value}`).is(':checked')
                 },
                 success: function (response) {

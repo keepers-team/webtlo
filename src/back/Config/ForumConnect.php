@@ -21,13 +21,11 @@ final class ForumConnect
     public function __construct(
         public readonly string  $baseUrl,
         public readonly bool    $isCustom,
-        public readonly bool    $ssl,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
     ) {
         $this->url = sprintf(
-            '%s://%s',
-            $this->ssl ? 'https' : 'http',
+            'https://%s',
             $this->baseUrl
         );
     }

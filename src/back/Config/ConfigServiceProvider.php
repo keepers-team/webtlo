@@ -64,7 +64,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
             $isCustomUrl = $url === 'custom';
 
-            $ssl      = (bool) $ini->read('torrent-tracker', 'forum_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_forum', 1);
 
             $timeout = new Timeout(
@@ -75,7 +74,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             return new ForumConnect(
                 baseUrl : $isCustomUrl ? $urlCustom : $url,
                 isCustom: $isCustomUrl,
-                ssl     : $ssl,
                 useProxy: $useProxy,
                 timeout : $timeout,
             );
@@ -92,7 +90,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
             $isCustomUrl = $url === 'custom';
 
-            $ssl      = (bool) $ini->read($section, 'api_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_api', 0);
 
             $timeout = new Timeout(
@@ -107,7 +104,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             return new ApiForumConnect(
                 baseUrl         : $isCustomUrl ? $urlCustom : $url,
                 isCustom        : $isCustomUrl,
-                ssl             : $ssl,
                 useProxy        : $useProxy,
                 timeout         : $timeout,
                 concurrency     : $concurrency,
@@ -127,7 +123,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
             $url = $url === 'custom' ? $urlCustom : $url;
 
-            $ssl      = (bool) $ini->read('torrent-tracker', 'report_ssl', 1);
             $useProxy = (bool) $ini->read('proxy', 'activate_report', 0);
 
             $timeout = new Timeout(
@@ -138,7 +133,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             return new ApiReportConnect(
                 baseUrl : $isCustomUrl ? $urlCustom : $url,
                 isCustom: $isCustomUrl,
-                ssl     : $ssl,
                 useProxy: $useProxy,
                 timeout : $timeout,
             );

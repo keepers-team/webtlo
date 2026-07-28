@@ -37,7 +37,6 @@ final class ApiForumConnect
     public function __construct(
         public readonly string  $baseUrl,
         public readonly bool    $isCustom,
-        public readonly bool    $ssl,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
         public readonly int     $concurrency,
@@ -46,8 +45,7 @@ final class ApiForumConnect
         public readonly string  $userAgent = Defaults::userAgent,
     ) {
         $this->url = sprintf(
-            '%s://%s/%s/',
-            $this->ssl ? 'https' : 'http',
+            'https://%s/%s/',
             $this->baseUrl,
             self::$apiVersion,
         );

@@ -82,21 +82,18 @@ final class Render
             'forumConnect' => [
                 'options' => $this->forumConnect->getSelectOptions(),
                 'custom'  => $this->forumConnect->getCustomUrl(),
-                'ssl'     => $this->checkbox($this->forumConnect->ssl),
                 'proxy'   => $this->checkbox($this->forumConnect->useProxy),
             ],
 
             'apiForumConnect' => [
                 'options' => $this->apiForumConnect->getSelectOptions(),
                 'custom'  => $this->apiForumConnect->getCustomUrl(),
-                'ssl'     => $this->checkbox($this->apiForumConnect->ssl),
                 'proxy'   => $this->checkbox($this->apiForumConnect->useProxy),
             ],
 
             'apiReportConnect' => [
                 'options' => $this->apiReportConnect->getSelectOptions(),
                 'custom'  => $this->apiReportConnect->getCustomUrl(),
-                'ssl'     => $this->checkbox($this->apiReportConnect->ssl),
                 'proxy'   => $this->checkbox($this->apiReportConnect->useProxy),
             ],
 

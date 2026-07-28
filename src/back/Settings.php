@@ -292,13 +292,11 @@ final class Settings
         foreach (['forum', 'api', 'report'] as $key) {
             $url    = "{$key}_url";
             $custom = "{$key}_url_custom";
-            $ssl    = "{$key}_ssl";
 
             $ini->write('torrent-tracker', $url, trim($cfg[$url] ?? ''));
             $ini->write('torrent-tracker', $custom, trim($cfg[$custom] ?? ''));
-            $ini->write('torrent-tracker', $ssl, isset($cfg[$ssl]) ? 1 : 0);
 
-            unset($key, $url, $custom, $ssl);
+            unset($key, $url, $custom);
         }
 
         if (isset($cfg['user_id'])) {

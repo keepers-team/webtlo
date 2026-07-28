@@ -515,12 +515,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                        class="inline-input" type="text" size="14"
                                        value="<?= $cs('forumConnect', 'custom'); ?>"
                                 />
-                                <label>
-                                    <input id="forum_ssl" name="forum_ssl" class="check_access_forum"
-                                           type="checkbox" <?= $cs('forumConnect', 'ssl'); ?>
-                                    />
-                                    HTTPS
-                                </label>
                                 <label
                                     title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
                                     <input id="proxy_activate_forum" name="proxy_activate_forum"
@@ -540,12 +534,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                        class="inline-input" type="text" size="14"
                                        value="<?= $cs('apiForumConnect', 'custom'); ?>"
                                 />
-                                <label>
-                                    <input id="api_ssl" name="api_ssl" class="check_access_api"
-                                           type="checkbox" <?= $cs('apiForumConnect', 'ssl'); ?>
-                                    />
-                                    HTTPS
-                                </label>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
                                     <input id="proxy_activate_api" name="proxy_activate_api" class="check_access_api" type="checkbox"
                                            size="24" <?= $cs('apiForumConnect', 'proxy'); ?>
@@ -563,12 +551,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                        class="inline-input" type="text" size="14"
                                        value="<?= $cs('apiReportConnect', 'custom'); ?>"
                                 />
-                                <label>
-                                    <input id="report_ssl" name="report_ssl" class="check_access_api"
-                                           type="checkbox" <?= $cs('apiReportConnect', 'ssl'); ?>
-                                    />
-                                    HTTPS
-                                </label>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
                                     <input id="proxy_activate_report" name="proxy_activate_report" class="check_access_report" type="checkbox"
                                            size="24" <?= $cs('apiReportConnect', 'proxy'); ?>
