@@ -55,7 +55,11 @@ final class SendKeeperReports
         }
 
         // Проверка доступности API.
-        $this->checkApiReportAccess();
+        if (!$this->checkApiReportAccess()) {
+            $this->logger->notice('Отправка отчёта в API невозможна или отключена.');
+
+            return true;
+        }
 
         // Инициализация переменных для создания отчётов.
         Timers::start('create_report');
@@ -67,13 +71,11 @@ final class SendKeeperReports
             return false;
         }
 
-        // Если API доступно - отправляем отчёты.
-        if ($this->sendReport->isApiEnable()) {
-            $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+        // Отправляем отчёты по каждому хранимому подразделу.
+        $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
 
-            // Сводный отчёт + телеметрия.
-            $this->sendSummaryReport();
-        }
+        // Отправляем сводный отчёт + телеметрию.
+        $this->sendSummaryReport();
 
         $this->logger->info(
             'Процесс отправки отчётов завершён за {sec}',
@@ -86,7 +88,7 @@ final class SendKeeperReports
     /**
      * Проверка доступности API отчётов и установка необходимых признаков.
      */
-    private function checkApiReportAccess(): void
+    private function checkApiReportAccess(): bool
     {
         $report = $this->sendReport;
 
@@ -98,9 +100,7 @@ final class SendKeeperReports
             $report->checkApiAccess();
         }
 
-        if (!$report->isApiEnable()) {
-            $this->logger->notice('Отправка отчёта в API невозможна или отключена.');
-        }
+        return $report->isApiEnable();
     }
 
     /**
