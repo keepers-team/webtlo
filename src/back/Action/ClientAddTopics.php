@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
-use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\SubFolderType;
 use KeepersTeam\Webtlo\Config\SubForum;
 use KeepersTeam\Webtlo\Config\SubForums;
@@ -27,7 +26,6 @@ use RuntimeException;
 final class ClientAddTopics
 {
     /**
-     * @param ApiCredentials  $apiCredentials  параметры авторизации в API форума
      * @param ForumClient     $forumClient     подключение к форуму
      * @param SubForums       $subsections     хранимые подразделы
      * @param ClientFactory   $clientFactory   подключение к торрент-клиенту
@@ -38,7 +36,6 @@ final class ClientAddTopics
      */
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly ApiCredentials  $apiCredentials,
         private readonly ForumClient     $forumClient,
         private readonly SubForums       $subsections,
         private readonly ClientFactory   $clientFactory,
@@ -64,9 +61,6 @@ final class ClientAddTopics
     {
         Timers::start('add_topics_to_client');
         $this->logger->info('Запущен процесс добавления раздач в торрент-клиенты...');
-
-        // Подключаемся к форуму используя ключи API.
-        $this->forumConnect();
 
         // Получение ID раздач с привязкой к подразделу
         $topicHashesByForums = $this->topics->getGroupedTopics(hashes: $hashes);
@@ -243,12 +237,6 @@ final class ClientAddTopics
         }
 
         return $addedTorrentHashes;
-    }
-
-    private function forumConnect(): void
-    {
-        // Записываем ключи доступа к API.
-        $this->forumClient->setApiCredentials(apiCredentials: $this->apiCredentials);
     }
 
     private function getTorrentFilePathTemplate(): string

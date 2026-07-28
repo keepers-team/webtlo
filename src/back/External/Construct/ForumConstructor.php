@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External\Construct;
 
 use GuzzleHttp\Client;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\Proxy;
@@ -17,6 +18,7 @@ final class ForumConstructor
     use RetryMiddleware;
 
     public function __construct(
+        private readonly ApiCredentials  $auth,
         private readonly ForumConnect    $connect,
         private readonly LoggerInterface $logger,
         private readonly Proxy           $proxy,
@@ -27,9 +29,9 @@ final class ForumConstructor
         $client = $this->createGuzzleClient();
 
         return new ForumClient(
-            client  : $client,
-            connect : $this->connect,
-            logger  : $this->logger,
+            client : $client,
+            auth   : $this->auth,
+            logger : $this->logger,
         );
     }
 

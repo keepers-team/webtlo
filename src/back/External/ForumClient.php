@@ -6,8 +6,9 @@ namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\Config\ForumConnect;
+use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\External\Shared\Validation;
+use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -15,33 +16,22 @@ use Psr\Log\LoggerInterface;
  */
 final class ForumClient
 {
-    use Forum\DomHelper;
-    use Forum\TorrentDownload;
-    use Forum\UnregisteredTopic;
     use Validation;
-
-    /** @var string URL просмотра темы */
-    protected const topicURL = '/forum/viewtopic.php';
 
     /** @var string URL загрузки торрент-файла */
     protected const torrentUrl = '/forum/dl_keeper.php';
 
     /**
      * @param Client          $client HTTP-клиент для запросов
+     * @param ApiCredentials  $auth   ключи доступа к API
      * @param LoggerInterface $logger интерфейс для записи журнала
      */
     public function __construct(
-        private readonly Client           $client,
-        private readonly ForumConnect     $connect,
-        private readonly LoggerInterface  $logger,
-    ) {}
-
-    /**
-     * Получить используемый домен трекера.
-     */
-    public function getForumDomain(): string
-    {
-        return $this->connect->baseUrl;
+        private readonly Client          $client,
+        private readonly ApiCredentials  $auth,
+        private readonly LoggerInterface $logger,
+    ) {
+        $this->auth->validate();
     }
 
     /**
@@ -85,7 +75,14 @@ final class ForumClient
         try {
             $response = $this->client->request(method: $method, uri: $url, options: $params);
         } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $params);
+            $this->logger->error(
+                'Ошибка выполнения запроса',
+                ['code' => $e->getCode(), 'error' => $e->getMessage()]
+            );
+
+            if (!empty($params)) {
+                $this->logger->debug('Failed params', $params);
+            }
 
             return null;
         }
@@ -100,21 +97,36 @@ final class ForumClient
     }
 
     /**
-     * Записать ошибку в лог.
+     * Download torrent file.
      *
-     * @param int                  $code    Код ошибки
-     * @param string               $message Сообщение об ошибке
-     * @param array<string, mixed> $params  Параметры запроса
+     * @param string $infoHash Info hash for torrent
+     *
+     * @return ?StreamInterface Stream with torrent body
      */
-    private function logException(int $code, string $message, array $params = []): void
+    public function downloadTorrent(string $infoHash, bool $addRetracker = false): ?StreamInterface
     {
-        $this->logger->error(
-            'Ошибка выполнения запроса',
-            ['code' => $code, 'error' => $message]
-        );
+        $options = [
+            'query' => [
+                'keeper_user_id'    => $this->auth->userId,
+                'keeper_api_key'    => $this->auth->apiKey,
+                'add_retracker_url' => $addRetracker ? 1 : 0,
+                'h'                 => $infoHash,
+            ],
+        ];
 
-        if (!empty($params)) {
-            $this->logger->debug('Failed params', $params);
+        try {
+            $this->logger->debug('Downloading torrent', ['hash' => $infoHash]);
+            $response = $this->client->get(self::torrentUrl, $options);
+        } catch (GuzzleException $e) {
+            $this->logger->error('Failed to download torrent', ['hash' => $infoHash, 'error' => $e]);
+
+            return null;
         }
+
+        if (self::isValidMime(logger: $this->logger, response: $response, expectedMime: self::$torrentMime)) {
+            return $response->getBody();
+        }
+
+        return null;
     }
 }

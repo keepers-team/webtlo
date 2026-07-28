@@ -3,7 +3,6 @@
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Config\TorrentDownload;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\TorrentEditor;
@@ -22,13 +21,6 @@ try {
     if (empty($_POST['topic_hashes'])) {
         throw new RuntimeException('Выберите раздачи');
     }
-
-    /**
-     * Ключи для скачивания файлов.
-     *
-     * @var ApiCredentials $apiCredentials
-     */
-    $apiCredentials = $app->get(ApiCredentials::class);
 
     /** @var TorrentDownload $downloadOptions */
     $downloadOptions = $app->get(TorrentDownload::class);
@@ -74,9 +66,6 @@ try {
     $torrent_files_path_pattern = Helper::normalizePathEncoding("$torrent_files_path/[webtlo].h%s.torrent");
 
     $forumClient = $app->getForumClient();
-
-    // Записываем ключи доступа к API.
-    $forumClient->setApiCredentials(apiCredentials: $apiCredentials);
 
     $log_string = sprintf(
         'Выполняется скачивание торрент-файлов (%d шт), трекеры %s. ',

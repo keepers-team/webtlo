@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Config\TopicSearch;
 use KeepersTeam\Webtlo\Config\TorrentClients;
@@ -13,7 +14,6 @@ use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicDetails;
 use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
-use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
 use KeepersTeam\Webtlo\Storage\Clone\Torrents;
@@ -39,7 +39,7 @@ final class TorrentsClients
      */
     public function __construct(
         private readonly ApiReportClient    $apiClient,
-        private readonly ForumClient        $forumClient,
+        private readonly ForumConnect       $forumConnect,
         private readonly UpdateTime         $updateTime,
         private readonly SubForums          $subForums,
         private readonly TopicSearch        $topicSearch,
@@ -101,7 +101,7 @@ final class TorrentsClients
         );
 
         /** Используемый домен трекера. */
-        $forumDomain = $this->forumClient->getForumDomain();
+        $forumDomain = $this->forumConnect->baseUrl;
 
         /** Клиенты, данные от которых получить не удалось */
         $failedClients = [];
@@ -274,10 +274,8 @@ final class TorrentsClients
             // Если нашлись "прошлые релизы", и они нужны для следующего этапа.
             if (count($response->oldTopics) && $searchUnregistered) {
                 foreach ($response->oldTopics as $topic) {
-                    if (!$topic->status->isValid()) {
-                        // Дописываем их в буфер если нужны.
-                        $this->unregisteredApiTopics[$topic->hash] = $topic;
-                    }
+                    // Дописываем их в буфер если нужны.
+                    $this->unregisteredApiTopics[$topic->hash] = $topic;
                 }
             }
         } catch (Throwable $e) {
@@ -304,45 +302,35 @@ final class TorrentsClients
                 return;
             }
 
-            if ($this->isUnregisteredDisabled()) {
-                $this->logger->notice('Поиск разрегистрированных раздач временно отключён.');
-
-                return;
-            }
-
             Timers::start('search_unregistered');
             $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
 
             // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
             if (count($unregisteredTopics)) {
                 foreach ($unregisteredTopics as $topicId => $infoHash) {
-                    $topicData = $this->forumClient->getUnregisteredTopic(topicId: (int) $topicId);
+                    // Если о раздаче есть данные в API, то дописываем их, как более верные.
+                    $topicData = $this->getApiTopicInfo(infoHash: $infoHash);
                     if ($topicData === null) {
                         continue;
                     }
 
-                    // Если о раздаче есть данные в API, то дописываем их, как более верные.
-                    $apiTopicInfo = $this->getApiTopicInfo(infoHash: $infoHash);
-                    if ($apiTopicInfo !== null) {
-                        $topicData['name']   = $apiTopicInfo->title;
-                        $topicData['status'] = $apiTopicInfo->status->label();
-                        if (empty($topicData['priority'])) {
-                            $topicData['priority'] = $apiTopicInfo->priority->label();
-                        }
+                    $status = 'неизвестно';
+                    if (!$topicData->status->isValid()) {
+                        $status = $topicData->status->label();
                     }
 
                     // Записываем данные раздачи в буфер.
                     $this->cloneUnregistered->addTopic(topic: [
                         $infoHash,
-                        $topicData['name'],
-                        $topicData['status'],
-                        $topicData['priority'],
-                        $topicData['transferred_from'],
-                        $topicData['transferred_to'],
-                        $topicData['transferred_by_whom'],
+                        $topicData->title,
+                        $status,
+                        $topicData->priority->label(),
+                        '',
+                        '',
+                        '',
                     ]);
 
-                    unset($topicId, $topicData, $apiTopicInfo);
+                    unset($topicId, $topicData);
                 }
 
                 $this->cloneUnregistered->fillTempTable();
@@ -369,15 +357,5 @@ final class TorrentsClients
         }
 
         return null;
-    }
-
-    /**
-     * Костыли.
-     *
-     * TODO Убрать когда будет ясно, что делать с разрегами.
-     */
-    private function isUnregisteredDisabled(): bool
-    {
-        return true;
     }
 }
