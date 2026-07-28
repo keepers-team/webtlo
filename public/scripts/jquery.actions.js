@@ -129,7 +129,7 @@ $(document).ready(function () {
         const check_list = ['forum', 'api', 'report'];
         const result_list = ['text-danger', 'text-success'];
 
-        let forumButtons = $('#forum_auth, #check_mirrors_access').toggleDisable(true);
+        let forumButtons = $('#check_mirrors_access').toggleDisable(true);
         let check_count = check_list.length;
 
         $.each(check_list, function (index, value) {
@@ -202,119 +202,6 @@ $(document).ready(function () {
     $("#report_url_params").on("change", function () {
         $("#report_url_result").removeAttr("class");
     });
-
-    // получение bt_key, api_key, user_id
-    $("#forum_auth").on("click", function () {
-        if (
-            !$("#tracker_username").val()
-            && !$("#tracker_password").val()
-        ) {
-            return false;
-        }
-        let forumButtons = $('#forum_auth, #check_mirrors_access').toggleDisable(true);
-        const $data = $("#config").serialize();
-        const cap_code = $("#cap_code").val();
-        const cap_fields = $("#cap_fields").val();
-
-        let dialog = $('#auth_dialog');
-        let authResult = $('#forum_auth_result');
-        $.ajax({
-            type: "POST",
-            url: "php/get_user_details.php",
-            data: {
-                cfg: $data,
-                cap_code: cap_code,
-                cap_fields: cap_fields
-            },
-            context: this,
-            success: function (response) {
-                response = $.parseJSON(response);
-                addDefaultLog(response.log ?? '');
-
-                if (!$.isEmptyObject(response.captcha)) {
-                    authResult.removeAttr("class").addClass("fa fa-circle text-danger");
-
-                    let currentLogin = $('#tracker_username').val();
-                    let currentPass  = $('#tracker_password').val();
-                    dialog.find('#tracker_username_correct').val(currentLogin);
-                    dialog.find('#tracker_password_correct').val(currentPass);
-
-                    dialog.find('#cap_fields').val(response.captcha.join(','));
-                    dialog.find('img.captcha-image').prop('src', response.captcha_path);
-
-                    dialog.dialog(
-                        {
-                            width: 500,
-                            buttons: [
-                                {
-                                    text: "OK",
-                                    click: function () {
-                                        let capCode = $('#cap_code');
-                                        if (!capCode.val().length) {
-                                            capCode.highlight();
-                                            return;
-                                        }
-
-                                        let username_correct = $("#tracker_username_correct").val();
-                                        let password_correct = $("#tracker_password_correct").val();
-                                        $("#tracker_username").val(username_correct);
-                                        $("#tracker_password").val(password_correct);
-                                        $("#forum_auth").click();
-                                        dialog.dialog("close");
-                                    },
-                                },
-                            ],
-                            modal: true,
-                            resizable: false,
-                        }
-                    );
-                    dialog.dialog("open");
-                } else {
-                    authResult.removeAttr("class");
-
-                    // Запишем данные о пользователе, если удалось их получить.
-                    if (!$.isEmptyObject(response.user_id)) {
-                        $("#user_id").val(response.user_id);
-                    }
-                    if (!$.isEmptyObject(response.user_session)) {
-                        $("#user_session").val(response.user_session);
-                    }
-
-                    // Проверим наличие API ключей.
-                    if (!$.isEmptyObject(response.bt_key) && !$.isEmptyObject(response.api_key)) {
-                        // Записываем полученные значения ключей и сохраняем настройки.
-                        $("#bt_key").val(response.bt_key);
-                        $("#api_key").val(response.api_key);
-
-                        authResult.addClass("fa fa-circle text-success");
-                        setSettings();
-                    } else {
-                        authResult.addClass("fa fa-circle text-danger");
-                    }
-                }
-            },
-            beforeSend: function () {
-                authResult.removeAttr("class");
-                authResult.addClass("fa fa-spinner fa-spin");
-            },
-            complete: function () {
-                forumButtons.toggleDisable(false);
-            }
-        });
-    });
-
-    // Данные для авторизации.
-    $('#forum_auth_params, #api_auth_params')
-        .on('input', function() {
-            $('#forum_auth_result').removeAttr('class');
-        })
-        .on('keypress', function() {
-            let disabled = $('#forum_auth').prop('disabled');
-            if (disabled !== false) {
-                return false;
-            }
-        });
-
 
     // проверка закрывающего слеша
     $("#savedir, #dir_torrents").on("change", function () {

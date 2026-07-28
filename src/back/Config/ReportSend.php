@@ -11,7 +11,6 @@ final class ReportSend
 {
     /**
      * @param bool  $sendReports         отправлять отчёты по хранимым подразделам
-     * @param bool  $sendSummary         отправлять сводный отчёт
      * @param bool  $sendTelemetry       отправлять дополнительные сведения об установке программы и настройках
      * @param bool  $unsetOtherTopics    при отправке отчёта по подразделу, снимать признак хранения с раздач, которых больше нет в БД (в т.ч. разрегистрированные и обновлённые раздачи)
      * @param bool  $unsetOtherSubForums снимать признак хранения у подразделов, которые более не хранятся, согласно настроек
@@ -22,7 +21,6 @@ final class ReportSend
      */
     public function __construct(
         public readonly bool  $sendReports,
-        public readonly bool  $sendSummary,
         public readonly bool  $sendTelemetry,
         public readonly bool  $excludeAuthored,
         public readonly bool  $unsetOtherTopics,

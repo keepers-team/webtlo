@@ -377,8 +377,6 @@ final class Settings
 
         // Отправлять ли отчёт пользователя в API.
         $ini->write('reports', 'send_report_api', (int) isset($cfg['send_report_api']));
-        // Отправка сводных отчётов на форум
-        $ini->write('reports', 'send_summary_report', (int) isset($cfg['send_summary_report']));
         // Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом.
         $ini->write('reports', 'send_report_settings', (int) isset($cfg['send_report_settings']));
         // Исключить авторские раздачи из отчётов.
@@ -430,11 +428,5 @@ final class Settings
         $ini = $this->ini;
 
         $ini->write('ui', 'theme', $cfg['theme_selector'] ?? Defaults::uiTheme);
-    }
-
-    public function setForumCookie(string $cookie): void
-    {
-        $this->ini->write('torrent-tracker', 'user_session', trim($cookie));
-        $this->ini->writeFile();
     }
 }

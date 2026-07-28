@@ -45,7 +45,7 @@ trait TorrentDownload
 
         try {
             $this->logger->debug('Downloading torrent', ['hash' => $infoHash]);
-            $response = $this->client->post(self::torrentUrl, $options);
+            $response = $this->client->get(self::torrentUrl, $options);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to download torrent', ['hash' => $infoHash, 'error' => $e]);
 

@@ -606,10 +606,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <button type="button" id="check_mirrors_access" class="settings-button" title="Проверить доступность форума и API">
                                 Проверить доступ
                             </button>
-                            <button type="button" id="forum_auth" class="settings-button" title="Авторизоваться на форуме">
-                                Авторизоваться
-                                <i id="forum_auth_result"></i>
-                            </button>
                             <button type="button" id="show_passwords" class="settings-button" title="Показать/скрыть пароли и ключи">
                                 <i class="fa fa-eye"></i>
                             </button>
@@ -621,19 +617,19 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                         <input id="bt_key" name="bt_key"
                                                class="inline-input user_details user_protected"
                                                type="password" size="10"
-                                               readonly value="<?= $cs('apiAuth', 'btKey'); ?>"
+                                               value="<?= $cs('apiAuth', 'btKey'); ?>"
                                         />
                                         api
                                         <input id="api_key" name="api_key"
                                                class="inline-input user_details user_protected"
                                                type="password" size="10"
-                                               readonly value="<?= $cs('apiAuth', 'apiKey'); ?>"
+                                               value="<?= $cs('apiAuth', 'apiKey'); ?>"
                                         />
                                         id
                                         <input id="user_id" name="user_id"
                                                class="inline-input user_details"
                                                type="text" size="10"
-                                               readonly value="<?= $cs('apiAuth', 'userId'); ?>"
+                                               value="<?= $cs('apiAuth', 'userId'); ?>"
                                         />
                                     </label>
                                 </div>
@@ -945,10 +941,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 <input name="send_report_api" type="checkbox" size="24" <?= $cs('reportSend', 'sendReports'); ?> />
                                 Отправлять отчёты в API
                             </label>
-                            <label class="label" title="Можно отключить отправку сводного отчёта. Отчёты по хранимым подразделам будут отправлены как обычно.">
-                                <input name="send_summary_report" type="checkbox" size="24" <?= $cs('reportSend', 'sendSummary'); ?> />
-                                Отправлять сводный отчёт на форум
-                            </label>
                             <label class="label" title="Количество и тип используемых торрент-клиентов. Данные о регулировке.">
                                 <input name="send_report_settings" type="checkbox" size="24" <?= $cs('reportSend', 'sendTelemetry'); ?> />
                                 Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом
@@ -1238,26 +1230,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
     </div>
 
     <div id="dialog" title="Сообщение"></div>
-    <div id="auth_dialog" title="Авторизация на форуме">
-        <span class="text-danger">
-            Вы видите это сообщение, потому что ввели неправильное имя пользователя или пароль
-        </span>
-        <hr/>
-        Введите правильные данные для авторизации и нажмите "ОК"
-        <br/><br/>
-        <label class="param-name" for="tracker_username_correct">Логин:</label>
-        <input type="text" class="inline-input" id="tracker_username_correct"/>
-        <br/>
-        <label class="param-name" for="tracker_password_correct">Пароль:</label>
-        <input type="text" class="inline-input" id="tracker_password_correct" />
-        <br/><br/>
-        <div>
-            <input class="inline-input" type="hidden" id="cap_fields" />
-            Введите текст с картинки (латиницей):
-            <img class="captcha-image" src="" alt="Если вы видите данный текст, то загрузить изображение капчи не удалось"/>
-        </div>
-        <input id="cap_code" size="10" title="Введите текст с картинки (латиницей)" />
-    </div>
 
     <!-- скрипты webtlo -->
     <script type="text/javascript" src="scripts/jquery.common.js"></script>

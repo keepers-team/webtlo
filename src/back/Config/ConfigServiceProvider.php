@@ -213,7 +213,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
             return new ReportSend(
                 sendReports        : (bool) $ini->read('reports', 'send_report_api', 1),
-                sendSummary        : (bool) $ini->read('reports', 'send_summary_report', 1),
                 sendTelemetry      : (bool) $ini->read('reports', 'send_report_settings', 1),
                 excludeAuthored    : (bool) $ini->read('reports', 'exclude_authored', 0),
                 unsetOtherTopics   : (bool) $ini->read('reports', 'unset_other_topics', 1),

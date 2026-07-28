@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\Module\Report\SendReport;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 
 /**
@@ -71,13 +70,6 @@ final class SendKeeperReports
         // Если API доступно - отправляем отчёты.
         if ($this->sendReport->isApiEnable()) {
             $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
-        }
-
-        // Желание отправить сводный отчёт на форум.
-        if ($this->configReport->sendSummary) {
-            $this->sendForumSummaryReport();
-        } else {
-            $this->logger->notice('Отправка сводного отчёта на форум отключена в настройках.');
         }
 
         $this->logger->info(
@@ -242,50 +234,6 @@ final class SendKeeperReports
 
             // Запишем время отправки отчётов.
             $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
-        }
-    }
-
-    /**
-     * Отправка "сводного" отчёта на форум и в API отчётов.
-     */
-    private function sendForumSummaryReport(): void
-    {
-        $creator = $this->createReport;
-        $report  = $this->sendReport;
-
-        try {
-            if ($report->isApiEnable()) {
-                // Формируем сводный для API.
-                $customApiReport = $creator->getConfigTelemetry();
-
-                $customApiReport['summary_report'] = $creator->getSummaryReport();
-
-                // Отправляем Сводный отчёт и телеметрию в API.
-                $report->sendCustomReport(apiCustom: $customApiReport);
-            }
-
-            // Проверяем доступ к форуму.
-            if (!$report->checkForumAccess()) {
-                throw new RuntimeException('Ошибка подключения к форуму.');
-            }
-
-            Timers::start('send_summary');
-            // Формируем сводный отчёт.
-            $summaryReport = $creator->getSummaryReport(withTelemetry: true);
-
-            // Отправляем сводный отчёт.
-            $postLink = $report->sendForumSummaryReport(report: $summaryReport);
-
-            // Запишем время отправки отчётов.
-            $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
-
-            $this->logger->info(
-                'Отправка сводного отчёта завершена за {sec} [{link}]',
-                ['sec' => Timers::getExecTime('send_summary'), 'link' => $postLink]
-            );
-        } catch (Throwable $e) {
-            $this->logger->error($e->getMessage());
-            $this->logger->warning('Нет доступа к форуму. Отправка сводного отчёта невозможна.');
         }
     }
 }

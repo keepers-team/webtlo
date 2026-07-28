@@ -74,9 +74,6 @@ try {
     $torrent_files_path_pattern = Helper::normalizePathEncoding("$torrent_files_path/[webtlo].h%s.torrent");
 
     $forumClient = $app->getForumClient();
-    if (!$forumClient->checkAccess()) {
-        throw new RuntimeException('Ошибка подключения к форуму.');
-    }
 
     // Записываем ключи доступа к API.
     $forumClient->setApiCredentials(apiCredentials: $apiCredentials);

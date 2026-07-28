@@ -247,11 +247,6 @@ final class ClientAddTopics
 
     private function forumConnect(): void
     {
-        // Проверим подключение к форуму.
-        if (!$this->forumClient->checkAccess()) {
-            throw new RuntimeException('Ошибка подключения к форуму.');
-        }
-
         // Записываем ключи доступа к API.
         $this->forumClient->setApiCredentials(apiCredentials: $this->apiCredentials);
     }

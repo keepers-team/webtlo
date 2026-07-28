@@ -9,7 +9,6 @@ use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
-use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\WebTLO;
 
 final class SendReport
@@ -19,13 +18,11 @@ final class SendReport
     /**
      * @param ApiCredentials  $apiCredentials хранительские ключи
      * @param ApiReportClient $apiReport      подключение к API отчётов
-     * @param ForumClient     $forumClient    подключение к форуму
      * @param WebTLO          $webtlo         основные параметры приложения
      */
     public function __construct(
         private readonly ApiCredentials  $apiCredentials,
         private readonly ApiReportClient $apiReport,
-        private readonly ForumClient     $forumClient,
         private readonly WebTLO          $webtlo,
     ) {
         $this->apiCredentials->validate();
@@ -143,18 +140,5 @@ final class SendReport
     public function sendCustomReport(array $apiCustom): void
     {
         $this->apiReport->sendCustomData($apiCustom);
-    }
-
-    /**
-     * Проверка доступности форума.
-     */
-    public function checkForumAccess(): bool
-    {
-        return $this->forumClient->checkAccess();
-    }
-
-    public function sendForumSummaryReport(string $report): ?string
-    {
-        return $this->forumClient->sendSummaryReport(userId: $this->apiCredentials->userId, message: $report);
     }
 }

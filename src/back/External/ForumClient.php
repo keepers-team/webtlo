@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\External;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ForumConnect;
-use KeepersTeam\Webtlo\Config\ForumCredentials;
 use KeepersTeam\Webtlo\External\Shared\Validation;
-use KeepersTeam\Webtlo\Settings;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -18,75 +15,25 @@ use Psr\Log\LoggerInterface;
  */
 final class ForumClient
 {
-    use Forum\AccessCheck;
-    use Forum\CaptchaHelper;
     use Forum\DomHelper;
-    use Forum\GetCredentials;
-    use Forum\SendMessage;
-    use Forum\SummaryReport;
     use Forum\TorrentDownload;
     use Forum\UnregisteredTopic;
     use Validation;
-
-    /** @var string Куки для авторизации на форуме. */
-    protected static string $authCookieName = 'bb_session';
-
-    /** @var int Ид темы для публикации сводных отчётов */
-    protected const reportsTopicId = 4275633;
-
-    /** @var string URL для проверки доступа */
-    protected const accessURL = '/myip';
-
-    /** @var string URL для входящих сообщений */
-    protected const inboxURL = '/forum/privmsg.php';
-
-    /** @var string URL для авторизации */
-    protected const loginURL = '/forum/login.php';
-
-    /** @var string URL для редактирования/публикации сообщения */
-    protected const postUrl = '/forum/posting.php';
-
-    /** @var string URL профиля */
-    protected const profileURL = '/forum/profile.php';
-
-    /** @var string URL для поиска */
-    protected const searchUrl = '/forum/search.php';
 
     /** @var string URL просмотра темы */
     protected const topicURL = '/forum/viewtopic.php';
 
     /** @var string URL загрузки торрент-файла */
-    protected const torrentUrl = '/forum/dl.php';
-
-    /** @var string Действие редактирования */
-    protected const editAction = 'editpost';
-
-    /** @var string Действие входа */
-    protected const loginAction = 'вход';
-
-    /** @var string Действие просмотра профиля */
-    protected const profileAction = 'viewprofile';
-
-    /** @var string Действие публикации */
-    protected const replyAction = 'reply';
-
-    /** @var ?string Обновленный cookie авторизации */
-    protected ?string $updatedCookie = null;
+    protected const torrentUrl = '/forum/dl_keeper.php';
 
     /**
-     * @param Client           $client   HTTP-клиент для запросов
-     * @param ForumCredentials $cred     учетные данные форума
-     * @param CookieJar        $cookie   cookieJar для управления cookies
-     * @param LoggerInterface  $logger   интерфейс для записи журнала
-     * @param Settings         $settings настройки приложения
+     * @param Client          $client HTTP-клиент для запросов
+     * @param LoggerInterface $logger интерфейс для записи журнала
      */
     public function __construct(
         private readonly Client           $client,
-        private readonly ForumCredentials $cred,
         private readonly ForumConnect     $connect,
-        private readonly CookieJar        $cookie,
         private readonly LoggerInterface  $logger,
-        private readonly Settings         $settings,
     ) {}
 
     /**
@@ -168,19 +115,6 @@ final class ForumClient
 
         if (!empty($params)) {
             $this->logger->debug('Failed params', $params);
-        }
-    }
-
-    /**
-     * Деструктор ForumClient.
-     * Сохраняет обновленные cookies при уничтожении объекта.
-     */
-    public function __destruct()
-    {
-        if ($this->updatedCookie !== null) {
-            $this->logger->debug('call settings set cookie', ['cookie' => $this->updatedCookie]);
-
-            $this->settings->setForumCookie($this->updatedCookie);
         }
     }
 }

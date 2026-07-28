@@ -99,7 +99,6 @@ final class TelemetryConstruct
         $shared['reports'] = [
             'enabled'             => $this->automation->reports,
             'send_report_api'     => $this->reportSend->sendReports,
-            'send_summary_report' => $this->reportSend->sendSummary,
             'exclude_authored'    => $this->reportSend->excludeAuthored,
             'unset_other_forums'  => $this->reportSend->unsetOtherSubForums,
             'unset_other_topics'  => $this->reportSend->unsetOtherTopics,

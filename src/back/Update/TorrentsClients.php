@@ -309,10 +309,6 @@ final class TorrentsClients
 
             // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
             if (count($unregisteredTopics)) {
-                if (!$this->forumClient->checkAccess()) {
-                    throw new RuntimeException('Ошибка подключения к форуму. Поиск прекращён.');
-                }
-
                 foreach ($unregisteredTopics as $topicId => $infoHash) {
                     $topicData = $this->forumClient->getUnregisteredTopic(topicId: (int) $topicId);
                     if ($topicData === null) {
