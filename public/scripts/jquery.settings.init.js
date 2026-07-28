@@ -13,13 +13,10 @@ $(document).ready(function() {
     });
 
     // Открыть ссылку на профиль пользователя.
-    $('#tracker_username').next('i').click(function(e) {
+    $('#forum_profile_link').click(function(e) {
         e.preventDefault();
 
         let user = $('#user_id').val();
-        if (!user) {
-            user = $('#tracker_username').val();
-        }
         if (!user) {
             return;
         }
@@ -55,5 +52,11 @@ $(document).ready(function() {
             'ui-controlgroup': 'hide-dot ui-padding-02'
         }
     });
+
+
+    $('#api_auth_params').change(function() {
+        const emptyKeys= !$('#api_key').val() || !$('#bt_key').val();
+        $('#api_auth_params .support-note').toggle(emptyKeys);
+    }).change();
 
 });

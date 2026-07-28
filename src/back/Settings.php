@@ -100,7 +100,6 @@ final class Settings
                 'login',
                 'password',
                 'user_id',
-                'user_session',
                 'bt_key',
                 'api_key',
             ],
@@ -302,17 +301,8 @@ final class Settings
             unset($key, $url, $custom, $ssl);
         }
 
-        if (isset($cfg['tracker_username'])) {
-            $ini->write('torrent-tracker', 'login', trim($cfg['tracker_username']));
-        }
-        if (isset($cfg['tracker_password'])) {
-            $ini->write('torrent-tracker', 'password', trim($cfg['tracker_password']));
-        }
         if (isset($cfg['user_id'])) {
             $ini->write('torrent-tracker', 'user_id', trim($cfg['user_id']));
-        }
-        if (isset($cfg['user_session'])) {
-            $ini->write('torrent-tracker', 'user_session', trim($cfg['user_session']));
         }
         if (isset($cfg['bt_key'])) {
             $ini->write('torrent-tracker', 'bt_key', trim($cfg['bt_key']));

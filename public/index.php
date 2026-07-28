@@ -577,62 +577,44 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 </label>
                                 <i id="api_url_result" class=""></i>
                             </div>
-                            <div id="forum_auth_params">
-                                <div>
-                                    <label for="tracker_username" class="param-name">Логин:</label>
-                                    <input id="tracker_username" name="tracker_username" type="text"
-                                           class="inline-input" size="25"
-                                           placeholder="Логин на форуме" title="Логин на форуме"
-                                           value="<?= $cs('forumAuth', 'username'); ?>"
-                                    />
-                                    <i class="fa fa-link forum-open-link" title="Открыть ссылку на профиль"></i>
-                                </div>
-                                <div>
-                                    <label for="tracker_password" class="param-name">Пароль:</label>
-                                    <input id="tracker_password" name="tracker_password" type="password"
-                                           class="inline-input user_protected" size="25"
-                                           placeholder="Пароль на форуме" title="Пароль на форуме"
-                                           value="<?= $cs('forumAuth', 'password'); ?>"
-                                    />
-                                </div>
-                                <div>
-                                    <label for="user_session" class="param-name">Сессия:</label>
-                                    <input id="user_session" name="user_session" type="password"
-                                           class="inline-input user_protected" size="25"
-                                           value="<?= $cs('forumAuth', 'session'); ?>" readonly
-                                    />
-                                </div>
-                            </div>
-                            <button type="button" id="check_mirrors_access" class="settings-button" title="Проверить доступность форума и API">
-                                Проверить доступ
-                            </button>
-                            <button type="button" id="show_passwords" class="settings-button" title="Показать/скрыть пароли и ключи">
-                                <i class="fa fa-eye"></i>
-                            </button>
                             <div id="api_auth_params">
                                 <div>
-                                    Полученные ключи:
-                                    <label>
-                                        bt
-                                        <input id="bt_key" name="bt_key"
-                                               class="inline-input user_details user_protected"
-                                               type="password" size="10"
-                                               value="<?= $cs('apiAuth', 'btKey'); ?>"
-                                        />
-                                        api
-                                        <input id="api_key" name="api_key"
-                                               class="inline-input user_details user_protected"
-                                               type="password" size="10"
-                                               value="<?= $cs('apiAuth', 'apiKey'); ?>"
-                                        />
-                                        id
-                                        <input id="user_id" name="user_id"
-                                               class="inline-input user_details"
-                                               type="text" size="10"
-                                               value="<?= $cs('apiAuth', 'userId'); ?>"
-                                        />
-                                    </label>
+                                    <label for="user_id" class="param-name" title="<id> в профиле хранителя">UserId:</label>
+                                    <input id="user_id" name="user_id"
+                                           class="inline-input user_details"
+                                           type="text" size="10"
+                                           value="<?= $cs('apiAuth', 'userId'); ?>"
+                                    />
                                 </div>
+                                <div>
+                                    <label for="api_key" class="param-name" title="<api> в профиле хранителя">API Key:</label>
+                                    <input id="api_key" name="api_key"
+                                           class="inline-input user_details user_protected"
+                                           type="password" size="10"
+                                           value="<?= $cs('apiAuth', 'apiKey'); ?>"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="bt_key" class="param-name" title="<bt> в профиле хранителя">BT Key:</label>
+                                    <input id="bt_key" name="bt_key"
+                                           class="inline-input user_details user_protected"
+                                           type="password" size="10"
+                                           value="<?= $cs('apiAuth', 'btKey'); ?>"
+                                    />
+                                </div>
+                                <button type="button" id="check_mirrors_access" class="settings-button" title="Проверить доступность форума и API">
+                                    Проверить доступ
+                                </button>
+                                <button type="button" id="forum_profile_link" class="settings-button" title="Открыть ссылку на профиль, если есть UserId">
+                                    Открыть профиль
+                                </button>
+                                <button type="button" id="show_passwords" class="settings-button" title="Показать/скрыть пароли и ключи">
+                                    <i class="fa fa-eye"></i>
+                                </button>
+                                <ol class="support-note">
+                                    Для заполнения параметров доступа, откройте свой профиль на форуме и заполните поля выше. <br>
+                                    id => UserId, api => API Key, bt => BT Key
+                                </ol>
                             </div>
                             <hr>
                             <div id="proxy_prop">

@@ -489,7 +489,7 @@ button.settings-button {
     text-align: right;
 }
 
-.forum-open-link {
+.forum-profile-link {
     cursor: pointer;
 }
 
@@ -594,6 +594,11 @@ button.settings-button {
 .script-name {
     font-family: Consolas, monospace;
     font-size: 11px;
+}
+
+.support-note {
+    display: none;
+    font-size: 12px;
 }
 
 .footnote {
