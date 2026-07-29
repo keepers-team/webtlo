@@ -245,7 +245,6 @@ final class Settings
         $ini = $this->ini;
 
         $ini->write('proxy', 'activate_forum', isset($cfg['proxy_activate_forum']) ? 1 : 0);
-        $ini->write('proxy', 'activate_api', isset($cfg['proxy_activate_api']) ? 1 : 0);
         $ini->write('proxy', 'activate_report', isset($cfg['proxy_activate_report']) ? 1 : 0);
 
         if (isset($cfg['proxy_type'])) {
@@ -288,16 +287,8 @@ final class Settings
     {
         $ini = $this->ini;
 
-        // Перебираем три набора полей с адресами.
-        foreach (['forum', 'api', 'report'] as $key) {
-            $url    = "{$key}_url";
-            $custom = "{$key}_url_custom";
-
-            $ini->write('torrent-tracker', $url, trim($cfg[$url] ?? ''));
-            $ini->write('torrent-tracker', $custom, trim($cfg[$custom] ?? ''));
-
-            unset($key, $url, $custom);
-        }
+        $ini->write('torrent-tracker', 'report_url', trim($cfg['report_url'] ?? ''));
+        $ini->write('torrent-tracker', 'report_url_custom', trim($cfg['report_url_custom'] ?? ''));
 
         if (isset($cfg['user_id'])) {
             $ini->write('torrent-tracker', 'user_id', trim($cfg['user_id']));

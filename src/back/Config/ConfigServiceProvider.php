@@ -21,7 +21,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ForumConnect::class,
-            ApiForumConnect::class,
             ApiReportConnect::class,
             ApiCredentials::class,
             Proxy::class,
@@ -76,39 +75,6 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 isCustom: $isCustomUrl,
                 useProxy: $useProxy,
                 timeout : $timeout,
-            );
-        });
-
-        // Параметры подключения к API форума.
-        $container->addShared(ApiForumConnect::class, function() {
-            $ini = $this->getIni();
-
-            $section = 'torrent-tracker';
-
-            $url       = basename((string) $ini->read($section, 'api_url', Defaults::apiForumUrl));
-            $urlCustom = basename((string) $ini->read($section, 'api_url_custom'));
-
-            $isCustomUrl = $url === 'custom';
-
-            $useProxy = (bool) $ini->read('proxy', 'activate_api', 0);
-
-            $timeout = new Timeout(
-                request   : (int) $ini->read('curl_setopt', 'api_timeout', Defaults::timeout),
-                connection: (int) $ini->read('curl_setopt', 'api_connecttimeout', Defaults::timeout),
-            );
-
-            $concurrency = (int) $ini->read($section, 'api_concurrency', ApiForumConnect::concurrency);
-            $rateSize    = (int) $ini->read($section, 'api_rate_frame_size', ApiForumConnect::rateFrameSize);
-            $rateLimit   = (int) $ini->read($section, 'api_rate_request_limit', ApiForumConnect::rateRequestLimit);
-
-            return new ApiForumConnect(
-                baseUrl         : $isCustomUrl ? $urlCustom : $url,
-                isCustom        : $isCustomUrl,
-                useProxy        : $useProxy,
-                timeout         : $timeout,
-                concurrency     : $concurrency,
-                rateFrameSize   : $rateSize,
-                rateRequestLimit: $rateLimit,
             );
         });
 

@@ -22,9 +22,6 @@ $urls = [
         'rutracker.org',
         'rutracker.net',
     ],
-    'api'    => [
-        'api.rutracker.cc',
-    ],
     'report' => [
         'rep.rutracker.cc',
     ],

@@ -16,7 +16,6 @@ final class ProbeChecker
 
     private const CHECK_URL = [
         'forum'  => 'https://%s/forum/info.php?show=copyright_holders',
-        'api'    => 'https://%s/v1/get_client_ip',
         'report' => 'https://%s/krs/api/v1/info/statuses',
     ];
 
@@ -84,20 +83,20 @@ final class ProbeChecker
         $webtlo = WebTLO::getVersion();
 
         $parsed = [
-            'forum_url' => $config['torrent-tracker']['forum_url'] == 'custom'
+            'forum_url'  => $config['torrent-tracker']['forum_url'] == 'custom'
                 ? $config['torrent-tracker']['forum_url_custom']
                 : $config['torrent-tracker']['forum_url'],
-            'api_url'   => $config['torrent-tracker']['api_url'] == 'custom'
-                ? $config['torrent-tracker']['api_url_custom']
-                : $config['torrent-tracker']['api_url'],
+            'report_url' => $config['torrent-tracker']['report_url'] == 'custom'
+                ? $config['torrent-tracker']['report_url_custom']
+                : $config['torrent-tracker']['report_url'],
         ];
 
-        if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_api'] == 1) {
+        if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_report'] == 1) {
             $parsed['proxy']['url']  = $config['proxy']['hostname'] . ':' . $config['proxy']['port'];
             $parsed['proxy']['type'] = $config['proxy']['type'];
         }
-        $parsed['proxy']['activate_forum'] = $config['proxy']['activate_forum'];
-        $parsed['proxy']['activate_api']   = $config['proxy']['activate_api'];
+        $parsed['proxy']['activate_forum']  = $config['proxy']['activate_forum'];
+        $parsed['proxy']['activate_report'] = $config['proxy']['activate_report'];
 
         return [
             'version' => $webtlo->version,

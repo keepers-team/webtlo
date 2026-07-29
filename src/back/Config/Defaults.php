@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\Config;
 final class Defaults
 {
     final public const forumUrl     = 'rutracker.org';
-    final public const apiForumUrl  = 'api.rutracker.cc';
     final public const apiReportUrl = 'rep.rutracker.cc';
     final public const downloadPath = 'C:\Temp\\';
     final public const proxyType    = ProxyType::SOCKS5H;

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Module;
 
-use KeepersTeam\Webtlo\Config\ApiForumConnect;
 use KeepersTeam\Webtlo\Config\ApiReportConnect;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ForumConnect;
@@ -24,7 +23,6 @@ final class TelemetryConstruct
     public function __construct(
         private readonly WebTLO           $webtlo,
         private readonly Automation       $automation,
-        private readonly ApiForumConnect  $apiForumConnect,
         private readonly ApiReportConnect $apiReportConnect,
         private readonly ForumConnect     $forumConnect,
         private readonly TopicControl     $topicControl,
@@ -44,7 +42,6 @@ final class TelemetryConstruct
             'software' => $this->webtlo->getSoftwareInfo(),
             'proxy'    => [
                 'activate_forum'  => $this->forumConnect->useProxy,
-                'activate_api'    => $this->apiForumConnect->useProxy,
                 'activate_report' => $this->apiReportConnect->useProxy,
             ],
         ];
