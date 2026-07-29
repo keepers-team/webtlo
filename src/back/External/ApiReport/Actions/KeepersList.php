@@ -6,8 +6,8 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Data\Keeper;
-use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\External\Data\KeepersResponse;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
