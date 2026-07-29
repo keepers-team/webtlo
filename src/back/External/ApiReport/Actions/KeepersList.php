@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\External\Data\ApiError;
-use KeepersTeam\Webtlo\External\Data\KeepersResponse;
+use KeepersTeam\Webtlo\External\Data\KeepersListResponse;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -17,9 +17,9 @@ trait KeepersList
     /**
      * Получить список хранителей.
      */
-    public function getKeepersList(): KeepersResponse|ApiError
+    public function getKeepersList(): KeepersListResponse|ApiError
     {
-        $dataProcessor = self::getKeepersProcessor($this->logger);
+        $dataProcessor = self::getKeepersListProcessor($this->logger);
 
         try {
             $response = $this->client->get(uri: 'proxy_api/v1/static/keepers_user_data');
@@ -32,9 +32,9 @@ trait KeepersList
         return $dataProcessor($response);
     }
 
-    private static function getKeepersProcessor(LoggerInterface $logger): callable
+    private static function getKeepersListProcessor(LoggerInterface $logger): callable
     {
-        return function(ResponseInterface $response) use (&$logger): KeepersResponse|ApiError {
+        return function(ResponseInterface $response) use ($logger): KeepersListResponse|ApiError {
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
                 return $result;
@@ -49,7 +49,7 @@ trait KeepersList
     /**
      * @param array<string, mixed> $result
      */
-    private static function parseStaticKeepersList(array $result): KeepersResponse
+    private static function parseStaticKeepersList(array $result): KeepersListResponse
     {
         $format = array_flip($result['format']['user_id']);
 
@@ -64,7 +64,7 @@ trait KeepersList
             );
         }
 
-        return new KeepersResponse(
+        return new KeepersListResponse(
             updateTime: self::dateTimeFromTimestamp($result['update_time']),
             keepers   : $keepers
         );

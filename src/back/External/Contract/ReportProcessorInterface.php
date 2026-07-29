@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Contract;
 
-use KeepersTeam\Webtlo\External\ApiReport\V1\KeeperTopics;
+use KeepersTeam\Webtlo\External\Data\KeeperTopics;
 
 /**
  * Интерфейс для ленивого перебора отчётов хранителей (списка хранимых раздач).

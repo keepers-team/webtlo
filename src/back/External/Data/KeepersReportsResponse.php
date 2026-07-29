@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\External\ApiReport\V1;
+namespace KeepersTeam\Webtlo\External\Data;
 
 /**
  * Ответ API с информацией о хранителях раздач.
  *
  * @property iterable<KeeperTopics> $keepers Генератор или массив с данными хранителей
  */
-final class KeepersResponse
+final class KeepersReportsResponse
 {
     /**
      * @param int                    $forumId ID подраздела

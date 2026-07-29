@@ -10,7 +10,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
-use KeepersTeam\Webtlo\External\Data\KeepersResponse;
+use KeepersTeam\Webtlo\External\Data\KeepersListResponse;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -196,7 +196,7 @@ final class KeepersReports
     /**
      * Загрузить список всех хранителей.
      */
-    private function getKeepersList(): ?KeepersResponse
+    private function getKeepersList(): ?KeepersListResponse
     {
         $response = $this->apiReport->getKeepersList();
         if ($response instanceof ApiError) {

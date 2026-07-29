@@ -6,8 +6,8 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\External\ApiReport\V1\KeeperUnseededResponse;
 use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\External\Data\KeeperUnseededResponse;
 use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;

@@ -10,7 +10,7 @@ use KeepersTeam\Webtlo\Data\Keeper;
 /**
  * Данные всех известных хранителей из API.
  */
-final class KeepersResponse
+final class KeepersListResponse
 {
     /**
      * @param DateTimeImmutable  $updateTime дата получения данных

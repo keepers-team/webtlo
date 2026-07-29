@@ -8,8 +8,8 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use GuzzleHttp\Exception\GuzzleException;
-use KeepersTeam\Webtlo\External\ApiReport\V1\KeepersResponse;
 use KeepersTeam\Webtlo\External\Contract\ReportProcessorInterface;
+use KeepersTeam\Webtlo\External\Data\KeepersReportsResponse;
 use KeepersTeam\Webtlo\Helper;
 use RuntimeException;
 use Throwable;
@@ -36,11 +36,11 @@ trait KeepersReports
      * Получить отчёт по подразделу.
      * Из csv (если он есть) или из API.
      */
-    public function getKeepersReports(int $forumId): KeepersResponse
+    public function getKeepersReports(int $forumId): KeepersReportsResponse
     {
         $processor = $this->tryGetCsvProcessor(forumId: $forumId) ?? $this->getApiProcessor(forumId: $forumId);
 
-        return new KeepersResponse(forumId: $forumId, keepers: $processor->process());
+        return new KeepersReportsResponse(forumId: $forumId, keepers: $processor->process());
     }
 
     private function tryGetCsvProcessor(int $forumId): ?ReportProcessorInterface

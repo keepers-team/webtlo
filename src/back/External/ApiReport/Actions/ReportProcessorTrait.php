@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 use DateTimeImmutable;
 use DateTimeZone;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
-use KeepersTeam\Webtlo\External\ApiReport\V1\KeptTopic;
+use KeepersTeam\Webtlo\External\Data\KeptTopic;
 use Throwable;
 
 trait ReportProcessorTrait
