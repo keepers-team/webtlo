@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
+use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use KeepersTeam\Webtlo\External\Data\ApiError;
@@ -14,6 +15,11 @@ use Psr\Log\LoggerInterface;
 trait Processor
 {
     use Validation;
+
+    protected static function dateTimeFromTimestamp(int $timestamp): DateTimeImmutable
+    {
+        return (new DateTimeImmutable())->setTimestamp($timestamp);
+    }
 
     /**
      * @return array<int|string, mixed>|ApiError

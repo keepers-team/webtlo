@@ -21,6 +21,8 @@ final class ApiReportClient
     use Actions\ForumTopicsPeers;
     use Actions\DownloadStaticFile;
     use Actions\ForumTopics;
+    use Actions\ForumTree;
+    use Actions\KeepersList;
     use Actions\KeepersReports;
     use Actions\KeeperUnseededTopics;
     use Actions\Processor;
