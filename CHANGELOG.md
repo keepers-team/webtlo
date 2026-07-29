@@ -8,6 +8,11 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.2.0] - 2026-07-29
+- Отключение работы с форумом
+- Исправление алгоритмов регулировки и поиска "прочих"
+
+---
 ### [4.1.1] - 2026-07-15
 - Исправлен путь выполнения legacy cron control
 
@@ -173,6 +178,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.2.0]: https://github.com/keepers-team/webtlo/compare/4.1.1...4.2.0
 [4.1.1]: https://github.com/keepers-team/webtlo/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/keepers-team/webtlo/compare/4.0.1...4.1.0
 [4.0.1]: https://github.com/keepers-team/webtlo/compare/4.0.0...4.0.1
