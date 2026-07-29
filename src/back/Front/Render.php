@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Front;
 
 use KeepersTeam\Webtlo\Config\ApiCredentials;
-use KeepersTeam\Webtlo\Config\ApiForumConnect;
 use KeepersTeam\Webtlo\Config\ApiReportConnect;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\AverageSeeds;
@@ -35,7 +34,6 @@ final class Render
         private readonly Automation       $automation,
         private readonly AverageSeeds     $averageSeeds,
         private readonly ApiCredentials   $apiAuth,
-        private readonly ApiForumConnect  $apiForumConnect,
         private readonly ApiReportConnect $apiReportConnect,
         private readonly ForumConnect     $forumConnect,
         private readonly TorrentClients   $torrentClients,
@@ -83,12 +81,6 @@ final class Render
                 'options' => $this->forumConnect->getSelectOptions(),
                 'custom'  => $this->forumConnect->getCustomUrl(),
                 'proxy'   => $this->checkbox($this->forumConnect->useProxy),
-            ],
-
-            'apiForumConnect' => [
-                'options' => $this->apiForumConnect->getSelectOptions(),
-                'custom'  => $this->apiForumConnect->getCustomUrl(),
-                'proxy'   => $this->checkbox($this->apiForumConnect->useProxy),
             ],
 
             'apiReportConnect' => [

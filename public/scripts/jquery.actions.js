@@ -111,7 +111,7 @@ $(document).ready(function () {
     });
 
     // произвольные адреса для форума и api
-    $('#forum_url, #api_url, #report_url').on("selectmenucreate selectmenuchange", function() {
+    $('#forum_url, #report_url').on("selectmenucreate selectmenuchange", function() {
         const value = $(this).val();
         const name = $(this).attr("name");
         if (value === 'custom') {
@@ -192,10 +192,6 @@ $(document).ready(function () {
 
     $("#forum_url_params").on("change", function () {
         $("#forum_url_result").removeAttr("class");
-    });
-
-    $("#api_url_params").on("change", function () {
-        $("#api_url_result").removeAttr("class");
     });
 
     $("#report_url_params").on("change", function () {

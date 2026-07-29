@@ -525,23 +525,6 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 </label>
                                 <i id="forum_url_result" class=""></i>
                             </div>
-                            <div id="api_url_params">
-                                <label for="api_url" class="param-name">API форума:</label>
-                                <select name="api_url" id="api_url" class="inline-input">
-                                    <?= $cs('apiForumConnect', 'options'); ?>
-                                </select>
-                                <input id="api_url_custom" name="api_url_custom"
-                                       class="inline-input" type="text" size="14"
-                                       value="<?= $cs('apiForumConnect', 'custom'); ?>"
-                                />
-                                <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
-                                    <input id="proxy_activate_api" name="proxy_activate_api" class="check_access_api" type="checkbox"
-                                           size="24" <?= $cs('apiForumConnect', 'proxy'); ?>
-                                    />
-                                    Через прокси
-                                </label>
-                                <i id="api_url_result" class=""></i>
-                            </div>
                             <div id="report_url_params">
                                 <label for="report_url" class="param-name">API отчётов:</label>
                                 <select name="report_url" id="report_url" class="inline-input">
@@ -557,7 +540,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     />
                                     Через прокси
                                 </label>
-                                <i id="api_url_result" class=""></i>
+                                <i id="report_url_result" class=""></i>
                             </div>
                             <div id="api_auth_params">
                                 <div>

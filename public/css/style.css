@@ -493,7 +493,7 @@ button.settings-button {
     cursor: pointer;
 }
 
-#forum_url_params label, #api_url_params label {
+#forum_url_params label {
     margin: 0;
 }
 
