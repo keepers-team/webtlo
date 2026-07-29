@@ -9,7 +9,6 @@ use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
 use KeepersTeam\Webtlo\Console\CronCommand;
 use KeepersTeam\Webtlo\Enum\LogFile;
-use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
@@ -100,11 +99,6 @@ final class App
     public function getForumClient(): ForumClient
     {
         return $this->get(ForumClient::class);
-    }
-
-    public function getApiForumClient(): ApiForumClient
-    {
-        return $this->get(ApiForumClient::class);
     }
 
     public function getApiReportClient(): ApiReportClient

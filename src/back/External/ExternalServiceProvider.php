@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External;
 
-use KeepersTeam\Webtlo\External\Construct\ApiForumConstructor;
 use KeepersTeam\Webtlo\External\Construct\ApiReportConstructor;
 use KeepersTeam\Webtlo\External\Construct\ForumConstructor;
 use League\Container\ServiceProvider\AbstractServiceProvider;
@@ -15,7 +14,6 @@ final class ExternalServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ForumClient::class,
-            ApiForumClient::class,
             ApiReportClient::class,
         ];
 
@@ -30,14 +28,6 @@ final class ExternalServiceProvider extends AbstractServiceProvider
         $container->addShared(ForumClient::class, function() use ($container) {
             /** @var ForumConstructor $helper */
             $helper = $container->get(ForumConstructor::class);
-
-            return $helper->createRequestClient();
-        });
-
-        // Добавляем клиент для работы с API форума.
-        $container->add(ApiForumClient::class, function() use ($container) {
-            /** @var ApiForumConstructor $helper */
-            $helper = $container->get(ApiForumConstructor::class);
 
             return $helper->createRequestClient();
         });
