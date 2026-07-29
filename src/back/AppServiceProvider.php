@@ -55,6 +55,6 @@ final class AppServiceProvider extends AbstractServiceProvider
         });
 
         // Подключаем описание версии WebTLO.
-        $container->add(WebTLO::class, fn() => WebTLO::loadFromFile());
+        $container->add(WebTLO::class, fn() => WebTLO::getVersion());
     }
 }

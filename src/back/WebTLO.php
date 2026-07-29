@@ -70,6 +70,15 @@ final class WebTLO
         );
     }
 
+    public function getSemanticVersion(): string
+    {
+        if (preg_match('/^(\d+\.\d+\.\d+)/', $this->version, $matches)) {
+            return $matches[1];
+        }
+
+        return 'unknown';
+    }
+
     public function versionUrl(): string
     {
         if (!empty($this->github)) {
@@ -111,9 +120,14 @@ final class WebTLO
     public function getReleaseLink(): string
     {
         $pattern = /** @lang text */
-            'Web-TLO <a href="%s" target="_blank">%s</a>';
+            '%s <a href="%s" target="_blank">%s</a>';
 
-        return sprintf($pattern, $this->versionUrl(), $this->version);
+        return sprintf(
+            $pattern,
+            self::AppName,
+            $this->versionUrl(),
+            $this->version
+        );
     }
 
     public function getCommitLink(): string

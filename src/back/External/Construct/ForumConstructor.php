@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
+use KeepersTeam\Webtlo\WebTLO;
 use Psr\Log\LoggerInterface;
 
 final class ForumConstructor
@@ -22,6 +23,7 @@ final class ForumConstructor
         private readonly ForumConnect    $connect,
         private readonly LoggerInterface $logger,
         private readonly Proxy           $proxy,
+        private readonly WebTLO          $webtlo,
     ) {}
 
     public function createRequestClient(): ForumClient
@@ -29,9 +31,9 @@ final class ForumConstructor
         $client = $this->createGuzzleClient();
 
         return new ForumClient(
-            client : $client,
-            auth   : $this->auth,
-            logger : $this->logger,
+            client: $client,
+            auth  : $this->auth,
+            logger: $this->logger,
         );
     }
 
@@ -42,7 +44,7 @@ final class ForumConstructor
     {
         $clientHeaders = [
             'User-Agent' => Defaults::userAgent,
-            'X-WebTLO'   => 'experimental',
+            'X-WebTLO'   => $this->webtlo->getSemanticVersion(),
         ];
 
         $baseUrl = $this->connect->url;

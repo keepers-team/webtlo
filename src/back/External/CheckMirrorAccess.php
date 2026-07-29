@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\Config\Timeout;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
+use KeepersTeam\Webtlo\WebTLO;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -18,7 +19,10 @@ final class CheckMirrorAccess
 {
     use RetryMiddleware;
 
-    public function __construct(private readonly LoggerInterface $logger) {}
+    public function __construct(
+        private readonly WebTLO $webtlo,
+        private readonly LoggerInterface $logger,
+    ) {}
 
     public function checkAddress(string $type, string $url, ?Proxy $proxy): bool
     {
@@ -27,7 +31,7 @@ final class CheckMirrorAccess
 
         $clientHeaders = [
             'User-Agent' => Defaults::userAgent,
-            'X-WebTLO'   => 'experimental',
+            'X-WebTLO'   => $this->webtlo->getSemanticVersion(),
         ];
 
         $baseUrl = sprintf(

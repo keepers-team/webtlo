@@ -10,6 +10,7 @@ use KeepersTeam\Webtlo\Config\ApiReportConnect;
 use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
+use KeepersTeam\Webtlo\WebTLO;
 use Psr\Log\LoggerInterface;
 
 final class ApiReportConstructor
@@ -21,6 +22,7 @@ final class ApiReportConstructor
         private readonly ApiReportConnect $connect,
         private readonly LoggerInterface  $logger,
         private readonly Proxy            $proxy,
+        private readonly WebTLO           $webtlo,
     ) {}
 
     public function createRequestClient(): ApiReportClient
@@ -41,7 +43,7 @@ final class ApiReportConstructor
     {
         $clientHeaders = [
             'User-Agent' => $this->connect->userAgent,
-            'X-WebTLO'   => 'experimental',
+            'X-WebTLO'   => $this->webtlo->getSemanticVersion(),
         ];
 
         $baseUrl     = $this->connect->url;
