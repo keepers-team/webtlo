@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Config\Automation;
 use KeepersTeam\Webtlo\Config\ConfigServiceProvider;
-use KeepersTeam\Webtlo\Console\CronCommand;
+use KeepersTeam\Webtlo\Console\ConsoleCommand;
 use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
@@ -72,7 +72,7 @@ final class App
         return self::$appContainer = new self($container);
     }
 
-    public static function createConsole(CronCommand $command): self
+    public static function createConsole(ConsoleCommand $command): self
     {
         return self::create($command->logFile());
     }

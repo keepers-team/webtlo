@@ -24,7 +24,13 @@ final class ConsoleKernel
             return 1;
         }
 
-        $command = CronCommand::tryFrom($argv[1]);
+        if ($argv[1] === '--help' || $argv[1] === '-h') {
+            $this->echoHelp();
+
+            return 1;
+        }
+
+        $command = ConsoleCommand::tryFrom($argv[1]);
         if (!$command) {
             echo "Unknown command: $argv[1]" . PHP_EOL;
             echo 'Usage: php bin/webtlo cron:{command}' . PHP_EOL;
@@ -77,5 +83,18 @@ final class ConsoleKernel
             $lock->release();
             $logger->info('-- DONE --');
         }
+    }
+
+    private function echoHelp(): void
+    {
+        echo 'Run a command from allowed list.' . PHP_EOL;
+        echo 'Example: php bin/webtlo cron:update' . PHP_EOL . PHP_EOL;
+
+        echo 'Allowed list of commands:' . PHP_EOL;
+        foreach (ConsoleCommand::cases() as $el) {
+            echo '-' . $el->value . PHP_EOL;
+        }
+
+        echo PHP_EOL;
     }
 }
