@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\External\ApiForumClient;
+use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -20,7 +20,7 @@ final class ForumTree
 {
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly ApiForumClient  $apiClient,
+        private readonly ApiReportClient $apiClient,
         private readonly CloneFactory    $cloneFactory,
         private readonly UpdateTime      $updateTime,
     ) {}

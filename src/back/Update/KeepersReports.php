@@ -9,7 +9,6 @@ use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\Api\V1\KeepersResponse;
-use KeepersTeam\Webtlo\External\ApiForumClient;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
@@ -22,7 +21,6 @@ use Throwable;
 final class KeepersReports
 {
     public function __construct(
-        private readonly ApiForumClient  $apiClient,
         private readonly ApiReportClient $apiReport,
         private readonly ReportSend      $configReport,
         private readonly SubForums       $configSubForums,
@@ -200,7 +198,7 @@ final class KeepersReports
      */
     private function getKeepersList(): ?KeepersResponse
     {
-        $response = $this->apiClient->getKeepersList();
+        $response = $this->apiReport->getKeepersList();
         if ($response instanceof ApiError) {
             $this->logger->error(
                 'Не получены данные о хранителях',
