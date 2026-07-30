@@ -10,7 +10,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\DateHelper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -105,7 +105,7 @@ final class Deluge implements ClientInterface
                 name        : (string) $torrent['name'],
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
                 size        : (int) $torrent['total_size'],
-                added       : Helper::makeDateTime((int) $torrent['time_added']),
+                added       : DateHelper::makeFromTimestamp((int) $torrent['time_added']),
                 done        : $progress,
                 paused      : (bool) $torrent['paused'],
                 error       : $torrentError,

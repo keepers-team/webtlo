@@ -6,9 +6,9 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use DateTimeImmutable;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\KeeperUnseededResponse;
-use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -30,7 +30,7 @@ trait KeeperUnseededTopics
             $notSeedingDays = max(0, $notSeedingDays);
             $limitTopics    = max(1, $limitTopics);
 
-            $cutoffDate = Helper::getCurrentUtcDateTime()->modify("- $notSeedingDays days");
+            $cutoffDate = DateHelper::getUtcCurrent()->modify("- $notSeedingDays days");
 
             // Фильтр по дате последнего сидирования.
             $dateFilter = "last_seeded_time<{$cutoffDate->format('Y-m-d')}";

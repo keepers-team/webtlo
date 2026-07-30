@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Data\Keeper;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\KeepersListResponse;
 use KeepersTeam\Webtlo\Helper;
@@ -65,7 +66,7 @@ trait KeepersList
         }
 
         return new KeepersListResponse(
-            updateTime: self::dateTimeFromTimestamp($result['update_time']),
+            updateTime: DateHelper::makeFromTimestamp($result['update_time']),
             keepers   : $keepers
         );
     }

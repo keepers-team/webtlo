@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use Generator;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectionException;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
 use KeepersTeam\Webtlo\External\Data\ApiError;
@@ -17,7 +16,6 @@ use KeepersTeam\Webtlo\External\Data\TopicDetails;
 use KeepersTeam\Webtlo\External\Data\TopicsDetailsResponse;
 use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
 use Psr\Http\Message\ResponseInterface;
-use Throwable;
 
 /**
  * @phpstan-type RequestTopics (int|string)[]
@@ -316,7 +314,7 @@ trait TopicsDetails
             forumId      : (int) $payload['subforum_id'],
             poster       : (int) $payload['topic_poster'],
             size         : (int) $payload['tor_size_bytes'],
-            registered   : self::parseDateTime((string) $payload['reg_time']),
+            registered   : DateHelper::makeFromString(datetime: (string) $payload['reg_time'], timezone: DateHelper::UTC),
             status       : TorrentStatus::from((int) $payload['tor_status']),
             priority     : KeepingPriority::from((int) $payload['keeping_priority']),
             seeders      : (int) $payload['seeders'],
@@ -351,19 +349,5 @@ trait TopicsDetails
         return array_values(
             array_diff($requestTopics, $identifiers),
         );
-    }
-
-    private static function parseDateTime(string $time): DateTimeImmutable
-    {
-        // Пробуем обработать полученною дату.
-        try {
-            if (!empty($time)) {
-                return new DateTimeImmutable($time, new DateTimeZone('UTC'));
-            }
-        } catch (Throwable) {
-        }
-
-        // Если не срослось - используем unix ноль.
-        return (new DateTimeImmutable())->setTimezone(new DateTimeZone('UTC'))->setTimestamp(0);
     }
 }

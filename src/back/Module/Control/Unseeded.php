@@ -6,9 +6,9 @@ namespace KeepersTeam\Webtlo\Module\Control;
 
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Config\TopicControl as ConfigControl;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Enum\DesiredStatusChange;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use Psr\Log\LoggerInterface;
 
@@ -121,6 +121,6 @@ final class Unseeded
     {
         $lastCheck = $this->updateTime->getMarkerTime(marker: UpdateMark::UNSEEDED);
 
-        return Helper::isUtcDayChanged(prevDate: $lastCheck);
+        return DateHelper::isUtcDayChanged(prevDate: $lastCheck);
     }
 }

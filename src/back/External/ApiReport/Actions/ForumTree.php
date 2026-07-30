@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Promise\Utils;
 use KeepersTeam\Webtlo\Data\Forum;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\ForumsResponse;
 use KeepersTeam\Webtlo\Helper;
@@ -75,7 +76,7 @@ trait ForumTree
      */
     private static function parseStaticForumTree(array $trees, array $sizes): ForumsResponse
     {
-        $updateTime = self::dateTimeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
+        $updateTime = DateHelper::makeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
 
         /**
          * Категории форума - основные группы.

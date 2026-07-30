@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
-use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 
 /**
@@ -51,7 +51,7 @@ final class UpdateTime
      */
     public function getMarkerTime(int|UpdateMark $marker): DateTimeImmutable
     {
-        return Helper::makeDateTime($this->getMarkerTimestamp($marker));
+        return DateHelper::makeFromTimestamp($this->getMarkerTimestamp($marker));
     }
 
     /**

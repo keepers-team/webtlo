@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
-use DateTimeImmutable;
-use DateTimeZone;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\Data\KeptTopic;
 use Throwable;
@@ -21,7 +20,10 @@ trait ReportProcessorTrait
             $lastUpdate = $data['last_update_time'] ?? '';
             $lastSeeded = $data['last_seeded_time'] ?? '';
 
-            $posted = self::parseDateTime(max($lastUpdate, $lastSeeded));
+            $posted = DateHelper::parseFromString(
+                datetime: max($lastUpdate, $lastSeeded),
+                timezone: DateHelper::UTC
+            );
             if ($posted === null) {
                 return null;
             }
@@ -32,18 +34,6 @@ trait ReportProcessorTrait
                 complete: !((int) $data['status'] & KeepingStatuses::Downloading->value),
                 seeding : ($this->seedingChecker)($data['last_seeded_time'] ?? '')
             );
-        } catch (Throwable) {
-            return null;
-        }
-    }
-
-    /**
-     * Попытка обработать дату из API, всегда в UTC зоне.
-     */
-    private static function parseDateTime(string $time): ?DateTimeImmutable
-    {
-        try {
-            return new DateTimeImmutable($time, new DateTimeZone('UTC'));
         } catch (Throwable) {
             return null;
         }

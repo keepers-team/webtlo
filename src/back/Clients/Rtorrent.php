@@ -9,7 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\DateHelper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -110,7 +110,7 @@ final class Rtorrent implements ClientInterface
                 name        : (string) $torrent[4],
                 topicId     : $this->getTorrentTopicId($torrentComment),
                 size        : (int) $torrent[5],
-                added       : Helper::makeDateTime((int) $torrent[7]),
+                added       : DateHelper::makeFromTimestamp((int) $torrent[7]),
                 done        : $progress,
                 paused      : !$torrent[6],
                 error       : !empty($torrent[3]),

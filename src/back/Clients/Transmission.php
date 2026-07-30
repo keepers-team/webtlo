@@ -11,7 +11,7 @@ use GuzzleRetry\GuzzleRetryMiddleware;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -135,7 +135,7 @@ final class Transmission implements ClientInterface
                 name        : $torrentName,
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
                 size        : (int) $torrent['totalSize'],
-                added       : Helper::makeDateTime((int) $torrent['addedDate']),
+                added       : DateHelper::makeFromTimestamp((int) $torrent['addedDate']),
                 done        : $progress,
                 paused      : (int) $torrent['status'] === 0,
                 error       : (int) $torrent['error'] !== 0,

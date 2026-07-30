@@ -6,9 +6,9 @@ namespace KeepersTeam\Webtlo\Module;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
-use KeepersTeam\Webtlo\Helper;
 use Psr\Log\LoggerInterface;
 
 final class MarkersUpdate
@@ -32,7 +32,7 @@ final class MarkersUpdate
     public function getFormattedMarkers(): array
     {
         return array_map(function($el) {
-            return Helper::makeDateTime($el)->format(DateTimeInterface::ATOM);
+            return DateHelper::makeFromTimestamp($el)->format(DateTimeInterface::ATOM);
         }, $this->timestamps);
     }
 
@@ -77,7 +77,7 @@ final class MarkersUpdate
             $minTimestamp = min($this->timestamps);
         }
 
-        return $this->min = Helper::makeDateTime($minTimestamp);
+        return $this->min = DateHelper::makeFromTimestamp($minTimestamp);
     }
 
     public function getLastCheckStatus(): ?UpdateStatus

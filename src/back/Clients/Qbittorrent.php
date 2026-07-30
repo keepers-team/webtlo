@@ -11,6 +11,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Table\Topics as TableTopics;
 use KeepersTeam\Webtlo\Storage\Table\Torrents as TableTorrents;
@@ -116,7 +117,7 @@ final class Qbittorrent implements ClientInterface
                 name        : (string) $payload['name'],
                 topicId     : $payload['topic_id'] ?: null,
                 size        : (int) $payload['total_size'],
-                added       : Helper::makeDateTime((int) $payload['time_added']),
+                added       : DateHelper::makeFromTimestamp((int) $payload['time_added']),
                 done        : $payload['done'],
                 paused      : (bool) $payload['paused'],
                 error       : (bool) $payload['error'],

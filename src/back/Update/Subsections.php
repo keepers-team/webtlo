@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Update;
 
 use KeepersTeam\Webtlo\Config\AverageSeeds;
 use KeepersTeam\Webtlo\Config\SubForums;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
@@ -150,7 +151,7 @@ final class Subsections
             // Запоминаем время обновления подраздела.
             $this->updateTime->addMarkerUpdate(marker: $subForumId, updateTime: $topicResponse->updateTime);
 
-            $isDateChanged = Helper::isUtcDayChanged(
+            $isDateChanged = DateHelper::isUtcDayChanged(
                 prevDate: $forumLastUpdated,
                 newDate : $topicResponse->updateTime
             );

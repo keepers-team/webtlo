@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Config\Telemetry;
 use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Data\Forum;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
@@ -570,7 +571,7 @@ final class CreateReport
 
             $this->updateTime = $update->getMinUpdate();
         } else {
-            $this->updateTime = Helper::makeDateTime($lastTimestamp);
+            $this->updateTime = DateHelper::makeFromTimestamp($lastTimestamp);
         }
     }
 

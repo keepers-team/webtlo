@@ -11,7 +11,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TorrentClientOptions;
-use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\DateHelper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -85,7 +85,7 @@ final class Flood implements ClientInterface
                 name        : (string) $torrent['name'],
                 topicId     : $this->getTorrentTopicId($torrent['comment']),
                 size        : (int) $torrent['sizeBytes'],
-                added       : Helper::makeDateTime((int) $torrent['dateAdded']),
+                added       : DateHelper::makeFromTimestamp((int) $torrent['dateAdded']),
                 done        : $torrent['percentComplete'] / 100,
                 paused      : $torrentPaused,
                 error       : (bool) $torrentError,
