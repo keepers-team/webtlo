@@ -8,6 +8,12 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.3.0] - 2026-08-05
+- Отключение работы с  API форума
+- Исправлен алгоритм поиска "разрегов"
+- Добавлена совместимость с `Adder`
+
+---
 ### [4.2.0] - 2026-07-29
 - Отключение работы с форумом
 - Исправление алгоритмов регулировки и поиска "прочих"
@@ -178,6 +184,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.3.0]: https://github.com/keepers-team/webtlo/compare/4.2.0...4.3.0
 [4.2.0]: https://github.com/keepers-team/webtlo/compare/4.1.1...4.2.0
 [4.1.1]: https://github.com/keepers-team/webtlo/compare/4.1.0...4.1.1
 [4.1.0]: https://github.com/keepers-team/webtlo/compare/4.0.1...4.1.0
