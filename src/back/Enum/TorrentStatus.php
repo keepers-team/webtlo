@@ -55,6 +55,15 @@ enum TorrentStatus: int
         return in_array($this, self::VALID, true);
     }
 
+    public function getGroupName(): string
+    {
+        if ($this->isValid()) {
+            return sprintf('обновлено (%s)', $this->label());
+        }
+
+        return sprintf('закрыто (%s)', $this->label());
+    }
+
     /**
      * Валидный ли статус раздачи.
      */

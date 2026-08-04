@@ -260,15 +260,44 @@ trait TopicsDetails
             $format = $result['columns'];
 
             foreach ($result['releases'] as $data) {
-                // Проверим, что последняя версия релиза есть.
-                $lastVersion = $data['versions'][0] ?? null;
-                if (!is_array($lastVersion)) {
+                if (empty($data['versions'])) {
                     continue;
                 }
 
-                $knownTopics[] = self::parseDynamicTopicDetails(
-                    payload: array_combine($format, $lastVersion)
+                // Считаем актуальной версией первую в списке.
+                $actualVersion = array_shift($data['versions']);
+                if (!is_array($actualVersion)) {
+                    continue;
+                }
+
+                $topic = self::parseDynamicTopicDetails(
+                    payload: array_combine($format, $actualVersion)
                 );
+
+                // Попробуем найти совпадение по искомому хешу.
+                if (!empty($data['requested_info_hash']) && count($data['versions'])) {
+                    $hashKeyIndex = array_flip($format)['info_hash'];
+
+                    $searchedVersion = null;
+                    foreach ($data['versions'] as $version) {
+                        if ($data['requested_info_hash'] === $version[$hashKeyIndex]) {
+                            $searchedVersion = $version;
+
+                            break;
+                        }
+                    }
+
+                    // Если нашли совпадение по хешу, значит раздачу обновили. Записываем обе версии.
+                    if (is_array($searchedVersion)) {
+                        $topic = self::parseDynamicTopicDetails(
+                            payload      : array_combine($format, $searchedVersion),
+                            actualVersion: $topic,
+                        );
+                    }
+                }
+
+                // Записываем найденное.
+                $knownTopics[] = $topic;
             }
 
             // Оставим для отладки.
@@ -279,19 +308,20 @@ trait TopicsDetails
     /**
      * @param array<array-key, int|string> $payload
      */
-    private static function parseDynamicTopicDetails(array $payload): TopicDetails
+    private static function parseDynamicTopicDetails(array $payload, ?TopicDetails $actualVersion = null): TopicDetails
     {
         return new TopicDetails(
-            id        : (int) $payload['topic_id'],
-            hash      : (string) $payload['info_hash'],
-            forumId   : (int) $payload['subforum_id'],
-            poster    : (int) $payload['topic_poster'],
-            size      : (int) $payload['tor_size_bytes'],
-            registered: self::parseDateTime((string) $payload['reg_time']),
-            status    : TorrentStatus::from((int) $payload['tor_status']),
-            priority  : KeepingPriority::from((int) $payload['keeping_priority']),
-            seeders   : (int) $payload['seeders'],
-            title     : (string) $payload['topic_title'],
+            id           : (int) $payload['topic_id'],
+            hash         : (string) $payload['info_hash'],
+            forumId      : (int) $payload['subforum_id'],
+            poster       : (int) $payload['topic_poster'],
+            size         : (int) $payload['tor_size_bytes'],
+            registered   : self::parseDateTime((string) $payload['reg_time']),
+            status       : TorrentStatus::from((int) $payload['tor_status']),
+            priority     : KeepingPriority::from((int) $payload['keeping_priority']),
+            seeders      : (int) $payload['seeders'],
+            title        : (string) $payload['topic_title'],
+            actualVersion: $actualVersion
         );
     }
 

@@ -110,7 +110,7 @@ final class Torrents
     {
         $tab = $this->clone->getTableObject();
 
-        $stm = $this->db->executeStatement(
+        return $this->db->query(
             "
                 SELECT tmp.info_hash
                 FROM $tab->clone AS tmp
@@ -119,10 +119,9 @@ final class Torrents
                     Topics.id IS NULL
                     OR Topics.forum_id NOT IN ($subsections->keys)
             ",
-            $subsections->values
+            $subsections->values,
+            PDO::FETCH_COLUMN
         );
-
-        return $stm->fetchAll(PDO::FETCH_COLUMN);
     }
 
     public function clearOriginTable(): void

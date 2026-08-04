@@ -240,7 +240,7 @@ final class TorrentsClients
 
             if ($response instanceof ApiError) {
                 $this->logger->debug(
-                    'Не удалось найти данные о раздачах в API. {code}: {text}',
+                    'Не удалось найти данные о сторонник раздачах в API. {code}: {text}',
                     ['code' => $response->code, 'text' => $response->text]
                 );
 
@@ -248,6 +248,16 @@ final class TorrentsClients
 
                 return;
             }
+
+            $this->logger->debug(
+                'Поиск сторонник раздач в API завершён. '
+                . 'Найдено актуальных {actual} шт., устаревших {old} шт., не найдено {missed} шт.',
+                [
+                    'actual' => count($response->actualTopics),
+                    'old'    => count($response->oldTopics),
+                    'missed' => count($response->missingTopics),
+                ]
+            );
 
             unset($untrackedTorrentHashes);
 
@@ -305,32 +315,32 @@ final class TorrentsClients
             Timers::start('search_unregistered');
             $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
 
-            // Если в БД есть разрегистрированные раздачи, ищем их статус на форуме.
+            // Если в БД есть разрегистрированные раздачи, ищем их в результатах поиска в API.
             if (count($unregisteredTopics)) {
                 foreach ($unregisteredTopics as $topicId => $infoHash) {
                     // Если о раздаче есть данные в API, то дописываем их, как более верные.
-                    $topicData = $this->getApiTopicInfo(infoHash: $infoHash);
-                    if ($topicData === null) {
+                    $topic = $this->getApiTopicInfo(infoHash: $infoHash);
+                    if ($topic === null) {
                         continue;
                     }
 
-                    $status = 'неизвестно';
-                    if (!$topicData->status->isValid()) {
-                        $status = $topicData->status->label();
+                    // Если у раздачи есть новая версия, то используем её данные.
+                    if ($topic->actualVersion !== null) {
+                        $topic = $topic->actualVersion;
                     }
 
-                    // Записываем данные раздачи в буфер.
+                    // Записываем данные раздачи в буферную таблицу.
                     $this->cloneUnregistered->addTopic(topic: [
-                        $infoHash,
-                        $topicData->title,
-                        $status,
-                        $topicData->priority->label(),
+                        $infoHash, // Текущий хеш раздачи, который в клиенте.
+                        $topic->title,
+                        $topic->status->getGroupName(),
+                        $topic->priority->label(),
                         '',
                         '',
                         '',
                     ]);
 
-                    unset($topicId, $topicData);
+                    unset($topicId, $topic);
                 }
 
                 $this->cloneUnregistered->fillTempTable();
