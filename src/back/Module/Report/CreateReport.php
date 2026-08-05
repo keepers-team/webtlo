@@ -86,12 +86,12 @@ final class CreateReport
      *
      * @throws Exception
      */
-    public function getSummaryReport(bool $withTelemetry = false): string
+    public function getSummaryReport(): string
     {
         $summary = $this->collectSummaryInfo();
 
-        // Проверяем возможность добавить в сводный отчёт данные о настройках.
-        if ($withTelemetry) {
+        // Если построение отчёта для UI, то дописываем json телеметрии, если она включена.
+        if ($this->mode === CreationMode::UI) {
             $shared = $this->getConfigTelemetry();
             if (!empty($shared)) {
                 $summary[] = '[hr]';
@@ -266,7 +266,7 @@ final class CreateReport
                 $this->encodeEmoji($subForum->name)
             );
 
-            // Ссылка на свой пост(отчёт) и количество + объём раздач.
+            // Количество + объём раздач.
             $rightPart = sprintf('%s шт. (%s)', $forumValues['keep_count'], $this->bytes($forumValues['keep_size']));
 
             // Записываем данные о подразделе в сводный отчёт.
@@ -275,7 +275,7 @@ final class CreateReport
             unset($forumValues, $leftPart, $rightPart);
         }
 
-        // формируем сводный отчёт
+        // Формируем сводный отчёт
         $summary   = [];
         $summary[] = $this->getFormattedUpdateTime();
         $summary[] = '';

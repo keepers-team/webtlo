@@ -30,7 +30,7 @@ try {
 
     if ($forumId === 0) {
         // Сводный отчёт
-        $output = $createReport->getSummaryReport(true);
+        $output = $createReport->getSummaryReport();
     } else {
         // Хранимые подразделы
         try {
