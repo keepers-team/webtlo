@@ -8,6 +8,10 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.3.1] - 2026-08-12
+- Исправлено сохранения адреса форума
+- Добавлено автоматическое обновление имён хранимых подразделов
+
 ### [4.3.0] - 2026-08-05
 - Отключение работы с  API форума
 - Исправлен алгоритм поиска "разрегов"
@@ -184,6 +188,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.3.1]: https://github.com/keepers-team/webtlo/compare/4.3.0...4.3.1
 [4.3.0]: https://github.com/keepers-team/webtlo/compare/4.2.0...4.3.0
 [4.2.0]: https://github.com/keepers-team/webtlo/compare/4.1.1...4.2.0
 [4.1.1]: https://github.com/keepers-team/webtlo/compare/4.1.0...4.1.1
