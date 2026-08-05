@@ -20,15 +20,6 @@ enum TorrentStatus: int
     case Temporary     = 10;
     case PreModeration = 11;
 
-    /** @var TorrentStatus[] Валидные статусы раздач. */
-    private const VALID = [
-        self::NotChecked,
-        self::Checked,
-        self::Malformed,
-        self::Doubtful,
-        self::Temporary,
-    ];
-
     public function label(): string
     {
         return match ($this) {
@@ -52,42 +43,13 @@ enum TorrentStatus: int
      */
     public function isValid(): bool
     {
-        return in_array($this, self::VALID, true);
-    }
-
-    public function getGroupName(): string
-    {
-        if ($this->isValid()) {
-            return sprintf('обновлено (%s)', $this->label());
-        }
-
-        return sprintf('закрыто (%s)', $this->label());
-    }
-
-    /**
-     * Валидный ли статус раздачи.
-     */
-    public static function isValidStatusLabel(string $label): bool
-    {
-        $case = self::tryFromLabel($label);
-        if ($case === null) {
-            return false;
-        }
-
-        return $case->isValid();
-    }
-
-    /**
-     * Пробуем по текстовому наименованию получить статус раздачи.
-     */
-    public static function tryFromLabel(string $label): ?self
-    {
-        foreach (self::cases() as $case) {
-            if ($case->label() === $label) {
-                return $case;
-            }
-        }
-
-        return null;
+        return match ($this) {
+            self::NotChecked,
+            self::Checked,
+            self::Malformed,
+            self::Doubtful,
+            self::Temporary => true,
+            default         => false,
+        };
     }
 }

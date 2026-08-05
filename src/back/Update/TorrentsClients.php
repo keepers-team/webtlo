@@ -329,11 +329,27 @@ final class TorrentsClients
                         $topic = $topic->actualVersion;
                     }
 
+                    // Берём статус из известной (актуальной) версии раздачи.
+                    if ($topic->status->isValid()) {
+                        $topicStatus = sprintf('обновлено (%s)', $topic->status->label());
+                    } else {
+                        $topicStatus = sprintf('закрыто (%s)', $topic->status->label());
+                    }
+
+                    /**
+                     * Если хеш раздачи в клиенте и хеш известной версии совпадают,
+                     * но раздачу нашли в "прошлых" версиях, что значит что раздача точно "разрег".
+                     * Значит отмечаем как "неизвестно", на всякий случай.
+                     */
+                    if ($infoHash === $topic->hash && $topic->status->isValid()) {
+                        $topicStatus = 'закрыто (неизвестно)';
+                    }
+
                     // Записываем данные раздачи в буферную таблицу.
                     $this->cloneUnregistered->addTopic(topic: [
                         $infoHash, // Текущий хеш раздачи, который в клиенте.
                         $topic->title,
-                        $topic->status->getGroupName(),
+                        $topicStatus,
                         $topic->priority->label(),
                         '',
                         '',
