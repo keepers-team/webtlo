@@ -187,12 +187,11 @@ final class Render
                 (int) $subForum->reportExclude,
             );
 
-            // TODO убрать html_entity_decode в следующей мажорной версии, когда все проскочат обновление БД.
             $optionForumsDataset .= sprintf(
                 self::optionTemplate,
                 $subForum->id,
                 $datasetForum,
-                html_entity_decode($subForum->name, ENT_QUOTES, 'UTF-8'),
+                $subForum->name,
             );
         }
 
