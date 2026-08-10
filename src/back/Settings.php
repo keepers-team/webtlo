@@ -281,14 +281,24 @@ final class Settings
     }
 
     /**
+     * Запись адресов API и форума и ключей авторизации.
+     *
      * @param array<string, mixed> $cfg
      */
     private function setForum(array $cfg): void
     {
         $ini = $this->ini;
 
-        $ini->write('torrent-tracker', 'report_url', trim($cfg['report_url'] ?? ''));
-        $ini->write('torrent-tracker', 'report_url_custom', trim($cfg['report_url_custom'] ?? ''));
+        // Перебираем два набора полей с адресами.
+        foreach (['forum', 'report'] as $key) {
+            $url    = "{$key}_url";
+            $custom = "{$key}_url_custom";
+
+            $ini->write('torrent-tracker', $url, trim($cfg[$url] ?? ''));
+            $ini->write('torrent-tracker', $custom, trim($cfg[$custom] ?? ''));
+
+            unset($key, $url, $custom);
+        }
 
         if (isset($cfg['user_id'])) {
             $ini->write('torrent-tracker', 'user_id', trim($cfg['user_id']));
