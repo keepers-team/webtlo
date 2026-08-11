@@ -104,7 +104,7 @@ trait ForumTree
         /**
          * Обработанный справочник разделов и подразделов.
          *
-         * @var Forum[] $forums
+         * @var array<int, Forum> $forums
          */
         $forums = [];
 

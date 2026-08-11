@@ -27,7 +27,13 @@ try {
     $app = App::create();
     $app->getDataBase();
 
-    /** @var Render $render */
+    // Если подключение удалось, то однократно обновляем конфиг.
+    if ($app->settingsMaintenance()) {
+        // Если в конфиг были внесены изменения, перезагружаем приложение.
+        $app = App::reload();
+    }
+
+    // Получаем конфиг для отрисовки в UI.
     $render = $app->get(Render::class);
     $config = $render->getConfig();
 

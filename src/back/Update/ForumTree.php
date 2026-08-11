@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
+use KeepersTeam\Webtlo\Infrastructure\Maintenance\SettingsPatch;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -24,6 +25,7 @@ final class ForumTree
         private readonly ApiReportClient $apiClient,
         private readonly CloneFactory    $cloneFactory,
         private readonly UpdateTime      $updateTime,
+        private readonly SettingsPatch   $patch,
     ) {}
 
     public function update(): void
@@ -66,5 +68,8 @@ final class ForumTree
             'sec'   => Timers::getExecTime('forum_tree'),
             'count' => count($forums),
         ]);
+
+        // Проверим хранимые подразделы, вдруг что-то изменилось.
+        $this->patch->updateSubForums(forumsResponse: $response);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo;
 
 use KeepersTeam\Webtlo\Config\Defaults;
+use KeepersTeam\Webtlo\Data\Forum;
 
 /**
  * Класс для записи конфигурации WebTLO в .ini файл.
@@ -87,7 +88,57 @@ final class Settings
         $this->setUI($cfg);
 
         // Запись файла с настройками.
+        return $this->saveChanges();
+    }
+
+    /**
+     * Сохранить файл с настройками после внесения изменений.
+     */
+    public function saveChanges(): bool
+    {
         return $this->ini->writeFile();
+    }
+
+    /**
+     * Хук для обновления названий хранимых подразделов при обновлении дерева подразделов.
+     *
+     * @param Forum[] $renamedSubForums
+     */
+    public function renameSubForums(array $renamedSubForums): bool
+    {
+        if (!count($renamedSubForums)) {
+            return false;
+        }
+
+        foreach ($renamedSubForums as $subForum) {
+            $this->ini->write($subForum->id, 'title', trim($subForum->name));
+        }
+
+        return true;
+    }
+
+    /**
+     * Удалить из хранимых несуществующие подразделы.
+     *
+     * @param int[] $removedForumIds
+     */
+    public function removeSubForum(array $removedForumIds): bool
+    {
+        $subsections = $this->ini->read('sections', 'subsections');
+
+        if (empty($subsections)) {
+            return false;
+        }
+
+        // Убираем из списка лишние ид подразделов
+        $subsections = array_filter(explode(',', $subsections));
+        $subsections = array_diff($subsections, $removedForumIds);
+        sort($subsections);
+
+        // И записываем обратно.
+        $this->ini->write('sections', 'subsections', implode(',', $subsections));
+
+        return true;
     }
 
     public function makePublicCopy(string $cloneName): bool

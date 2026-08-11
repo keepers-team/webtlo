@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
+use KeepersTeam\Webtlo\Infrastructure\Maintenance\SettingsPatch;
 use KeepersTeam\Webtlo\Logger\LoggerServiceProvider;
 use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
 use KeepersTeam\Webtlo\Storage\CloneServiceProvider;
@@ -73,6 +74,13 @@ final class App
         return self::$appContainer = new self($container);
     }
 
+    public static function reload(): self
+    {
+        self::$appContainer = null;
+
+        return self::create();
+    }
+
     public static function createConsole(ConsoleCommand $command): self
     {
         return self::create($command->logFile());
@@ -132,6 +140,13 @@ final class App
     public function getLoggerRecords(): string
     {
         return Log::getRecords();
+    }
+
+    public function settingsMaintenance(): bool
+    {
+        $maintenance = $this->get(SettingsPatch::class);
+
+        return $maintenance->checkSubForums(con: $this->getDataBase());
     }
 
     /**
