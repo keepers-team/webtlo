@@ -2,27 +2,24 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo;
+namespace KeepersTeam\Webtlo\Infrastructure\Database;
 
 use KeepersTeam\Webtlo\Config\AverageSeeds;
-use KeepersTeam\Webtlo\Infrastructure\Database\Cleaner;
-use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
-use KeepersTeam\Webtlo\Infrastructure\Database\MigrationRunner;
-use KeepersTeam\Webtlo\Storage\Traits;
+use KeepersTeam\Webtlo\Helper;
 use PDO;
 use PDOException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
-final class DB implements ConnectionInterface
+final class SQLiteAdapter implements ConnectionInterface
 {
-    use Traits\DbQuery;
+    use DatabaseQueryTrait;
 
     /** Название файла БД. */
     private const DATABASE_FILE = 'webtlo.db';
 
     public function __construct(
-        public readonly PDO             $db,
+        public readonly PDO             $pdo,
         public readonly LoggerInterface $logger,
     ) {}
 
@@ -38,7 +35,7 @@ final class DB implements ConnectionInterface
             $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
 
             // Создаём экземпляр класса.
-            $db = new DB(db: $pdo, logger: $logger);
+            $db = new SQLiteAdapter(pdo: $pdo, logger: $logger);
 
             $migrator = new MigrationRunner(
                 logger       : $logger,
@@ -73,7 +70,7 @@ final class DB implements ConnectionInterface
 
     public function getPdo(): PDO
     {
-        return $this->db;
+        return $this->pdo;
     }
 
     /**

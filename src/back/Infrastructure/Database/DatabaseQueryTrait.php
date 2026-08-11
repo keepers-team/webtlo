@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace KeepersTeam\Webtlo\Storage\Traits;
+namespace KeepersTeam\Webtlo\Infrastructure\Database;
 
 use PDO;
 use PDOException;
@@ -10,7 +10,7 @@ use PDOStatement;
 use RuntimeException;
 use Throwable;
 
-trait DbQuery
+trait DatabaseQueryTrait
 {
     /**
      * Выполнить готовый запрос к БД.
@@ -18,7 +18,7 @@ trait DbQuery
     public function executeQuery(string $sql): void
     {
         try {
-            $this->db->exec($sql);
+            $this->pdo->exec($sql);
         } catch (Throwable $e) {
             $this->logger->error(
                 'SQL. Ошибка выполнения запроса',
@@ -37,7 +37,7 @@ trait DbQuery
     public function executeStatement(string $sql, array $param = []): PDOStatement
     {
         try {
-            $sth = $this->db->prepare($sql);
+            $sth = $this->pdo->prepare($sql);
             if ($sth === false) {
                 throw new PDOException('Cant create PDOStatement');
             }
@@ -132,20 +132,20 @@ trait DbQuery
 
     public function beginTransaction(): void
     {
-        $this->db->beginTransaction();
+        $this->pdo->beginTransaction();
     }
 
     public function commitTransaction(): void
     {
-        if ($this->db->inTransaction()) {
-            $this->db->commit();
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->commit();
         }
     }
 
     public function rollbackTransaction(): void
     {
-        if ($this->db->inTransaction()) {
-            $this->db->rollBack();
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
         }
     }
 }

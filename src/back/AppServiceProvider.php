@@ -7,6 +7,7 @@ namespace KeepersTeam\Webtlo;
 use KeepersTeam\Webtlo\Config\AverageSeeds;
 use KeepersTeam\Webtlo\Config\ConfigMigration;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
+use KeepersTeam\Webtlo\Infrastructure\Database\SQLiteAdapter;
 use League\Container\ServiceProvider\AbstractServiceProvider;
 use Psr\Log\LoggerInterface;
 
@@ -19,7 +20,7 @@ final class AppServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ConnectionInterface::class,
-            DB::class,
+            SQLiteAdapter::class,
             TIniFileEx::class,
             WebTLO::class,
         ];
@@ -39,15 +40,15 @@ final class AppServiceProvider extends AbstractServiceProvider
             /** @var AverageSeeds $average */
             $average = $container->get(AverageSeeds::class);
 
-            return DB::connect(logger: $logger, averageSeeds: $average);
+            return SQLiteAdapter::connect(logger: $logger, averageSeeds: $average);
         });
 
         // Обработчик ini-файла с конфигом.
-        $container->addShared(TIniFileEx::class, function() {
+        $container->add(TIniFileEx::class, function() {
             $ini = new TIniFileEx();
 
             // Мигрируем, если есть что.
-            (new ConfigMigration($ini))->run();
+            (new ConfigMigration(ini: $ini))->run();
 
             return $ini;
         });
