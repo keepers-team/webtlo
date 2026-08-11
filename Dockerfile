@@ -67,15 +67,18 @@ FROM base AS builder
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer
 
 WORKDIR /app
-COPY composer.json composer.lock ./
-COPY src ./src
 
 # Install dependencies (prod only)
+COPY composer.json composer.lock ./
 RUN composer install \
     --no-dev \
     --no-progress \
-    --no-interaction \
-    --optimize-autoloader \
+    --no-interaction
+
+# Make classmap
+COPY src ./src
+RUN composer dump-autoload \
+    --optimize \
     --classmap-authoritative
 
 # =========================
@@ -101,11 +104,11 @@ WORKDIR /var/www/webtlo
 COPY bin ./bin
 RUN chmod +x bin/webtlo
 
-# Copy application to workdir
-COPY database ./database
-COPY public ./public
-COPY src ./src
-COPY version.json ./version.json
-
 # Copy vendor to workdir
 COPY --from=builder /app/vendor ./vendor
+
+# Copy application to workdir
+COPY database ./database
+COPY version.json ./version.json
+COPY public ./public
+COPY src ./src
