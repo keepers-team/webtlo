@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
@@ -17,8 +17,8 @@ final class UnregisteredTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
-        private readonly DB     $db,
-        private readonly Formatter $output
+        private readonly ConnectionInterface $con,
+        private readonly Formatter           $output
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics

@@ -16,7 +16,6 @@ use RuntimeException;
 
 final class DB implements ConnectionInterface
 {
-    use Traits\DbDataSet;
     use Traits\DbQuery;
 
     /** Название файла БД. */
@@ -30,7 +29,7 @@ final class DB implements ConnectionInterface
     public static function connect(
         LoggerInterface $logger,
         AverageSeeds $averageSeeds,
-    ): DB {
+    ): self {
         $databasePath = Helper::getStorageSubFolderPath(file: self::DATABASE_FILE);
 
         try {

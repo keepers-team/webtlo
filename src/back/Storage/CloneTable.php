@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 
 final class CloneTable
 {
     public function __construct(
-        private readonly DB               $db,
-        private readonly CloneTableObject $table,
+        private readonly ConnectionInterface $con,
+        private readonly CloneTableObject    $table,
     ) {}
 
     /**
@@ -41,7 +41,7 @@ final class CloneTable
             WHERE FALSE
         ";
 
-        $this->db->executeStatement(sql: $sql);
+        $this->con->executeStatement(sql: $sql);
     }
 
     /**
@@ -68,11 +68,11 @@ final class CloneTable
     {
         $keys = count($this->table->keys) ? sprintf('(%s)', implode(',', $this->table->keys)) : '';
 
-        $rows = $this->db->combineDataSet(dataSet: $dataSet, primaryKey: $this->table->primary);
+        $rows = $this->combineDataSet(dataSet: $dataSet, primaryKey: $this->table->primary);
 
         $sql = "INSERT INTO {$this->table->clone} $keys $rows";
 
-        $this->db->executeStatement(sql: $sql);
+        $this->con->executeStatement(sql: $sql);
     }
 
     /**
@@ -103,7 +103,7 @@ final class CloneTable
             FROM {$this->table->clone}
         ";
 
-        $this->db->executeStatement(sql: $sql);
+        $this->con->executeStatement(sql: $sql);
     }
 
     public function querySelectPrimaryClone(): string
@@ -116,7 +116,7 @@ final class CloneTable
      */
     public function cloneCount(): int
     {
-        return $this->db->selectRowsCount(table: $this->table->clone);
+        return $this->con->selectRowsCount(table: $this->table->clone);
     }
 
     /**
@@ -126,7 +126,7 @@ final class CloneTable
     {
         $sql = "DELETE FROM {$this->table->clone} WHERE TRUE";
 
-        $this->db->executeStatement(sql: $sql);
+        $this->con->executeStatement(sql: $sql);
     }
 
     /**
@@ -142,7 +142,7 @@ final class CloneTable
             )
         ";
 
-        $this->db->executeStatement(sql: $sql);
+        $this->con->executeStatement(sql: $sql);
     }
 
     /**
@@ -154,7 +154,7 @@ final class CloneTable
     {
         $tab = $this->table;
 
-        $this->db->executeStatement(
+        $this->con->executeStatement(
             "
                 DELETE FROM $tab->origin
                 WHERE topic_id || keeper_id NOT IN (
@@ -165,5 +165,25 @@ final class CloneTable
                 )
             "
         );
+    }
+
+    /**
+     * @param array<array-key, mixed> $dataSet
+     */
+    private function combineDataSet(array $dataSet, string $primaryKey = 'id'): string
+    {
+        // Экранирование строк.
+        $quote = $this->con->getPdo()->quote(...);
+
+        $rows = [];
+        foreach ($dataSet as $id => $value) {
+            $value = array_map(function($elem) use ($quote) {
+                return is_numeric($elem) ? $elem : $quote((string) $elem);
+            }, $value);
+
+            $rows[] = (empty($value[$primaryKey]) ? "$id," : '') . implode(',', $value);
+        }
+
+        return 'SELECT ' . implode(' UNION ALL SELECT ', $rows);
     }
 }

@@ -19,7 +19,7 @@ trait FilterTrait
     protected function selectTopics(string $statement, array $params = []): array
     {
         try {
-            return $this->db->query($statement, $params);
+            return $this->con->query($statement, $params);
         } catch (Throwable $e) {
             throw new RuntimeException($e->getMessage());
         }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\Clients\Data\Torrent;
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
@@ -35,8 +35,8 @@ final class Torrents
     private array $torrents = [];
 
     public function __construct(
-        private readonly DB         $db,
-        private readonly CloneTable $clone,
+        private readonly ConnectionInterface $db,
+        private readonly CloneTable          $clone,
     ) {}
 
     public function addTorrent(int $clientId, Torrent $torrent): void

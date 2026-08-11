@@ -7,12 +7,12 @@ namespace KeepersTeam\Webtlo\Update;
 use KeepersTeam\Webtlo\Config\AverageSeeds;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\DateHelper;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\ForumTopic;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsInsert;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
@@ -60,16 +60,16 @@ final class Subsections
     private array $skipSubsections = [];
 
     public function __construct(
-        private readonly ApiReportClient $apiReport,
-        private readonly AverageSeeds    $averageSeeds,
-        private readonly SubForums       $subForums,
-        private readonly DB              $db,
-        private readonly Topics          $topics,
-        private readonly TopicsInsert    $tableInsert,
-        private readonly TopicsUpdate    $tableUpdate,
-        private readonly SeedersInsert   $seedersInsert,
-        private readonly UpdateTime      $updateTime,
-        private readonly LoggerInterface $logger
+        private readonly ApiReportClient     $apiReport,
+        private readonly AverageSeeds        $averageSeeds,
+        private readonly SubForums           $subForums,
+        private readonly ConnectionInterface $con,
+        private readonly Topics              $topics,
+        private readonly TopicsInsert        $tableInsert,
+        private readonly TopicsUpdate        $tableUpdate,
+        private readonly SeedersInsert       $seedersInsert,
+        private readonly UpdateTime          $updateTime,
+        private readonly LoggerInterface     $logger
     ) {}
 
     /**
@@ -380,9 +380,9 @@ final class Subsections
                     {$this->tableUpdate->querySelectPrimaryClone()}
                 )
         ";
-        $this->db->executeStatement(sql: $query);
+        $this->con->executeStatement(sql: $query);
 
-        $unused = $this->db->queryChanges();
+        $unused = $this->con->queryChanges();
         if ($unused > 0) {
             $this->logger->debug(
                 'Удалено лишних раздач {count} шт. за {sec}',

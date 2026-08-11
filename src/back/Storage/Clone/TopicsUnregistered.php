@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 use PDO;
 use Psr\Log\LoggerInterface;
@@ -31,9 +31,9 @@ final class TopicsUnregistered
     private array $topics = [];
 
     public function __construct(
-        private readonly DB              $db,
-        private readonly LoggerInterface $logger,
-        private readonly CloneTable      $clone,
+        private readonly ConnectionInterface $db,
+        private readonly LoggerInterface     $logger,
+        private readonly CloneTable          $clone,
     ) {}
 
     /**

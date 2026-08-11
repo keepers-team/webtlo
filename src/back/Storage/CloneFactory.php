@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Clone\SeedersInsert;
@@ -19,8 +19,8 @@ use Psr\Log\LoggerInterface;
 final class CloneFactory
 {
     public function __construct(
-        private readonly DB              $db,
-        private readonly LoggerInterface $logger,
+        private readonly ConnectionInterface $con,
+        private readonly LoggerInterface     $logger,
     ) {}
 
     /**
@@ -46,7 +46,7 @@ final class CloneFactory
             primary: $primary,
         );
 
-        $clone = new CloneTable(db: $this->db, table: $cloneObject);
+        $clone = new CloneTable(con: $this->con, table: $cloneObject);
 
         $clone->createClone(cloneName: $cloneName);
 
@@ -62,7 +62,7 @@ final class CloneFactory
         );
 
         return new KeepersLists(
-            db    : $this->db,
+            db    : $this->con,
             logger: $this->logger,
             clone : $table,
         );
@@ -133,7 +133,7 @@ final class CloneFactory
         );
 
         return new TopicsUnregistered(
-            db    : $this->db,
+            db    : $this->con,
             logger: $this->logger,
             clone : $table,
         );
@@ -161,7 +161,7 @@ final class CloneFactory
         );
 
         return new Torrents(
-            db   : $this->db,
+            db   : $this->con,
             clone: $table,
         );
     }
@@ -175,7 +175,7 @@ final class CloneFactory
         );
 
         return new UpdateTime(
-            db   : $this->db,
+            db   : $this->con,
             clone: $table,
         );
     }

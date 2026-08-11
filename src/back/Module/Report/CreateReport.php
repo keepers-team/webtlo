@@ -13,10 +13,10 @@ use KeepersTeam\Webtlo\Config\Telemetry;
 use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DateHelper;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\WebTLO;
@@ -53,15 +53,15 @@ final class CreateReport
     private array $cache = [];
 
     public function __construct(
-        private readonly DB              $db,
-        private readonly SubForums       $subForums,
-        private readonly TorrentClients  $clients,
-        private readonly ApiCredentials  $auth,
-        private readonly ReportSend      $reportSend,
-        private readonly Telemetry       $telemetry,
-        private readonly UpdateTime      $tableUpdate,
-        private readonly WebTLO          $webtlo,
-        private readonly LoggerInterface $logger,
+        private readonly ConnectionInterface $db,
+        private readonly SubForums           $subForums,
+        private readonly TorrentClients      $clients,
+        private readonly ApiCredentials      $auth,
+        private readonly ReportSend          $reportSend,
+        private readonly Telemetry           $telemetry,
+        private readonly UpdateTime          $tableUpdate,
+        private readonly WebTLO              $webtlo,
+        private readonly LoggerInterface     $logger,
     ) {
         $this->auth->validate();
     }

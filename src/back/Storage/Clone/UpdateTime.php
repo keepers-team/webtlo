@@ -6,8 +6,8 @@ namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use DateTimeImmutable;
 use KeepersTeam\Webtlo\DateHelper;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\CloneTable;
 
 /**
@@ -27,8 +27,8 @@ final class UpdateTime
     private array $updatedMarkers = [];
 
     public function __construct(
-        private readonly DB         $db,
-        private readonly CloneTable $clone,
+        private readonly ConnectionInterface $db,
+        private readonly CloneTable          $clone,
     ) {}
 
     /**

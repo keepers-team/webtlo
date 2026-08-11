@@ -6,8 +6,8 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use DateTimeImmutable;
 use Generator;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Excluded;
@@ -32,10 +32,10 @@ final class DefaultTopics implements ListInterface
     private array $keepers = [];
 
     public function __construct(
-        private readonly DB           $db,
-        private readonly ConfigFilter $configFilter,
-        private readonly Formatter    $formatter,
-        private readonly int          $forumId
+        private readonly ConnectionInterface $con,
+        private readonly ConfigFilter        $configFilter,
+        private readonly Formatter           $formatter,
+        private readonly int                 $forumId
     ) {}
 
     /**
@@ -202,7 +202,7 @@ final class DefaultTopics implements ListInterface
         Sort              $sort
     ): Generator {
         // Открываем транзакцию выполнения запроса к БД.
-        $this->db->beginTransaction();
+        $this->con->beginTransaction();
 
         // Создаём временные таблицы.
         $this->createTempTopics($forum, $status, $priority, $dateRelease);
@@ -226,7 +226,7 @@ final class DefaultTopics implements ListInterface
         $topics = $this->selectTopics($statement);
 
         // Закрываем транзакцию к БД.
-        $this->db->commitTransaction();
+        $this->con->commitTransaction();
 
         foreach ($topics as $topic) {
             yield $topic;

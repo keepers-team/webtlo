@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Table;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
 
 final class Torrents
 {
-    public function __construct(private readonly DB $db) {}
+    public function __construct(private readonly ConnectionInterface $con) {}
 
     /**
      * Поиск в БД ид раздач, по хешу.
@@ -27,7 +27,7 @@ final class Torrents
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
-            $stm = $this->db->executeStatement(
+            $stm = $this->con->executeStatement(
                 "
                     SELECT info_hash, topic_id FROM Torrents
                     WHERE info_hash IN ($search->keys) AND topic_id <> ''
@@ -62,7 +62,7 @@ final class Torrents
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
-            $stm = $this->db->executeStatement(
+            $stm = $this->con->executeStatement(
                 "
                     SELECT client_id, info_hash FROM Torrents
                     WHERE info_hash IN ($search->keys)
@@ -112,7 +112,7 @@ final class Torrents
                 WHERE info_hash IN ($object->keys)
             ";
 
-            $this->db->executeStatement(
+            $this->con->executeStatement(
                 sql  : $sql,
                 param: [$clientId, ...$object->values],
             );
@@ -130,7 +130,7 @@ final class Torrents
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
-            $this->db->executeStatement(
+            $this->con->executeStatement(
                 "DELETE FROM Torrents WHERE info_hash IN ($search->keys)",
                 $search->values
             );
@@ -150,7 +150,7 @@ final class Torrents
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
-            $this->db->executeStatement(
+            $this->con->executeStatement(
                 "UPDATE Torrents SET paused = ? WHERE info_hash IN ($search->keys)",
                 [$paused, ...$search->values]
             );
@@ -173,6 +173,6 @@ final class Torrents
             ORDER BY topics DESC
         ';
 
-        return $this->db->query($query, [], PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
+        return $this->con->query($query, [], PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
     }
 }

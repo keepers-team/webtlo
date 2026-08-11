@@ -18,7 +18,7 @@ trait DbHelperTrait
     public function getHighPriorityForums(): array
     {
         try {
-            return $this->db->query(
+            return $this->con->query(
                 'SELECT DISTINCT forum_id FROM Topics WHERE keeping_priority = ?',
                 [2],
                 PDO::FETCH_COLUMN
@@ -36,7 +36,7 @@ trait DbHelperTrait
     public function queryStatement(string $statement, array $params = []): array
     {
         try {
-            return $this->db->query($statement, $params);
+            return $this->con->query($statement, $params);
         } catch (Exception $e) {
             throw new RuntimeException($e->getMessage());
         }
@@ -50,7 +50,7 @@ trait DbHelperTrait
     public function queryStatementRow(string $statement, array $params = []): array
     {
         try {
-            $result = $this->db->queryRow($statement, $params);
+            $result = $this->con->queryRow($statement, $params);
 
             return $result ?? [];
         } catch (Exception $e) {
@@ -66,7 +66,7 @@ trait DbHelperTrait
     public function queryStatementGroup(string $statement, array $params = []): array
     {
         try {
-            return $this->db->query($statement, $params, PDO::FETCH_ASSOC | PDO::FETCH_GROUP);
+            return $this->con->query($statement, $params, PDO::FETCH_ASSOC | PDO::FETCH_GROUP);
         } catch (Exception $e) {
             throw new RuntimeException($e->getMessage());
         }

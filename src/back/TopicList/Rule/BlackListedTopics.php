@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\Formatter;
@@ -17,9 +17,9 @@ final class BlackListedTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
-        private readonly DB        $db,
-        private readonly Forums    $forums,
-        private readonly Formatter $output,
+        private readonly ConnectionInterface $con,
+        private readonly Forums              $forums,
+        private readonly Formatter           $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics

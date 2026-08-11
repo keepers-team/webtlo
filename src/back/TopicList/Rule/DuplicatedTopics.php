@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
@@ -21,9 +21,9 @@ final class DuplicatedTopics implements ListInterface
     use FilterTrait;
 
     public function __construct(
-        private readonly DB           $db,
-        private readonly Formatter    $formatter,
-        private readonly ConfigFilter $configFilter,
+        private readonly ConnectionInterface $con,
+        private readonly Formatter           $formatter,
+        private readonly ConfigFilter        $configFilter,
     ) {}
 
     /**

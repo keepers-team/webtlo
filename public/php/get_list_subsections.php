@@ -5,7 +5,6 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
-use KeepersTeam\Webtlo\DB;
 use KeepersTeam\Webtlo\Update\ForumTree;
 
 try {
@@ -14,16 +13,14 @@ try {
     }
 
     $app = App::create();
-
-    /** @var DB $db */
-    $db = $app->get(DB::class);
+    $db  = $app->getDataBase();
 
     $patterns = is_array($_GET['term'])
         ? $_GET['term']
         : explode(';', (string) $_GET['term']);
 
+    /** Обновляем дерево подразделов. */
     if (empty($db->selectRowsCount('Forums'))) {
-        /** @var ForumTree $forumTree Обновляем дерево подразделов. */
         $forumTree = $app->get(ForumTree::class);
         $forumTree->update();
     }
@@ -40,7 +37,8 @@ try {
             sql  : '
                 SELECT id AS value, name AS label
                 FROM Forums
-                WHERE size > 0 AND (id LIKE :term OR name LIKE :term) ORDER BY LOWER(name)
+                WHERE size > 0 AND (id LIKE :term OR name LIKE :term)
+                ORDER BY LOWER(name)
              ',
             param: ['term' => (string) $pattern],
         );

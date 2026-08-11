@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Formatter;
@@ -13,10 +13,10 @@ use RuntimeException;
 final class Factory
 {
     public function __construct(
-        private readonly DB           $db,
-        private readonly Forums       $forums,
-        private readonly ConfigFilter $configFilter,
-        private readonly Formatter    $formatter,
+        private readonly ConnectionInterface $con,
+        private readonly Forums              $forums,
+        private readonly ConfigFilter        $configFilter,
+        private readonly Formatter           $formatter,
     ) {}
 
     /**
@@ -32,22 +32,22 @@ final class Factory
 
         // Хранимые раздачи из других подразделов.
         if ($forumId === 0) {
-            return new UntrackedTopics($this->db, $this->forums, $this->formatter);
+            return new UntrackedTopics($this->con, $this->forums, $this->formatter);
         }
 
         if ($forumId === -1) {
             // Хранимые раздачи незарегистрированные на форуме.
-            return new UnregisteredTopics($this->db, $this->formatter);
+            return new UnregisteredTopics($this->con, $this->formatter);
         }
 
         if ($forumId === -2) {
             // Раздачи из "Черного списка".
-            return new BlackListedTopics($this->db, $this->forums, $this->formatter);
+            return new BlackListedTopics($this->con, $this->forums, $this->formatter);
         }
 
         if ($forumId === -4) {
             // Хранимые дублирующиеся раздачи.
-            return new DuplicatedTopics($this->db, $this->formatter, $this->configFilter);
+            return new DuplicatedTopics($this->con, $this->formatter, $this->configFilter);
         }
 
         if (
@@ -58,7 +58,7 @@ final class Factory
             || $forumId === -6  // Все хранимые подразделы по спискам.
         ) {
             return new DefaultTopics(
-                db          : $this->db,
+                con         : $this->con,
                 configFilter: $this->configFilter,
                 formatter   : $this->formatter,
                 forumId     : $forumId

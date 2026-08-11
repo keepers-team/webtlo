@@ -7,7 +7,7 @@ namespace KeepersTeam\Webtlo\Module\Control;
 use Generator;
 use KeepersTeam\Webtlo\Clients\Data\Torrents;
 use KeepersTeam\Webtlo\Config\TopicControl;
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\Timers;
 use PDO;
@@ -23,8 +23,8 @@ final class DbSearch
     private const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
     public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly DB              $db,
+        private readonly LoggerInterface     $logger,
+        private readonly ConnectionInterface $db,
     ) {}
 
     public function getStoredHashes(KeysObject $forums, Torrents $torrents, string $timer): Generator
