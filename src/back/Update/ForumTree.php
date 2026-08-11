@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\Storage\CloneFactory;
+use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -44,10 +45,10 @@ final class ForumTree
         }
 
         // Параметры таблиц.
-        $tabForums = $this->cloneFactory->makeClone(table: 'Forums', keys: ['id', 'name', 'quantity', 'size']);
+        $tabForums = $this->cloneFactory->makeClone(table: Forums::TABLE, keys: Forums::KEYS);
 
-        // Преобразуем объекты в простой массив. TODO переделать.
-        $forums = array_map(fn($el) => array_combine($tabForums->getTableKeys(), (array) $el), $response->forums);
+        // Преобразуем объекты в простой массив.
+        $forums = array_map(static fn($el) => $el->jsonSerialize(), $response->forums);
 
         // Записываем в базу данных.
         $tabForums->cloneFillChunk(dataSet: $forums);

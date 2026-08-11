@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Data;
 
+use JsonSerializable;
+
 /**
  * Данные подраздела.
  */
-final class Forum
+final class Forum implements JsonSerializable
 {
     /**
      * @param int    $id    ид подраздела
@@ -21,4 +23,12 @@ final class Forum
         public readonly int    $count,
         public readonly int    $size
     ) {}
+
+    /**
+     * @return array{id: int, name: string, count: int, size: int}
+     */
+    public function jsonSerialize(): array
+    {
+        return (array) $this;
+    }
 }

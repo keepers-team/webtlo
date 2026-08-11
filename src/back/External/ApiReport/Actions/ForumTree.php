@@ -10,7 +10,6 @@ use KeepersTeam\Webtlo\Data\Forum;
 use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\ForumsResponse;
-use KeepersTeam\Webtlo\Helper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -36,7 +35,7 @@ trait ForumTree
 
             $this->logger->warning('ForumTree. Ошибка получения данных', [$error->getMessage()]);
 
-            return ApiError::fromHttpCode($code);
+            return ApiError::fromHttpCode(code: $code);
         } catch (Throwable $error) {
             $this->logger->warning('ForumTree. Неизвестная ошибка получения данных', [$error->getMessage()]);
 
@@ -52,27 +51,24 @@ trait ForumTree
         return function(
             ResponseInterface $treeResponse,
             ResponseInterface $sizeResponse
-        ) use (&$logger): ForumsResponse|ApiError {
-            $treeResult = self::decodeResponse($logger, $treeResponse);
+        ) use ($logger): ForumsResponse|ApiError {
+            $treeResult = self::decodeResponse(logger: $logger, response: $treeResponse);
             if ($treeResult instanceof ApiError) {
                 return $treeResult;
             }
 
-            $sizeResult = self::decodeResponse($logger, $sizeResponse);
+            $sizeResult = self::decodeResponse(logger: $logger, response: $sizeResponse);
             if ($sizeResult instanceof ApiError) {
                 return $sizeResult;
             }
 
-            return self::parseStaticForumTree(
-                Helper::convertKeysToString($treeResult),
-                Helper::convertKeysToString($sizeResult)
-            );
+            return self::parseStaticForumTree(trees: $treeResult, sizes: $sizeResult);
         };
     }
 
     /**
-     * @param array<string, mixed> $trees
-     * @param array<string, mixed> $sizes
+     * @param array<array-key, mixed> $trees
+     * @param array<array-key, mixed> $sizes
      */
     private static function parseStaticForumTree(array $trees, array $sizes): ForumsResponse
     {
@@ -94,7 +90,7 @@ trait ForumTree
          * @var string[] $forumNames
          */
         $forumNames = array_map(
-            static fn($name) => html_entity_decode($name, ENT_QUOTES, 'UTF-8'),
+            static fn($name) => html_entity_decode(trim($name), ENT_QUOTES, 'UTF-8'),
             $trees['result']['f']
         );
 
@@ -123,7 +119,7 @@ trait ForumTree
             if (isset($sizes['result'][$forumId])) {
                 [$count, $size] = $sizes['result'][$forumId];
 
-                $forums[] = new Forum(
+                $forums[$forumId] = new Forum(
                     id   : $forumId,
                     name : implode(' » ', $parts),
                     count: $count,

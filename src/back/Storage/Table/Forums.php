@@ -5,14 +5,25 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Storage\Table;
 
 use KeepersTeam\Webtlo\Data\Forum;
-use KeepersTeam\Webtlo\DB;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
+use KeepersTeam\Webtlo\Storage\KeysObject;
 
 final class Forums
 {
-    /** @var Forum[] */
+    // Параметры таблицы.
+    public const TABLE   = 'Forums';
+    public const PRIMARY = 'id';
+    public const KEYS    = [
+        self::PRIMARY,
+        'name',
+        'quantity',
+        'size',
+    ];
+
+    /** @var array<int, Forum> */
     private static array $forums = [];
 
-    public function __construct(private readonly DB $db) {}
+    public function __construct(private readonly ConnectionInterface $con) {}
 
     /**
      * Получить параметры заданного подраздела.
@@ -28,23 +39,53 @@ final class Forums
                 WHERE f.id = :forum_id
             ';
 
-            $res = $this->db->queryRow($sql, ['forum_id' => $forumId]);
+            $row = $this->con->queryRow($sql, ['forum_id' => $forumId]);
 
-            if ($res === null || !count($res)) {
+            if ($row === null || !count($row)) {
                 return null;
             }
 
             $forum = new Forum(
-                id   : (int) $res['id'],
-                name : (string) $res['name'],
-                count: (int) $res['quantity'],
-                size : (int) $res['size'],
+                id   : (int) $row['id'],
+                name : (string) $row['name'],
+                count: (int) $row['quantity'],
+                size : (int) $row['size'],
             );
 
-            self::$forums[$forumId] = $forum;
+            self::$forums[$forum->id] = $forum;
         }
 
         return $forum;
+    }
+
+    /**
+     * @param int[] $forumIds
+     */
+    public function fillForums(array $forumIds): void
+    {
+        $forumKeys = KeysObject::create($forumIds);
+
+        $sql = "
+            SELECT f.id, f.name, f.quantity, f.size
+            FROM Forums f
+            WHERE f.id IN ($forumKeys->keys)
+        ";
+
+        $forums = $this->con->query(
+            sql  : $sql,
+            param: $forumKeys->values,
+        );
+
+        foreach ($forums as $row) {
+            $forum = new Forum(
+                id   : (int) $row['id'],
+                name : (string) $row['name'],
+                count: (int) $row['quantity'],
+                size : (int) $row['size'],
+            );
+
+            self::$forums[$forum->id] = $forum;
+        }
     }
 
     /**

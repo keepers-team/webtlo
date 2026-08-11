@@ -18,7 +18,7 @@ use KeepersTeam\Webtlo\Update\TorrentsClients;
 $update_result = '';
 
 // Создаём контейнер и пишем в лог.
-$app = App::create(LogFile::Update);
+$app = App::create(logFile: LogFile::Update);
 $log = $app->getLogger();
 
 try {
@@ -43,6 +43,12 @@ try {
         );
     }
 
+    if ($pairs === []) {
+        $log->notice('Неизвестный тип обновления данных', ['process' => $process]);
+
+        return;
+    }
+
     $updateForumTree = false;
     if (count($pairs) > 1) {
         $updateForumTree = true;
@@ -54,21 +60,14 @@ try {
     }
 
     if ($updateForumTree) {
-        /** @var ForumTree $forumTree */
         $forumTree = $app->get(ForumTree::class);
         $forumTree->update();
     }
 
     // Запускаем задачи по очереди.
     foreach ($pairs as $process => $className) {
-        /** @var null|object $instance */
         $instance = $app->get($className);
-
-        if ($instance && method_exists($instance, 'update')) {
-            $instance->update();
-        } else {
-            $log->notice('Неизвестный тип обновления данных', ['process' => $process]);
-        }
+        $instance->update();
     }
 } catch (Throwable $e) {
     $update_result = 'В процессе обновления сведений были ошибки. '
