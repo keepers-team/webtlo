@@ -40,7 +40,9 @@ final class App
         }
     }
 
-    /** Создаём di-контейнер. */
+    /**
+     * Создаём DI-контейнер.
+     */
     public static function create(?LogFile $logFile = null): self
     {
         // Если контейнер уже создан, новый не создаём.
@@ -52,9 +54,8 @@ final class App
         self::init();
 
         // Создаём di-контейнер и включаем auto wiring.
-        $container = new Container();
-        $container->defaultToShared();
-        $container->delegate(new ReflectionContainer(true));
+        $container = new Container(defaultToShared: true);
+        $container->delegate(new ReflectionContainer(cacheResolutions: true));
 
         // Основные классы для работы.
         $container->addServiceProvider(new AppServiceProvider());
@@ -77,10 +78,17 @@ final class App
         return self::create($command->logFile());
     }
 
+    /**
+     * @template ClassName
+     *
+     * @param class-string<ClassName> $id
+     *
+     * @return ClassName
+     */
     public function get(string $id): mixed
     {
         try {
-            return $this->container->get($id);
+            return $this->container->get(id: $id);
         } catch (Throwable $e) {
             throw new RuntimeException($e->getMessage(), $e->getCode());
         }
