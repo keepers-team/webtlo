@@ -12,6 +12,7 @@ use KeepersTeam\Webtlo\Enum\LogFile;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\ExternalServiceProvider;
 use KeepersTeam\Webtlo\External\ForumClient;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Infrastructure\Maintenance\SettingsPatch;
 use KeepersTeam\Webtlo\Logger\LoggerServiceProvider;
 use KeepersTeam\Webtlo\Logger\MemoryLoggerHandler as Log;
@@ -104,9 +105,9 @@ final class App
         }
     }
 
-    public function getDataBase(): DB
+    public function getDataBase(): ConnectionInterface
     {
-        return $this->get(DB::class);
+        return $this->get(ConnectionInterface::class);
     }
 
     public function getAutomation(): Automation

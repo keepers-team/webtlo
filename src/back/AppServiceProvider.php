@@ -32,7 +32,7 @@ final class AppServiceProvider extends AbstractServiceProvider
         $container = $this->getContainer();
 
         // Подключаем БД.
-        $container->add(DB::class, function() use ($container) {
+        $container->add(ConnectionInterface::class, function() use ($container) {
             /** @var LoggerInterface $logger */
             $logger = $container->get(LoggerInterface::class);
 
@@ -41,8 +41,6 @@ final class AppServiceProvider extends AbstractServiceProvider
 
             return DB::connect(logger: $logger, averageSeeds: $average);
         });
-
-        $container->add(ConnectionInterface::class, fn() => $container->get(DB::class));
 
         // Обработчик ini-файла с конфигом.
         $container->addShared(TIniFileEx::class, function() {
