@@ -221,7 +221,10 @@ final class TorrentsClients
                 // Обрежем раздачи, если их слишком много.
                 $countLimit = rand(256, 512);
                 if ($countUntracked > $countLimit) {
-                    $this->logger->warning('Будет обработано {limit} сторонних раздач.', ['limit' => $countLimit]);
+                    $this->logger->warning(
+                        'Будет произведён анализ первых {limit} из {total} сторонних раздач.',
+                        ['limit' => $countLimit, 'total' => $countUntracked]
+                    );
 
                     $untrackedTorrentHashes = array_slice($untrackedTorrentHashes, 0, $countLimit);
                 }
