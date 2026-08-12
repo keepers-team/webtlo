@@ -6,9 +6,11 @@ namespace KeepersTeam\Webtlo\External\Construct;
 
 use GuzzleHttp\Client;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
+use KeepersTeam\Webtlo\Config\ApiReportConnect;
 use KeepersTeam\Webtlo\Config\Defaults;
 use KeepersTeam\Webtlo\Config\ForumConnect;
 use KeepersTeam\Webtlo\Config\Proxy;
+use KeepersTeam\Webtlo\Config\TorrentDownload;
 use KeepersTeam\Webtlo\External\ForumClient;
 use KeepersTeam\Webtlo\External\Shared\RetryMiddleware;
 use KeepersTeam\Webtlo\WebTLO;
@@ -19,11 +21,13 @@ final class ForumConstructor
     use RetryMiddleware;
 
     public function __construct(
-        private readonly ApiCredentials  $auth,
-        private readonly ForumConnect    $connect,
-        private readonly LoggerInterface $logger,
-        private readonly Proxy           $proxy,
-        private readonly WebTLO          $webtlo,
+        private readonly ApiCredentials   $auth,
+        private readonly ApiReportConnect $apiConnect,
+        private readonly ForumConnect     $forumConnect,
+        private readonly TorrentDownload  $torrentDownload,
+        private readonly LoggerInterface  $logger,
+        private readonly Proxy            $proxy,
+        private readonly WebTLO           $webtlo,
     ) {}
 
     public function createRequestClient(): ForumClient
@@ -47,11 +51,16 @@ final class ForumConstructor
             'X-WebTLO'   => $this->webtlo->getSemanticVersion(),
         ];
 
-        $baseUrl = $this->connect->url;
+        // По умолчанию, создаём подключение к url форума.
+        $connectParams = $this->forumConnect;
+        // Если выбрана опция в настройках, то подключаемся к url API
+        if ($this->torrentDownload->useApiProxy) {
+            $connectParams = $this->apiConnect;
+        }
 
-        $proxyConfig = $this->connect->useProxy ? $this->proxy->getOptions() : [];
-
-        $timeout = $this->connect->timeout;
+        $baseUrl     = $connectParams->url;
+        $timeout     = $connectParams->timeout;
+        $proxyConfig = $connectParams->useProxy ? $this->proxy->getOptions() : [];
 
         $clientProperties = [
             'base_uri'        => $baseUrl,
@@ -68,7 +77,7 @@ final class ForumConstructor
         $client = new Client(config: $clientProperties);
 
         $log = ['base' => $baseUrl];
-        if ($this->connect->useProxy) {
+        if ($connectParams->useProxy) {
             $log['proxy'] = $this->proxy->log();
         }
         $this->logger->info('Подключение к Форуму (ForumClient)', $log);

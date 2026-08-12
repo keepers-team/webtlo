@@ -26,14 +26,4 @@ final class ApiCredentials
             throw new RuntimeException('Отсутствуют ключи пользователя для доступа к API. Укажите их в настройках.');
         }
     }
-
-    /**
-     * @return array{api_key: string}
-     */
-    public function getApiKey(): array
-    {
-        $this->validate();
-
-        return ['api_key' => $this->apiKey];
-    }
 }
