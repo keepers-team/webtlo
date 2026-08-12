@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Clone;
 
-use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use PDO;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -31,31 +29,9 @@ final class TopicsUnregistered
     private array $topics = [];
 
     public function __construct(
-        private readonly ConnectionInterface $db,
-        private readonly LoggerInterface     $logger,
-        private readonly CloneTable          $clone,
+        private readonly LoggerInterface $logger,
+        private readonly CloneTable      $clone,
     ) {}
-
-    /**
-     * @return array<int, string>
-     */
-    public function searchUnregisteredTopics(): array
-    {
-        return $this->db->query(
-            sql  : "
-                SELECT
-                    Torrents.topic_id,
-                    Torrents.info_hash
-                FROM Torrents
-                LEFT JOIN Topics ON Topics.info_hash = Torrents.info_hash
-                LEFT JOIN TopicsUntracked ON TopicsUntracked.info_hash = Torrents.info_hash
-                WHERE Topics.info_hash IS NULL
-                    AND TopicsUntracked.info_hash IS NULL
-                    AND Torrents.topic_id <> ''
-            ",
-            pdo  : PDO::FETCH_KEY_PAIR
-        );
-    }
 
     /**
      * @param array<int, mixed> $topic
@@ -66,27 +42,21 @@ final class TopicsUnregistered
     }
 
     /**
-     * Записать раздачи во временную таблицу.
-     */
-    public function fillTempTable(): void
-    {
-        $rows = array_map(fn($el) => array_combine($this->clone->getTableKeys(), $el), $this->topics);
-
-        $this->clone->cloneFillChunk(dataSet: $rows);
-
-        $this->topics = [];
-    }
-
-    /**
      * Перенести данные о раздачах в основную таблицу БД.
      */
     public function moveToOrigin(): void
     {
-        $count = $this->clone->cloneCount();
-        if ($count > 0) {
-            $this->logger->info('Найдено разрегистрированных или обновлённых раздач: {count} шт.', ['count' => $count]);
-            $this->clone->moveToOrigin();
+        if (!count($this->topics)) {
+            return;
         }
+
+        $this->logger->info('Найдено разрегистрированных или обновлённых раздач: {count} шт.', ['count' => count($this->topics)]);
+
+        $rows = array_map(fn($el) => array_combine($this->clone->getTableKeys(), $el), $this->topics);
+
+        $this->clone->cloneFillChunk(dataSet: $rows);
+
+        $this->clone->writeTable();
     }
 
     /**

@@ -133,7 +133,6 @@ final class CloneFactory
         );
 
         return new TopicsUnregistered(
-            db    : $this->con,
             logger: $this->logger,
             clone : $table,
         );

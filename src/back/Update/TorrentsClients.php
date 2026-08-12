@@ -13,7 +13,6 @@ use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\TopicDetails;
-use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUnregistered;
 use KeepersTeam\Webtlo\Storage\Clone\TopicsUntracked;
 use KeepersTeam\Webtlo\Storage\Clone\Torrents;
@@ -30,7 +29,7 @@ final class TorrentsClients
     private array $timers = [];
 
     /** @var TopicDetails[] */
-    private array $unregisteredApiTopics = [];
+    private array $unregisteredTopics = [];
 
     /**
      * @param Torrents           $cloneTorrents     таблица хранимых раздач в торрент-клиентах
@@ -188,13 +187,13 @@ final class TorrentsClients
     private function updateUntracked(): void
     {
         try {
+            $searchUntracked    = $this->topicSearch->untracked;
+            $searchUnregistered = $this->topicSearch->unregistered;
+
             // Выключено - прекращаем работу.
-            if (!$this->topicSearch->untracked) {
+            if (!$searchUntracked && !$searchUnregistered) {
                 return;
             }
-
-            // Включён ли поиск разрегистрированных раздач.
-            $searchUnregistered = $this->topicSearch->unregistered;
 
             Timers::start('search_untracked');
 
@@ -213,21 +212,19 @@ final class TorrentsClients
                 ['count' => $countUntracked]
             );
 
-            if ($countUntracked > 150) {
+            $countLimit = 10_000;
+            if ($countUntracked > $countLimit) {
                 $this->logger->notice(
                     'Хранится много сторонних раздач. Рекомендуется отключить поиск сторонних раздач или добавить подразделы в хранимые.'
                 );
 
                 // Обрежем раздачи, если их слишком много.
-                $countLimit = rand(256, 512);
-                if ($countUntracked > $countLimit) {
-                    $this->logger->warning(
-                        'Будет произведён анализ первых {limit} из {total} сторонних раздач.',
-                        ['limit' => $countLimit, 'total' => $countUntracked]
-                    );
+                $this->logger->warning(
+                    'Будет произведён анализ первых {limit} из {total} сторонних раздач.',
+                    ['limit' => $countLimit, 'total' => $countUntracked]
+                );
 
-                    $untrackedTorrentHashes = array_slice($untrackedTorrentHashes, 0, $countLimit);
-                }
+                $untrackedTorrentHashes = array_slice($untrackedTorrentHashes, 0, $countLimit);
             }
 
             // Проверим доступность API отчётов перед попыткой поиска раздач.
@@ -236,10 +233,7 @@ final class TorrentsClients
             }
 
             // Пробуем найти в API раздачи по их хешам из клиента.
-            $response = $this->apiClient->getTopicsDetails(
-                topics    : $untrackedTorrentHashes,
-                searchMode: TopicSearchMode::HASH
-            );
+            $response = $this->apiClient->getTopicsDetails(topics: $untrackedTorrentHashes);
 
             if ($response instanceof ApiError) {
                 $this->logger->debug(
@@ -247,7 +241,7 @@ final class TorrentsClients
                     ['code' => $response->code, 'text' => $response->text]
                 );
 
-                $this->logger->debug('hashes', $untrackedTorrentHashes);
+                $this->logger->debug('hashes', array_slice($untrackedTorrentHashes, 0, 50));
 
                 return;
             }
@@ -269,18 +263,21 @@ final class TorrentsClients
                 foreach ($response->actualTopics as $topic) {
                     // Пропускаем раздачи в невалидных статусах.
                     if (!$topic->status->isValid()) {
-                        // Дописываем их в буфер если нужны.
+                        // Дописываем их в буфер если включено.
                         if ($searchUnregistered) {
-                            $this->unregisteredApiTopics[$topic->hash] = $topic;
+                            $this->unregisteredTopics[$topic->hash] = $topic;
                         }
 
                         continue;
                     }
 
-                    $this->cloneUntracked->addTopic(topic: $topic);
+                    // Записываем прочие раздачи, если включено.
+                    if ($searchUntracked) {
+                        $this->cloneUntracked->addTopic(topic: $topic);
+                    }
                 }
 
-                // Если нашлись существующие на форуме раздачи, то записываем их в БД.
+                // Если нашлись существующие раздачи, то записываем их в БД.
                 $this->cloneUntracked->moveToOrigin();
             }
 
@@ -288,7 +285,7 @@ final class TorrentsClients
             if (count($response->oldTopics) && $searchUnregistered) {
                 foreach ($response->oldTopics as $topic) {
                     // Дописываем их в буфер если нужны.
-                    $this->unregisteredApiTopics[$topic->hash] = $topic;
+                    $this->unregisteredTopics[$topic->hash] = $topic;
                 }
             }
         } catch (Throwable $e) {
@@ -311,58 +308,53 @@ final class TorrentsClients
     {
         try {
             // Выключено - прекращаем работу.
-            if (!$this->topicSearch->untracked || !$this->topicSearch->unregistered) {
+            if (!$this->topicSearch->unregistered) {
+                return;
+            }
+
+            // Если нет подходящих раздач, выходим.
+            if (!count($this->unregisteredTopics)) {
                 return;
             }
 
             Timers::start('search_unregistered');
-            $unregisteredTopics = $this->cloneUnregistered->searchUnregisteredTopics();
+            foreach ($this->unregisteredTopics as $topic) {
+                // Сохраняем исходных хеш раздачи из клиента.
+                $infoHash = $topic->hash;
 
-            // Если в БД есть разрегистрированные раздачи, ищем их в результатах поиска в API.
-            if (count($unregisteredTopics)) {
-                foreach ($unregisteredTopics as $topicId => $infoHash) {
-                    // Если о раздаче есть данные в API, то дописываем их, как более верные.
-                    $topic = $this->getApiTopicInfo(infoHash: $infoHash);
-                    if ($topic === null) {
-                        continue;
-                    }
-
-                    // Если у раздачи есть новая версия, то используем её данные.
-                    if ($topic->actualVersion !== null) {
-                        $topic = $topic->actualVersion;
-                    }
-
-                    // Берём статус из известной (актуальной) версии раздачи.
-                    if ($topic->status->isValid()) {
-                        $topicStatus = sprintf('обновлено (%s)', $topic->status->label());
-                    } else {
-                        $topicStatus = sprintf('закрыто (%s)', $topic->status->label());
-                    }
-
-                    /**
-                     * Если хеш раздачи в клиенте и хеш известной версии совпадают,
-                     * но раздачу нашли в "прошлых" версиях, что значит что раздача точно "разрег".
-                     * Значит отмечаем как "неизвестно", на всякий случай.
-                     */
-                    if ($infoHash === $topic->hash && $topic->status->isValid()) {
-                        $topicStatus = 'закрыто (неизвестно)';
-                    }
-
-                    // Записываем данные раздачи в буферную таблицу.
-                    $this->cloneUnregistered->addTopic(topic: [
-                        $infoHash, // Текущий хеш раздачи, который в клиенте.
-                        $topic->title,
-                        $topicStatus,
-                        $topic->priority->label(),
-                        '',
-                        '',
-                        '',
-                    ]);
-
-                    unset($topicId, $topic);
+                // Если у раздачи есть новая версия, то используем её данные.
+                if ($topic->actualVersion !== null) {
+                    $topic = $topic->actualVersion;
                 }
 
-                $this->cloneUnregistered->fillTempTable();
+                // Берём статус из известной (актуальной) версии раздачи.
+                if ($topic->status->isValid()) {
+                    $topicStatus = sprintf('обновлено (%s)', $topic->status->label());
+                } else {
+                    $topicStatus = sprintf('закрыто (%s)', $topic->status->label());
+                }
+
+                /**
+                 * Если хеш раздачи в клиенте и хеш известной версии совпадают,
+                 * но раздачу нашли в "прошлых" версиях, что значит что раздача точно "разрег".
+                 * Значит отмечаем как "неизвестно", на всякий случай.
+                 */
+                if ($infoHash === $topic->hash && $topic->status->isValid()) {
+                    $topicStatus = 'закрыто (неизвестно)';
+                }
+
+                // Записываем данные раздачи в буферную таблицу.
+                $this->cloneUnregistered->addTopic(topic: [
+                    $infoHash,
+                    $topic->title,
+                    $topicStatus,
+                    $topic->priority->label(),
+                    '',
+                    '',
+                    '',
+                ]);
+
+                unset($infoHash, $topic);
             }
 
             $this->cloneUnregistered->moveToOrigin();
@@ -377,14 +369,5 @@ final class TorrentsClients
             // Очищаем ненужные строки.
             $this->cloneUnregistered->clearUnusedRows();
         }
-    }
-
-    private function getApiTopicInfo(string $infoHash): ?TopicDetails
-    {
-        if (isset($this->unregisteredApiTopics[$infoHash])) {
-            return $this->unregisteredApiTopics[$infoHash];
-        }
-
-        return null;
     }
 }
