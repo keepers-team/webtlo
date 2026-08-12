@@ -18,7 +18,7 @@ use KeepersTeam\Webtlo\External\Data\TopicSearchMode;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * @phpstan-type RequestTopics (int|string)[]
+ * @phpstan-type RequestTopics int[]|string[]
  * @phpstan-type TopicsChunks RequestTopics[]
  * @phpstan-type RequestFactory callable(): PromiseInterface
  * @phpstan-type PromiseProcessor callable(ResponseInterface, int): void
@@ -32,7 +32,7 @@ trait TopicsDetails
      */
     public function getTopicsDetails(
         array           $topics,
-        TopicSearchMode $searchMode = TopicSearchMode::ID,
+        TopicSearchMode $searchMode = TopicSearchMode::HASH,
     ): ApiError|TopicsDetailsResponse {
         // Ищем раздачи в актуальном API.
         $actualTopics = $this->getTopicsDetailsConcurrently(
@@ -101,7 +101,7 @@ trait TopicsDetails
     ): ApiError|array {
         $knownTopics = [];
 
-        $topicChunks  = array_chunk($topics, $searchMode->paramsLimit());
+        $topicChunks  = array_chunk($topics, $searchMode->postParamChunkSize());
         $requestCount = count($topicChunks);
 
         $pool = new Pool(
@@ -144,7 +144,7 @@ trait TopicsDetails
         // Параметры для каждого запроса в Pool.
         $options = [
             'mode'    => $searchMode->value,
-            'columns' => implode(',', $columns),
+            'columns' => $columns,
         ];
 
         /**
@@ -153,14 +153,14 @@ trait TopicsDetails
          * @return Generator<RequestFactory>
          */
         return static function(array $topicsChunks) use ($client, $options): Generator {
-            foreach ($topicsChunks as $requestTopics) {
-                yield static function() use ($client, $options, $requestTopics) {
-                    return $client->getAsync(
+            foreach ($topicsChunks as $topics) {
+                yield static function() use ($client, $options, $topics) {
+                    return $client->postAsync(
                         uri    : 'releases/pvc',
                         options: [
-                            'query' => [
+                            'json' => [
                                 ...$options,
-                                'topic_ids' => implode(',', $requestTopics),
+                                'topic_ids' => $topics,
                             ],
                         ]
                     );
@@ -184,8 +184,13 @@ trait TopicsDetails
         return static function(array $topicsChunks) use ($client): Generator {
             foreach ($topicsChunks as $topics) {
                 yield static function() use ($client, $topics) {
-                    return $client->getAsync(
-                        uri: 'old_releases_versions/' . implode(',', $topics),
+                    return $client->postAsync(
+                        uri    : 'old_releases_versions',
+                        options: [
+                            'json' => [
+                                'topic_ids_or_hashes' => $topics,
+                            ],
+                        ],
                     );
                 };
             }

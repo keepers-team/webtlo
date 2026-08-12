@@ -15,7 +15,7 @@ use KeepersTeam\Webtlo\External\Data\TopicsPeersResponse;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * @phpstan-type RequestTopics (int|string)[]
+ * @phpstan-type RequestTopics int[]|string[]
  * @phpstan-type TopicsChunks RequestTopics[]
  * @phpstan-type RequestFactory callable(): PromiseInterface
  * @phpstan-type PromiseProcessor callable(ResponseInterface, int): void
@@ -37,7 +37,7 @@ trait TopicsPeers
         $fulfilledProcessor = $this->getPeersPayloadProcessor(...);
         $requestGenerator   = $this->getPeersRequestGenerator(searchMode: $searchMode);
 
-        $topicChunks  = array_chunk($topics, $searchMode->paramsLimit());
+        $topicChunks  = array_chunk($topics, $searchMode->postParamChunkSize());
         $requestCount = count($topicChunks);
 
         $pool = new Pool(
@@ -90,7 +90,7 @@ trait TopicsPeers
         // Параметры для каждого запроса в Pool.
         $options = [
             'mode'    => $searchMode->value,
-            'columns' => implode(',', $columns),
+            'columns' => $columns,
         ];
 
         /**
@@ -101,12 +101,12 @@ trait TopicsPeers
         return static function(array $topicsChunks) use ($client, $options): Generator {
             foreach ($topicsChunks as $requestTopics) {
                 yield static function() use ($client, $options, $requestTopics) {
-                    return $client->getAsync(
+                    return $client->postAsync(
                         uri    : 'releases/pvc',
                         options: [
-                            'query' => [
+                            'json' => [
                                 ...$options,
-                                'topic_ids' => implode(',', $requestTopics),
+                                'topic_ids' => $requestTopics,
                             ],
                         ]
                     );

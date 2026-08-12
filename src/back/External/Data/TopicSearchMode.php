@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\Data;
 
-/** Тип поиска раздач. */
+/**
+ * Тип поиска раздач.
+ */
 enum TopicSearchMode: string
 {
-    case ID   = 'topic_id';
+    case ID   = 'id';
     case HASH = 'hash';
 
     /**
+     * Количество раздач (параметров) в одном запросе для POST запроса.
+     *
      * @return positive-int
      */
-    public function paramsLimit(): int
+    public function postParamChunkSize(): int
     {
         return match ($this) {
-            self::ID   => 100,
-            /*
-             * Hashes are longer, so to avoid HTTP 414 in legacy API
-             * we're capping max identifiers per request.
-             */
-            self::HASH => 32,
+            self::ID   => 1500,
+            self::HASH => 1000,
         };
     }
 }
