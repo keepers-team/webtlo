@@ -25,6 +25,8 @@ use Throwable;
 
 final class App
 {
+    private const DEFAULT_TIMEZONE = 'Europe/Moscow';
+
     private static bool $initialized = false;
 
     private static ?self $appContainer = null;
@@ -172,8 +174,12 @@ final class App
      */
     private static function setDefaultTimeZone(): void
     {
-        if (!ini_get('date.timezone')) {
-            date_default_timezone_set(getenv('TZ') ?: 'Europe/Moscow');
+        $env_tz = getenv('TZ');
+        $ini_tz = ini_get('date.timezone');
+
+        // Переопределяем часовой пояс, если он пуст изначально или задан снаружи.
+        if (!$ini_tz || ($env_tz && $env_tz !== $ini_tz)) {
+            ini_set('date.timezone', $env_tz ?: self::DEFAULT_TIMEZONE);
         }
     }
 }
