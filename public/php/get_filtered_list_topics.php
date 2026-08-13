@@ -11,8 +11,8 @@ use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 $response = [
-    'result'   => '',
-    'validate' => '',
+    'result'         => '',
+    'validate'       => '',
 
     'topics_size'    => 0,
     'topics_count'   => 0,

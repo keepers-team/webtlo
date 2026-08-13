@@ -94,11 +94,11 @@ final class TelemetryConstruct
 
         // Параметры отправки отчётов.
         $shared['reports'] = [
-            'enabled'             => $this->automation->reports,
-            'send_report_api'     => $this->reportSend->sendReports,
-            'exclude_authored'    => $this->reportSend->excludeAuthored,
-            'unset_other_forums'  => $this->reportSend->unsetOtherSubForums,
-            'unset_other_topics'  => $this->reportSend->unsetOtherTopics,
+            'enabled'            => $this->automation->reports,
+            'send_report_api'    => $this->reportSend->sendReports,
+            'exclude_authored'   => $this->reportSend->excludeAuthored,
+            'unset_other_forums' => $this->reportSend->unsetOtherSubForums,
+            'unset_other_topics' => $this->reportSend->unsetOtherTopics,
         ];
 
         // Локальные даты обновления сведений.

@@ -132,8 +132,8 @@ trait TopicsPeers
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
                 $logger->debug('Failed chunk request {index}/{total}', [
-                    'index'   => $index,
-                    'total'   => $requestCount,
+                    'index'  => $index,
+                    'total'  => $requestCount,
                     'reason' => (array) $result,
                 ]);
 

@@ -35,7 +35,10 @@ $rules = [
 
     'binary_operator_spaces' => [
         'default'   => 'at_least_single_space',
-        'operators' => ['=' => 'align'],
+        'operators' => [
+            '='  => 'align',
+            '=>' => 'align_single_space_minimal_by_scope',
+        ],
     ],
 
     'echo_tag_syntax' => ['format' => 'short', 'shorten_simple_statements_only' => true],
@@ -47,5 +50,4 @@ return $config
     ->setCacheFile('.cache/php-cs-fixer.cache')
     ->setRules($rules)->setFinder($finder)
     ->setRiskyAllowed(true)
-    ->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect())
 ;

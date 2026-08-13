@@ -90,7 +90,7 @@ final class CheckMirrorAccess
         return match ($type) {
             'forum'  => 'myip',
             'report' => 'krs/api/v1/info/statuses',
-            default => throw new RuntimeException("Unknown type: $type"),
+            default  => throw new RuntimeException("Unknown type: $type"),
         };
     }
 }

@@ -66,7 +66,7 @@ final class Render
     public function getConfig(): array
     {
         return [
-            'webtlo' => [
+            'webtlo'           => [
                 'version'  => $this->webtlo->version,
                 'wiki'     => $this->webtlo->wiki,
                 'wikiLink' => $this->webtlo->getWikiLink(),
@@ -75,9 +75,9 @@ final class Render
                 'install'  => $this->webtlo->getInstallation(),
             ],
 
-            'apiAuth' => Reflection::reflect($this->apiAuth),
+            'apiAuth'          => Reflection::reflect($this->apiAuth),
 
-            'forumConnect' => [
+            'forumConnect'     => [
                 'options' => $this->forumConnect->getSelectOptions(),
                 'custom'  => $this->forumConnect->getCustomUrl(),
                 'proxy'   => $this->checkbox($this->forumConnect->useProxy),
@@ -89,20 +89,20 @@ final class Render
                 'proxy'   => $this->checkbox($this->apiReportConnect->useProxy),
             ],
 
-            'proxy' => $this->makeProxy(),
+            'proxy'            => $this->makeProxy(),
 
-            'automation'      => Reflection::reflect($this->automation),
-            'averageSeeds'    => Reflection::reflect($this->averageSeeds),
-            'filterRules'     => Reflection::reflect($this->filterRules),
-            'reportSend'      => Reflection::reflect($this->reportSend),
-            'topicSearch'     => Reflection::reflect($this->topicSearch),
-            'topicControl'    => Reflection::reflect($this->topicControl),
-            'torrentDownload' => Reflection::reflect($this->torrentDownload),
+            'automation'       => Reflection::reflect($this->automation),
+            'averageSeeds'     => Reflection::reflect($this->averageSeeds),
+            'filterRules'      => Reflection::reflect($this->filterRules),
+            'reportSend'       => Reflection::reflect($this->reportSend),
+            'topicSearch'      => Reflection::reflect($this->topicSearch),
+            'topicControl'     => Reflection::reflect($this->topicControl),
+            'torrentDownload'  => Reflection::reflect($this->torrentDownload),
 
-            'subForums'      => $this->makeSubForums(),
-            'torrentClients' => $this->makeTorrentClients(),
+            'subForums'        => $this->makeSubForums(),
+            'torrentClients'   => $this->makeTorrentClients(),
 
-            'other' => $this->makeOther(),
+            'other'            => $this->makeOther(),
         ];
     }
 
