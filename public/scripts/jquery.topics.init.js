@@ -112,7 +112,7 @@ $(document).ready(function () {
             tor_clients : tor_clients,
             sel_client  : $('#filter_client_id').val(),
             topic_hashes: topic_hashes,
-            // Принудительный запуск раздач, только uTorrent и Transmission.
+            // Принудительный запуск раздач, только qBittorrent, uTorrent и Transmission.
             force_start: (action === 'start' && e.ctrlKey),
             remove_data: false,
         }

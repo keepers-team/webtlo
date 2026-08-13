@@ -159,7 +159,8 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <button type="button" class="tor_label torrent_action" value="set_label" title="Установить метку для выделенных раздач текущего подраздела в торрент-клиенте (удерживайте Ctrl для установки произвольной метки)">
                                 <i class="fa fa-tag" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="tor_start torrent_action" value="start" title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте">
+                            <button type="button" class="tor_start torrent_action" value="start"
+                                    title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте. &#10;Ctrl+Click выполнит `принудительный` запуск.">
                                 <i class="fa fa-play" aria-hidden="true"></i>
                             </button>
                             <button type="button" class="tor_stop torrent_action" value="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте">
@@ -177,7 +178,8 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <select id="update_info_select" class="filter-select-menu">
                             </select>
                         </div>
-                        <button class="send_reports" name="send_reports" type="button" title="Отправить отчёты на форум">
+                        <button class="send_reports" name="send_reports" type="button"
+                                title="Отправить отчёты на форум. &#10;Ctrl+Click отправит `чистый` отчёт.">
                             <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                         </button>
                         <button id="control_torrents" name="control_torrents" type="button" title="Выполнить регулировку раздач в торрент-клиентах">
@@ -1080,7 +1082,8 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                     <button type="button" disabled id="get_reports" title="Повторить построение выбранного отчёта">
                         <i class="fa fa-refresh" aria-hidden="true"></i>
                     </button>
-                    <button type="button" class="send_reports" name="send_reports" title="Отправить отчёты на форум">
+                    <button type="button" class="send_reports" name="send_reports"
+                            title="Отправить отчёты на форум. &#10;Ctrl+Click отправит `чистый` отчёт.">
                         <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                     </button>
                 </div>
