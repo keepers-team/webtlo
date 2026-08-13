@@ -121,6 +121,7 @@ final class Qbittorrent implements ClientInterface
                 done        : $payload['done'],
                 paused      : (bool) $payload['paused'],
                 error       : (bool) $payload['error'],
+                forced      : (bool) $payload['forced'],
                 trackerError: $payload['tracker_error'] ?: null,
                 comment     : $payload['comment'] ?: null,
                 storagePath : $payload['storagePath'] ?? null
@@ -231,7 +232,14 @@ final class Qbittorrent implements ClientInterface
 
         $methodName = $this->getTorrentMethodName(method: 'start');
 
-        return $this->sendRequest(url: $methodName, params: $fields);
+        $startResult = $this->sendRequest(url: $methodName, params: $fields);
+
+        if ($forceStart) {
+            // Прокидываем отдельный признак "принудительного запуска".
+            $this->sendRequest(url: 'torrents/setForceStart', params: ['value' => 'true', ...$fields]);
+        }
+
+        return $startResult;
     }
 
     public function stopTorrents(array $torrentHashes): bool
@@ -538,6 +546,7 @@ final class Qbittorrent implements ClientInterface
                 'error'         => $torrentError,
                 'name'          => $torrent['name'],
                 'paused'        => $torrentPaused,
+                'forced'        => $torrent['force_start'] ?? false,
                 'time_added'    => $torrent['added_on'],
                 'total_size'    => $torrent['total_size'],
                 'client_hash'   => $clientHash,

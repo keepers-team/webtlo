@@ -21,6 +21,7 @@ final class Torrent
      * @param int|float         $done         прогресс загрузки (1 = скачана, <1 - качается)
      * @param bool              $paused       остановлена ли раздача в клиенте
      * @param bool              $error        есть ошибка в клиенте
+     * @param bool              $forced       принудительно запущена
      * @param null|string       $trackerError текст ошибки трекера
      * @param null|string       $comment      текст комментария раздачи (содержит topicId)
      * @param null|string       $storagePath  путь хранения раздачи на диске
@@ -35,6 +36,7 @@ final class Torrent
         public readonly int|float         $done,
         public readonly bool              $paused,
         public readonly bool              $error = false,
+        public readonly bool              $forced = false,
         public readonly ?string           $trackerError = null,
         public readonly ?string           $comment = null,
         public readonly ?string           $storagePath = null,
