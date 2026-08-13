@@ -30,6 +30,11 @@ enum DesiredStatusChange
         };
     }
 
+    public function doNothing(): bool
+    {
+        return $this === self::Nothing;
+    }
+
     public function isRandom(): bool
     {
         return match ($this) {

@@ -187,7 +187,13 @@ final class TopicControl
                             topic    : $topic,
                             peerLimit: $peerLimit,
                             isSeeding: !$torrent->paused,
+                            isForced : $torrent->forced,
                         );
+                    }
+
+                    // Если решено ничего не делать, пропускаем раздачу.
+                    if ($desiredChange->doNothing()) {
+                        continue;
                     }
 
                     if ($desiredChange->isRandom()) {

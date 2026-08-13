@@ -81,7 +81,7 @@ final class Unseeded
         if ($this->isEnable()) {
             if ($this->startCounter > 0) {
                 $this->logger->info(
-                    '[Unseeded] Запущено {count} из {total} раздач, которые не сидировались как минимум {days} дней.',
+                    '[Unseeded] В клиентах запущено {count} из {total} раздач, которые не сидировались как минимум {days} дней.',
                     [
                         'count' => $this->startCounter,
                         'total' => $this->totalCount,

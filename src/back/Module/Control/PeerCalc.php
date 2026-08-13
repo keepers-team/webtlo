@@ -44,8 +44,13 @@ final class PeerCalc
     /**
      * Определить желаемое состояние раздачи в клиенте, в зависимости от текущих значений и настроек.
      */
-    public function determineDesiredState(TopicPeers $topic, int $peerLimit, bool $isSeeding): DesiredStatusChange
+    public function determineDesiredState(TopicPeers $topic, int $peerLimit, bool $isSeeding, bool $isForced): DesiredStatusChange
     {
+        // Если раздача запущена принудительно извне, ничего не делаем.
+        if ($isSeeding && $isForced) {
+            return DesiredStatusChange::Nothing;
+        }
+
         // Если у раздачи нет личей и выбрана опция "не сидировать без личей", то рандомно останавливаем раздачу.
         if ($isSeeding && self::shouldSkipSeeding(control: $this->config, topic: $topic)) {
             return DesiredStatusChange::RandomStop;
