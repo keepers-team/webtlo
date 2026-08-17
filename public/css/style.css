@@ -489,6 +489,10 @@ button.settings-button {
     text-align: right;
 }
 
+.prop-width-5em {
+    width: 5em;
+}
+
 .forum-profile-link {
     cursor: pointer;
 }

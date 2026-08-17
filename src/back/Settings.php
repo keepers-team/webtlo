@@ -374,6 +374,7 @@ final class Settings
         }
         $ini->write('download', 'savesubdir', isset($cfg['savesubdir']) ? 1 : 0);
         $ini->write('download', 'retracker', isset($cfg['retracker']) ? 1 : 0);
+        $ini->write('download', 'api_proxy', isset($cfg['download_api_proxy']) ? 1 : 0);
     }
 
     /**

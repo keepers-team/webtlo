@@ -328,10 +328,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 </fieldset>
                             </div>
                             <div class="filter_block ui-widget"
-                                 title="Статус определяется при сканировании списков хранимого на форуме и обновлении сведений через API форума. Каждая раздача может иметь (или не иметь):
-                                 'Хранителя', который скачал раздачу и включил её в свой отчёт;
-                                 'Хранителя', который раздаёт раздачу на момент последнего обновления сведений;
-                                 'Хранителя', который скачивает раздачу.">
+                                 title="Статус определяется при сканировании списков хранимого на форуме и обновлении сведений через API форума. Каждая раздача может иметь (или не иметь):&#10;- 'Хранителя', который скачал раздачу и включил её в свой отчёт;&#10;- 'Хранителя', который раздаёт раздачу на момент последнего обновления сведений;&#10;- 'Хранителя', который скачивает раздачу.">
                                 <span>Статус хранения раздачи</span>
                                 <hr/>
                                 <fieldset class="filter-topic-kept-status">
@@ -591,44 +588,34 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <div id="proxy_prop">
                             <h2>Настройки прокси-сервера</h2>
                                 <div>
-                                    <label>
-                                        Тип:
-                                        <select name="proxy_type" id="proxy_type" class="inline-input" title="Тип прокси-сервера">
-                                            <?= $cs('proxy', 'options'); ?>
-                                        </select>
-                                    </label>
+                                    <label for="proxy_type" class="prop-inline-block prop-width-5em">Тип:</label>
+                                    <select name="proxy_type" id="proxy_type" class="inline-input" title="Тип прокси-сервера">
+                                        <?= $cs('proxy', 'options'); ?>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label>
-                                        Адрес:
-                                        <input name="proxy_hostname" id="proxy_hostname" type="text"
-                                               class="inline-input" size="24"
-                                               title="IP-адрес или сетевое/доменное имя прокси-сервера."
-                                               value="<?= $cs('proxy', 'hostname'); ?>"/>
-                                    </label>
-                                    <label>
-                                        Порт:
-                                        <input name="proxy_port" id="proxy_port" type="text"
-                                               class="inline-input" size="6"
-                                               title="Порт прокси-сервера."
-                                               value="<?= $cs('proxy', 'port'); ?>"/>
-                                    </label>
+                                    <label for="proxy_hostname" class="prop-inline-block prop-width-5em">Адрес:</label>
+                                    <input name="proxy_hostname" id="proxy_hostname" type="text"
+                                           class="inline-input" size="17"
+                                           title="IP-адрес или сетевое/доменное имя прокси-сервера."
+                                           value="<?= $cs('proxy', 'hostname'); ?>"/>
+                                    <label for="proxy_port" class="prop-inline-block prop-width-5em">Порт:</label>
+                                    <input name="proxy_port" id="proxy_port" type="text"
+                                           class="inline-input" size="6"
+                                           title="Порт прокси-сервера."
+                                           value="<?= $cs('proxy', 'port'); ?>"/>
                                 </div>
                                 <div>
-                                    <label>
-                                        Логин:
-                                        <input name="proxy_login" id="proxy_login" type="text"
-                                               class="inline-input" size="24"
-                                               title="Имя пользователя для доступа к прокси-серверу (необязательно)."
-                                               value="<?= $cs('proxy', 'username'); ?>"/>
-                                    </label>
-                                    <label>
-                                        Пароль:
-                                        <input name="proxy_paswd" id="proxy_paswd" type="password"
-                                               class="inline-input user_protected" size="24"
-                                               title="Пароль для доступа к прокси-серверу (необязатально)."
-                                               value="<?= $cs('proxy', 'password'); ?>"/>
-                                    </label>
+                                    <label for="proxy_login" class="prop-inline-block prop-width-5em">Логин:</label>
+                                    <input name="proxy_login" id="proxy_login" type="text"
+                                           class="inline-input" size="17"
+                                           title="Имя пользователя для доступа к прокси-серверу (необязательно)."
+                                           value="<?= $cs('proxy', 'username'); ?>"/>
+                                    <label for="proxy_paswd" class="prop-inline-block prop-width-5em">Пароль:</label>
+                                    <input name="proxy_paswd" id="proxy_paswd" type="password"
+                                           class="inline-input user_protected" size="17"
+                                           title="Пароль для доступа к прокси-серверу (необязатально)."
+                                           value="<?= $cs('proxy', 'password'); ?>"/>
                                 </div>
                             </div>
                         </div>
@@ -846,10 +833,28 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                         </div>
                         <h2>Скачивание торрент-файлов</h2>
                         <div>
-                            <h3>Каталог для скачиваемых *.torrent файлов</h3>
+                            <h3>Откуда загружать *.torrent-файлы</h3>
+                            <label title="- Выключено (По умолчанию) *.torrent-файлы будут загружены с форума. &#10;- Включено, *.torrent-файлы будут загружены через API отчётов. &#10;&#10;См `Связь с форумом и API`">
+                                <input name="download_api_proxy" type="checkbox" size="24"
+                                    <?= $cs('torrentDownload', 'useApiProxy'); ?>
+                                />
+                                загружать файлы через API отчётов.
+                            </label>
+                            <hr>
+
+                            <h3>Настройки retracker.local</h3>
+                            <label title="Добавлять retracker.local в скачиваемые *.torrent-файлы. Влияет на добавляемые в клиент файлы и на файлы скачиваемые в каталог.">
+                                <input name="retracker" type="checkbox" size="24"
+                                    <?= $cs('torrentDownload', 'addRetracker'); ?>
+                                />
+                                добавлять retracker.local в скачиваемые *.torrent-файлы
+                            </label>
+                            <hr>
+                            <h3>Загрузка *.torrent файлов со своим PASSKEY</h3>
                             <div>
+                                Каталог:
                                 <input id="savedir" name="savedir" class="inline-input" type="text" size="53"
-                                       title="Каталог, куда будут сохраняться новые *.torrent-файлы."
+                                       title="Каталог, в который будут сохранены загруженные torrent-файлы с учётными данными авторизованного хранителя."
                                        value="<?= $cs('torrentDownload', 'folder'); ?>"
                                 />
                             </div>
@@ -859,18 +864,12 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 />
                                 создавать подкаталоги
                             </label>
-                            <h3>Настройки retracker.local</h3>
-                            <label title="Добавлять retracker.local в скачиваемые *.torrent-файлы.">
-                                <input name="retracker" type="checkbox" size="24"
-                                    <?= $cs('torrentDownload', 'addRetracker'); ?>
-                                />
-                                добавлять retracker.local в скачиваемые *.torrent-файлы
-                            </label>
-                            <h3>Скачивание *.torrent файлов с заменой Passkey</h3>
+                            <hr>
+                            <h3>Загрузка *.torrent файлов с указанным PASSKEY</h3>
                             <label class="label">
                                 Каталог:
                                 <input id="dir_torrents" name="dir_torrents" class="inline-input" type="text" size="53"
-                                       title="Каталог, в который требуется сохранять торрент-файлы с изменённым Passkey."
+                                       title="Каталог, в который будут сохранены загруженные torrent-файлы с изменённым PASSKEY. Актуально при скачивании файлов для другого человека"
                                        value="<?= $cs('torrentDownload', 'folderReplace'); ?>"
                                 />
                             </label>
