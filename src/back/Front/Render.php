@@ -79,13 +79,13 @@ final class Render
 
             'forumConnect'     => [
                 'options' => $this->forumConnect->getSelectOptions(),
-                'custom'  => $this->forumConnect->getCustomUrl(),
+                'custom'  => $this->forumConnect->customUrl,
                 'proxy'   => $this->checkbox($this->forumConnect->useProxy),
             ],
 
             'apiReportConnect' => [
                 'options' => $this->apiReportConnect->getSelectOptions(),
-                'custom'  => $this->apiReportConnect->getCustomUrl(),
+                'custom'  => $this->apiReportConnect->customUrl,
                 'proxy'   => $this->checkbox($this->apiReportConnect->useProxy),
             ],
 

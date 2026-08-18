@@ -71,10 +71,11 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             );
 
             return new ForumConnect(
-                baseUrl : $isCustomUrl ? $urlCustom : $url,
-                isCustom: $isCustomUrl,
-                useProxy: $useProxy,
-                timeout : $timeout,
+                baseUrl  : $isCustomUrl ? $urlCustom : $url,
+                customUrl: $urlCustom,
+                isCustom : $isCustomUrl,
+                useProxy : $useProxy,
+                timeout  : $timeout,
             );
         });
 
@@ -97,10 +98,11 @@ final class ConfigServiceProvider extends AbstractServiceProvider
             );
 
             return new ApiReportConnect(
-                baseUrl : $isCustomUrl ? $urlCustom : $url,
-                isCustom: $isCustomUrl,
-                useProxy: $useProxy,
-                timeout : $timeout,
+                baseUrl  : $isCustomUrl ? $urlCustom : $url,
+                customUrl: $urlCustom,
+                isCustom : $isCustomUrl,
+                useProxy : $useProxy,
+                timeout  : $timeout,
             );
         });
 

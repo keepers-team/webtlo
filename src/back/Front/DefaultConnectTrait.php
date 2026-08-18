@@ -27,9 +27,4 @@ trait DefaultConnectTrait
 
         return implode('', $options);
     }
-
-    public function getCustomUrl(): string
-    {
-        return $this->isCustom ? $this->baseUrl : '';
-    }
 }

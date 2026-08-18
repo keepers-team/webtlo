@@ -20,6 +20,7 @@ final class ForumConnect
 
     public function __construct(
         public readonly string  $baseUrl,
+        public readonly string  $customUrl,
         public readonly bool    $isCustom,
         public readonly bool    $useProxy,
         public readonly Timeout $timeout,
