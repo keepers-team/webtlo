@@ -12,6 +12,28 @@ $(document).ready(function() {
         togglePasswordVisibility(this, $('#torrent-client-password'))
     });
 
+    // Показать/скрыть произвольные адреса для форума и api
+    $('#forum_url, #report_url').on('selectmenucreate selectmenuchange', function() {
+        const name = $(this).prop('name');
+
+        $(`#${name}_custom`).toggle($(this).val() === 'custom');
+    });
+
+    // Показать/скрыть настройки прокси, при использовании
+    $('#proxy_activate_forum, #proxy_activate_report').change(function () {
+        const anyEnabled =
+            $('#proxy_activate_forum').prop('checked') ||
+            $('#proxy_activate_report').prop('checked');
+
+        $('#proxy_prop').toggle(anyEnabled);
+    }).change();
+
+    // Показать подсказку, если ключи пустые.
+    $('#api_auth_params').on('change click keyup', function() {
+        const emptyKeys= !$('#api_key').val() || !$('#bt_key').val();
+        $('#api_auth_params .support-note').toggle(emptyKeys);
+    }).change();
+
     // Открыть ссылку на профиль пользователя.
     $('#forum_profile_link').click(function(e) {
         e.preventDefault();
@@ -52,11 +74,5 @@ $(document).ready(function() {
             'ui-controlgroup': 'hide-dot ui-padding-02'
         }
     });
-
-
-    $('#api_auth_params').change(function() {
-        const emptyKeys= !$('#api_key').val() || !$('#bt_key').val();
-        $('#api_auth_params .support-note').toggle(emptyKeys);
-    }).change();
 
 });

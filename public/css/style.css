@@ -493,12 +493,22 @@ button.settings-button {
     width: 5em;
 }
 
-.forum-profile-link {
-    cursor: pointer;
+.url-select-container {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: top;
+}
+
+.custom-url-input {
+    margin-top: 0;
 }
 
 #forum_url_params label {
     margin: 0;
+}
+
+.forum-profile-link {
+    cursor: pointer;
 }
 
 #proxy_prop {

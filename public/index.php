@@ -513,13 +513,16 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                         <div>
                             <div id="forum_url_params">
                                 <label for="forum_url" class="param-name">Адрес форума:</label>
-                                <select name="forum_url" id="forum_url" class="inline-input">
-                                    <?= $cs('forumConnect', 'options'); ?>
-                                </select>
-                                <input id="forum_url_custom" name="forum_url_custom"
-                                       class="inline-input" type="text" size="14"
-                                       value="<?= $cs('forumConnect', 'custom'); ?>"
-                                />
+                                <div class="url-select-container">
+                                    <select name="forum_url" id="forum_url" class="inline-input">
+                                        <?= $cs('forumConnect', 'options'); ?>
+                                    </select>
+                                    <input id="forum_url_custom" name="forum_url_custom"
+                                           class="inline-input custom-url-input"
+                                           type="text" size="14"
+                                           value="<?= $cs('forumConnect', 'custom'); ?>"
+                                    />
+                                </div>
                                 <label
                                     title="Использовать прокси-сервер при обращении к форуму, например, для обхода блокировки.">
                                     <input id="proxy_activate_forum" name="proxy_activate_forum"
@@ -532,13 +535,16 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             </div>
                             <div id="report_url_params">
                                 <label for="report_url" class="param-name">API отчётов:</label>
-                                <select name="report_url" id="report_url" class="inline-input">
-                                    <?= $cs('apiReportConnect', 'options'); ?>
-                                </select>
-                                <input id="report_url_custom" name="report_url_custom"
-                                       class="inline-input" type="text" size="14"
-                                       value="<?= $cs('apiReportConnect', 'custom'); ?>"
-                                />
+                                <div class="url-select-container">
+                                    <select name="report_url" id="report_url" class="inline-input">
+                                        <?= $cs('apiReportConnect', 'options'); ?>
+                                    </select>
+                                    <input id="report_url_custom" name="report_url_custom"
+                                           class="inline-input custom-url-input"
+                                           type="text" size="14"
+                                           value="<?= $cs('apiReportConnect', 'custom'); ?>"
+                                    />
+                                </div>
                                 <label title="Использовать прокси-сервер при обращении к API, например, для обхода блокировки.">
                                     <input id="proxy_activate_report" name="proxy_activate_report" class="check_access_report" type="checkbox"
                                            size="24" <?= $cs('apiReportConnect', 'proxy'); ?>
@@ -582,12 +588,12 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     <i class="fa fa-eye"></i>
                                 </button>
                                 <ol class="support-note">
-                                    Для заполнения параметров доступа, откройте свой профиль на форуме и заполните поля выше. <br>
-                                    id => UserId, api => API Key, bt => BT Key
+                                    <li>Для заполнения параметров доступа, откройте свой профиль на форуме и заполните поля выше.</li>
+                                    <li>id => UserId, api => API Key, bt => BT Key</li>
                                 </ol>
                             </div>
-                            <hr>
                             <div id="proxy_prop">
+                            <hr>
                             <h2>Настройки прокси-сервера</h2>
                                 <div>
                                     <label for="proxy_type" class="prop-inline-block prop-width-5em">Тип:</label>

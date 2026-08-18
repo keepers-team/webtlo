@@ -110,17 +110,6 @@ $(document).ready(function () {
         $("#savecfg").change();
     });
 
-    // произвольные адреса для форума и api
-    $('#forum_url, #report_url').on("selectmenucreate selectmenuchange", function() {
-        const value = $(this).val();
-        const name = $(this).attr("name");
-        if (value === 'custom') {
-            $(`#${name}_custom`).attr("type", "text");
-        } else {
-            $(`#${name}_custom`).attr("type", "hidden");
-        }
-    });
-
     // проверка доступности форума и API
     $('#check_mirrors_access').on('click', function () {
         const $data = $("#config").serialize();
