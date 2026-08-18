@@ -334,7 +334,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                 folder        : (string) $ini->read('download', 'savedir', Defaults::downloadPath),
                 subFolder     : (bool) $ini->read('download', 'savesubdir', 0),
                 addRetracker  : (bool) $ini->read('download', 'retracker', 0),
-                useApiProxy   : (bool) $ini->read('download', 'api_proxy', 0),
+                useApiProxy   : (bool) $ini->read('download', 'api_proxy', 1),
                 folderReplace : (string) $ini->read('curators', 'dir_torrents', Defaults::downloadPath),
                 replacePassKey: (string) $ini->read('curators', 'user_passkey'),
                 forRegularUser: (bool) $ini->read('curators', 'tor_for_user', 0)

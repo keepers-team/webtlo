@@ -836,7 +836,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                         <h2>Скачивание торрент-файлов</h2>
                         <div>
                             <h3>Откуда загружать *.torrent-файлы</h3>
-                            <label title="- Выключено (По умолчанию) *.torrent-файлы будут загружены с форума. &#10;- Включено, *.torrent-файлы будут загружены через API отчётов. &#10;&#10;См `Связь с форумом и API`">
+                            <label title="- Включено (по умолчанию), *.torrent-файлы будут загружены через API отчётов.&#10;- Выключено *.torrent-файлы будут загружены с форума.&#10;&#10;См `Связь с форумом и API`">
                                 <input name="download_api_proxy" type="checkbox" size="24"
                                     <?= $cs('torrentDownload', 'useApiProxy'); ?>
                                 />
