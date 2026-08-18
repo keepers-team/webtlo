@@ -122,64 +122,6 @@ function doSortSelect(selectId, sortElement = 'option') {
     $select.empty().append(sorted);
 }
 
-// сохранение настроек
-function setSettings() {
-    savecfg.dataset["unsaved"] = 0;
-    $("#savecfg").change();
-    let forums = getForums();
-    let tor_clients = getListTorrentClients();
-    let $data = $("#config").serialize();
-
-    $.ajax({
-        context: this,
-        type: "POST",
-        url: "php/set_config.php",
-        dataType: 'json',
-        data: JSON.stringify({
-            cfg: $data,
-            forums: forums,
-            tor_clients: tor_clients,
-        }),
-        beforeSend: function () {
-            $(this).addClass("ui-state-disabled").prop("disabled", true);
-        },
-        success: function (response) {
-            addDefaultLog(response.log ?? '');
-        },
-        complete: function () {
-            $(this).removeClass("ui-state-disabled").prop("disabled", false);
-        },
-    });
-}
-
-function checkSaveSettings() {
-    let unsaved = !!+savecfg.dataset["unsaved"];
-    if (!unsaved) {
-        return;
-    }
-    $("#dialog").dialog(
-        {
-            buttons: [
-                {
-                    text: "Ну и ладно",
-                    click: function () {
-                        $(this).dialog("close");
-                    }
-                },
-                {
-                    text: "Сохранить",
-                    click: function() {
-                        setSettings();
-                        $(this).dialog("close");
-                    }
-                }
-            ],
-            modal: true,
-            resizable: false
-        }
-    ).text("Похоже, что вы не сохранили настройки");
-    $("#dialog").dialog("open");
-}
 
 /** Получить содержимое лог-файла */
 function getLogContent(log_name) {

@@ -97,25 +97,12 @@ $(document).ready(function () {
         getFilteredTopics();
     });
 
-    // сохранение настроек
-    $("#savecfg").on("click", setSettings)
-        .on("change", function () {
-            let unsaved = !!+this.dataset["unsaved"];
-            $(this).toggleClass("ui-state-highlight", unsaved);
-        });
-
-    // Проверяем, что настройки были изменены
-    $("form#config :input").not(".ignore-save-change").on("change selectmenuchange spinstop", function () {
-        savecfg.dataset["unsaved"] = 1;
-        $("#savecfg").change();
-    });
-
     // проверка доступности форума и API
     $('#check_mirrors_access').on('click', function () {
         const $data = $("#config").serialize();
 
         // Проверяемые адреса.
-        const check_list = ['forum', 'api', 'report'];
+        const check_list = ['forum', 'report'];
         const result_list = ['text-danger', 'text-success'];
 
         let forumButtons = $('#check_mirrors_access').toggleDisable(true);
@@ -177,39 +164,6 @@ $(document).ready(function () {
                 }
             });
         });
-    });
-
-    $("#forum_url_params").on("change", function () {
-        $("#forum_url_result").removeAttr("class");
-    });
-
-    $("#report_url_params").on("change", function () {
-        $("#report_url_result").removeAttr("class");
-    });
-
-    // проверка закрывающего слеша
-    $("#savedir, #dir_torrents").on("change", function () {
-        var e = this;
-        var val = $(e).val();
-        if ($.isEmptyObject(val)) {
-            return false;
-        }
-        var path = $(e).val();
-        var last_s = path.slice(-1);
-        if (path.indexOf('/') + 1) {
-            if (last_s != '/') {
-                new_path = path + '/';
-            } else {
-                new_path = path;
-            }
-        } else {
-            if (last_s != '\\') {
-                new_path = path + '\\';
-            } else {
-                new_path = path;
-            }
-        }
-        $(e).val(new_path);
     });
 
     // Обновить отчёт.

@@ -28,6 +28,14 @@ $(document).ready(function() {
         $('#proxy_prop').toggle(anyEnabled);
     }).change();
 
+    $("#forum_url_params").on("change", function () {
+        $("#forum_url_result").removeAttr("class");
+    });
+
+    $("#report_url_params").on("change", function () {
+        $("#report_url_result").removeAttr("class");
+    });
+
     // Показать подсказку, если ключи пустые.
     $('#api_auth_params').on('change click keyup', function() {
         const emptyKeys= !$('#api_key').val() || !$('#bt_key').val();
@@ -73,6 +81,37 @@ $(document).ready(function() {
         classes: {
             'ui-controlgroup': 'hide-dot ui-padding-02'
         }
+    });
+
+    // Проверка закрывающего слэша.
+    $('#savedir, #dir_torrents').on('change', function () {
+        const path = this.value.trim(); // Убираем лишние пробелы.
+        if (!path) return;
+
+        const lastChar = path.slice(-1);
+
+        // Если уже заканчивается на / или \ – ничего не делаем
+        if (lastChar === '/' || lastChar === '\\') return;
+
+        // Определяем разделитель: если путь содержит '/', то используем '/', иначе '\'
+        const separator = path.includes('/') ? '/' : '\\';
+        if (lastChar !== separator) {
+            this.value = path + separator;
+        }
+    });
+
+
+    // сохранение настроек
+    $("#savecfg")
+        .on("click", setSettings)
+        .on("change", function () {
+            const unsaved = !!+$(this).data('unsaved');
+            $(this).toggleClass("ui-state-highlight", unsaved);
+        });
+
+    // Проверяем, что настройки были изменены
+    $("form#config :input").not(".ignore-save-change").on("change selectmenuchange spinstop", function () {
+        $("#savecfg").data('unsaved', true).change();
     });
 
 });
