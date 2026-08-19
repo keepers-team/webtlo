@@ -51,9 +51,11 @@ final class PeerCalc
             return DesiredStatusChange::Nothing;
         }
 
-        // Если у раздачи нет личей и выбрана опция "не сидировать без личей", то рандомно останавливаем раздачу.
-        if ($isSeeding && self::shouldSkipSeeding(control: $this->config, topic: $topic)) {
-            return DesiredStatusChange::RandomStop;
+        // Если выключена опция "запускать раздачи с нулём личей" и у раздачи нет личей, то раздача должна быть остановлена.
+        if (!$this->config->seedingWithoutLeechers && $topic->noLeechers()) {
+            return $isSeeding
+                ? DesiredStatusChange::RandomStop
+                : DesiredStatusChange::Nothing;
         }
 
         // Расчётное значение пиров раздачи.
@@ -139,13 +141,5 @@ final class PeerCalc
         $peerLimit = $interval->getCurrentIntervalPeerLimit($currentHour);
 
         return $this->peerLimit = $peerLimit ?? $this->config->peersLimit;
-    }
-
-    /**
-     * Определяет, следует ли остановить сидирование раздачи.
-     */
-    private static function shouldSkipSeeding(TopicControl $control, TopicPeers $topic): bool
-    {
-        return !$control->seedingWithoutLeechers && $topic->leechers === 0 && $topic->seeders > 1;
     }
 }
