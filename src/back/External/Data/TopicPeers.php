@@ -23,4 +23,12 @@ final class TopicPeers
         public readonly int    $leechers,
         public readonly int    $keepers,
     ) {}
+
+    /**
+     * У раздачи есть сиды и нет личей. Частный случай.
+     */
+    public function noLeechers(): bool
+    {
+        return $this->leechers === 0 && $this->seeders > 1;
+    }
 }
