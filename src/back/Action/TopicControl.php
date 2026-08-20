@@ -13,6 +13,7 @@ use KeepersTeam\Webtlo\Config\TorrentClients;
 use KeepersTeam\Webtlo\Module\Control\ApiSearch;
 use KeepersTeam\Webtlo\Module\Control\DbSearch;
 use KeepersTeam\Webtlo\Module\Control\PeerCalc;
+use KeepersTeam\Webtlo\Module\Control\ResultCounter;
 use KeepersTeam\Webtlo\Module\Control\Unseeded;
 use KeepersTeam\Webtlo\Timers;
 use Psr\Log\LoggerInterface;
@@ -86,7 +87,7 @@ final class TopicControl
 
             // Получаем раздачи из него.
             $torrents = $this->getClientTorrents($client);
-            if ($torrents === null) {
+            if ($torrents === null || !$torrents->count()) {
                 continue;
             }
 
@@ -99,6 +100,8 @@ final class TopicControl
 
             // Счётчики применения фортуны при переключении состояния раздачи.
             $randomCounter = $randomProc = 0;
+
+            $records = [];
 
             $controlTopics = ['stop' => [], 'start' => []];
             foreach ($topicsHashes as $group => $hashes) {
@@ -130,6 +133,17 @@ final class TopicControl
 
                 Timers::start("subsection_$group");
 
+                // Лимит пиров для регулировки текущей группы раздач.
+                $peerLimit = $this->calc->calcLimit(
+                    clientControlPeers    : $clientControlPeers,
+                    subsectionControlPeers: $subControlPeers,
+                );
+
+                $logRecord = [
+                    'forumId'   => $group,
+                    'peerLimit' => $peerLimit,
+                ];
+
                 $forumUnseededTopics = [];
                 if ($this->unseeded->checkLimit()) {
                     $forumUnseededTopics = $this->api->getUnseededHashes(
@@ -138,27 +152,25 @@ final class TopicControl
                         limit: $configControl->maxUnseededCount,
                     );
 
+                    $logRecord['unseeded'] = count($forumUnseededTopics);
+
                     $this->unseeded->updateTotal(count: count($forumUnseededTopics));
                 }
-
-                // Лимит пиров для регулировки текущей группы раздач.
-                $peerLimit = $this->calc->calcLimit(
-                    clientControlPeers    : $clientControlPeers,
-                    subsectionControlPeers: $subControlPeers,
-                );
 
                 // Получаем данные о пирах искомых раздач и перебираем их.
                 try {
                     $topicsPeers = $this->api->getGroupTopicPeersIterator(group: $group, hashes: $hashes);
                 } catch (RuntimeException $e) {
                     $this->logger->warning('Обработка подраздела не удалась', [
-                        'forumId'  => $group,
-                        'error'    => $e->getMessage(),
-                        'execTime' => Timers::getExecTime("subsection_$group"),
+                        'forumId' => $group,
+                        'error'   => $e->getMessage(),
+                        'sec'     => Timers::getExecTime("subsection_$group"),
                     ]);
 
                     continue;
                 }
+
+                $counter = new ResultCounter();
 
                 foreach ($topicsPeers as $topic) {
                     // Проверяем наличие и статус раздачи в клиенте.
@@ -191,6 +203,9 @@ final class TopicControl
                         );
                     }
 
+                    // Записываем результат анализа раздачи.
+                    $counter->add(seeding: !$torrent->paused, targetStatus: $desiredChange);
+
                     // Если решено ничего не делать, пропускаем раздачу.
                     if ($desiredChange->doNothing()) {
                         continue;
@@ -217,16 +232,18 @@ final class TopicControl
                     unset($topic, $torrent);
                 }
 
-                $this->logger->debug('Обработка подраздела', [
-                    'forumId'   => $group,
-                    'count'     => count($hashes),
-                    'unseeded'  => count($forumUnseededTopics),
-                    'peerLimit' => $peerLimit,
-                    'execTime'  => Timers::getExecTime("subsection_$group"),
+                $this->logger->debug('Анализ подраздела', [
+                    ...$logRecord,
+                    ...$counter->getResults(),
+                    'sec' => Timers::getExecTime("subsection_$group"),
                 ]);
+
+                $records[] = $counter;
 
                 unset($group, $hashes, $topicsPeers);
             }
+
+            $this->logger->debug('Анализ торрент клиента', ResultCounter::summary(results: $records)->getResults());
 
             // Если сработал рандом, запишем в лог.
             if ($randomProc > 0) {
