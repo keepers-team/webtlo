@@ -19,10 +19,10 @@ services:
       - WEBTLO_CRON=true
       # Указать расписание для конкретной задачи.
       # Или "false" - чтобы отключить эту задачу.
-      - CRON_UPDATE=15 * * * *
       - CRON_CONTROL=25 * * * *
-      - CRON_KEEPERS=0 6 * * *
-      - CRON_REPORTS=0 5 * * *
+      - CRON_UPDATE=0 5 * * *
+      - CRON_KEEPERS=15 5 * * *
+      - CRON_REPORTS=0 6 * * *
     volumes:
       # Проброшенный каталог с файлами конфигурации
       - "./webtlo-data:/data"

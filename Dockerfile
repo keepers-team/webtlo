@@ -46,9 +46,9 @@ ENV WEBTLO_GID=1000
 # set cron environment
 ENV WEBTLO_DIR="/data/storage"
 ENV WEBTLO_CRON="true" \
-    CRON_UPDATE="15 * * * *" \
     CRON_CONTROL="25 * * * *" \
-    CRON_KEEPERS="0 5 * * *" \
+    CRON_UPDATE="0 5 * * *" \
+    CRON_KEEPERS="15 5 * * *" \
     CRON_REPORTS="0 6 * * *"
 
 EXPOSE 80
