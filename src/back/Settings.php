@@ -151,8 +151,18 @@ final class Settings
                 'login',
                 'password',
                 'user_id',
+                'user_session',
                 'bt_key',
                 'api_key',
+            ],
+            'proxy'           => [
+                'hostname',
+                'port',
+                'login',
+                'password',
+            ],
+            'curators'        => [
+                'user_passkey',
             ],
         ];
 
