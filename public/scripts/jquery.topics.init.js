@@ -97,18 +97,14 @@ $(document).ready(function () {
         }
 
         // Текущий выбранный "разворот раздач"/ подраздел.
-        const subsection = getCurrentSubsection();
+        const listingType = getCurrentSubsection();
 
         const action = $(this).val();
 
-        // Разворот, при котором можно установить произвольную метку.
-        const labelSubsections = [0, -3, -4, -5];
-        const allowCustomLabel = e.ctrlKey || ~$.inArray(subsection, labelSubsections);
-
         let params = {
             action      : action,
-            subsection  : subsection,
-            label       : getLabelBySubsection(subsection),
+            listingType : listingType,
+            label       : null,
             tor_clients : tor_clients,
             sel_client  : $('#filter_client_id').val(),
             topic_hashes: topic_hashes,
@@ -156,8 +152,8 @@ $(document).ready(function () {
         }
 
         // Присвоение метки.
-        if (action === 'set_label' && allowCustomLabel) {
-            dialog.html('<label>Установить метку: <input id="any_label" size="27" />');
+        if (action === 'set_label' && e.ctrlKey) {
+            dialog.html('<label>Установить метку: <input type="text" id="any_label" size="27" placeholder="<пустая строка>"/></label>');
             dialog.dialog({
                 buttons  : [
                     {

@@ -46,38 +46,33 @@ final class Torrents
     }
 
     /**
-     * Найти список раздач, сгруппировав их по ид клиента.
+     * Найти список раздач, сгруппировав их по ид клиента и ид подраздела.
      *
-     * @param string[]     $hashes
-     * @param positive-int $chunkSize
+     * @param string[] $hashes
      *
-     * @return array<int, string[]>
+     * @return array<int, array<int, string[]>>
      */
-    public function getGroupedByClientTopics(array $hashes, int $chunkSize = 499): array
+    public function getGroupedTopics(array $hashes): array
     {
         $result = [];
 
-        $hashes = array_chunk(array_unique($hashes), $chunkSize);
+        $hashes = array_chunk(array_unique($hashes), 500);
 
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
+            $query  = "
+                SELECT tr.client_id, tp.forum_id, tr.info_hash
+                FROM Torrents AS tr
+                    LEFT JOIN Topics AS tp ON tp.info_hash = tr.info_hash
+                WHERE tr.info_hash IN ($search->keys)
+            ";
 
-            $stm = $this->con->executeStatement(
-                "
-                    SELECT client_id, info_hash FROM Torrents
-                    WHERE info_hash IN ($search->keys)
-                ",
-                $search->values,
-            );
+            $topics = $this->con->query($query, $search->values);
+            foreach ($topics as $topic) {
+                $clientId = (int) $topic['client_id'];
+                $forumId  = (int) $topic['forum_id'];
 
-            $topics = $stm->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
-
-            foreach ($topics as $clientId => $clientHashes) {
-                $clientId = (int) $clientId;
-
-                $result[$clientId] = isset($result[$clientId])
-                    ? array_merge($result[$clientId], $clientHashes)
-                    : $clientHashes;
+                $result[$clientId][$forumId][] = $topic['info_hash'];
             }
         }
 

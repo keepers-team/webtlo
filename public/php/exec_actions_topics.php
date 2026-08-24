@@ -7,6 +7,7 @@ use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
+use KeepersTeam\Webtlo\TopicList\ListingType;
 
 // Подключаем контейнер.
 $app = App::create();
@@ -34,9 +35,12 @@ try {
 
     // Дополнительные параметры.
     $actionOptions = new ClientApplyOptions(
-        label      : (string) ($request['label'] ?? ''),
-        forceStart : (bool) ($request['force_start'] ?? 0),
-        removeFiles : (bool) ($request['remove_data'] ?? 0),
+        label      : isset($request['label']) ? (string) $request['label'] : null,
+        forceStart : (bool) ($request['force_start'] ?? false),
+        removeFiles: (bool) ($request['remove_data'] ?? false),
+        listingType: ListingType::tryFrom(
+            (int) ($request['listingType'] ?? -999),
+        )
     );
 
     parse_str($request['topic_hashes'], $topicHashes);

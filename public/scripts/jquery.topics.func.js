@@ -110,22 +110,6 @@ function getCurrentSubsection() {
     return +$('#main-subsections').val();
 }
 
-/**
- * Метка для раздач, в зависимости от подраздела.
- *
- * @param {number} subsection
- * @returns {string}
- */
-function getLabelBySubsection(subsection) {
-    if (subsection > 0) {
-        const forumData = $(`#list-forums [value=${subsection}]`).data();
-
-        return '' + forumData.label;
-    }
-
-    return '';
-}
-
 // получение отфильтрованных раздач из базы
 function getFilteredTopics() {
     // Ставим в "очередь" поиск раздач при выполнении тяжелых запросов.
