@@ -8,6 +8,7 @@ use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Formatter;
+use KeepersTeam\Webtlo\TopicList\ListingType;
 use RuntimeException;
 
 final class Factory
@@ -30,41 +31,47 @@ final class Factory
             $this->formatter->setFilter(filter: $filter);
         }
 
+        $listingType = ListingType::tryFrom($forumId);
+
         // Хранимые раздачи из других подразделов.
-        if ($forumId === 0) {
+        if ($listingType === ListingType::OtherSubForums) {
             return new UntrackedTopics($this->con, $this->forums, $this->formatter);
         }
 
-        if ($forumId === -1) {
-            // Хранимые раздачи незарегистрированные на форуме.
+        // Хранимые раздачи незарегистрированные на форуме.
+        if ($listingType === ListingType::Unregistered) {
             return new UnregisteredTopics($this->con, $this->formatter);
         }
 
-        if ($forumId === -2) {
-            // Раздачи из "Черного списка".
+        // Раздачи из "Черного списка".
+        if ($listingType === ListingType::BlackListed) {
             return new BlackListedTopics($this->con, $this->forums, $this->formatter);
         }
 
-        if ($forumId === -4) {
-            // Хранимые дублирующиеся раздачи.
+        // Хранимые дублирующиеся раздачи.
+        if ($listingType === ListingType::Duplicated) {
             return new DuplicatedTopics($this->con, $this->formatter, $this->configFilter);
         }
 
+        // Основной поиск раздач.
         if (
-            // Основной поиск раздач.
-            $forumId > 0        // Заданный раздел.
-            || $forumId === -3  // Все хранимые подразделы.
-            || $forumId === -5  // Высокий приоритет.
-            || $forumId === -6  // Все хранимые подразделы по спискам.
+            // Заданный раздел.
+            $forumId > 0
+            // Все хранимые подразделы.
+            || $listingType === ListingType::AllKept
+            // Высокий приоритет.
+            || $listingType === ListingType::HighPriority
+            // Все хранимые подразделы по спискам.
+            || $listingType === ListingType::SelfKeep
         ) {
             return new DefaultTopics(
                 con         : $this->con,
                 configFilter: $this->configFilter,
                 formatter   : $this->formatter,
-                forumId     : $forumId
+                listingType : $listingType ?? $forumId,
             );
         }
 
-        throw new RuntimeException('Неизвестный ид подраздела.');
+        throw new RuntimeException("Некорректный идентификатор подраздела: $forumId");
     }
 }

@@ -26,7 +26,7 @@ $app = App::create();
 try {
     $forum_id = $_POST['forum_id'] ?? null;
     if (!is_numeric($forum_id)) {
-        throw new Exception("Некорректный идентификатор подраздела: $forum_id");
+        throw new RuntimeException("Некорректный идентификатор подраздела: $forum_id");
     }
 
     // Кодировка для regexp.
@@ -40,7 +40,6 @@ try {
     // Проверяем наличие сортировки.
     $sorting = Validate::sortFilter($filter);
 
-    /** @var Factory $ruleFactory */
     $ruleFactory = $app->get(Factory::class);
 
     //  0 - из других подразделов

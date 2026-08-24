@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use Exception;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use PDO;
 use RuntimeException;
 
@@ -20,7 +21,7 @@ trait DbHelperTrait
         try {
             return $this->con->query(
                 'SELECT DISTINCT forum_id FROM Topics WHERE keeping_priority = ?',
-                [2],
+                [KeepingPriority::High->value],
                 PDO::FETCH_COLUMN
             );
         } catch (Exception $e) {

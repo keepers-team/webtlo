@@ -16,6 +16,7 @@ use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
 use KeepersTeam\Webtlo\TopicList\Formatter;
+use KeepersTeam\Webtlo\TopicList\ListingType;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
 use KeepersTeam\Webtlo\TopicList\Topics;
@@ -35,7 +36,7 @@ final class DefaultTopics implements ListInterface
         private readonly ConnectionInterface $con,
         private readonly ConfigFilter        $configFilter,
         private readonly Formatter           $formatter,
-        private readonly int                 $forumId
+        private readonly int|ListingType     $listingType,
     ) {}
 
     /**
@@ -56,7 +57,7 @@ final class DefaultTopics implements ListInterface
         $status = KeysObject::create(Validate::checkTrackerStatus($filter));
 
         // Фильтр по приоритету хранения раздачи на форуме.
-        $priority = KeysObject::create(Validate::checkKeepingPriority($filter, $this->forumId));
+        $priority = KeysObject::create(Validate::checkKeepingPriority($filter, $this->listingType));
 
         // Данные для фильтрации по количеству сидов раздачи.
         $filterSeed = Validate::prepareSeedFilter($filter);
@@ -77,7 +78,7 @@ final class DefaultTopics implements ListInterface
         $userId = $this->configFilter->userId;
 
         // Хранимые подразделы.
-        $forum = $this->getForumIdList();
+        $forum = KeysObject::create($this->getForumIdList());
 
         // Ищем раздачи по фильтрам.
         $topics = $this->queryTopics(
@@ -123,7 +124,7 @@ final class DefaultTopics implements ListInterface
             }
 
             // Фильтрация раздач по своим спискам.
-            if ($this->forumId == -6) {
+            if ($this->listingType === ListingType::SelfKeep) {
                 $excludeSelfKeep = false;
 
                 if (!FilterApply::isUserInKeepers($topicKeepers, $userId)) {
@@ -164,25 +165,33 @@ final class DefaultTopics implements ListInterface
         return new Topics($totalCount, $totalSize, $topicRows, $excluded);
     }
 
-    /** Список ид подразделов. */
-    private function getForumIdList(): KeysObject
+    /**
+     * Список ид подразделов.
+     *
+     * @return int[]
+     */
+    private function getForumIdList(): array
     {
-        if ($this->forumId > 0) {
-            $forumsIDs = [$this->forumId];
-        } elseif ($this->forumId === -5) {
-            // Высокий приоритет.
-            $forumsIDs = $this->getHighPriorityForums();
-        } else {
-            // -3 Все хранимые подразделы.
-            // -6 Все хранимые подразделы по спискам.
-            $forumsIDs = $this->configFilter->notHiddenSubForums;
+        // Конкретный подраздел.
+        if (is_int($this->listingType) && $this->listingType > 0) {
+            return [$this->listingType];
         }
 
-        if (empty($forumsIDs)) {
-            $forumsIDs = [0];
+        // Высокий приоритет.
+        if ($this->listingType === ListingType::HighPriority) {
+            return $this->getHighPriorityForums();
         }
 
-        return KeysObject::create($forumsIDs);
+        // -3 Все хранимые подразделы.
+        // -6 Все хранимые подразделы по спискам.
+        $subForums = $this->configFilter->notHiddenSubForums;
+
+        // Если что-то пошло не так - заглушка.
+        if (empty($subForums)) {
+            $subForums = [0];
+        }
+
+        return $subForums;
     }
 
     /**

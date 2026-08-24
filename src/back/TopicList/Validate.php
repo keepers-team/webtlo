@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\TopicList;
 
 use DateTimeImmutable;
+use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\KeepersCount;
@@ -142,11 +143,11 @@ final class Validate
      *
      * @throws ValidationException
      */
-    public static function checkKeepingPriority(array $filter, int $forumId): array
+    public static function checkKeepingPriority(array $filter, int|ListingType $forumId): array
     {
         if (empty($filter['keeping_priority'])) {
-            if ($forumId === -5) {
-                return [2];
+            if ($forumId === ListingType::HighPriority) {
+                return [KeepingPriority::High->value];
             }
 
             throw new ValidationException(
