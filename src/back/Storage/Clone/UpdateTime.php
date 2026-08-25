@@ -23,7 +23,11 @@ final class UpdateTime
         'ud',
     ];
 
-    /** @var array<int, int>[] */
+    /**
+     * Ид маркера обновления => timestamp обновления по текущему часовому поясу.
+     *
+     * @var array<int, int>[]
+     */
     private array $updatedMarkers = [];
 
     public function __construct(
@@ -51,7 +55,7 @@ final class UpdateTime
      */
     public function getMarkerTime(int|UpdateMark $marker): DateTimeImmutable
     {
-        return DateHelper::makeFromTimestamp($this->getMarkerTimestamp($marker));
+        return DateHelper::makeDateTime(datetime: $this->getMarkerTimestamp(marker: $marker));
     }
 
     /**
@@ -66,7 +70,8 @@ final class UpdateTime
         }
 
         if ($updateTime instanceof DateTimeImmutable) {
-            $updateTime = $updateTime->getTimestamp();
+            // Приводим дату к текущему часовому поясу и переводим в timestamp.
+            $updateTime = DateHelper::setCurrentTimeZone(datetime: $updateTime)->getTimestamp();
         }
 
         $this->updatedMarkers[] = [$marker, $updateTime];
@@ -81,7 +86,11 @@ final class UpdateTime
             return;
         }
 
-        $rows = array_map(fn($el) => array_combine($this->clone->getTableKeys(), $el), $this->updatedMarkers);
+        $keys = $this->clone->getTableKeys();
+        $rows = array_map(
+            static fn($el) => array_combine($keys, $el),
+            $this->updatedMarkers,
+        );
 
         $this->clone->cloneFillChunk(dataSet: $rows);
 

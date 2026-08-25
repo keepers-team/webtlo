@@ -119,7 +119,7 @@ final class Qbittorrent implements ClientInterface
                 name        : (string) $payload['name'],
                 topicId     : $payload['topic_id'] ?: null,
                 size        : (int) $payload['total_size'],
-                added       : DateHelper::makeFromTimestamp((int) $payload['time_added']),
+                added       : DateHelper::makeDateTime(datetime: (int) $payload['time_added']),
                 done        : $payload['done'],
                 paused      : (bool) $payload['paused'],
                 error       : (bool) $payload['error'],

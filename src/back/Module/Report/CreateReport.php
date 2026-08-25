@@ -551,7 +551,7 @@ final class CreateReport
 
     private function getLastUpdateTime(): void
     {
-        $lastTimestamp = $this->tableUpdate->getMarkerTimestamp(UpdateMark::FULL_UPDATE->value);
+        $lastTimestamp = $this->tableUpdate->getMarkerTimestamp(marker: UpdateMark::FULL_UPDATE);
 
         if ($lastTimestamp === 0) {
             $update = $this->tableUpdate->checkFullUpdate(
@@ -571,7 +571,7 @@ final class CreateReport
 
             $this->updateTime = $update->getMinUpdate();
         } else {
-            $this->updateTime = DateHelper::makeFromTimestamp($lastTimestamp);
+            $this->updateTime = DateHelper::makeDateTime(datetime: $lastTimestamp);
         }
     }
 

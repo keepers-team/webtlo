@@ -20,10 +20,7 @@ trait ReportProcessorTrait
             $lastUpdate = $data['last_update_time'] ?? '';
             $lastSeeded = $data['last_seeded_time'] ?? '';
 
-            $posted = DateHelper::parseFromString(
-                datetime: max($lastUpdate, $lastSeeded),
-                timezone: DateHelper::UTC
-            );
+            $posted = DateHelper::tryUtcFromString(datetime: max($lastUpdate, $lastSeeded));
             if ($posted === null) {
                 return null;
             }

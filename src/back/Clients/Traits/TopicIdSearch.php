@@ -15,7 +15,7 @@ trait TopicIdSearch
      */
     protected static function getEmptyTopics(array $torrents): array
     {
-        return array_filter($torrents, fn($el) => empty($el['topic_id']));
+        return array_filter($torrents, static fn($el) => empty($el['topic_id']));
     }
 
     /**

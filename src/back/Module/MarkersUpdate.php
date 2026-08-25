@@ -31,8 +31,8 @@ final class MarkersUpdate
      */
     public function getFormattedMarkers(): array
     {
-        return array_map(function($el) {
-            return DateHelper::makeFromTimestamp($el)->format(DateTimeInterface::ATOM);
+        return array_map(static function($timestamp) {
+            return DateHelper::makeDateTime(datetime: $timestamp)->format(DateTimeInterface::ATOM);
         }, $this->timestamps);
     }
 
@@ -77,7 +77,7 @@ final class MarkersUpdate
             $minTimestamp = min($this->timestamps);
         }
 
-        return $this->min = DateHelper::makeFromTimestamp($minTimestamp);
+        return $this->min = DateHelper::makeDateTime(datetime: $minTimestamp);
     }
 
     public function getLastCheckStatus(): ?UpdateStatus
