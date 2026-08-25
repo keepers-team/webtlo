@@ -19,6 +19,7 @@ use KeepersTeam\Webtlo\Storage\Clone\TopicsUpdate;
 use KeepersTeam\Webtlo\Storage\Clone\UpdateTime;
 use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Timers;
+use KeepersTeam\Webtlo\TopicList\Validate;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,7 +42,9 @@ use Psr\Log\LoggerInterface;
  * Остальные значения - это вчера, позавчера и т.д. до (-30 дней от сегодня).
  * Эти значения записываются в таблицу в Seeders, где countN => qN (quantity_update) и sumN => dN (day_sum).
  *
- *  Запись в БД см. KeepersTeam\Webtlo\Storage\Clone\SeedersInsert
+ *  Запись в БД
+ *
+ * @see SeedersInsert
  *
  * Таким образом, вычислить значение средних сидов за 14 дней можно по формуле:
  * - (sum0 + ... + sum13) / (count0 + ... count13)
@@ -49,7 +52,8 @@ use Psr\Log\LoggerInterface;
  * Что в рамках БД ТЛО превращается в:
  * - (Topics.seeders + Seeders.d0 ... + Seeders.d12) / (Topics.seeders_updates_today + Seeders.q0 + ... Seeders.q12)
  *
- * Поиск в БД см. KeepersTeam\Webtlo\TopicList\Validate::prepareAverageSeedFilter
+ * Поиск в БД
+ * @see Validate::prepareAverageSeedFilter
  */
 final class Subsections
 {
@@ -92,7 +96,7 @@ final class Subsections
         $user = $this->apiReport->getKeeperPermissions();
 
         // Выбрана опция накапливать данные о средних сидах.
-        $doCollectAverageSeeds = $this->averageSeeds->enableHistory;
+        $collectAverageSeeds = $this->averageSeeds->enableHistory;
 
         // Обновим каждый хранимый подраздел.
         foreach ($subForums as $subForumId) {
@@ -114,10 +118,11 @@ final class Subsections
 
             // Получаем данные о раздачах.
             Timers::start("update_forum_$subForumId");
-            $topicResponse = $this->apiReport->getForumTopicsData(
-                forumId         : $subForumId,
-                loadAverageSeeds: $doCollectAverageSeeds
+            $topicResponse = $this->apiReport->getSubForumTopics(
+                subForumId      : $subForumId,
+                loadAverageSeeds: $collectAverageSeeds,
             );
+
             if ($topicResponse instanceof ApiError) {
                 $this->skipSubsections[] = $subForumId;
 
@@ -335,6 +340,7 @@ final class Subsections
     private function writeTopicsToOrigin(array $updatedSubForums): void
     {
         Timers::start('writeTopicsToOrigin');
+
         // Переносим данные в основную таблицу.
         $countTopicsUpdate = $this->tableUpdate->writeTable();
         $countTopicsInsert = $this->tableInsert->writeTable();
@@ -368,6 +374,7 @@ final class Subsections
     private function clearUnusedTopics(array $updatedSubForums): void
     {
         Timers::start('clearUnusedTopics');
+
         $in = implode(',', $updatedSubForums);
 
         $query = "

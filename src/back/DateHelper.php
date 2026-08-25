@@ -10,49 +10,39 @@ use Throwable;
 
 final class DateHelper
 {
-    public const UTC = 'UTC';
+    private const UTC = 'UTC';
+
+    private static ?DateTimeZone $currentTimeZone = null;
 
     /**
-     * Попытка получить объект даты из строки. Если не получилось - null.
+     * Создать объект даты из timestamp или строки. Если не получилось - unix-0.
      */
-    public static function parseFromString(string $datetime, ?string $timezone = null): ?DateTimeImmutable
+    public static function makeDateTime(int|string $datetime, bool $utc = false): DateTimeImmutable
     {
-        if ($datetime === '') {
-            return null;
-        }
+        $tz = $utc ? new DateTimeZone(self::UTC) : null;
 
         try {
-            $timezone = self::checkTimeZone(timezone: $timezone);
+            if (is_int($datetime)) {
+                return (new DateTimeImmutable(timezone: $tz))->setTimestamp($datetime);
+            }
 
-            return new DateTimeImmutable($datetime, $timezone);
+            return new DateTimeImmutable(datetime: $datetime, timezone: $tz);
+        } catch (Throwable) {
+            // Если не срослось - используем unix ноль.
+            return (new DateTimeImmutable())->setTimestamp(0);
+        }
+    }
+
+    /**
+     * Попытка получить объект UTC даты из строки. Если не получилось - null.
+     */
+    public static function tryUtcFromString(string $datetime): ?DateTimeImmutable
+    {
+        try {
+            return new DateTimeImmutable(datetime: $datetime, timezone: new DateTimeZone(self::UTC));
         } catch (Throwable) {
             return null;
         }
-    }
-
-    /**
-     * Создать объект даты из строки. Если не получилось - unix-0.
-     */
-    public static function makeFromString(string $datetime, ?string $timezone = null): DateTimeImmutable
-    {
-        $dt = self::parseFromString(datetime: $datetime, timezone: $timezone);
-
-        // Если не срослось - используем unix ноль.
-        return $dt ?? self::makeFromTimestamp(timestamp: 0, timezone: $timezone);
-    }
-
-    /**
-     * Создать объект даты из timestamp.
-     */
-    public static function makeFromTimestamp(int $timestamp, ?string $timezone = null): DateTimeImmutable
-    {
-        $dt = (new DateTimeImmutable())->setTimestamp($timestamp);
-
-        if ($timezone = self::checkTimeZone(timezone: $timezone)) {
-            $dt = $dt->setTimezone($timezone);
-        }
-
-        return $dt;
     }
 
     /**
@@ -76,12 +66,23 @@ final class DateHelper
         return $newDate > $prevDate && $newDate->format('Y-m-d') !== $prevDate->format('Y-m-d');
     }
 
-    private static function checkTimeZone(?string $timezone = null): ?DateTimeZone
+    public static function setCurrentTimeZone(DateTimeImmutable $datetime): DateTimeImmutable
     {
-        if ($timezone === self::UTC) {
-            return new DateTimeZone(self::UTC);
+        return $datetime->setTimezone(self::getCurrentTimeZone());
+    }
+
+    private static function getCurrentTimeZone(): DateTimeZone
+    {
+        if (self::$currentTimeZone !== null) {
+            return self::$currentTimeZone;
         }
 
-        return null;
+        try {
+            $tz = new DateTimeZone(date_default_timezone_get());
+        } catch (Throwable) {
+            $tz = new DateTimeZone(self::UTC);
+        }
+
+        return self::$currentTimeZone = $tz;
     }
 }

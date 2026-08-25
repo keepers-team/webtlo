@@ -44,7 +44,7 @@ final class Topic
             hash       : (string) $topicData['info_hash'],
             name       : (string) $topicData['name'],
             size       : (int) $topicData['size'],
-            regDate    : DateHelper::makeFromTimestamp((int) $topicData['reg_time']),
+            regDate    : DateHelper::makeDateTime(datetime: (int) $topicData['reg_time']),
             forumId    : !empty($topicData['forum_id']) ? (int) $topicData['forum_id'] : null,
             averageSeed: round((float) ($topicData['seed'] ?? -1), 2),
             priority   : !empty($topicData['priority']) ? (int) $topicData['priority'] : null,

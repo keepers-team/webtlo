@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
-use DateTimeImmutable;
 use Exception;
 use Generator;
 use GuzzleHttp\Exception\GuzzleException;
+use KeepersTeam\Webtlo\DateHelper;
 use KeepersTeam\Webtlo\Enum\KeepingPriority;
 use KeepersTeam\Webtlo\Enum\TorrentStatus;
 use KeepersTeam\Webtlo\External\Data\ApiError;
@@ -22,9 +22,9 @@ trait ForumTopics
     /**
      * Получить список раздач подраздела.
      */
-    public function getForumTopicsData(int $forumId, bool $loadAverageSeeds = false): ForumTopicsResponse|ApiError
+    public function getSubForumTopics(int $subForumId, bool $loadAverageSeeds = false): ForumTopicsResponse|ApiError
     {
-        $dataProcessor = self::getForumTopicsProcessor($this->logger, $forumId);
+        $dataProcessor = self::getSubForumTopicsProcessor(logger: $this->logger, subForumId: $subForumId);
 
         $columns = [
             'info_hash',
@@ -48,7 +48,7 @@ trait ForumTopics
                 'columns' => implode(',', $columns),
             ];
 
-            $response = $this->client->get(uri: "subforum/$forumId/pvc", options: ['query' => $params]);
+            $response = $this->client->get(uri: "subforum/$subForumId/pvc", options: ['query' => $params]);
         } catch (GuzzleException $error) {
             $code = $error->getCode();
 
@@ -58,10 +58,10 @@ trait ForumTopics
         return $dataProcessor($response);
     }
 
-    private static function getForumTopicsProcessor(LoggerInterface $logger, int $forumId): callable
+    private static function getSubForumTopicsProcessor(LoggerInterface $logger, int $subForumId): callable
     {
-        return function(ResponseInterface $response) use (&$logger, $forumId): ForumTopicsResponse|ApiError {
-            $result = self::decodeResponse($logger, $response);
+        return function(ResponseInterface $response) use ($logger, $subForumId): ForumTopicsResponse|ApiError {
+            $result = self::decodeResponse(logger: $logger, response: $response);
             if ($result instanceof ApiError) {
                 return $result;
             }
@@ -72,12 +72,12 @@ trait ForumTopics
             $chunks = array_chunk($result['releases'], 500);
             unset($result['releases']);
 
-            $topicGenerator = function() use ($chunks, $format, $forumId): Generator {
+            $topicGenerator = function() use ($chunks, $format, $subForumId): Generator {
                 foreach ($chunks as $chunk) {
                     $topics = [];
                     foreach ($chunk as $data) {
-                        $topics[] = self::parseStaticForumTopics(
-                            forumId: $forumId,
+                        $topics[] = self::parseStaticSubForumTopics(
+                            forumId: $subForumId,
                             payload: array_combine($format, $data)
                         );
                     }
@@ -87,7 +87,10 @@ trait ForumTopics
             };
 
             return new ForumTopicsResponse(
-                updateTime  : new DateTimeImmutable($result['pvc_update_time'] ?? $result['cache_time']),
+                updateTime  : DateHelper::makeDateTime(
+                    datetime: $result['pvc_update_time'] ?? $result['cache_time'],
+                    utc     : true
+                ),
                 totalCount  : (int) $result['total_count'],
                 totalSize   : (int) $result['total_size'],
                 topicsChunks: $topicGenerator(),
@@ -100,7 +103,7 @@ trait ForumTopics
      *
      * @throws Exception
      */
-    private static function parseStaticForumTopics(int $forumId, array $payload): ForumTopic
+    private static function parseStaticSubForumTopics(int $forumId, array $payload): ForumTopic
     {
         $averageSeeds = null;
         if (!empty($payload['average_seeds_sum'])) {
@@ -122,13 +125,18 @@ trait ForumTopics
             status      : TorrentStatus::from((int) $payload['tor_status']),
             name        : (string) $payload['topic_title'],
             forumId     : $forumId,
-            registered  : new DateTimeImmutable($payload['reg_time']),
+            registered  : DateHelper::makeDateTime(
+                datetime: (string) $payload['reg_time'],
+                utc     : true
+            ),
             priority    : KeepingPriority::from((int) $payload['keeping_priority']),
             size        : (int) $payload['tor_size_bytes'],
             poster      : (int) $payload['topic_poster'],
             seeders     : (int) $payload['seeders'],
-            keepers     : [], // TODO УБрать хранителей.
-            lastSeeded  : new DateTimeImmutable($payload['seeder_last_seen']),
+            lastSeeded  : DateHelper::makeDateTime(
+                datetime: (string) $payload['seeder_last_seen'],
+                utc     : true
+            ),
             averageSeeds: $averageSeeds,
         );
     }

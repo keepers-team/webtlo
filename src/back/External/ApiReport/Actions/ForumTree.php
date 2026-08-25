@@ -72,7 +72,7 @@ trait ForumTree
      */
     private static function parseStaticForumTree(array $trees, array $sizes): ForumsResponse
     {
-        $updateTime = DateHelper::makeFromTimestamp(min($trees['update_time'], $sizes['update_time']));
+        $updateTime = DateHelper::makeDateTime(min($trees['update_time'], $sizes['update_time']));
 
         /**
          * Категории форума - основные группы.

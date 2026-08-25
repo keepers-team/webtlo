@@ -66,7 +66,7 @@ trait KeepersList
         }
 
         return new KeepersListResponse(
-            updateTime: DateHelper::makeFromTimestamp($result['update_time']),
+            updateTime: DateHelper::makeDateTime(datetime: (int) $result['update_time']),
             keepers   : $keepers
         );
     }

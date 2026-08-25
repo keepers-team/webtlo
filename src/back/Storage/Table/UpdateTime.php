@@ -41,7 +41,7 @@ final class UpdateTime
      */
     public function getMarkerTime(int|UpdateMark $marker): DateTimeImmutable
     {
-        return DateHelper::makeFromTimestamp($this->getMarkerTimestamp($marker));
+        return DateHelper::makeDateTime(datetime: $this->getMarkerTimestamp(marker: $marker));
     }
 
     /**

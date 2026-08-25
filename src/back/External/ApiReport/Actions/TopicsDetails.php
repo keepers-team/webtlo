@@ -319,7 +319,7 @@ trait TopicsDetails
             forumId      : (int) $payload['subforum_id'],
             poster       : (int) $payload['topic_poster'],
             size         : (int) $payload['tor_size_bytes'],
-            registered   : DateHelper::makeFromString(datetime: (string) $payload['reg_time'], timezone: DateHelper::UTC),
+            registered   : DateHelper::makeDateTime(datetime: (string) $payload['reg_time'], utc: true),
             status       : TorrentStatus::from((int) $payload['tor_status']),
             priority     : KeepingPriority::from((int) $payload['keeping_priority']),
             seeders      : (int) $payload['seeders'],

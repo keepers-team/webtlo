@@ -138,7 +138,7 @@ final class Transmission implements ClientInterface
                 name        : $torrentName,
                 topicId     : $this->getTorrentTopicId(comment: $torrent['comment']),
                 size        : (int) $torrent['totalSize'],
-                added       : DateHelper::makeFromTimestamp(timestamp: (int) $torrent['addedDate']),
+                added       : DateHelper::makeDateTime(datetime: (int) $torrent['addedDate']),
                 done        : $progress,
                 paused      : (int) $torrent['status'] === 0,
                 error       : (int) $torrent['error'] !== 0,

@@ -22,8 +22,6 @@ final class ForumTopic
         public readonly int               $size,
         public readonly int               $poster,
         public readonly int               $seeders,
-        /** @var ?int[] */
-        public readonly ?array            $keepers,
         public readonly DateTimeImmutable $lastSeeded,
         public readonly ?AverageSeeds     $averageSeeds = null,
     ) {}
