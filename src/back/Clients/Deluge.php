@@ -17,11 +17,12 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Class Deluge
- * Supported by Deluge 2.1.1 [ plugins WebUi 0.2 and Label 0.3 ] and later.
+ * Class Deluge.
  *
- * https://deluge.readthedocs.io/en/latest/devguide/how-to/curl-jsonrpc.html
- * https://github.com/kaysond/deluge-php/blob/master/deluge.class.php
+ * Supported by Deluge 2.1.1 [plugins WebUi 0.2 and Label 0.3] and later.
+ *
+ * @see https://deluge.readthedocs.io/en/latest/devguide/how-to/curl-jsonrpc.html
+ * @see https://github.com/kaysond/deluge-php/blob/master/deluge.class.php
  */
 final class Deluge implements ClientInterface
 {
@@ -30,6 +31,8 @@ final class Deluge implements ClientInterface
     use Traits\CheckDomain;
     use Traits\ClientTag;
     use Traits\RetryMiddleware;
+
+    public const ACTION_CHUNK_SIZE = 500;
 
     /** Счетчик запросов API. */
     private int $counter = 1;
@@ -117,7 +120,7 @@ final class Deluge implements ClientInterface
             unset($torrentHash, $torrent, $torrentError, $trackerError, $progress);
         }
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -145,6 +148,9 @@ final class Deluge implements ClientInterface
         return $this->sendRequest(method: 'core.add_torrent_file', params: $fields);
     }
 
+    /**
+     * Метка присваивается по одной раздаче. Разделение не нужно.
+     */
     public function setLabel(array $torrentHashes, string $label = ''): bool
     {
         if (!empty($label)) {
@@ -177,20 +183,22 @@ final class Deluge implements ClientInterface
         return $result;
     }
 
+    /**
+     * Клиент не поддерживает принудительный запуск раздач.
+     */
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
-        $params = $this->prepareHashes($torrentHashes);
-
-        return $this->sendRequest('core.resume_torrent', $params);
+        return $this->actionTorrents(method: 'core.resume_torrent', hashes: $torrentHashes);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
-        $params = $this->prepareHashes($torrentHashes);
-
-        return $this->sendRequest('core.pause_torrent', $params);
+        return $this->actionTorrents(method: 'core.pause_torrent', hashes: $torrentHashes);
     }
 
+    /**
+     * Удаление по одной раздаче. Разделение не нужно.
+     */
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $result = true;
@@ -211,9 +219,7 @@ final class Deluge implements ClientInterface
 
     public function recheckTorrents(array $torrentHashes): bool
     {
-        $params = $this->prepareHashes($torrentHashes);
-
-        return $this->sendRequest(method: 'core.force_recheck', params: $params);
+        return $this->actionTorrents(method: 'core.force_recheck', hashes: $torrentHashes);
     }
 
     /**
@@ -224,7 +230,7 @@ final class Deluge implements ClientInterface
         if (!$this->authenticated) {
             try {
                 // Авторизуемся в клиенте. Логин всегда deluge.
-                $this->request('auth.login', [$this->options->credentials->password ?? '']);
+                $this->request(method: 'auth.login', params: [$this->options->credentials->password ?? '']);
 
                 // Проверяем успешность и наличие куки авторизации.
                 if ($this->jar->count() === 0) {
@@ -237,11 +243,11 @@ final class Deluge implements ClientInterface
                 }
 
                 // Пробуем подключится к клиенту.
-                $this->authenticated = $this->sendRequest('web.connected');
+                $this->authenticated = $this->sendRequest(method: 'web.connected');
 
                 // Если подключение не удалось - начинаем шаманство.
                 if (!$this->authenticated) {
-                    $hosts = $this->makeRequest('web.get_hosts');
+                    $hosts = $this->makeRequest(method: 'web.get_hosts');
 
                     $webUiHost = $hosts[0][0] ?? null;
                     if ($webUiHost === null) {
@@ -250,7 +256,7 @@ final class Deluge implements ClientInterface
                         return false;
                     }
 
-                    $hostStatus = $this->makeRequest('web.get_host_status', [$webUiHost]);
+                    $hostStatus = $this->makeRequest(method: 'web.get_host_status', params: [$webUiHost]);
                     if (in_array('Offline', $hostStatus)) {
                         $this->logger->error('WebUI host is offline', $hostStatus);
                     } elseif (in_array('Online', $hostStatus)) {
@@ -273,6 +279,7 @@ final class Deluge implements ClientInterface
     }
 
     /**
+     * @param literal-string    $method
      * @param array<int, mixed> $params
      *
      * @throws GuzzleException
@@ -289,6 +296,7 @@ final class Deluge implements ClientInterface
     }
 
     /**
+     * @param literal-string    $method
      * @param array<int, mixed> $params
      *
      * @return array<int|string, mixed>
@@ -315,6 +323,7 @@ final class Deluge implements ClientInterface
     }
 
     /**
+     * @param literal-string    $method
      * @param array<int, mixed> $params
      */
     private function sendRequest(string $method, array $params = []): bool
@@ -331,13 +340,32 @@ final class Deluge implements ClientInterface
     }
 
     /**
-     * @param string[] $torrentHashes
+     * Выполняет массовое действие над торрентами с разбивкой.
      *
-     * @return string[][]
+     * @param literal-string $method
+     * @param string[]       $hashes
+     *
+     * @return bool true, если все части успешно обработаны, иначе false
      */
-    private function prepareHashes(array $torrentHashes): array
+    private function actionTorrents(string $method, array $hashes): bool
     {
-        return [array_map('strtolower', $torrentHashes)];
+        if ($hashes === []) {
+            return true;
+        }
+
+        $result = true;
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $response = $this->sendRequest(
+                method: $method,
+                params: self::prepareHashes(hashes: $chunk),
+            );
+
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
     }
 
     private function checkLabelExists(string $labelName): bool
@@ -365,5 +393,15 @@ final class Deluge implements ClientInterface
     private function enablePlugin(string $pluginName): bool
     {
         return $this->sendRequest(method: 'core.enable_plugin', params: [$pluginName]);
+    }
+
+    /**
+     * @param string[] $hashes
+     *
+     * @return string[][]
+     */
+    private static function prepareHashes(array $hashes): array
+    {
+        return [array_map('strtolower', $hashes)];
     }
 }

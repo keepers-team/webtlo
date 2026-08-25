@@ -20,10 +20,11 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Class Transmission
+ * Class Transmission.
+ *
  * Supported by Transmission 2.80 and later.
  *
- * https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md
+ * @see https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md
  */
 final class Transmission implements ClientInterface
 {
@@ -34,6 +35,8 @@ final class Transmission implements ClientInterface
     use Traits\RetryMiddleware;
 
     private const TOKEN = 'X-Transmission-Session-Id';
+
+    private const ACTION_CHUNK_SIZE = 500;
 
     /**
      * Заголовки для хранения ключа авторизации.
@@ -99,7 +102,7 @@ final class Transmission implements ClientInterface
             ],
         ];
         Timers::start('torrents_info');
-        $response = $this->makeRequest('torrent-get', $fields);
+        $response = $this->makeRequest(method: 'torrent-get', params: $fields);
         Timers::stash('torrents_info');
 
         $torrents = $brokenFiles = [];
@@ -133,9 +136,9 @@ final class Transmission implements ClientInterface
                 topicHash   : $torrentHash,
                 clientHash  : $torrentHash,
                 name        : $torrentName,
-                topicId     : $this->getTorrentTopicId($torrent['comment']),
+                topicId     : $this->getTorrentTopicId(comment: $torrent['comment']),
                 size        : (int) $torrent['totalSize'],
-                added       : DateHelper::makeFromTimestamp((int) $torrent['addedDate']),
+                added       : DateHelper::makeFromTimestamp(timestamp: (int) $torrent['addedDate']),
                 done        : $progress,
                 paused      : (int) $torrent['status'] === 0,
                 error       : (int) $torrent['error'] !== 0,
@@ -155,7 +158,7 @@ final class Transmission implements ClientInterface
             $this->logger->debug('Broken encoding detected.', array_values($brokenFiles));
         }
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -167,7 +170,7 @@ final class Transmission implements ClientInterface
             return false;
         }
 
-        return $this->addTorrentContent($content, $savePath, $label);
+        return $this->addTorrentContent(content: $content, savePath: $savePath, label: $label);
     }
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
@@ -180,10 +183,10 @@ final class Transmission implements ClientInterface
             $fields['download-dir'] = $savePath;
         }
         if (!empty($label)) {
-            $fields['labels'] = [$this->prepareLabel($label)];
+            $fields['labels'] = [$this->prepareLabel(label: $label)];
         }
 
-        $result = $this->makeRequest('torrent-add', $fields);
+        $result = $this->makeRequest(method: 'torrent-add', params: $fields);
         if (!empty($result['torrent-duplicate'])) {
             $torrentHash = $result['torrent-duplicate']['hashString'];
             $this->logger->notice('This torrent already added', ['hash' => $torrentHash]);
@@ -203,50 +206,37 @@ final class Transmission implements ClientInterface
             return false;
         }
 
-        $fields = [
-            'labels' => [$this->prepareLabel($label)],
-            'ids'    => $torrentHashes,
-        ];
-
-        return $this->sendRequest('torrent-set', $fields);
+        return $this->actionTorrents(
+            method: 'torrent-set',
+            hashes: $torrentHashes,
+            extra : ['labels' => [$this->prepareLabel(label: $label)]],
+        );
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $method = $forceStart ? 'torrent-start-now' : 'torrent-start';
-        $fields = [
-            'ids' => $torrentHashes,
-        ];
 
-        return $this->sendRequest($method, $fields);
+        return $this->actionTorrents(method: $method, hashes: $torrentHashes);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
-        $fields = [
-            'ids' => $torrentHashes,
-        ];
-
-        return $this->sendRequest('torrent-stop', $fields);
+        return $this->actionTorrents(method: 'torrent-stop', hashes: $torrentHashes);
     }
 
     public function recheckTorrents(array $torrentHashes): bool
     {
-        $fields = [
-            'ids' => $torrentHashes,
-        ];
-
-        return $this->sendRequest('torrent-verify', $fields);
+        return $this->actionTorrents(method: 'torrent-verify', hashes: $torrentHashes);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
-        $fields = [
-            'ids'               => $torrentHashes,
-            'delete-local-data' => $deleteFiles,
-        ];
-
-        return $this->sendRequest('torrent-remove', $fields);
+        return $this->actionTorrents(
+            method: 'torrent-remove',
+            hashes: $torrentHashes,
+            extra : ['delete-local-data' => $deleteFiles],
+        );
     }
 
     /**
@@ -256,8 +246,8 @@ final class Transmission implements ClientInterface
     {
         if (!$this->authenticated) {
             try {
-                $response = $this->request('session-get');
-                $result   = $this->validateResponse($response);
+                $response = $this->request(method: 'session-get');
+                $result   = $this->validateResponse(response: $response);
 
                 // Если получили ответ, значит авторизация успешна.
                 if (!empty($result['rpc-version'])) {
@@ -302,6 +292,7 @@ final class Transmission implements ClientInterface
     }
 
     /**
+     * @param literal-string       $method
      * @param array<string, mixed> $options
      *
      * @throws GuzzleException
@@ -318,10 +309,11 @@ final class Transmission implements ClientInterface
             'body'    => json_encode($params),
         ];
 
-        return $this->client->post('', $options);
+        return $this->client->post(uri: '', options: $options);
     }
 
     /**
+     * @param literal-string       $method
      * @param array<string, mixed> $params
      *
      * @return array<string, mixed>
@@ -329,23 +321,24 @@ final class Transmission implements ClientInterface
     private function makeRequest(string $method, array $params = []): array
     {
         try {
-            $response = $this->request($method, $params);
+            $response = $this->request(method: $method, options: $params);
         } catch (GuzzleException $e) {
             $this->logger->error('Failed to make request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
 
             throw new RuntimeException('Failed to make request');
         }
 
-        return $this->validateResponse($response);
+        return $this->validateResponse(response: $response);
     }
 
     /**
+     * @param literal-string       $method
      * @param array<string, mixed> $params
      */
     private function sendRequest(string $method, array $params = []): bool
     {
         try {
-            $response = $this->request($method, $params);
+            $response = $this->request(method: $method, options: $params);
 
             return $response->getStatusCode() === 200;
         } catch (Throwable $e) {
@@ -353,6 +346,35 @@ final class Transmission implements ClientInterface
         }
 
         return false;
+    }
+
+    /**
+     * Выполняет массовое действие над торрентами с разбивкой.
+     *
+     * @param literal-string       $method
+     * @param string[]             $hashes
+     * @param array<string, mixed> $extra
+     *
+     * @return bool true, если все части успешно обработаны, иначе false
+     */
+    private function actionTorrents(string $method, array $hashes, array $extra = []): bool
+    {
+        if ($hashes === []) {
+            return true;
+        }
+
+        $result = true;
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $response = $this->sendRequest(
+                method: $method,
+                params: ['ids' => $chunk, ...$extra],
+            );
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
     }
 
     /**

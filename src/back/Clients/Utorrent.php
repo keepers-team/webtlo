@@ -22,10 +22,11 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Class Utorrent
+ * Class Utorrent.
+ *
  * Supported by uTorrent 1.8.2 and later.
  *
- * https://forum.utorrent.com/topic/21814-web-ui-api/
+ * @see https://forum.utorrent.com/topic/21814-web-ui-api/
  */
 final class Utorrent implements ClientInterface
 {
@@ -37,6 +38,8 @@ final class Utorrent implements ClientInterface
     use Traits\TopicIdSearch;
 
     private const HashesPerRequest = 32;
+
+    private const ACTION_CHUNK_SIZE = 100;
 
     private string $token;
 
@@ -101,7 +104,7 @@ final class Utorrent implements ClientInterface
 
         $this->logger->debug('Done processing', Timers::getStash());
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -113,14 +116,14 @@ final class Utorrent implements ClientInterface
             return false;
         }
 
-        return $this->addTorrentContent($content, $savePath, $label);
+        return $this->addTorrentContent(content: $content, savePath: $savePath, label: $label);
     }
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
     {
-        $this->setSetting('dir_active_download_flag', '1');
+        $this->setSetting(setting: 'dir_active_download_flag', value: '1');
         if (!empty($savePath)) {
-            $this->setSetting('dir_active_download', $savePath);
+            $this->setSetting(setting: 'dir_active_download', value: $savePath);
             sleep(1);
         }
 
@@ -137,7 +140,7 @@ final class Utorrent implements ClientInterface
         $query = $this->buildHttpQuery(method: 'action', action: 'add-file');
 
         try {
-            $response = $this->client->post('', ['query' => $query, 'multipart' => $fields]);
+            $response = $this->client->post(uri: '', options: ['query' => $query, 'multipart' => $fields]);
 
             return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
@@ -152,36 +155,36 @@ final class Utorrent implements ClientInterface
 
     public function setLabel(array $torrentHashes, string $label = ''): bool
     {
-        return $this->setProperties($torrentHashes, 'label', $label);
+        return $this->setProperties(hashes: $torrentHashes, property: 'label', value: $label);
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
         $action = $forceStart ? 'forcestart' : 'start';
 
-        return $this->sendRequest(action: $action, params: ['hashes' => $torrentHashes]);
+        return $this->actionTorrents(action: $action, hashes: $torrentHashes);
+    }
+
+    public function stopTorrents(array $torrentHashes): bool
+    {
+        return $this->actionTorrents(action: 'stop', hashes: $torrentHashes);
     }
 
     public function recheckTorrents(array $torrentHashes): bool
     {
         // uTorrent может перехешировать только остановленные раздачи.
-        if ($this->stopTorrents($torrentHashes)) {
-            return $this->sendRequest(action: 'recheck', params: ['hashes' => $torrentHashes]);
+        if ($this->stopTorrents(torrentHashes: $torrentHashes)) {
+            return $this->actionTorrents(action: 'recheck', hashes: $torrentHashes);
         }
 
         return false;
-    }
-
-    public function stopTorrents(array $torrentHashes): bool
-    {
-        return $this->sendRequest(action: 'stop', params: ['hashes' => $torrentHashes]);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
         $action = $deleteFiles ? 'removedata' : 'remove';
 
-        return $this->sendRequest(action: $action, params: ['hashes' => $torrentHashes]);
+        return $this->actionTorrents(action: $action, hashes: $torrentHashes);
     }
 
     /**
@@ -191,7 +194,7 @@ final class Utorrent implements ClientInterface
     {
         if (!$this->authenticated) {
             try {
-                $response = $this->client->post('token.html');
+                $response = $this->client->post(uri: 'token.html');
 
                 $html = $response->getBody()->getContents();
 
@@ -229,7 +232,9 @@ final class Utorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string       $action
      * @param array<string, mixed> $params
+     * @param literal-string       $method
      *
      * @throws GuzzleException
      */
@@ -239,18 +244,20 @@ final class Utorrent implements ClientInterface
         // hash=hash1&hash=hash2...
         $hashes = [];
         if (!empty($params['hashes'])) {
-            $hashes = array_map(fn($el) => "hash=$el", $params['hashes']);
+            $hashes = array_map(static fn($el) => "hash=$el", $params['hashes']);
         }
         unset($params['hashes']);
 
         $props = $this->buildHttpQuery(method: $method, action: $action, params: $params);
         $query = implode('&', [$props, ...$hashes]);
 
-        return $this->client->get('', ['query' => $query]);
+        return $this->client->get(uri: '', options: ['query' => $query]);
     }
 
     /**
+     * @param literal-string       $action
      * @param array<string, mixed> $params
+     * @param literal-string       $method
      *
      * @return array<string, mixed>
      */
@@ -268,7 +275,9 @@ final class Utorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string       $action
      * @param array<string, mixed> $params
+     * @param literal-string       $method
      */
     private function sendRequest(string $action, array $params = [], string $method = 'action'): bool
     {
@@ -284,8 +293,39 @@ final class Utorrent implements ClientInterface
     }
 
     /**
+     * Выполняет массовое действие над торрентами с разбивкой.
+     *
+     * @param literal-string       $action
+     * @param string[]             $hashes
+     * @param array<string, mixed> $extra
+     *
+     * @return bool true, если все части успешно обработаны, иначе false
+     */
+    private function actionTorrents(string $action, array $hashes, array $extra = []): bool
+    {
+        if ($hashes === []) {
+            return true;
+        }
+
+        $result = true;
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $response = $this->sendRequest(
+                action: $action,
+                params: ['hashes' => $chunk, ...$extra]
+            );
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Кодируем выполняемое действие + токен авторизации.
      *
+     * @param literal-string       $method
+     * @param literal-string       $action
      * @param array<string, mixed> $params
      */
     private function buildHttpQuery(string $method, string $action, array $params = []): string
@@ -323,8 +363,8 @@ final class Utorrent implements ClientInterface
 
         if (!$simpleRun) {
             // Попытка найти ид раздачи в локальных таблицах.
-            $this->tryFillTopicIdFromTopics($torrents);
-            $this->tryFillTopicIdFromTorrents($torrents);
+            $this->tryFillTopicIdFromTopics(torrents: $torrents);
+            $this->tryFillTopicIdFromTorrents(torrents: $torrents);
         }
 
         foreach ($torrents as $hash => $torrent) {
@@ -403,7 +443,7 @@ final class Utorrent implements ClientInterface
         // Экранируем значение, т.к. передавать будем GET-ом.
         $value = urlencode($value);
         // Создаём строки присвоение значения каждому хешу.
-        $hashes = array_map(fn($hash) => sprintf('%s&s=%s&v=%s', $hash, $property, $value), $hashes);
+        $hashes = array_map(static fn($hash) => sprintf('%s&s=%s&v=%s', $hash, $property, $value), $hashes);
 
         // Делим итоговый список на части.
         $hashesChunks = array_chunk($hashes, self::HashesPerRequest);
