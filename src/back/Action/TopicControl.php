@@ -266,23 +266,17 @@ final class TopicControl
 
             // Запускаем раздачи.
             if (count($controlTopics['start'])) {
-                // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
-                foreach (array_chunk($controlTopics['start'], 100) as $hashes) {
-                    $response = $client->startTorrents(torrentHashes: $hashes);
-                    if ($response === false) {
-                        $this->logger->error('Возникли проблемы при отправке запроса на запуск раздач.');
-                    }
+                $response = $client->startTorrents(torrentHashes: $controlTopics['start']);
+                if ($response === false) {
+                    $this->logger->error('Возникли проблемы при отправке запроса на запуск раздач.');
                 }
             }
 
             // Останавливаем раздачи.
             if (count($controlTopics['stop'])) {
-                // TODO перекинуть задачу разбиения хешей на чанки торрент-клиентам.
-                foreach (array_chunk($controlTopics['stop'], 100) as $hashes) {
-                    $response = $client->stopTorrents(torrentHashes: $hashes);
-                    if ($response === false) {
-                        $this->logger->error('Возникли проблемы при отправке запроса на остановку раздач.');
-                    }
+                $response = $client->stopTorrents(torrentHashes: $controlTopics['stop']);
+                if ($response === false) {
+                    $this->logger->error('Возникли проблемы при отправке запроса на остановку раздач.');
                 }
             }
 
