@@ -16,12 +16,13 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Class Rtorrent
+ * Class Rtorrent.
+ *
  * Supported by rTorrent 0.9.7 and later.
  *
- * https://rtorrent-docs.readthedocs.io/en/latest/scripting.html
- * https://php.watch/versions/8.0/xmlrpc#alternatives
- * https://github.com/gggeek/polyfill-xmlrpc
+ * @see https://rtorrent-docs.readthedocs.io/en/latest/scripting.html
+ * @see https://php.watch/versions/8.0/xmlrpc#alternatives
+ * @see https://github.com/gggeek/polyfill-xmlrpc
  */
 final class Rtorrent implements ClientInterface
 {
@@ -67,8 +68,8 @@ final class Rtorrent implements ClientInterface
     public function getTorrents(array $filter = []): Torrents
     {
         $response = $this->makeRequest(
-            'd.multicall2',
-            [
+            command: 'd.multicall2',
+            params : [
                 '',
                 'main',
                 'd.hash=',              // [0] хеш раздачи
@@ -122,7 +123,7 @@ final class Rtorrent implements ClientInterface
             unset($torrent, $torrentHash, $torrentComment, $trackerError, $progress, $storagePath);
         }
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -171,28 +172,28 @@ final class Rtorrent implements ClientInterface
             ],
         ];
 
-        return $this->makeMultiCall($callsChain);
+        return $this->makeMultiCall(callsChain: $callsChain);
     }
 
     public function setLabel(array $torrentHashes, string $label = ''): bool
     {
-        $calls = $this->prepareHashesCalls('d.custom1.set', $torrentHashes, [$label]);
+        $calls = $this->prepareHashesCalls(method: 'd.custom1.set', hashes: $torrentHashes, params: [$label]);
 
-        return $this->actionTorrents($calls);
+        return $this->actionTorrents(calls: $calls);
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
-        $calls = $this->prepareHashesCalls('d.start', $torrentHashes);
+        $calls = $this->prepareHashesCalls(method: 'd.start', hashes: $torrentHashes);
 
-        return $this->actionTorrents($calls);
+        return $this->actionTorrents(calls: $calls);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
-        $calls = $this->prepareHashesCalls('d.stop', $torrentHashes);
+        $calls = $this->prepareHashesCalls(method: 'd.stop', hashes: $torrentHashes);
 
-        return $this->actionTorrents($calls);
+        return $this->actionTorrents(calls: $calls);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
@@ -201,7 +202,7 @@ final class Rtorrent implements ClientInterface
         foreach ($torrentHashes as $torrentHash) {
             $executeDeleteFiles = ['', 'true'];
             if ($deleteFiles) {
-                $dataPath = $this->makeRequest('d.data_path', [$torrentHash]);
+                $dataPath = $this->makeRequest(command: 'd.data_path', params: [$torrentHash]);
                 if (!empty($dataPath)) {
                     $executeDeleteFiles = ['', 'rm', '-rf', '--', $dataPath];
                 }
@@ -226,7 +227,7 @@ final class Rtorrent implements ClientInterface
                 ],
             ];
 
-            $response = $this->makeMultiCall($chainCalls);
+            $response = $this->makeMultiCall(callsChain: $chainCalls);
             if ($response === false) {
                 $result = false;
             }
@@ -237,9 +238,9 @@ final class Rtorrent implements ClientInterface
 
     public function recheckTorrents(array $torrentHashes): bool
     {
-        $calls = $this->prepareHashesCalls('d.check_hash', $torrentHashes);
+        $calls = $this->prepareHashesCalls(method: 'd.check_hash', hashes: $torrentHashes);
 
-        return $this->actionTorrents($calls);
+        return $this->actionTorrents(calls: $calls);
     }
 
     /**
@@ -249,11 +250,11 @@ final class Rtorrent implements ClientInterface
     {
         if (!$this->authenticated) {
             try {
-                $xml = $this->xmpRequestEncode('session.name');
+                $xml = $this->xmpRequestEncode(command: 'session.name');
 
-                $response = $this->client->post('', ['body' => $xml]);
+                $response = $this->client->post(uri: '', options: ['body' => $xml]);
 
-                $result = $this->xmlResponseDecode($response->getBody()->getContents());
+                $result = $this->xmlResponseDecode(response: $response->getBody()->getContents());
 
                 // Проверяем статус авторизации.
                 $this->authenticated =
@@ -287,18 +288,20 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string    $command
      * @param array<int, mixed> $params
      *
      * @throws GuzzleException
      */
     private function request(string $command, array $params = []): ResponseInterface
     {
-        $options = ['body' => $this->xmpRequestEncode($command, $params)];
+        $options = ['body' => $this->xmpRequestEncode(command: $command, params: $params)];
 
         return $this->client->post(uri: '', options: $options);
     }
 
     /**
+     * @param literal-string    $command
      * @param array<int, mixed> $params
      *
      * @return array<int, mixed>
@@ -315,10 +318,11 @@ final class Rtorrent implements ClientInterface
 
         $content = $response->getBody()->getContents();
 
-        return (array) $this->xmlResponseDecode($content);
+        return (array) $this->xmlResponseDecode(response: $content);
     }
 
     /**
+     * @param literal-string    $command
      * @param array<int, mixed> $params
      */
     private function sendRequest(string $command, array $params = []): bool
@@ -331,7 +335,7 @@ final class Rtorrent implements ClientInterface
             }
 
             $content = $response->getBody()->getContents();
-            $result  = $this->xmlResponseDecode($content);
+            $result  = $this->xmlResponseDecode(response: $content);
 
             return !empty($result);
         } catch (Throwable $e) {
@@ -348,20 +352,20 @@ final class Rtorrent implements ClientInterface
      */
     private function makeMultiCall(array $callsChain): bool
     {
-        return $this->sendRequest('system.multicall', [$callsChain]);
+        return $this->sendRequest(command: 'system.multicall', params: [$callsChain]);
     }
 
     /**
-     * @param string[]          $torrentHashes
+     * @param string[]          $hashes
      * @param array<int, mixed> $params
      *
      * @return array<array<string, mixed>>
      */
-    private function prepareHashesCalls(string $method, array $torrentHashes, array $params = []): array
+    private function prepareHashesCalls(string $method, array $hashes, array $params = []): array
     {
-        $callback = fn($hash) => ['methodName' => $method, 'params' => [$hash, ...$params]];
+        $callback = static fn($hash) => ['methodName' => $method, 'params' => [$hash, ...$params]];
 
-        return array_map($callback, $torrentHashes);
+        return array_map($callback, $hashes);
     }
 
     /**
@@ -369,6 +373,10 @@ final class Rtorrent implements ClientInterface
      */
     private function actionTorrents(array $calls): bool
     {
+        if ($calls === []) {
+            return true;
+        }
+
         // Разделяем необходимые запросы на группы.
         $callsChunks = array_chunk(
             $calls,
@@ -377,7 +385,7 @@ final class Rtorrent implements ClientInterface
 
         $result = true;
         foreach ($callsChunks as $callsChain) {
-            $response = $this->makeMultiCall($callsChain);
+            $response = $this->makeMultiCall(callsChain: $callsChain);
             if ($response === false) {
                 $result = false;
             }
@@ -387,6 +395,7 @@ final class Rtorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string    $command
      * @param array<int, mixed> $params
      */
     private function xmpRequestEncode(string $command, array $params = []): string

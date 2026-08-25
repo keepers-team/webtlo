@@ -37,6 +37,8 @@ final class Qbittorrent implements ClientInterface
     use Traits\RetryMiddleware;
     use Traits\TopicIdSearch;
 
+    private const ACTION_CHUNK_SIZE = 500;
+
     /** Версия webApi. */
     private ?string $apiVersion = null;
 
@@ -130,7 +132,7 @@ final class Qbittorrent implements ClientInterface
 
         $this->logger->debug('Done processing', Timers::getStash());
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -142,7 +144,7 @@ final class Qbittorrent implements ClientInterface
             return false;
         }
 
-        return $this->addTorrentContent($content, $savePath, $label);
+        return $this->addTorrentContent(content: $content, savePath: $savePath, label: $label);
     }
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
@@ -158,12 +160,12 @@ final class Qbittorrent implements ClientInterface
         ];
 
         if (!empty($label)) {
-            $this->checkLabelExists($label);
+            $this->checkLabelExists(labelName: $label);
             $fields[] = ['name' => 'category', 'contents' => $label];
         }
 
         try {
-            $response = $this->client->post('torrents/add', ['multipart' => $fields]);
+            $response = $this->client->post(uri: 'torrents/add', options: ['multipart' => $fields]);
 
             return $response->getStatusCode() === 200;
         } catch (GuzzleException $e) {
@@ -182,90 +184,68 @@ final class Qbittorrent implements ClientInterface
 
     public function setLabel(array $torrentHashes, string $label = ''): bool
     {
-        $this->checkLabelExists($label);
+        $this->checkLabelExists(labelName: $label);
 
-        $fields = [
-            'hashes'   => implode('|', array_map('strtolower', $torrentHashes)),
-            'category' => $label,
-        ];
+        $success = true;
+        foreach (array_chunk($torrentHashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $fields = [
+                'hashes'   => self::prepareHashes(hashes: $chunk),
+                'category' => $label,
+            ];
 
-        try {
-            $response = $this->request(url: 'torrents/setCategory', params: $fields);
+            try {
+                $response = $this->request(url: 'torrents/setCategory', params: $fields);
 
-            return $response->getStatusCode() === 200;
-        } catch (GuzzleException $e) {
-            if ($e->getCode() === 409) {
-                $this->logger->error('Category name does not exist', ['name' => $label]);
-            } else {
-                $this->logger->warning(
-                    'Failed to set category',
-                    ['code' => $e->getCode(), 'message' => $e->getMessage()]
-                );
+                if ($response->getStatusCode() !== 200) {
+                    $success = false;
+                }
+            } catch (GuzzleException $e) {
+                $success = false;
+                if ($e->getCode() === 409) {
+                    $this->logger->error('Category name does not exist', ['name' => $label]);
+                } else {
+                    $this->logger->warning(
+                        'Failed to set category',
+                        ['code' => $e->getCode(), 'message' => $e->getMessage()]
+                    );
+                }
             }
         }
 
-        return false;
-    }
-
-    public function createCategory(string $categoryName): void
-    {
-        $fields = [
-            'category' => $categoryName,
-            'savePath' => '',
-        ];
-
-        try {
-            $this->request(url: 'torrents/createCategory', params: $fields);
-        } catch (GuzzleException $e) {
-            $statusCode = $e->getCode();
-            if ($statusCode === 400) {
-                $this->logger->error('Category name is empty');
-            } elseif ($statusCode === 409) {
-                $this->logger->error('Category name is invalid', ['name' => $categoryName]);
-            }
-        }
+        return $success;
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
-        $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
-
         $methodName = $this->getTorrentMethodName(method: 'start');
 
-        $startResult = $this->sendRequest(url: $methodName, params: $fields);
+        $result = $this->actionTorrents(url: $methodName, hashes: $torrentHashes);
 
         if ($forceStart) {
             // Прокидываем отдельный признак "принудительного запуска".
-            $this->sendRequest(url: 'torrents/setForceStart', params: ['value' => 'true', ...$fields]);
+            $this->actionTorrents(url: 'torrents/setForceStart', hashes: $torrentHashes, extra: ['value' => 'true']);
         }
 
-        return $startResult;
+        return $result;
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
-        $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
-
         $methodName = $this->getTorrentMethodName(method: 'stop');
 
-        return $this->sendRequest(url: $methodName, params: $fields);
+        return $this->actionTorrents(url: $methodName, hashes: $torrentHashes);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
-        $fields = [
-            'hashes'      => implode('|', array_map('strtolower', $torrentHashes)),
-            'deleteFiles' => $deleteFiles ? 'true' : 'false',
-        ];
+        $extra = ['deleteFiles' => $deleteFiles ? 'true' : 'false'];
 
-        return $this->sendRequest(url: 'torrents/delete', params: $fields);
+        return $this->actionTorrents(url: 'torrents/delete', hashes: $torrentHashes, extra: $extra);
     }
 
     public function recheckTorrents(array $torrentHashes): bool
     {
-        $fields = ['hashes' => implode('|', array_map('strtolower', $torrentHashes))];
-
-        return $this->sendRequest(url: 'torrents/recheck', params: $fields);
+        return $this->actionTorrents(url: 'torrents/recheck', hashes: $torrentHashes);
     }
 
     /**
@@ -319,7 +299,7 @@ final class Qbittorrent implements ClientInterface
     {
         if ($this->authenticated) {
             try {
-                $response = $this->client->post('auth/logout', ['form_params' => []]);
+                $response = $this->client->post(uri: 'auth/logout', options: ['form_params' => []]);
 
                 $this->authenticated = !($response->getStatusCode() === 200);
 
@@ -378,16 +358,18 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string       $url
      * @param array<string, mixed> $params
      *
      * @throws GuzzleException
      */
     private function request(string $url, array $params = []): ResponseInterface
     {
-        return $this->client->post($url, ['form_params' => $params]);
+        return $this->client->post(uri: $url, options: ['form_params' => $params]);
     }
 
     /**
+     * @param literal-string       $url
      * @param array<string, mixed> $params
      *
      * @return array<int|string, mixed>
@@ -406,6 +388,7 @@ final class Qbittorrent implements ClientInterface
     }
 
     /**
+     * @param literal-string       $url
      * @param array<string, mixed> $params
      */
     private function sendRequest(string $url, array $params = []): bool
@@ -419,6 +402,38 @@ final class Qbittorrent implements ClientInterface
         }
 
         return false;
+    }
+
+    /**
+     * Выполняет массовое действие над торрентами с разбивкой.
+     *
+     * @param literal-string       $url
+     * @param string[]             $hashes
+     * @param array<string, mixed> $extra
+     *
+     * @return bool true, если все части успешно обработаны, иначе false
+     */
+    private function actionTorrents(string $url, array $hashes, array $extra = []): bool
+    {
+        if ($hashes === []) {
+            return true;
+        }
+
+        $result = true;
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $response = $this->sendRequest(
+                url   : $url,
+                params: [
+                    'hashes' => self::prepareHashes(hashes: $chunk),
+                    ...$extra,
+                ]
+            );
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -448,6 +463,10 @@ final class Qbittorrent implements ClientInterface
 
     /**
      * Определить метод, который нужно вызвать в зависимости от версии webApi.
+     *
+     * @param literal-string $method
+     *
+     * @return literal-string
      */
     private function getTorrentMethodName(string $method): string
     {
@@ -472,6 +491,25 @@ final class Qbittorrent implements ClientInterface
         return sprintf('torrents/%s', $actions[$method] ?? '');
     }
 
+    private function createCategory(string $categoryName): void
+    {
+        $fields = [
+            'category' => $categoryName,
+            'savePath' => '',
+        ];
+
+        try {
+            $this->request(url: 'torrents/createCategory', params: $fields);
+        } catch (GuzzleException $e) {
+            $statusCode = $e->getCode();
+            if ($statusCode === 400) {
+                $this->logger->error('Category name is empty');
+            } elseif ($statusCode === 409) {
+                $this->logger->error('Category name is invalid', ['name' => $categoryName]);
+            }
+        }
+    }
+
     private function generateTorrentsList(bool $simpleRun): Generator
     {
         // Получаем и обрабатываем список раздач от клиента.
@@ -482,11 +520,11 @@ final class Qbittorrent implements ClientInterface
 
         if (!$simpleRun) {
             // Попытка найти ид раздачи в локальных таблицах.
-            $this->tryFillTopicIdFromTopics($torrents);
-            $this->tryFillTopicIdFromTorrents($torrents);
+            $this->tryFillTopicIdFromTopics(torrents: $torrents);
+            $this->tryFillTopicIdFromTorrents(torrents: $torrents);
 
             // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий.
-            $this->tryFillTopicIdFromComments($torrents);
+            $this->tryFillTopicIdFromComments(torrents: $torrents);
         }
 
         foreach ($torrents as $hash => $torrent) {
@@ -626,7 +664,7 @@ final class Qbittorrent implements ClientInterface
         }
 
         if (!array_key_exists($labelName, $this->categories)) {
-            $this->createCategory($labelName);
+            $this->createCategory(categoryName: $labelName);
             $this->categories[$labelName] = [
                 'name' => $labelName,
             ];
@@ -642,14 +680,14 @@ final class Qbittorrent implements ClientInterface
     {
         Timers::start('comment_search');
 
-        $emptyTopics = self::getEmptyTopics($torrents);
+        $emptyTopics = self::getEmptyTopics(torrents: $torrents);
         if (count($emptyTopics)) {
             $this->logger->debug('Start search torrents in comment column', ['empty' => count($emptyTopics)]);
 
             foreach ($emptyTopics as $torrentHash => $torrent) {
-                $properties = $this->getProperties($torrent['client_hash']);
+                $properties = $this->getProperties(torrentHash: $torrent['client_hash']);
                 if (!empty($properties)) {
-                    $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId($properties['comment']);
+                    $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId(comment: $properties['comment']);
                     $torrents[$torrentHash]['comment']  = $properties['comment'];
                 }
 
@@ -659,6 +697,16 @@ final class Qbittorrent implements ClientInterface
             Timers::stash('comment_search');
             $this->logger->debug('End search torrents in comment column');
         }
+    }
+
+    /**
+     * Преобразует массив хэшей в строку, разделённую '|', с приведением к нижнему регистру.
+     *
+     * @param string[] $hashes
+     */
+    private static function prepareHashes(array $hashes): string
+    {
+        return implode('|', array_map('strtolower', $hashes));
     }
 
     private static function isTorrentStatePaused(string $state): bool

@@ -18,10 +18,11 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Class Flood
+ * Class Flood.
+ *
  * Supported by flood by jesec API.
  *
- * https://flood-api.netlify.app
+ * @see https://flood-api.netlify.app
  */
 final class Flood implements ClientInterface
 {
@@ -30,6 +31,8 @@ final class Flood implements ClientInterface
     use Traits\CheckDomain;
     use Traits\ClientTag;
     use Traits\RetryMiddleware;
+
+    public const ACTION_CHUNK_SIZE = 500;
 
     /** @var string[] */
     private const trackerErrorStates = [
@@ -77,7 +80,7 @@ final class Flood implements ClientInterface
             $torrentHash   = strtoupper($torrent['hash']);
             $torrentPaused = in_array('stopped', $torrent['status']);
 
-            [$torrentError, $errorMessage] = self::checkTorrentError($torrent);
+            [$torrentError, $errorMessage] = self::checkTorrentError(torrent: $torrent);
 
             $torrents[$torrentHash] = new Torrent(
                 topicHash   : $torrentHash,
@@ -97,7 +100,7 @@ final class Flood implements ClientInterface
             unset($torrent, $torrentHash, $torrentPaused, $torrentError, $errorMessage);
         }
 
-        return new Torrents($torrents);
+        return new Torrents(torrents: $torrents);
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool
@@ -109,7 +112,7 @@ final class Flood implements ClientInterface
             return false;
         }
 
-        return $this->addTorrentContent($content, $savePath, $label);
+        return $this->addTorrentContent(content: $content, savePath: $savePath, label: $label);
     }
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
@@ -120,58 +123,44 @@ final class Flood implements ClientInterface
             'start'       => true,
         ];
         if (!empty($label)) {
-            $fields['tags'] = [$this->prepareLabel($label)];
+            $fields['tags'] = [$this->prepareLabel(label: $label)];
         }
 
-        return $this->sendRequest('torrents/add-files', 'POST', $fields);
+        return $this->sendRequest(uri: 'torrents/add-files', method: 'POST', params: $fields);
     }
 
     /**
      * Присвоение пустой метки (удаление метки) - не работает для qBittorrent.
      *
-     * https://github.com/jesec/flood/issues/605
+     * @see https://github.com/jesec/flood/issues/605
      */
     public function setLabel(array $torrentHashes, string $label = ''): bool
     {
-        $fields = [
-            'hashes' => $torrentHashes,
-            'tags'   => [$this->prepareLabel($label)],
-        ];
+        $extra = ['tags' => [$this->prepareLabel($label)]];
 
-        return $this->sendRequest('torrents/tags', 'PATCH', $fields);
+        return $this->actionTorrents(uri: 'torrents/tags', method: 'PATCH', hashes: $torrentHashes, extra: $extra);
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool
     {
-        $fields = ['hashes' => $torrentHashes];
-
-        return $this->sendRequest('torrents/start', 'POST', $fields);
+        return $this->actionTorrents(uri: 'torrents/start', method: 'POST', hashes: $torrentHashes);
     }
 
     public function stopTorrents(array $torrentHashes): bool
     {
-        $fields = ['hashes' => $torrentHashes];
-
-        return $this->sendRequest('torrents/stop', 'POST', $fields);
+        return $this->actionTorrents(uri: 'torrents/stop', method: 'POST', hashes: $torrentHashes);
     }
 
     public function removeTorrents(array $torrentHashes, bool $deleteFiles = false): bool
     {
-        $deleteFiles = $deleteFiles ? 'true' : 'false';
+        $extra = ['deleteData' => $deleteFiles ? 'true' : 'false'];
 
-        $fields = [
-            'hashes'     => $torrentHashes,
-            'deleteData' => $deleteFiles,
-        ];
-
-        return $this->sendRequest('torrents/delete', 'POST', $fields);
+        return $this->actionTorrents(uri: 'torrents/delete', method: 'POST', hashes: $torrentHashes, extra: $extra);
     }
 
     public function recheckTorrents(array $torrentHashes): bool
     {
-        $fields = ['hashes' => $torrentHashes];
-
-        return $this->sendRequest('torrents/check-hash', 'POST', $fields);
+        return $this->actionTorrents(uri: 'torrents/check-hash', method: 'POST', hashes: $torrentHashes);
     }
 
     /**
@@ -187,7 +176,7 @@ final class Flood implements ClientInterface
                     return false;
                 }
 
-                $response = $this->client->post('auth/authenticate', [
+                $response = $this->client->post(uri: 'auth/authenticate', options: [
                     'form_params' => [
                         'username' => $this->options->credentials->username,
                         'password' => $this->options->credentials->password,
@@ -225,6 +214,8 @@ final class Flood implements ClientInterface
     }
 
     /**
+     * @param literal-string       $uri
+     * @param literal-string       $method
      * @param array<string, mixed> $params
      *
      * @throws GuzzleException
@@ -240,6 +231,8 @@ final class Flood implements ClientInterface
     }
 
     /**
+     * @param literal-string       $uri
+     * @param literal-string       $method
      * @param array<string, mixed> $params
      *
      * @return array<string, mixed>
@@ -258,6 +251,8 @@ final class Flood implements ClientInterface
     }
 
     /**
+     * @param literal-string       $uri
+     * @param literal-string       $method
      * @param array<string, mixed> $params
      */
     private function sendRequest(string $uri, string $method = 'GET', array $params = []): bool
@@ -286,6 +281,37 @@ final class Flood implements ClientInterface
         }
 
         return false;
+    }
+
+    /**
+     * Выполняет массовое действие над торрентами с разбивкой.
+     *
+     * @param literal-string       $uri
+     * @param literal-string       $method
+     * @param string[]             $hashes
+     * @param array<string, mixed> $extra  Дополнительные поля, которые будут добавлены в тело запроса
+     *
+     * @return bool true, если все части успешно обработаны, иначе false
+     */
+    private function actionTorrents(string $uri, string $method, array $hashes, array $extra = []): bool
+    {
+        if ($hashes === []) {
+            return true;
+        }
+
+        $result = true;
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+            $response = $this->sendRequest(
+                uri   : $uri,
+                method: $method,
+                params: ['hashes' => $chunk, ...$extra]
+            );
+            if ($response === false) {
+                $result = false;
+            }
+        }
+
+        return $result;
     }
 
     /**
