@@ -85,8 +85,8 @@ jobs:
           unzip -d $server_dir nginx.zip
           mv "$server_dir/nginx-$NGINX_VERSION" "$server_dir/nginx"
 
-          # PHP: https://windows.php.net/downloads Non-Thread-Safe
-          PHP_RELEASES='https://windows.php.net/downloads/releases'
+          # PHP: https://downloads.php.net/~windows/releases Non-Thread-Safe
+          PHP_RELEASES='https://downloads.php.net/~windows/releases'
           PHP_RELEASE=$(curl -s "$PHP_RELEASES/releases.json" | jq -r '."8.2"."nts-vs16-x64".zip.path')
 
           wget -nv -O php.zip "$PHP_RELEASES/$PHP_RELEASE"
