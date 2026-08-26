@@ -1,0 +1,86 @@
+name: Check version change
+run-name: Check version change (${{ github.event.head_commit.message }})
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - version.json
+
+jobs:
+
+  tag:
+    name: Make new version tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read version
+        id: version
+        run: |
+          set -e
+
+          VERSION=$(jq -r '.version' version.json)
+
+          if [ -z "$VERSION" ]; then
+            echo "::error file=version.json,title=Empty Version::version field is empty or missing"
+            exit 1
+          fi
+          echo "Version from file: $VERSION"
+
+          # Pattern for stable versions (only numbers)
+          stablePattern="^[0-9]+\.[0-9]+\.[0-9]+$"
+
+          if [[ "$VERSION" =~ $stablePattern ]]; then
+            echo "✓ Stable version check passed: $VERSION"
+          else
+            echo "::error file=version.json,title=Invalid Version Format::Version '$VERSION' doesn't match stable pattern"
+            exit 1
+          fi
+
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check token
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.PAT_WEBTLO_CREATE_TAG }}" ]; then
+            echo "::warning::PAT_WEBTLO_CREATE_TAG token not set. Skipping create tag."
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag via API
+        if: ${{ steps.check-secrets.outputs.valid == 'true' }}
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.PAT_WEBTLO_CREATE_TAG }}
+          script: |
+            const version = '${{ steps.version.outputs.value }}';
+            const { owner, repo } = context.repo;
+            const sha = context.sha;
+
+            // Проверим, существует ли уже такой тег
+            try {
+              await github.rest.git.getRef({
+                owner,
+                repo,
+                ref: `tags/${version}`
+              });
+
+              core.warning(`Tag ${version} already exists, skipping.`);
+              return;
+            } catch (error) {
+              if (error.status !== 404) throw error;
+            }
+
+            // Создаём тег через API
+            await github.rest.git.createRef({
+              owner,
+              repo,
+              ref: `refs/tags/${version}`,
+              sha: sha
+            });
+
+            console.log(`✓ Tag ${version} created successfully.`);
