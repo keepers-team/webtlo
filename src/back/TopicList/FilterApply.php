@@ -82,7 +82,7 @@ final class FilterApply
     {
         $keepersList = array_column($topicKeepers, 'keeper_id');
 
-        return count($keepersList) && in_array($userId, $keepersList);
+        return count($keepersList) && in_array($userId, $keepersList, true);
     }
 
     /**
@@ -103,12 +103,12 @@ final class FilterApply
             $matchKeepers = [];
             foreach ($filterStrings->values as $filterKeeper) {
                 if (mb_substr($filterKeeper, 0, 1) === '!') {
-                    $matchKeepers[] = !in_array(mb_substr($filterKeeper, 1), $topicKeepers);
+                    $matchKeepers[] = !in_array(mb_substr($filterKeeper, 1), $topicKeepers, true);
                 } else {
-                    $matchKeepers[] = in_array($filterKeeper, $topicKeepers);
+                    $matchKeepers[] = in_array($filterKeeper, $topicKeepers, true);
                 }
             }
-            if (in_array(0, $matchKeepers)) {
+            if (in_array(false, $matchKeepers, true)) {
                 return false;
             }
         } elseif ($filterStrings->type === 1) {

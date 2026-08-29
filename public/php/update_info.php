@@ -54,7 +54,7 @@ try {
         $updateForumTree = true;
     } elseif (count($pairs) === 1) {
         $runProcess = array_key_first($pairs);
-        if (in_array($runProcess, $topicsRelated)) {
+        if (in_array($runProcess, $topicsRelated, true)) {
             $updateForumTree = true;
         }
     }
