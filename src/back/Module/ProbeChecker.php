@@ -83,15 +83,18 @@ final class ProbeChecker
         $webtlo = WebTLO::getVersion();
 
         $parsed = [
-            'forum_url'  => $config['torrent-tracker']['forum_url'] == 'custom'
+            'forum_url'  => $config['torrent-tracker']['forum_url'] === 'custom'
                 ? $config['torrent-tracker']['forum_url_custom']
                 : $config['torrent-tracker']['forum_url'],
-            'report_url' => $config['torrent-tracker']['report_url'] == 'custom'
+            'report_url' => $config['torrent-tracker']['report_url'] === 'custom'
                 ? $config['torrent-tracker']['report_url_custom']
                 : $config['torrent-tracker']['report_url'],
         ];
 
-        if ($config['proxy']['activate_forum'] == 1 || $config['proxy']['activate_report'] == 1) {
+        if (
+            (int) $config['proxy']['activate_forum'] === 1
+            || (int) $config['proxy']['activate_report'] === 1
+        ) {
             $parsed['proxy']['url']  = $config['proxy']['hostname'] . ':' . $config['proxy']['port'];
             $parsed['proxy']['type'] = $config['proxy']['type'];
         }

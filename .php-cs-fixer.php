@@ -21,6 +21,7 @@ $rules = [
     '@PhpCsFixer' => true,
 
     'declare_strict_types' => true,
+    'strict_comparison'    => true,
 
     'yoda_style' => ['equal' => false, 'identical' => false],
 

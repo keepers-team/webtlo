@@ -176,7 +176,7 @@ final class Helper
 
     public static function normalizePathEncoding(string $path): string
     {
-        if (PHP_OS == 'WINNT') {
+        if (PHP_OS === 'WINNT') {
             return self::encodeCyrillicString(string: $path);
         }
 

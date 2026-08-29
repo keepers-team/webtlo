@@ -89,7 +89,7 @@ final class State
         if ($topicDone === null) {
             // Нет в клиенте.
             $topicState = StateClientIcon::NotAdded;
-        } elseif ($topicDone == 1) {
+        } elseif ((int) $topicDone === 1) {
             // Раздаётся.
             $topicState = StateClientIcon::Seeding;
         } else {
@@ -118,7 +118,7 @@ final class State
     public static function getClientColor(?array $topic = null): StateColor
     {
         $color = StateColor::Success;
-        if (empty($topic) || $topic['done'] != 1 || $topic['error'] == 1) {
+        if (empty($topic) || (int) $topic['done'] !== 1 || (int) $topic['error'] === 1) {
             $color = StateColor::Danger;
         }
 

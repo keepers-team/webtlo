@@ -185,7 +185,7 @@ final class CreateReport
             $availableLength = $message_length_max - $spoiler_length - ($tmp['topicCounter'] - $tmp['firstTopic'] + 1) * 4;
             if (
                 $fullLength > $availableLength
-                || $tmp['topicCounter'] == $topics_count
+                || $tmp['topicCounter'] === $topics_count
             ) {
                 $topicMessages[] = sprintf(
                     $pattern_spoiler,
@@ -337,7 +337,7 @@ final class CreateReport
     {
         $topicUrl = '';
         // #dl - скачивание, :!: - смайлик.
-        $downloadIcon = $topic['done'] != 1 ? ' :!: ' : '';
+        $downloadIcon = (int) $topic['done'] !== 1 ? ' :!: ' : '';
 
         if ($this->mode === CreationMode::UI) {
             // [url=viewtopic.php?t=topic_id#dl]topic_name[/url] 842 GB :!:
@@ -345,7 +345,7 @@ final class CreateReport
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
+                $topic['id'] . ((int) $topic['done'] !== 1 ? '#dl' : ''),
                 $topic['topic_name'],
                 $this->bytes($topic['topic_size']),
                 $downloadIcon
@@ -357,7 +357,7 @@ final class CreateReport
 
             $topicUrl = sprintf(
                 $pattern_topic,
-                $topic['id'] . ($topic['done'] != 1 ? '#dl' : ''),
+                $topic['id'] . ((int) $topic['done'] !== 1 ? '#dl' : ''),
                 $topic['topic_hash'],
                 $topic['id'],
                 $downloadIcon
