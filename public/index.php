@@ -163,7 +163,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     title="Запустить выделенные раздачи текущего подраздела в торрент-клиенте. &#10;Ctrl+Click выполнит `принудительный` запуск.">
                                 <i class="fa fa-play" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="tor_stop torrent_action" value="stop" title="Приостановить выделенные раздачи текущего подраздела в торрент-клиенте">
+                            <button type="button" class="tor_stop torrent_action" value="stop" title="Остановить выделенные раздачи текущего подраздела в торрент-клиенте">
                                 <i class="fa fa-pause" aria-hidden="true"></i>
                             </button>
                             <button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
@@ -622,7 +622,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     <label for="proxy_paswd" class="prop-inline-block prop-width-5em">Пароль:</label>
                                     <input name="proxy_paswd" id="proxy_paswd" type="password"
                                            class="inline-input user_protected" size="17"
-                                           title="Пароль для доступа к прокси-серверу (необязатально)."
+                                           title="Пароль для доступа к прокси-серверу (необязательно)."
                                            value="<?= $cs('proxy', 'password'); ?>"/>
                                 </div>
                             </div>
@@ -677,7 +677,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     <label for="torrent-client-port" class="prop-inline-block">Порт:</label>
                                     <input name="torrent-client-port" id="torrent-client-port"
                                            class="torrent-client-props" type="text" size="23"
-                                           title="Порт веб-интерфейса торрент-клиента."/>
+                                           title="Порт веб-интерфейса торрент-клиента (необязательно, 80/443 по умолчанию)."/>
                                 </div>
                                 <div>
                                     <label for="torrent-client-login" class="prop-inline-block">Логин:</label>
@@ -712,7 +712,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                     </label>
                                     <input name="torrent-client-peers" id="torrent-client-peers"
                                            class="torrent-client-props spinner-peers" type="text" size="10"
-                                           title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. Значение равное -1 исключит торрент-клиент из регулировки. См. подраздел 'Автоматизация и дополнительные настройки > Регулировка раздач.'"/>
+                                           title="Числовое значение пиров, при котором требуется останавливать раздачи текущего торрент-клиента. &#10;Значение равное -1 исключит торрент-клиент из регулировки. &#10;См. подраздел 'Автоматизация и дополнительные настройки > Регулировка раздач.'"/>
                                 </div>
                             </div>
                         </div>
@@ -778,7 +778,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                         <option value="1">да</option>
                                     </select>
                                 </label>
-                                <label title="Числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела. Значение равное -1 исключит раздачи подраздела из регулировки. См. подраздел 'Настройки управления раздачами.'">
+                                <label title="Числовое значение пиров, при котором требуется останавливать раздачи текущего подраздела. &#10;Значение равное -1 исключит раздачи подраздела из регулировки. &#10;См. подраздел 'Настройки управления раздачами.'">
                                     <i class="fa fa-bolt" aria-hidden="true" title="Иконка исключённого из регулировки подраздела"></i>
                                     Останавливать раздачи с количеством пиров более:
                                     <input id="forum-control-peers" class="inline-input forum-props spinner-peers" type="text" size="10" />
@@ -799,7 +799,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 дн.
                             </label>
                             <label class="label"
-                                   title="Если перерыв между обновлениями сведений составит больше этого периода, то накопленные данные о сидах будут считаться устаревшими (по умолчанию: 7)">
+                                   title="Если перерыв между обновлениями сведений составит больше этого периода, то устаревшие записи будут удалены (по умолчанию: 7)">
                                 Допустимый период простоя между обновлениями:
                                 <input id="avg_seeders_period_outdated" name="avg_seeders_period_outdated"
                                        type="text" size="2"
@@ -808,7 +808,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 дн.
                             </label>
                             <label class="label"
-                                   title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: выключено)">
+                                   title="При фильтрации раздач будет использоваться среднее значение количества сидов вместо мгновенного (по умолчанию: включено)">
                                 <input id="avg_seeders" name="avg_seeders" type="checkbox" <?= $cs('averageSeeds', 'enableHistory'); ?> />
                                 находить среднее значение количества сидов за
                                 <input id="avg_seeders_period" name="avg_seeders_period"
@@ -832,7 +832,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 применять параметры фильтра автоматически
                             </label>
                             <label class="label"
-                                   title="Запоминать последний выбранный раздел, и загружать его автоматически при перезагрузке страницы (по умолчанию: включено). Может быть полезно отключить, при большом объёме хранимого, чтобы не загружать раздачи до применения желаемых фильтров.">
+                                   title="Запоминать последний выбранный раздел, и загружать его автоматически при перезагрузке страницы (по умолчанию: включено). &#10;Может быть полезно отключить, при большом объёме хранимого, чтобы не загружать раздачи до применения желаемых фильтров.">
                                 <input id="ui_save_selected_section" name="ui_save_selected_section" type="checkbox" size="24"
                                     <?= $cs('other', 'uiSaveSelectedSection'); ?>
                                 />
@@ -973,7 +973,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 />
                                 (Лимит пиров)
                             </label>
-                            <label class="label" title="Перечисление цифр значения пиров, используемые в зависимости от времени суток. Например, '3/4/5/6' или '3:4|5:12|4:8', где [4:8] - [лимит пиров:размер временного интервала (ч.)]. (по умолчанию: пусто)">
+                            <label class="label" title="Перечисление цифр значения пиров, используемые в зависимости от времени суток. &#10;Например, '3/4/5/6' или '3:4|5:12|4:8', где [4:8] - [лимит пиров:размер временного интервала (ч.)]. &#10;(по умолчанию: пусто)">
                                 Динамический набор интервалов количества пиров:
                                 <input id="peers_intervals" name="peers_intervals" type="text"
                                        value="<?= $cs('topicControl', 'peersLimitIntervals'); ?>"
@@ -1009,11 +1009,11 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                                 <input name="unadded_subsections" type="checkbox" <?= $cs('topicControl', 'manageOtherSubsections'); ?> />
                                 регулировать раздачи не из хранимых подразделов
                             </label>
-                            <label class="label" title="Установите, если необходимо учитывать значение личей при подсчёте пиров, иначе будут браться только значения сидов (по умолчанию: выключено)">
+                            <label class="label" title="Установите, если необходимо учитывать значение личей при подсчёте пиров, иначе будут использовано только значения сидов (по умолчанию: выключено)">
                                 <input name="leechers" type="checkbox" <?= $cs('topicControl', 'countLeechersAsPeers'); ?> />
                                 учитывать значение личей
                             </label>
-                            <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет скачивающих (по умолчанию: включено)">
+                            <label class="label" title="Выберите, если нужно запускать раздачи с 0 (нулём) личей, когда нет других раздающих (по умолчанию: включено)">
                                 <input name="no_leechers" type="checkbox" <?= $cs('topicControl', 'seedingWithoutLeechers'); ?> />
                                 запускать раздачи с 0 (нулём) личей
                             </label>
@@ -1075,7 +1075,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                             <hr>
                             <label class="label">
                                 Уровень ведения журнала:
-                                <select name="log_level" id="log_level" class="inline-input" title="Записи с выбранным уровнем и ниже - попадут в журнал. Не все записи в журнале имеют указание уровня.">
+                                <select name="log_level" id="log_level" class="inline-input" title="Записи с выбранным уровнем и ниже - попадут в журнал.">
                                     <?= $cs('other', 'loggerOptions'); ?>
                                 </select>
                             </label>
