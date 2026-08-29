@@ -107,7 +107,7 @@ final class MarkersUpdate
 
             $log['missed'] = $missed;
 
-            $missed = array_map(function($markId) {
+            $missed = array_map(static function($markId) {
                 $mark = UpdateMark::tryFrom((int) $markId);
 
                 return $mark ? $mark->label() : "Раздачи подраздела №$markId";

@@ -48,7 +48,7 @@ trait ForumTree
 
     private static function getForumTreeProcessor(LoggerInterface $logger): callable
     {
-        return function(
+        return static function(
             ResponseInterface $treeResponse,
             ResponseInterface $sizeResponse,
         ) use ($logger): ForumsResponse|ApiError {

@@ -114,7 +114,7 @@ final class Render
         $params = Reflection::reflect($this->other);
 
         $params['loggerOptions'] = LoggerConstructor::getSelectOptions(
-            optionFormat: Render::optionTemplate,
+            optionFormat: self::optionTemplate,
             level       : $this->other->logLevel
         );
 

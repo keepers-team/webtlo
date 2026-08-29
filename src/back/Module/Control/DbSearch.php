@@ -62,7 +62,7 @@ final class DbSearch
             }
         }
 
-        $topicsHashes = array_map(fn($el) => array_merge(...$el), $topicsHashes);
+        $topicsHashes = array_map(static fn($el) => array_merge(...$el), $topicsHashes);
 
         $this->logger->info(
             'Поиск раздач в БД завершён за {sec}. Найдено раздач из хранимых подразделов {count} шт, из прочих {unknown} шт.',

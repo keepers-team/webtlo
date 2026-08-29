@@ -374,7 +374,7 @@ final class CreateReport
      */
     public function prepareReportsMessages(array $messages): string
     {
-        array_walk($messages, function(&$a, $b) {
+        array_walk($messages, static function(&$a, $b): void {
             ++$b;
             $a = sprintf('<h3>Сообщение %d</h3><div>%s</div>', $b, $a);
         });

@@ -28,7 +28,7 @@ final class TopicListServiceProvider extends AbstractServiceProvider
     {
         $container = $this->getContainer();
 
-        $container->addShared(ConfigFilter::class, function() use ($container) {
+        $container->addShared(ConfigFilter::class, static function() use ($container) {
             /** @var UserInfo $user */
             $user = $container->get(UserInfo::class);
 
@@ -54,7 +54,7 @@ final class TopicListServiceProvider extends AbstractServiceProvider
             );
         });
 
-        $container->addShared(Formatter::class, function() use ($container) {
+        $container->addShared(Formatter::class, static function() use ($container) {
             /** @var ForumConnect $forum */
             $forum = $container->get(ForumConnect::class);
 

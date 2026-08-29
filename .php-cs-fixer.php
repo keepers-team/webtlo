@@ -20,9 +20,10 @@ $rules = [
     '@PER-CS'     => true,
     '@PhpCsFixer' => true,
 
-    'declare_strict_types' => true,
-    'strict_comparison'    => true,
-    'strict_param'         => true,
+    '@PhpCsFixer:risky' => true,
+
+    'native_constant_invocation' => false,
+    'native_function_invocation' => false,
 
     'yoda_style' => ['equal' => false, 'identical' => false],
 

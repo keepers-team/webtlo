@@ -12,36 +12,36 @@ final class ApiError
         public readonly string $text,
     ) {}
 
-    public static function fromHttpCode(int $code): ApiError
+    public static function fromHttpCode(int $code): self
     {
-        return new ApiError(code: $code, text: 'Network error');
+        return new self(code: $code, text: 'Network error');
     }
 
     /**
      * @param ?array<string, mixed> $legacyError
      */
-    public static function fromLegacyError(?array $legacyError): ApiError
+    public static function fromLegacyError(?array $legacyError): self
     {
         $error = $legacyError ?? [];
 
-        return new ApiError(
+        return new self(
             code: $error['code'] ?? -1,
             text: $error['text'] ?? 'Unknown API error'
         );
     }
 
-    public static function invalidMime(): ApiError
+    public static function invalidMime(): self
     {
-        return new ApiError(code: -2, text: 'Invalid mime');
+        return new self(code: -2, text: 'Invalid mime');
     }
 
-    public static function malformedJson(): ApiError
+    public static function malformedJson(): self
     {
-        return new ApiError(code: -3, text: 'Malformed JSON');
+        return new self(code: -3, text: 'Malformed JSON');
     }
 
-    public static function emptyResponse(): ApiError
+    public static function emptyResponse(): self
     {
-        return new ApiError(code: -4, text: 'Empty JSON');
+        return new self(code: -4, text: 'Empty JSON');
     }
 }

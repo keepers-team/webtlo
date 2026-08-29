@@ -26,7 +26,7 @@ final class FilterApply
 
         $matchedKeepers = array_filter(
             $topicKeepers,
-            function($kp) use ($countRules) {
+            static function($kp) use ($countRules) {
                 // Хранитель раздаёт.
                 if ($countRules->useSeed && $kp['seeding'] === 1) {
                     return true;

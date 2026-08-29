@@ -56,7 +56,7 @@ final class UntrackedTopics implements ListInterface
         };
 
         // Типизируем данные раздач в объекты.
-        $topics = array_map(function($topicData) {
+        $topics = array_map(static function($topicData) {
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly(topicData: $topicData);
 

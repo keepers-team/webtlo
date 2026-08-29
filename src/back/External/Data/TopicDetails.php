@@ -37,6 +37,6 @@ final class TopicDetails
         public readonly KeepingPriority   $priority,
         public readonly int               $seeders,
         public readonly string            $title,
-        public readonly ?TopicDetails     $actualVersion = null,
+        public readonly ?self     $actualVersion = null,
     ) {}
 }

@@ -33,7 +33,7 @@ final class AppServiceProvider extends AbstractServiceProvider
         $container = $this->getContainer();
 
         // Подключаем БД.
-        $container->add(ConnectionInterface::class, function() use ($container) {
+        $container->add(ConnectionInterface::class, static function() use ($container) {
             /** @var LoggerInterface $logger */
             $logger = $container->get(LoggerInterface::class);
 
@@ -44,7 +44,7 @@ final class AppServiceProvider extends AbstractServiceProvider
         });
 
         // Обработчик ini-файла с конфигом.
-        $container->add(TIniFileEx::class, function() {
+        $container->add(TIniFileEx::class, static function() {
             $ini = new TIniFileEx();
 
             // Мигрируем, если есть что.
@@ -54,6 +54,6 @@ final class AppServiceProvider extends AbstractServiceProvider
         });
 
         // Подключаем описание версии WebTLO.
-        $container->add(WebTLO::class, fn() => WebTLO::getVersion());
+        $container->add(WebTLO::class, static fn() => WebTLO::getVersion());
     }
 }

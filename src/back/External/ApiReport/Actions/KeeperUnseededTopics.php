@@ -54,7 +54,7 @@ trait KeeperUnseededTopics
 
     private static function getStaticUnseededProcessor(LoggerInterface $logger): callable
     {
-        return function(ResponseInterface $response, int $forumId) use (&$logger): KeeperUnseededResponse|ApiError {
+        return static function(ResponseInterface $response, int $forumId) use (&$logger): KeeperUnseededResponse|ApiError {
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
                 return $result;

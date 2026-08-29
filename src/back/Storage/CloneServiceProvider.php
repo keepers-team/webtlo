@@ -41,63 +41,63 @@ final class CloneServiceProvider extends AbstractServiceProvider
     {
         $container = $this->getContainer();
 
-        $container->addShared(KeepersLists::class, function() use ($container) {
+        $container->addShared(KeepersLists::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneKeepersLists();
         });
 
-        $container->addShared(KeepersSeeders::class, function() use ($container) {
+        $container->addShared(KeepersSeeders::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneKeepersSeeders();
         });
 
-        $container->addShared(TopicsInsert::class, function() use ($container) {
+        $container->addShared(TopicsInsert::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTopicsInsert();
         });
 
-        $container->addShared(TopicsUpdate::class, function() use ($container) {
+        $container->addShared(TopicsUpdate::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTopicsUpdate();
         });
 
-        $container->addShared(TopicsUntracked::class, function() use ($container) {
+        $container->addShared(TopicsUntracked::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTopicsUntracked();
         });
 
-        $container->addShared(TopicsUnregistered::class, function() use ($container) {
+        $container->addShared(TopicsUnregistered::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTopicsUnregistered();
         });
 
-        $container->addShared(SeedersInsert::class, function() use ($container) {
+        $container->addShared(SeedersInsert::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneSeeders();
         });
 
-        $container->addShared(Torrents::class, function() use ($container) {
+        $container->addShared(Torrents::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 
             return $factory->cloneTorrents();
         });
 
-        $container->addShared(UpdateTime::class, function() use ($container) {
+        $container->addShared(UpdateTime::class, static function() use ($container) {
             /** @var CloneFactory $factory */
             $factory = $container->get(CloneFactory::class);
 

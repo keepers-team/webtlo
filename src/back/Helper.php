@@ -27,7 +27,7 @@ final class Helper
     /** Конвертация секунд в строку. */
     public static function convertSeconds(int $seconds, bool $leadZeros = false): string
     {
-        $pad = fn(int $val): string => !$leadZeros ? (string) $val : str_pad((string) $val, 2, '0', STR_PAD_LEFT);
+        $pad = static fn(int $val): string => !$leadZeros ? (string) $val : str_pad((string) $val, 2, '0', STR_PAD_LEFT);
 
         if ($seconds > 0) {
             $minutes = intdiv($seconds, 60);
@@ -158,7 +158,7 @@ final class Helper
      */
     public static function normalizePath(string $path): string
     {
-        return array_reduce(explode(DIRECTORY_SEPARATOR, $path), function($left, $right) {
+        return array_reduce(explode(DIRECTORY_SEPARATOR, $path), static function($left, $right) {
             if ($left === null) {
                 return $right;
             }
