@@ -193,9 +193,9 @@ final class Flood implements ClientInterface
                 $response = $e->getResponse();
 
                 $statusCode = $response->getStatusCode();
-                if ($statusCode == 401) {
+                if ($statusCode === 401) {
                     $this->logger->error('Incorrect login/password', ['response' => $response->getReasonPhrase()]);
-                } elseif ($statusCode == 422) {
+                } elseif ($statusCode === 422) {
                     $this->logger->error('Malformed request', ['response' => $response->getReasonPhrase()]);
                 } else {
                     $this->logger->error('Failed to authenticate', ['response' => $response->getReasonPhrase()]);
