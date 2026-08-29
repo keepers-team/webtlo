@@ -53,7 +53,7 @@ final class TopicsUpdate
 
         $tab = $this->clone;
 
-        $rows = array_map(fn($el) => array_combine($tab->getTableKeys(), $el), $this->topics);
+        $rows = array_map(static fn($el) => array_combine($tab->getTableKeys(), $el), $this->topics);
         $tab->cloneFill(dataSet: $rows);
 
         $this->topics = [];

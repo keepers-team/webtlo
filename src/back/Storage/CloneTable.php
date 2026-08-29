@@ -177,7 +177,7 @@ final class CloneTable
 
         $rows = [];
         foreach ($dataSet as $id => $value) {
-            $value = array_map(function($elem) use ($quote) {
+            $value = array_map(static function($elem) use ($quote) {
                 return is_numeric($elem) ? $elem : $quote((string) $elem);
             }, $value);
 

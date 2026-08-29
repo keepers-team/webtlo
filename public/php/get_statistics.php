@@ -86,9 +86,9 @@ try {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
-    $size4 = (int) pow(1024, 4);
+    $tbody = implode('', array_map(static function($e) use (&$tfoot) {
+        $size4 = 1024 ** 4;
 
-    $tbody = implode('', array_map(function($e) use ($size4, &$tfoot) {
         // всего
         $tfoot[0][0] += $e['Count0'];
         $tfoot[0][1] += $e['Size0'];
@@ -143,19 +143,19 @@ try {
         $e['Size15'] = Helper::convertBytes((int) $e['Size15']);
         $e['size']   = Helper::convertBytes((int) $e['size']);
 
-        $e = implode('', array_map(fn($col) => "<td>$col</td>", $e));
+        $e = implode('', array_map(static fn($col) => "<td>$col</td>", $e));
 
         return "<tr class=\"$state\">$e</tr>";
     }, $statistics));
 
     // всего/всего (от нуля)
-    $tfoot = array_map(function($row) {
+    $tfoot = array_map(static function($row) {
         foreach ([1, 3, 5, 7, 9] as $i) {
             // байты
             $row[$i] = Helper::convertBytes((int) $row[$i]);
         }
 
-        return implode('', array_map(fn($col) => "<th>$col</th>", $row));
+        return implode('', array_map(static fn($col) => "<th>$col</th>", $row));
     }, $tfoot);
 
     $tfoot = sprintf(

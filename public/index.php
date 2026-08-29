@@ -55,7 +55,7 @@ try {
  * @param string $section DTO-класс с параметрами
  * @param string $key     название параметра
  */
-$cs = function(string $section, string $key, int|string $default = '') use ($config): string {
+$cs = static function(string $section, string $key, int|string $default = '') use ($config): string {
     $value = $config[$section][$key] ?? $default;
 
     return (string) $value;

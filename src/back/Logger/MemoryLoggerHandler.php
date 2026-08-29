@@ -70,7 +70,7 @@ final class MemoryLoggerHandler extends AbstractProcessingHandler implements Han
 
         // Заменяем спецсимволы для вывода в UI.
         if ($replace) {
-            $output = array_map(fn($el) => htmlspecialchars($el), $output);
+            $output = array_map(static fn($el) => htmlspecialchars($el), $output);
         }
 
         return implode($break, $output) . $break;

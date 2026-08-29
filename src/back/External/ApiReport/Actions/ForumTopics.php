@@ -60,7 +60,7 @@ trait ForumTopics
 
     private static function getSubForumTopicsProcessor(LoggerInterface $logger, int $subForumId): callable
     {
-        return function(ResponseInterface $response) use ($logger, $subForumId): ForumTopicsResponse|ApiError {
+        return static function(ResponseInterface $response) use ($logger, $subForumId): ForumTopicsResponse|ApiError {
             $result = self::decodeResponse(logger: $logger, response: $response);
             if ($result instanceof ApiError) {
                 return $result;
@@ -72,7 +72,7 @@ trait ForumTopics
             $chunks = array_chunk($result['releases'], 500);
             unset($result['releases']);
 
-            $topicGenerator = function() use ($chunks, $format, $subForumId): Generator {
+            $topicGenerator = static function() use ($chunks, $format, $subForumId): Generator {
                 foreach ($chunks as $chunk) {
                     $topics = [];
                     foreach ($chunk as $data) {

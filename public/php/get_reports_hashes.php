@@ -28,7 +28,7 @@ try {
         $hashIndex = $columns['info_hash'];
 
         // Получаем хеши раздач и возвращаем их.
-        $output = array_map(fn($el) => $el[$hashIndex], $result['kept_releases']);
+        $output = array_map(static fn($el) => $el[$hashIndex], $result['kept_releases']);
     }
 } catch (Throwable $e) {
     $error = $e->getMessage();

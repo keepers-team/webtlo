@@ -42,7 +42,7 @@ trait Processor
      */
     protected static function getChunkErrorHandler(LoggerInterface $logger, ?int $total = null): callable
     {
-        return function(GuzzleException $error, int $index) use ($logger, $total): void {
+        return static function(GuzzleException $error, int $index) use ($logger, $total): void {
             $logger->debug('Got unexpected error when fetch chunk {index}/{total}', [
                 'index'   => $index,
                 'total'   => $total ?? 'X',

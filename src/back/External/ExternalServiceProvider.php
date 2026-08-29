@@ -25,7 +25,7 @@ final class ExternalServiceProvider extends AbstractServiceProvider
         $container = $this->getContainer();
 
         // Добавляем клиент для работы с Форумом.
-        $container->addShared(ForumClient::class, function() use ($container) {
+        $container->addShared(ForumClient::class, static function() use ($container) {
             /** @var ForumConstructor $helper */
             $helper = $container->get(ForumConstructor::class);
 
@@ -33,7 +33,7 @@ final class ExternalServiceProvider extends AbstractServiceProvider
         });
 
         // Добавляем клиент для работы с API отчётов.
-        $container->add(ApiReportClient::class, function() use ($container) {
+        $container->add(ApiReportClient::class, static function() use ($container) {
             /** @var ApiReportConstructor $helper */
             $helper = $container->get(ApiReportConstructor::class);
 

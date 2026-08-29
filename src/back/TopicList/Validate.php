@@ -54,7 +54,7 @@ final class Validate
      */
     public static function filterRuleIntervals(array $filter): void
     {
-        $makeException = function(string $hint, string $type, string $class = ''): void {
+        $makeException = static function(string $hint, string $type, string $class = ''): void {
             $patterns = [
                 'invalid' => 'В фильтре введено некорректное значение %s.',
                 'zero'    => 'Значение %s в фильтре должно быть больше 0.',
@@ -377,7 +377,7 @@ final class Validate
                 // Список ников режем по запятой, убираем пробелы и заменяем спецсимволы.
                 $values = explode(',', $filter['filter_phrase']);
                 $values = array_filter($values);
-                $values = array_map(fn($el) => htmlspecialchars(trim($el)), $values);
+                $values = array_map(static fn($el) => htmlspecialchars(trim($el)), $values);
             }
 
             // В названии раздачи.
@@ -390,7 +390,7 @@ final class Validate
 
                 $values = explode(',', $pattern);
                 $values = array_filter($values);
-                $values = array_map(fn($el) => trim($el), $values);
+                $values = array_map(static fn($el) => trim($el), $values);
             }
 
             // В номере темы.

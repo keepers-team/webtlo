@@ -58,7 +58,7 @@ final class KeepersLists
     {
         $tab = $this->clone;
 
-        $rows = array_map(fn($el) => array_combine($tab->getTableKeys(), $el), $this->keptTopics);
+        $rows = array_map(static fn($el) => array_combine($tab->getTableKeys(), $el), $this->keptTopics);
         $tab->cloneFillChunk($rows, 200);
 
         $this->keptTopics = [];

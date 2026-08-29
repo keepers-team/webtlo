@@ -178,7 +178,7 @@ final class WebTLO
 
         $about['installation']   = $this->installation;
         $about['git_sha']        = $this->sha;
-        $about['php_version']    = phpversion();
+        $about['php_version']    = PHP_VERSION;
         $about['sqlite_version'] = SQLite3::version()['versionString'];
 
         return $about;
@@ -200,7 +200,7 @@ final class WebTLO
         $about['project_dir'] = (string) realpath(Helper::getProjectRoot());
         $about['storage_dir'] = (string) realpath(Helper::getStorageDir());
 
-        $about['php_version']    = phpversion();
+        $about['php_version']    = PHP_VERSION;
         $about['sqlite_version'] = SQLite3::version()['versionString'];
 
         $about['memory_limit']       = (string) ini_get('memory_limit');

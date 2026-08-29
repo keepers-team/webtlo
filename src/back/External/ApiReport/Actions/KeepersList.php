@@ -35,7 +35,7 @@ trait KeepersList
 
     private static function getKeepersListProcessor(LoggerInterface $logger): callable
     {
-        return function(ResponseInterface $response) use ($logger): KeepersListResponse|ApiError {
+        return static function(ResponseInterface $response) use ($logger): KeepersListResponse|ApiError {
             $result = self::decodeResponse($logger, $response);
             if ($result instanceof ApiError) {
                 return $result;

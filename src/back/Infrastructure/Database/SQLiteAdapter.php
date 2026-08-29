@@ -35,7 +35,7 @@ final class SQLiteAdapter implements ConnectionInterface
             $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
 
             // Создаём экземпляр класса.
-            $db = new SQLiteAdapter(pdo: $pdo, logger: $logger);
+            $db = new self(pdo: $pdo, logger: $logger);
 
             $migrator = new MigrationRunner(
                 logger       : $logger,

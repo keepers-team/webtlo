@@ -165,7 +165,7 @@ final class LoggerConstructor
     {
         $selected = self::getLogLevel($level);
 
-        $options = array_map(function($level) use ($optionFormat, $selected) {
+        $options = array_map(static function($level) use ($optionFormat, $selected) {
             $name = ucfirst(strtolower($level->getName()));
 
             return sprintf($optionFormat, $name, $level === $selected ? 'selected' : '', $name);

@@ -72,7 +72,7 @@ final class RateLimiterMiddleware
         // Фильтруем запросы, попадающие в текущий временной интервал.
         $recentRequests = array_filter(
             $this->timestamps,
-            fn(int $t): bool => $t >= $frameStart
+            static fn(int $t): bool => $t >= $frameStart
         );
 
         // Если в текущем интервале меньше запросов чем лимит - задержка не нужна.
@@ -98,9 +98,9 @@ final class RateLimiterMiddleware
         $seconds = (float) ($milliseconds / self::MILLISECONDS_PER_SECOND);
 
         try {
-            $promise = new Promise(function($resolve) use ($seconds) {
+            $promise = new Promise(static function($resolve) use ($seconds): void {
                 // resolve the promise when the timer fires in $time seconds
-                Loop::addTimer($seconds, function() use ($resolve) {
+                Loop::addTimer($seconds, static function() use ($resolve): void {
                     $resolve(null);
                 });
             });

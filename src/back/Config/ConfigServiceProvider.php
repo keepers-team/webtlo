@@ -344,7 +344,7 @@ final class ConfigServiceProvider extends AbstractServiceProvider
         });
 
         // Телеметрия - публичные данные об используемом ПО.
-        $container->addShared(Telemetry::class, function() use ($container) {
+        $container->addShared(Telemetry::class, static function() use ($container) {
             /** @var ReportSend $report */
             $report = $container->get(ReportSend::class);
 
