@@ -257,9 +257,9 @@ final class Deluge implements ClientInterface
                     }
 
                     $hostStatus = $this->makeRequest(method: 'web.get_host_status', params: [$webUiHost]);
-                    if (in_array('Offline', $hostStatus)) {
+                    if (in_array('Offline', $hostStatus, true)) {
                         $this->logger->error('WebUI host is offline', $hostStatus);
-                    } elseif (in_array('Online', $hostStatus)) {
+                    } elseif (in_array('Online', $hostStatus, true)) {
                         $this->authenticated = $this->sendRequest('web.connect', [$webUiHost]);
                     }
                 }
@@ -378,7 +378,7 @@ final class Deluge implements ClientInterface
             $this->labels = $this->makeRequest(method: 'label.get_labels');
         }
 
-        if (in_array($labelName, array_map('strtolower', $this->labels))) {
+        if (in_array($labelName, array_map('strtolower', $this->labels), true)) {
             return true;
         }
 

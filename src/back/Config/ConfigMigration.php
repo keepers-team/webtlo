@@ -67,7 +67,7 @@ final class ConfigMigration
         foreach ($excludeForums as $forumId) {
             $forumId = (int) $forumId;
 
-            if (in_array($forumId, $subsections)) {
+            if (in_array($forumId, $subsections, true)) {
                 $ini->write($forumId, 'exclude', 1);
 
                 $checkedForumIDs[] = $forumId;

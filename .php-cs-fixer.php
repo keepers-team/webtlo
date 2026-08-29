@@ -22,6 +22,7 @@ $rules = [
 
     'declare_strict_types' => true,
     'strict_comparison'    => true,
+    'strict_param'         => true,
 
     'yoda_style' => ['equal' => false, 'identical' => false],
 

@@ -78,7 +78,7 @@ final class Flood implements ClientInterface
         $torrents = [];
         foreach ($response['torrents'] as $torrent) {
             $torrentHash   = strtoupper($torrent['hash']);
-            $torrentPaused = in_array('stopped', $torrent['status']);
+            $torrentPaused = in_array('stopped', $torrent['status'], true);
 
             [$torrentError, $errorMessage] = self::checkTorrentError(torrent: $torrent);
 
@@ -338,7 +338,7 @@ final class Flood implements ClientInterface
      */
     private static function checkTorrentError(array $torrent): array
     {
-        if (in_array('error', $torrent['status'])) {
+        if (in_array('error', $torrent['status'], true)) {
             return [1, $torrent['message'] ?: 'torrent status error'];
         }
 

@@ -52,7 +52,7 @@ try {
     }
 
     // дополнительный слэш в конце каталога
-    if (!in_array(substr($torrent_files_path, -1), ['\\', '/'])) {
+    if (!in_array(substr($torrent_files_path, -1), ['\\', '/'], true)) {
         $torrent_files_path .= !str_contains($torrent_files_path, '/') ? '\\' : '/';
     }
 
