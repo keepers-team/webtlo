@@ -1094,7 +1094,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
                         <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                     </button>
                 </div>
-                <select id="reports-subsections">
+                <select id="reports-subsections" class="filter-select-menu">
                     <optgroup label="">
                         <option value="" disabled selected>Выберите подраздел из выпадающего списка</option>
                     </optgroup>
@@ -1193,18 +1193,33 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
 
     <div id="dialog" title="Сообщение"></div>
 
-    <!-- скрипты webtlo -->
-    <script type="text/javascript" src="scripts/jquery.common.js"></script>
-    <script type="text/javascript" src="scripts/jquery.settings.func.js"></script>
-    <script type="text/javascript" src="scripts/jquery.topics.func.js"></script>
-    <script type="text/javascript" src="scripts/jquery.subsections.func.js"></script>
-    <script type="text/javascript" src="scripts/jquery.clients.func.js"></script>
-    <script type="text/javascript" src="scripts/jquery.actions.js"></script>
-    <script type="text/javascript" src="scripts/jquery.settings.init.js"></script>
-    <script type="text/javascript" src="scripts/jquery.widgets.init.js"></script>
-    <script type="text/javascript" src="scripts/jquery.topics.init.js"></script>
-    <script type="text/javascript" src="scripts/jquery.subsections.init.js"></script>
-    <script type="text/javascript" src="scripts/jquery.clients.init.js"></script>
+    <!-- Общие функции -->
+    <script type="text/javascript" src="scripts/lib.common.js"></script>
+    <script type="text/javascript" src="scripts/lib.config.js"></script>
+    <script type="text/javascript" src="scripts/lib.forum.js"></script>
+    <script type="text/javascript" src="scripts/lib.topics.js"></script>
+
+    <!-- Реестр модулей-->
+    <script type="text/javascript" src="scripts/app-registry.js"></script>
+
+    <!-- Регистрируем модули-->
+    <script type="text/javascript" src="scripts/module.config.main.js"></script>
+    <script type="text/javascript" src="scripts/module.config.common.js"></script>
+    <script type="text/javascript" src="scripts/module.config.actions.js"></script>
+    <script type="text/javascript" src="scripts/module.config.clients.js"></script>
+    <script type="text/javascript" src="scripts/module.config.subsections.js"></script>
+    <script type="text/javascript" src="scripts/module.topics.actions.js"></script>
+    <script type="text/javascript" src="scripts/module.topics.filters.js"></script>
+    <script type="text/javascript" src="scripts/module.topics.list.js"></script>
+    <script type="text/javascript" src="scripts/module.topics.subsections.js"></script>
+    <script type="text/javascript" src="scripts/module.buttons.common.js"></script>
+    <script type="text/javascript" src="scripts/module.journal.js"></script>
+    <script type="text/javascript" src="scripts/module.reports.js"></script>
+    <script type="text/javascript" src="scripts/module.jquery.widgets.js"></script>
+    <script type="text/javascript" src="scripts/module.jquery.methods.js"></script>
+
+    <!-- Инициализация модулей-->
+    <script type="text/javascript" src="scripts/app-init.js"></script>
 </body>
 
 </html>
