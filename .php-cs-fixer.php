@@ -20,6 +20,8 @@ $rules = [
     '@PER-CS'     => true,
     '@PhpCsFixer' => true,
 
+    'declare_strict_types' => true,
+
     'yoda_style' => ['equal' => false, 'identical' => false],
 
     'global_namespace_import' => ['import_classes' => true],
