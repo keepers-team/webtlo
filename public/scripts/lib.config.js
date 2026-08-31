@@ -149,13 +149,13 @@ function addSubsection(event, ui) {
 
         // Дописываем параметры.
         optionForum.text(forumTitle);
-        optionForum.attr('data-client', 0).data('client', 0);
-        optionForum.attr('data-label', forumLabel).data('label', forumLabel);
-        optionForum.attr('data-savepath', '').data('savepath', '');
-        optionForum.attr('data-subdirectory', 1).data('subdirectory', 1);
-        optionForum.attr('data-hide', 0).data('hide', 0);
-        optionForum.attr('data-peers', '').data('peers', '');
-        optionForum.attr('data-exclude', 0).data('exclude', 0);
+        optionForum.saveDataKey('client', 0);
+        optionForum.saveDataKey('label', forumLabel);
+        optionForum.saveDataKey('savepath', '');
+        optionForum.saveDataKey('subdirectory', 1);
+        optionForum.saveDataKey('hide', 0);
+        optionForum.saveDataKey('peers', '');
+        optionForum.saveDataKey('exclude', 0);
 
         // Дописываем в селекторы подразделов.
         $('#main-subsections-stored').append(templateOption);

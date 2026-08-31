@@ -15,6 +15,16 @@ webtlo.register(ModuleNames.JQUERY_METHODS, function () {
             });
         }
 
+        /**
+         * Записать данные в HTML-dataset и jQuery-data.
+         *
+         * @param {string} key
+         * @param data
+         */
+        $.fn.saveDataKey = function(key, data) {
+            this.attr(`data-${key}`, data).data(key, data);
+        }
+
         // https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
         $.fn.serializeAllArray = function () {
             let data = $(this).serializeArray();

@@ -116,16 +116,16 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
             torrentClientTitle += torrentClientStatus[0].outerHTML;
         }
 
-        currentEditableClient.attr('data-comment', torrentClientComment).data('comment', torrentClientComment);
-        currentEditableClient.attr('data-type', torrentClientType).data('type', torrentClientType);
-        currentEditableClient.attr('data-hostname', torrentClientHostname).data('hostname', torrentClientHostname);
-        currentEditableClient.attr('data-port', torrentClientPort).data('port', torrentClientPort);
-        currentEditableClient.attr('data-login', torrentClientLogin).data('login', torrentClientLogin);
-        currentEditableClient.attr('data-password', torrentClientPassword).data('password', torrentClientPassword);
-        currentEditableClient.attr('data-ssl', torrentClientSSL).data('ssl', torrentClientSSL);
-        currentEditableClient.attr('data-peers', torrentControlPeers).data('peers', torrentControlPeers);
-        currentEditableClient.attr('data-exclude', torrentExclude).data('exclude', torrentExclude);
         currentEditableClient.html(torrentClientTitle);
+        currentEditableClient.saveDataKey('comment', torrentClientComment);
+        currentEditableClient.saveDataKey('type', torrentClientType);
+        currentEditableClient.saveDataKey('hostname', torrentClientHostname);
+        currentEditableClient.saveDataKey('port', torrentClientPort);
+        currentEditableClient.saveDataKey('login', torrentClientLogin);
+        currentEditableClient.saveDataKey('password', torrentClientPassword);
+        currentEditableClient.saveDataKey('ssl', torrentClientSSL);
+        currentEditableClient.saveDataKey('peers', torrentControlPeers);
+        currentEditableClient.saveDataKey('exclude', torrentExclude);
 
         doSortSelect('list-torrent-clients', 'li');
 
@@ -202,15 +202,15 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
 
         const optionTorrentClient = $("#list-torrent-clients li[value=" + torrentClientID + "]");
 
-        optionTorrentClient.attr('data-comment', torrentClientComment).data('comment', torrentClientComment);
-        optionTorrentClient.attr('data-type', torrentClientType).data('type', torrentClientType);
-        optionTorrentClient.attr('data-hostname', torrentClientHostname).data('hostname', torrentClientHostname);
-        optionTorrentClient.attr('data-port', torrentClientPort).data('port', torrentClientPort);
-        optionTorrentClient.attr('data-login', torrentClientLogin).data('login', torrentClientLogin);
-        optionTorrentClient.attr('data-password', torrentClientPassword).data('password', torrentClientPassword);
-        optionTorrentClient.attr('data-ssl', torrentClientSSL).data('ssl', torrentClientSSL);
-        optionTorrentClient.attr('data-peers', torrentControlPeers).data('peers', torrentControlPeers);
-        optionTorrentClient.attr('data-exclude', torrentExclude).data('exclude', torrentExclude);
+        optionTorrentClient.saveDataKey('comment', torrentClientComment);
+        optionTorrentClient.saveDataKey('type', torrentClientType);
+        optionTorrentClient.saveDataKey('hostname', torrentClientHostname);
+        optionTorrentClient.saveDataKey('port', torrentClientPort);
+        optionTorrentClient.saveDataKey('login', torrentClientLogin);
+        optionTorrentClient.saveDataKey('password', torrentClientPassword);
+        optionTorrentClient.saveDataKey('ssl', torrentClientSSL);
+        optionTorrentClient.saveDataKey('peers', torrentControlPeers);
+        optionTorrentClient.saveDataKey('exclude', torrentExclude);
 
         optionTorrentClient.addClass('ui-widget-content ui-selected ui-state-focus');
 
@@ -254,7 +254,7 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
 
             // Если, используемый в подразделе, клиент был удалён - указываем "не выбран".
             if (typeof usedClientId === 'undefined') {
-                $(this).attr(`data-client`, 0).data('client', 0);
+                $(this).saveDataKey('client', 0);
             }
         });
 
