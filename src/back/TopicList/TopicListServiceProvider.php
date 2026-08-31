@@ -41,16 +41,21 @@ final class TopicListServiceProvider extends AbstractServiceProvider
             /** @var SubForums $subForums */
             $subForums = $container->get(SubForums::class);
 
-            $notHidden = array_filter(
-                $subForums->params,
-                static fn($subForum) => !$subForum->hideTopics
-            );
+            $hidden = $showed = [];
+            foreach ($subForums->params as $subForum) {
+                if ($subForum->hideTopics) {
+                    $hidden[] = $subForum->id;
+                } else {
+                    $showed[] = $subForum->id;
+                }
+            }
 
             return new ConfigFilter(
                 userId              : $user->userId,
                 excludeSelf         : $filterRules->excludeSelf,
                 enableAverageHistory: $average->enableHistory,
-                notHiddenSubForums  : array_column($notHidden, 'id')
+                showedSubForums     : $showed,
+                hiddenSubForums     : $hidden,
             );
         });
 

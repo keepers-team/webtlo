@@ -212,6 +212,9 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
                 foreach ($subsections as $section) {
                     $subForumId = (int) $section;
+                    if ($subForumId <= 0) {
+                        continue;
+                    }
 
                     $list[$subForumId] = new SubForum(
                         id           : $subForumId,

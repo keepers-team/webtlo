@@ -13,8 +13,8 @@ use KeepersTeam\Webtlo\Storage\KeysObject;
 final class SubForums
 {
     /**
-     * @param int[]                $ids    список ид подразделов
-     * @param array<int, SubForum> $params параметры подразделов
+     * @param positive-int[]                $ids    список ид подразделов
+     * @param array<positive-int, SubForum> $params параметры подразделов
      */
     public function __construct(
         public readonly array $ids,
