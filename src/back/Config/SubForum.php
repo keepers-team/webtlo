@@ -10,7 +10,7 @@ namespace KeepersTeam\Webtlo\Config;
 final class SubForum
 {
     /**
-     * @param int            $id            ид подраздела
+     * @param positive-int   $id            ид подраздела
      * @param string         $name          полное название подраздела
      * @param int            $clientId      ид торрент-клиента, куда добавляются раздачи
      * @param string         $label         метка, выставляемая раздачам при добавлении в клиент

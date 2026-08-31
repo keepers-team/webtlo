@@ -184,7 +184,7 @@ final class DefaultTopics implements ListInterface
 
         // -3 Все хранимые подразделы.
         // -6 Все хранимые подразделы по спискам.
-        $subForums = $this->configFilter->notHiddenSubForums;
+        $subForums = $this->configFilter->showedSubForums;
 
         // Если что-то пошло не так - заглушка.
         if (empty($subForums)) {
