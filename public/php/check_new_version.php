@@ -56,15 +56,12 @@ echo App::decorateJsonResponse($result);
  */
 function getReleaseLink(string $install, array $release): string
 {
-    // По-умолчанию ссылка на релиз.
-    $link = $release['html_url'];
-
     $assets = $release['assets'] ?? [];
     // Пробуем найти ссылку на конкретный zip.
     if (count($assets)) {
         if ($install === 'standalone') {
             foreach ($assets as $asset) {
-                if (preg_match('/webtlo-win-.*\.zip/', $asset['name'])) {
+                if (preg_match('/webtlo-win(-.*)?\.zip/', $asset['name'])) {
                     return $asset['browser_download_url'];
                 }
             }
@@ -78,7 +75,8 @@ function getReleaseLink(string $install, array $release): string
         }
     }
 
-    return $link;
+    // По-умолчанию ссылка на релиз.
+    return $release['html_url'];
 }
 
 function getReleaseDescription(string $desc): string
