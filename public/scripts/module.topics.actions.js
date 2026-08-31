@@ -18,6 +18,7 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
     // Кнопка "применить фильтр".
     $('#apply_filter').on('click', function () {
+        clearLoadResult();
         getFilteredTopics();
     });
 

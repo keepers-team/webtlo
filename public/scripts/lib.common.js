@@ -20,6 +20,10 @@ function convertBytes(size) {
     return size ? (size / Math.pow(1024, pow)).toFixed(2) + units[pow] : '0.00';
 }
 
+function clearLoadResult() {
+    $('#topics_result, #topics_timer').html('');
+}
+
 function showResultTopics(text = '') {
     $('#topics_result').html(text);
 }

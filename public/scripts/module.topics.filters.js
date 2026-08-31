@@ -146,7 +146,10 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
         Cookies.set('filter-options', currentFilter);
 
         if ($('#enable_auto_apply_filter').prop('checked')) {
-            filter_delay(getFilteredTopics, window);
+            filter_delay(function(){
+                clearLoadResult();
+                getFilteredTopics();
+            }, window);
         }
 
         return true;

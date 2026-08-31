@@ -498,6 +498,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             </span>
                         </div>
                         <div id="topics_result"></div>
+                        <div id="topics_timer"></div>
                     </div>
                     <form id="topics" method="post"></form>
                 </div>

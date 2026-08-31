@@ -24,6 +24,7 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
                     block_actions();
                     processStatus.set(button.prop('title') + '...');
 
+                    clearLoadResult();
                 },
                 success: function (response) {
                     filter_hold = false;
