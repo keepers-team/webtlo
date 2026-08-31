@@ -141,9 +141,6 @@ function getFilteredTopics() {
         beforeSend: function () {
             filter_hold = true;
             block_actions();
-
-            // Очистка прошлого результата.
-            showResultTopics();
         },
         complete: function () {
             filter_hold = false;
@@ -153,19 +150,23 @@ function getFilteredTopics() {
             blockTopicsFilters(forum_id);
 
             $('#load_error').html('');
+
+            // Допишем время выполнения.
+            const timeTaken = ((performance.now() - filterStart) / 1000).toFixed(1);
+            $('#topics_timer').html(`[${timeTaken}s]`);
         },
         success: function (response) {
-            let messageResult = '';
             response = $.parseJSON(response);
 
             // Если есть ошибка - выводим её текст.
             if (response.result.length) {
-                messageResult = response.result;
-
                 // Если указан элемент, вызывающий ошибку - покажем его.
                 if (response.validate) {
                     $(`.${response.validate}`).highlight();
                 }
+
+                // Выводим сообщение, если есть что.
+                showResultTopics(response.result);
             }
 
             // Если есть список раздач для отображения - показываем.
@@ -178,14 +179,8 @@ function getFilteredTopics() {
                     .parent().toggle(!!response.excluded_count);
                 $("#excluded_topics_size").text(convertBytes(response.excluded_size));
             }
+
             showCountSizeSelectedTopics();
-
-            // Допишем время выполнения.
-            const timeTaken = ((performance.now() - filterStart) / 1000).toFixed(1);
-            messageResult += ` [${timeTaken}s]`;
-
-            // Выводим сообщение, если есть что.
-            showResultTopics(messageResult);
         }
     });
 }
