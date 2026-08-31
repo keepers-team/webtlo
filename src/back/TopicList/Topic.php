@@ -10,7 +10,7 @@ use KeepersTeam\Webtlo\Helper;
 
 final class Topic
 {
-    private static string $emptyNameTemplate = '[[No Title]] %s';
+    private const EmptyNameTemplate = '[[No Title]] %s';
 
     public function __construct(
         public readonly int               $id,
@@ -36,7 +36,7 @@ final class Topic
          * Делается это тут, чтобы фильтры по имени раздачи тоже работали.
          */
         if (empty($topicData['name'])) {
-            $topicData['name'] = sprintf(self::$emptyNameTemplate, $topicData['info_hash']);
+            $topicData['name'] = sprintf(self::EmptyNameTemplate, $topicData['info_hash']);
         }
 
         return new self(
