@@ -147,27 +147,28 @@ function getFilteredTopics() {
 
     const filterStart = performance.now();
 
-    const listingType = +$('#main-subsections').val();
+    const listingId = +$('#main-subsections').val();
     $('#excluded_topics_size').parent().hide();
 
     // Ничего не загружать.
-    if (listingType === -999) return;
+    if (listingId === -999) return;
 
     // Блокировка/разблокировка элементов после смены выбранного разворота.
-    blockTopicsFilters(listingType);
+    blockTopicsFilters(listingId);
 
     // Параметры фильтра в строку.
-    const $filter = $("#topics_filter").serialize();
+    const $filter = $("#topics_filter").serializeJSON();
     processStatus.set('Получение данных о раздачах...');
 
     $.ajax({
         type: 'POST',
-        url: 'php/get_filtered_list_topics.php',
-        data: {
-            forum_id: listingType,
-            filter: $filter,
-        },
-        beforeSend: function () {
+        url : 'php/get_filtered_list_topics.php',
+        data: JSON.stringify({
+            listing_id   : listingId,
+            filter       : $filter,
+            response_type: 'html',
+        }),
+        beforeSend: function() {
             filter_hold = true;
             block_actions();
         },
@@ -176,7 +177,7 @@ function getFilteredTopics() {
             block_actions();
 
             // Блокировка/разблокировка элементов строго после разблокировки прочих кнопок.
-            blockTopicsFilters(listingType);
+            blockTopicsFilters(listingId);
 
             $('#load_error').html('');
 
@@ -200,7 +201,9 @@ function getFilteredTopics() {
 
             // Если есть список раздач для отображения - показываем.
             if (response.topics != null) {
-                $("#topics").html(response.topics);
+                if (response.response_type === 'html') {
+                    $('#topics').html(response.topics);
+                }
                 $("#filtered_topics_count").text(response.topics_count);
                 $("#filtered_topics_size").text(convertBytes(response.topics_size));
 

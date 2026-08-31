@@ -6,6 +6,8 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\TopicList\HtmlFormatter;
+use KeepersTeam\Webtlo\TopicList\JsonFormatter;
 use KeepersTeam\Webtlo\TopicList\Rule\Factory;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
@@ -24,37 +26,56 @@ $response = [
 $app = App::create();
 
 try {
-    $forum_id = $_POST['forum_id'] ?? null;
-    if (!is_numeric($forum_id)) {
-        throw new RuntimeException("Некорректный идентификатор подраздела: $forum_id");
+    $request = json_decode((string) file_get_contents('php://input'), true);
+
+    $listingId = $request['listing_id'] ?? null;
+    if (!is_numeric($listingId)) {
+        throw new RuntimeException("Некорректный идентификатор подраздела/разворота: $listingId");
     }
 
     // Кодировка для regexp.
     mb_regex_encoding('UTF-8');
 
+    // Список добавляемых раздач (info_hash).
+    if (empty($request['filter']) || !is_array($request['filter'])) {
+        throw new RuntimeException('Отсутствуют параметры фильтрации раздач.');
+    }
+
     // Получаем параметры фильтра.
-    $filter = [];
-    parse_str($_POST['filter'], $filter);
-    $filter = Helper::convertKeysToString($filter);
+    $filter = Helper::convertKeysToString(array: $request['filter']);
 
     // Проверяем наличие сортировки.
-    $sorting = Validate::sortFilter($filter);
+    $sorting = Validate::sortFilter(filter: $filter);
+
+    $columns = $request['columns'] ?? [];
+
+    $responseType = $request['response_type'] ?? 'html';
+    if (!in_array($responseType, ['html', 'json'], true)) {
+        throw new RuntimeException('Некорректный тип ответа');
+    }
 
     $ruleFactory = $app->get(Factory::class);
 
     // Получаем нужные правила поиска раздач.
-    $ruleSet = $ruleFactory->getRule(forumId: (int) $forum_id);
+    $ruleSet = $ruleFactory->getRule(listingId: (int) $listingId);
 
-    // Ищем раздачи.
+    // Ищем и форматируем раздачи.
     $topics = $ruleSet->getTopics(filter: $filter, sort: $sorting);
 
-    // Формируем ответ.
-    $response['topics'] = $topics->mergeList();
+    if ($responseType === 'json') {
+        $formatter = new JsonFormatter();
+    } else {
+        $formatter = $app->get(HtmlFormatter::class);
+    }
 
-    $response['topics_size']    = $topics->size;
-    $response['topics_count']   = $topics->count;
-    $response['excluded_count'] = $topics->excluded->count;
-    $response['excluded_size']  = $topics->excluded->size;
+    $result = $formatter->format(topics: $topics, columns: (array) $columns);
+
+    // Формируем ответ.
+    $response = [
+        'response_type' => $responseType,
+        ...$response,
+        ...$result,
+    ];
 } catch (ValidationException $e) {
     $response['result']   = $e->getMessage();
     $response['validate'] = $e->getClass();
@@ -62,4 +83,4 @@ try {
     $response['result'] = $e->getMessage();
 }
 
-echo App::decorateJsonResponse($response);
+echo App::decorateJsonResponse(result: $response);
