@@ -87,13 +87,13 @@ webtlo.register(ModuleNames.CONFIG_SUBSECTIONS,function() {
         const forumExclude = $("#forum-exclude :selected").val();
         const optionForum = $(`#list-forums option[value=${editableForumID}]`);
 
-        optionForum.attr('data-client', forumClient).data('client', forumClient);
-        optionForum.attr('data-label', forumLabel).data('label', forumLabel);
-        optionForum.attr('data-savepath', forumSavePath).data("savepath", forumSavePath);
-        optionForum.attr('data-subdirectory', forumSubdirectory).data('subdirectory', forumSubdirectory);
-        optionForum.attr('data-hide', forumHideTopics).data('hide', forumHideTopics);
-        optionForum.attr('data-peers', forumControlPeers).data('peers', forumControlPeers);
-        optionForum.attr('data-exclude', forumExclude).data('exclude', forumExclude);
+        optionForum.saveDataKey('client', forumClient);
+        optionForum.saveDataKey('label', forumLabel);
+        optionForum.saveDataKey("savepath", forumSavePath);
+        optionForum.saveDataKey('subdirectory', forumSubdirectory);
+        optionForum.saveDataKey('hide', forumHideTopics);
+        optionForum.saveDataKey('peers', forumControlPeers);
+        optionForum.saveDataKey('exclude', forumExclude);
 
         refreshExcludedSubsections();
     });
