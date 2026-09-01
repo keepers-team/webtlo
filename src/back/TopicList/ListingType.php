@@ -7,44 +7,50 @@ namespace KeepersTeam\Webtlo\TopicList;
 /**
  * Тип выборки раздач (разворот).
  *
- * @see index.php #main-subsections
+ * @see public/index.php #main-subsections
+ * @see public/scripts/lib.topics.js TopicListingType
  */
 enum ListingType: int
 {
     /**
-     * Раздачи из всех хранимых подразделов.
+     * Раздачи из всех хранимых подразделов (отображаемых).
      */
-    case AllKept = -3;
+    case AllKeptShowed = -10;
+
+    /**
+     * Раздачи из всех хранимых подразделов (скрытых).
+     */
+    case AllKeptHidden = -11;
 
     /**
      * Раздачи с высоким приоритетом хранения.
      */
-    case HighPriority = -5;
+    case HighPriority = -15;
 
     /**
-     * Раздачи из «чёрного списка».
+     * Хранимые раздачи по спискам.
      */
-    case BlackListed = -2;
+    case SelfKeep = -20;
 
     /**
      * Хранимые дублирующиеся раздачи.
      */
-    case Duplicated = -4;
+    case Duplicated = -21;
 
     /**
-     * Хранимые раздачи по спискам
+     * Раздачи из «чёрного списка».
      */
-    case SelfKeep = -6;
+    case BlackListed = -22;
 
     /**
      * Хранимые раздачи из других подразделов.
      */
-    case OtherSubForums = 0;
+    case OtherSubForums = -30;
 
     /**
      * Хранимые раздачи незарегистрированные на трекере.
      */
-    case Unregistered = -1;
+    case Unregistered = -31;
 
     public function getDefaultLabel(): string
     {
@@ -62,7 +68,8 @@ enum ListingType: int
     public function allowMassLabelSet(): bool
     {
         return match ($this) {
-            self::AllKept,
+            self::AllKeptShowed,
+            self::AllKeptHidden,
             self::HighPriority,
             self::SelfKeep => true,
             default        => false,

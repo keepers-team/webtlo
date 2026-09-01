@@ -106,13 +106,14 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                         <option value="-999">[[Выберите необходимый раздел из списка]]</option>
                     </optgroup>
                     <optgroup label="Общие группы раздач">
-                        <option value="-3">Раздачи из всех хранимых подразделов</option>
-                        <option value="-5">Раздачи с высоким приоритетом хранения</option>
-                        <option value="-2">Раздачи из «чёрного списка»</option>
-                        <option value="-4">Хранимые дублирующиеся раздачи</option>
-                        <option value="-6">Хранимые раздачи по спискам</option>
-                        <option value="0">Хранимые раздачи из других подразделов</option>
-                        <option value="-1">Хранимые раздачи незарегистрированные на трекере</option>
+                        <option value="-10">Раздачи из всех хранимых подразделов</option>
+                        <option value="-11">Раздачи из всех хранимых подразделов (скрытых)</option>
+                        <option value="-15">Раздачи с высоким приоритетом хранения</option>
+                        <option value="-20">Хранимые раздачи по спискам</option>
+                        <option value="-21">Хранимые дублирующиеся раздачи</option>
+                        <option value="-22">Раздачи из «чёрного списка»</option>
+                        <option value="-30">Хранимые раздачи из других подразделов</option>
+                        <option value="-31">Хранимые раздачи незарегистрированные на трекере</option>
                     </optgroup>
                     <optgroup label="Хранимые подразделы" id="main-subsections-stored">
                         <?= $cs('subForums', 'mainOptions'); ?>
@@ -195,7 +196,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                     <form method="post" id="topics_filter">
                         <div class="topics_filter">
                             <div class="filter_block ui-widget">
-                                <fieldset class="filter-exception-client-status" title="Статус раздач в торрент-клиенте">
+                                <fieldset id="filter_client_status" class="filter-exception-client-status" title="Статус раздач в торрент-клиенте">
                                     <label>
                                         <input type="checkbox" name="filter_client_status[]" value="1" />
                                         храню

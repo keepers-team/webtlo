@@ -2,6 +2,24 @@
 /* Функции для вкладки "Раздачи". */
 
 /**
+ * Тип выборки раздач (разворот).
+ *
+ * @enum {int}
+ *
+ * @see \KeepersTeam\Webtlo\TopicList\ListingType
+ */
+const TopicListingType = {
+    AllKeptShowed : -10, // все хранимые (отображаемые)
+    AllKeptHidden : -11, // все хранимые (скрытые)
+    HighPriority  : -15, // высокоприоритетные раздачи
+    SelfKeep      : -20, // раздачи своим по спискам
+    Duplicated    : -21, // дублирующиеся раздачи
+    BlackListed   : -22, // черный список
+    OtherSubForums: -30, // из других подразделов
+    Unregistered  : -31, // незарегистрированные
+}
+
+/**
  * Список info_hash выделенных раздач.
  *
  * @returns {string[]}
@@ -33,7 +51,7 @@ function downloadTorrents(replace_passkey) {
  * @param {boolean} replace_passkey
  */
 function downloadTorrentsByKeepersList(replace_passkey) {
-    const subForumId = $('#main-subsections').val();
+    const subForumId = +$('#main-subsections').val();
     if ($.isEmptyObject(subForumId) || subForumId < 0) {
         return;
     }
@@ -129,14 +147,14 @@ function getFilteredTopics() {
 
     const filterStart = performance.now();
 
-    const forum_id = +$("#main-subsections").val();
-    $("#excluded_topics_size").parent().hide();
+    const listingType = +$('#main-subsections').val();
+    $('#excluded_topics_size').parent().hide();
 
     // Ничего не загружать.
-    if (forum_id === -999) return;
+    if (listingType === -999) return;
 
     // Блокировка/разблокировка элементов после смены выбранного разворота.
-    blockTopicsFilters(forum_id);
+    blockTopicsFilters(listingType);
 
     // Параметры фильтра в строку.
     const $filter = $("#topics_filter").serialize();
@@ -146,7 +164,7 @@ function getFilteredTopics() {
         type: 'POST',
         url: 'php/get_filtered_list_topics.php',
         data: {
-            forum_id: forum_id,
+            forum_id: listingType,
             filter: $filter,
         },
         beforeSend: function () {
@@ -158,7 +176,7 @@ function getFilteredTopics() {
             block_actions();
 
             // Блокировка/разблокировка элементов строго после разблокировки прочих кнопок.
-            blockTopicsFilters(forum_id);
+            blockTopicsFilters(listingType);
 
             $('#load_error').html('');
 
@@ -198,22 +216,16 @@ function getFilteredTopics() {
 
 /**
  * Изменить набор доступных к работе элементов.
- * @param {number} forum_id
+ *
+ * @param {number} listingType
  */
-function blockTopicsFilters(forum_id) {
-    //  0 - из других подразделов
-    // -1 - незарегистрированные
-    // -2 - черный список
-    // -3 - все хранимые
-    // -4 - дублирующиеся раздачи
-    // -5 - высокоприоритетные раздачи
-    // -6 - раздачи своим по спискам
-
+function blockTopicsFilters(listingType) {
     if (
-        forum_id > 0
-        || forum_id === -3
-        || forum_id === -5
-        || forum_id === -6
+        listingType > 0
+        || listingType === TopicListingType.AllKeptShowed
+        || listingType === TopicListingType.AllKeptHidden
+        || listingType === TopicListingType.HighPriority
+        || listingType === TopicListingType.SelfKeep
     ) {
         // Разблокировать.
 
@@ -233,9 +245,16 @@ function blockTopicsFilters(forum_id) {
         $('#filter_date_release').datepicker('enable');
 
         // Для высокого приоритета, блокируем добавление раздач и фильтр по приоритету.
-        if (forum_id === -5) {
+        if (listingType === TopicListingType.HighPriority) {
             $('#tor_add').button('disable');
-            $(".topics_filter input[name^='keeping_priority']").toggleDisable(true);
+            $(`.topics_filter input[name^='keeping_priority']`).toggleDisable(true);
+        }
+
+        // Для "своих хранимых". Снимаем галку "не храню", ставим галку "храню".
+        if (listingType === TopicListingType.SelfKeep) {
+            const $filter_client_status = $(`#filter_client_status input[name^='filter_client_status']`);
+            $filter_client_status.filter(`[value='null']`).prop('checked', false);
+            $filter_client_status.filter(`[value='1']`).prop('checked', true);
         }
 
         // Фильтр по клиенту разблокируем.
@@ -245,12 +264,12 @@ function blockTopicsFilters(forum_id) {
     } else {
         // Заблокировать.
 
-        if (forum_id === -2) {
-            $("#toolbar-control-topics").buttonset("disable");
-            $("#tor_blacklist").button("enable");
+        if (listingType === TopicListingType.BlackListed) {
+            $('#toolbar-control-topics').buttonset('disable');
+            $('#tor_blacklist').button('enable');
         } else {
-            $("#toolbar-control-topics").buttonset("enable");
-            $("#tor_blacklist").button("disable");
+            $('#toolbar-control-topics').buttonset('enable');
+            $('#tor_blacklist').button('disable');
         }
 
         // Блокируем все input, за исключением сортировки.
@@ -273,7 +292,7 @@ function blockTopicsFilters(forum_id) {
         $('.filter_status_controlgroup').controlgroup('disable')
 
         // Для дублирующихся раздач, разблокируем фильтр средних сидов.
-        if (forum_id === -4) {
+        if (listingType === TopicListingType.Duplicated) {
             $('.tor_remove').toggleDisable(true);
             $('#filter_avg_seeders_period')
                 .toggleDisable(false)
@@ -282,7 +301,7 @@ function blockTopicsFilters(forum_id) {
     }
 
     // Блокируем кнопки загрузки по спискам, если не выбран подраздел.
-    $('.tor_download_by_keepers_list').prop('disabled', forum_id < 0);
+    $('.tor_download_by_keepers_list').prop('disabled', listingType < 0);
     $('#tor_download_options').selectmenu('refresh');
 }
 

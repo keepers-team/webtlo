@@ -58,7 +58,8 @@ final class Factory
             // Заданный раздел.
             $forumId > 0
             // Все хранимые подразделы.
-            || $listingType === ListingType::AllKept
+            || $listingType === ListingType::AllKeptShowed
+            || $listingType === ListingType::AllKeptHidden
             // Высокий приоритет.
             || $listingType === ListingType::HighPriority
             // Все хранимые подразделы по спискам.

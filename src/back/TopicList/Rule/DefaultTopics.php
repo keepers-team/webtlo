@@ -29,7 +29,11 @@ final class DefaultTopics implements ListInterface
     use FilterTrait;
     use FormatKeepersTrait;
 
-    /** @var array<string, mixed>[][] */
+    /**
+     * Раздачи и их хранители (topic_id => keepers[]).
+     *
+     * @var array<string, mixed>[][]
+     */
     private array $keepers = [];
 
     public function __construct(
@@ -177,14 +181,17 @@ final class DefaultTopics implements ListInterface
             return [$this->listingType];
         }
 
-        // Высокий приоритет.
-        if ($this->listingType === ListingType::HighPriority) {
-            return $this->getHighPriorityForums();
-        }
+        $subForums = match ($this->listingType) {
+            ListingType::HighPriority  => $this->getHighPriorityForums(),
+            ListingType::AllKeptHidden => $this->configFilter->hiddenSubForums,
+            ListingType::SelfKeep      => array_merge(
+                $this->configFilter->showedSubForums,
+                $this->configFilter->hiddenSubForums
+            ),
 
-        // -3 Все хранимые подразделы.
-        // -6 Все хранимые подразделы по спискам.
-        $subForums = $this->configFilter->showedSubForums;
+            // -3 Все хранимые подразделы.
+            default                    => $this->configFilter->showedSubForums,
+        };
 
         // Если что-то пошло не так - заглушка.
         if (empty($subForums)) {
