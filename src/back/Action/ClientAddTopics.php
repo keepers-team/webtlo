@@ -57,7 +57,7 @@ final class ClientAddTopics
     /**
      * @param string[] $hashes
      */
-    public function process(array $hashes): void
+    public function process(array $hashes): string
     {
         Timers::start('add_topics_to_client');
         $this->logger->info('Запущен процесс добавления раздач в торрент-клиенты...');
@@ -149,10 +149,16 @@ final class ClientAddTopics
             ['sec' => Timers::getExecTime('add_topics_to_client')]
         );
 
-        $this->logger->info(
-            'Задействовано торрент-клиентов — {clients}, добавлено раздач всего — {topics} шт.',
-            ['clients' => $totalTorrentClients, 'topics' => $totalTorrentFilesAdded]
+        $result = sprintf(
+            'Задействовано торрент-клиентов: %d, добавлено раздач: [%d/%d] шт.',
+            $totalTorrentClients,
+            $totalTorrentFilesAdded,
+            count($hashes)
         );
+
+        $this->logger->info($result);
+
+        return $result;
     }
 
     /**

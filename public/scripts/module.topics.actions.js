@@ -72,9 +72,9 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
     // Кнопка добавления раздач в торрент-клиент.
     $('#tor_add').on('click', function () {
-        const topic_hashes = $("#topics").serialize();
+        const topic_hashes = getCheckedTopicHashes();
         if ($.isEmptyObject(topic_hashes)) {
-            showResultTopics('Выберите раздачи');
+            showResultTopics('Выберите раздачи для скачивания.');
 
             return false;
         }
@@ -83,11 +83,13 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
         $.ajax({
             type: 'POST',
             url: 'php/add_topics_to_client.php',
-            data: {
-                topic_hashes: topic_hashes
-            },
+            data: JSON.stringify({
+                topic_hashes: topic_hashes,
+            }),
             beforeSend: function () {
                 block_actions();
+
+                clearLoadResult();
             },
             complete: function () {
                 block_actions();
@@ -95,15 +97,18 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
             success: function (response) {
                 response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
-                getFilteredTopics();
                 showResultTopics(response.result);
+
+                getFilteredTopics();
             }
         });
     });
 
     // Кнопка (с вариантами) скачивания торрент-файлов.
     $('.tor_download').on('click', function () {
-        downloadTorrents(+$(this).val());
+        clearLoadResult();
+
+        downloadTorrents(Boolean(+$(this).val()));
     });
 
     // Варианты скачивания торрент-файлов.
@@ -116,17 +121,19 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
             my: 'right+12 top', at: 'left+135 bottom', collision: 'flip'
         },
         select: function (event, ui) {
+            clearLoadResult();
+
             if (ui.item.element.attr('class') === 'tor_download') {
-                downloadTorrents(+ui.item.value);
+                downloadTorrents(Boolean(+ui.item.value));
             } else if (ui.item.element.attr('class') === 'tor_download_by_keepers_list') {
-                downloadTorrentsByKeepersList(+ui.item.value);
+                downloadTorrentsByKeepersList(Boolean(+ui.item.value));
             }
         }
     });
 
     // Кнопка добавления/удаления в "чёрный" список раздач.
     $('#tor_blacklist').on('click', function () {
-        const topic_hashes = $('#topics').serialize();
+        const topic_hashes = getCheckedTopicHashes();
 
         if ($.isEmptyObject(topic_hashes)) {
             showResultTopics('Выберите раздачи');
@@ -135,16 +142,17 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
         }
 
         const listingType = +$("#main-subsections").val();
-        const exclude = listingType !== -2 ? 1 : 0;
+        const exclude = listingType !== -2;
+
         processStatus.set('Редактирование "чёрного списка" раздач...');
 
         $.ajax({
             type: 'POST',
             url: 'php/exclude_topics.php',
-            data: {
+            data: JSON.stringify({
                 topic_hashes: topic_hashes,
                 exclude: exclude
-            },
+            }),
             beforeSend: function () {
                 block_actions();
             },
@@ -164,9 +172,10 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
     // Кнопки управления раздачами (метка, старт, стоп, удаление).
     $('.torrent_action').on('click', function (e) {
-        const topic_hashes = $topicsForm.serialize();
+        const topic_hashes = getCheckedTopicHashes();
+
         if ($.isEmptyObject(topic_hashes)) {
-            showResultTopics('Выберите раздачи');
+            showResultTopics('Выберите раздачи.');
 
             return false;
         }

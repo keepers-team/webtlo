@@ -9,25 +9,26 @@ use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Storage\Table\TopicsExcluded;
 
 try {
-    if (empty($_POST['topic_hashes'])) {
-        throw new Exception('Выберите раздачи, которые желаете исключить');
+    $request = json_decode((string) file_get_contents('php://input'), true);
+
+    // Список добавляемых раздач (info_hash).
+    if (empty($request['topic_hashes']) || !is_array($request['topic_hashes'])) {
+        throw new RuntimeException('Выберите раздачи, которые желаете исключить');
     }
 
     $app = App::create();
     $db  = $app->getDataBase();
 
-    /** @var TopicsExcluded $topicsExcluded */
     $topicsExcluded = $app->get(TopicsExcluded::class);
 
-    parse_str($_POST['topic_hashes'], $topicHashes);
-    $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString(array: $request['topic_hashes']);
 
     /**
      * Признак исключения раздач:
      * 1 - добавить в список исключений.
      * 0 - удалить из списка исключений.
      */
-    $exclude = !empty($_POST['exclude']);
+    $exclude = !empty($request['exclude']);
 
     $topicsExcluded->manageTopics(hashes: $topicHashes, exclude: $exclude);
 
@@ -36,4 +37,4 @@ try {
     $result = $e->getMessage();
 }
 
-echo App::decorateJsonResponse($result);
+echo App::decorateJsonResponse(result: $result);
