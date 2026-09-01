@@ -15,32 +15,29 @@ $app = App::create();
 $log = $app->getLogger();
 
 try {
+    $request = json_decode((string) file_get_contents('php://input'), true);
+
     Timers::start('download');
 
     $result = '';
 
-    // список выбранных раздач
-    if (empty($_POST['topic_hashes'])) {
-        throw new RuntimeException('Выберите раздачи');
+    // Список добавляемых раздач (info_hash).
+    if (empty($request['topic_hashes']) || !is_array($request['topic_hashes'])) {
+        throw new RuntimeException('Выберите раздачи для скачивания.');
     }
 
-    /** @var TorrentDownload $downloadOptions */
+    // Идентификатор подраздела.
+    $forum_id = $request['forum_id'] ?? 0;
+
+    // Нужна ли замена PASSKEY.
+    $replace_passkey = (bool) ($request['replace_passkey'] ?? false);
+
     $downloadOptions = $app->get(TorrentDownload::class);
-
-    // идентификатор подраздела
-    $forum_id = $_POST['forum_id'] ?? 0;
-
-    // нужна ли замена passkey
-    $replace_passkey = (bool) ($_POST['replace_passkey'] ?? false);
 
     $passkeyValue   = $downloadOptions->replacePassKey;
     $forRegularUser = $downloadOptions->forRegularUser;
 
-    // парсим список выбранных раздач
-    parse_str($_POST['topic_hashes'], $topicHashes);
-
-    /** @var string[] $topicHashes */
-    $topicHashes = array_map('strval', (array) $topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString(array: $request['topic_hashes']);
 
     // выбор каталога
     $torrent_files_path = !$replace_passkey

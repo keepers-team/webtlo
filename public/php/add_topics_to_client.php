@@ -13,20 +13,18 @@ $app = App::create();
 $log = $app->getLogger();
 
 try {
+    $request = json_decode((string) file_get_contents('php://input'), true);
+
     // Список добавляемых раздач (info_hash).
-    if (empty($_POST['topic_hashes'])) {
-        throw new RuntimeException('Выберите раздачи');
+    if (empty($request['topic_hashes']) || !is_array($request['topic_hashes'])) {
+        throw new RuntimeException('Выберите раздачи для скачивания.');
     }
 
-    parse_str($_POST['topic_hashes'], $topicHashes);
-    $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString(array: $request['topic_hashes']);
 
-    /** @var ClientAddTopics $addTopics */
     $addTopics = $app->get(ClientAddTopics::class);
 
-    $addTopics->process($topicHashes);
-
-    $result = 'Добавление завершено.';
+    $result = $addTopics->process(hashes: $topicHashes);
 } catch (RuntimeException $e) {
     $result = $e->getMessage();
     $log->error($result);
@@ -34,4 +32,4 @@ try {
     $log->info('-- DONE --');
 }
 
-echo App::decorateJsonResponse($result);
+echo App::decorateJsonResponse(result: $result);
