@@ -36,7 +36,7 @@ webtlo.register(ModuleNames.CONFIG_MAIN,function() {
 
     // Кнопка проверки доступности форума и API
     $('#check_mirrors_access').on('click', function () {
-        const $data = $('#config').serialize();
+        const config = $('#config').serializeJSON();
 
         // Проверяемые адреса.
         const check_list = ['forum', 'report'];
@@ -71,13 +71,13 @@ webtlo.register(ModuleNames.CONFIG_MAIN,function() {
             $.ajax({
                 type: 'POST',
                 url: 'php/check_mirror_access.php',
-                data: {
+                data: JSON.stringify({
                     url_type  : value,
-                    cfg       : $data,
                     url       : url,
                     url_custom: $(`${element}_custom`).val(),
-                    proxy     : $(`#proxy_activate_${value}`).is(':checked')
-                },
+                    proxy     : $(`#proxy_activate_${value}`).is(':checked'),
+                    cfg       : config
+                }),
                 success: function (response) {
                     response = $.parseJSON(response);
 
