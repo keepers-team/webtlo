@@ -73,6 +73,7 @@ $cs = function(string $section, string $key, int|string $default = '') use ($con
     <script src="scripts/jquery.lib/js.cookie.min.js"></script>
     <script src="scripts/jquery.lib/jquery.1.12.4.min.js"></script>
     <script src="scripts/jquery.lib/jquery.mousewheel.min.js"></script>
+    <script src="scripts/jquery.lib/jquery.serializejson.min.js"></script>
     <script src="scripts/jquery.lib/jquery-ui.1.12.1.min.js"></script>
     <script src="scripts/jquery.lib/jquery-ui-i18n.1.11.4.min.js"></script>
 
