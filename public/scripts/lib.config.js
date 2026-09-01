@@ -10,7 +10,7 @@ function saveSettings() {
 
     const forums = getForums();
     const tor_clients = getListTorrentClients();
-    const $data = $('#config').serialize();
+    const $data = $('#config').serializeJSON();
 
     $.ajax({
         context: this,

@@ -13,13 +13,15 @@ try {
 
     // парсим настройки
     $cfg = [];
-    if (isset($request['cfg'])) {
-        parse_str($request['cfg'], $cfg);
+    if (!empty($request['cfg']) && is_array($request['cfg'])) {
+        $cfg = $request['cfg'];
     }
+
     if (empty($cfg)) {
         throw new RuntimeException('Настройки не переданы. Нечего сохранять.');
     }
-    $cfg = Helper::convertKeysToString($cfg);
+
+    $cfg = Helper::convertKeysToString(array: $cfg);
 
     $settings = $app->getSettings();
 
@@ -27,7 +29,7 @@ try {
     $clients = $request['tor_clients'] ?? [];
 
     // Записываем настройки.
-    $saveResult = $settings->update($cfg, $forums, $clients);
+    $saveResult = $settings->update(cfg: $cfg, forums: $forums, torrentClients: $clients);
     if ($saveResult) {
         $log->info('Настройки успешно сохранены в файл.');
     } else {
@@ -35,7 +37,7 @@ try {
     }
 
     // Сделаем копию настроек, убрав приватные данные.
-    $cloneResult = $settings->makePublicCopy('config_public.ini');
+    $cloneResult = $settings->makePublicCopy(cloneName: 'config_public.ini');
     if ($cloneResult) {
         $log->info('Публичная копия настроек сохранена успешно.');
     } else {

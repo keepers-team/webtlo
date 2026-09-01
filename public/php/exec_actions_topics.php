@@ -23,7 +23,7 @@ try {
         throw new Exception('Попытка выполнить неизвестное действие');
     }
 
-    if (empty($request['topic_hashes'])) {
+    if (empty($request['topic_hashes']) || !is_array($request['topic_hashes'])) {
         throw new Exception('Выберите раздачи');
     }
     if (empty($request['tor_clients'])) {
@@ -43,10 +43,8 @@ try {
         )
     );
 
-    parse_str($request['topic_hashes'], $topicHashes);
-    $topicHashes = Helper::convertKeysToString((array) $topicHashes['topic_hashes']);
+    $topicHashes = Helper::convertKeysToString(array: $request['topic_hashes']);
 
-    /** @var ClientApplyAction $actionApply */
     $actionApply = $app->get(ClientApplyAction::class);
 
     $actionApply->process(

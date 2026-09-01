@@ -15,24 +15,24 @@ $log = $app->getLogger();
 $result = false;
 
 try {
+    $request = json_decode((string) file_get_contents('php://input'), true);
+
     // Получаем настройки.
-    if (isset($_POST['cfg'])) {
-        parse_str($_POST['cfg'], $cfg);
-    }
+    $cfg = $request['cfg'] ?? [];
 
     // Нет конфига - нет проверки.
-    if (empty($cfg)) {
-        throw new RuntimeException('Пустой конфиг');
+    if (empty($cfg) || !is_array($cfg)) {
+        throw new RuntimeException('Нет настроек для проверки доступности.');
     }
 
     // Проверяемый url.
-    $url = $_POST['url'] ?? null;
+    $url = $request['url'] ?? null;
 
     // Свой проверяемый url.
-    $url_custom = $_POST['url_custom'] ?? null;
+    $url_custom = $request['url_custom'] ?? null;
 
     // Тип url.
-    $url_type = $_POST['url_type'] ?? null;
+    $url_type = $request['url_type'] ?? null;
     if (empty($url) || empty($url_type)) {
         throw new Exception('Не удалось определить тип проверки.');
     }
@@ -45,16 +45,15 @@ try {
     }
 
     $proxy = null;
-    if ('true' === ($_POST['proxy'] ?? null)) {
-        $proxy = Proxy::fromLegacy($cfg);
+    if (true === ($request['proxy'] ?? null)) {
+        $proxy = Proxy::fromLegacy(cfg: $cfg);
     }
 
-    /** @var CheckMirrorAccess $check */
     $check = $app->get(CheckMirrorAccess::class);
 
-    $result = $check->checkAddress($url_type, $url, $proxy);
+    $result = $check->checkAddress(type: $url_type, url: $url, proxy: $proxy);
 } catch (Throwable $e) {
     $log->error($e->getMessage());
 }
 
-echo App::decorateJsonResponse($result ? '1' : '0');
+echo App::decorateJsonResponse(result: $result ? '1' : '0');
