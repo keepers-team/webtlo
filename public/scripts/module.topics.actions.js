@@ -142,7 +142,7 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
         }
 
         const listingType = +$("#main-subsections").val();
-        const exclude = listingType !== -2;
+        const exclude = listingType !== TopicListingType.BlackListed;
 
         processStatus.set('Редактирование "чёрного списка" раздач...');
 
