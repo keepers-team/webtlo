@@ -34,7 +34,7 @@ final class CloneFactory
         string $table,
         array  $keys = [],
         string $primary = 'id',
-        string $prefix = 'New'
+        string $prefix = 'New',
     ): CloneTable {
         $cloneName  = $prefix . $table;
         $cloneTable = "temp.$cloneName";

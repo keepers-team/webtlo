@@ -19,7 +19,7 @@ final class CsvReportProcessor implements ReportProcessorInterface
      */
     public function __construct(
         private readonly Reader  $csv,
-        private readonly Closure $seedingChecker
+        private readonly Closure $seedingChecker,
     ) {}
 
     public function process(): iterable

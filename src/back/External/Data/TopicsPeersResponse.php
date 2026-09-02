@@ -20,7 +20,7 @@ final class TopicsPeersResponse implements TopicPeersProcessorInterface
      */
     public function __construct(
         public readonly array $peers,
-        public readonly array $missingTopics
+        public readonly array $missingTopics,
     ) {}
 
     /**

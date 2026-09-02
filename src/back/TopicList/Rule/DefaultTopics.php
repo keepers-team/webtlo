@@ -208,7 +208,7 @@ final class DefaultTopics implements ListInterface
         KeysObject        $priority,
         DateTimeImmutable $dateRelease,
         bool              $excludeSelfKeep,
-        Sort              $sort
+        Sort              $sort,
     ): Generator {
         // Открываем транзакцию выполнения запроса к БД.
         $this->con->beginTransaction();
@@ -334,7 +334,7 @@ final class DefaultTopics implements ListInterface
         array       $filter,
         Keepers     $filterKeepers,
         AverageSeed $averageSeed,
-        Sort        $sort
+        Sort        $sort,
     ): string {
         // Шаблон для статуса хранения.
         $torrentDone = 'CAST(done as INT) IS ' . implode(' OR CAST(done AS INT) IS ', $filter['filter_client_status']);

@@ -16,7 +16,7 @@ final class CloneTableObject
         public readonly string $origin,
         public readonly string $clone,
         public readonly array  $keys,
-        public readonly string $primary
+        public readonly string $primary,
     ) {}
 
     public function getKeysSelect(): string

@@ -50,7 +50,7 @@ trait ForumTree
     {
         return function(
             ResponseInterface $treeResponse,
-            ResponseInterface $sizeResponse
+            ResponseInterface $sizeResponse,
         ) use ($logger): ForumsResponse|ApiError {
             $treeResult = self::decodeResponse(logger: $logger, response: $treeResponse);
             if ($treeResult instanceof ApiError) {

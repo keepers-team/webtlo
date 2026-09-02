@@ -73,7 +73,7 @@ final class Subsections
         private readonly TopicsUpdate        $tableUpdate,
         private readonly SeedersInsert       $seedersInsert,
         private readonly UpdateTime          $updateTime,
-        private readonly LoggerInterface     $logger
+        private readonly LoggerInterface     $logger,
     ) {}
 
     /**

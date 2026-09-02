@@ -13,7 +13,7 @@ final class AverageSeed
         /** @var string[] */
         public readonly array $fields,
         /** @var string[] */
-        public readonly array $joins
+        public readonly array $joins,
     ) {}
 
     public function getFields(): string

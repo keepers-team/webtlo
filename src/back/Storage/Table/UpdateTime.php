@@ -49,7 +49,7 @@ final class UpdateTime
      */
     public function setMarkerTime(
         int|UpdateMark        $marker,
-        int|DateTimeImmutable $updateTime = new DateTimeImmutable()
+        int|DateTimeImmutable $updateTime = new DateTimeImmutable(),
     ): void {
         if ($marker instanceof UpdateMark) {
             $marker = $marker->value;

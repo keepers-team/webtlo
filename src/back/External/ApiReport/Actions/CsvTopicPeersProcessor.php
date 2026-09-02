@@ -14,7 +14,7 @@ final class CsvTopicPeersProcessor implements TopicPeersProcessorInterface
      * @param Reader<array<string, string>> $csv
      */
     public function __construct(
-        private readonly Reader $csv
+        private readonly Reader $csv,
     ) {}
 
     public function process(array $hashes): iterable

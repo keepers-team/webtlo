@@ -18,7 +18,7 @@ final class UnregisteredTopics implements ListInterface
 
     public function __construct(
         private readonly ConnectionInterface $con,
-        private readonly Formatter           $output
+        private readonly Formatter           $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
