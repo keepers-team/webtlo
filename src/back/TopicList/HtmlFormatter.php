@@ -104,11 +104,22 @@ final class HtmlFormatter
             return $this->formatClients(clients: $details['clients']);
         }
 
+        // Прочие дополнительные значения.
+        $merge = [];
+        if (isset($details['updated_hash'])) {
+            $merge[] = sprintf(
+                '<input type="hidden" class="topic_hash" value="%s"/>',
+                $details['updated_hash']
+            );
+        }
         if (isset($details['previous_name'])) {
-            return sprintf(
+            $merge[] = sprintf(
                 '<span class="text-disabled">%s</span>',
                 $details['previous_name']
             );
+        }
+        if (count($merge)) {
+            return implode('', $merge);
         }
 
         return null;
