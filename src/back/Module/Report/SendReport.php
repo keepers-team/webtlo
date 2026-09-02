@@ -52,7 +52,7 @@ final class SendReport
         int               $forumId,
         array             $topicsToReport,
         DateTimeInterface $reportDate,
-        bool              $reportRewrite = false
+        bool              $reportRewrite = false,
     ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(

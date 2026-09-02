@@ -10,6 +10,6 @@ final class Keeper
     public function __construct(
         public readonly int    $keeperId,
         public readonly string $keeperName,
-        public readonly bool   $isCandidate
+        public readonly bool   $isCandidate,
     ) {}
 }

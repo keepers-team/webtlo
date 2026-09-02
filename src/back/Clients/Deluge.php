@@ -45,7 +45,7 @@ final class Deluge implements ClientInterface
 
     public function __construct(
         private readonly LoggerInterface      $logger,
-        private readonly TorrentClientOptions $options
+        private readonly TorrentClientOptions $options,
     ) {
         $this->jar = new CookieJar();
 

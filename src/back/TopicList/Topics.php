@@ -11,7 +11,7 @@ final class Topics
         public int      $size = 0,
         /** @var string[] */
         public array    $list = [],
-        public Excluded $excluded = new Excluded()
+        public Excluded $excluded = new Excluded(),
     ) {}
 
     public function mergeList(string $glue = ''): string

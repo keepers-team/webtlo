@@ -9,7 +9,7 @@ final class ApiError
 {
     public function __construct(
         public readonly int    $code,
-        public readonly string $text
+        public readonly string $text,
     ) {}
 
     public static function fromHttpCode(int $code): ApiError

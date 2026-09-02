@@ -24,7 +24,7 @@ trait Validation
     protected static function isValidMime(
         LoggerInterface   $logger,
         ResponseInterface $response,
-        string            $expectedMime
+        string            $expectedMime,
     ): bool {
         $type = $response->getHeader('content-type');
         if (empty($type)) {

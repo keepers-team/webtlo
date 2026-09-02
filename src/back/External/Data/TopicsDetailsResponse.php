@@ -15,6 +15,6 @@ final class TopicsDetailsResponse
     public function __construct(
         public readonly array $actualTopics,
         public readonly array $oldTopics = [],
-        public readonly array $missingTopics = []
+        public readonly array $missingTopics = [],
     ) {}
 }

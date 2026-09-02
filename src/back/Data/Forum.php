@@ -21,7 +21,7 @@ final class Forum implements JsonSerializable
         public readonly int    $id,
         public readonly string $name,
         public readonly int    $count,
-        public readonly int    $size
+        public readonly int    $size,
     ) {}
 
     /**

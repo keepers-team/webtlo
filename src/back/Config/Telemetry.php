@@ -13,6 +13,6 @@ final class Telemetry
      * @param array{}|array<string, mixed> $info
      */
     public function __construct(
-        public readonly array $info
+        public readonly array $info,
     ) {}
 }

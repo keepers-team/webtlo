@@ -29,7 +29,7 @@ trait TopicsPeers
      */
     public function getPeerStats(
         array           $topics,
-        TopicSearchMode $searchMode = TopicSearchMode::HASH
+        TopicSearchMode $searchMode = TopicSearchMode::HASH,
     ): ApiError|TopicsPeersResponse {
         /** @var TopicPeers[] $knownTopics */
         $knownTopics = [];

@@ -1,12 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 $finder = PhpCsFixer\Finder::create()
     ->in(['src', 'public'])
 ;
 
 $config = new PhpCsFixer\Config();
 
+/**
+ * Описание правил.
+ *
+ * @see https://cs.symfony.com/doc/ruleSets/index.html
+ * @see https://cs.symfony.com/doc/rules/index.html
+ */
 $rules = [
+    '@PHP8x1Migration' => true,
+
     '@PER-CS'     => true,
     '@PhpCsFixer' => true,
 
@@ -16,6 +26,11 @@ $rules = [
     'function_declaration'    => [
         'closure_fn_spacing'       => 'none',
         'closure_function_spacing' => 'none',
+    ],
+
+    'trailing_comma_in_multiline' => [
+        'after_heredoc' => true,
+        'elements'      => ['array_destructuring', 'arrays', 'match', 'parameters'],
     ],
 
     'phpdoc_to_comment' => false,
@@ -42,12 +57,12 @@ $rules = [
     ],
 
     'echo_tag_syntax' => ['format' => 'short', 'shorten_simple_statements_only' => true],
-
     'concat_space' => ['spacing' => 'one'],
 ];
 
 return $config
     ->setCacheFile('.cache/php-cs-fixer.cache')
-    ->setRules($rules)->setFinder($finder)
+    ->setRules($rules)
+    ->setFinder($finder)
     ->setRiskyAllowed(true)
 ;

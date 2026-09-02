@@ -10,7 +10,7 @@ use KeepersTeam\Webtlo\Storage\KeysObject;
 final class TopicsExcluded
 {
     public function __construct(
-        private readonly ConnectionInterface $con
+        private readonly ConnectionInterface $con,
     ) {}
 
     /**

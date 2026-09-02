@@ -17,7 +17,7 @@ final class ApiReportProcessor implements ReportProcessorInterface
      */
     public function __construct(
         private readonly array   $reports,
-        private readonly Closure $seedingChecker
+        private readonly Closure $seedingChecker,
     ) {}
 
     public function process(): iterable

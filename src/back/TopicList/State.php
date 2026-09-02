@@ -9,7 +9,7 @@ final class State
     public function __construct(
         public readonly StateClientIcon|StateKeeperIcon $icon,
         public readonly StateColor                      $color,
-        public readonly string                          $title
+        public readonly string                          $title,
     ) {}
 
     public function getIconElem(string $classes = ''): string
@@ -145,7 +145,7 @@ final class State
     public static function getClientTitle(
         ?StateClientIcon $state = null,
         ?StateColor      $color = null,
-        ?string          $error = null
+        ?string          $error = null,
     ): string {
         $bulletTitles = [];
 

@@ -48,7 +48,7 @@ final class Flood implements ClientInterface
 
     public function __construct(
         private readonly LoggerInterface      $logger,
-        private readonly TorrentClientOptions $options
+        private readonly TorrentClientOptions $options,
     ) {
         /** Клиент позволяет присваивать раздаче категорию при добавлении. */
         $this->categoryAddingAllowed = true;
