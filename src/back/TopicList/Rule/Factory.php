@@ -23,7 +23,7 @@ final class Factory
      */
     public function getRule(int $listingId): ListInterface
     {
-        $listingType = ListingType::tryFrom($listingId);
+        $listingType = ListingType::tryFallBack($listingId);
 
         // Хранимые раздачи из других подразделов.
         if ($listingType === ListingType::OtherSubForums) {

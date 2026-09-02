@@ -40,7 +40,7 @@ try {
         label      : isset($request['label']) ? (string) $request['label'] : null,
         forceStart : (bool) ($request['force_start'] ?? false),
         removeFiles: (bool) ($request['remove_data'] ?? false),
-        listingType: ListingType::tryFrom(
+        listingType: ListingType::tryFallBack(
             (int) ($request['listingType'] ?? -999),
         )
     );
