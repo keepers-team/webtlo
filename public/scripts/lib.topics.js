@@ -80,7 +80,6 @@ function downloadTorrentsByKeepersList(replace_passkey) {
             block_actions();
         },
         success: function (response) {
-            response = $.parseJSON(response);
             addDefaultLog(response.log ?? '');
             if (response.error) {
                 showResultTopics(response.error);
@@ -130,7 +129,6 @@ function downloadTorrentFiles(listingId, topic_hashes, replace_passkey) {
             block_actions();
         },
         success: function (response) {
-            response = $.parseJSON(response);
             addDefaultLog(response.log ?? '');
             showResultTopics(response.result);
         },
@@ -196,8 +194,6 @@ function getFilteredTopics() {
             $('#topics_timer').html(`[${timeTaken}s]`);
         },
         success: function (response) {
-            response = $.parseJSON(response);
-
             // Если есть ошибка - выводим её текст.
             if (response.result.length) {
                 // Если указан элемент, вызывающий ошибку - покажем его.
@@ -353,8 +349,6 @@ function execActionTopics(params) {
             block_actions();
         },
         success: function(response) {
-            response = $.parseJSON(response);
-
             addDefaultLog(response.log ?? '');
             showResultTopics(response.result);
 

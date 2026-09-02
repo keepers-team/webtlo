@@ -180,7 +180,6 @@ function checkNewVersion() {
         url: 'php/check_new_version.php',
         success: function (response) {
             addDefaultLog(response.log ?? '');
-            response = $.parseJSON(response);
 
             Cookies.set('new-version-number', response.newVersionNumber);
             Cookies.set('new-version-link', response.newVersionLink);

@@ -84,7 +84,6 @@ webtlo.register(ModuleNames.REPORTS,function () {
                 $('#reports-content').html(`<i class="fa fa-spinner fa-pulse"></i>`);
             },
             success: function (response) {
-                response = $.parseJSON(response);
                 $('#reports-content').html(response.report);
                 addDefaultLog(response.log ?? '');
 

@@ -167,6 +167,8 @@ final class App
 
         $response['log'] = Log::getRecords();
 
+        header('Content-Type: application/json; charset=utf-8');
+
         return (string) json_encode($response, JSON_UNESCAPED_UNICODE);
     }
 

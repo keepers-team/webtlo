@@ -312,7 +312,6 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
                     $(this).addClass('ui-connection');
                 },
                 success: function (response) {
-                    response = $.parseJSON(response);
                     addDefaultLog(response.log ?? '');
 
                     $(this).children('i').remove();
