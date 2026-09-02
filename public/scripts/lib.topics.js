@@ -22,10 +22,19 @@ const TopicListingType = {
 /**
  * Список info_hash выделенных раздач.
  *
+ * @param {?number} listingId
  * @returns {string[]}
  */
-function getCheckedTopicHashes() {
-    return $('#topics .topic:checked').map((i, el) => el.value).toArray()
+function getCheckedTopicHashes(listingId = null) {
+    // Для "незарегистрированных" ищем хеши в другом инпуте.
+    if (listingId === TopicListingType.Unregistered) {
+        return $('#topics .topic_data')
+            .has('input:checked')
+            .find('input.topic_hash')
+            .map((i, el) => el.value).toArray();
+    }
+
+    return $('#topics .topic:checked').map((i, el) => el.value).toArray();
 }
 
 /**
@@ -34,15 +43,16 @@ function getCheckedTopicHashes() {
  * @param {boolean} replace_passkey
  */
 function downloadTorrents(replace_passkey) {
-    const topic_hashes = getCheckedTopicHashes();
+    const listingId = +$('#main-subsections').val();
+
+    const topic_hashes = getCheckedTopicHashes(listingId);
     if ($.isEmptyObject(topic_hashes)) {
         showResultTopics('Выберите раздачи для скачивания.');
 
         return;
     }
 
-    const subForumId = +$('#main-subsections').val();
-    downloadTorrentFiles(subForumId, topic_hashes, replace_passkey);
+    downloadTorrentFiles(listingId, topic_hashes, replace_passkey);
 }
 
 /**
@@ -51,8 +61,8 @@ function downloadTorrents(replace_passkey) {
  * @param {boolean} replace_passkey
  */
 function downloadTorrentsByKeepersList(replace_passkey) {
-    const subForumId = +$('#main-subsections').val();
-    if ($.isEmptyObject(subForumId) || subForumId < 0) {
+    const listingId = +$('#main-subsections').val();
+    if ($.isEmptyObject(listingId) || listingId < 0) {
         return;
     }
 
@@ -61,7 +71,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
         type: 'POST',
         url: 'php/get_reports_hashes.php',
         data: {
-            forum_id: subForumId
+            forum_id: listingId
         },
         beforeSend: function () {
             block_actions();
@@ -84,7 +94,7 @@ function downloadTorrentsByKeepersList(replace_passkey) {
                 return;
             }
 
-            downloadTorrentFiles(subForumId, response.hashes, replace_passkey);
+            downloadTorrentFiles(listingId, response.hashes, replace_passkey);
         },
     });
 }
@@ -92,11 +102,11 @@ function downloadTorrentsByKeepersList(replace_passkey) {
 /**
  * Скачивание торрент-файлов по списку хешей.
  *
- * @param {number} subForumId
+ * @param {number} listingId
  * @param {string[]} topic_hashes
  * @param {boolean} replace_passkey
  */
-function downloadTorrentFiles(subForumId, topic_hashes, replace_passkey) {
+function downloadTorrentFiles(listingId, topic_hashes, replace_passkey) {
     if ($.isEmptyObject(topic_hashes)) {
         showResultTopics('Нет раздач для скачивания.');
 
@@ -110,7 +120,7 @@ function downloadTorrentFiles(subForumId, topic_hashes, replace_passkey) {
         url: 'php/get_torrent_files.php',
         data: JSON.stringify({
             topic_hashes: topic_hashes,
-            forum_id: subForumId,
+            forum_id: listingId,
             replace_passkey: replace_passkey
         }),
         beforeSend: function () {

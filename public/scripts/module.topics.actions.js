@@ -72,7 +72,9 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
     // Кнопка добавления раздач в торрент-клиент.
     $('#tor_add').on('click', function () {
-        const topic_hashes = getCheckedTopicHashes();
+        const listingId = +$('#main-subsections').val();
+
+        const topic_hashes = getCheckedTopicHashes(listingId);
         if ($.isEmptyObject(topic_hashes)) {
             showResultTopics('Выберите раздачи для скачивания.');
 

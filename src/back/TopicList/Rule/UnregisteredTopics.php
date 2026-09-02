@@ -32,16 +32,18 @@ final class UnregisteredTopics implements ListInterface
                 TopicsUnregistered.status,
                 Torrents.info_hash,
                 Torrents.total_size AS size,
-                Torrents.time_added AS reg_time,
+                COALESCE(tp.reg_time, Torrents.time_added) AS reg_time,
                 -1 AS seed,
                 -1 AS days_seed,
                 Torrents.client_id AS client_id,
                 Torrents.paused,
                 Torrents.error,
                 Torrents.tracker_error AS error_message,
-                Torrents.done
+                Torrents.done,
+                tp.info_hash AS updated_hash
             FROM TopicsUnregistered
             INNER JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
+            LEFT JOIN Topics AS tp ON tp.id = Torrents.topic_id
             ORDER BY {$sort->fieldDirection()}
         ";
 
@@ -57,6 +59,10 @@ final class UnregisteredTopics implements ListInterface
             // Если имя раздачи отличается от имени в клиенте - выводим оба имени.
             if (!empty($topicData['prev']) && $topicData['prev'] !== $topicData['name']) {
                 $details['previous_name'] = $topicData['prev'];
+            }
+
+            if (!empty($topicData['updated_hash'])) {
+                $details['updated_hash'] = $topicData['updated_hash'];
             }
 
             // Типизируем данные раздачи в объект.
