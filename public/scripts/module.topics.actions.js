@@ -95,7 +95,6 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
                 block_actions();
             },
             success: function (response) {
-                response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
 
@@ -160,7 +159,6 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
                 block_actions();
             },
             success: function (response) {
-                response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
                 getFilteredTopics();

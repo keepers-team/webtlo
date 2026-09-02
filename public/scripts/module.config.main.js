@@ -79,8 +79,6 @@ webtlo.register(ModuleNames.CONFIG_MAIN,function() {
                     cfg       : config
                 }),
                 success: function (response) {
-                    response = $.parseJSON(response);
-
                     lockElems.toggleDisable(false);
                     elemParam.removeAttr('class');
 

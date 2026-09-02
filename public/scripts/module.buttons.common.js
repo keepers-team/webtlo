@@ -28,7 +28,6 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
                 },
                 success: function (response) {
                     filter_hold = false;
-                    response = $.parseJSON(response);
                     addDefaultLog(response.log ?? '');
 
                     if (response.result) {
@@ -67,7 +66,6 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
                 processStatus.set('Отправка отчётов хранимого...');
             },
             success: function (response) {
-                response = $.parseJSON(response);
                 addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
             },
@@ -89,9 +87,7 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
                 block_actions();
                 processStatus.set('Регулировка раздач...');
             },
-            success: response => {
-                response = $.parseJSON(response);
-
+            success: (response) => {
                 addDefaultLog(response.log ?? '');
                 showResultTopics(response.result);
             },
@@ -111,8 +107,6 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
                 $(this).toggleDisable(true);
             },
             success: function (response) {
-                response = $.parseJSON(response);
-
                 const tab = $('#table_statistics');
                 tab.find('tbody').html(response.tbody);
                 tab.find('tfoot').html(response.tfoot);
