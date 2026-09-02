@@ -15,10 +15,11 @@ use KeepersTeam\Webtlo\TopicList\Filter\AverageSeed;
 use KeepersTeam\Webtlo\TopicList\Filter\Keepers;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
 use KeepersTeam\Webtlo\TopicList\FilterApply;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\ListingType;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicGroup;
+use KeepersTeam\Webtlo\TopicList\TopicResult;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
@@ -27,7 +28,6 @@ final class DefaultTopics implements ListInterface
 {
     use DbHelperTrait;
     use FilterTrait;
-    use FormatKeepersTrait;
 
     /**
      * Раздачи и их хранители (topic_id => keepers[]).
@@ -39,7 +39,6 @@ final class DefaultTopics implements ListInterface
     public function __construct(
         private readonly ConnectionInterface $con,
         private readonly ConfigFilter        $configFilter,
-        private readonly Formatter           $formatter,
         private readonly int|ListingType     $listingType,
     ) {}
 
@@ -97,33 +96,31 @@ final class DefaultTopics implements ListInterface
             $sort,
         );
 
-        $topicRows  = [];
-        $totalCount = $totalSize = 0;
+        $results = [];
         // Перебираем раздачи.
         foreach ($topics as $topicData) {
             $daysSeed = (int) $topicData['days_seed'];
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::parseFromTorrent(
-                $topicData,
-                $filterAverageSeed->seedPeriod,
-                $daysSeed
+                topicData  : $topicData,
+                daysRequire: $filterAverageSeed->seedPeriod,
+                daysUpdate : $daysSeed
             );
 
             // Типизируем данные раздачи в объект.
-            $topic = Topic::fromTopicData($topicData, $topicState);
-
+            $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
             unset($topicData);
 
             // Список хранителей раздачи.
-            $topicKeepers = $this->getTopicKeepers($topic->id);
+            $topicKeepers = $this->getTopicKeepers(topicId: $topic->id);
 
             // Фильтрация по количеству сидов.
-            if (!FilterApply::isSeedCountInRange($filterSeed, (float) $topic->averageSeed)) {
+            if (!FilterApply::isSeedCountInRange(range: $filterSeed, topicSeeds: (float) $topic->averageSeed)) {
                 continue;
             }
 
             // Фильтрация по статусу "зелёные"
-            if (!FilterApply::isSeedCountGreen($filterAverageSeed, $daysSeed)) {
+            if (!FilterApply::isSeedCountGreen(seedPeriod: $filterAverageSeed, ds: $daysSeed)) {
                 continue;
             }
 
@@ -131,42 +128,45 @@ final class DefaultTopics implements ListInterface
             if ($this->listingType === ListingType::SelfKeep) {
                 $excludeSelfKeep = false;
 
-                if (!FilterApply::isUserInKeepers($topicKeepers, $userId)) {
+                if (!FilterApply::isUserInKeepers(topicKeepers: $topicKeepers, userId: $userId)) {
                     continue;
                 }
             }
 
             // Исключим себя из списка хранителей раздачи.
             if ($excludeSelfKeep) {
-                $topicKeepers = self::excludeUserFromKeepers($topicKeepers, $userId);
+                $topicKeepers = self::excludeUserFromKeepers(topicKeepers: $topicKeepers, userId: $userId);
             }
 
             // Фильтрация по фразе.
-            if (!FilterApply::isStringsMatch($filterStrings, $topic, $topicKeepers)) {
+            if (!FilterApply::isStringsMatch(filterStrings: $filterStrings, topic: $topic, topicKeepers: $topicKeepers)) {
                 continue;
             }
 
             // Фильтрация по количеству хранителей
-            if (!FilterApply::isTopicKeepersInRange($filterKeepers->count, $topicKeepers)) {
+            if (!FilterApply::isTopicKeepersInRange(countRules: $filterKeepers->count, topicKeepers: $topicKeepers)) {
                 continue;
             }
 
-            ++$totalCount;
-            $totalSize += $topic->size;
-
-            // Выводим строку с данными раздачи.
-            $topicRows[] = $this->formatter->formatTopic(
+            $results[] = new TopicResult(
                 topic  : $topic,
-                details: self::getFormattedKeepersList($topicKeepers, $userId)
+                details: [
+                    'keepers' => $topicKeepers,
+                ],
             );
 
             unset($daysSeed, $topicState, $topicKeepers, $topic);
         }
 
         // Раздачи подраздела в "чёрном списке".
-        $excluded = $this->getExcluded($forum, $status, $priority);
+        $excluded = $this->getExcluded(forum: $forum, status: $status, priority: $priority);
 
-        return new Topics($totalCount, $totalSize, $topicRows, $excluded);
+        return new Topics(
+            groups  : [
+                TopicGroup::makeDefault(topics: $results),
+            ],
+            excluded: $excluded,
+        );
     }
 
     /**

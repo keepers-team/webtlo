@@ -18,7 +18,7 @@ final class TopicListServiceProvider extends AbstractServiceProvider
     {
         $services = [
             ConfigFilter::class,
-            Formatter::class,
+            HtmlFormatter::class,
         ];
 
         return in_array($id, $services, true);
@@ -59,16 +59,20 @@ final class TopicListServiceProvider extends AbstractServiceProvider
             );
         });
 
-        $container->addShared(Formatter::class, static function() use ($container) {
+        $container->addShared(HtmlFormatter::class, static function() use ($container) {
+            /** @var UserInfo $user */
+            $user = $container->get(UserInfo::class);
+
             /** @var ForumConnect $forum */
             $forum = $container->get(ForumConnect::class);
 
             /** @var TorrentClients $clients */
             $clients = $container->get(TorrentClients::class);
 
-            return new Formatter(
+            return new HtmlFormatter(
                 clients : $clients->getClientsNames(),
                 forumUrl: $forum->url,
+                userId  : $user->userId,
             );
         });
     }

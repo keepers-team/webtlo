@@ -6,19 +6,20 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicGroup;
+use KeepersTeam\Webtlo\TopicList\TopicResult;
 use KeepersTeam\Webtlo\TopicList\Topics;
 
 /** Хранимые раздачи незарегистрированные на трекере. */
 final class UnregisteredTopics implements ListInterface
 {
     use FilterTrait;
+    use NatSortTrait;
 
     public function __construct(
         private readonly ConnectionInterface $con,
-        private readonly Formatter           $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -46,38 +47,36 @@ final class UnregisteredTopics implements ListInterface
 
         $topics = $this->selectTopics(statement: $statement);
 
-        $counter = new Topics();
+        $groups = [];
         foreach ($topics as $topicData) {
             $topicStatus = $topicData['status'];
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly(topicData: $topicData);
 
-            $details = '';
+            $details = [];
             // Если имя раздачи отличается от имени в клиенте - выводим оба имени.
             if (!empty($topicData['prev']) && $topicData['prev'] !== $topicData['name']) {
-                $details = sprintf('<span class="text-disabled">%s</span>', $topicData['prev']);
+                $details['previous_name'] = $topicData['prev'];
             }
 
             // Типизируем данные раздачи в объект.
             $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
             unset($topicData);
 
-            ++$counter->count;
-            $counter->size += $topic->size;
-
-            if (!isset($counter->list[$topicStatus])) {
-                $counter->list[$topicStatus] = "<div class='subsection-title'>$topicStatus</div>";
+            if (!isset($groups[$topicStatus])) {
+                $groups[$topicStatus] = new TopicGroup(
+                    key: $topicStatus,
+                    title: $topicStatus,
+                );
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topicStatus] .= $this->output->formatTopic(topic: $topic, details: $details);
-
-            unset($topicStatus, $topicState, $topic, $details);
+            $groups[$topicStatus]->topics[] = new TopicResult(topic: $topic, details: $details);
         }
         unset($topics);
 
-        natcasesort($counter->list);
+        $groups = self::sortGroups(groups: $groups);
 
-        return $counter;
+        return new Topics(groups: array_values($groups));
     }
 }

@@ -8,9 +8,10 @@ use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicGroup;
+use KeepersTeam\Webtlo\TopicList\TopicResult;
 use KeepersTeam\Webtlo\TopicList\Topics;
 use KeepersTeam\Webtlo\TopicList\Validate;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
@@ -22,7 +23,6 @@ final class DuplicatedTopics implements ListInterface
 
     public function __construct(
         private readonly ConnectionInterface $con,
-        private readonly Formatter           $formatter,
         private readonly ConfigFilter        $configFilter,
     ) {}
 
@@ -56,69 +56,41 @@ final class DuplicatedTopics implements ListInterface
 
         $topics = $this->selectTopics(statement: $statement);
 
-        // Типизируем данные раздач в объекты.
-        $topics = array_map(static function(array $topicData) use ($seedFilter) {
+        // Данные о клиентах, в которых есть найденные раздачи.
+        $torrentClients = $this->getClientsByHashes(
+            hashes: KeysObject::create(
+                data: array_column($topics, 'info_hash')
+            )
+        );
+
+        $results = [];
+        foreach ($topics as $topicData) {
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::seedOnly(
                 daysRequire: $seedFilter->seedPeriod,
                 daysUpdate : (int) $topicData['days_seed']
             );
 
-            return Topic::fromTopicData(topicData: $topicData, state: $topicState);
-        }, $topics);
+            $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
+            unset($topicData);
 
-        // Данные о клиентах, в которых есть найденные раздачи.
-        $torrentClients = $this->getClientsByHashes(
-            hashes: KeysObject::create(
-                data: array_column($topics, 'hash')
-            )
-        );
-
-        $formatClients = $this->parseStaticClientsNames();
-
-        $counter = new Topics();
-        foreach ($topics as $topic) {
-            ++$counter->count;
-            $counter->size += $topic->size;
-
-            // Выводим строку с данными раздачи.
-            $counter->list[] = $this->formatter->formatTopic(
-                topic  : $topic,
-                details: $formatClients($torrentClients[$topic->hash] ?? [])
+            $results[] = new TopicResult(
+                topic: $topic,
+                details: [
+                    'clients' => $torrentClients[$topic->hash] ?? [],
+                ],
             );
         }
 
-        return $counter;
-    }
-
-    /**
-     * Собрать заголовок со списком клиентов, в котором есть раздача.
-     *
-     * @return callable(array<string, mixed>[] $torrentClients): string
-     */
-    private function parseStaticClientsNames(): callable
-    {
-        $clients = $this->formatter->clients;
-
-        return static function(array $torrentClients) use ($clients): string {
-            $torrentClientsNames = array_map(static function(array $e) use ($clients): string {
-                if (empty($clientName = $clients[$e['client_id']] ?? '')) {
-                    return '';
-                }
-
-                $state = State::clientOnly(topicData: $e);
-
-                return $state->getIconElem() . ' ' . $state->getStringElem(text: $clientName, classes: 'bold');
-            }, $torrentClients);
-
-            return implode(', ', array_filter($torrentClientsNames));
-        };
+        return new Topics(groups: [
+            TopicGroup::makeDefault(topics: $results),
+        ]);
     }
 
     /**
      * Список клиентов, в которых хранятся заданные раздачи.
      *
-     * @return array<int|string, mixed>[]
+     * @return array<array-key, mixed>[]
      */
     private function getClientsByHashes(KeysObject $hashes): array
     {

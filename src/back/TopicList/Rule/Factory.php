@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\ConfigFilter;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\ListingType;
 use RuntimeException;
 
@@ -17,46 +16,39 @@ final class Factory
         private readonly ConnectionInterface $con,
         private readonly Forums              $forums,
         private readonly ConfigFilter        $configFilter,
-        private readonly Formatter           $formatter,
     ) {}
 
     /**
      * Получить соответствующий класс для поиска раздач.
-     *
-     * @param ?string[] $filter
      */
-    public function getRule(int $forumId, ?array $filter = null): ListInterface
+    public function getRule(int $listingId): ListInterface
     {
-        if ($filter !== null) {
-            $this->formatter->setFilter(filter: $filter);
-        }
-
-        $listingType = ListingType::tryFrom($forumId);
+        $listingType = ListingType::tryFrom($listingId);
 
         // Хранимые раздачи из других подразделов.
         if ($listingType === ListingType::OtherSubForums) {
-            return new UntrackedTopics($this->con, $this->forums, $this->formatter);
+            return new UntrackedTopics($this->con, $this->forums);
         }
 
         // Хранимые раздачи незарегистрированные на форуме.
         if ($listingType === ListingType::Unregistered) {
-            return new UnregisteredTopics($this->con, $this->formatter);
+            return new UnregisteredTopics($this->con);
         }
 
         // Раздачи из "Черного списка".
         if ($listingType === ListingType::BlackListed) {
-            return new BlackListedTopics($this->con, $this->forums, $this->formatter);
+            return new BlackListedTopics($this->con, $this->forums);
         }
 
         // Хранимые дублирующиеся раздачи.
         if ($listingType === ListingType::Duplicated) {
-            return new DuplicatedTopics($this->con, $this->formatter, $this->configFilter);
+            return new DuplicatedTopics($this->con, $this->configFilter);
         }
 
         // Основной поиск раздач.
         if (
             // Заданный раздел.
-            $forumId > 0
+            $listingId > 0
             // Все хранимые подразделы.
             || $listingType === ListingType::AllKeptShowed
             || $listingType === ListingType::AllKeptHidden
@@ -68,11 +60,10 @@ final class Factory
             return new DefaultTopics(
                 con         : $this->con,
                 configFilter: $this->configFilter,
-                formatter   : $this->formatter,
-                listingType : $listingType ?? $forumId,
+                listingType : $listingType ?? $listingId,
             );
         }
 
-        throw new RuntimeException("Некорректный идентификатор подраздела: $forumId");
+        throw new RuntimeException("Некорректный идентификатор подраздела/разворота: $listingId");
     }
 }
