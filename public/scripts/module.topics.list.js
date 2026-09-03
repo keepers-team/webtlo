@@ -32,14 +32,6 @@ webtlo.register(ModuleNames.TOPICS_LIST, function() {
         refreshCountSizeSelectedTopics();
     });
 
-    // Снять выделение всех раздач по Esc
-    $topicsForm.on('keyup', function(event) {
-        if (event.which === 27) {
-            $('#topics .topic').prop('checked', false).removeClass('last-checked');
-            refreshCountSizeSelectedTopics();
-        }
-    });
-
     // Alt+Click по нику хранителя - открывает его профиль.
     $topicsForm.on('mousedown', '.keeper', function(e) {
         if (e.altKey || e.which === 2) {
@@ -95,6 +87,41 @@ webtlo.register(ModuleNames.TOPICS_LIST, function() {
 
     // очистка topics_result при изменениях на странице
     $('#topics_data').on('change input spin', showResultTopics);
+
+    // Обработчик нажатия кнопок.
+    $(document).on('keyup', function(event) {
+        // Если не открыта нужная вкладка - ничего не делаем.
+        if (!$topicsForm.is(':visible')) {
+            return;
+        }
+
+        // Снять выделение всех раздач по Esc.
+        if (event.which === 27) {
+            $('#topics .topic').prop('checked', false).removeClass('last-checked');
+            refreshCountSizeSelectedTopics();
+
+            event.preventDefault();
+        }
+
+        // Скопировать ссылки на раздачи на Ctrl+C.
+        if (event.which === 67 && (event.ctrlKey || event.metaKey)) {
+            // Собираем список ссылок на раздачи.
+            const topics = $('#topics .topic_data')
+                .has('input:checked')
+                .find('a')
+                .map((i, el) => el.href)
+                .toArray()
+                .join('\n');
+
+            if (topics) {
+                // Пытаемся скопировать через современный API
+                copyToClipboard(topics);
+
+                // Отменяем стандартное копирование, чтобы не дублировалось
+                event.preventDefault();
+            }
+        }
+    });
 
 }, [
     ModuleNames.JQUERY_METHODS,
