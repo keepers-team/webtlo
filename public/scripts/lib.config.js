@@ -1,37 +1,53 @@
 
 /* Функции для вкладки "Настройки". */
 
-
 /**
- * Сохранение настроек.
+ * Получить объект с настройками.
  */
-function saveSettings() {
-    $('#savecfg').data('unsaved', false).change();
-
+function getConfigData() {
     const forums = getForums();
     const tor_clients = getListTorrentClients();
     const $data = $('#config').serializeJSON();
 
-    $.ajax({
+    return {
+        cfg: $data,
+        forums: forums,
+        tor_clients: tor_clients
+    };
+}
+
+/**
+ * Сохранение настроек.
+ */
+async function saveSettings(config) {
+    $('#configSave').data('unsaved', false).change();
+
+    if (!config) {
+        config = getConfigData();
+    }
+
+    let result = false;
+    await $.ajax({
         context: this,
         type: 'POST',
         url: 'php/set_config.php',
         dataType: 'json',
-        data: JSON.stringify({
-            cfg: $data,
-            forums: forums,
-            tor_clients: tor_clients,
-        }),
+        data: JSON.stringify(config),
         beforeSend: function () {
             $(this).toggleDisable(true);
         },
         success: function (response) {
             addDefaultLog(response.log ?? '');
+            if (response.result) {
+                result = true;
+            }
         },
         complete: function () {
             $(this).toggleDisable(false);
         },
     });
+
+    return result;
 }
 
 function checkSaveSettings() {
@@ -52,7 +68,7 @@ function checkSaveSettings() {
                 {
                     text: 'Сохранить',
                     click: function() {
-                        saveSettings();
+                        saveSettings().then();
                         $(this).dialog('close');
                     }
                 }

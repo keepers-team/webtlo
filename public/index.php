@@ -506,8 +506,14 @@ $cs = static function(string $section, string $key, int|string $default = '') us
             </div>
             <div id="settings" class="content">
                 <div>
-                    <button type="button" id="savecfg" title="Записать настройки в файл">
+                    <button type="button" id="configSave" class="config-btn" title="Записать настройки в файл">
                         Сохранить настройки
+                    </button>
+                    <button type="button" id="configExport" class="config-btn float-right" title="Экспорт настроек в буфер обмена">
+                        Экспорт
+                    </button>
+                    <button type="button" id="configImport" class="config-btn float-right" title="Импорт настроек из json">
+                        Импорт
                     </button>
                 </div>
                 <form id="config">

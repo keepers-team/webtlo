@@ -51,4 +51,4 @@ try {
     $log->info('-- DONE --');
 }
 
-echo App::decorateJsonResponse();
+echo App::decorateJsonResponse($saveResult ?? false);
