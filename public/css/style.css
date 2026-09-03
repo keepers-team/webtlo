@@ -427,10 +427,15 @@ li.menu.ui-tabs-active {
     height: calc(100% - 2px);
 }
 
-#savecfg {
+
+#settings .config-btn {
     margin: 0 0 10px 15px;
     padding: .3em .7em;
     font-size: 85%;
+}
+
+#settings .float-right {
+    float: right;
 }
 
 #config {
