@@ -131,6 +131,17 @@ function doSortSelect(selectId, sortElement = 'option') {
     $select.empty().append(sorted);
 }
 
+function copyToClipboard(text) {
+    // Пытаемся скопировать через современный API.
+    if (document.hasFocus() && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then();
+
+        return true;
+    }
+
+    return false;
+}
+
 // Выделить тело объекта.
 function selectBlockText(elem) {
     if (window.getSelection) {
