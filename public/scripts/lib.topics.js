@@ -1,23 +1,87 @@
 
-/* Работа с раздачами */
+/* Функции для вкладки "Раздачи". */
 
-// скачивание т.-файлов выделенных топиков
+/**
+ * Кнопка. Скачивание торрент-файлов выделенных раздач.
+ *
+ * @param {number} replace_passkey
+ */
 function downloadTorrents(replace_passkey) {
-    var topic_hashes = $("#topics").serialize();
+    const topic_hashes = $('#topics').serialize();
     if ($.isEmptyObject(topic_hashes)) {
-        showResultTopics("Выберите раздачи");
-        return false;
+        showResultTopics('Выберите раздачи');
+
+        return;
     }
-    var forum_id = $("#main-subsections").val();
-    var config = $("#config").serialize();
-    processStatus.set("Скачивание торрент-файлов...");
+
+    const subForumId = +$('#main-subsections').val();
+    downloadTorrentFiles(subForumId, topic_hashes, replace_passkey);
+}
+
+/**
+ * Кнопка. Скачивание торрент-файлов раздач по списку хранимого.
+ *
+ * @param {number} replace_passkey
+ */
+function downloadTorrentsByKeepersList(replace_passkey) {
+    const subForumId = $('#main-subsections').val();
+    if ($.isEmptyObject(subForumId) || subForumId < 0) {
+        return;
+    }
+
+    processStatus.set('Получение списка раздач...');
     $.ajax({
-        type: "POST",
-        url: "php/get_torrent_files.php",
+        type: 'POST',
+        url: 'php/get_reports_hashes.php',
+        data: {
+            forum_id: subForumId
+        },
+        beforeSend: function () {
+            block_actions();
+        },
+        complete: function () {
+            block_actions();
+        },
+        success: function (response) {
+            response = $.parseJSON(response);
+            addDefaultLog(response.log ?? '');
+            if (response.error) {
+                showResultTopics(response.error);
+                return;
+            }
+
+            // Обрабатываем список хешей раздач.
+            const topic_hashes = $.param(response.hashes.map(s => ({name: "topic_hashes[]", value: s})));
+            if ($.isEmptyObject(topic_hashes)) {
+                showResultTopics('Не удалось получить список раздач для загрузки');
+
+                return;
+            }
+
+            downloadTorrentFiles(subForumId, topic_hashes, replace_passkey);
+        },
+    });
+}
+
+/**
+ * Скачивание торрент-файлов по списку хешей.
+ *
+ * @param {number} subForumId
+ * @param {string} topic_hashes @TODO string[]
+ * @param {number} replace_passkey
+ */
+function downloadTorrentFiles(subForumId, topic_hashes, replace_passkey) {
+    processStatus.set('Скачивание торрент-файлов...');
+
+    const config = $('#config').serialize();
+
+    $.ajax({
+        type: 'POST',
+        url: 'php/get_torrent_files.php',
         data: {
             cfg: config,
             topic_hashes: topic_hashes,
-            forum_id: forum_id,
+            forum_id: subForumId,
             replace_passkey: replace_passkey
         },
         beforeSend: function () {
@@ -34,87 +98,22 @@ function downloadTorrents(replace_passkey) {
     });
 }
 
-// скачивание т.-файлов хранимых раздач по спискам с форума
-function downloadTorrentsByKeepersList(replace_passkey) {
-    const forum_id = $('#main-subsections').val();
-    if ($.isEmptyObject(forum_id) || forum_id < 0) {
-        return false;
-    }
-
-    let config = $('#config').serialize();
-    processStatus.set('Получение списка раздач...');
-    $.ajax({
-        type: 'POST',
-        url: 'php/get_reports_hashes.php',
-        data: {
-            forum_id: forum_id
-        },
-        beforeSend: function () {
-            block_actions();
-        },
-        complete: function () {
-            block_actions();
-        },
-        success: function (response) {
-            response = $.parseJSON(response);
-            addDefaultLog(response.log ?? '');
-            if (response.error) {
-                showResultTopics(response.error);
-                return false;
-            }
-
-            // Обрабатываем список хешей раздач.
-            let topic_hashes = $.param(response.hashes.map(s => ({name: "topic_hashes[]", value: s})));
-            if ($.isEmptyObject(topic_hashes)) {
-                showResultTopics('Не удалось получить список раздач для загрузки');
-                return false;
-            }
-
-            processStatus.set("Скачивание торрент-файлов...");
-            $.ajax({
-                type: "POST",
-                url: "php/get_torrent_files.php",
-                data: {
-                    cfg: config,
-                    topic_hashes: topic_hashes,
-                    forum_id: forum_id,
-                    replace_passkey: replace_passkey
-                },
-                beforeSend: function () {
-                    block_actions();
-                },
-                complete: function () {
-                    block_actions();
-                },
-                success: function (response) {
-                    response = $.parseJSON(response);
-                    addDefaultLog(response.log ?? '');
-                    showResultTopics(response.result);
-                },
-            });
-        },
-    });
-}
-
 // задержка при выборе свойств фильтра
 let filter_delay = makeDelay(1500);
 
 // подавление срабатывания фильтрации раздач
 let filter_hold = false;
 
-/**
- * Текущий выбранный в фильтре подраздел.
- * @returns {number}
- */
-function getCurrentSubsection() {
-    return +$('#main-subsections').val();
-}
 
-// получение отфильтрованных раздач из базы
+/**
+ * Получение отфильтрованных раздач из базы.
+ *
+ * @requires widgets, report
+ */
 function getFilteredTopics() {
     // Ставим в "очередь" поиск раздач при выполнении тяжелых запросов.
     if (filter_hold) {
-        return filter_delay(getFilteredTopics);
+        return filter_delay(getFilteredTopics, this);
     }
 
     const filterStart = performance.now();
@@ -129,8 +128,9 @@ function getFilteredTopics() {
     blockTopicsFilters(forum_id);
 
     // Параметры фильтра в строку.
-    let $filter = $("#topics_filter").serialize();
+    const $filter = $("#topics_filter").serialize();
     processStatus.set('Получение данных о раздачах...');
+
     $.ajax({
         type: 'POST',
         url: 'php/get_filtered_list_topics.php',
@@ -281,7 +281,7 @@ function blockTopicsFilters(forum_id) {
 }
 
 // получение кол-ва, объёма выделенных раздач
-function getCountSizeSelectedTopics() {
+function refreshCountSizeSelectedTopics() {
     let count = 0;
     let size = 0.00;
 
@@ -328,32 +328,36 @@ function execActionTopics(params) {
     });
 }
 
-// распарсить сохранённый набор фильтров на главной
+// Обработать сохранённый набор фильтров вкладки "Раздачи".
 function loadSavedFilterOptions(filter_options) {
     filter_options = $.parseJSON(filter_options);
-    $("#topics_filter input[type=radio], #topics_filter input[type=checkbox]").prop("checked", false);
+
+    $('#topics_filter input[type=radio], #topics_filter input[type=checkbox]').prop('checked', false);
     $.each(filter_options, function (i, option) {
-        // пропускаем дату регистрации до
-        if (option.name == "filter_date_release") {
+        // Пропускаем "дату регистрации до".
+        if (option.name === 'filter_date_release') {
             return true;
         }
+
         if ($(`#topics_filter [name='${option.name}']`).is("select")) {
             $(`#${option.name}`).val(option.value).selectmenu("refresh");
             return true;
         }
+
         $(`#topics_filter input[name='${option.name}']`).each(function () {
             if (
-                $(this).attr("type") == "checkbox"
-                || $(this).attr("type") == "radio"
+                $(this).attr("type") === "checkbox"
+                || $(this).attr("type") === "radio"
             ) {
-                if ($(this).val() == option.value) {
+                if ($(this).val() === option.value) {
                     $(this).prop("checked", true);
                 }
-            } else if (this.name == option.name) {
+            } else if (this.name === option.name) {
                 $(this).val(option.value);
             }
         });
     });
+
     // FIXME !!!
     if ($("#topics_filter [name=filter_interval]").prop("checked")) {
         $(".filter_rule_interval, .filter_rule_one").toggle(500);
@@ -364,19 +368,4 @@ function loadSavedFilterOptions(filter_options) {
 
     // Обновить выбранные статусы хранения раздач.
     $('.filter_status_controlgroup').controlgroup('refresh');
-}
-
-/**
- * Открыть профиль пользователя.
- *
- * @param {number|string} user id/name
- */
-function openUserProfile(user) {
-    if (!user) {
-        return;
-    }
-
-    const domain = getForumUrl()
-    const url = `${domain}/forum/profile.php?mode=viewprofile&u=${user}`;
-    window.open(url, '_blank');
 }
