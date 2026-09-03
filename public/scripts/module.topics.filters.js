@@ -133,7 +133,7 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
         e.preventDefault();
 
         // Текущий отсортированный набор фильтров.
-        const currentFilter = $topicsFilter.serializeAllArray().toSorted();
+        const currentFilter = getCurrentFilter();
         const currentFilterString = JSON.stringify(currentFilter);
 
         // Если прошлый набор фильтров идентичен текущему - ничего не делаем.
@@ -144,6 +144,8 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
         // Запоминаем параметры фильтра в куки.
         lastUsedFilter = currentFilterString;
         Cookies.set('filter-options', currentFilter);
+
+        toggleButtonUnsavedState(true);
 
         if ($('#enable_auto_apply_filter').prop('checked')) {
             filter_delay(function(){
@@ -166,6 +168,9 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
         }
     });
 
+
+    // Загружаем пресеты.
+    loadPresetList();
 
     // Загрузка параметров фильтра из cookie
     const filter_state = Cookies.get('filter-state');

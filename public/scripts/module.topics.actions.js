@@ -59,6 +59,9 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
         // Обновить выбранные статусы хранения раздач.
         $('.filter_status_controlgroup').controlgroup('refresh');
+
+        // Сбросить выбранный пресет.
+        $('#preset_select').val('').selectmenu('refresh');
     });
 
     // Кнопки выделить все / отменить выделение.
@@ -273,6 +276,30 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
     });
 
 
+    // Пресет фильтров.
+    $('#preset_select').selectMenuWheel({
+        classes: {
+            'ui-selectmenu-menu': 'ui-menu-update-info'
+        },
+        select : () => toggleButtonUnsavedState(true)
+    });
+
+    // Кнопка показать/скрыть пресеты фильтров.
+    $('#preset_toggle').on('click', function () {
+        $('#preset_controls').toggle(500, function () {
+            Cookies.set('filter-preset-state', $(this).is(':visible'));
+        });
+    });
+
+    // Кнопки действия для пресетов.
+    $('#preset_apply').on('click', applySelectedPreset);
+    $('#preset_save').on('click', saveCurrentFilterAsPreset);
+    $('#preset_delete').on('click', deleteSelectedPreset);
+
+    // Состояние панели пресетов.
+    if (Cookies.get('filter-preset-state') === 'false') {
+        $('#preset_controls').hide();
+    }
 
     // Кнопка "Обновить сведения" и варианты обновления.
     const updateInfoSelect = $('#update_info_select');

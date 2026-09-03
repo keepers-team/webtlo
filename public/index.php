@@ -172,6 +172,29 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                                 <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
                         </div>
+
+                        <div class="control-group">
+                            <button id="preset_toggle" title="Показать/скрыть панель пресетов">
+                                <i class="fa fa-layer-group" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
+                        <div id="preset_controls" class="control-group">
+                            <select id="preset_select" style="width: 20px">
+                                <option value="">[[Выберите пресет]]</option>
+                            </select>
+
+                            <button id="preset_apply" class="preset-unsaved" title="Применить выбранный пресет">
+                                <i class="fa fa-check" aria-hidden="true"></i>
+                            </button>
+                            <button id="preset_save" class="preset-unsaved" title="Сохранить текущий фильтр как пресет">
+                                <i class="fa fa-save" aria-hidden="true"></i>
+                            </button>
+                            <button id="preset_delete" title="Удалить выбранный пресет">
+                                <i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
                         <div class="control-group">
                             <button type="button" id="update_info" name="update_info" title="Обновить сведения о раздачах">
                                 <i class="fa fa-refresh" aria-hidden="true"></i>
@@ -180,10 +203,12 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             <select id="update_info_select" class="filter-select-menu">
                             </select>
                         </div>
+
                         <button class="send_reports" name="send_reports" type="button"
                                 title="Отправить отчёты на форум. &#10;Ctrl+Click отправит `чистый` отчёт.">
                             <i class="fa fa-paper-plane-o" aria-hidden="true"></i> Отправить отчёты
                         </button>
+
                         <button id="control_torrents" name="control_torrents" type="button" title="Выполнить регулировку раздач в торрент-клиентах">
                             <i class="fa fa-adjust" aria-hidden="true"></i> Регулировка раздач
                         </button>
@@ -193,6 +218,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             <div class="process-loading process-status"></div>
                         </div>
                     </div>
+
                     <form method="post" id="topics_filter">
                         <div class="topics_filter">
                             <div class="filter_block ui-widget">
@@ -1205,6 +1231,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
     <script type="text/javascript" src="scripts/lib.common.js"></script>
     <script type="text/javascript" src="scripts/lib.config.js"></script>
     <script type="text/javascript" src="scripts/lib.forum.js"></script>
+    <script type="text/javascript" src="scripts/lib.preset.js"></script>
     <script type="text/javascript" src="scripts/lib.topics.js"></script>
 
     <!-- Реестр модулей-->
