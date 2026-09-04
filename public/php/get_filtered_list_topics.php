@@ -8,8 +8,7 @@ use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\TopicList\HtmlFormatter;
 use KeepersTeam\Webtlo\TopicList\JsonFormatter;
-use KeepersTeam\Webtlo\TopicList\Rule\Factory;
-use KeepersTeam\Webtlo\TopicList\Validate;
+use KeepersTeam\Webtlo\TopicList\TopicListing;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 
 $response = [
@@ -41,26 +40,18 @@ try {
         throw new RuntimeException('Отсутствуют параметры фильтрации раздач.');
     }
 
-    // Получаем параметры фильтра.
-    $filter = Helper::convertKeysToString(array: $request['filter']);
-
-    // Проверяем наличие сортировки.
-    $sorting = Validate::sortFilter(filter: $filter);
-
-    $columns = $request['columns'] ?? [];
-
     $responseType = $request['response_type'] ?? 'html';
     if (!in_array($responseType, ['html', 'json'], true)) {
         throw new RuntimeException('Некорректный тип ответа');
     }
 
-    $ruleFactory = $app->get(Factory::class);
+    // Получаем параметры фильтра.
+    $filter = Helper::convertKeysToString(array: $request['filter']);
 
-    // Получаем нужные правила поиска раздач.
-    $ruleSet = $ruleFactory->getRule(listingId: (int) $listingId);
+    $topicListing = $app->get(TopicListing::class);
 
     // Ищем и форматируем раздачи.
-    $topics = $ruleSet->getTopics(filter: $filter, sort: $sorting);
+    $topics = $topicListing->findTopics(listingId: (int) $listingId, filter: $filter);
 
     if ($responseType === 'json') {
         $formatter = new JsonFormatter();
@@ -68,7 +59,8 @@ try {
         $formatter = $app->get(HtmlFormatter::class);
     }
 
-    $result = $formatter->format(topics: $topics, columns: (array) $columns);
+    $columns = $request['columns'] ?? [];
+    $result  = $formatter->format(topics: $topics, columns: (array) $columns);
 
     // Формируем ответ.
     $response = [
