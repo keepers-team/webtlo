@@ -23,6 +23,7 @@ enum LogFile: string
     case Keepers = 'keepers';
     case Reports = 'reports';
     case Control = 'control';
+    case Topics  = 'topics';
 
     public function getFileName(): string
     {

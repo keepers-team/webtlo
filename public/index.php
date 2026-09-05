@@ -1190,6 +1190,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                         <li class="menu"><a href="#log_keepers" class="menu log_file">keepers</a></li>
                         <li class="menu"><a href="#log_reports" class="menu log_file">reports</a></li>
                         <li class="menu"><a href="#log_control" class="menu log_file">control</a></li>
+                        <li class="menu"><a href="#log_topics" class="menu log_file">topics</a></li>
                     </ul>
                     <div id="log_content">
                         <div id="log"></div>
@@ -1197,6 +1198,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                         <div id="log_keepers"></div>
                         <div id="log_reports"></div>
                         <div id="log_control"></div>
+                        <div id="log_topics"></div>
                     </div>
                 </div>
             </div>

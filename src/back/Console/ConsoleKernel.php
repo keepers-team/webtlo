@@ -66,7 +66,10 @@ final class ConsoleKernel
                 return 1;
             }
 
-            $command->run(app: $app);
+            $command->run(
+                app  : $app,
+                input: self::parseInput(command: $command, argv: $argv),
+            );
 
             return 0;
         } catch (RuntimeException $e) {
@@ -83,6 +86,30 @@ final class ConsoleKernel
             $lock->release();
             $logger->info('-- DONE --');
         }
+    }
+
+    /**
+     * @param string[] $argv
+     */
+    public static function parseInput(ConsoleCommand $command, array $argv): ConsoleInput
+    {
+        $argumentNames = $command->arguments();
+
+        $providedArguments = array_slice($argv, 2);
+
+        if (count($providedArguments) !== count($argumentNames)) {
+            throw new RuntimeException(
+                sprintf(
+                    'Command "%s" requires arguments: %s',
+                    $command->value,
+                    implode(' ', $argumentNames),
+                )
+            );
+        }
+
+        return new ConsoleInput(
+            arguments: array_combine($argumentNames, $providedArguments),
+        );
     }
 
     private function echoHelp(): void
