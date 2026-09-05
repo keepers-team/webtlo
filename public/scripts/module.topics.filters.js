@@ -91,7 +91,7 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
     });
 
     // Фильтр "количество сидов" или интервал.
-    $('#rule_topics, .filter_rule input[type=text]').spinner({
+    $('#rule_topics, .filter_rule_value input[type=text]').spinner({
         min       : 0,
         step      : 0.5,
         mouseWheel: true

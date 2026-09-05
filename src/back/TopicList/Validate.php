@@ -78,16 +78,23 @@ final class Validate
         $filterRules = [
             [
                 'name'  => 'filter_rule_interval',
+                'check' => 'filter_interval',
                 'hint'  => 'интервала сидов',
                 'class' => 'filter-exception-seed-interval',
             ],
             [
                 'name'  => 'keepers_filter_count',
+                'check' => 'is_keepers',
                 'hint'  => 'количества хранителей',
                 'class' => 'filter-exception-keepers-count',
             ],
         ];
         foreach ($filterRules as $rule) {
+            // Не проверяем значения интервалов, в выключенных правилах.
+            if (empty($filter[$rule['check']])) {
+                continue;
+            }
+
             if (
                 !is_numeric($filter[$rule['name']]['min'])
                 || !is_numeric($filter[$rule['name']]['max'])
