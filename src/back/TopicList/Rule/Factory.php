@@ -31,7 +31,7 @@ final class Factory
             $this->formatter->setFilter(filter: $filter);
         }
 
-        $listingType = ListingType::tryFrom($forumId);
+        $listingType = ListingType::tryFallBack($forumId);
 
         // Хранимые раздачи из других подразделов.
         if ($listingType === ListingType::OtherSubForums) {

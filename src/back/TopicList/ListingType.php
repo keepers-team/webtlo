@@ -13,6 +13,21 @@ namespace KeepersTeam\Webtlo\TopicList;
 enum ListingType: int
 {
     /**
+     * Старые ид типа выборки, для совместимости.
+     *
+     * @TODO убрать в 5.0
+     */
+    private const FallBack = [
+        -3 => -10,
+        -5 => -15,
+        -6 => -20,
+        -4 => -21,
+        -2 => -22,
+        0  => -30,
+        -1 => -31,
+    ];
+
+    /**
      * Раздачи из всех хранимых подразделов (отображаемых).
      */
     case AllKeptShowed = -10;
@@ -74,5 +89,17 @@ enum ListingType: int
             self::SelfKeep => true,
             default        => false,
         };
+    }
+
+    /**
+     * Получить экземпляр enum, с поддержкой старых значений.
+     */
+    public static function tryFallBack(int $value): ?self
+    {
+        if (isset(self::FallBack[$value])) {
+            return self::tryFrom(self::FallBack[$value]);
+        }
+
+        return self::tryFrom($value);
     }
 }
