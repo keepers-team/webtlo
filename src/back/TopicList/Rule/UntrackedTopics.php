@@ -7,20 +7,21 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\State;
 use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicGroup;
+use KeepersTeam\Webtlo\TopicList\TopicResult;
 use KeepersTeam\Webtlo\TopicList\Topics;
 
 /** Хранимые раздачи из других подразделов. */
 final class UntrackedTopics implements ListInterface
 {
     use FilterTrait;
+    use NatSortTrait;
 
     public function __construct(
         private readonly ConnectionInterface $con,
         private readonly Forums              $forums,
-        private readonly Formatter           $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -48,36 +49,33 @@ final class UntrackedTopics implements ListInterface
 
         $topics = $this->selectTopics(statement: $statement);
 
-        $getForumHeader = function(?int $id): string {
-            $name  = $this->forums->getForumName(forumId: $id);
-            $click = sprintf('addUnsavedSubsection(%s, "%s");', $id, $name);
-
-            return "<div class='subsection-title'>$name <a href='#' onclick='$click' title='Нажмите, чтобы добавить подраздел в хранимые'>[$id]</a></div>";
-        };
-
+        $groups = [];
         // Типизируем данные раздач в объекты.
-        $topics = array_map(static function($topicData) {
+        foreach ($topics as $topicData) {
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly(topicData: $topicData);
 
-            return Topic::fromTopicData(topicData: $topicData, state: $topicState);
-        }, $topics);
+            $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
+            unset($topicData);
 
-        $counter = new Topics();
-        foreach ($topics as $topic) {
-            ++$counter->count;
-            $counter->size += $topic->size;
-
-            if (!isset($counter->list[$topic->forumId])) {
-                $counter->list[$topic->forumId] = $getForumHeader($topic->forumId);
+            if ($topic->forumId === null) {
+                continue;
             }
 
-            // Выводим строку с данными раздачи.
-            $counter->list[$topic->forumId] .= $this->output->formatTopic(topic: $topic);
+            if (!isset($groups[$topic->forumId])) {
+                $groups[$topic->forumId] = new TopicGroup(
+                    key     : $topic->forumId,
+                    title   : $this->forums->getForumName(forumId: $topic->forumId),
+                    metadata: ['add_unsaved_subsection' => true],
+                );
+            }
+
+            $groups[$topic->forumId]->topics[] = new TopicResult(topic: $topic);
         }
+        unset($topics);
 
-        natcasesort($counter->list);
+        $groups = self::sortGroups(groups: $groups);
 
-        return $counter;
+        return new Topics(groups: array_values($groups));
     }
 }

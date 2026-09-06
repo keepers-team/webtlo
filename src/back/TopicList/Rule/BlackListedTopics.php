@@ -7,19 +7,20 @@ namespace KeepersTeam\Webtlo\TopicList\Rule;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Table\Forums;
 use KeepersTeam\Webtlo\TopicList\Filter\Sort;
-use KeepersTeam\Webtlo\TopicList\Formatter;
 use KeepersTeam\Webtlo\TopicList\Topic;
+use KeepersTeam\Webtlo\TopicList\TopicGroup;
+use KeepersTeam\Webtlo\TopicList\TopicResult;
 use KeepersTeam\Webtlo\TopicList\Topics;
 
 /** Раздачи из "Черного списка". */
 final class BlackListedTopics implements ListInterface
 {
     use FilterTrait;
+    use NatSortTrait;
 
     public function __construct(
         private readonly ConnectionInterface $con,
         private readonly Forums              $forums,
-        private readonly Formatter           $output,
     ) {}
 
     public function getTopics(array $filter, Sort $sort): Topics
@@ -44,29 +45,29 @@ final class BlackListedTopics implements ListInterface
 
         $topics = $this->selectTopics(statement: $statement);
 
-        // Типизируем данные раздач в объекты.
-        $topics = array_map(static fn($row) => Topic::fromTopicData(topicData: $row), $topics);
+        $groups = [];
+        foreach ($topics as $topicData) {
+            $topic = Topic::fromTopicData(topicData: $topicData);
+            unset($topicData);
 
-        $counter = new Topics();
-        foreach ($topics as $topic) {
-            ++$counter->count;
-            $counter->size += $topic->size;
+            if ($topic->forumId === null) {
+                continue;
+            }
 
-            if (!isset($counter->list[$topic->forumId])) {
-                $counter->list[$topic->forumId] = sprintf(
-                    "<div class='subsection-title'>%s [%d]</div>",
-                    $this->forums->getForumName(forumId: $topic->forumId),
-                    $topic->forumId,
+            if (!isset($groups[$topic->forumId])) {
+                $groups[$topic->forumId] = new TopicGroup(
+                    key: $topic->forumId,
+                    title: $this->forums->getForumName(forumId: $topic->forumId)
                 );
             }
 
             // Выводим строку с данными раздачи.
-            $counter->list[$topic->forumId] .= $this->output->formatTopic(topic: $topic);
+            $groups[$topic->forumId]->topics[] = new TopicResult(topic: $topic);
         }
         unset($topics);
 
-        natcasesort($counter->list);
+        $groups = self::sortGroups(groups: $groups);
 
-        return $counter;
+        return new Topics(groups: array_values($groups));
     }
 }
