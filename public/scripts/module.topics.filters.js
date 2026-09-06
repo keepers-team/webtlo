@@ -125,32 +125,31 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
     });
 
 
-    let lastUsedFilter = '';
-
-    $topicsFilter.on('change input selectmenuchange spinstop', function(e) {
-        e.preventDefault();
-
-        // Текущий отсортированный набор фильтров.
-        const currentFilter = $topicsFilter.serializeAllArray().toSorted();
-        const currentFilterString = JSON.stringify(currentFilter);
-
-        // Если прошлый набор фильтров идентичен текущему - ничего не делаем.
-        if (lastUsedFilter === currentFilterString) {
-            return false;
+    $topicsFilter.on('change input selectmenuchange spinstop manual_change', function(e) {
+        // Пропускаем событие input, если элемент — чекбокс или радио.
+        if (e.type === 'input' && ($(e.target).is(':checkbox, :radio'))) {
+            return;
         }
 
-        // Запоминаем параметры фильтра в куки.
-        lastUsedFilter = currentFilterString;
-        Cookies.set('filter-options', currentFilter);
+        e.preventDefault();
 
+        // Если фильтр не изменился, то не применяем его автоматически.
+        if (!checkUsedFilterChange()) {
+            return;
+        }
+
+        // Если фильтр изменился (автоматически), подсвечиваем кнопки пресетов.
+        if (e.type !== 'manual_change') {
+            toggleButtonUnsavedState(true);
+        }
+
+        // Если включена опция "автоматически применять" - применяем.
         if ($('#enable_auto_apply_filter').prop('checked')) {
             filter_delay(function(){
                 clearLoadResult();
                 getFilteredTopics();
             }, window);
         }
-
-        return true;
     });
 
     // Скрываем прогресс загрузки.
@@ -164,6 +163,44 @@ webtlo.register(ModuleNames.TOPICS_FILTERS, function() {
         }
     });
 
+    // Пресет фильтров.
+    $('#preset_select').selectMenuWheel({
+        classes: {
+            'ui-selectmenu-menu': 'ui-menu-update-info'
+        },
+        select : (e, ui) => {
+            // При выборе нового элемента пресета, подсвечиваем кнопки, которые говорят о том, что его надо применить вручную.
+            toggleButtonUnsavedState(ui.item.index > 0);
+        }
+    });
+
+    // Кнопка показать/скрыть пресеты фильтров.
+    $('#preset_toggle').on('click', function () {
+        $('#preset_controls').toggle(500, function () {
+            Cookies.set('filter-preset-state', $(this).is(':visible'));
+        });
+    });
+
+    // Кнопки действия для пресетов.
+    $('#preset_apply').on('click', applySelectedPreset);
+    $('#preset_delete').on('click', deleteSelectedPreset);
+    $('#preset_save').on('click', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            // Ctrl+Click – открываем расширенный диалог.
+            e.preventDefault();
+            openPresetDialog();
+        } else {
+            // Обычный клик – сохранение пресета.
+            saveCurrentFilter();
+        }
+    });
+
+
+    // Загружаем пресеты.
+    loadPresetList();
+
+    // Состояние панели пресетов.
+    $('#preset_controls').toggle(Cookies.get('filter-preset-state') === 'true');
 
     // Загрузка параметров фильтра из cookie
     const filter_state = Cookies.get('filter-state');

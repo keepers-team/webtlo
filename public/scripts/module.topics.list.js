@@ -69,7 +69,7 @@ webtlo.register(ModuleNames.TOPICS_LIST, function() {
         $('input[name=filter_by_phrase][type="radio"]').prop('checked', false);
         $('#filter_by_keeper').prop('checked', true);
 
-        $('#topics_filter').change();
+        $('#topics_filter').trigger('manual_change');
     });
 
     // Поиск по торрент-клиенту при двойном клике по названию.
@@ -82,7 +82,7 @@ webtlo.register(ModuleNames.TOPICS_LIST, function() {
 
         $('#filter_client_id').val(torrentClientID).selectmenu('refresh');
 
-        $('#topics_filter').change();
+        $('#topics_filter').trigger('manual_change');
     });
 
     // очистка topics_result при изменениях на странице

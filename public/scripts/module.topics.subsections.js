@@ -35,7 +35,9 @@ webtlo.register(ModuleNames.TOPICS_SUBSECTIONS, function() {
                 lastLoadedListing = savedForumId;
                 $(this).val(savedForumId).selectmenu('refresh')
 
-                loadFilteredTopics();
+                if (checkUsedFilterChange()) {
+                    loadFilteredTopics();
+                }
             }
         },
         open: function() {

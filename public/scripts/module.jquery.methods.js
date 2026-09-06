@@ -25,28 +25,15 @@ webtlo.register(ModuleNames.JQUERY_METHODS, function () {
             this.attr(`data-${key}`, data).data(key, data);
         }
 
-        // https://stackoverflow.com/questions/15958671/disabled-fields-not-picked-up-by-serializearray
-        $.fn.serializeAllArray = function () {
-            let data = $(this).serializeArray();
-            $(':disabled[name]', this).each(function () {
-                if (
-                    (
-                        $(this).attr('type') === 'checkbox'
-                        || $(this).attr('type') === 'radio'
-                    ) && !$(this).prop('checked')
-                ) {
-                    return true;
-                }
+        $.fn.serializeSortedJSON = function() {
+            const object = this.serializeJSON();
 
-                data.push(
-                    {
-                        name: this.name,
-                        value: $(this).val()
-                    }
-                );
-            });
-
-            return data;
+            return Object.keys(object)
+                .sort()
+                .reduce((Obj, key) => {
+                    Obj[key] = object[key];
+                    return Obj;
+                }, {});
         }
 
         /** Блокировка элемента + визуальное отображение */

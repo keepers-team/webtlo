@@ -39,7 +39,7 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
             return;
         }
 
-        Cookies.set('filter-backup', $topicsFilter.serializeAllArray());
+        Cookies.set('filter-backup', getCurrentFilter());
 
         $("#topics_filter input[type=text]").val("");
         $("#topics_filter input[type=search]").val("");
@@ -59,6 +59,9 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
 
         // Обновить выбранные статусы хранения раздач.
         $('.filter_status_controlgroup').controlgroup('refresh');
+
+        // Сбросить выбранный пресет.
+        $('#preset_select').val('').selectmenu('refresh');
     });
 
     // Кнопки выделить все / отменить выделение.

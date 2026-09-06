@@ -55,14 +55,14 @@ let processStatus = {
 let lock_actions = 0;
 function block_actions() {
     let buttons = $('#topics_control button')
-        .add("button.send_reports")
+        .add('button.send_reports')
         .not('button.disabled-manual');
 
 
     if (lock_actions === 0) {
         buttons.toggleDisable(true);
 
-        $("#main-subsections, .filter-select-menu").selectmenu("disable");
+        $('#main-subsections, #preset_select, .filter-select-menu').selectmenu('disable');
 
         processStatus.show();
         lock_actions = 1;
@@ -70,14 +70,14 @@ function block_actions() {
         buttons.toggleDisable(false);
 
         if (
-            $("#main-subsections").val() < 1
-            || !$("input[name=filter_status]").eq(1).prop("checked")
+            $('#main-subsections').val() < 1
+            || !$('input[name=filter_status]').eq(1).prop('checked')
         ) {
-            $(".tor_add").toggleDisable(true);
+            $('.tor_add').toggleDisable(true);
         } else {
-            $(".tor_stop, .tor_remove, .tor_label, .tor_start").toggleDisable(true);
+            $('.tor_stop, .tor_remove, .tor_label, .tor_start').toggleDisable(true);
         }
-        $("#main-subsections, .filter-select-menu").selectmenu("enable");
+        $('#main-subsections, #preset_select, .filter-select-menu').selectmenu('enable');
 
         processStatus.hide();
         lock_actions = 0;

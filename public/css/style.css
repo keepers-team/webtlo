@@ -131,11 +131,6 @@ li.menu.ui-tabs-active {
     cursor: default;
 }
 
-.ui-button.ui-button-icon-only.split-button-select {
-    width: 1em;
-    padding: .4em .1em;
-}
-
 .ui-menu-update-info .ui-menu-item-wrapper.ui-state-active {
     color: #28a745;
 }
@@ -238,6 +233,16 @@ li.menu.ui-tabs-active {
 
 #topics_control {
     padding: 10px;
+}
+
+/* Размеры кнопок в панели */
+#topics_control .ui-button {
+    padding: .4em .9em;
+}
+
+#topics_control .ui-button.ui-button-icon-only.split-button-select {
+    width: 1em;
+    padding: .4em .1em;
 }
 
 .download-replace {
