@@ -205,7 +205,7 @@
 - Начало ведения истории
 - Стабильная версия
 
-[4.5.0]: https://github.com/keepers-team/webtlo/compare/4.4.1...4.4.5
+[4.5.0]: https://github.com/keepers-team/webtlo/compare/4.4.1...4.5.0
 [4.4.1]: https://github.com/keepers-team/webtlo/compare/4.4.0...4.4.1
 [4.4.0]: https://github.com/keepers-team/webtlo/compare/4.3.1...4.4.0
 [4.3.1]: https://github.com/keepers-team/webtlo/compare/4.3.0...4.3.1
