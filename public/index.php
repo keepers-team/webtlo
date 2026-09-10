@@ -931,43 +931,67 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             </label>
                         </div>
                         <h2>Отправка отчётов</h2>
-                        <div>
+                        <div class="config-send-report">
                             <label class="label" title="Отправлять ли отчёты по хранимым подразделам в API.">
-                                <input name="send_report_api" type="checkbox" size="24" <?= $cs('reportSend', 'sendReports'); ?> />
-                                Отправлять отчёты в API
+                                <input id="send_report_api" name="send_report_api" type="checkbox" size="24" <?= $cs('reportSend', 'sendReports'); ?> />
+                                Отправлять отчёты о хранимых раздачах в API
                             </label>
-                            <label class="label" title="Количество и тип используемых торрент-клиентов. Данные о регулировке.">
-                                <input name="send_report_settings" type="checkbox" size="24" <?= $cs('reportSend', 'sendTelemetry'); ?> />
-                                Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом
-                            </label>
-                            <hr>
-                            <label class="label" title="Снимать отметку хранения с подразделов, которые отсутствуют в списке 'Сканируемых подразделов'. Может быть полезно отключить, если используется несколько копий программы в разных локациях.">
-                                <input name="unset_other_forums" type="checkbox" size="24" <?= $cs('reportSend', 'unsetOtherSubForums'); ?> />
-                                Снимать отметку хранения с не хранимых подразделов
-                            </label>
-                            <label class="label" title="Снимать отметку хранения с раздач, которых нет в актуальном списке раздач 'Сканируемых подразделов'. Если включено - каждый отправляемый отчёт будет перезаписывать список хранимых раздач в API отчётов. Если выключено - API отчётов сможет отслеживать обновления/закрытие раздач и 'прошлые' релизы.">
-                                <input name="unset_other_topics" type="checkbox" size="24" <?= $cs('reportSend', 'unsetOtherTopics'); ?> />
-                                Снимать отметку хранения с не хранимых раздач
-                            </label>
-                            <hr>
-                            <label class="label" title="Авторской является раздача, автором которой является текущий авторизованный в программе хранитель.">
-                                <input name="exclude_authored" type="checkbox" size="24" <?= $cs('reportSend', 'excludeAuthored'); ?> />
-                                Исключить авторские (свои) раздачи из отчётов
-                            </label>
-                            <hr>
-                            <h3>Список исключённых из отчётов групп, см. настройки торрент-клиентов/подразделов:</h3>
-                            <label class="label">
-                                Исключенные клиенты
-                                <input id="exclude_clients_ids" type="text" size="20" readonly
-                                       value="<?= $cs('torrentClients', 'excludedClients'); ?>"
-                                />
-                            </label>
-                            <label class="label">
-                                Исключенные подразделы
-                                <input id="exclude_forums_ids" type="text" size="20" readonly
-                                       value="<?= $cs('reportSend', 'excludedSubForums'); ?>"
-                                />
-                            </label>
+
+                            <fieldset class="fieldset-toggle">
+                                <div class="label" title="Отправка отчётов по каждому подразделу или просто отправка всех хранимых раздач.">
+                                    <div class="config_controlgroup" style="margin-left:30px;">
+                                        <input type="hidden" id="send_report_method" class="radio_from_input" value="<?= $cs('reportSend', 'sendMethod'); ?>">
+
+                                        <input type="radio" id="send_report_method_subsection" name="send_report_method" value="1" checked="checked">
+                                        <label for="send_report_method_subsection">По подразделам</label>
+
+                                        <input type="radio" id="send_report_method_hash" name="send_report_method" value="2">
+                                        <label for="send_report_method_hash">По хешам</label>
+                                    </div>
+                                </div>
+                                <label class="label" style="margin-left:30px;"
+                                       title="При использовании более одного инстанса, укажите разные порядковые номера в каждом из них. &#10;От 0 до 7 (по умолчанию: 0).">
+                                    <input name="send_report_reporter_id" class="control-reporter-spinner" type="text"
+                                           size="1"
+                                           value="<?= $cs('reportSend', 'reporterId'); ?>"
+                                    />
+                                    порядковый номер инстанса
+                                </label>
+
+                                <hr>
+                                <label class="label" title="Количество и тип используемых торрент-клиентов. Данные о регулировке.">
+                                    <input name="send_report_settings" type="checkbox" size="24" <?= $cs('reportSend', 'sendTelemetry'); ?> />
+                                    Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом
+                                </label>
+                                <hr>
+                                <label class="label" title="Снимать отметку хранения с подразделов, которые отсутствуют в списке 'Сканируемых подразделов'. Может быть полезно отключить, если используется несколько копий программы в разных локациях.">
+                                    <input name="unset_other_forums" type="checkbox" size="24" <?= $cs('reportSend', 'unsetOtherSubForums'); ?> />
+                                    Снимать отметку хранения с не хранимых подразделов
+                                </label>
+                                <label class="label" title="Снимать отметку хранения с раздач, которых нет в актуальном списке раздач 'Сканируемых подразделов'. Если включено - каждый отправляемый отчёт будет перезаписывать список хранимых раздач в API отчётов. Если выключено - API отчётов сможет отслеживать обновления/закрытие раздач и 'прошлые' релизы.">
+                                    <input name="unset_other_topics" type="checkbox" size="24" <?= $cs('reportSend', 'unsetOtherTopics'); ?> />
+                                    Снимать отметку хранения с не хранимых раздач
+                                </label>
+                                <hr>
+                                <label class="label" title="Авторской является раздача, автором которой является текущий авторизованный в программе хранитель.">
+                                    <input name="exclude_authored" type="checkbox" size="24" <?= $cs('reportSend', 'excludeAuthored'); ?> />
+                                    Исключить авторские (свои) раздачи из отчётов
+                                </label>
+                                <hr>
+                                <h3>Список исключённых из отчётов групп, см. настройки торрент-клиентов/подразделов:</h3>
+                                <label class="label">
+                                    Исключенные клиенты
+                                    <input id="exclude_clients_ids" type="text" size="20" readonly
+                                           value="<?= $cs('torrentClients', 'excludedClients'); ?>"
+                                    />
+                                </label>
+                                <label class="label">
+                                    Исключенные подразделы
+                                    <input id="exclude_forums_ids" type="text" size="20" readonly
+                                           value="<?= $cs('reportSend', 'excludedSubForums'); ?>"
+                                    />
+                                </label>
+                            </fieldset>
                         </div>
 
                         <h2>Автоматизация и дополнительные настройки</h2>
