@@ -141,6 +141,9 @@ final class SendKeeperReports
         // Ограничения доступа для кандидатов в хранители.
         $user = $this->sendReport->getKeeperPermissions();
 
+        // Статусы, которые нужно присвоить раздачам и подразделам.
+        $statusRules = $this->configReport->getStatusRules();
+
         $apiReportCount = 0;
         $forumsToReport = [];
         foreach ($creator->getForums() as $forumId) {
@@ -174,6 +177,7 @@ final class SendKeeperReports
                     forumId       : $forumId,
                     topicsToReport: $topicsToReport,
                     reportDate    : $this->fullUpdateTime,
+                    statusRules   : $statusRules,
                     reportRewrite : $reportRewrite,
                 );
 
@@ -222,6 +226,7 @@ final class SendKeeperReports
             // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
             $setStatus = $report->setForumsStatus(
                 forumIds        : array_unique($forumsToReport),
+                statusRules     : $statusRules,
                 unsetOtherForums: $this->configReport->unsetOtherSubForums
             );
             $this->logger->debug('kept forums setStatus', $setStatus);
