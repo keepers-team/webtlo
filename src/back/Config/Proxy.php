@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Config;
 
+use GuzzleHttp\RequestOptions;
 use RuntimeException;
 
 final class Proxy
@@ -16,23 +17,24 @@ final class Proxy
     ) {}
 
     /**
-     * @return array{proxy: string, curl: array<int, mixed>}
+     * @return array{proxy: string}
      */
     public function getOptions(): array
     {
-        $curlOptions = [CURLOPT_PROXYTYPE => $this->type->value];
-
+        $proxyAuth = '';
         if ($this->credentials !== null) {
-            $curlOptions[CURLOPT_PROXYUSERPWD] = sprintf(
-                '%s:%s',
-                $this->credentials->username,
-                $this->credentials->password
-            );
+            $proxyAuth = sprintf('%s:%s@', $this->credentials->username, $this->credentials->password);
         }
 
+        // @example http://user:pass@proxy.example.com:8090
         return [
-            'proxy' => sprintf('%s:%d', $this->hostname, $this->port),
-            'curl'  => $curlOptions,
+            RequestOptions::PROXY => sprintf(
+                '%s://%s%s:%d',
+                strtolower($this->type->name),
+                $proxyAuth,
+                $this->hostname,
+                $this->port
+            ),
         ];
     }
 
