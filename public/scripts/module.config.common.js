@@ -15,6 +15,15 @@ webtlo.register(ModuleNames.CONFIG_COMMON,function() {
         $(`#${name}_custom`).toggle($(this).val() === 'custom');
     });
 
+    // Переносим значения радио кнопок из скрытых элементов формы.
+    $('#config .radio_from_input').each(function() {
+        if (this.value === '') {
+            return;
+        }
+
+        $(`#config input[type=radio][name='${this.id}'][value=${this.value}]`).prop('checked', true);
+    });
+
     // Инициализация Controlgroup Widget.
     $('#config .config_controlgroup').controlgroup({
         classes: {

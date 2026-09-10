@@ -90,17 +90,6 @@ webtlo.register(ModuleNames.CONFIG_ACTIONS,function() {
             .dialog('open');
     });
 
-    // Переносим значения радио кнопок из скрытых элементов формы.
-    $('#config .radio_from_input').each(function() {
-        if (this.value === '') {
-            return false;
-        }
-
-        $(`input[type=radio][name='${this.id}'][value=${this.value}]`).prop('checked', true);
-
-        return true;
-    });
-
     // Вызываем смену видимости элементов.
     $('#proxy_activate_report, #api_auth_params').trigger('change');
 
