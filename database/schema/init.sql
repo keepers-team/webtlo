@@ -308,6 +308,7 @@ END;
 CREATE TABLE IF NOT EXISTS Torrents
 (
     info_hash     TEXT NOT NULL,
+    client_hash   TEXT NOT NULL DEFAULT '',
     client_id     INT  NOT NULL,
     topic_id      INT,
     name          TEXT,
@@ -328,12 +329,14 @@ CREATE INDEX IF NOT EXISTS IX_Torrents_error ON Torrents (error);
 
 CREATE TRIGGER IF NOT EXISTS remove_unregistered_topics
     AFTER DELETE ON Torrents FOR EACH ROW
+    WHEN NOT EXISTS (SELECT 1 FROM Torrents WHERE info_hash = OLD.info_hash)
 BEGIN
     DELETE FROM TopicsUnregistered WHERE info_hash = OLD.info_hash;
 END;
 
 CREATE TRIGGER IF NOT EXISTS remove_untracked_topics
     AFTER DELETE ON Torrents FOR EACH ROW
+    WHEN NOT EXISTS (SELECT 1 FROM Torrents WHERE info_hash = OLD.info_hash)
 BEGIN
     DELETE FROM TopicsUntracked WHERE info_hash = OLD.info_hash;
 END;
@@ -362,4 +365,4 @@ BEGIN
 END;
 
 -- Запишем текущую версию БД.
-PRAGMA user_version = 15;
+PRAGMA user_version = 16;
