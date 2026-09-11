@@ -50,7 +50,7 @@ final class Torrents
      *
      * @param string[] $hashes
      *
-     * @return array<int, array<int, string[]>>
+     * @return array<int, array<int, array<string, string>>>
      */
     public function getGroupedTopics(array $hashes): array
     {
@@ -61,7 +61,11 @@ final class Torrents
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
             $query  = "
-                SELECT tr.client_id, tp.forum_id, tr.info_hash
+                SELECT
+                    tr.client_id,
+                    tp.forum_id,
+                    tr.info_hash,
+                    COALESCE(NULLIF(tr.client_hash, ''), tr.info_hash) AS client_hash
                 FROM Torrents AS tr
                     LEFT JOIN Topics AS tp ON tp.info_hash = tr.info_hash
                 WHERE tr.info_hash IN ($search->keys)
@@ -69,10 +73,12 @@ final class Torrents
 
             $topics = $this->con->query($query, $search->values);
             foreach ($topics as $topic) {
-                $clientId = (int) $topic['client_id'];
-                $forumId  = (int) $topic['forum_id'];
+                $clientId   = (int) $topic['client_id'];
+                $forumId    = (int) $topic['forum_id'];
+                $topicHash  = (string) $topic['info_hash'];
+                $clientHash = (string) $topic['client_hash'];
 
-                $result[$clientId][$forumId][] = $topic['info_hash'];
+                $result[$clientId][$forumId][$topicHash] = $clientHash;
             }
         }
 
@@ -92,12 +98,14 @@ final class Torrents
             $sql = "
                 INSERT INTO Torrents (
                     info_hash,
+                    client_hash,
                     client_id,
                     topic_id,
                     name,
                     total_size
                 )
                 SELECT
+                    Topics.info_hash,
                     Topics.info_hash,
                     ?,
                     Topics.id,
@@ -115,29 +123,29 @@ final class Torrents
     }
 
     /**
-     * Удалить раздачи в БД по хешу.
+     * Удалить раздачи клиента в БД по хешу форума.
      *
      * @param string[] $hashes
      */
-    public function deleteTorrentsByHashes(array $hashes): void
+    public function deleteTorrentsByHashes(array $hashes, int $clientId): void
     {
         $hashes = array_chunk($hashes, 500);
         foreach ($hashes as $chunk) {
             $search = KeysObject::create($chunk);
 
             $this->con->executeStatement(
-                "DELETE FROM Torrents WHERE info_hash IN ($search->keys)",
-                $search->values
+                "DELETE FROM Torrents WHERE client_id = ? AND info_hash IN ($search->keys)",
+                [$clientId, ...$search->values]
             );
         }
     }
 
     /**
-     * Изменить статус раздач в БД по хешу.
+     * Изменить статус раздач клиента в БД по хешу форума.
      *
      * @param string[] $hashes
      */
-    public function setTorrentsStatusByHashes(array $hashes, bool $paused): void
+    public function setTorrentsStatusByHashes(array $hashes, int $clientId, bool $paused): void
     {
         $paused = (int) $paused;
 
@@ -146,8 +154,8 @@ final class Torrents
             $search = KeysObject::create($chunk);
 
             $this->con->executeStatement(
-                "UPDATE Torrents SET paused = ? WHERE info_hash IN ($search->keys)",
-                [$paused, ...$search->values]
+                "UPDATE Torrents SET paused = ? WHERE client_id = ? AND info_hash IN ($search->keys)",
+                [$paused, $clientId, ...$search->values]
             );
         }
     }

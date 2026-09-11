@@ -75,10 +75,13 @@ final class ClientApplyAction
 
             $logRecord = ['tag' => $client->getClientTag(), 'action' => $action->value];
 
-            foreach ($groupBySubForum as $subForumId => $torrentHashes) {
-                if (empty($torrentHashes)) {
+            foreach ($groupBySubForum as $subForumId => $hashesByTopic) {
+                if (empty($hashesByTopic)) {
                     continue;
                 }
+
+                $topicHashes  = array_keys($hashesByTopic);
+                $clientHashes = array_values($hashesByTopic);
 
                 $response = false;
                 switch ($action) {
@@ -89,45 +92,50 @@ final class ClientApplyAction
                         $logRecord['forumId'] = $subForumId;
                         $logRecord['label']   = $label;
 
-                        $response = $client->setLabel(torrentHashes: $torrentHashes, label: $label);
+                        $response = $client->setLabel(torrentHashes: $clientHashes, label: $label);
 
                         break;
                     case ClientAction::Stop:
-                        $response = $client->stopTorrents(torrentHashes: $torrentHashes);
+                        $response = $client->stopTorrents(torrentHashes: $clientHashes);
 
                         // Отмечаем в БД изменение статуса раздач.
                         if ($response !== false) {
                             $this->tableTorrents->setTorrentsStatusByHashes(
-                                hashes: $torrentHashes,
-                                paused: true
+                                hashes   : $topicHashes,
+                                clientId : $clientId,
+                                paused   : true
                             );
                         }
 
                         break;
                     case ClientAction::Start:
                         $response = $client->startTorrents(
-                            torrentHashes: $torrentHashes,
+                            torrentHashes: $clientHashes,
                             forceStart   : $params->forceStart
                         );
 
                         // Отмечаем в БД изменение статуса раздач.
                         if ($response !== false) {
                             $this->tableTorrents->setTorrentsStatusByHashes(
-                                hashes: $torrentHashes,
-                                paused: false
+                                hashes   : $topicHashes,
+                                clientId : $clientId,
+                                paused   : false
                             );
                         }
 
                         break;
                     case ClientAction::Remove:
                         $response = $client->removeTorrents(
-                            torrentHashes: $torrentHashes,
+                            torrentHashes: $clientHashes,
                             deleteFiles  : $params->removeFiles
                         );
 
                         // Отмечаем в БД удаление раздач.
                         if ($response !== false) {
-                            $this->tableTorrents->deleteTorrentsByHashes(hashes: $torrentHashes);
+                            $this->tableTorrents->deleteTorrentsByHashes(
+                                hashes  : $topicHashes,
+                                clientId: $clientId
+                            );
                         }
 
                         break;
@@ -141,7 +149,7 @@ final class ClientApplyAction
                 } else {
                     $this->logger->info(
                         "Действие '{action}' для торрент-клиента '{tag}' выполнено ({count})",
-                        [...$logRecord, 'count' => count($torrentHashes)]
+                        [...$logRecord, 'count' => count($clientHashes)]
                     );
                 }
             }
