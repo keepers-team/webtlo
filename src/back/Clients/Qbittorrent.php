@@ -552,8 +552,9 @@ final class Qbittorrent implements ClientInterface
 
         $torrents = [];
         foreach ($clientTorrents as $torrent) {
-            $clientHash    = strtoupper($torrent['hash']);
-            $torrentHash   = strtoupper($torrent['infohash_v1'] ?? $clientHash);
+            $clientHash    = strtoupper((string) $torrent['hash']);
+            $torrentHash   = strtoupper((string) ($torrent['infohash_v1'] ?? ''));
+            $torrentHash   = $torrentHash !== '' ? $torrentHash : $clientHash;
             $torrentPaused = self::isTorrentStatePaused(state: (string) $torrent['state']);
             $torrentError  = self::isTorrentStateError(state: (string) $torrent['state']);
             $trackerError  = null;
