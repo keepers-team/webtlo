@@ -49,4 +49,23 @@ final class ConsoleInput
 
         return $value;
     }
+
+    /**
+     * @param literal-string $name
+     */
+    public function booleanArgument(string $name): bool
+    {
+        $value = filter_var(
+            $this->argument($name),
+            FILTER_VALIDATE_BOOL,
+            FILTER_NULL_ON_FAILURE,
+        );
+        if (!is_bool($value)) {
+            throw new RuntimeException(
+                sprintf('Invalid boolean argument: %s', $name)
+            );
+        }
+
+        return $value;
+    }
 }

@@ -28,7 +28,7 @@ final class TopicsDownload
     {
         $listingId      = $input->integerArgument(name: 'listingId');
         $filterName     = $input->argument(name: 'filterName');
-        $replacePasskey = (bool) $input->argument(name: 'replacePasskey');
+        $replacePasskey = $input->booleanArgument(name: 'replacePasskey');
 
         $this->logger->info(
             'Начинаем автоматическое скачивание торрент-файлов раздач.',
