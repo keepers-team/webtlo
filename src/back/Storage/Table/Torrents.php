@@ -96,7 +96,7 @@ final class Torrents
             $object = KeysObject::create($chunk);
 
             $sql = "
-                INSERT INTO Torrents (
+                INSERT OR IGNORE INTO Torrents (
                     info_hash,
                     client_hash,
                     client_id,
