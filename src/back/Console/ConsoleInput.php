@@ -30,4 +30,23 @@ final class ConsoleInput
 
         return $this->arguments[$name];
     }
+
+    /**
+     * @param literal-string $name
+     */
+    public function integerArgument(string $name): int
+    {
+        $value = filter_var(
+            $this->argument($name),
+            FILTER_VALIDATE_INT,
+            FILTER_NULL_ON_FAILURE,
+        );
+        if (!is_int($value)) {
+            throw new RuntimeException(
+                sprintf('Invalid integer argument: %s', $name)
+            );
+        }
+
+        return $value;
+    }
 }
