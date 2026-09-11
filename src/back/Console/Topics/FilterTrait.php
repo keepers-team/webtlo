@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Console\Topics;
 
 use KeepersTeam\Webtlo\Helper;
+use KeepersTeam\Webtlo\TopicList\ListingType;
 use KeepersTeam\Webtlo\TopicList\ValidationException;
 use RuntimeException;
 
@@ -66,9 +67,21 @@ trait FilterTrait
             throw new RuntimeException('Раздачи не найдены.');
         }
 
-        $hashes = [];
+        $hashes      = [];
+        $listingType = ListingType::tryFallBack($listingId);
         foreach ($result->groups as $group) {
             foreach ($group->topics as $topic) {
+                if ($listingType === ListingType::Unregistered) {
+                    $updatedHash = $topic->details['updated_hash'] ?? null;
+                    if (!is_string($updatedHash) || $updatedHash === '') {
+                        continue;
+                    }
+
+                    $hashes[] = $updatedHash;
+
+                    continue;
+                }
+
                 $hashes[] = $topic->topic->hash;
             }
         }
