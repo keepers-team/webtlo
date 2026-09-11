@@ -340,8 +340,8 @@ final class Qbittorrent implements ClientInterface
         // Если какой-то иной статус, прекращаем.
         if ($cookieName === null) {
             $this->logger->debug('Unhandled qbittorrent auth status', [
-                'status' => $statusCode,
-                'cookie' => $response->getHeader('set-cookie'),
+                'status'              => $statusCode,
+                'auth_cookie_present' => $response->hasHeader('set-cookie'),
             ]);
 
             return false;
@@ -349,7 +349,7 @@ final class Qbittorrent implements ClientInterface
 
         $cookie = $this->jar->getCookieByName(name: $cookieName);
         if ($cookie !== null) {
-            $this->logger->debug('Got qbittorrent auth token', $cookie->toArray());
+            $this->logger->debug('Got qbittorrent auth token');
 
             return true;
         }
