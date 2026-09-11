@@ -321,7 +321,7 @@ final class Flood implements ClientInterface
     {
         $sid = $this->jar->getCookieByName('jwt');
         if ($sid !== null) {
-            $this->logger->debug('Got flood auth token', $sid->toArray());
+            $this->logger->debug('Got flood auth token');
 
             return true;
         }

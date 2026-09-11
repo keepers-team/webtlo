@@ -47,7 +47,7 @@ trait RetryMiddleware
             ]);
 
             $logger->debug('Retrying request', [
-                'url'     => $request->getUri()->__toString(),
+                'url'     => $request->getUri()->getPath(),
                 'delay'   => $delay,
                 'attempt' => $attempt,
                 'reason'  => $reason,
