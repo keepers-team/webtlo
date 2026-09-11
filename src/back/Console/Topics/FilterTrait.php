@@ -70,10 +70,21 @@ trait FilterTrait
         $hashes      = [];
         $listingType = ListingType::tryFallBack($listingId);
         foreach ($result->groups as $group) {
+            if (
+                $listingType === ListingType::Unregistered
+                && (!is_string($group->key) || !str_starts_with($group->key, 'обновлено ('))
+            ) {
+                continue;
+            }
+
             foreach ($group->topics as $topic) {
                 if ($listingType === ListingType::Unregistered) {
                     $updatedHash = $topic->details['updated_hash'] ?? null;
-                    if (!is_string($updatedHash) || $updatedHash === '') {
+                    if (
+                        !is_string($updatedHash)
+                        || $updatedHash === ''
+                        || $updatedHash === $topic->topic->hash
+                    ) {
                         continue;
                     }
 
