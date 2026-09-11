@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
 use KeepersTeam\Webtlo\Storage\Table\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Управление раздачами в торрент-клиенте при нажатии кнопок на вкладке "Раздачи".
@@ -72,6 +74,12 @@ final class ClientApplyAction
             if ($client === null) {
                 continue;
             }
+
+            $groupBySubForum = $this->resolveClientHashes(
+                client         : $client,
+                clientId       : $clientId,
+                groupBySubForum: $groupBySubForum,
+            );
 
             $logRecord = ['tag' => $client->getClientTag(), 'action' => $action->value];
 
@@ -157,6 +165,68 @@ final class ClientApplyAction
 
         $this->logger->info("Выполнение действия '$action->value' завершено.");
         $this->logger->info('-- DONE --');
+    }
+
+    /**
+     * Получить неизвестные идентификаторы раздач из клиента и исключить отсутствующие раздачи.
+     *
+     * @param array<int, array<string, string>> $groupBySubForum
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function resolveClientHashes(
+        ClientInterface $client,
+        int             $clientId,
+        array           $groupBySubForum,
+    ): array {
+        $unknownCount = 0;
+        foreach ($groupBySubForum as $hashesByTopic) {
+            $unknownCount += count(array_filter($hashesByTopic, static fn(string $hash): bool => $hash === ''));
+        }
+
+        if ($unknownCount === 0) {
+            return $groupBySubForum;
+        }
+
+        try {
+            $clientTorrents = $client->getTorrents(['simple' => true]);
+        } catch (Throwable) {
+            $clientTorrents = null;
+        }
+
+        $resolvedHashes  = [];
+        $unresolvedCount = 0;
+        foreach ($groupBySubForum as $subForumId => $hashesByTopic) {
+            foreach ($hashesByTopic as $topicHash => $clientHash) {
+                if ($clientHash !== '') {
+                    continue;
+                }
+
+                $clientHash = $clientTorrents?->getTorrent(hash: $topicHash)?->clientHash ?? '';
+                if ($clientHash === '') {
+                    unset($groupBySubForum[$subForumId][$topicHash]);
+                    ++$unresolvedCount;
+
+                    continue;
+                }
+
+                $groupBySubForum[$subForumId][$topicHash] = $clientHash;
+                $resolvedHashes[$topicHash]               = $clientHash;
+            }
+        }
+
+        if ($resolvedHashes !== []) {
+            $this->tableTorrents->setClientHashes(hashesByTopic: $resolvedHashes, clientId: $clientId);
+        }
+
+        if ($unresolvedCount > 0) {
+            $this->logger->warning(
+                'Не удалось определить идентификаторы раздач в торрент-клиенте {tag}. Пропущено: {count}',
+                ['tag' => $client->getClientTag(), 'count' => $unresolvedCount]
+            );
+        }
+
+        return $groupBySubForum;
     }
 
     private function findLabel(ClientApplyOptions $params, int $subForumId): string

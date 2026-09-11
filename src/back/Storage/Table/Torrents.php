@@ -65,7 +65,7 @@ final class Torrents
                     tr.client_id,
                     tp.forum_id,
                     tr.info_hash,
-                    COALESCE(NULLIF(tr.client_hash, ''), tr.info_hash) AS client_hash
+                    tr.client_hash
                 FROM Torrents AS tr
                     LEFT JOIN Topics AS tp ON tp.info_hash = tr.info_hash
                 WHERE tr.info_hash IN ($search->keys)
@@ -106,7 +106,7 @@ final class Torrents
                 )
                 SELECT
                     Topics.info_hash,
-                    Topics.info_hash,
+                    '',
                     ?,
                     Topics.id,
                     Topics.name,
@@ -118,6 +118,21 @@ final class Torrents
             $this->con->executeStatement(
                 sql  : $sql,
                 param: [$clientId, ...$object->values],
+            );
+        }
+    }
+
+    /**
+     * Сохранить идентификаторы раздач в торрент-клиенте.
+     *
+     * @param array<string, string> $hashesByTopic
+     */
+    public function setClientHashes(array $hashesByTopic, int $clientId): void
+    {
+        foreach ($hashesByTopic as $topicHash => $clientHash) {
+            $this->con->executeStatement(
+                'UPDATE Torrents SET client_hash = ? WHERE client_id = ? AND info_hash = ?',
+                [$clientHash, $clientId, $topicHash]
             );
         }
     }
