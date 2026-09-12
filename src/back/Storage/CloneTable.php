@@ -146,24 +146,36 @@ final class CloneTable
     }
 
     /**
-     * Удалить ненужные строки о хранимых раздачах хранителей.
+     * Заменить данные хранителей для известных тем указанного подраздела.
      *
      * Актуально только для KeepersLists и KeepersSeeders.
+     * Новые темы без строки в Topics тоже сохраняются до обновления списка тем.
+     * Вызывать внутри транзакции вместе с обновлением второй таблицы и маркера.
      */
-    public function removeUnusedKeepersRows(): void
+    public function replaceKeepersRows(int $forumId): void
     {
         $tab = $this->table;
+        $keys = implode(', ', array_map(static fn(string $key) => "tmp.$key", $tab->keys));
+        $insertKeys = $tab->getKeysInsert();
 
         $this->con->executeStatement(
             "
                 DELETE FROM $tab->origin
-                WHERE topic_id || keeper_id NOT IN (
-                    SELECT upd.topic_id || upd.keeper_id
-                    FROM $tab->clone AS tmp
-                    LEFT JOIN $tab->origin AS upd ON tmp.topic_id = upd.topic_id AND tmp.keeper_id = upd.keeper_id
-                    WHERE upd.topic_id IS NOT NULL
-                )
+                WHERE topic_id IN (SELECT id FROM Topics WHERE forum_id = ?)
+            ",
+            [$forumId]
+        );
+
+        // Темы без строки в Topics оставляем до обновления списка тем.
+        // Известные темы другого подраздела отчёт менять не должен.
+        $this->con->executeStatement(
             "
+                INSERT INTO $tab->origin $insertKeys
+                SELECT $keys FROM $tab->clone AS tmp
+                LEFT JOIN Topics AS topic ON topic.id = tmp.topic_id
+                WHERE topic.forum_id = ? OR topic.forum_id IS NULL
+            ",
+            [$forumId]
         );
     }
 
