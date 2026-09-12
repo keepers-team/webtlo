@@ -1,6 +1,6 @@
 parameters:
   level: 8
-  tmpDir: .cache
+  tmpDir: .cache/phpstan
   paths:
     - src/
     - public/

@@ -66,7 +66,7 @@ $rules = [
 ];
 
 return $config
-    ->setCacheFile('.cache/php-cs-fixer.cache')
+    ->setCacheFile('.cache/php-cs-fixer/fixer.cache')
     ->setRules($rules)
     ->setFinder($finder)
     ->setRiskyAllowed(true)
