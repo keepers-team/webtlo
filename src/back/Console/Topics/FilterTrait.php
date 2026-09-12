@@ -46,7 +46,8 @@ trait FilterTrait
     }
 
     /**
-     * @param array<string, mixed> $filter
+     * @param int                  $listingId ид подраздела или ид "разворота" раздач
+     * @param array<string, mixed> $filter    параметры фильтра для поиска раздач
      *
      * @return string[]
      */
@@ -67,9 +68,15 @@ trait FilterTrait
             throw new RuntimeException('Раздачи не найдены.');
         }
 
-        $hashes      = [];
+        $hashes = [];
+
         $listingType = ListingType::tryFallBack($listingId);
         foreach ($result->groups as $group) {
+            /**
+             * Для разворота "незарегистрированные" используем только хеши раздач, которые имеют новую версию.
+             *
+             * @TODO Переделать таблицу хранения разрегов и завести ид вместо текста статусов.
+             */
             if (
                 $listingType === ListingType::Unregistered
                 && (!is_string($group->key) || !str_starts_with($group->key, 'обновлено ('))
