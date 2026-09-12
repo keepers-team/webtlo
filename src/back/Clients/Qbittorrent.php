@@ -561,12 +561,7 @@ final class Qbittorrent implements ClientInterface
             $trackerError  = null;
 
             // Процент загрузки торрента.
-            $progress = $torrent['progress'];
-            if ($progress === 1 && !empty($torrent['availability'])) {
-                if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
-                    $progress = (float) $torrent['availability'];
-                }
-            }
+            $progress = $this->getTorrentProgress(torrent: $torrent);
 
             // Получение ошибок трекера.
             if ($callback !== null) {
@@ -651,6 +646,36 @@ final class Qbittorrent implements ClientInterface
         );
 
         return Helper::convertKeysToString(array: $properties);
+    }
+
+    /**
+     * qBittorrent считает progress только по выбранным файлам. Начиная с 5.2.0
+     * torrents/info содержит число загруженных и всех частей. Для старых версий
+     * сохраняем прежнюю оценку по availability.
+     *
+     * @param array<string, mixed> $torrent
+     */
+    private function getTorrentProgress(array $torrent): float
+    {
+        $progress = (float) $torrent['progress'];
+        if ($progress !== 1.0) {
+            return $progress;
+        }
+
+        $piecesHave = $torrent['pieces_have'] ?? null;
+        $piecesNum  = $torrent['pieces_num'] ?? null;
+        if (
+            is_int($piecesHave) && is_int($piecesNum)
+            && $piecesNum > 0 && $piecesHave >= 0 && $piecesHave <= $piecesNum
+        ) {
+            return $piecesHave / $piecesNum;
+        }
+
+        if (!empty($torrent['availability']) && $torrent['availability'] > 0 && $torrent['availability'] < 1) {
+            return (float) $torrent['availability'];
+        }
+
+        return $progress;
     }
 
     private function checkLabelExists(string $labelName = ''): void
