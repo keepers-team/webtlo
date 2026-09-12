@@ -574,9 +574,12 @@ final class Qbittorrent implements ClientInterface
                 }
             }
 
+            // У qBittorrent 5.0.0 (webApi 2.11) появилось поле comment в выдаче.
+            $comment = $torrent['comment'] ?? null;
+
             $torrents[$torrentHash] = [
-                'topic_id'      => null,
-                'comment'       => null,
+                'topic_id'      => $this->getTorrentTopicId(comment: (string) $comment),
+                'comment'       => $comment,
                 'done'          => $progress,
                 'error'         => $torrentError,
                 'name'          => $torrent['name'],
@@ -652,6 +655,9 @@ final class Qbittorrent implements ClientInterface
      * qBittorrent считает progress только по выбранным файлам. Начиная с 5.2.0
      * torrents/info содержит число загруженных и всех частей. Для старых версий
      * сохраняем прежнюю оценку по availability.
+     *
+     * В документации изменения API, как обычно, не описаны.
+     * Опытным путём установлено, что pieces_* появились в WebAPI 2.15.1+
      *
      * @param array<string, mixed> $torrent
      */
