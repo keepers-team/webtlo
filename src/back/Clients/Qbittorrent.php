@@ -522,11 +522,10 @@ final class Qbittorrent implements ClientInterface
 
         if (!$simpleRun) {
             // Попытка найти ид раздачи в локальных таблицах.
-            $this->tryFillTopicIdFromTopics(torrents: $torrents);
-            $this->tryFillTopicIdFromTorrents(torrents: $torrents);
-
+            $this->tryFillTopicIdFromTopics(torrents: $torrents)
+            || $this->tryFillTopicIdFromTorrents(torrents: $torrents)
             // Для раздач, у которых нет ид раздачи, вытаскиваем комментарий.
-            $this->tryFillTopicIdFromComments(torrents: $torrents);
+            || $this->tryFillTopicIdFromComments(torrents: $torrents);
         }
 
         foreach ($torrents as $hash => $torrent) {
@@ -714,23 +713,25 @@ final class Qbittorrent implements ClientInterface
     {
         Timers::start('comment_search');
 
-        $emptyTopics = self::getEmptyTopics(torrents: $torrents);
-        if (count($emptyTopics)) {
-            $this->logger->debug('Start search torrents in comment column', ['empty' => count($emptyTopics)]);
+        $emptyHashed = self::getEmptyTopics(torrents: $torrents);
+        if (!count($emptyHashed)) {
+            return;
+        }
 
-            foreach ($emptyTopics as $torrentHash => $torrent) {
-                $properties = $this->getProperties(torrentHash: $torrent['client_hash']);
-                if (!empty($properties)) {
-                    $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId(comment: $properties['comment']);
-                    $torrents[$torrentHash]['comment']  = $properties['comment'];
-                }
+        $this->logger->debug('Start search torrents in comment column', ['empty' => count($emptyHashed)]);
 
-                unset($torrentHash, $torrent, $properties);
+        foreach ($emptyHashed as $torrentHash => $torrent) {
+            $properties = $this->getProperties(torrentHash: $torrent['client_hash']);
+            if (!empty($properties)) {
+                $torrents[$torrentHash]['topic_id'] = $this->getTorrentTopicId(comment: $properties['comment']);
+                $torrents[$torrentHash]['comment']  = $properties['comment'];
             }
 
-            Timers::stash('comment_search');
-            $this->logger->debug('End search torrents in comment column');
+            unset($torrentHash, $torrent, $properties);
         }
+
+        Timers::stash('comment_search');
+        $this->logger->debug('End search torrents in comment column');
     }
 
     /**
