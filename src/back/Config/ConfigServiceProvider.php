@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Config;
 
 use KeepersTeam\Webtlo\Clients\ClientType;
 use KeepersTeam\Webtlo\Enum\ControlPeerLimitPriority as PeerPriority;
+use KeepersTeam\Webtlo\Enum\SendReportMethod as ReportMethod;
 use KeepersTeam\Webtlo\Helper;
 use KeepersTeam\Webtlo\Module\TelemetryConstruct;
 use KeepersTeam\Webtlo\TIniFileEx;
@@ -160,6 +161,8 @@ final class ConfigServiceProvider extends AbstractServiceProvider
 
             return new ReportSend(
                 sendReports        : (bool) $ini->read('reports', 'send_report_api', 1),
+                sendMethod         : ReportMethod::from((int) $ini->read('reports', 'send_report_method', 1)),
+                reporterId         : max(0, min(7, (int) $ini->read('reports', 'send_report_reporter_id', 0))),
                 sendTelemetry      : (bool) $ini->read('reports', 'send_report_settings', 1),
                 excludeAuthored    : (bool) $ini->read('reports', 'exclude_authored', 0),
                 unsetOtherTopics   : (bool) $ini->read('reports', 'unset_other_topics', 1),

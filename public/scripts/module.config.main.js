@@ -164,6 +164,34 @@ webtlo.register(ModuleNames.CONFIG_MAIN,function() {
     });
 
 
+    /* Отправка отчётов */
+
+    // Галка отправки отчётов.
+    $('#send_report_api').on('change', function (e) {
+        e.preventDefault();
+
+        const checked = $(this).prop('checked');
+
+        $('#config .config-send-report .fieldset-toggle').toggle(checked);
+    });
+
+    // Ид экземпляра WebTLO для отчётов.
+    $('#config .control-reporter-spinner').spinner({
+        min: 0,
+        max: 7,
+        mouseWheel: true
+    }).on('change', function (e) {
+        e.preventDefault();
+
+        if (this.value < 0) {
+            this.value = 0;
+        }
+        else if (this.value > 7) {
+            this.value = 7;
+        }
+    });
+
+
     /* Автоматизация и дополнительные настройки */
 
     // Регулировка, количество пиров
