@@ -491,7 +491,7 @@ final class Qbittorrent implements ClientInterface
         return sprintf('torrents/%s', $actions[$method] ?? '');
     }
 
-    private function createCategory(string $categoryName): void
+    private function createCategory(string $categoryName): bool
     {
         $fields = [
             'category' => $categoryName,
@@ -499,7 +499,7 @@ final class Qbittorrent implements ClientInterface
         ];
 
         try {
-            $this->request(url: 'torrents/createCategory', params: $fields);
+            return $this->request(url: 'torrents/createCategory', params: $fields)->getStatusCode() === 200;
         } catch (GuzzleException $e) {
             $statusCode = $e->getCode();
             if ($statusCode === 400) {
@@ -508,6 +508,8 @@ final class Qbittorrent implements ClientInterface
                 $this->logger->error('Category name is invalid', ['name' => $categoryName]);
             }
         }
+
+        return false;
     }
 
     private function generateTorrentsList(bool $simpleRun): Generator
@@ -664,10 +666,11 @@ final class Qbittorrent implements ClientInterface
         }
 
         if (!array_key_exists($labelName, $this->categories)) {
-            $this->createCategory(categoryName: $labelName);
-            $this->categories[$labelName] = [
-                'name' => $labelName,
-            ];
+            if ($this->createCategory(categoryName: $labelName)) {
+                $this->categories[$labelName] = [
+                    'name' => $labelName,
+                ];
+            }
         }
     }
 
