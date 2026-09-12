@@ -56,7 +56,7 @@ final class KeepersReports
         $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид обновлений подразделов.
-        $keptForumsUpdate = array_map(static fn($el) => 100000 + $el, $keptForums);
+        $keptForumsUpdate   = array_map(static fn($el) => 100000 + $el, $keptForums);
         $keptForumsUpdate[] = UpdateMark::KEEPERS->value;
 
         $updateStatus = $this->updateTime->getMarkersObject(markers: $keptForumsUpdate);
@@ -155,7 +155,7 @@ final class KeepersReports
 
             try {
                 $this->db->beginTransaction();
-                $listsCount = $this->keepersLists->replaceForum(forumId: $forumId);
+                $listsCount   = $this->keepersLists->replaceForum(forumId: $forumId);
                 $seedersCount = $this->keepersSeeders->replaceForum(forumId: $forumId);
                 $this->updateTime->setMarkerTime(marker: 100000 + $forumId);
                 $this->db->commitTransaction();

@@ -154,8 +154,8 @@ final class CloneTable
      */
     public function replaceKeepersRows(int $forumId): void
     {
-        $tab = $this->table;
-        $keys = implode(', ', array_map(static fn(string $key) => "tmp.$key", $tab->keys));
+        $tab        = $this->table;
+        $keys       = implode(', ', array_map(static fn(string $key) => "tmp.$key", $tab->keys));
         $insertKeys = $tab->getKeysInsert();
 
         $this->con->executeStatement(
