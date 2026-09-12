@@ -20,6 +20,7 @@ final class Torrents
     public const PRIMARY = 'info_hash';
     public const KEYS    = [
         self::PRIMARY,
+        'client_hash',
         'topic_id',
         'client_id',
         'done',
@@ -43,6 +44,7 @@ final class Torrents
     {
         $this->torrents[] = [
             $torrent->topicHash,
+            $torrent->clientHash,
             $torrent->topicId,
             $clientId,
             $torrent->done,

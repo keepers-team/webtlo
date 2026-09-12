@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
 use KeepersTeam\Webtlo\Storage\Table\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Управление раздачами в торрент-клиенте при нажатии кнопок на вкладке "Раздачи".
@@ -73,12 +75,21 @@ final class ClientApplyAction
                 continue;
             }
 
+            $groupBySubForum = $this->resolveClientHashes(
+                client         : $client,
+                clientId       : $clientId,
+                groupBySubForum: $groupBySubForum,
+            );
+
             $logRecord = ['tag' => $client->getClientTag(), 'action' => $action->value];
 
-            foreach ($groupBySubForum as $subForumId => $torrentHashes) {
-                if (empty($torrentHashes)) {
+            foreach ($groupBySubForum as $subForumId => $hashesByTopic) {
+                if (empty($hashesByTopic)) {
                     continue;
                 }
+
+                $topicHashes  = array_keys($hashesByTopic);
+                $clientHashes = array_values($hashesByTopic);
 
                 $response = false;
                 switch ($action) {
@@ -89,45 +100,50 @@ final class ClientApplyAction
                         $logRecord['forumId'] = $subForumId;
                         $logRecord['label']   = $label;
 
-                        $response = $client->setLabel(torrentHashes: $torrentHashes, label: $label);
+                        $response = $client->setLabel(torrentHashes: $clientHashes, label: $label);
 
                         break;
                     case ClientAction::Stop:
-                        $response = $client->stopTorrents(torrentHashes: $torrentHashes);
+                        $response = $client->stopTorrents(torrentHashes: $clientHashes);
 
                         // Отмечаем в БД изменение статуса раздач.
                         if ($response !== false) {
                             $this->tableTorrents->setTorrentsStatusByHashes(
-                                hashes: $torrentHashes,
-                                paused: true
+                                hashes   : $topicHashes,
+                                clientId : $clientId,
+                                paused   : true
                             );
                         }
 
                         break;
                     case ClientAction::Start:
                         $response = $client->startTorrents(
-                            torrentHashes: $torrentHashes,
+                            torrentHashes: $clientHashes,
                             forceStart   : $params->forceStart
                         );
 
                         // Отмечаем в БД изменение статуса раздач.
                         if ($response !== false) {
                             $this->tableTorrents->setTorrentsStatusByHashes(
-                                hashes: $torrentHashes,
-                                paused: false
+                                hashes   : $topicHashes,
+                                clientId : $clientId,
+                                paused   : false
                             );
                         }
 
                         break;
                     case ClientAction::Remove:
                         $response = $client->removeTorrents(
-                            torrentHashes: $torrentHashes,
+                            torrentHashes: $clientHashes,
                             deleteFiles  : $params->removeFiles
                         );
 
                         // Отмечаем в БД удаление раздач.
                         if ($response !== false) {
-                            $this->tableTorrents->deleteTorrentsByHashes(hashes: $torrentHashes);
+                            $this->tableTorrents->deleteTorrentsByHashes(
+                                hashes  : $topicHashes,
+                                clientId: $clientId
+                            );
                         }
 
                         break;
@@ -141,7 +157,7 @@ final class ClientApplyAction
                 } else {
                     $this->logger->info(
                         "Действие '{action}' для торрент-клиента '{tag}' выполнено ({count})",
-                        [...$logRecord, 'count' => count($torrentHashes)]
+                        [...$logRecord, 'count' => count($clientHashes)]
                     );
                 }
             }
@@ -149,6 +165,68 @@ final class ClientApplyAction
 
         $this->logger->info("Выполнение действия '$action->value' завершено.");
         $this->logger->info('-- DONE --');
+    }
+
+    /**
+     * Получить неизвестные идентификаторы раздач из клиента и исключить отсутствующие раздачи.
+     *
+     * @param array<int, array<string, string>> $groupBySubForum
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function resolveClientHashes(
+        ClientInterface $client,
+        int             $clientId,
+        array           $groupBySubForum,
+    ): array {
+        $unknownCount = 0;
+        foreach ($groupBySubForum as $hashesByTopic) {
+            $unknownCount += count(array_filter($hashesByTopic, static fn(string $hash): bool => $hash === ''));
+        }
+
+        if ($unknownCount === 0) {
+            return $groupBySubForum;
+        }
+
+        try {
+            $clientTorrents = $client->getTorrents(['simple' => true]);
+        } catch (Throwable) {
+            $clientTorrents = null;
+        }
+
+        $resolvedHashes  = [];
+        $unresolvedCount = 0;
+        foreach ($groupBySubForum as $subForumId => $hashesByTopic) {
+            foreach ($hashesByTopic as $topicHash => $clientHash) {
+                if ($clientHash !== '') {
+                    continue;
+                }
+
+                $clientHash = $clientTorrents?->getTorrent(hash: $topicHash)?->clientHash ?? '';
+                if ($clientHash === '') {
+                    unset($groupBySubForum[$subForumId][$topicHash]);
+                    ++$unresolvedCount;
+
+                    continue;
+                }
+
+                $groupBySubForum[$subForumId][$topicHash] = $clientHash;
+                $resolvedHashes[$topicHash]               = $clientHash;
+            }
+        }
+
+        if ($resolvedHashes !== []) {
+            $this->tableTorrents->setClientHashes(hashesByTopic: $resolvedHashes, clientId: $clientId);
+        }
+
+        if ($unresolvedCount > 0) {
+            $this->logger->warning(
+                'Не удалось определить идентификаторы раздач в торрент-клиенте {tag}. Пропущено: {count}',
+                ['tag' => $client->getClientTag(), 'count' => $unresolvedCount]
+            );
+        }
+
+        return $groupBySubForum;
     }
 
     private function findLabel(ClientApplyOptions $params, int $subForumId): string
