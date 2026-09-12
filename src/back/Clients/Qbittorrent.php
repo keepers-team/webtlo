@@ -559,12 +559,7 @@ final class Qbittorrent implements ClientInterface
             $trackerError  = null;
 
             // Процент загрузки торрента.
-            $progress = $torrent['progress'];
-            if ($progress === 1 && !empty($torrent['availability'])) {
-                if ($torrent['availability'] > 0 && $torrent['availability'] < 1) {
-                    $progress = (float) $torrent['availability'];
-                }
-            }
+            $progress = $this->getTorrentProgress(torrent: $torrent, clientHash: $clientHash);
 
             // Получение ошибок трекера.
             if ($callback !== null) {
@@ -649,6 +644,45 @@ final class Qbittorrent implements ClientInterface
         );
 
         return Helper::convertKeysToString(array: $properties);
+    }
+
+    /**
+     * qBittorrent считает progress только по выбранным файлам. Если size меньше
+     * total_size (пропущенные файлы или padding), проверяем локальные части,
+     * а не доступность частей в сети.
+     *
+     * @param array<string, mixed> $torrent
+     */
+    private function getTorrentProgress(array $torrent, string $clientHash): float
+    {
+        $progress = (float) $torrent['progress'];
+        if ($progress !== 1.0 || (int) $torrent['size'] >= (int) $torrent['total_size']) {
+            return $progress;
+        }
+
+        $piecesHave = $torrent['pieces_have'] ?? null;
+        $piecesNum  = $torrent['pieces_num'] ?? null;
+        if ($piecesHave === null || $piecesNum === null) {
+            // В старых версиях qBittorrent этих полей нет в torrents/info.
+            try {
+                $properties = $this->getProperties(torrentHash: $clientHash);
+            } catch (RuntimeException) {
+                // Дополнительный запрос не должен прерывать обновление списка раздач.
+                return $progress;
+            }
+
+            $piecesHave = $properties['pieces_have'] ?? null;
+            $piecesNum  = $properties['pieces_num'] ?? null;
+        }
+
+        if (
+            is_int($piecesHave) && is_int($piecesNum)
+            && $piecesNum > 0 && $piecesHave >= 0 && $piecesHave <= $piecesNum
+        ) {
+            return $piecesHave / $piecesNum;
+        }
+
+        return $progress;
     }
 
     private function checkLabelExists(string $labelName = ''): void
