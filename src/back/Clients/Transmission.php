@@ -340,7 +340,28 @@ final class Transmission implements ClientInterface
         try {
             $response = $this->request(method: $method, options: $params);
 
-            return $response->getStatusCode() === 200;
+            if ($response->getStatusCode() !== 200) {
+                return false;
+            }
+
+            $result = json_decode(
+                json: $response->getBody()->getContents(),
+                associative: true,
+                flags: JSON_INVALID_UTF8_SUBSTITUTE,
+            );
+            if (!is_array($result) || !is_string($result['result'] ?? null)) {
+                $this->logger->warning('Invalid Transmission RPC action response', ['method' => $method]);
+
+                return false;
+            }
+
+            if ($result['result'] !== 'success') {
+                $this->logger->warning('Transmission RPC action failed', ['method' => $method]);
+
+                return false;
+            }
+
+            return true;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -364,12 +385,17 @@ final class Transmission implements ClientInterface
         }
 
         $result = true;
-        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunkIndex => $chunk) {
             $response = $this->sendRequest(
                 method: $method,
                 params: ['ids' => $chunk, ...$extra],
             );
             if ($response === false) {
+                $this->logger->warning('Transmission action batch failed', [
+                    'method' => $method,
+                    'batch'  => $chunkIndex + 1,
+                    'count'  => count($chunk),
+                ]);
                 $result = false;
             }
         }
