@@ -24,6 +24,7 @@ final class Torrent
      * @param bool              $forced       принудительно запущена
      * @param null|string       $trackerError текст ошибки трекера
      * @param null|string       $comment      текст комментария раздачи (содержит topicId)
+     * @param null|string       $label        текущая метка раздачи
      * @param null|string       $storagePath  путь хранения раздачи на диске
      */
     public function __construct(
@@ -39,6 +40,7 @@ final class Torrent
         public readonly bool              $forced = false,
         public readonly ?string           $trackerError = null,
         public readonly ?string           $comment = null,
+        public readonly ?string           $label = null,
         public readonly ?string           $storagePath = null,
     ) {}
 }
