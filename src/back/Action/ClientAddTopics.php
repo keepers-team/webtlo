@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
+use KeepersTeam\Webtlo\Clients\SavePathLookupInterface;
 use KeepersTeam\Webtlo\Config\SubFolderType;
 use KeepersTeam\Webtlo\Config\SubForum;
 use KeepersTeam\Webtlo\Config\SubForums;
@@ -218,6 +219,32 @@ final class ClientAddTopics
     {
         $clientAddingSleep = $client->getTorrentAddingSleep();
 
+        $previousPaths = [];
+        if ($client instanceof SavePathLookupInterface) {
+            $previousHashes = $this->torrents->getUpdatedPreviousHashes(
+                hashes  : array_map(static fn(DownloadedTopic $topic) => $topic->hash, $topics),
+                clientId: $subForum->clientId,
+            );
+            if ($previousHashes !== []) {
+                $pathsByHash = $client->getTorrentSavePaths(array_unique(array_merge(...array_values($previousHashes))));
+                foreach ($previousHashes as $currentHash => $oldHashes) {
+                    $paths = [];
+                    foreach ($oldHashes as $oldHash) {
+                        $path = $pathsByHash[strtoupper($oldHash)] ?? null;
+                        if ($path !== null && !in_array($path, $paths, true)) {
+                            $paths[] = $path;
+                        }
+                    }
+
+                    if (count($paths) === 1) {
+                        $previousPaths[$currentHash] = $paths[0];
+                    } elseif (count($paths) > 1) {
+                        $this->logger->warning('У предыдущих версий раздачи разные каталоги', ['hash' => $currentHash]);
+                    }
+                }
+            }
+        }
+
         // Убираем последний слэш в пути каталога для данных
         $dataFolder = trim($subForum->dataFolder);
         $dataFolder = rtrim($dataFolder, '/\\');
@@ -225,7 +252,8 @@ final class ClientAddTopics
         $addedTorrentHashes = [];
         // Добавление раздач в торрент-клиенты.
         foreach ($topics as $topic) {
-            $torrentSavePath = $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
+            $torrentSavePath = $previousPaths[$topic->hash]
+                ?? $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
 
             // Добавляем раздачу в торрент-клиент.
             $response = $client->addTorrent(
