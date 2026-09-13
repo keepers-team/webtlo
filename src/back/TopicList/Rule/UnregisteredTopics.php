@@ -25,6 +25,18 @@ final class UnregisteredTopics implements ListInterface
     public function getTopics(array $filter, Sort $sort): Topics
     {
         $statement = "
+            WITH updated_topics AS (
+                SELECT DISTINCT tr.topic_id
+                FROM TopicsUnregistered AS unregistered
+                INNER JOIN Torrents AS tr ON tr.info_hash = unregistered.info_hash
+                WHERE unregistered.status LIKE 'обновлено (%'
+            ), current_versions AS (
+                SELECT DISTINCT tr.topic_id, tr.client_id
+                FROM Torrents AS tr
+                LEFT JOIN TopicsUnregistered AS unregistered ON unregistered.info_hash = tr.info_hash
+                WHERE tr.topic_id IN (SELECT topic_id FROM updated_topics)
+                  AND unregistered.info_hash IS NULL
+            )
             SELECT
                 Torrents.topic_id AS topic_id,
                 COALESCE(TopicsUnregistered.name, Torrents.name) AS name,
@@ -40,10 +52,14 @@ final class UnregisteredTopics implements ListInterface
                 Torrents.error,
                 Torrents.tracker_error AS error_message,
                 Torrents.done,
-                tp.info_hash AS updated_hash
+                tp.info_hash AS updated_hash,
+                current_versions.topic_id IS NOT NULL AS current_added
             FROM TopicsUnregistered
             INNER JOIN Torrents ON TopicsUnregistered.info_hash = Torrents.info_hash
             LEFT JOIN Topics AS tp ON tp.id = Torrents.topic_id
+            LEFT JOIN current_versions
+                ON current_versions.topic_id = Torrents.topic_id
+               AND current_versions.client_id = Torrents.client_id
             ORDER BY {$sort->fieldDirection()}
         ";
 
@@ -51,7 +67,11 @@ final class UnregisteredTopics implements ListInterface
 
         $groups = [];
         foreach ($topics as $topicData) {
-            $topicStatus = $topicData['status'];
+            $topicStatus  = (string) $topicData['status'];
+            $currentAdded = (bool) $topicData['current_added']
+                && str_starts_with($topicStatus, 'обновлено (');
+            $groupTitle   = $currentAdded ? 'Старая версия уже обновлена' : $topicStatus;
+
             // Состояние раздачи в клиенте (пулька) [иконка, цвет, описание].
             $topicState = State::clientOnly(topicData: $topicData);
 
@@ -64,20 +84,24 @@ final class UnregisteredTopics implements ListInterface
             if (!empty($topicData['updated_hash'])) {
                 $details['updated_hash'] = $topicData['updated_hash'];
             }
+            if ($currentAdded) {
+                $details['current_added'] = true;
+                $details['original_status'] = $topicStatus;
+            }
 
             // Типизируем данные раздачи в объект.
             $topic = Topic::fromTopicData(topicData: $topicData, state: $topicState);
             unset($topicData);
 
-            if (!isset($groups[$topicStatus])) {
-                $groups[$topicStatus] = new TopicGroup(
-                    key: $topicStatus,
-                    title: $topicStatus,
+            if (!isset($groups[$groupTitle])) {
+                $groups[$groupTitle] = new TopicGroup(
+                    key: $groupTitle,
+                    title: $groupTitle,
                 );
             }
 
             // Выводим строку с данными раздачи.
-            $groups[$topicStatus]->topics[] = new TopicResult(topic: $topic, details: $details);
+            $groups[$groupTitle]->topics[] = new TopicResult(topic: $topic, details: $details);
         }
         unset($topics);
 

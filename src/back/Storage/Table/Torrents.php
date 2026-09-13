@@ -17,7 +17,7 @@ final class Torrents
      *
      * @param array{hash: string, client_id: int}[] $selected
      *
-     * @return array<int, array{old_hash: string, client_id: int, topic_id: int, current_hash: ?string}>
+     * @return array<int, array{old_hash: string, client_id: int, topic_id: int, current_hash: ?string, added_hash: ?string}>
      */
     public function getSelectedUnregistered(array $selected): array
     {
@@ -33,10 +33,12 @@ final class Torrents
             $rows = $this->con->query(
                 "
                     SELECT tr.info_hash AS old_hash, tr.client_id, tr.topic_id,
-                           current.info_hash AS current_hash
+                           current.info_hash AS current_hash, added.info_hash AS added_hash
                     FROM Torrents AS tr
                     INNER JOIN TopicsUnregistered AS unregistered ON unregistered.info_hash = tr.info_hash
                     LEFT JOIN Topics AS current ON current.id = tr.topic_id
+                    LEFT JOIN Torrents AS added
+                        ON added.info_hash = current.info_hash AND added.client_id = tr.client_id
                     WHERE (tr.info_hash, tr.client_id) IN ($pairs)
                 ",
                 $params,

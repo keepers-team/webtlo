@@ -76,6 +76,15 @@ final class ClientAddUnregisteredTopics
                 continue;
             }
 
+            if (!empty($row['added_hash'])) {
+                $this->logger->info('Актуальная версия уже есть в торрент-клиенте', [
+                    'topic_id' => $row['topic_id'], 'client_id' => $row['client_id'],
+                ]);
+                ++$skipped;
+
+                continue;
+            }
+
             if (!empty($row['current_hash'])) {
                 $knownHashes[] = $row['current_hash'];
             } else {
@@ -116,7 +125,7 @@ final class ClientAddUnregisteredTopics
     }
 
     /**
-     * @param array<int, array{old_hash: string, client_id: int, topic_id: int, current_hash: ?string}> $unresolved
+     * @param array<int, array{old_hash: string, client_id: int, topic_id: int, current_hash: ?string, added_hash: ?string}> $unresolved
      */
     private function addMissingTopics(array $unresolved, int &$skipped): int
     {

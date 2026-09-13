@@ -53,15 +53,19 @@ final class Topic
         );
     }
 
-    public function getCheckBox(): string
+    public function getCheckBox(bool $currentAdded = false): string
     {
         $clientId = $this->clientId !== null ? sprintf(" data-client-id='%d'", $this->clientId) : '';
+        $added    = $currentAdded
+            ? " data-current-added='1' title='Актуальная версия уже добавлена; выбор доступен для управления старой раздачей'"
+            : '';
 
         return sprintf(
-            "<input type='checkbox' name='topic_hashes[]' class='topic' value='%s' data-size='%d'%s>",
+            "<input type='checkbox' name='topic_hashes[]' class='topic' value='%s' data-size='%d'%s%s>",
             $this->hash,
             $this->size,
-            $clientId
+            $clientId,
+            $added,
         );
     }
 

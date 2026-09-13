@@ -76,15 +76,19 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
     // Кнопка добавления раздач в торрент-клиент.
     $('#tor_add').on('click', function () {
         const listingId = +$('#main-subsections').val();
+        const selectedUnregistered = listingId === TopicListingType.Unregistered
+            ? $('#topics .topic:checked') : null;
         const unregisteredTopics = listingId === TopicListingType.Unregistered
-            ? $('#topics .topic:checked').map((i, el) => ({
+            ? selectedUnregistered.not('[data-current-added]').map((i, el) => ({
                 hash: el.value,
                 client_id: +el.dataset.clientId,
             })).toArray()
             : null;
         const topic_hashes = unregisteredTopics === null ? getCheckedTopicHashes(listingId) : [];
         if (unregisteredTopics === null ? topic_hashes.length === 0 : unregisteredTopics.length === 0) {
-            showResultTopics('Выберите раздачи для скачивания.');
+            showResultTopics(selectedUnregistered !== null && selectedUnregistered.length > 0
+                ? 'Актуальные версии выбранных раздач уже добавлены в торрент-клиент.'
+                : 'Выберите раздачи для скачивания.');
 
             return false;
         }
