@@ -76,9 +76,14 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
     // Кнопка добавления раздач в торрент-клиент.
     $('#tor_add').on('click', function () {
         const listingId = +$('#main-subsections').val();
-
-        const topic_hashes = getCheckedTopicHashes(listingId);
-        if ($.isEmptyObject(topic_hashes)) {
+        const unregisteredTopics = listingId === TopicListingType.Unregistered
+            ? $('#topics .topic:checked').map((i, el) => ({
+                hash: el.value,
+                client_id: +el.dataset.clientId,
+            })).toArray()
+            : null;
+        const topic_hashes = unregisteredTopics === null ? getCheckedTopicHashes(listingId) : [];
+        if (unregisteredTopics === null ? topic_hashes.length === 0 : unregisteredTopics.length === 0) {
             showResultTopics('Выберите раздачи для скачивания.');
 
             return false;
@@ -88,9 +93,9 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
         $.ajax({
             type: 'POST',
             url: 'php/add_topics_to_client.php',
-            data: JSON.stringify({
-                topic_hashes: topic_hashes,
-            }),
+            data: JSON.stringify(unregisteredTopics === null
+                ? {topic_hashes: topic_hashes}
+                : {unregistered_topics: unregisteredTopics}),
             beforeSend: function () {
                 block_actions();
 

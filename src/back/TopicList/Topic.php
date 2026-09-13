@@ -55,10 +55,13 @@ final class Topic
 
     public function getCheckBox(): string
     {
+        $clientId = $this->clientId !== null ? sprintf(" data-client-id='%d'", $this->clientId) : '';
+
         return sprintf(
-            "<input type='checkbox' name='topic_hashes[]' class='topic' value='%s' data-size='%d'>",
+            "<input type='checkbox' name='topic_hashes[]' class='topic' value='%s' data-size='%d'%s>",
             $this->hash,
-            $this->size
+            $this->size,
+            $clientId
         );
     }
 

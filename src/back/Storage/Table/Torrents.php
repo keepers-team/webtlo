@@ -13,6 +13,81 @@ final class Torrents
     public function __construct(private readonly ConnectionInterface $con) {}
 
     /**
+     * Resolve checked rows against the current database state. A hash can exist in several clients.
+     *
+     * @param array{hash: string, client_id: int}[] $selected
+     *
+     * @return array<int, array{old_hash: string, client_id: int, topic_id: int, current_hash: ?string}>
+     */
+    public function getSelectedUnregistered(array $selected): array
+    {
+        $result = [];
+        foreach (array_chunk($selected, 400) as $chunk) {
+            $pairs  = implode(', ', array_fill(0, count($chunk), '(?, ?)'));
+            $params = [];
+            foreach ($chunk as $row) {
+                $params[] = $row['hash'];
+                $params[] = $row['client_id'];
+            }
+
+            $rows = $this->con->query(
+                "
+                    SELECT tr.info_hash AS old_hash, tr.client_id, tr.topic_id,
+                           current.info_hash AS current_hash
+                    FROM Torrents AS tr
+                    INNER JOIN TopicsUnregistered AS unregistered ON unregistered.info_hash = tr.info_hash
+                    LEFT JOIN Topics AS current ON current.id = tr.topic_id
+                    WHERE (tr.info_hash, tr.client_id) IN ($pairs)
+                ",
+                $params,
+            );
+
+            array_push($result, ...$rows);
+        }
+
+        return $result;
+    }
+
+    public function insertAddedTopic(string $hash, int $clientId, int $topicId, string $name, int $size): void
+    {
+        $this->con->executeStatement(
+            '
+                INSERT OR IGNORE INTO Torrents (info_hash, client_id, topic_id, name, total_size)
+                VALUES (?, ?, ?, ?, ?)
+            ',
+            [$hash, $clientId, $topicId, $name, $size],
+        );
+    }
+
+    /**
+     * @param array{hash: string, client_id: int}[] $topics
+     *
+     * @return array<string, true> keys in the form client_id:UPPER(info_hash)
+     */
+    public function getExistingClientHashes(array $topics): array
+    {
+        $existing = [];
+        foreach (array_chunk($topics, 400) as $chunk) {
+            $pairs  = implode(', ', array_fill(0, count($chunk), '(?, ?)'));
+            $params = [];
+            foreach ($chunk as $topic) {
+                $params[] = $topic['hash'];
+                $params[] = $topic['client_id'];
+            }
+
+            $rows = $this->con->query(
+                "SELECT info_hash, client_id FROM Torrents WHERE (info_hash, client_id) IN ($pairs)",
+                $params,
+            );
+            foreach ($rows as $row) {
+                $existing[$row['client_id'] . ':' . strtoupper($row['info_hash'])] = true;
+            }
+        }
+
+        return $existing;
+    }
+
+    /**
      * Поиск в БД ид раздач, по хешу.
      *
      * @param string[] $hashes
