@@ -43,7 +43,11 @@ final class LoggerConstructor
     private static int $logMaxSize  = 2097152;
     private static int $logMaxCount = 5;
 
-    public static function create(?LogFile $logFile = null, Level $level = Level::Info): LoggerInterface
+    public static function create(
+        ?LogFile $logFile = null,
+        Level $level = Level::Info,
+        bool $logToTab = false,
+    ): LoggerInterface
     {
         $appLogFile = LogFile::Main;
 
@@ -67,6 +71,13 @@ final class LoggerConstructor
             if ($logFile !== null) {
                 $logger->pushHandler(
                     self::getFileHandler(logFile: $logFile, level: $level)
+                );
+            }
+
+            // Записи операций, выводимых во вкладке «Лог».
+            if ($logToTab) {
+                $logger->pushHandler(
+                    self::getFileHandler(logFile: LogFile::LogTab, level: $level)
                 );
             }
 

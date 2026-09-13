@@ -9,7 +9,7 @@ use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 
 // Подключаем контейнер.
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 try {
