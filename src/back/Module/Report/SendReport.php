@@ -10,6 +10,9 @@ use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\WebTLO;
 
+/**
+ * @phpstan-import-type TopicShort from CreateReport
+ */
 final class SendReport
 {
     private bool $enabled = true;
@@ -79,11 +82,11 @@ final class SendReport
 
         // Отправляем отчёт о скачанных раздачах.
         $completeReport = $this->apiReport->reportKeptReleases(
-            forumId             : $forumId,
-            topicIds            : $downloadedTopics,
-            status              : $statusRules->keptTopics,
-            reportDate          : $reportDate,
-            excludeOtherReleases: $reportRewrite,
+            forumId     : $forumId,
+            topicIds    : $downloadedTopics,
+            status      : $statusRules->keptTopics,
+            reportDate  : $reportDate,
+            excludeOther: $reportRewrite,
         );
         if ($completeReport !== null) {
             $result['reportComplete'] = $completeReport;
@@ -98,6 +101,60 @@ final class SendReport
                 reportDate: $reportDate,
             );
             if ($downloadingReport !== null) {
+                $result['reportDownloading'] = $downloadingReport;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param TopicShort[] $topicsToReport
+     *
+     * @return array<string, mixed>
+     */
+    public function sendReportHashes(
+        array             $topicsToReport,
+        DateTimeInterface $reportDate,
+        ReportStatus      $statusRules,
+        bool              $reportRewrite = false,
+    ): array {
+        $result = [
+            'topics' => count($topicsToReport),
+        ];
+
+        // Разделяем раздачи на скачанные и качаемые.
+        $downloadedTopics = $downloadingTopics = [];
+        foreach ($topicsToReport as $topic) {
+            if ($topic['done'] < 1.0) {
+                $downloadingTopics[] = $topic['hash'];
+            } else {
+                $downloadedTopics[] = $topic['hash'];
+            }
+        }
+        unset($topicsToReport);
+
+        // Отправляем отчёт о скачанных раздачах.
+        $completeReport = $this->apiReport->reportKeptReleasesHashes(
+            topicHashes : $downloadedTopics,
+            status      : $statusRules->keptTopics,
+            reportDate  : $reportDate,
+            excludeOther: $reportRewrite
+        );
+        if ($completeReport !== null) {
+            $result['statusComplete'] = $statusRules->keptTopics;
+            $result['reportComplete'] = $completeReport;
+        }
+
+        // Отправляем отчёт о качаемых раздачах.
+        if (count($downloadingTopics)) {
+            $downloadingReport = $this->apiReport->reportKeptReleasesHashes(
+                $downloadingTopics,
+                $statusRules->downloadingTopics,
+                $reportDate,
+            );
+            if ($downloadingReport !== null) {
+                $result['statusComplete']    = $statusRules->downloadingTopics;
                 $result['reportDownloading'] = $downloadingReport;
             }
         }
@@ -122,6 +179,14 @@ final class SendReport
             appVersion      : $this->webtlo->appVersionLine(),
             unsetOtherForums: $unsetOtherForums
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function setForumsStatusAuto(): array
+    {
+        return $this->apiReport->setForumsStatusAuto();
     }
 
     public function setApiEnable(bool $enabled): void

@@ -27,10 +27,17 @@ use RuntimeException;
 /**
  * Объект для создания новых отчётов.
  */
+
+/**
+ * @phpstan-type TopicShort array{hash: string, author: int, done: float}
+ */
 final class CreateReport
 {
-    /** @var int[] */
+    /** @var ?positive-int[] */
     public ?array $forums = null;
+
+    /** @var ?positive-int[] */
+    private ?array $reportedForums = null;
 
     private ?DateTimeImmutable $updateTime = null;
 
@@ -104,25 +111,28 @@ final class CreateReport
         return implode($this->implodeGlue, $summary);
     }
 
-    public function getForumCount(): int
-    {
-        if ($this->forums === null) {
-            return 0;
-        }
-
-        return count($this->forums) - count($this->reportSend->excludedSubForums);
-    }
-
     /**
-     * @return int[]
+     * @return positive-int[]
      */
     public function getForums(): array
     {
         if ($this->forums === null) {
-            throw new RuntimeException('No forums found');
+            throw new RuntimeException('No kept forums found');
         }
 
         return $this->forums;
+    }
+
+    /**
+     * @return positive-int[]
+     */
+    public function getReportedForums(): array
+    {
+        if ($this->reportedForums !== null) {
+            return $this->reportedForums;
+        }
+
+        return $this->reportedForums = array_diff($this->getForums(), $this->reportSend->excludedSubForums);
     }
 
     public function isForumExcluded(int $forumId): bool
@@ -431,7 +441,7 @@ final class CreateReport
         if ($forumId !== null) {
             $forumIds = [$forumId];
         } else {
-            $forumIds = $this->getForums();
+            $forumIds = $this->getReportedForums();
             sort($forumIds);
         }
 
@@ -493,6 +503,48 @@ final class CreateReport
     private function getStoredForumValues(int $forumId): array
     {
         return $this->stored[$forumId] ?? [];
+    }
+
+    /**
+     * Получить список всех хранимых раздач.
+     * За исключением исключённых подразделов, торрент-клиентов и авторских раздач.
+     *
+     * @return TopicShort[]
+     */
+    public function findKeptTopics(): array
+    {
+        // Включённые в отчёты подразделы и исключённые из них торрент-клиенты.
+        $includeForums  = KeysObject::create($this->getReportedForums());
+        $excludeClients = KeysObject::create($this->reportSend->excludedClients);
+
+        $topics = $this->db->query(
+            "
+                SELECT
+                    tp.info_hash AS hash,
+                    tp.poster AS author,
+                    MAX(tr.done) AS done
+                FROM Topics tp
+                INNER JOIN Torrents tr ON tr.info_hash = tp.info_hash
+                WHERE tp.forum_id IN ($includeForums->keys)
+                    AND tr.client_id NOT IN ($excludeClients->keys)
+                    AND tr.error = 0
+                GROUP BY tp.id, tp.info_hash, tp.forum_id, tp.name, tp.size, tp.status
+                ORDER BY tp.id
+            ",
+            [...$includeForums->values, ...$excludeClients->values],
+        );
+
+        if (!count($topics)) {
+            throw new EmptyFoundTopicsException('В БД не найдены хранимые раздачи подраздела.');
+        }
+
+        // Если включена опция исключения авторских раздач, фильтруем раздачи.
+        if ($this->reportSend->excludeAuthored) {
+            $userId = $this->auth->userId;
+            $topics = array_filter($topics, static fn($topic): bool => $topic['author'] !== $userId);
+        }
+
+        return $topics;
     }
 
     /**
