@@ -45,7 +45,7 @@ $db->executeQuery(<<<'SQL'
         tracker_error TEXT,
         PRIMARY KEY (info_hash, client_id)
     );
-    CREATE TABLE TopicsUnregistered (info_hash TEXT PRIMARY KEY, status TEXT);
+    CREATE TABLE TopicsUnregistered (info_hash TEXT PRIMARY KEY, name TEXT, status TEXT);
     CREATE TABLE Topics (id INT PRIMARY KEY, info_hash TEXT, forum_id INT, reg_time INT);
     INSERT INTO Torrents (info_hash, client_id, topic_id) VALUES ('OLD1', 1, 101), ('OLD1', 2, 101), ('OLD2', 1, 102);
     INSERT INTO TopicsUnregistered (info_hash, status) VALUES ('OLD1', 'обновлено (проверено)'), ('OLD2', 'обновлено (проверено)');
