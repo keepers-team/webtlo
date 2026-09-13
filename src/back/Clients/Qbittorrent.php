@@ -37,7 +37,7 @@ final class Qbittorrent implements ClientInterface, SavePathLookupInterface
     use Traits\RetryMiddleware;
     use Traits\TopicIdSearch;
 
-    private const ACTION_CHUNK_SIZE = 500;
+    private const ACTION_CHUNK_SIZE    = 500;
     private const SAVE_PATH_CHUNK_SIZE = 100;
 
     /** Версия webApi. */
