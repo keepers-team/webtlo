@@ -22,9 +22,9 @@ if ($request === false) {
 }
 
 curl_setopt_array($request, [
-    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_RETURNTRANSFER    => true,
     CURLOPT_CONNECTTIMEOUT_MS => 500,
-    CURLOPT_TIMEOUT_MS => 1500,
+    CURLOPT_TIMEOUT_MS        => 1500,
 ]);
 
 $response = curl_exec($request);
@@ -54,6 +54,7 @@ foreach ($fields as $name => $source) {
 
 // Read the configured limit rather than assuming the Docker default of two.
 $poolConfig = @file_get_contents("$poolConfigDir/www.conf");
+
 $counters['max_children'] = is_string($poolConfig)
     && preg_match('/^\s*pm\.max_children\s*=\s*(\d+)\s*$/m', $poolConfig, $matches)
         ? (int) $matches[1]
