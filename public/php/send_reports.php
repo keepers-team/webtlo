@@ -11,7 +11,7 @@ use KeepersTeam\Webtlo\Enum\LogFile;
 $reports_result = '';
 
 // Создаём контейнер и пишем в лог.
-$app = App::create(LogFile::Reports);
+$app = App::create(logFile: LogFile::Reports, logToTab: true);
 $log = $app->getLogger();
 
 try {

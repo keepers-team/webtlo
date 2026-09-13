@@ -16,6 +16,9 @@ enum LogFile: string
      */
     case Main = 'webtlo';
 
+    /** Записи операций, выводимых во вкладке «Лог». */
+    case LogTab = 'log-tab';
+
     /**
      * Файлы для каждого из процессов.
      */
