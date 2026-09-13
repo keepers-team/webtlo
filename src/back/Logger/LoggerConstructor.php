@@ -43,11 +43,7 @@ final class LoggerConstructor
     private static int $logMaxSize  = 2097152;
     private static int $logMaxCount = 5;
 
-    public static function create(
-        ?LogFile $logFile = null,
-        Level $level = Level::Info,
-        bool $logToTab = false,
-    ): LoggerInterface
+    public static function create(?LogFile $logFile = null, Level $level = Level::Info, bool $logToTab = false): LoggerInterface
     {
         $appLogFile = LogFile::Main;
 
