@@ -202,7 +202,7 @@ final class ClientApplyAction
                     continue;
                 }
 
-                $clientHash = $clientTorrents?->getTorrent(hash: $topicHash)?->clientHash ?? '';
+                $clientHash = $clientTorrents?->getTorrent(hash: $topicHash)->clientHash ?? '';
                 if ($clientHash === '') {
                     unset($groupBySubForum[$subForumId][$topicHash]);
                     ++$unresolvedCount;
