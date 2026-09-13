@@ -192,7 +192,7 @@ final class ClientAddUnregisteredTopics
                 ++$skipped;
             }
 
-            if ($subForum === null) {
+            if ($clientId === (int) $row['client_id']) {
                 $planned[$key]['old_hashes'][] = $row['old_hash'];
             }
         }
@@ -230,9 +230,7 @@ final class ClientAddUnregisteredTopics
             $oldHashes = [];
 
             foreach ($clientTopics as $item) {
-                if ($item['sub_forum'] === null) {
-                    array_push($oldHashes, ...$item['old_hashes']);
-                }
+                array_push($oldHashes, ...$item['old_hashes']);
             }
 
             $savePaths = $oldHashes !== [] && $client instanceof SavePathLookupInterface
@@ -243,30 +241,33 @@ final class ClientAddUnregisteredTopics
             foreach ($clientTopics as $item) {
                 $topic    = $item['topic'];
                 $subForum = $item['sub_forum'];
-                if ($subForum !== null) {
-                    $savePath = self::makeTopicContentPath($topic, $subForum);
-                    $label    = $subForum->label;
-                } else {
-                    $paths = [];
-                    foreach ($item['old_hashes'] as $oldHash) {
-                        $path = $savePaths[strtoupper($oldHash)] ?? null;
-                        if ($path !== null) {
-                            $paths[$path] = true;
-                        }
+                $paths    = [];
+                foreach ($item['old_hashes'] as $oldHash) {
+                    $path = $savePaths[strtoupper($oldHash)] ?? null;
+                    if ($path !== null) {
+                        $paths[$path] = true;
                     }
+                }
 
-                    if (count($paths) !== 1) {
-                        $this->logger->warning('Не удалось однозначно определить каталог предыдущей версии', [
+                if (count($paths) === 1) {
+                    $savePath = (string) array_key_first($paths);
+                } elseif ($subForum !== null) {
+                    if (count($paths) > 1) {
+                        $this->logger->warning('У предыдущих версий раздачи разные каталоги', [
                             'topic_id' => $topic->id, 'client_id' => $clientId,
                         ]);
-                        ++$skipped;
-
-                        continue;
                     }
 
-                    $savePath = (string) array_key_first($paths);
-                    $label    = '';
+                    $savePath = self::makeTopicContentPath($topic, $subForum);
+                } else {
+                    $this->logger->warning('Не удалось однозначно определить каталог предыдущей версии', [
+                        'topic_id' => $topic->id, 'client_id' => $clientId,
+                    ]);
+                    ++$skipped;
+
+                    continue;
                 }
+                $label = $subForum?->label ?? '';
 
                 $stream = $this->forumClient->downloadTorrent(
                     infoHash    : $topic->hash,
