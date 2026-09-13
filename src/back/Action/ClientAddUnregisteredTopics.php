@@ -124,6 +124,7 @@ final class ClientAddUnregisteredTopics
             static fn(array $row): int => (int) $row['topic_id'],
             $unresolved,
         )));
+
         try {
             $response = $this->apiConstructor->createRequestClient()->getTopicsDetails(
                 topics           : $topicIds,
