@@ -62,17 +62,20 @@ final class SendKeeperReports
         }
 
         // Инициализация переменных для создания отчётов.
-        Timers::start('create_report');
         $this->createReport->initConfig();
-        $this->logger->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
         // Проверим факт полного обновления сведений.
         if ($this->checkFullUpdateTime() === false) {
             return false;
         }
 
-        // Отправляем отчёты по каждому хранимому подразделу.
-        $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+        if ($this->configReport->sendMethod->bySubsections()) {
+            // Отправляем отчёты по каждому хранимому подразделу.
+            $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+        } else {
+            // Или просто кидаем все хранимые хеши.
+            $this->sendHashesReports(reportRewrite: $reportRewrite);
+        }
 
         // Отправляем сводный отчёт + телеметрию.
         $this->sendSummaryReport();
@@ -136,7 +139,7 @@ final class SendKeeperReports
 
         $Timers = [];
 
-        $forumCount = $creator->getForumCount();
+        $forumCount = count($creator->getReportedForums());
 
         // Ограничения доступа для кандидатов в хранители.
         $user = $this->sendReport->getKeeperPermissions();
@@ -262,5 +265,51 @@ final class SendKeeperReports
         } catch (Throwable $e) {
             $this->logger->warning($e->getMessage());
         }
+    }
+
+    /**
+     * Отправка отчётов в виде списка хранимых хешей в API отчётов.
+     *
+     * @param bool $reportRewrite признак отправки "чистых" отчётов
+     */
+    private function sendHashesReports(bool $reportRewrite): void
+    {
+        $creator = $this->createReport;
+        $report  = $this->sendReport;
+
+        // Статусы, которые нужно присвоить раздачам и подразделам.
+        $statusRules = $this->configReport->getStatusRules();
+
+        // Режем хранимые раздачи на куски по 50к штук и отправляем.
+        $hashesChunks = array_chunk($creator->findKeptTopics(), 50_000);
+        $chunkCount   = count($hashesChunks);
+
+        foreach ($hashesChunks as $i => $chunk) {
+            Timers::start("send_api_chunks_$i");
+
+            $apiResult = $report->sendReportHashes(
+                topicsToReport: $chunk,
+                reportDate    : $this->fullUpdateTime,
+                statusRules   : $statusRules,
+                reportRewrite : $reportRewrite,
+            );
+
+            $this->logger->debug(
+                'API. Отчёт отправлен [{current}/{total}] {sec}',
+                [
+                    'current' => ++$i,
+                    'total'   => $chunkCount,
+                    'sec'     => Timers::getExecTime("send_api_chunks_$i"),
+                    ...$apiResult,
+                ]
+            );
+        }
+
+        // Вызываем пересчёт отметок хранимых подразделов.
+        $resultStatusAuto = $report->setForumsStatusAuto();
+        $this->logger->debug('setStatusAuto', $resultStatusAuto);
+
+        // Запишем время отправки отчётов.
+        $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
     }
 }
