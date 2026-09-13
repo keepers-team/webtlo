@@ -18,4 +18,9 @@ enum SendReportMethod: int
      * Просто отправка всех известных хранимых хешей раздач.
      */
     case Hash = 2;
+
+    public function bySubsections(): bool
+    {
+        return $this === self::Subsection;
+    }
 }

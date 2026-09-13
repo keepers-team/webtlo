@@ -22,62 +22,74 @@ trait TopicIdSearch
      * Пробуем найти раздачи в локальной таблице раздач хранимых подразделов.
      *
      * @param array<string, mixed> $torrents
+     *
+     * @return bool true - если нет раздач без id
      */
-    protected function tryFillTopicIdFromTopics(array &$torrents): void
+    protected function tryFillTopicIdFromTopics(array &$torrents): bool
     {
         Timers::start('db_topics_search');
 
         $emptyHashed = self::getEmptyTopicsHashes(torrents: $torrents);
-        if (count($emptyHashed)) {
-            $this->logger->debug('Start search torrents in Topics table', ['empty' => count($emptyHashed)]);
+        if (!count($emptyHashed)) {
+            return true;
+        }
 
-            $topics = $this->tableTopics->getTopicsIdsByHashes(hashes: $emptyHashed);
+        $this->logger->debug('Start search torrents in Topics table', ['empty' => count($emptyHashed)]);
 
-            // Дописываем topic_id в данные раздачи.
-            if (count($topics)) {
-                foreach ($topics as $hash => $topic) {
-                    if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
-                        $torrents[$hash] = array_merge($torrents[$hash], $topic);
-                    } else {
-                        $torrents[$hash] = $topic;
-                    }
+        $topics = $this->tableTopics->getTopicsIdsByHashes(hashes: $emptyHashed);
+
+        // Дописываем topic_id в данные раздачи.
+        if (count($topics)) {
+            foreach ($topics as $hash => $topic) {
+                if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
+                    $torrents[$hash] = array_merge($torrents[$hash], $topic);
+                } else {
+                    $torrents[$hash] = $topic;
                 }
             }
-
-            Timers::stash('db_topics_search');
-            $this->logger->debug('End search torrents in Topics table', ['filled' => count($topics)]);
         }
+
+        Timers::stash('db_topics_search');
+        $this->logger->debug('End search torrents in Topics table', ['filled' => count($topics)]);
+
+        return false;
     }
 
     /**
      * Пробуем найти раздачи в локальной таблице раздач в клиентах.
      *
      * @param array<string, mixed> $torrents
+     *
+     * @return bool true - если нет раздач без id
      */
-    protected function tryFillTopicIdFromTorrents(array &$torrents): void
+    protected function tryFillTopicIdFromTorrents(array &$torrents): bool
     {
         Timers::start('db_torrents_search');
 
         $emptyHashed = self::getEmptyTopicsHashes(torrents: $torrents);
-        if (count($emptyHashed)) {
-            $this->logger->debug('Start search torrents in Torrents table', ['empty' => count($emptyHashed)]);
+        if (!count($emptyHashed)) {
+            return true;
+        }
 
-            $topics = $this->tableTorrents->getTopicsIdsByHashes(hashes: $emptyHashed);
+        $this->logger->debug('Start search torrents in Torrents table', ['empty' => count($emptyHashed)]);
 
-            // Дописываем topic_id в данные раздачи.
-            if (count($topics)) {
-                foreach ($topics as $hash => $topic) {
-                    if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
-                        $torrents[$hash] = array_merge($torrents[$hash], $topic);
-                    } else {
-                        $torrents[$hash] = $topic;
-                    }
+        $topics = $this->tableTorrents->getTopicsIdsByHashes(hashes: $emptyHashed);
+
+        // Дописываем topic_id в данные раздачи.
+        if (count($topics)) {
+            foreach ($topics as $hash => $topic) {
+                if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
+                    $torrents[$hash] = array_merge($torrents[$hash], $topic);
+                } else {
+                    $torrents[$hash] = $topic;
                 }
             }
-
-            Timers::stash('db_torrents_search');
-            $this->logger->debug('End search torrents in Torrents table', ['filled' => count($topics)]);
         }
+
+        Timers::stash('db_torrents_search');
+        $this->logger->debug('End search torrents in Torrents table', ['filled' => count($topics)]);
+
+        return false;
     }
 
     /**

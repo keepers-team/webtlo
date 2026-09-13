@@ -43,7 +43,7 @@ final class TopicDownload
             $forRegularUser ? 'пользовательские' : 'хранительские'
         );
         if ($replacePasskey) {
-            $log_string .= !empty($passkeyValue) ? "Замена Passkey: [$passkeyValue]" : 'Passkey пуст.';
+            $log_string .= !empty($passkeyValue) ? 'Замена Passkey включена.' : 'Passkey пуст.';
         }
 
         $this->logger->info($log_string);

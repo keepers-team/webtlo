@@ -950,12 +950,12 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                                     </div>
                                 </div>
                                 <label class="label" style="margin-left:30px;"
-                                       title="При использовании более одного инстанса, укажите разные порядковые номера в каждом из них. &#10;От 0 до 7 (по умолчанию: 0).">
+                                       title="При использовании более одной копии WebTLO, укажите разные порядковые номера в каждом из них. &#10;От 0 до 7 (по умолчанию: 0).">
                                     <input name="send_report_reporter_id" class="control-reporter-spinner" type="text"
                                            size="1"
                                            value="<?= $cs('reportSend', 'reporterId'); ?>"
                                     />
-                                    порядковый номер инстанса
+                                    порядковый номер клиента (копии WebTLO для отчётов)
                                 </label>
 
                                 <hr>

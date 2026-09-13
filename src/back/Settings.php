@@ -430,7 +430,7 @@ final class Settings
         $ini->write('reports', 'send_report_api', (int) isset($cfg['send_report_api']));
         // Метод отправки отчётов.
         $ini->write('reports', 'send_report_method', (int) ($cfg['send_report_method'] ?? 1));
-        // Порядковый номер инстанса.
+        // порядковый номер клиента.
         $ini->write('reports', 'send_report_reporter_id', (int) ($cfg['send_report_reporter_id'] ?? 0));
         // Отправлять краткую информацию о настройках WebTLO вместе со сводным отчётом.
         $ini->write('reports', 'send_report_settings', (int) isset($cfg['send_report_settings']));

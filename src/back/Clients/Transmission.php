@@ -423,7 +423,7 @@ final class Transmission implements ClientInterface
 
                 // Записываем токен авторизации в заголовки.
                 $headers[$tokenName] = $sid;
-                $logger->debug('Got transmission auth token', [$sid]);
+                $logger->debug('Got transmission auth token');
             }
         };
     }

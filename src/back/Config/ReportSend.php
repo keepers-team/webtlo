@@ -14,7 +14,7 @@ final class ReportSend
     /**
      * @param bool      $sendReports         отправлять ли отчёт в целом
      * @param Method    $sendMethod          метод отправки отчётов (подразделы|хеши)
-     * @param int<0, 7> $reporterId          порядковый номер инстанса
+     * @param int<0, 7> $reporterId          порядковый номер клиента
      * @param bool      $sendTelemetry       отправлять дополнительные сведения об установке программы и настройках
      * @param bool      $excludeAuthored     исключить ли свои раздачи из отчёта
      * @param bool      $unsetOtherTopics    при отправке отчёта по подразделу, снимать признак хранения с раздач, которых больше нет в БД (в т.ч. разрегистрированные и обновлённые раздачи)

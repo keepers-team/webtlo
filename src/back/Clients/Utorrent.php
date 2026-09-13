@@ -363,8 +363,8 @@ final class Utorrent implements ClientInterface
 
         if (!$simpleRun) {
             // Попытка найти ид раздачи в локальных таблицах.
-            $this->tryFillTopicIdFromTopics(torrents: $torrents);
-            $this->tryFillTopicIdFromTorrents(torrents: $torrents);
+            $this->tryFillTopicIdFromTopics(torrents: $torrents)
+            || $this->tryFillTopicIdFromTorrents(torrents: $torrents);
         }
 
         foreach ($torrents as $hash => $torrent) {

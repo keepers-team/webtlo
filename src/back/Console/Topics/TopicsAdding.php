@@ -26,7 +26,7 @@ final class TopicsAdding
 
     public function run(ConsoleInput $input): void
     {
-        $listingId  = (int) $input->argument(name: 'listingId');
+        $listingId  = $input->integerArgument(name: 'listingId');
         $filterName = $input->argument(name: 'filterName');
 
         $this->logger->info(
