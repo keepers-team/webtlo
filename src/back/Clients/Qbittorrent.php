@@ -126,6 +126,7 @@ final class Qbittorrent implements ClientInterface
                 forced      : (bool) $payload['forced'],
                 trackerError: $payload['tracker_error'] ?: null,
                 comment     : $payload['comment'] ?: null,
+                label       : $payload['category'] ?? null,
                 storagePath : $payload['storagePath'] ?? null
             );
         }
@@ -588,6 +589,7 @@ final class Qbittorrent implements ClientInterface
                 'total_size'    => $torrent['total_size'],
                 'client_hash'   => $clientHash,
                 'storagePath'   => $torrent['save_path'],
+                'category'      => $torrent['category'],
                 'tracker_error' => $trackerError,
             ];
 

@@ -98,7 +98,8 @@ final class Utorrent implements ClientInterface
                 error       : (bool) $payload['error'],
                 trackerError: $payload['tracker_error'] ?: null,
                 comment     : $payload['comment'] ?: null,
-                storagePath : null
+                label       : $payload['label'] ?: null,
+                storagePath : null,
             );
         }
 
@@ -406,6 +407,7 @@ final class Utorrent implements ClientInterface
                 'done'          => (int) $torrent[4] / 1000,
                 'error'         => (bool) $torrentState[3],
                 'name'          => $torrentName,
+                'label'         => $torrent[11],
                 'paused'        => $torrentPaused,
                 'time_added'    => null,
                 'total_size'    => (int) $torrent[3],
