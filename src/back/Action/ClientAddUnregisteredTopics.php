@@ -267,7 +267,7 @@ final class ClientAddUnregisteredTopics
 
                     continue;
                 }
-                $label = $subForum?->label ?? '';
+                $label = $subForum->label ?? '';
 
                 $stream = $this->forumClient->downloadTorrent(
                     infoHash    : $topic->hash,
