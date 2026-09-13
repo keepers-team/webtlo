@@ -66,6 +66,7 @@ final class ClientAddUnregisteredTopics
         $knownHashes = [];
         $unresolved  = [];
         $skipped     = 0;
+
         foreach ($items as $key => $item) {
             $row = $found[$key] ?? null;
             if ($row === null || (int) $row['topic_id'] <= 0) {
@@ -95,6 +96,7 @@ final class ClientAddUnregisteredTopics
         }
 
         $addedMissing = 0;
+
         if ($unresolved !== []) {
             $addedMissing = $this->addMissingTopics($unresolved, $skipped);
         }
@@ -146,12 +148,14 @@ final class ClientAddUnregisteredTopics
         }
 
         $actualById = [];
+
         foreach ($response->actualTopics as $topic) {
             $actualById[$topic->id] = $topic;
         }
 
         /** @var array<string, array{topic: TopicDetails, client_id: int, sub_forum: ?SubForum, old_hashes: string[]}> $planned */
         $planned = [];
+
         foreach ($unresolved as $row) {
             $topic = $actualById[(int) $row['topic_id']] ?? null;
             if ($topic === null || !$topic->status->isValid() || $topic->hash === $row['old_hash']) {
@@ -198,6 +202,7 @@ final class ClientAddUnregisteredTopics
         ));
 
         $byClient = [];
+
         foreach ($planned as $key => $item) {
             if (isset($existing[$key])) {
                 $this->logger->info('Актуальная версия уже есть в торрент-клиенте', [
@@ -212,6 +217,7 @@ final class ClientAddUnregisteredTopics
         }
 
         $added = 0;
+
         foreach ($byClient as $clientId => $clientTopics) {
             $client = $this->clientFactory->getClientById((int) $clientId);
             if ($client === null) {
@@ -221,6 +227,7 @@ final class ClientAddUnregisteredTopics
             }
 
             $oldHashes = [];
+
             foreach ($clientTopics as $item) {
                 if ($item['sub_forum'] === null) {
                     array_push($oldHashes, ...$item['old_hashes']);
@@ -231,6 +238,7 @@ final class ClientAddUnregisteredTopics
                 ? $client->getTorrentSavePaths(array_values(array_unique($oldHashes)))
                 : [];
             $labels = [];
+
             foreach ($clientTopics as $item) {
                 $topic    = $item['topic'];
                 $subForum = $item['sub_forum'];
