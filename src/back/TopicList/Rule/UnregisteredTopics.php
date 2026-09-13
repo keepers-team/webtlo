@@ -85,7 +85,7 @@ final class UnregisteredTopics implements ListInterface
                 $details['updated_hash'] = $topicData['updated_hash'];
             }
             if ($currentAdded) {
-                $details['current_added'] = true;
+                $details['current_added']   = true;
                 $details['original_status'] = $topicStatus;
             }
 
