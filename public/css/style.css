@@ -785,6 +785,21 @@ td.statistic-forum-id {
     padding: 5px;
 }
 
+.worker-pool-status {
+    display: none;
+    margin-right: 14px;
+    font-style: normal;
+    color: #555;
+}
+
+.worker-pool-status.is-busy {
+    color: #a05a00;
+}
+
+.worker-pool-status.has-queue {
+    color: #b00020;
+}
+
 ul.about-installation
 {
     list-style: disc;
