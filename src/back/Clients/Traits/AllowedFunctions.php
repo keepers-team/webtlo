@@ -21,4 +21,9 @@ trait AllowedFunctions
     {
         return $this->categoryAddingAllowed;
     }
+
+    public function getPostAddLabelDelay(int $torrentCount): ?int
+    {
+        return (int) round($torrentCount / 20) + 1;
+    }
 }
