@@ -104,10 +104,7 @@ final class Qbittorrent implements ClientInterface
 
     public function getTorrents(array $filter = []): Torrents
     {
-        /** Получить просто список раздач без дополнительных действий */
-        $simpleRun = (bool) ($filter['simple'] ?? 0);
-
-        $generator = $this->generateTorrentsList(simpleRun: $simpleRun);
+        $generator = $this->generateTorrentsList(filter: $filter);
 
         $torrents = [];
         foreach ($generator as $hash => $payload) {
@@ -513,11 +510,21 @@ final class Qbittorrent implements ClientInterface
         return false;
     }
 
-    private function generateTorrentsList(bool $simpleRun): Generator
+    /**
+     * @param array<string, mixed> $filter
+     */
+    private function generateTorrentsList(array $filter): Generator
     {
+        /** Получить просто список раздач без дополнительных действий */
+        $simpleRun = false;
+        if (isset($filter['simple'])) {
+            $simpleRun = (bool) $filter['simple'];
+            unset($filter['simple']);
+        }
+
         // Получаем и обрабатываем список раздач от клиента.
         $torrents = $this->processTorrents(
-            clientTorrents: $this->requestTorrents(),
+            clientTorrents: $this->requestTorrents(filter: $filter),
             callback      : $simpleRun ? null : fn(string $clientHash) => $this->checkTorrentTrackers($clientHash)
         );
 
@@ -534,10 +541,13 @@ final class Qbittorrent implements ClientInterface
         }
     }
 
-    private function requestTorrents(): Generator
+    /**
+     * @param array<string, mixed> $filter
+     */
+    private function requestTorrents(array $filter): Generator
     {
         Timers::start('torrents_info');
-        $response = $this->makeRequest(url: 'torrents/info');
+        $response = $this->makeRequest(url: 'torrents/info', params: $filter);
         Timers::stash('torrents_info');
 
         foreach ($response as $torrent) {
