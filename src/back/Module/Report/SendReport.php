@@ -10,9 +10,6 @@ use KeepersTeam\Webtlo\Data\KeeperPermissions;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\WebTLO;
 
-/**
- * @phpstan-import-type TopicShort from CreateReport
- */
 final class SendReport
 {
     private bool $enabled = true;
@@ -109,54 +106,30 @@ final class SendReport
     }
 
     /**
-     * @param TopicShort[] $topicsToReport
+     * @param string[] $hashes
      *
      * @return array<string, mixed>
      */
     public function sendReportHashes(
-        array             $topicsToReport,
+        array             $hashes,
         DateTimeInterface $reportDate,
-        ReportStatus      $statusRules,
+        int               $status,
         bool              $reportRewrite = false,
     ): array {
         $result = [
-            'topics' => count($topicsToReport),
+            'topics' => count($hashes),
         ];
 
-        // Разделяем раздачи на скачанные и качаемые.
-        $downloadedTopics = $downloadingTopics = [];
-        foreach ($topicsToReport as $topic) {
-            if ($topic['done'] < 1.0) {
-                $downloadingTopics[] = $topic['hash'];
-            } else {
-                $downloadedTopics[] = $topic['hash'];
-            }
-        }
-        unset($topicsToReport);
-
         // Отправляем отчёт о скачанных раздачах.
-        $completeReport = $this->apiReport->reportKeptReleasesHashes(
-            topicHashes : $downloadedTopics,
-            status      : $statusRules->keptTopics,
+        $report = $this->apiReport->reportKeptReleasesHashes(
+            topicHashes : $hashes,
+            status      : $status,
             reportDate  : $reportDate,
             excludeOther: $reportRewrite
         );
-        if ($completeReport !== null) {
-            $result['statusComplete'] = $statusRules->keptTopics;
-            $result['reportComplete'] = $completeReport;
-        }
-
-        // Отправляем отчёт о качаемых раздачах.
-        if (count($downloadingTopics)) {
-            $downloadingReport = $this->apiReport->reportKeptReleasesHashes(
-                $downloadingTopics,
-                $statusRules->downloadingTopics,
-                $reportDate,
-            );
-            if ($downloadingReport !== null) {
-                $result['statusComplete']    = $statusRules->downloadingTopics;
-                $result['reportDownloading'] = $downloadingReport;
-            }
+        if ($report !== null) {
+            $result['status'] = $status;
+            $result['result'] = $report;
         }
 
         return $result;
