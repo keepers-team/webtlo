@@ -13,7 +13,7 @@ final class MigrationRunner
     /**
      * Актуальная версия БД.
      */
-    public const DATABASE_VERSION = 15;
+    public const DATABASE_VERSION = 16;
 
     public function __construct(
         private readonly LoggerInterface $logger,
