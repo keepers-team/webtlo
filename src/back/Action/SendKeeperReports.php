@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use DateTimeImmutable;
+use Generator;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\Report\CreateReport;
@@ -280,25 +281,61 @@ final class SendKeeperReports
         // Статусы, которые нужно присвоить раздачам и подразделам.
         $statusRules = $this->configReport->getStatusRules();
 
-        // Режем хранимые раздачи на куски по 50к штук и отправляем.
-        $hashesChunks = array_chunk($creator->findKeptTopics(), 50_000);
-        $chunkCount   = count($hashesChunks);
+        $topics = $creator->findKeptTopics();
 
-        foreach ($hashesChunks as $i => $chunk) {
+        /**
+         * @return Generator<non-negative-int, string[]>
+         */
+        $generator = static function() use ($topics, $statusRules): Generator {
+            // Разделяем раздачи на скачанные и качаемые.
+            $completeTopics = $downloadingTopics = [];
+            foreach ($topics as $topic) {
+                if ($topic['done'] < 1.0) {
+                    $downloadingTopics[] = $topic['hash'];
+                } else {
+                    $completeTopics[] = $topic['hash'];
+                }
+
+                if (count($completeTopics) >= 50_000) {
+                    yield $statusRules->keptTopics => $completeTopics;
+
+                    // Очищаем буфер.
+                    $completeTopics = [];
+                }
+
+                if (count($downloadingTopics) >= 50_000) {
+                    yield $statusRules->downloadingTopics => $downloadingTopics;
+
+                    // Очищаем буфер.
+                    $downloadingTopics = [];
+                }
+            }
+
+            // Если есть остатки, то их тоже возвращаем.
+            if ($completeTopics !== []) {
+                yield $statusRules->keptTopics => $completeTopics;
+            }
+
+            if ($downloadingTopics !== []) {
+                yield $statusRules->downloadingTopics => $downloadingTopics;
+            }
+        };
+
+        $i = 0;
+        foreach ($generator() as $status => $hashes) {
             Timers::start("send_api_chunks_$i");
 
             $apiResult = $report->sendReportHashes(
-                topicsToReport: $chunk,
-                reportDate    : $this->fullUpdateTime,
-                statusRules   : $statusRules,
-                reportRewrite : $reportRewrite,
+                hashes       : $hashes,
+                reportDate   : $this->fullUpdateTime,
+                status       : $status,
+                reportRewrite: $reportRewrite,
             );
 
             $this->logger->debug(
-                'API. Отчёт отправлен [{current}/{total}] {sec}',
+                'API. Отчёт отправлен [{current}] {sec}',
                 [
                     'current' => ++$i,
-                    'total'   => $chunkCount,
                     'sec'     => Timers::getExecTime("send_api_chunks_$i"),
                     ...$apiResult,
                 ]
