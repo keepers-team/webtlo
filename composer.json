@@ -53,6 +53,10 @@
     "scripts": {
         "cs:check": "@php vendor/bin/php-cs-fixer fix --dry-run --verbose",
         "cs:fix": "@php vendor/bin/php-cs-fixer fix",
-        "phpstan": "@php vendor/bin/phpstan analyse -vv --memory-limit=512M"
+        "phpstan": "@php vendor/bin/phpstan analyse -vv --memory-limit=512M",
+        "check" : [
+            "@cs:fix",
+            "@phpstan"
+        ]
     }
 }
