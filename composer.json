@@ -19,6 +19,11 @@
             "KeepersTeam\\Webtlo\\": "src/back/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "KeepersTeam\\Webtlo\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^8.1.5",
         "ext-curl": "*",
@@ -47,12 +52,19 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpunit/phpunit": "^10.5",
         "symfony/polyfill-iconv": "^1.30",
         "symfony/var-dumper": "^6.4"
     },
     "scripts": {
         "cs:check": "@php vendor/bin/php-cs-fixer fix --dry-run --verbose",
         "cs:fix": "@php vendor/bin/php-cs-fixer fix",
-        "phpstan": "@php vendor/bin/phpstan analyse -vv --memory-limit=512M"
+        "phpstan": "@php vendor/bin/phpstan analyse -vv --memory-limit=512M",
+        "phpunit": "@php vendor/bin/phpunit",
+        "test": [
+            "@cs:fix",
+            "@phpstan",
+            "@phpunit"
+        ]
     }
 }

@@ -4,6 +4,7 @@ parameters:
   paths:
     - src/
     - public/
+    - tests/
   excludePaths:
     analyse:
       - public/php/debug (?)

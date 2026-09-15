@@ -88,7 +88,10 @@ FROM base AS dev
 
 COPY /docker/debug /etc/php82/conf.d
 
-RUN apk add --update --no-cache git php82-phar php82-pecl-xdebug php82-tokenizer
+RUN apk add --update --no-cache \
+    git \
+    php82-phar php82-pecl-xdebug \
+    php82-tokenizer php82-xmlwriter
 RUN git config --global --add safe.directory "*"
 # Copy composer for dev
 COPY --from=builder /usr/bin/composer /usr/bin/composer
