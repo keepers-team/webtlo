@@ -54,6 +54,9 @@ jobs:
       - name: Run PHPStan
         run: composer phpstan
 
+      - name: Run PHPUnit
+        run: composer phpunit
+
       - name: Save tools cache
         uses: actions/cache/save@v6
         if: ${{ !cancelled() && steps.cache-tools.outputs.cache-hit != 'true' }}
