@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use DateTimeImmutable;
+use Generator;
 use KeepersTeam\Webtlo\Config\ReportSend as ConfigReport;
 use KeepersTeam\Webtlo\Enum\UpdateMark;
 use KeepersTeam\Webtlo\Module\Report\CreateReport;
@@ -62,17 +63,20 @@ final class SendKeeperReports
         }
 
         // Инициализация переменных для создания отчётов.
-        Timers::start('create_report');
         $this->createReport->initConfig();
-        $this->logger->debug('create report {sec}', ['sec' => Timers::getExecTime('create_report')]);
 
         // Проверим факт полного обновления сведений.
         if ($this->checkFullUpdateTime() === false) {
             return false;
         }
 
-        // Отправляем отчёты по каждому хранимому подразделу.
-        $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+        if ($this->configReport->sendMethod->bySubsections()) {
+            // Отправляем отчёты по каждому хранимому подразделу.
+            $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+        } else {
+            // Или просто кидаем все хранимые хеши.
+            $this->sendHashesReports(reportRewrite: $reportRewrite);
+        }
 
         // Отправляем сводный отчёт + телеметрию.
         $this->sendSummaryReport();
@@ -136,10 +140,13 @@ final class SendKeeperReports
 
         $Timers = [];
 
-        $forumCount = $creator->getForumCount();
+        $forumCount = count($creator->getReportedForums());
 
         // Ограничения доступа для кандидатов в хранители.
         $user = $this->sendReport->getKeeperPermissions();
+
+        // Статусы, которые нужно присвоить раздачам и подразделам.
+        $statusRules = $this->configReport->getStatusRules();
 
         $apiReportCount = 0;
         $forumsToReport = [];
@@ -174,6 +181,7 @@ final class SendKeeperReports
                     forumId       : $forumId,
                     topicsToReport: $topicsToReport,
                     reportDate    : $this->fullUpdateTime,
+                    statusRules   : $statusRules,
                     reportRewrite : $reportRewrite,
                 );
 
@@ -222,6 +230,7 @@ final class SendKeeperReports
             // Отправляем статус хранения подразделов и отмечаем прочие как не хранимые, если включено.
             $setStatus = $report->setForumsStatus(
                 forumIds        : array_unique($forumsToReport),
+                statusRules     : $statusRules,
                 unsetOtherForums: $this->configReport->unsetOtherSubForums
             );
             $this->logger->debug('kept forums setStatus', $setStatus);
@@ -257,5 +266,87 @@ final class SendKeeperReports
         } catch (Throwable $e) {
             $this->logger->warning($e->getMessage());
         }
+    }
+
+    /**
+     * Отправка отчётов в виде списка хранимых хешей в API отчётов.
+     *
+     * @param bool $reportRewrite признак отправки "чистых" отчётов
+     */
+    private function sendHashesReports(bool $reportRewrite): void
+    {
+        $creator = $this->createReport;
+        $report  = $this->sendReport;
+
+        // Статусы, которые нужно присвоить раздачам и подразделам.
+        $statusRules = $this->configReport->getStatusRules();
+
+        $topics = $creator->findKeptTopics();
+
+        /**
+         * @return Generator<non-negative-int, string[]>
+         */
+        $generator = static function() use ($topics, $statusRules): Generator {
+            // Разделяем раздачи на скачанные и качаемые.
+            $completeTopics = $downloadingTopics = [];
+            foreach ($topics as $topic) {
+                if ($topic['done'] < 1.0) {
+                    $downloadingTopics[] = $topic['hash'];
+                } else {
+                    $completeTopics[] = $topic['hash'];
+                }
+
+                if (count($completeTopics) >= 50_000) {
+                    yield $statusRules->keptTopics => $completeTopics;
+
+                    // Очищаем буфер.
+                    $completeTopics = [];
+                }
+
+                if (count($downloadingTopics) >= 50_000) {
+                    yield $statusRules->downloadingTopics => $downloadingTopics;
+
+                    // Очищаем буфер.
+                    $downloadingTopics = [];
+                }
+            }
+
+            // Если есть остатки, то их тоже возвращаем.
+            if ($completeTopics !== []) {
+                yield $statusRules->keptTopics => $completeTopics;
+            }
+
+            if ($downloadingTopics !== []) {
+                yield $statusRules->downloadingTopics => $downloadingTopics;
+            }
+        };
+
+        $i = 0;
+        foreach ($generator() as $status => $hashes) {
+            Timers::start("send_api_chunks_$i");
+
+            $apiResult = $report->sendReportHashes(
+                hashes       : $hashes,
+                reportDate   : $this->fullUpdateTime,
+                status       : $status,
+                reportRewrite: $reportRewrite,
+            );
+
+            $this->logger->debug(
+                'API. Отчёт отправлен [{current}] {sec}',
+                [
+                    'current' => ++$i,
+                    'sec'     => Timers::getExecTime("send_api_chunks_$i"),
+                    ...$apiResult,
+                ]
+            );
+        }
+
+        // Вызываем пересчёт отметок хранимых подразделов.
+        $resultStatusAuto = $report->setForumsStatusAuto();
+        $this->logger->debug('setStatusAuto', $resultStatusAuto);
+
+        // Запишем время отправки отчётов.
+        $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
     }
 }
