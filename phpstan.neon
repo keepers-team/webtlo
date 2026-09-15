@@ -2,8 +2,9 @@ parameters:
   level: 8
   tmpDir: .cache/phpstan
   paths:
-    - src/
     - public/
+    - src/
+    - tests/
   excludePaths:
     analyse:
       - public/php/debug (?)

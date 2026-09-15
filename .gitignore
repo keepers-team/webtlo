@@ -7,7 +7,6 @@
 /.Trash*
 /data
 /webtlo-data*
-/test*
 .cache
 *.db
 *.sqlite
