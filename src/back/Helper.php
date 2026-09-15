@@ -206,7 +206,7 @@ final class Helper
 
         $values = explode($separator, trim((string) $string));
 
-        return array_map('intval', array_filter($values));
+        return array_map('intval', array_values(array_filter($values)));
     }
 
     /**
