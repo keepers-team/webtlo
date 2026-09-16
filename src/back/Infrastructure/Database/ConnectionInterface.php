@@ -14,6 +14,20 @@ use RuntimeException;
 interface ConnectionInterface
 {
     /**
+     * Закрыть соединение с БД.
+     *
+     * После вызова соединение считается неактивным до вызова reconnect().
+     */
+    public function close(): void;
+
+    /**
+     * (Пере)подключиться к БД.
+     *
+     * Используется после подмены файла БД из бекапа или пересоздания схемы.
+     */
+    public function reconnect(): void;
+
+    /**
      * Получить объект PDO соединения.
      */
     public function getPdo(): PDO;

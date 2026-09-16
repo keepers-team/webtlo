@@ -40,7 +40,7 @@ final class AppServiceProvider extends AbstractServiceProvider
             /** @var AverageSeeds $average */
             $average = $container->get(AverageSeeds::class);
 
-            return SQLiteAdapter::connect(logger: $logger, averageSeeds: $average);
+            return SQLiteAdapter::create(logger: $logger, averageSeeds: $average);
         });
 
         // Обработчик ini-файла с конфигом.

@@ -40,6 +40,30 @@ final class Backup
         self::clearBackups($backupPath, 'webtlo-*.db');
     }
 
+    /**
+     * Найти последний бекап БД для указанной версии.
+     *
+     * @param positive-int $version
+     *
+     * @return ?string путь к файлу бекапа или null, если не найден
+     */
+    public static function findDatabaseBackup(int $version): ?string
+    {
+        $backupPath = self::getPath();
+
+        $pattern = sprintf('webtlo-v%d-*.db', $version);
+        $files   = glob($backupPath . DIRECTORY_SEPARATOR . $pattern);
+
+        if (empty($files)) {
+            return null;
+        }
+
+        // Сортируем по времени изменения (сначала новые).
+        usort($files, static fn(string $a, string $b): int => filemtime($b) <=> filemtime($a));
+
+        return $files[0];
+    }
+
     private static function getPath(): string
     {
         $backupPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
