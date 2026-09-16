@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS Topics
     forum_id              INT,      -- Ид Подраздела
     name                  VARCHAR,  -- Название раздачи
     info_hash             VARCHAR,  -- Хеш раздачи
-    seeders               INT,      -- Симмарное количество сидов за сегодня
+    seeders               INT,      -- Суммарное количество сидов за сегодня
     size                  INT,      -- Размер раздачи (байт)
     status                INT,      -- Статус раздачи на форуме
     reg_time              INT,      -- Дата регистрации
