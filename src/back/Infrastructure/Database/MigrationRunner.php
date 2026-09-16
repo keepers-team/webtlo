@@ -12,49 +12,133 @@ final class MigrationRunner
 {
     /**
      * Актуальная версия БД.
+     *
+     * Должна совпадать с init.sql и последним файлом миграции.
      */
     public const DATABASE_VERSION = 15;
 
+    /**
+     * @param positive-int $targetVersion
+     */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly int             $targetVersion,
-        private readonly string          $databasePath,
         private readonly string          $filesPath,
     ) {}
 
     /**
-     * Проверить текущую версию БД и, при необходимости, выполнить инициализацию/миграцию.
+     * Применить план миграции.
+     * Явно управляет жизненным циклом соединения
+     * там, где это требуется (откат версии).
      */
-    public function migrate(ConnectionInterface $con): void
+    public function applyMigrationPlan(SQLiteAdapter $db): void
     {
-        // Определим текущую версию БД.
+        $plan = $this->plan(con: $db);
+
+        switch ($plan->action) {
+            case MigrationAction::UpToDate:
+                // Актуально, ничего не делаем.
+                break;
+            case MigrationAction::Initialize:
+                // Создаём схему с нуля.
+                $this->initSchema(con: $db);
+
+                break;
+            case MigrationAction::MigrateUp:
+                // Последовательное поднятие версии до текущей.
+                // Бекапим текущую версию.
+                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+
+                // Мигрируем.
+                $this->migrateUp(con: $db, startVersion: $plan->fromVersion);
+
+                break;
+            case MigrationAction::RestoreBackup:
+                // Найден бекап, пробуем откатить.
+                // Бекапим текущую версию.
+                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+
+                // Подменяем файл БД, для этого нужно закрыть соединение.
+                $db->close();
+                if ($plan->backupPath && !copy($plan->backupPath, $db->databasePath)) {
+                    throw new RuntimeException(
+                        sprintf(
+                            'Не удалось восстановить бекап из файла %s',
+                            $plan->backupPath
+                        )
+                    );
+                }
+
+                $db->reconnect();
+                $this->logger->info(
+                    'Восстановлен бекап базы данных, user_version {before} => {after}.',
+                    ['before' => $plan->fromVersion, 'after' => $plan->toVersion]
+                );
+
+                break;
+            case MigrationAction::RecreateSchema:
+                // Удалить и пересоздать схему.
+                // Бекапим текущую версию.
+                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+
+                // Удаляем файл и создаём схему с нуля.
+                $db->close();
+                if (file_exists($db->databasePath)) {
+                    unlink($db->databasePath);
+                }
+                $db->reconnect();
+
+                $this->initSchema(con: $db);
+                $this->logger->info(
+                    'Бекап базы данных не найден, создаём заново, user_version {before} => {after}.',
+                    ['before' => $plan->fromVersion, 'after' => $plan->toVersion]
+                );
+
+                break;
+        }
+    }
+
+    /**
+     * Построить план миграции. Не мутирует соединение.
+     */
+    private function plan(ConnectionInterface $con): MigrationPlan
+    {
         $current = (int) ($con->queryColumn('PRAGMA user_version') ?? 0);
 
-        // БД актуальна, делать ничего не нужно.
         if ($current === $this->targetVersion) {
-            return;
-        }
-
-        // Создание БД с нуля
-        if ($current === 0) {
-            $this->initSchema($con);
-
-            return;
-        }
-
-        // Странный случай, вероятно, откат версии ТЛО.
-        if ($current > $this->targetVersion) {
-            throw new RuntimeException(
-                sprintf(
-                    'Ваша версия БД (#%d), опережает указанную в настройках web-TLO. '
-                    . 'Вероятно, вы откатились на прошлую версию программы. '
-                    . 'Удалите файл БД и перезапустите программу.',
-                    $current
-                )
+            return new MigrationPlan(
+                action     : MigrationAction::UpToDate,
+                fromVersion: $current,
+                toVersion  : $this->targetVersion
             );
         }
 
-        $this->runIncrementalMigrations($con, $current);
+        if ($current === 0) {
+            return new MigrationPlan(
+                action     : MigrationAction::Initialize,
+                fromVersion: $current,
+                toVersion  : $this->targetVersion
+            );
+        }
+
+        if ($current > $this->targetVersion) {
+            $backupPath = Backup::findDatabaseBackup(version: $this->targetVersion);
+
+            return new MigrationPlan(
+                action     : $backupPath !== null
+                    ? MigrationAction::RestoreBackup
+                    : MigrationAction::RecreateSchema,
+                fromVersion: $current,
+                toVersion  : $this->targetVersion,
+                backupPath : $backupPath,
+            );
+        }
+
+        return new MigrationPlan(
+            action     : MigrationAction::MigrateUp,
+            fromVersion: $current,
+            toVersion  : $this->targetVersion
+        );
     }
 
     /**
@@ -71,7 +155,7 @@ final class MigrationRunner
             throw new RuntimeException('Не удалось загрузить файл инициализации таблиц БД.');
         }
 
-        $con->executeQuery($sql);
+        $con->executeQuery(sql: $sql);
     }
 
     /**
@@ -82,11 +166,8 @@ final class MigrationRunner
      *
      * @param int $startVersion версия БД до применения миграций (текущая)
      */
-    private function runIncrementalMigrations(ConnectionInterface $con, int $startVersion): void
+    private function migrateUp(ConnectionInterface $con, int $startVersion): void
     {
-        // Делаем бекап БД при изменении версии.
-        Backup::database($this->databasePath, $startVersion);
-
         $currentVersion = $startVersion;
 
         $migrationPath = $this->filesPath . '/migrations';
@@ -120,7 +201,7 @@ final class MigrationRunner
                 throw new RuntimeException(sprintf('Пустой файл миграции %s', $file));
             }
 
-            $con->executeQuery($migration);
+            $con->executeQuery(sql: $migration);
 
             $currentVersion = $version;
         }
