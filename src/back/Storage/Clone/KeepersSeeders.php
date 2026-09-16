@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\Storage\Clone;
 use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\External\Data\KeptTopic;
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use Psr\Log\LoggerInterface;
 
 /**
  * Временная таблица содержащая данные о хранителях и сидируемых ими раздачах, по данным API форума.
@@ -26,10 +25,7 @@ final class KeepersSeeders
     /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
-    public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly CloneTable      $clone,
-    ) {}
+    public function __construct(private readonly CloneTable $clone) {}
 
     /**
      * Записать хранителя, если он сидирует раздачу.
@@ -65,25 +61,20 @@ final class KeepersSeeders
         $this->keptTopics = [];
     }
 
-    /**
-     * Перенести данные о хранимых раздачах в основную таблицу БД.
-     */
-    public function moveToOrigin(): void
+    public function clearTempTable(): void
     {
-        $tab = $this->clone;
+        $this->clone->clearClone();
+        $this->keptTopics = [];
+    }
 
-        $keepersSeedersCount = $tab->cloneCount();
-        if ($keepersSeedersCount > 0) {
-            $this->logger->info('KeepersSeeders. Запись в базу данных списка сидов-хранителей...');
-            $tab->moveToOrigin();
+    /**
+     * Заменить данные подраздела в основной таблице БД.
+     */
+    public function replaceForum(int $forumId): int
+    {
+        $count = $this->clone->cloneCount();
+        $this->clone->replaceKeepersRows(forumId: $forumId);
 
-            // Удалить ненужные записи.
-            $tab->removeUnusedKeepersRows();
-
-            $this->logger->info(
-                'KeepersSeeders. Хранителями раздаётся {topics} неуникальных раздач.',
-                ['topics' => $keepersSeedersCount]
-            );
-        }
+        return $count;
     }
 }

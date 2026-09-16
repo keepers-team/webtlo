@@ -62,9 +62,7 @@ final class CloneFactory
         );
 
         return new KeepersLists(
-            db    : $this->con,
-            logger: $this->logger,
-            clone : $table,
+            clone: $table,
         );
     }
 
@@ -77,8 +75,7 @@ final class CloneFactory
         );
 
         return new KeepersSeeders(
-            logger: $this->logger,
-            clone : $table,
+            clone: $table,
         );
     }
 

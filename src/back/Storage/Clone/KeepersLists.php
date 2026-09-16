@@ -6,9 +6,7 @@ namespace KeepersTeam\Webtlo\Storage\Clone;
 
 use KeepersTeam\Webtlo\Data\Keeper;
 use KeepersTeam\Webtlo\External\Data\KeptTopic;
-use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\CloneTable;
-use Psr\Log\LoggerInterface;
 
 /**
  * Временная таблица содержащая данные о хранителях и их хранимых раздачах, по данным API отчётов.
@@ -29,11 +27,7 @@ final class KeepersLists
     /** @var array<int, mixed>[] */
     private array $keptTopics = [];
 
-    public function __construct(
-        private readonly ConnectionInterface $db,
-        private readonly LoggerInterface     $logger,
-        private readonly CloneTable          $clone,
-    ) {}
+    public function __construct(private readonly CloneTable $clone) {}
 
     /**
      * @param KeptTopic[] $topics
@@ -64,33 +58,20 @@ final class KeepersLists
         $this->keptTopics = [];
     }
 
-    /**
-     * Перенести данные о хранимых раздачах в основную таблицу БД.
-     */
-    public function moveToOrigin(int $forumsScanned, int $keepersCount): void
+    public function clearTempTable(): void
     {
-        $tab = $this->clone;
-
-        $keepersSeedersCount = $tab->cloneCount();
-        if ($keepersSeedersCount > 0) {
-            $this->logger->info('Подразделов: {forums} шт, хранителей: {keepers}, хранимых раздач: {topics} шт.', [
-                'forums'  => $forumsScanned,
-                'keepers' => $keepersCount,
-                'topics'  => $keepersSeedersCount,
-            ]);
-            $this->logger->info('KeepersLists. Запись в базу данных списков раздач хранителей...');
-
-            $tab->moveToOrigin();
-
-            // Удаляем неактуальные записи списков.
-            $tab->removeUnusedKeepersRows();
-
-            $this->logger->info('KeepersLists. Записано {topics} хранимых раздач.', ['topics' => $keepersSeedersCount]);
-        }
+        $this->clone->clearClone();
+        $this->keptTopics = [];
     }
 
-    public function clearLists(): void
+    /**
+     * Заменить данные подраздела в основной таблице БД.
+     */
+    public function replaceForum(int $forumId): int
     {
-        $this->db->executeStatement('DELETE FROM UpdateTime WHERE id BETWEEN 100000 AND 200000');
+        $count = $this->clone->cloneCount();
+        $this->clone->replaceKeepersRows(forumId: $forumId);
+
+        return $count;
     }
 }
