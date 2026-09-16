@@ -12,7 +12,7 @@ use KeepersTeam\Webtlo\Storage\Table\Forums;
 $output = '<br /><div>Нет или недостаточно данных для отображения.<br />Проверьте настройки, журнал и выполните обновление сведений.</div><br />';
 
 // Подключаем контейнер.
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 try {

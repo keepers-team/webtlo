@@ -16,7 +16,7 @@ try {
         throw new RuntimeException('Выберите раздачи, которые желаете исключить');
     }
 
-    $app = App::create();
+    $app = App::create(logToTab: true);
     $db  = $app->getDataBase();
 
     $topicsExcluded = $app->get(TopicsExcluded::class);

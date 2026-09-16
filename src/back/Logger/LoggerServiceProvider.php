@@ -13,6 +13,7 @@ final class LoggerServiceProvider extends AbstractServiceProvider
 {
     public function __construct(
         private readonly ?LogFile $logFile = null,
+        private readonly bool $logToTab = false,
     ) {}
 
     public function provides(string $id): bool
@@ -30,7 +31,7 @@ final class LoggerServiceProvider extends AbstractServiceProvider
 
             $level = LoggerConstructor::getLogLevel(level: $params->logLevel);
 
-            return LoggerConstructor::create(logFile: $this->logFile, level: $level);
+            return LoggerConstructor::create(logFile: $this->logFile, level: $level, logToTab: $this->logToTab);
         });
     }
 }

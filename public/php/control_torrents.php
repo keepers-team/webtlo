@@ -12,7 +12,7 @@ $control_result = 'В процессе регулировки раздач бы�
     'Для получения подробностей обратитесь к журналу событий.';
 
 // Инициализируем контейнер.
-$app = App::create(LogFile::Control);
+$app = App::create(logFile: LogFile::Control, logToTab: true);
 $log = $app->getLogger();
 
 try {
