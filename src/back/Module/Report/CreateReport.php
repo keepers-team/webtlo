@@ -455,7 +455,7 @@ final class CreateReport
             FROM (
                 SELECT
                     tp.forum_id,
-                    (tp.seeders * 1.0 / tp.seeders_updates_today) av,
+                    (tp.seeders * 1.0 / MAX(1, tp.seeders_updates_today)) av,
                     tp.size topic_size,
                     tr.done,
                     CASE WHEN tp.poster = ? THEN 1 END AS authored_by_user

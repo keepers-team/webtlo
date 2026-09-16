@@ -35,7 +35,7 @@ final class BlackListedTopics implements ListInterface
                 tp.forum_id,
                 tp.keeping_priority AS priority,
                 0 AS client_id,
-                tp.seeders / tp.seeders_updates_today AS seed,
+                tp.seeders * 1. / MAX(1, tp.seeders_updates_today) AS seed,
                 te.comment
             FROM Topics AS tp
             LEFT JOIN TopicsExcluded AS te ON tp.info_hash = te.info_hash
