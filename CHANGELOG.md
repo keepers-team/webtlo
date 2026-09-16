@@ -8,6 +8,10 @@
 ### [Список релизов](https://github.com/keepers-team/webtlo/releases)
 
 ---
+### [4.5.1] - 2026-09-16
+- Улучшена обработка аргументов bin/webtlo
+- Улучшена обработка ответов при взаимодействии с торрент-клиентами
+
 ### [4.5.0] - 2026-09-09
 - Обновление структуры хранения JS-файлов.
 - Добавлена возможность хранения пресетов фильтров.
@@ -205,6 +209,7 @@
 - Начало ведения истории
 - Стабильная версия
 
+[4.5.1]: https://github.com/keepers-team/webtlo/compare/4.5.0...4.5.1
 [4.5.0]: https://github.com/keepers-team/webtlo/compare/4.4.1...4.5.0
 [4.4.1]: https://github.com/keepers-team/webtlo/compare/4.4.0...4.4.1
 [4.4.0]: https://github.com/keepers-team/webtlo/compare/4.3.1...4.4.0
