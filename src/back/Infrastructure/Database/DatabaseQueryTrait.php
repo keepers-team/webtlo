@@ -18,7 +18,7 @@ trait DatabaseQueryTrait
     public function executeQuery(string $sql): void
     {
         try {
-            $this->pdo->exec($sql);
+            $this->getPdo()->exec($sql);
         } catch (Throwable $e) {
             $this->logger->error(
                 'SQL. Ошибка выполнения запроса',
@@ -37,7 +37,7 @@ trait DatabaseQueryTrait
     public function executeStatement(string $sql, array $param = []): PDOStatement
     {
         try {
-            $sth = $this->pdo->prepare($sql);
+            $sth = $this->getPdo()->prepare($sql);
             if ($sth === false) {
                 throw new PDOException('Cant create PDOStatement');
             }
@@ -66,9 +66,9 @@ trait DatabaseQueryTrait
      */
     public function query(string $sql, array $param = [], int $pdo = PDO::FETCH_ASSOC): array
     {
-        $sth = $this->executeStatement($sql, $param);
+        $sth = $this->executeStatement(sql: $sql, param: $param);
 
-        return (array) $sth->fetchAll($pdo);
+        return $sth->fetchAll($pdo);
     }
 
     /**
@@ -80,7 +80,7 @@ trait DatabaseQueryTrait
      */
     public function queryRow(string $sql, array $param = []): ?array
     {
-        $sth = $this->executeStatement($sql, $param);
+        $sth = $this->executeStatement(sql: $sql, param: $param);
 
         $result = $sth->fetch(PDO::FETCH_ASSOC);
         if ($result === false) {
@@ -99,7 +99,7 @@ trait DatabaseQueryTrait
      */
     public function queryColumn(string $sql, array $param = []): mixed
     {
-        $sth = $this->executeStatement($sql, $param);
+        $sth = $this->executeStatement(sql: $sql, param: $param);
 
         return $sth->fetch(PDO::FETCH_COLUMN);
     }
@@ -111,7 +111,7 @@ trait DatabaseQueryTrait
      */
     public function queryCount(string $sql, array $param = []): int
     {
-        return (int) $this->queryColumn($sql, $param);
+        return (int) $this->queryColumn(sql: $sql, param: $param);
     }
 
     /**
@@ -132,20 +132,22 @@ trait DatabaseQueryTrait
 
     public function beginTransaction(): void
     {
-        $this->pdo->beginTransaction();
+        $this->getPdo()->beginTransaction();
     }
 
     public function commitTransaction(): void
     {
-        if ($this->pdo->inTransaction()) {
-            $this->pdo->commit();
+        $pdo = $this->getPdo();
+        if ($pdo->inTransaction()) {
+            $pdo->commit();
         }
     }
 
     public function rollbackTransaction(): void
     {
-        if ($this->pdo->inTransaction()) {
-            $this->pdo->rollBack();
+        $pdo = $this->getPdo();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
         }
     }
 }

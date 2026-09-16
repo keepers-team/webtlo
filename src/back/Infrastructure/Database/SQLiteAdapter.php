@@ -18,34 +18,73 @@ final class SQLiteAdapter implements ConnectionInterface
     /** Название файла БД. */
     private const DATABASE_FILE = 'webtlo.db';
 
-    public function __construct(
-        public readonly PDO             $pdo,
-        public readonly LoggerInterface $logger,
-    ) {}
+    private ?PDO $pdo;
 
-    public static function connect(
+    private function __construct(
+        public readonly string           $databasePath,
+        private readonly LoggerInterface $logger,
+        PDO                              $pdo,
+    ) {
+        $this->pdo = $pdo;
+    }
+
+    public function __destruct()
+    {
+        if ($this->pdo === null) {
+            return;
+        }
+
+        $this->query('PRAGMA analysis_limit=400;');
+        $this->query('PRAGMA optimize;');
+    }
+
+    public function getPdo(): PDO
+    {
+        if ($this->pdo === null) {
+            throw new RuntimeException('Соединение с БД не установлено (было закрыто).');
+        }
+
+        return $this->pdo;
+    }
+
+    public function close(): void
+    {
+        // Обнуляем ссылку, чтобы освободить файл БД (важно для подмены файла).
+        $this->pdo = null;
+    }
+
+    public function reconnect(): void
+    {
+        if ($this->pdo !== null) {
+            // Уже подключены — ничего не делаем.
+            return;
+        }
+
+        $this->pdo = self::createPdo(databasePath: $this->databasePath);
+    }
+
+    public static function create(
         LoggerInterface $logger,
-        AverageSeeds $averageSeeds,
+        AverageSeeds    $averageSeeds,
     ): self {
         $databasePath = Helper::getStorageSubFolderPath(file: self::DATABASE_FILE);
 
         try {
-            // Подключаемся к БД. Создаём кастомную функцию like.
-            $pdo = new PDO('sqlite:' . $databasePath);
-            $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
-
             // Создаём экземпляр класса.
-            $db = new self(pdo: $pdo, logger: $logger);
+            $db = new self(
+                databasePath: $databasePath,
+                logger      : $logger,
+                pdo         : self::createPdo(databasePath: $databasePath),
+            );
 
             $migrator = new MigrationRunner(
                 logger       : $logger,
                 targetVersion: MigrationRunner::DATABASE_VERSION,
-                databasePath : $databasePath,
                 filesPath    : Helper::getProjectRoot() . '/database',
             );
 
-            // Инициализация/миграция таблиц БД.
-            $migrator->migrate(con: $db);
+            // Применяем план миграции.
+            $migrator->applyMigrationPlan(db: $db);
         } catch (PDOException $e) {
             $logger->emergency('Ошибка инициализации БД.', ['path' => $databasePath, 'exception' => $e]);
 
@@ -68,9 +107,15 @@ final class SQLiteAdapter implements ConnectionInterface
         return $db;
     }
 
-    public function getPdo(): PDO
+    /**
+     * Создать новое PDO-соединение с зарегистрированной функцией like.
+     */
+    private static function createPdo(string $databasePath): PDO
     {
-        return $this->pdo;
+        $pdo = new PDO('sqlite:' . $databasePath);
+        $pdo->sqliteCreateFunction('like', [self::class, 'lexa_ci_utf8_like'], 2);
+
+        return $pdo;
     }
 
     /**
@@ -88,11 +133,5 @@ final class SQLiteAdapter implements ConnectionInterface
         $mask = "/^$mask$/ui";
 
         return preg_match($mask, (string) $value);
-    }
-
-    public function __destruct()
-    {
-        $this->query('PRAGMA analysis_limit=400;');
-        $this->query('PRAGMA optimize;');
     }
 }
