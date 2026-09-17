@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\Module\Report;
 use DateTimeInterface;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Data\KeeperPermissions;
-use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\WebTLO;
 
@@ -52,12 +51,13 @@ final class SendReport
         int               $forumId,
         array             $topicsToReport,
         DateTimeInterface $reportDate,
+        ReportStatus      $statusRules,
         bool              $reportRewrite = false,
     ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
             forumId   : $forumId,
-            status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            status    : $statusRules->subForum,
             appVersion: $this->webtlo->appVersionLine(),
         );
 
@@ -81,7 +81,7 @@ final class SendReport
         $completeReport = $this->apiReport->reportKeptReleases(
             forumId             : $forumId,
             topicIds            : $downloadedTopics,
-            status              : KeepingStatuses::ReportedByApi->value,
+            status              : $statusRules->keptTopics,
             reportDate          : $reportDate,
             excludeOtherReleases: $reportRewrite,
         );
@@ -94,7 +94,7 @@ final class SendReport
             $downloadingReport = $this->apiReport->reportKeptReleases(
                 forumId   : $forumId,
                 topicIds  : $downloadingTopics,
-                status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
+                status    : $statusRules->downloadingTopics,
                 reportDate: $reportDate,
             );
             if ($downloadingReport !== null) {
@@ -114,11 +114,11 @@ final class SendReport
      *
      * @return array<string, mixed>
      */
-    public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array
+    public function setForumsStatus(array $forumIds, ReportStatus $statusRules, bool $unsetOtherForums = false): array
     {
         return $this->apiReport->setForumsStatus(
             forumIds        : $forumIds,
-            status          : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            status          : $statusRules->subForum,
             appVersion      : $this->webtlo->appVersionLine(),
             unsetOtherForums: $unsetOtherForums
         );

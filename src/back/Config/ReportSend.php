@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Config;
 
 use KeepersTeam\Webtlo\Enum\SendReportMethod as Method;
+use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
+use KeepersTeam\Webtlo\Module\Report\ReportStatus;
 
 /**
  * Параметры отправки и получения отчётов.
@@ -37,4 +39,13 @@ final class ReportSend
         public readonly array  $excludedClients,
         public readonly array  $excludedKeepers,
     ) {}
+
+    public function getStatusRules(): ReportStatus
+    {
+        return new ReportStatus(
+            subForum         : KeepingStatuses::buildSubForumStatus(reporterId: $this->reporterId),
+            keptTopics       : KeepingStatuses::buildTopicStatus(reporterId: $this->reporterId),
+            downloadingTopics: KeepingStatuses::buildTopicStatus(reporterId: $this->reporterId, downloading: true),
+        );
+    }
 }
