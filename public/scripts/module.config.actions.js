@@ -91,7 +91,7 @@ webtlo.register(ModuleNames.CONFIG_ACTIONS,function() {
     });
 
     // Вызываем смену видимости элементов.
-    $('#proxy_activate_report, #api_auth_params').trigger('change');
+    $('#proxy_activate_report, #api_auth_params, #send_report_api').trigger('change');
 
     // Проверяем, что настройки были изменены
     $('form#config :input').not('.ignore-save-change').on('change selectmenuchange spinstop', function () {

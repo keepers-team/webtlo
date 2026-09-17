@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\External;
 
-use DateTimeInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
@@ -26,6 +25,7 @@ final class ApiReportClient
     use Actions\KeepersReports;
     use Actions\KeeperUnseededTopics;
     use Actions\Processor;
+    use Actions\SendReportTrait;
     use Actions\TopicsDetails;
     use Actions\TopicsPeers;
 
@@ -78,40 +78,6 @@ final class ApiReportClient
     }
 
     /**
-     * @param int[] $topicIds
-     *
-     * @return ?array<string, int>
-     */
-    public function reportKeptReleases(
-        int               $forumId,
-        array             $topicIds,
-        int               $status,
-        DateTimeInterface $reportDate,
-        bool              $excludeOtherReleases = false,
-    ): ?array {
-        $params = [
-            'keeper_id'                           => $this->auth->userId,
-            'topic_ids'                           => $topicIds,
-            'status'                              => $status,
-            'last_update_time'                    => $reportDate->format(DateTimeInterface::ATOM),
-            'reported_subforum_id'                => $forumId,
-            'unreport_other_releases_in_subforum' => $excludeOtherReleases,
-        ];
-
-        try {
-            $response = $this->client->post('releases/set_status', ['json' => $params]);
-        } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $params);
-
-            return null;
-        }
-
-        $body = $response->getBody()->getContents();
-
-        return json_decode($body, true);
-    }
-
-    /**
      * Получить список раздач хранителя в указанном подразделе.
      *
      * @return ?array<string, mixed>
@@ -141,74 +107,6 @@ final class ApiReportClient
         }
 
         return null;
-    }
-
-    /**
-     * Задать статус хранения подраздела.
-     */
-    public function setForumStatus(int $forumId, int $status, string $appVersion = ''): bool
-    {
-        $params = [
-            'keeper_id'   => $this->auth->userId,
-            'status'      => $status,
-            'subforum_id' => $forumId,
-            'comment'     => $appVersion,
-        ];
-
-        try {
-            $response = $this->client->post('subforum/set_status', ['query' => $params]);
-        } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $params);
-
-            return false;
-        }
-
-        $body = json_decode($response->getBody()->getContents(), true);
-
-        return (bool) ($body['result'] ?? false);
-    }
-
-    /**
-     * Задать статус хранения подразделов, и пометить остальные как более не хранимые.
-     *
-     * @param int[] $forumIds
-     *
-     * @return array<string, mixed>
-     */
-    public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): array
-    {
-        $params = [
-            'keeper_id'             => $this->auth->userId,
-            'status'                => $status,
-            'subforum_id'           => implode(',', array_filter($forumIds)),
-            'comment'               => $appVersion,
-            'unset_other_subforums' => $unsetOtherForums,
-        ];
-
-        try {
-            // POST запрос с GET параметрами.
-            $response = $this->client->post('subforum/set_status_bulk', ['query' => $params]);
-        } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $params);
-
-            return ['result' => $e->getMessage()];
-        }
-
-        $body = json_decode($response->getBody()->getContents(), true);
-
-        return $body ?: ['result' => 'unknown'];
-    }
-
-    /**
-     * @param array<string, mixed> $data
-     */
-    public function sendCustomData(array $data): void
-    {
-        try {
-            $this->client->post("custom_data/{$this->auth->userId}", ['json' => $data]);
-        } catch (GuzzleException $e) {
-            $this->logException($e->getCode(), $e->getMessage(), $data);
-        }
     }
 
     /**

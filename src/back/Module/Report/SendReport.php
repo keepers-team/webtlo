@@ -7,7 +7,6 @@ namespace KeepersTeam\Webtlo\Module\Report;
 use DateTimeInterface;
 use KeepersTeam\Webtlo\Config\ApiCredentials;
 use KeepersTeam\Webtlo\Data\KeeperPermissions;
-use KeepersTeam\Webtlo\External\ApiReport\KeepingStatuses;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\WebTLO;
 
@@ -52,12 +51,13 @@ final class SendReport
         int               $forumId,
         array             $topicsToReport,
         DateTimeInterface $reportDate,
+        ReportStatus      $statusRules,
         bool              $reportRewrite = false,
     ): array {
         // Устанавливаем статус подраздела.
         $this->apiReport->setForumStatus(
             forumId   : $forumId,
-            status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            status    : $statusRules->subForum,
             appVersion: $this->webtlo->appVersionLine(),
         );
 
@@ -79,11 +79,11 @@ final class SendReport
 
         // Отправляем отчёт о скачанных раздачах.
         $completeReport = $this->apiReport->reportKeptReleases(
-            forumId             : $forumId,
-            topicIds            : $downloadedTopics,
-            status              : KeepingStatuses::ReportedByApi->value,
-            reportDate          : $reportDate,
-            excludeOtherReleases: $reportRewrite,
+            forumId     : $forumId,
+            topicIds    : $downloadedTopics,
+            status      : $statusRules->keptTopics,
+            reportDate  : $reportDate,
+            excludeOther: $reportRewrite,
         );
         if ($completeReport !== null) {
             $result['reportComplete'] = $completeReport;
@@ -94,12 +94,42 @@ final class SendReport
             $downloadingReport = $this->apiReport->reportKeptReleases(
                 forumId   : $forumId,
                 topicIds  : $downloadingTopics,
-                status    : KeepingStatuses::ReportedByApi->value | KeepingStatuses::Downloading->value,
+                status    : $statusRules->downloadingTopics,
                 reportDate: $reportDate,
             );
             if ($downloadingReport !== null) {
                 $result['reportDownloading'] = $downloadingReport;
             }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param string[] $hashes
+     *
+     * @return array<string, mixed>
+     */
+    public function sendReportHashes(
+        array             $hashes,
+        DateTimeInterface $reportDate,
+        int               $status,
+        bool              $reportRewrite = false,
+    ): array {
+        $result = [
+            'topics' => count($hashes),
+        ];
+
+        // Отправляем отчёт о скачанных раздачах.
+        $report = $this->apiReport->reportKeptReleasesHashes(
+            topicHashes : $hashes,
+            status      : $status,
+            reportDate  : $reportDate,
+            excludeOther: $reportRewrite
+        );
+        if ($report !== null) {
+            $result['status'] = $status;
+            $result['result'] = $report;
         }
 
         return $result;
@@ -114,14 +144,22 @@ final class SendReport
      *
      * @return array<string, mixed>
      */
-    public function setForumsStatus(array $forumIds, bool $unsetOtherForums = false): array
+    public function setForumsStatus(array $forumIds, ReportStatus $statusRules, bool $unsetOtherForums = false): array
     {
         return $this->apiReport->setForumsStatus(
             forumIds        : $forumIds,
-            status          : KeepingStatuses::ReportedByApi->value | KeepingStatuses::IgnoreNonReported->value,
+            status          : $statusRules->subForum,
             appVersion      : $this->webtlo->appVersionLine(),
             unsetOtherForums: $unsetOtherForums
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function setForumsStatusAuto(): array
+    {
+        return $this->apiReport->setForumsStatusAuto();
     }
 
     public function setApiEnable(bool $enabled): void
