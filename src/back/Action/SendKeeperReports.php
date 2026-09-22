@@ -323,6 +323,7 @@ final class SendKeeperReports
 
         $i = 0;
         foreach ($generator() as $status => $hashes) {
+            ++$i;
             Timers::start("send_api_chunks_$i");
 
             $apiResult = $report->sendReportHashes(
@@ -335,7 +336,7 @@ final class SendKeeperReports
             $this->logger->debug(
                 'API. Отчёт отправлен [{current}] {sec}',
                 [
-                    'current' => ++$i,
+                    'current' => $i,
                     'sec'     => Timers::getExecTime("send_api_chunks_$i"),
                     ...$apiResult,
                 ]
