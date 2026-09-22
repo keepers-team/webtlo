@@ -34,7 +34,7 @@ use RuntimeException;
 final class CreateReport
 {
     /** @var ?positive-int[] */
-    public ?array $forums = null;
+    private ?array $forums = null;
 
     /** @var ?positive-int[] */
     private ?array $reportedForums = null;
