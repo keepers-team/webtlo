@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
+use RuntimeException;
+
 /**
  * Бекапим конфиг.
  */
@@ -29,12 +31,55 @@ final class Backup
 
     public static function database(string $path, int $version): void
     {
-        $backupName = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
-        $backupPath = self::getPath();
-        $backupFile = $backupPath . DIRECTORY_SEPARATOR . $backupName;
+        $backupName    = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
+        $backupPath    = self::getPath();
+        $backupFile    = $backupPath . DIRECTORY_SEPARATOR . $backupName;
+        $temporaryFile = tempnam($backupPath, '.webtlo-');
 
-        // Бекапим БД.
-        copy($path, $backupFile);
+        if ($temporaryFile === false) {
+            throw new RuntimeException('Не удалось создать временный файл для бекапа базы данных.');
+        }
+
+        // Сначала копируем в невидимый для поиска бекапов временный файл.
+        if (!@copy($path, $temporaryFile)) {
+            unlink($temporaryFile);
+
+            throw new RuntimeException(
+                sprintf('Не удалось создать бекап базы данных из файла %s.', $path)
+            );
+        }
+
+        // tempnam создаёт файл с правами 0600, сохраняем права опубликованного файла.
+        $backupMode = 0o666 & ~umask();
+        if (is_file($backupFile)) {
+            $backupPermissions = @fileperms($backupFile);
+            if ($backupPermissions === false) {
+                unlink($temporaryFile);
+
+                throw new RuntimeException(
+                    sprintf('Не удалось прочитать права существующего бекапа базы данных %s.', $backupFile)
+                );
+            }
+
+            $backupMode = $backupPermissions & 0o777;
+        }
+
+        if (!@chmod($temporaryFile, $backupMode)) {
+            unlink($temporaryFile);
+
+            throw new RuntimeException(
+                sprintf('Не удалось установить права для бекапа базы данных %s.', $temporaryFile)
+            );
+        }
+
+        // Публикуем бекап только после успешного копирования.
+        if (!@rename($temporaryFile, $backupFile)) {
+            unlink($temporaryFile);
+
+            throw new RuntimeException(
+                sprintf('Не удалось опубликовать бекап базы данных %s.', $backupFile)
+            );
+        }
 
         // Удаляем лишние бекапы.
         self::clearBackups($backupPath, 'webtlo-*.db');
