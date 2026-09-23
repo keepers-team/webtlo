@@ -72,21 +72,22 @@ final class SendKeeperReports
 
         if ($this->configReport->sendMethod->bySubsections()) {
             // Отправляем отчёты по каждому хранимому подразделу.
-            $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+            $reportsSent = $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
         } else {
             // Или просто кидаем все хранимые хеши.
-            $this->sendHashesReports(reportRewrite: $reportRewrite);
+            $reportsSent = $this->sendHashesReports(reportRewrite: $reportRewrite);
         }
 
         // Отправляем сводный отчёт + телеметрию.
         $this->sendSummaryReport();
 
-        $this->logger->info(
-            'Процесс отправки отчётов завершён за {sec}',
+        $this->logger->log(
+            $reportsSent ? 'info' : 'notice',
+            $reportsSent ? 'Процесс отправки отчётов завершён за {sec}' : 'Процесс отправки отчётов завершён с ошибками за {sec}',
             ['sec' => Timers::getExecTime('send_reports')]
         );
 
-        return true;
+        return $reportsSent;
     }
 
     /**
@@ -133,7 +134,7 @@ final class SendKeeperReports
      *
      * @param bool $reportRewrite признак отправки "чистых" отчётов
      */
-    private function sendSubsectionsReports(bool $reportRewrite): void
+    private function sendSubsectionsReports(bool $reportRewrite): bool
     {
         $creator = $this->createReport;
         $report  = $this->sendReport;
@@ -148,8 +149,11 @@ final class SendKeeperReports
         // Статусы, которые нужно присвоить раздачам и подразделам.
         $statusRules = $this->configReport->getStatusRules();
 
-        $apiReportCount = 0;
-        $forumsToReport = [];
+        $apiReportAttempts  = 0;
+        $apiReportSuccesses = 0;
+        $apiReportProgress  = 0;
+        $allReportsSent     = true;
+        $forumsToReport     = [];
         foreach ($creator->getForums() as $forumId) {
             // Пропускаем исключённые подразделы.
             if ($creator->isForumExcluded(forumId: $forumId)) {
@@ -160,6 +164,7 @@ final class SendKeeperReports
                 continue;
             }
 
+            ++$apiReportProgress;
             $timer = [];
 
             // Пробуем отправить отчёт по API.
@@ -177,6 +182,7 @@ final class SendKeeperReports
                 $forumsToReport[] = $forumId;
 
                 // Пробуем отправить отчёт по API.
+                ++$apiReportAttempts;
                 $apiResult = $report->sendForumTopics(
                     forumId       : $forumId,
                     topicsToReport: $topicsToReport,
@@ -187,10 +193,18 @@ final class SendKeeperReports
 
                 $timer['send_api'] = Timers::getExecTime("send_api_$forumId");
 
-                $this->logger->debug(
-                    'API. Отчёт отправлен [{current}/{total}] {sec}',
+                $success = $apiResult['success'];
+                if ($success) {
+                    ++$apiReportSuccesses;
+                } else {
+                    $allReportsSent = false;
+                }
+
+                $this->logger->log(
+                    $success ? 'debug' : 'notice',
+                    $success ? 'API. Отчёт отправлен [{current}/{total}] {sec}' : 'API. Отчёт не отправлен [{current}/{total}] {sec}',
                     [
-                        'current' => ++$apiReportCount,
+                        'current' => $apiReportProgress,
                         'total'   => $forumCount,
                         'sec'     => $timer['send_api'],
                         ...$apiResult,
@@ -202,12 +216,13 @@ final class SendKeeperReports
                 // Если отправка отчёта провалилась не по причине отсутствия хранимых раздач - записываем ид подраздела.
                 if (!$e instanceof EmptyFoundTopicsException) {
                     $forumsToReport[] = $forumId;
+                    $allReportsSent   = false;
                 }
 
                 $this->logger->notice('API. Отчёт не отправлен [{current}/{total}]. Причина: "{error}"', [
                     'forumId' => $forumId,
                     'error'   => $e->getMessage(),
-                    'current' => ++$apiReportCount,
+                    'current' => $apiReportProgress,
                     'total'   => $forumCount,
                 ]);
             }
@@ -233,7 +248,14 @@ final class SendKeeperReports
                 statusRules     : $statusRules,
                 unsetOtherForums: $this->configReport->unsetOtherSubForums
             );
-            $this->logger->debug('kept forums setStatus', $setStatus);
+            if ($setStatus === null) {
+                $allReportsSent = false;
+            }
+            $this->logger->log(
+                $setStatus === null ? 'notice' : 'debug',
+                $setStatus === null ? 'kept forums setStatus failed' : 'kept forums setStatus',
+                $setStatus ?? []
+            );
         }
 
         // Запишем таймеры в журнал.
@@ -241,12 +263,16 @@ final class SendKeeperReports
             $this->logger->debug((string) json_encode($Timers));
         }
 
-        if ($apiReportCount > 0) {
-            $this->logger->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportCount]);
+        if ($apiReportAttempts > 0) {
+            $this->logger->info('Отчётов отправлено в API: {count} шт.', ['count' => $apiReportSuccesses]);
 
-            // Запишем время отправки отчётов.
-            $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+            if ($allReportsSent) {
+                // Запишем время отправки отчётов.
+                $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+            }
         }
+
+        return $allReportsSent;
     }
 
     /**
@@ -273,7 +299,7 @@ final class SendKeeperReports
      *
      * @param bool $reportRewrite признак отправки "чистых" отчётов
      */
-    private function sendHashesReports(bool $reportRewrite): void
+    private function sendHashesReports(bool $reportRewrite): bool
     {
         $creator = $this->createReport;
         $report  = $this->sendReport;
@@ -322,9 +348,14 @@ final class SendKeeperReports
         };
 
         $i = 0;
+
+        $apiReportAttempts  = 0;
+        $apiReportSuccesses = 0;
+        $allReportsSent     = true;
         foreach ($generator() as $status => $hashes) {
             Timers::start("send_api_chunks_$i");
 
+            ++$apiReportAttempts;
             $apiResult = $report->sendReportHashes(
                 hashes       : $hashes,
                 reportDate   : $this->fullUpdateTime,
@@ -332,8 +363,16 @@ final class SendKeeperReports
                 reportRewrite: $reportRewrite,
             );
 
-            $this->logger->debug(
-                'API. Отчёт отправлен [{current}] {sec}',
+            $success = $apiResult['success'];
+            if ($success) {
+                ++$apiReportSuccesses;
+            } else {
+                $allReportsSent = false;
+            }
+
+            $this->logger->log(
+                $success ? 'debug' : 'notice',
+                $success ? 'API. Отчёт отправлен [{current}] {sec}' : 'API. Отчёт не отправлен [{current}] {sec}',
                 [
                     'current' => ++$i,
                     'sec'     => Timers::getExecTime("send_api_chunks_$i"),
@@ -344,9 +383,20 @@ final class SendKeeperReports
 
         // Вызываем пересчёт отметок хранимых подразделов.
         $resultStatusAuto = $report->setForumsStatusAuto();
-        $this->logger->debug('setStatusAuto', $resultStatusAuto);
+        if ($resultStatusAuto === null) {
+            $allReportsSent = false;
+        }
+        $this->logger->log(
+            $resultStatusAuto === null ? 'notice' : 'debug',
+            $resultStatusAuto === null ? 'setStatusAuto failed' : 'setStatusAuto',
+            $resultStatusAuto ?? []
+        );
 
-        // Запишем время отправки отчётов.
-        $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+        if ($apiReportAttempts > 0 && $allReportsSent) {
+            // Запишем время отправки отчётов.
+            $this->updateTime->setMarkerTime(marker: UpdateMark::SEND_REPORT);
+        }
+
+        return $allReportsSent;
     }
 }
