@@ -73,18 +73,29 @@ final class DatabaseBackupFailureTest extends TestCase
         file_put_contents($source, 'updated database contents');
 
         $backupPath = $this->tmpDir . '/backup';
-        $backupFile = $backupPath . '/webtlo-v7-' . date('Y-m-d-H-i') . '.db';
         mkdir($backupPath, 0o777, true);
-        file_put_contents($backupFile, 'previous database contents');
-        chmod($backupFile, 0o600);
+        $now         = time();
+        $backupFiles = [];
+        foreach ([$now, $now + 60] as $timestamp) {
+            $backupFile = $backupPath . '/webtlo-v7-' . date('Y-m-d-H-i', $timestamp) . '.db';
+            file_put_contents($backupFile, 'previous database contents');
+            chmod($backupFile, 0o600);
+            $backupFiles[] = $backupFile;
+        }
 
         Backup::database(path: $source, version: 7);
 
-        clearstatcache(true, $backupFile);
-        $backupPermissions = fileperms($backupFile);
-        self::assertNotFalse($backupPermissions);
-        self::assertSame(0o600, $backupPermissions & 0o777);
-        self::assertSame('updated database contents', file_get_contents($backupFile));
+        $updated = 0;
+        foreach ($backupFiles as $backupFile) {
+            clearstatcache(true, $backupFile);
+            $backupPermissions = fileperms($backupFile);
+            self::assertNotFalse($backupPermissions);
+            self::assertSame(0o600, $backupPermissions & 0o777);
+            if (file_get_contents($backupFile) === 'updated database contents') {
+                ++$updated;
+            }
+        }
+        self::assertSame(1, $updated);
     }
 
     public function testDatabaseFailureLeavesNoVisibleOrTemporaryBackup(): void
@@ -114,7 +125,8 @@ final class DatabaseBackupFailureTest extends TestCase
 
         $backupPath = $this->tmpDir . '/backup';
         mkdir($backupPath, 0o777, true);
-        foreach ([time(), time() + 60] as $timestamp) {
+        $now = time();
+        foreach ([$now, $now + 60] as $timestamp) {
             mkdir($backupPath . '/webtlo-v2-' . date('Y-m-d-H-i', $timestamp) . '.db');
         }
 
