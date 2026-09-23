@@ -56,7 +56,11 @@ final class MigrationRunner
             case MigrationAction::RestoreBackup:
                 // Найден бекап, пробуем откатить.
                 // Бекапим текущую версию.
-                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+                Backup::database(
+                    path           : $db->databasePath,
+                    version        : $plan->fromVersion,
+                    protectedBackup: $plan->backupPath,
+                );
 
                 // Подменяем файл БД, для этого нужно закрыть соединение.
                 $db->close();

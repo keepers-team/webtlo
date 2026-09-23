@@ -27,7 +27,7 @@ final class Backup
         self::clearBackups($backupPath, 'config-*.ini');
     }
 
-    public static function database(string $path, int $version): void
+    public static function database(string $path, int $version, ?string $protectedBackup = null): void
     {
         $backupName = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
         $backupPath = self::getPath();
@@ -37,7 +37,7 @@ final class Backup
         copy($path, $backupFile);
 
         // Удаляем лишние бекапы.
-        self::clearBackups($backupPath, 'webtlo-*.db');
+        self::clearBackups($backupPath, 'webtlo-*.db', $protectedBackup);
     }
 
     /**
@@ -75,7 +75,7 @@ final class Backup
     /**
      * Удаляем лишние конфиги.
      */
-    private static function clearBackups(string $path, string $pattern): void
+    private static function clearBackups(string $path, string $pattern, ?string $protectedBackup = null): void
     {
         // Все файлы по указанному пути.
         $files = glob($path . DIRECTORY_SEPARATOR . $pattern);
@@ -90,8 +90,17 @@ final class Backup
         }
         krsort($matches);
 
-        // Оставим максимальное кол-во бекапов.
-        $unlink = array_slice($matches, self::MAX_BACKUPS);
+        // Оставим максимальное кол-во бекапов, включая защищённый.
+        $backupsToKeep = self::MAX_BACKUPS;
+        if ($protectedBackup !== null) {
+            $protectedKey = array_search($protectedBackup, $matches, true);
+            if ($protectedKey !== false) {
+                unset($matches[$protectedKey]);
+                --$backupsToKeep;
+            }
+        }
+
+        $unlink = array_slice($matches, $backupsToKeep);
 
         // Остальное - удалим.
         foreach ($unlink as $file) {
