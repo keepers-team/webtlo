@@ -9,7 +9,7 @@ use KeepersTeam\Webtlo\Config\Proxy;
 use KeepersTeam\Webtlo\External\CheckMirrorAccess;
 
 // Получаем контейнер.
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 $result = false;
