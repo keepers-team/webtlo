@@ -133,8 +133,8 @@ final class Torrents
     {
         foreach ($hashesByTopic as $topicHash => $clientHash) {
             $this->con->executeStatement(
-                'UPDATE Torrents SET client_hash = ? WHERE client_id = ? AND info_hash = ?',
-                [$clientHash === $topicHash ? null : $clientHash, $clientId, $topicHash]
+                'UPDATE Torrents SET client_hash = NULLIF(?, info_hash) WHERE client_id = ? AND info_hash = ?',
+                [$clientHash, $clientId, $topicHash]
             );
         }
     }
