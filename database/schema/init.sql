@@ -308,7 +308,7 @@ END;
 CREATE TABLE IF NOT EXISTS Torrents
 (
     info_hash     TEXT NOT NULL,
-    client_hash   TEXT NOT NULL DEFAULT '',
+    client_hash   TEXT DEFAULT '',
     client_id     INT  NOT NULL,
     topic_id      INT,
     name          TEXT,

@@ -65,7 +65,7 @@ final class Torrents
                     tr.client_id,
                     tp.forum_id,
                     tr.info_hash,
-                    tr.client_hash
+                    COALESCE(tr.client_hash, tr.info_hash) AS client_hash
                 FROM Torrents AS tr
                     LEFT JOIN Topics AS tp ON tp.info_hash = tr.info_hash
                 WHERE tr.info_hash IN ($search->keys)
@@ -95,6 +95,8 @@ final class Torrents
         foreach ($chunks as $chunk) {
             $object = KeysObject::create($chunk);
 
+            // ON CONFLICT REPLACE задан в схеме, поэтому обычный INSERT удалит уже
+            // просканированную строку вместе с известным client_hash и состоянием.
             $sql = "
                 INSERT OR IGNORE INTO Torrents (
                     info_hash,
@@ -132,7 +134,7 @@ final class Torrents
         foreach ($hashesByTopic as $topicHash => $clientHash) {
             $this->con->executeStatement(
                 'UPDATE Torrents SET client_hash = ? WHERE client_id = ? AND info_hash = ?',
-                [$clientHash, $clientId, $topicHash]
+                [$clientHash === $topicHash ? null : $clientHash, $clientId, $topicHash]
             );
         }
     }
