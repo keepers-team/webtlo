@@ -42,9 +42,11 @@
         "league/csv": "^9.23",
         "monolog/monolog": "^3.5",
         "phpxmlrpc/polyfill-xmlrpc": "^1.0",
+        "psr/clock": "^1.0",
         "psr/log": "^3.0",
         "react/async": "^4.3",
         "react/event-loop": "^1.5",
+        "symfony/clock": "^6.4",
         "symfony/lock": "^6.4"
     },
     "require-dev": {
