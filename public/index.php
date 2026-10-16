@@ -96,6 +96,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
             <li id="menu_manual"     class="menu"><a href="#manual"     class="menu">О программе</a></li>
         </ul>
         <div id="new_version_available">
+            <span id="worker_pool_status" class="worker-pool-status" role="status" aria-live="polite"></span>
             <span id="current_version"><?= 'v' . $cs('webtlo', 'version'); ?></span>
             <span id="new_version_description"></span>
         </div>
@@ -1275,6 +1276,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
     <script type="text/javascript" src="scripts/module.topics.subsections.js"></script>
     <script type="text/javascript" src="scripts/module.buttons.common.js"></script>
     <script type="text/javascript" src="scripts/module.journal.js"></script>
+    <script type="text/javascript" src="scripts/module.worker-pool-status.js"></script>
     <script type="text/javascript" src="scripts/module.reports.js"></script>
     <script type="text/javascript" src="scripts/module.jquery.widgets.js"></script>
     <script type="text/javascript" src="scripts/module.jquery.methods.js"></script>

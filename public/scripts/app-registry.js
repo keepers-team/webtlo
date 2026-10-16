@@ -17,6 +17,7 @@ const ModuleNames = {
     BUTTONS_ACTIONS   : 'buttons_actions',
     REPORTS           : 'reports',
     JOURNAL           : 'journal',
+    WORKER_POOL_STATUS: 'worker_pool_status',
 };
 
 window.webtlo = {
