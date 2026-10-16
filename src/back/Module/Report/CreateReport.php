@@ -83,7 +83,7 @@ final class CreateReport
         }
 
         // Проверяем настройки.
-        $this->setForums();
+        $this->getForums();
         $this->checkExcluded();
         $this->getLastUpdateTime();
     }
@@ -117,7 +117,13 @@ final class CreateReport
     public function getForums(): array
     {
         if ($this->forums === null) {
-            throw new RuntimeException('No kept forums found');
+            $forums = $this->subForums->ids;
+            if (!count($forums)) {
+                throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
+            }
+
+            // Записываем идентификаторы хранимых подразделов.
+            $this->forums = $forums;
         }
 
         return $this->forums;
@@ -637,20 +643,6 @@ final class CreateReport
         $dateString = $this->updateTime === null ? 'никогда' : $this->updateTime->format('d.m.Y');
 
         return sprintf('Актуально на: [color=darkblue][b]%s[/b][/color]', $dateString);
-    }
-
-    /**
-     * Найти данные хранимых подразделов.
-     */
-    private function setForums(): void
-    {
-        $subForums = $this->subForums->ids;
-        if (!count($subForums)) {
-            throw new RuntimeException('Отсутствуют хранимые подразделы. Проверьте настройки.');
-        }
-
-        // Записываем идентификаторы хранимых подразделов.
-        $this->forums = $subForums;
     }
 
     /**
