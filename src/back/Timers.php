@@ -4,52 +4,67 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo;
 
-/** Простой способ замера времени выполнения. */
+use Psr\Clock\ClockInterface;
+use Symfony\Component\Clock\Clock;
+
+/**
+ * Простой способ замера времени выполнения.
+ */
 final class Timers
 {
-    /** @var array<string, array<string, mixed>> */
+    /** @var array<string, array<string, int|float>> */
     private static array $markers = [];
+
     /** @var array<string, string> */
     private static array $stash = [];
 
+    private static ?ClockInterface $clock = null;
+
+    /**
+     * Подмена часов.
+     */
+    public static function setClock(?ClockInterface $clock): void
+    {
+        self::$clock = $clock;
+    }
+
+    public static function reset(): void
+    {
+        self::$markers = [];
+        self::$stash   = [];
+    }
+
     public static function start(string $marker = 'default'): void
     {
-        self::$markers[$marker]['start'] = microtime(true);
+        self::$markers[$marker] = ['start' => self::now()];
     }
 
     public static function stop(string $marker = 'default'): void
     {
-        self::$markers[$marker]['stop'] = $stop = microtime(true);
+        // Уже остановлен — не перезаписываем.
+        if (isset(self::$markers[$marker]['exec'])) {
+            return;
+        }
 
+        $stop  = self::now();
         $start = self::$markers[$marker]['start'] ?? $stop;
 
+        self::$markers[$marker]['stop'] = $stop;
         self::$markers[$marker]['exec'] = $stop - $start;
-    }
-
-    public static function getExec(string $marker = 'default'): int
-    {
-        self::stop($marker);
-
-        return (int) floor(self::$markers[$marker]['exec']);
     }
 
     public static function getExecTime(string $marker = 'default', bool $leadZeros = false): string
     {
-        self::stop($marker);
+        self::stop(marker: $marker);
 
         $time = self::$markers[$marker]['exec'] ?? 0;
 
-        return Helper::convertSeconds((int) $time, $leadZeros);
-    }
-
-    public static function printExecTime(string $marker = 'default'): void
-    {
-        echo sprintf('ExecTime [%s]: %s<br>', $marker, self::getExecTime($marker));
+        return Helper::convertSeconds(seconds: (int) $time, leadZeros: $leadZeros);
     }
 
     public static function stash(string $marker = 'default'): void
     {
-        self::$stash[$marker] = self::getExecTime($marker);
+        self::$stash[$marker] = self::getExecTime(marker: $marker);
     }
 
     /**
@@ -62,5 +77,12 @@ final class Timers
         self::$stash = [];
 
         return $stash;
+    }
+
+    private static function now(): float
+    {
+        $clock = self::$clock ??= new Clock();
+
+        return (float) $clock->now()->format('U.u');
     }
 }
