@@ -4,92 +4,75 @@
  * @module ModuleNames.JOURNAL
  */
 
-webtlo.register(ModuleNames.JOURNAL,function () {
-
-    // Инициализируем Tabs Widget.
+webtlo.register(ModuleNames.JOURNAL, function () {
     const $logTabs = $('#log_tabs').tabs();
+    const $defaultTab = $logTabs.find('a[data-log-file="log-tab"]');
 
-    // Чтение журнала из файла.
     $logTabs.on('tabsactivate', function (event, ui) {
-        // current tab
-        const element_new = $(ui.newTab).children('a');
-        const name_new = $(element_new).text();
-
-        if (!element_new.hasClass('log_file')) {
-            return false;
-        }
-
-        // previous tab
-        const element_old = $(ui.oldTab).children('a');
-        if (element_old.hasClass('log_file')) {
-            $(`#log_${$(element_old).text()}`).text('');
-        }
-
-        getLogContent(name_new);
-
-        return true;
+        ui.oldPanel.empty();
+        getLogContent($(ui.newTab).children('a'));
     });
 
-    // Очистка журнала.
+    // После завершения операции перечитываем файл; ответ служит запасным источником.
+    $logTabs.on('log-tab:refresh', function (event, fallbackLog) {
+        event.preventDefault();
+        getLogContent($defaultTab, fallbackLog);
+    });
+
     $('#clear_log').on('click', function () {
-        // active log tab
-        const log_file = $('#log_tabs .ui-tabs-panel:visible').prop('id').replace(/log_?/, '');
-        if (!log_file) {
-            $('#log').text('');
+        const $tab = getActiveTab();
+        const logFile = $tab.data('log-file');
+        const $panel = getPanel($tab);
 
-            return;
-        }
-
-        // request
         $.ajax({
             type: 'POST',
             url: 'php/clear_log_content.php',
-            data: {
-                log_file: log_file
-            },
+            data: {log_file: logFile},
             success: function () {
-                $(`#log_${log_file}`).text('');
+                $panel.empty();
             },
             beforeSend: function () {
-                $(`#log_${log_file}`).html(`<i class="fa fa-spinner fa-pulse"></i>`);
+                $panel.html('<i class="fa fa-spinner fa-pulse"></i>');
             }
         });
     });
 
-    // Обновить содержимое журнала.
     $('#refresh_log').on('click', function () {
-        // active log tab
-        const log_file = $('#log_tabs .ui-tabs-panel:visible').prop('id').replace(/log_?/, '');
-        getLogContent(log_file);
+        getLogContent(getActiveTab());
     });
 
+    // Первая вкладка активна сразу после инициализации Tabs Widget.
+    getLogContent($defaultTab);
 
-    // === ЛОКАЛЬНЫЕ ФУНКЦИИ ===
+    function getActiveTab() {
+        return $logTabs.find('.ui-tabs-active a.log_file');
+    }
 
-    /**
-     * Получить содержимое лог-файла.
-     *
-     * @param {string} log_name
-     */
-    function getLogContent(log_name) {
-        if (!log_name) return;
+    function getPanel($tab) {
+        return $($tab.attr('href'));
+    }
 
-        // request
+    function getLogContent($tab, fallbackLog = '') {
+        const logFile = $tab.data('log-file');
+        const $panel = getPanel($tab);
+
         $.ajax({
             type: 'POST',
             url: 'php/get_log_content.php',
-            data: {
-                log_file: log_name
-            },
+            data: {log_file: logFile},
             success: function (response) {
-                if (typeof response !== 'undefined') {
-                    $(`#log_${log_name}`).html(response);
+                $panel.html(response || fallbackLog);
+            },
+            error: function () {
+                if (fallbackLog) {
+                    $panel.html(fallbackLog);
+                } else {
+                    $panel.text('Не удалось прочитать журнал.');
                 }
             },
             beforeSend: function () {
-                $(`#log_${log_name}`).html(`<i class="fa fa-spinner fa-pulse"></i>`);
+                $panel.html('<i class="fa fa-spinner fa-pulse"></i>');
             }
         });
     }
-
 });

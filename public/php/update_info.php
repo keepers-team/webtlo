@@ -18,7 +18,7 @@ use KeepersTeam\Webtlo\Update\TorrentsClients;
 $update_result = '';
 
 // Создаём контейнер и пишем в лог.
-$app = App::create(logFile: LogFile::Update);
+$app = App::create(logFile: LogFile::Update, logToTab: true);
 $log = $app->getLogger();
 
 try {

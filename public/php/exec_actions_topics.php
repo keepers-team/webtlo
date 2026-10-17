@@ -12,7 +12,7 @@ use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
 use KeepersTeam\Webtlo\TopicList\ListingType;
 
 // Подключаем контейнер.
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 try {

@@ -7,7 +7,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 use KeepersTeam\Webtlo\App;
 use KeepersTeam\Webtlo\Helper;
 
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 try {

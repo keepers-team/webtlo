@@ -12,7 +12,7 @@ use KeepersTeam\Webtlo\WebTLO;
 $result = array_fill_keys(['newVersionNumber', 'newVersionLink', 'whatsNew'], '');
 
 // Подключаем контейнер.
-$app = App::create();
+$app = App::create(logToTab: true);
 $log = $app->getLogger();
 
 try {

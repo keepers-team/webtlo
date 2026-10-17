@@ -47,7 +47,7 @@ final class App
     /**
      * Создаём DI-контейнер.
      */
-    public static function create(?LogFile $logFile = null): self
+    public static function create(?LogFile $logFile = null, bool $logToTab = false): self
     {
         // Если контейнер уже создан, новый не создаём.
         if (self::$appContainer !== null) {
@@ -66,7 +66,7 @@ final class App
         // Добавляем обработчик классов конфига.
         $container->addServiceProvider(new ConfigServiceProvider());
         // Подключаем интерфейс для ведения журнала.
-        $container->addServiceProvider(new LoggerServiceProvider(logFile: $logFile));
+        $container->addServiceProvider(new LoggerServiceProvider(logFile: $logFile, logToTab: $logToTab));
         // Добавляем создание таблиц-клонов.
         $container->addServiceProvider(new CloneServiceProvider());
         // Добавляем подключение к внешним ресурсам.

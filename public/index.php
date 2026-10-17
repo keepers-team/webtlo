@@ -1209,12 +1209,12 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                 </div>
                 <div id="log_tabs" class="menu">
                     <ul class="menu">
-                        <li class="menu"><a href="#log" class="menu">Лог</a></li>
-                        <li class="menu"><a href="#log_update" class="menu log_file">update</a></li>
-                        <li class="menu"><a href="#log_keepers" class="menu log_file">keepers</a></li>
-                        <li class="menu"><a href="#log_reports" class="menu log_file">reports</a></li>
-                        <li class="menu"><a href="#log_control" class="menu log_file">control</a></li>
-                        <li class="menu"><a href="#log_topics" class="menu log_file">topics</a></li>
+                        <li class="menu"><a href="#log" class="menu log_file" data-log-file="log-tab">Лог</a></li>
+                        <li class="menu"><a href="#log_update" class="menu log_file" data-log-file="update">update</a></li>
+                        <li class="menu"><a href="#log_keepers" class="menu log_file" data-log-file="keepers">keepers</a></li>
+                        <li class="menu"><a href="#log_reports" class="menu log_file" data-log-file="reports">reports</a></li>
+                        <li class="menu"><a href="#log_control" class="menu log_file" data-log-file="control">control</a></li>
+                        <li class="menu"><a href="#log_topics" class="menu log_file" data-log-file="topics">topics</a></li>
                     </ul>
                     <div id="log_content">
                         <div id="log"></div>
