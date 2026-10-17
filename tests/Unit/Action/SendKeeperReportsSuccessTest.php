@@ -287,8 +287,8 @@ final class SendKeeperReportsSuccessTest extends TestCase
             logger     : $logger,
         );
 
-        $creator->forums = [10, 20];
-        $action          = new SendKeeperReports($config, $creator, $report, $updateTime, $logger);
+        (new ReflectionProperty($creator, 'forums'))->setValue($creator, [10, 20]);
+        $action = new SendKeeperReports($config, $creator, $report, $updateTime, $logger);
 
         $fullUpdateTime = new ReflectionProperty($action, 'fullUpdateTime');
         $fullUpdateTime->setValue($action, new DateTimeImmutable('2026-09-23T00:00:00+00:00'));
