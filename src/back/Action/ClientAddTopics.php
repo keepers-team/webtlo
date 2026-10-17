@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
+use KeepersTeam\Webtlo\Clients\SavePathLookupInterface;
 use KeepersTeam\Webtlo\Config\SubFolderType;
 use KeepersTeam\Webtlo\Config\SubForum;
 use KeepersTeam\Webtlo\Config\SubForums;
@@ -100,46 +101,99 @@ final class ClientAddTopics
                 continue;
             }
 
-            $logClient = ['tag' => $client->getClientTag()];
-
-            // Добавляем раздачи в нужный торрент-клиент.
-            $addedTorrentHashes = $this->addTorrentsToClient(
-                topics  : $downloadedTorrents,
-                client  : $client,
-                subForum: $subForum,
+            // Ищем предыдущие версии добавляемых раздач с их клиентами хранения.
+            $updatedHashes = $this->torrents->getUpdatedPreviousHashes(
+                hashes: array_map(static fn(DownloadedTopic $topic) => $topic->hash, $downloadedTorrents),
             );
-            unset($downloadedTorrents);
 
-            // Сохраним количество добавленных раздач для общего счётчика.
-            $countAddedTorrents = count($addedTorrentHashes);
-            if (!$countAddedTorrents) {
-                $this->logger->warning('Не удалось добавить раздачи в торрент-клиент "{tag}"', $logClient);
+            // Актуальная версия раздачи добавляется в клиент хранения предыдущей версии.
+            $storingClientByHash = [];
+            $ambiguousHashes     = [];
+            foreach ($updatedHashes as $clientId => $previousByHash) {
+                foreach (array_keys($previousByHash) as $currentHash) {
+                    if (isset($storingClientByHash[$currentHash])) {
+                        // Предыдущие версии раздачи найдены в разных торрент-клиентах.
+                        $ambiguousHashes[$currentHash] = true;
+                        unset($storingClientByHash[$currentHash]);
 
-                continue;
-            }
-
-            // Указываем раздачам метку, если она не выставлена при добавлении раздач.
-            if ($subForum->label !== '' && !$client->isLabelAddingAllowed()) {
-                // Ждём добавления раздач, чтобы проставить метку
-                sleep((int) round(count($addedTorrentHashes) / 20) + 1);
-
-                // устанавливаем метку
-                $response = $client->setLabel(torrentHashes: $addedTorrentHashes, label: $subForum->label);
-                if ($response === false) {
-                    $this->logger->warning('Возникли проблемы при отправке запроса на установку метки', $logClient);
+                        continue;
+                    }
+                    $storingClientByHash[$currentHash] = $clientId;
                 }
             }
+            foreach (array_keys($ambiguousHashes) as $currentHash) {
+                $this->logger->warning(
+                    'Предыдущие версии раздачи найдены в разных торрент-клиентах',
+                    ['hash' => $currentHash]
+                );
+            }
 
-            // Записываем новые раздачи как хранимые в торрент-клиенте.
-            $this->torrents->addDownloadedTorrents(hashes: $addedTorrentHashes, clientId: $subForum->clientId);
+            // Обновлённые раздачи добавляем в клиент хранения предыдущей версии,
+            // остальные - в клиент подраздела.
+            $topicsByClient = [];
+            foreach ($downloadedTorrents as $topic) {
+                $topicsByClient[$storingClientByHash[$topic->hash] ?? $subForum->clientId][] = $topic;
+            }
+            unset($downloadedTorrents);
 
-            $this->logger->info(
-                'Добавлено раздач в торрент-клиент "{tag}": {count} шт.',
-                [...$logClient, 'count' => $countAddedTorrents]
-            );
+            foreach ($topicsByClient as $storingClientId => $clientTopics) {
+                // Подключаемся к торрент-клиенту добавления. Если недоступен - пропускаем.
+                if ($storingClientId === $subForum->clientId) {
+                    $targetClient = $client;
+                } else {
+                    $targetClient = $this->clientFactory->getClientById(clientId: $storingClientId);
+                }
+                if ($targetClient === null) {
+                    $this->logger->warning(
+                        'Недоступен торрент-клиент #{id} для добавления обновлённых раздач',
+                        ['id' => $storingClientId]
+                    );
 
-            $usedTorrentClients[]   = $subForum->clientId;
-            $totalTorrentFilesAdded += $countAddedTorrents;
+                    continue;
+                }
+
+                $logClient = ['tag' => $targetClient->getClientTag()];
+
+                // Добавляем раздачи в торрент-клиент хранения.
+                $addedTorrentHashes = $this->addTorrentsToClient(
+                    topics        : $clientTopics,
+                    client        : $targetClient,
+                    subForum      : $subForum,
+                    previousHashes: $updatedHashes[$storingClientId] ?? [],
+                );
+                unset($clientTopics);
+
+                // Сохраним количество добавленных раздач для общего счётчика.
+                $countAddedTorrents = count($addedTorrentHashes);
+                if (!$countAddedTorrents) {
+                    $this->logger->warning('Не удалось добавить раздачи в торрент-клиент "{tag}"', $logClient);
+
+                    continue;
+                }
+
+                // Указываем раздачам метку, если она не выставлена при добавлении раздач.
+                if ($subForum->label !== '' && !$targetClient->isLabelAddingAllowed()) {
+                    // Ждём добавления раздач, чтобы проставить метку
+                    sleep((int) round(count($addedTorrentHashes) / 20) + 1);
+
+                    // устанавливаем метку
+                    $response = $targetClient->setLabel(torrentHashes: $addedTorrentHashes, label: $subForum->label);
+                    if ($response === false) {
+                        $this->logger->warning('Возникли проблемы при отправке запроса на установку метки', $logClient);
+                    }
+                }
+
+                // Записываем новые раздачи как хранимые в торрент-клиенте.
+                $this->torrents->addDownloadedTorrents(hashes: $addedTorrentHashes, clientId: $storingClientId);
+
+                $this->logger->info(
+                    'Добавлено раздач в торрент-клиент "{tag}": {count} шт.',
+                    [...$logClient, 'count' => $countAddedTorrents]
+                );
+
+                $usedTorrentClients[]   = $storingClientId;
+                $totalTorrentFilesAdded += $countAddedTorrents;
+            }
         }
 
         $totalTorrentClients = count(array_unique($usedTorrentClients));
@@ -210,13 +264,34 @@ final class ClientAddTopics
     }
 
     /**
-     * @param DownloadedTopic[] $topics
+     * @param DownloadedTopic[]       $topics         Раздачи для добавления
+     * @param array<string, string[]> $previousHashes Хеши предыдущих версий по хешу добавляемой
      *
-     * @return string[]
+     * @return string[] Хеши добавленных раздач
      */
-    private function addTorrentsToClient(array $topics, ClientInterface $client, SubForum $subForum): array
+    private function addTorrentsToClient(array $topics, ClientInterface $client, SubForum $subForum, array $previousHashes): array
     {
         $clientAddingSleep = $client->getTorrentAddingSleep();
+
+        $previousPaths = [];
+        if ($previousHashes !== [] && $client instanceof SavePathLookupInterface) {
+            $pathsByHash = $client->getTorrentSavePaths(array_unique(array_merge(...array_values($previousHashes))));
+            foreach ($previousHashes as $currentHash => $oldHashes) {
+                $paths = [];
+                foreach ($oldHashes as $oldHash) {
+                    $path = $pathsByHash[strtoupper($oldHash)] ?? null;
+                    if ($path !== null && !in_array($path, $paths, true)) {
+                        $paths[] = $path;
+                    }
+                }
+
+                if (count($paths) === 1) {
+                    $previousPaths[$currentHash] = $paths[0];
+                } elseif (count($paths) > 1) {
+                    $this->logger->warning('У предыдущих версий раздачи разные каталоги', ['hash' => $currentHash]);
+                }
+            }
+        }
 
         // Убираем последний слэш в пути каталога для данных
         $dataFolder = trim($subForum->dataFolder);
@@ -225,7 +300,8 @@ final class ClientAddTopics
         $addedTorrentHashes = [];
         // Добавление раздач в торрент-клиенты.
         foreach ($topics as $topic) {
-            $torrentSavePath = $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
+            $torrentSavePath = $previousPaths[$topic->hash]
+                ?? $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
 
             // Добавляем раздачу в торрент-клиент.
             $response = $client->addTorrent(
