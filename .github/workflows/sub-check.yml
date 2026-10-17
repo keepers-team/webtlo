@@ -38,6 +38,9 @@ jobs:
       - name: Install composer dependencies
         run: composer install --ignore-platform-reqs --prefer-dist
 
+      - name: Test Transmission RPC actions
+        run: php qa/TransmissionActionTest.php
+
       - name: Restore tools cache
         id: cache-tools
         uses: actions/cache/restore@v6
