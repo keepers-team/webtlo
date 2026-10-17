@@ -9,6 +9,10 @@ namespace KeepersTeam\Webtlo\Infrastructure\Database;
  */
 final class MigrationPlan
 {
+    /**
+     * @param non-negative-int $fromVersion
+     * @param non-negative-int $toVersion
+     */
     public function __construct(
         public readonly MigrationAction $action,
         public readonly int             $fromVersion,

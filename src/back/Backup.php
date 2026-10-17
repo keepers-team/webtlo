@@ -27,17 +27,24 @@ final class Backup
         self::clearBackups($backupPath, 'config-*.ini');
     }
 
-    public static function database(string $path, int $version): void
+    /**
+     * @param string           $path    путь к файлу БД для создания бекапа
+     * @param non-negative-int $version текущая версия БД
+     * @param bool             $rotate  ротировать ли старые бекапы
+     */
+    public static function database(string $path, int $version, bool $rotate = true): void
     {
         $backupName = sprintf('webtlo-v%d-%s.db', $version, date('Y-m-d-H-i'));
         $backupPath = self::getPath();
         $backupFile = $backupPath . DIRECTORY_SEPARATOR . $backupName;
 
         // Бекапим БД.
-        copy($path, $backupFile);
+        $done = copy($path, $backupFile);
 
-        // Удаляем лишние бекапы.
-        self::clearBackups($backupPath, 'webtlo-*.db');
+        // Удаляем лишние бекапы в случае успешного создания нового бекапа.
+        if ($done && $rotate) {
+            self::clearBackups($backupPath, 'webtlo-*.db');
+        }
     }
 
     /**
@@ -64,16 +71,8 @@ final class Backup
         return $files[0];
     }
 
-    private static function getPath(): string
-    {
-        $backupPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
-        Helper::checkDirRecursive($backupPath);
-
-        return $backupPath;
-    }
-
     /**
-     * Удаляем лишние конфиги.
+     * Удаляем лишние бекапы.
      */
     private static function clearBackups(string $path, string $pattern): void
     {
@@ -83,15 +82,11 @@ final class Backup
             return;
         }
 
-        // Сортируем от свежих к старым и удаляем самые старые.
-        $matches = [];
-        foreach ($files as $file) {
-            $matches[filemtime($file)] = $file;
-        }
-        krsort($matches);
+        // Сортируем по времени изменения (сначала новые).
+        usort($files, static fn(string $a, string $b): int => filemtime($b) <=> filemtime($a));
 
         // Оставим максимальное кол-во бекапов.
-        $unlink = array_slice($matches, self::MAX_BACKUPS);
+        $unlink = array_slice($files, self::MAX_BACKUPS);
 
         // Остальное - удалим.
         foreach ($unlink as $file) {
@@ -99,5 +94,16 @@ final class Backup
                 unlink($file);
             }
         }
+    }
+
+    /**
+     * Путь хранения бекапов.
+     */
+    private static function getPath(): string
+    {
+        $backupPath = Helper::getStorageDir() . DIRECTORY_SEPARATOR . self::FOLDER;
+        Helper::checkDirRecursive($backupPath);
+
+        return $backupPath;
     }
 }

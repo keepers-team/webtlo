@@ -55,8 +55,8 @@ final class MigrationRunner
                 break;
             case MigrationAction::RestoreBackup:
                 // Найден бекап, пробуем откатить.
-                // Бекапим текущую версию.
-                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+                // Бекапим текущую версию без ротации.
+                Backup::database(path: $db->databasePath, version: $plan->fromVersion, rotate: false);
 
                 // Подменяем файл БД, для этого нужно закрыть соединение.
                 $db->close();
@@ -78,8 +78,8 @@ final class MigrationRunner
                 break;
             case MigrationAction::RecreateSchema:
                 // Удалить и пересоздать схему.
-                // Бекапим текущую версию.
-                Backup::database(path: $db->databasePath, version: $plan->fromVersion);
+                // Бекапим текущую версию без ротации.
+                Backup::database(path: $db->databasePath, version: $plan->fromVersion, rotate: false);
 
                 // Удаляем файл и создаём схему с нуля.
                 $db->close();
@@ -103,7 +103,8 @@ final class MigrationRunner
      */
     private function plan(ConnectionInterface $con): MigrationPlan
     {
-        $current = (int) ($con->queryColumn('PRAGMA user_version') ?? 0);
+        // Версия может быть 0 или больше.
+        $current = max(0, (int) ($con->queryColumn('PRAGMA user_version') ?? 0));
 
         if ($current === $this->targetVersion) {
             return new MigrationPlan(
