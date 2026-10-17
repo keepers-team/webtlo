@@ -130,7 +130,7 @@ final class SendKeeperReports
      * Отправка отчётов по каждому хранимому подразделу в API отчётов.
      *
      * @param DateTimeImmutable $fullUpdateTime дата полного обновления сведений
-     * @param bool              $reportRewrite признак отправки "чистых" отчётов
+     * @param bool              $reportRewrite  признак отправки "чистых" отчётов
      */
     private function sendSubsectionsReports(DateTimeImmutable $fullUpdateTime, bool $reportRewrite): bool
     {
@@ -296,7 +296,7 @@ final class SendKeeperReports
      * Отправка отчётов в виде списка хранимых хешей в API отчётов.
      *
      * @param DateTimeImmutable $fullUpdateTime дата полного обновления сведений
-     * @param bool              $reportRewrite признак отправки "чистых" отчётов
+     * @param bool              $reportRewrite  признак отправки "чистых" отчётов
      */
     private function sendHashesReports(DateTimeImmutable $fullUpdateTime, bool $reportRewrite): bool
     {
