@@ -290,16 +290,17 @@ final class SendKeeperReportsSuccessTest extends TestCase
         (new ReflectionProperty($creator, 'forums'))->setValue($creator, [10, 20]);
         $action = new SendKeeperReports($config, $creator, $report, $updateTime, $logger);
 
-        $fullUpdateTime = new ReflectionProperty($action, 'fullUpdateTime');
-        $fullUpdateTime->setValue($action, new DateTimeImmutable('2026-09-23T00:00:00+00:00'));
-
         return [$action, $handler];
     }
 
     private function invokeSend(SendKeeperReports $action, string $method): bool
     {
         $reflection = new ReflectionMethod($action, $method);
-        $result     = $reflection->invoke($action, false);
+        $result     = $reflection->invoke(
+            $action,
+            new DateTimeImmutable('2026-09-23T00:00:00+00:00'),
+            false,
+        );
         self::assertIsBool($result);
 
         return $result;
