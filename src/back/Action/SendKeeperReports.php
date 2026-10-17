@@ -22,12 +22,6 @@ use Throwable;
 final class SendKeeperReports
 {
     /**
-     * Дата полного обновления сведений.
-     * Она же считается датой каждого из отправляемых отчётов.
-     */
-    private DateTimeImmutable $fullUpdateTime;
-
-    /**
      * @param ConfigReport $configReport настройки отправки отчётов
      * @param CreateReport $createReport Создание отчётов
      */
@@ -65,17 +59,21 @@ final class SendKeeperReports
         // Инициализация переменных для создания отчётов.
         $this->createReport->initConfig();
 
-        // Проверим факт полного обновления сведений.
-        if ($this->checkFullUpdateTime() === false) {
+        /**
+         * Дата полного обновления сведений.
+         * Она же считается датой каждого из отправляемых отчётов.
+         */
+        $fullUpdateTime = $this->checkFullUpdateTime();
+        if ($fullUpdateTime === null) {
             return false;
         }
 
         if ($this->configReport->sendMethod->bySubsections()) {
             // Отправляем отчёты по каждому хранимому подразделу.
-            $reportsSent = $this->sendSubsectionsReports(reportRewrite: $reportRewrite);
+            $reportsSent = $this->sendSubsectionsReports(fullUpdateTime: $fullUpdateTime, reportRewrite: $reportRewrite);
         } else {
             // Или просто кидаем все хранимые хеши.
-            $reportsSent = $this->sendHashesReports(reportRewrite: $reportRewrite);
+            $reportsSent = $this->sendHashesReports(fullUpdateTime: $fullUpdateTime, reportRewrite: $reportRewrite);
         }
 
         // Отправляем сводный отчёт + телеметрию.
@@ -111,7 +109,7 @@ final class SendKeeperReports
     /**
      * Проверка наличия даты полного обновления сведений и запись этой даты в локальные переменные.
      */
-    private function checkFullUpdateTime(): bool
+    private function checkFullUpdateTime(): ?DateTimeImmutable
     {
         $fullUpdateTime = $this->updateTime->checkReportsSendAvailable(
             markers: $this->createReport->getForums(),
@@ -119,22 +117,22 @@ final class SendKeeperReports
         );
 
         if ($fullUpdateTime === null) {
-            return false;
+            return null;
         }
 
         // Перезапишем актуальную дату отчётности.
-        $this->fullUpdateTime = $fullUpdateTime;
         $this->createReport->setFullUpdateTime(updateTime: $fullUpdateTime);
 
-        return true;
+        return $fullUpdateTime;
     }
 
     /**
      * Отправка отчётов по каждому хранимому подразделу в API отчётов.
      *
-     * @param bool $reportRewrite признак отправки "чистых" отчётов
+     * @param DateTimeImmutable $fullUpdateTime дата полного обновления сведений
+     * @param bool              $reportRewrite признак отправки "чистых" отчётов
      */
-    private function sendSubsectionsReports(bool $reportRewrite): bool
+    private function sendSubsectionsReports(DateTimeImmutable $fullUpdateTime, bool $reportRewrite): bool
     {
         $creator = $this->createReport;
         $report  = $this->sendReport;
@@ -186,7 +184,7 @@ final class SendKeeperReports
                 $apiResult = $report->sendForumTopics(
                     forumId       : $forumId,
                     topicsToReport: $topicsToReport,
-                    reportDate    : $this->fullUpdateTime,
+                    reportDate    : $fullUpdateTime,
                     statusRules   : $statusRules,
                     reportRewrite : $reportRewrite,
                 );
@@ -297,9 +295,10 @@ final class SendKeeperReports
     /**
      * Отправка отчётов в виде списка хранимых хешей в API отчётов.
      *
-     * @param bool $reportRewrite признак отправки "чистых" отчётов
+     * @param DateTimeImmutable $fullUpdateTime дата полного обновления сведений
+     * @param bool              $reportRewrite признак отправки "чистых" отчётов
      */
-    private function sendHashesReports(bool $reportRewrite): bool
+    private function sendHashesReports(DateTimeImmutable $fullUpdateTime, bool $reportRewrite): bool
     {
         $creator = $this->createReport;
         $report  = $this->sendReport;
@@ -353,12 +352,13 @@ final class SendKeeperReports
         $apiReportSuccesses = 0;
         $allReportsSent     = true;
         foreach ($generator() as $status => $hashes) {
+            ++$i;
             Timers::start("send_api_chunks_$i");
 
             ++$apiReportAttempts;
             $apiResult = $report->sendReportHashes(
                 hashes       : $hashes,
-                reportDate   : $this->fullUpdateTime,
+                reportDate   : $fullUpdateTime,
                 status       : $status,
                 reportRewrite: $reportRewrite,
             );
@@ -374,7 +374,7 @@ final class SendKeeperReports
                 $success ? 'debug' : 'notice',
                 $success ? 'API. Отчёт отправлен [{current}] {sec}' : 'API. Отчёт не отправлен [{current}] {sec}',
                 [
-                    'current' => ++$i,
+                    'current' => $i,
                     'sec'     => Timers::getExecTime("send_api_chunks_$i"),
                     ...$apiResult,
                 ]

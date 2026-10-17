@@ -158,20 +158,32 @@ final class Helper
      */
     public static function normalizePath(string $path): string
     {
-        return array_reduce(explode(DIRECTORY_SEPARATOR, $path), static function($left, $right) {
-            if ($left === null) {
-                return $right;
-            }
-            if ($right === '' || $right === '.') {
-                return $left;
-            }
-            if ($right === '..') {
-                return dirname($left);
-            }
-            $pattern = sprintf('/\%s+/', DIRECTORY_SEPARATOR);
+        $pattern = sprintf('/\%s+/', DIRECTORY_SEPARATOR);
 
-            return preg_replace($pattern, DIRECTORY_SEPARATOR, $left . DIRECTORY_SEPARATOR . $right);
-        });
+        $result = array_reduce(
+            explode(DIRECTORY_SEPARATOR, $path),
+            static function(?string $left, string $right) use ($pattern): ?string {
+                if ($left === null) {
+                    return $right;
+                }
+
+                if ($right === '' || $right === '.') {
+                    return $left;
+                }
+
+                if ($right === '..') {
+                    return dirname($left);
+                }
+
+                return preg_replace(
+                    $pattern,
+                    DIRECTORY_SEPARATOR,
+                    $left . DIRECTORY_SEPARATOR . $right
+                );
+            }
+        );
+
+        return $result ?? '';
     }
 
     public static function normalizePathEncoding(string $path): string
