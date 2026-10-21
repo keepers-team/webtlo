@@ -47,7 +47,7 @@ final class App
     /**
      * Создаём DI-контейнер.
      */
-    public static function create(?LogFile $logFile = null): self
+    public static function create(?LogFile $logFile = LogFile::Default): self
     {
         // Если контейнер уже создан, новый не создаём.
         if (self::$appContainer !== null) {

@@ -16,6 +16,9 @@ enum LogFile: string
      */
     case Main = 'webtlo';
 
+    /** Записи операций, выводимых во вкладке «Лог». */
+    case Default = 'default';
+
     /**
      * Файлы для каждого из процессов.
      */
@@ -36,5 +39,31 @@ enum LogFile: string
     public function getFilePath(): string
     {
         return Helper::getStorageLogsPath(file: $this->getFileName());
+    }
+
+    /**
+     * Максимальное количество файлов при ротации.
+     *
+     * @return positive-int
+     */
+    public function maxFilesCount(): int
+    {
+        return match ($this) {
+            self::Default => 1,
+            default       => 5,
+        };
+    }
+
+    /**
+     * Максимальный размер файла при ротации.
+     *
+     * @return positive-int
+     */
+    public function maxFileSize(): int
+    {
+        return match ($this) {
+            self::Default => 65536,   // 64 кб
+            default       => 2097152, // 2 мб
+        };
     }
 }

@@ -4,92 +4,95 @@
  * @module ModuleNames.JOURNAL
  */
 
-webtlo.register(ModuleNames.JOURNAL,function () {
+webtlo.register(ModuleNames.JOURNAL, function () {
 
     // Инициализируем Tabs Widget.
     const $logTabs = $('#log_tabs').tabs();
 
-    // Чтение журнала из файла.
+    // Отмечаем вкладку по умолчанию и текущую активную вкладку.
+    const $defaultTab = $logTabs.find('a[href="#log_default"]')
+    let $activeTab = $defaultTab;
+
     $logTabs.on('tabsactivate', function (event, ui) {
-        // current tab
-        const element_new = $(ui.newTab).children('a');
-        const name_new = $(element_new).text();
+        ui.oldPanel.empty();
 
-        if (!element_new.hasClass('log_file')) {
-            return false;
-        }
-
-        // previous tab
-        const element_old = $(ui.oldTab).children('a');
-        if (element_old.hasClass('log_file')) {
-            $(`#log_${$(element_old).text()}`).text('');
-        }
-
-        getLogContent(name_new);
-
-        return true;
+        // Обновляем текущую активную вкладку и загружаем содержимое.
+        $activeTab = $(ui.newTab).children('a[data-log-file]');
+        loadLog($activeTab);
     });
 
-    // Очистка журнала.
-    $('#clear_log').on('click', function () {
-        // active log tab
-        const log_file = $('#log_tabs .ui-tabs-panel:visible').prop('id').replace(/log_?/, '');
-        if (!log_file) {
-            $('#log').text('');
-
-            return;
-        }
-
-        // request
-        $.ajax({
-            type: 'POST',
-            url: 'php/clear_log_content.php',
-            data: {
-                log_file: log_file
-            },
-            success: function () {
-                $(`#log_${log_file}`).text('');
-            },
-            beforeSend: function () {
-                $(`#log_${log_file}`).html(`<i class="fa fa-spinner fa-pulse"></i>`);
-            }
-        });
+    // После завершения операции перечитываем файл; ответ служит запасным источником.
+    $logTabs.on('logTabRefresh', function (event, fallbackLog) {
+        event.preventDefault();
+        loadLog($defaultTab, fallbackLog);
     });
 
-    // Обновить содержимое журнала.
     $('#refresh_log').on('click', function () {
-        // active log tab
-        const log_file = $('#log_tabs .ui-tabs-panel:visible').prop('id').replace(/log_?/, '');
-        getLogContent(log_file);
+        loadLog($activeTab);
+    })
+
+    $('#clear_log').on('click', function () {
+        clearLog($activeTab);
     });
 
+    // Первая вкладка активна сразу после инициализации Tabs Widget.
+    loadLog($defaultTab);
 
-    // === ЛОКАЛЬНЫЕ ФУНКЦИИ ===
+    function getPanel($tab) {
+        return $($tab.attr('href'));
+    }
 
-    /**
-     * Получить содержимое лог-файла.
-     *
-     * @param {string} log_name
-     */
-    function getLogContent(log_name) {
-        if (!log_name) return;
+    function loadLog($tab, fallbackLog = '') {
+        const logFile = $tab.data('log-file');
+        if (!logFile) return;
 
-        // request
+        const $panel = getPanel($tab);
+
         $.ajax({
             type: 'POST',
             url: 'php/get_log_content.php',
-            data: {
-                log_file: log_name
+            data: {log_file: logFile},
+            dataType: 'text',
+            beforeSend: function () {
+                showSpinner($panel);
             },
             success: function (response) {
-                if (typeof response !== 'undefined') {
-                    $(`#log_${log_name}`).html(response);
-                }
+                $panel.html(response || fallbackLog);
             },
-            beforeSend: function () {
-                $(`#log_${log_name}`).html(`<i class="fa fa-spinner fa-pulse"></i>`);
+            error: function () {
+                if (fallbackLog) {
+                    $panel.html(fallbackLog);
+                } else {
+                    $panel.text('Не удалось прочитать журнал.');
+                }
             }
         });
+    }
+
+    function clearLog($tab) {
+        const logFile = $tab.data('log-file');
+        if (!logFile) return;
+
+        const $panel = getPanel($tab);
+
+        $.ajax({
+            type: 'POST',
+            url: 'php/clear_log_content.php',
+            data: {log_file: logFile},
+            beforeSend: function () {
+                showSpinner($panel);
+            },
+            success: function () {
+                $panel.empty();
+            },
+            error: function () {
+                $panel.text('Не удалось очистить журнал.');
+            }
+        });
+    }
+
+    function showSpinner($panel) {
+        $panel.html('<i class="fa fa-spinner fa-pulse"></i>');
     }
 
 });

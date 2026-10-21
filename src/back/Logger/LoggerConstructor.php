@@ -40,10 +40,7 @@ final class LoggerConstructor
         'WARNING',
     ];
 
-    private static int $logMaxSize  = 2097152;
-    private static int $logMaxCount = 5;
-
-    public static function create(?LogFile $logFile = null, Level $level = Level::Info): LoggerInterface
+    public static function create(?LogFile $logFile = LogFile::Default, Level $level = Level::Info): LoggerInterface
     {
         $appLogFile = LogFile::Main;
 
@@ -63,11 +60,19 @@ final class LoggerConstructor
                 new StreamHandler(self::createLogFile(logFile: $appLogFile))
             );
 
-            // Запись в заданный файл.
+            // Указана запись в файл.
             if ($logFile !== null) {
+                // Пишем в дефолтный файл всегда, но в ограниченном виде, для вкладки «Лог».
                 $logger->pushHandler(
-                    self::getFileHandler(logFile: $logFile, level: $level)
+                    self::getFileHandler(logFile: LogFile::Default, level: $level)
                 );
+
+                // Если файл, не дефолтный, то добавляем и его.
+                if ($logFile !== LogFile::Default) {
+                    $logger->pushHandler(
+                        self::getFileHandler(logFile: $logFile, level: $level)
+                    );
+                }
             }
 
             // Запись в error_log.
@@ -121,7 +126,7 @@ final class LoggerConstructor
         $filePath = $logFile->getFilePath();
 
         // Ротация файла журнала, если нужна.
-        self::logRotate(filename: $filePath);
+        self::logRotate(logFile: $logFile, filename: $filePath);
 
         // Создаём файл, если его нет.
         if (!file_exists($filePath)) {
@@ -131,15 +136,15 @@ final class LoggerConstructor
         return $filePath;
     }
 
-    private static function logRotate(string $filename): void
+    private static function logRotate(LogFile $logFile, string $filename): void
     {
         if (!file_exists($filename)) {
             return;
         }
 
         $rotation = new Rotation(options: [
-            'files'    => self::$logMaxCount,
-            'min-size' => self::$logMaxSize,
+            'files'    => $logFile->maxFilesCount(),
+            'min-size' => $logFile->maxFileSize(),
             'then'     => static fn(string $rotated, string $origin): bool => touch($origin),
         ]);
 

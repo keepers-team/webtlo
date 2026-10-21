@@ -29,8 +29,14 @@ function showResultTopics(text = '') {
 }
 
 function addDefaultLog(log) {
-    if (log) {
-        $('#log').prepend(log);
+    if (!log) return;
+
+    const refresh = $.Event('logTabRefresh');
+    $('#log_tabs').trigger(refresh, [log]);
+
+    // При ошибке инициализации вкладок сохраняем прежний способ вывода.
+    if (!refresh.isDefaultPrevented()) {
+        $('#log_default').prepend(log);
     }
 }
 
