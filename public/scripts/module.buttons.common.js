@@ -153,7 +153,7 @@ webtlo.register(ModuleNames.BUTTONS_ACTIONS, function() {
             'name': 'Обновить сведения',
             'title': 'Обновление всех сведений из всех источников',
         },
-        'loadSubForums': {
+        'subsections': {
             'name': 'Обновить хранимые подразделы',
             'title': 'Обновление списков раздач всех хранимых подразделов',
         },
