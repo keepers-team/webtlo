@@ -80,6 +80,39 @@ final class Torrents
     }
 
     /**
+     * Найти хеши предыдущих версий из группы «обновлено (...)» по клиентам их хранения.
+     *
+     * @param string[] $hashes хеши актуальных версий
+     *
+     * @return array<int, array<string, string[]>> хеши предыдущих версий по хешу актуальной, сгруппированные по клиенту хранения
+     */
+    public function getUpdatedPreviousHashes(array $hashes): array
+    {
+        $result = [];
+        foreach (array_chunk(array_unique($hashes), 500) as $chunk) {
+            $search = KeysObject::create($chunk);
+            $rows   = $this->con->query(
+                "
+                    SELECT previous.client_id AS client_id, current.info_hash AS current_hash, previous.info_hash AS previous_hash
+                    FROM Topics AS current
+                    INNER JOIN Torrents AS previous ON previous.topic_id = current.id
+                    INNER JOIN TopicsUnregistered AS unregistered ON unregistered.info_hash = previous.info_hash
+                    WHERE current.info_hash IN ($search->keys)
+                      AND previous.info_hash <> current.info_hash
+                      AND unregistered.status LIKE 'обновлено (%'
+                ",
+                $search->values,
+            );
+
+            foreach ($rows as $row) {
+                $result[(int) $row['client_id']][$row['current_hash']][] = $row['previous_hash'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * @param string[]     $hashes
      * @param positive-int $chunkSize
      */
