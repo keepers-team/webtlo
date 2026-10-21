@@ -11,6 +11,7 @@ use KeepersTeam\Webtlo\Enum\UpdateStatus;
 use KeepersTeam\Webtlo\External\ApiReportClient;
 use KeepersTeam\Webtlo\External\Data\ApiError;
 use KeepersTeam\Webtlo\External\Data\KeepersListResponse;
+use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersLists;
 use KeepersTeam\Webtlo\Storage\Clone\KeepersSeeders;
 use KeepersTeam\Webtlo\Storage\Table\UpdateTime;
@@ -21,13 +22,14 @@ use Throwable;
 final class KeepersReports
 {
     public function __construct(
-        private readonly ApiReportClient $apiReport,
-        private readonly ReportSend      $configReport,
-        private readonly SubForums       $configSubForums,
-        private readonly KeepersLists    $keepersLists,
-        private readonly KeepersSeeders  $keepersSeeders,
-        private readonly UpdateTime      $updateTime,
-        private readonly LoggerInterface $logger,
+        private readonly ApiReportClient     $apiReport,
+        private readonly ReportSend          $configReport,
+        private readonly SubForums           $configSubForums,
+        private readonly KeepersLists        $keepersLists,
+        private readonly KeepersSeeders      $keepersSeeders,
+        private readonly UpdateTime          $updateTime,
+        private readonly ConnectionInterface $db,
+        private readonly LoggerInterface     $logger,
     ) {}
 
     public function __destruct()
@@ -54,15 +56,11 @@ final class KeepersReports
         $this->logger->info('ApiReport. Начато обновление отчётов хранителей...');
 
         // Список ид обновлений подразделов.
-        $keptForumsUpdate = array_map(static fn($el) => 100000 + $el, $keptForums);
+        $keptForumsUpdate   = array_map(static fn($el) => 100000 + $el, $keptForums);
+        $keptForumsUpdate[] = UpdateMark::KEEPERS->value;
 
         $updateStatus = $this->updateTime->getMarkersObject(markers: $keptForumsUpdate);
         $updateStatus->checkMarkersLess(seconds: 15 * 60);
-
-        // Если количество маркеров не совпадает, обнулим имеющиеся, чтобы обновить все.
-        if ($updateStatus->getLastCheckStatus() === UpdateStatus::MISSED) {
-            $this->keepersLists->clearLists();
-        }
 
         // Проверим минимальную дату обновления данных других хранителей.
         if ($updateStatus->getLastCheckStatus() === UpdateStatus::EXPIRED) {
@@ -92,7 +90,6 @@ final class KeepersReports
         }
 
         $forumsScanned = 0;
-        $keeperIds     = [];
 
         $apiReportCount = 0;
 
@@ -114,50 +111,72 @@ final class KeepersReports
             Timers::start("get_report_api_$forumId");
 
             try {
+                $this->keepersLists->clearTempTable();
+                $this->keepersSeeders->clearTempTable();
+
                 $forumReports = $this->apiReport->getKeepersReports(forumId: $forumId);
+
+                $keeperIds = [];
+                foreach ($forumReports->keepers as $keeperReport) {
+                    // Пропускаем игнорируемых хранителей.
+                    if (in_array($keeperReport->keeperId, $excludedKeepers, true)) {
+                        continue;
+                    }
+
+                    /** Данные о хранителе. */
+                    $keeper = $keepersList->getKeeperInfo(keeperId: $keeperReport->keeperId);
+
+                    // Пропускаем раздачи несуществующих хранителей.
+                    if ($keeper === null) {
+                        continue;
+                    }
+
+                    // Записываем сидов-хранителей раздачи, не зависимо от статуса.
+                    $this->keepersSeeders->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
+                    $this->keepersSeeders->cloneFill();
+
+                    // Пропускаем раздачи кандидатов в хранители.
+                    if ($keeper->isCandidate) {
+                        continue;
+                    }
+
+                    $keeperIds[] = $keeper->keeperId;
+                    $this->keepersLists->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
+                    $this->keepersLists->fillTempTable();
+                }
             } catch (Throwable $e) {
-                $this->logger->warning($e->getMessage());
+                $this->logger->warning('Не удалось обработать отчёт подраздела {forum}: {error}', [
+                    'forum' => $forumId,
+                    'error' => $e->getMessage(),
+                ]);
 
                 continue;
             }
 
-            foreach ($forumReports->keepers as $keeperReport) {
-                // Пропускаем игнорируемых хранителей.
-                if (in_array($keeperReport->keeperId, $excludedKeepers, true)) {
-                    continue;
-                }
+            try {
+                $this->db->beginTransaction();
+                $listsCount   = $this->keepersLists->replaceForum(forumId: $forumId);
+                $seedersCount = $this->keepersSeeders->replaceForum(forumId: $forumId);
+                $this->updateTime->setMarkerTime(marker: 100000 + $forumId);
+                $this->db->commitTransaction();
+            } catch (Throwable $e) {
+                $this->db->rollbackTransaction();
+                $this->logger->error('Не удалось записать отчёт подраздела {forum}: {error}', [
+                    'forum' => $forumId,
+                    'error' => $e->getMessage(),
+                ]);
 
-                /** Данные о хранителе. */
-                $keeper = $keepersList->getKeeperInfo(keeperId: $keeperReport->keeperId);
-
-                // Пропускаем раздачи несуществующих хранителей.
-                if ($keeper === null) {
-                    continue;
-                }
-
-                // Записываем сидов-хранителей раздачи, не зависимо от статуса.
-                $this->keepersSeeders->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
-                // Запись сидов-хранителей во временную таблицу.
-                $this->keepersSeeders->cloneFill();
-
-                // Пропускаем раздачи кандидатов в хранители.
-                if ($keeper->isCandidate) {
-                    continue;
-                }
-
-                // Считаем уникальных хранителей.
-                $keeperIds[] = $keeper->keeperId;
-
-                // Записываем раздачи хранителя во временную таблицу.
-                $this->keepersLists->addKeptTopics(keeper: $keeper, topics: $keeperReport->topics);
-                $this->keepersLists->fillTempTable();
+                continue;
             }
 
-            // Считаем обновлённые подразделы.
             ++$forumsScanned;
 
-            // Пометим факт обновления отчётов хранителей подраздела.
-            $this->updateTime->setMarkerTime(marker: 100000 + $forumId);
+            $this->logger->info('ApiReport. Подраздел {forum}: хранителей {keepers}, записей {lists}, сидов {seeders}.', [
+                'forum'   => $forumId,
+                'keepers' => count(array_unique($keeperIds)),
+                'lists'   => $listsCount,
+                'seeders' => $seedersCount,
+            ]);
 
             $this->logger->debug('Отчёт получен [{current}/{total}] {sec}', [
                 'forumId' => $forumId,
@@ -174,23 +193,58 @@ final class KeepersReports
             );
         }
 
-        // Записываем изменения в локальную таблицу.
-        $this->keepersLists->moveToOrigin(
-            forumsScanned: $forumsScanned,
-            keepersCount : count(array_unique($keeperIds))
-        );
+        if ($forumsScanned !== $forumCount) {
+            $this->logger->warning('ApiReport. Обновлено {updated} из {total} подразделов.', [
+                'updated' => $forumsScanned,
+                'total'   => $forumCount,
+            ]);
 
-        // Записываем данные о сидах-хранителях в БД.
-        $this->keepersSeeders->moveToOrigin();
+            return false;
+        }
 
-        // Записываем дату получения списков.
-        $this->updateTime->setMarkerTime(marker: UpdateMark::KEEPERS);
+        try {
+            $this->db->beginTransaction();
+            $this->removeOrphanRows($keptForums);
+            $this->updateTime->setMarkerTime(marker: UpdateMark::KEEPERS);
+            $this->db->commitTransaction();
+        } catch (Throwable $e) {
+            $this->db->rollbackTransaction();
+            $this->logger->error('Не удалось завершить обновление отчётов хранителей: {error}', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
         $this->logger->info(
             'ApiReport. Обновление отчётов хранителей завершено за {sec}',
             ['sec' => Timers::getExecTime('update_keepers')]
         );
 
         return true;
+    }
+
+    /**
+     * Удалять сирот можно только после полного обновления отчётов и при наличии
+     * актуальных маркеров тем всех хранимых подразделов.
+     *
+     * @param int[] $keptForums
+     */
+    private function removeOrphanRows(array $keptForums): void
+    {
+        $topicsStatus = $this->updateTime->getMarkersObject(markers: $keptForums);
+        $topicsStatus->checkMarkersAbove(seconds: 5 * 24 * 3600);
+        if ($topicsStatus->getLastCheckStatus() !== null) {
+            $this->logger->debug('ApiReport. Очистка записей без темы отложена: данные подразделов неполные или устарели.');
+
+            return;
+        }
+
+        foreach ([KeepersLists::TABLE, KeepersSeeders::TABLE] as $table) {
+            $this->db->executeStatement(
+                "DELETE FROM $table WHERE NOT EXISTS (SELECT 1 FROM Topics WHERE Topics.id = $table.topic_id)"
+            );
+        }
     }
 
     /**
