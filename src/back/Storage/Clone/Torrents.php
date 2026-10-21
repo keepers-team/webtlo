@@ -20,6 +20,7 @@ final class Torrents
     public const PRIMARY = 'info_hash';
     public const KEYS    = [
         self::PRIMARY,
+        'client_hash',
         'topic_id',
         'client_id',
         'done',
@@ -43,6 +44,7 @@ final class Torrents
     {
         $this->torrents[] = [
             $torrent->topicHash,
+            $torrent->clientHash,
             $torrent->topicId,
             $clientId,
             $torrent->done,
@@ -74,7 +76,25 @@ final class Torrents
 
     public function writeTable(): int
     {
-        return $this->clone->writeTable();
+        $count = $this->clone->cloneCount();
+        if ($count === 0) {
+            return 0;
+        }
+
+        // CloneTable экранирует NULL как пустую строку. Убираем совпадающие хеши
+        // при переносе во внешнюю таблицу, не меняя общий механизм клонирования.
+        $tab        = $this->clone->getTableObject();
+        $insertKeys = $tab->getKeysInsert();
+        $selectKeys = array_map(
+            static fn(string $key): string => $key === 'client_hash' ? 'NULLIF(client_hash, info_hash)' : $key,
+            self::KEYS,
+        );
+
+        $this->db->executeStatement(
+            "INSERT INTO $tab->origin $insertKeys SELECT " . implode(', ', $selectKeys) . " FROM $tab->clone"
+        );
+
+        return $count;
     }
 
     /**
