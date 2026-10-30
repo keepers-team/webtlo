@@ -225,12 +225,12 @@ final class ClientAddTopics
         $addedTorrentHashes = [];
         // Добавление раздач в торрент-клиенты.
         foreach ($topics as $topic) {
-            $torrentSavePath = $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
+            $topicContentPath = $this->makeTopicContentPath(topic: $topic, dataPath: $dataFolder, subForum: $subForum);
 
             // Добавляем раздачу в торрент-клиент.
             $response = $client->addTorrent(
                 torrentFilePath: $topic->filePath,
-                savePath       : $torrentSavePath,
+                savePath       : $topicContentPath,
                 label          : $subForum->label
             );
 
@@ -277,16 +277,18 @@ final class ClientAddTopics
             return $dataPath;
         }
 
-        // Подкаталог для каждой раздачи.
-        $subFolderPath = match ($subForum->subFolderType) {
-            SubFolderType::Topic => (string) $topic->topicId,
-            SubFolderType::Hash  => $topic->hash,
+        // Подкаталоги для каждой раздачи.
+        $subFolders = match ($subForum->subFolderType) {
+            SubFolderType::Topic         => [(string) $topic->topicId],
+            SubFolderType::ShardTopic256 => [sprintf('%03d', $topic->topicId % 256), (string) $topic->topicId],
+            SubFolderType::Hash          => [$topic->hash],
+            SubFolderType::ShardHash2    => [substr($topic->hash, 0, 2), $topic->hash],
         };
 
         // Попытка угадать, тип ФС торрент-клиента по пути хранения.
         $delimiter = !str_contains($dataPath, '/') ? '\\' : '/';
 
-        return $dataPath . $delimiter . $subFolderPath;
+        return implode($delimiter, [$dataPath, ...$subFolders]);
     }
 
     private function getSubForumOptions(int $subForumId): ?SubForum

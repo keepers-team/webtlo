@@ -794,7 +794,9 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                                     <select id="forum-subdirectory" class="inline-input forum-props">
                                         <option value="0">нет</option>
                                         <option value="1">номер темы</option>
+                                        <option value="3">DDD/номер темы</option>
                                         <option value="2">хэш раздачи</option>
+                                        <option value="4">FF/хэш раздачи</option>
                                     </select>
                                 </label>
                                 <label title="Позволяет скрыть раздачи текущего подраздела из списка 'Раздачи из всех хранимых подразделов'">
