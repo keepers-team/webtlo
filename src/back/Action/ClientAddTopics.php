@@ -267,8 +267,7 @@ final class ClientAddTopics
     private function makeTopicContentPath(DownloadedTopic $topic, string $dataPath, SubForum $subForum): string
     {
         // Если путь хранения не указан - используем пустую строку.
-        // Потому что разные клиенты по разному понимают не абсолютный путь хранения добавляемых раздач.
-        // TODO Возможно стоит этот момент доработать.
+        // Потому что разные клиенты по-разному понимают не абсолютный путь хранения добавляемых раздач.
         if (empty($dataPath)) {
             return '';
         }

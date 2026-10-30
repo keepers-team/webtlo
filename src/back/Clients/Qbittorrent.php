@@ -147,6 +147,10 @@ final class Qbittorrent implements ClientInterface
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
     {
+        /**
+         * Если путь не задан, то клиент сам решит куда сложить файлы.
+         * Если путь не абсолютный, то клиент добавляет его к месту расположения себя.
+         */
         $fields = [
             [
                 'name'     => 'torrents',

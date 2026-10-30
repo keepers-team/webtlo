@@ -40,6 +40,9 @@ final class Deluge implements ClientInterface
     /** @var ?string[] */
     private ?array $labels = null;
 
+    /** Путь хранения содержимого раздачи из настроек клиента */
+    private ?string $defaultDownloadLocation = null;
+
     private Client    $client;
     private CookieJar $jar;
 
@@ -137,7 +140,15 @@ final class Deluge implements ClientInterface
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
     {
-        $torrentOptions = !empty($savePath) ? ['download_location' => $savePath] : [];
+        /**
+         * Клиенту нужен путь хранения раздачи всегда,
+         * потому если не задан явно, вытаскиваем путь по умолчанию из настроек.
+         */
+        if ($savePath === '') {
+            $savePath = $this->getDefaultDownloadLocation();
+        }
+
+        $torrentOptions = ['download_location' => $savePath];
 
         $fields = [
             'torrentName.torrent',
@@ -403,5 +414,17 @@ final class Deluge implements ClientInterface
     private static function prepareHashes(array $hashes): array
     {
         return [array_map('strtolower', $hashes)];
+    }
+
+    private function getDefaultDownloadLocation(): string
+    {
+        if ($this->defaultDownloadLocation === null) {
+            // Отправляем запрос core.get_config и извлекаем download_location
+            $config = $this->makeRequest(method: 'core.get_config');
+
+            $this->defaultDownloadLocation = $config['download_location'] ?? '';
+        }
+
+        return $this->defaultDownloadLocation;
     }
 }

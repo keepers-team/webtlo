@@ -122,8 +122,13 @@ final class Utorrent implements ClientInterface
 
     public function addTorrentContent(string $content, string $savePath = '', string $label = ''): bool
     {
-        $this->setSetting(setting: 'dir_active_download_flag', value: '1');
-        if (!empty($savePath)) {
+        /**
+         * Если путь хранения задан, то включаем нужную опцию и задаём каталог для этой одной раздачи.
+         * Если путь не задан, то клиент сам решит куда сложить файлы.
+         * Если путь не абсолютный, то клиент добавляет его к месту расположения себя.
+         */
+        if ($savePath !== '') {
+            $this->setSetting(setting: 'dir_active_download_flag', value: '1');
             $this->setSetting(setting: 'dir_active_download', value: $savePath);
             sleep(1);
         }
