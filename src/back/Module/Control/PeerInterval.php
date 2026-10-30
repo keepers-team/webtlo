@@ -76,6 +76,10 @@ final class PeerInterval
      */
     public function getCurrentIntervalPeerLimit(int $currentHour): ?int
     {
+        if ($this->pattern === '') {
+            return null;
+        }
+
         $intervals = $this->parseIntervals();
 
         foreach ($intervals as $interval) {
