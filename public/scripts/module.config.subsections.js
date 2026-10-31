@@ -186,6 +186,9 @@ webtlo.register(ModuleNames.CONFIG_SUBSECTIONS,function() {
 
         refreshExcludedSubsections();
 
+        // Подсвечиваем кнопку сохранения настроек.
+        $('#configSave').trigger('mark_unsaved');
+
         return true;
     });
 

@@ -12,11 +12,17 @@ webtlo.register(ModuleNames.CONFIG_ACTIONS,function() {
     // Кнопка. Сохранение настроек.
     $('#configSave')
         .on('click', () => {
-            saveSettings().then();
+            saveSettings().then(function(){
+                // Убираем выделение добавленного подраздела.
+                $('#list-forums-button').removeClass('ui-state-highlight');
+            });
         })
         .on('change', function () {
             const unsaved = !!+$(this).data('unsaved');
             $(this).toggleClass('ui-state-highlight', unsaved);
+        })
+        .on('mark_unsaved', function() {
+            $(this).data('unsaved', true).trigger('change');
         });
 
     // Обработчик кнопки экспорта.
@@ -95,7 +101,7 @@ webtlo.register(ModuleNames.CONFIG_ACTIONS,function() {
 
     // Проверяем, что настройки были изменены
     $('form#config :input').not('.ignore-save-change').on('change selectmenuchange spinstop', function () {
-        $('#configSave').data('unsaved', true).change();
+        $('#configSave').trigger('mark_unsaved');
     });
 
 }, [

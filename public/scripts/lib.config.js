@@ -20,7 +20,7 @@ function getConfigData() {
  * Сохранение настроек.
  */
 async function saveSettings(config) {
-    $('#configSave').data('unsaved', false).change();
+    $('#configSave').data('unsaved', false).trigger('change');
 
     if (!config) {
         config = getConfigData();
@@ -183,6 +183,9 @@ function addSubsection(event, ui) {
 
         // Подсвечиваем добавленный подраздел.
         $('#list-forums-button').addClass('ui-state-highlight');
+
+        // Подсвечиваем кнопку сохранения настроек.
+        $('#configSave').trigger('mark_unsaved');
     }
 
     // Сортируем места, где можно выбрать подраздел.
