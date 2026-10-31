@@ -84,7 +84,11 @@ final class HtmlFormatter
         foreach ($group->topics as $topicResult) {
             $details = $this->formatDetails(result: $topicResult);
 
-            $tmp[] = $this->makeHtmlRow(topic: $topicResult->topic, details: $details);
+            $tmp[] = $this->makeHtmlRow(
+                topic       : $topicResult->topic,
+                details     : $details,
+                currentAdded: !empty($topicResult->details['current_added']),
+            );
         }
 
         return implode("\n", $tmp);
@@ -118,6 +122,12 @@ final class HtmlFormatter
                 $details['previous_name']
             );
         }
+        if (isset($details['original_status'])) {
+            $merge[] = sprintf(
+                ' <span class="text-disabled">%s</span>',
+                htmlspecialchars((string) $details['original_status'], ENT_QUOTES),
+            );
+        }
         if (count($merge)) {
             return implode('', $merge);
         }
@@ -132,9 +142,9 @@ final class HtmlFormatter
         return sprintf(self::UntrackedClickTemplate, $group->title, $click, $group->key);
     }
 
-    private function makeHtmlRow(Topic $topic, ?string $details = null): string
+    private function makeHtmlRow(Topic $topic, ?string $details = null, bool $currentAdded = false): string
     {
-        $box = $this->getBoxString(topic: $topic);
+        $box = $this->getBoxString(topic: $topic, currentAdded: $currentAdded);
 
         $date = $topic->getDate();
 
@@ -165,10 +175,10 @@ final class HtmlFormatter
     }
 
     /** Первый блок, чекбокс + иконка/статус раздачи. */
-    private function getBoxString(Topic $topic): string
+    private function getBoxString(Topic $topic, bool $currentAdded): string
     {
         $box = [
-            $topic->getCheckBox(),
+            $topic->getCheckBox(currentAdded: $currentAdded),
             $topic->getIcon(),
         ];
 
