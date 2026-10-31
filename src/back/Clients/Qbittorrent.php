@@ -83,6 +83,8 @@ final class Qbittorrent implements ClientInterface
         $this->torrentAddingSleep = 100;
         /** Клиент позволяет присваивать раздаче категорию при добавлении. */
         $this->categoryAddingAllowed = true;
+        /** Клиент позволяет менять путь хранения содержимого раздачи. */
+        $this->locationChangeAllowed = true;
 
         $this->jar = new CookieJar();
 
@@ -215,6 +217,11 @@ final class Qbittorrent implements ClientInterface
         }
 
         return $success;
+    }
+
+    public function setTorrentsLocation(array $torrentHashes, string $savePath): bool
+    {
+        return $this->actionTorrents(url: 'torrents/setLocation', hashes: $torrentHashes, extra: ['location' => $savePath]);
     }
 
     public function startTorrents(array $torrentHashes, bool $forceStart = false): bool

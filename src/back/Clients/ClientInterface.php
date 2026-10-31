@@ -17,6 +17,21 @@ interface ClientInterface
     public function isOnline(): bool;
 
     /**
+     * Может ли торрент-клиент присваивать метки при добавлении раздачи.
+     */
+    public function isLabelAddingAllowed(): bool;
+
+    /**
+     * Может ли торрент-клиент перемещать содержимое раздачи.
+     */
+    public function isLocationChangeAllowed(): bool;
+
+    /**
+     * Название торрент клиента.
+     */
+    public function getClientTypeName(): string;
+
+    /**
      * Описание текущего экземпляра торрент клиента.
      */
     public function getClientTag(): string;
@@ -44,6 +59,14 @@ interface ClientInterface
      * @param string[] $torrentHashes
      */
     public function setLabel(array $torrentHashes, string $label = ''): bool;
+
+    /**
+     * Изменить путь хранения содержимого раздачи и перенести файлы.
+     *
+     * @param string[]         $torrentHashes
+     * @param non-empty-string $savePath
+     */
+    public function setTorrentsLocation(array $torrentHashes, string $savePath): bool;
 
     /**
      * Запуск раздач перечисленных в $torrentHashes.
@@ -78,11 +101,6 @@ interface ClientInterface
      * Пауза между добавлением раздач в торрент-клиент, микросекунды.
      */
     public function getTorrentAddingSleep(): int;
-
-    /**
-     * Может ли торрент-клиент присваивать метки при добавлении раздачи.
-     */
-    public function isLabelAddingAllowed(): bool;
 
     /**
      * Установка своего домена трекера.

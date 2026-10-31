@@ -50,6 +50,9 @@ final class Deluge implements ClientInterface
         private readonly LoggerInterface      $logger,
         private readonly TorrentClientOptions $options,
     ) {
+        /** Клиент позволяет менять путь хранения содержимого раздачи. */
+        $this->locationChangeAllowed = true;
+
         $this->jar = new CookieJar();
 
         $this->client = new Client([
@@ -192,6 +195,11 @@ final class Deluge implements ClientInterface
         }
 
         return $result;
+    }
+
+    public function setTorrentsLocation(array $torrentHashes, string $savePath): bool
+    {
+        return $this->actionTorrents(method: 'core.move_storage', hashes: $torrentHashes, extra: [$savePath]);
     }
 
     /**
@@ -353,12 +361,13 @@ final class Deluge implements ClientInterface
     /**
      * Выполняет массовое действие над торрентами с разбивкой.
      *
-     * @param literal-string $method
-     * @param string[]       $hashes
+     * @param literal-string    $method
+     * @param string[]          $hashes
+     * @param array<int, mixed> $extra
      *
      * @return bool true, если все части успешно обработаны, иначе false
      */
-    private function actionTorrents(string $method, array $hashes): bool
+    private function actionTorrents(string $method, array $hashes, array $extra = []): bool
     {
         if ($hashes === []) {
             return true;
@@ -368,7 +377,10 @@ final class Deluge implements ClientInterface
         foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
             $response = $this->sendRequest(
                 method: $method,
-                params: self::prepareHashes(hashes: $chunk),
+                params: [
+                    array_map('strtolower', $chunk),
+                    ...$extra,
+                ],
             );
 
             if ($response === false) {
@@ -404,16 +416,6 @@ final class Deluge implements ClientInterface
     private function enablePlugin(string $pluginName): bool
     {
         return $this->sendRequest(method: 'core.enable_plugin', params: [$pluginName]);
-    }
-
-    /**
-     * @param string[] $hashes
-     *
-     * @return string[][]
-     */
-    private static function prepareHashes(array $hashes): array
-    {
-        return [array_map('strtolower', $hashes)];
     }
 
     private function getDefaultDownloadLocation(): string

@@ -55,6 +55,8 @@ final class Transmission implements ClientInterface
     ) {
         /** Клиент позволяет присваивать раздаче категорию при добавлении. */
         $this->categoryAddingAllowed = true;
+        /** Клиент позволяет менять путь хранения содержимого раздачи. */
+        $this->locationChangeAllowed = true;
 
         // Обработчик для получения токена авторизации.
         $authMiddleware = GuzzleRetryMiddleware::factory([
@@ -212,6 +214,15 @@ final class Transmission implements ClientInterface
             method: 'torrent-set',
             hashes: $torrentHashes,
             extra : ['labels' => [$this->prepareLabel(label: $label)]],
+        );
+    }
+
+    public function setTorrentsLocation(array $torrentHashes, string $savePath): bool
+    {
+        return $this->actionTorrents(
+            method: 'torrent-set-location',
+            hashes: $torrentHashes,
+            extra : ['location' => $savePath, 'move' => true],
         );
     }
 
