@@ -781,7 +781,7 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                                         <?= $cs('torrentClients', 'filterOptions'); ?>
                                     </select>
                                 </label>
-                                <label title="При добавлении раздачи установить для неё метку (поддерживаются только Deluge, qBittorrent, Flood и uTorrent)">
+                                <label title="Установить метку для добавляемой раздачи (Deluge, qBittorrent, Flood, uTorrent и Transmission 3.0+)">
                                     Метка:
                                     <input id="forum-label" class="inline-input forum-props" type="text" size="50" />
                                 </label>
