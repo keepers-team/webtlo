@@ -217,6 +217,9 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
         // Сортируем клиенты и вызываем заполнение параметров.
         doSortSelect('list-torrent-clients', 'li');
         $torrentClientsList.trigger('selectablestop');
+
+        // Подсвечиваем кнопку сохранения настроек.
+        $('#configSave').trigger('mark_unsaved');
     });
 
     // Удалить торрент-клиент из списка.
@@ -257,6 +260,9 @@ webtlo.register(ModuleNames.CONFIG_CLIENTS, function () {
                 $(this).saveDataKey('client', 0);
             }
         });
+
+        // Подсвечиваем кнопку сохранения настроек.
+        $('#configSave').trigger('mark_unsaved');
 
         return true;
     });
