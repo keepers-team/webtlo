@@ -219,12 +219,16 @@ final class ConfigServiceProvider extends AbstractServiceProvider
                         continue;
                     }
 
+                    // Убираем последний слэш в пути каталога для данных
+                    $dataFolder = trim((string) $ini->read($section, 'data-folder'));
+                    $dataFolder = rtrim($dataFolder, '/\\');
+
                     $list[$subForumId] = new SubForum(
                         id           : $subForumId,
                         name         : (string) $ini->read($section, 'title', $section),
                         clientId     : (int) $ini->read($section, 'client', 0),
                         label        : (string) $ini->read($section, 'label'),
-                        dataFolder   : (string) $ini->read($section, 'data-folder'),
+                        dataFolder   : $dataFolder,
                         subFolderType: SubFolderType::tryFrom((int) $ini->read($section, 'data-sub-folder')),
                         hideTopics   : (bool) $ini->read($section, 'hide-topics'),
                         reportExclude: (bool) $ini->read($section, 'exclude'),
