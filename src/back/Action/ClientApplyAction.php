@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
+use KeepersTeam\Webtlo\Clients\ClientInterface;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Module\Action\ClientAction;
 use KeepersTeam\Webtlo\Module\Action\ClientApplyOptions;
+use KeepersTeam\Webtlo\Storage\Table\Topics;
 use KeepersTeam\Webtlo\Storage\Table\Torrents;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -22,6 +24,7 @@ final class ClientApplyAction
         private readonly ClientFactory   $clientFactory,
         private readonly SubForums       $subForums,
         private readonly Torrents        $tableTorrents,
+        private readonly Topics          $tableTopics,
     ) {}
 
     /**
@@ -90,6 +93,14 @@ final class ClientApplyAction
                         $logRecord['label']   = $label;
 
                         $response = $client->setLabel(torrentHashes: $torrentHashes, label: $label);
+
+                        break;
+                    case ClientAction::SetLocation:
+                        $response = $this->setLocation(
+                            client       : $client,
+                            subForumId   : $subForumId,
+                            torrentHashes: $torrentHashes
+                        );
 
                         break;
                     case ClientAction::Stop:
@@ -166,5 +177,57 @@ final class ClientApplyAction
 
         // Пробуем присвоить метку по умолчанию или пустую.
         return $params->listingType->getDefaultLabel();
+    }
+
+    /**
+     * Перемещение содержимого выбранных раздач.
+     *
+     * @param string[] $torrentHashes
+     */
+    private function setLocation(ClientInterface $client, int $subForumId, array $torrentHashes): bool
+    {
+        $subForum = $this->subForums->getSubForum(subForumId: $subForumId);
+        if ($subForum === null) {
+            $this->logger->warning('В настройках нет данных о подразделе с идентификатором "' . $subForumId . '"');
+
+            return false;
+        }
+
+        $topics = $this->tableTopics->getTopicsIdsByHashes(hashes: $torrentHashes);
+        if (!count($topics)) {
+            $this->logger->notice(
+                'Не найдено подходящих раздач для перемещения в подразделе.',
+                ['forumId' => $subForum->id]
+            );
+
+            return false;
+        }
+
+        $this->logger->info(
+            'Найдено {count} раздач для перемещения в подразделе.',
+            ['count' => count($topics), 'forumId' => $subForum->id]
+        );
+
+        // Группируем раздачи по желаемому пути хранения раздачи.
+        $temp = [];
+        foreach ($topics as $topic) {
+            $contentPath = $subForum->makeContentPath(topicId: $topic->id, topicHash: $topic->hash);
+
+            $temp[$contentPath][] = $topic->hash;
+
+            unset($topic, $contentPath);
+        }
+
+        // Перемещаем раздачи группами.
+        foreach ($temp as $contentPath => $hashes) {
+            $this->logger->debug(
+                'Будет перемещено {count} раздач по указанному пути "{path}"',
+                ['path' => $contentPath, 'count' => count($hashes)]
+            );
+
+            $client->setTorrentsLocation(torrentHashes: $hashes, savePath: $contentPath);
+        }
+
+        return true;
     }
 }

@@ -171,6 +171,9 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             <button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
                                 <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
+                            <button type="button" class="tor_location torrent_action" value="set_location"  title="Выполнить перемещение выделенных раздач в торрент-клиентах">
+                                <i class="fa fa-arrow-circle-o-right" aria-hidden="true"></i>
+                            </button>
                         </div>
 
                         <div class="control-group">
