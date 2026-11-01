@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace KeepersTeam\Webtlo\Storage\Table;
 
+use KeepersTeam\Webtlo\Data\Topic;
 use KeepersTeam\Webtlo\Infrastructure\Database\ConnectionInterface;
 use KeepersTeam\Webtlo\Storage\KeysObject;
 use PDO;
@@ -60,7 +61,7 @@ final class Topics
      * @param string[]     $hashes
      * @param positive-int $chunkSize
      *
-     * @return array<string, array{topic_id:int}>
+     * @return Topic[]
      */
     public function getTopicsIdsByHashes(array $hashes, int $chunkSize = 500): array
     {
@@ -78,11 +79,17 @@ final class Topics
             $topics = $stm->fetchAll(PDO::FETCH_ASSOC | PDO::FETCH_UNIQUE);
 
             if (!empty($topics)) {
-                $result[] = $topics;
+                foreach ($topics as $hash => $id) {
+                    if (empty($hash) || empty($id['topic_id']) || $id['topic_id'] <= 0) {
+                        continue;
+                    }
+
+                    $result[] = new Topic(id: $id['topic_id'], hash: $hash);
+                }
             }
         }
 
-        return array_merge(...$result);
+        return $result;
     }
 
     /**
