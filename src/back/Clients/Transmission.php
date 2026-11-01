@@ -353,7 +353,13 @@ final class Transmission implements ClientInterface
         try {
             $response = $this->request(method: $method, options: $params);
 
-            return $response->getStatusCode() === 200;
+            if ($response->getStatusCode() !== 200) {
+                return false;
+            }
+
+            $this->validateResponse(response: $response);
+
+            return true;
         } catch (Throwable $e) {
             $this->logger->warning('Failed to send request', ['code' => $e->getCode(), 'message' => $e->getMessage()]);
         }
@@ -377,12 +383,17 @@ final class Transmission implements ClientInterface
         }
 
         $result = true;
-        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunk) {
+        foreach (array_chunk($hashes, self::ACTION_CHUNK_SIZE) as $chunkIndex => $chunk) {
             $response = $this->sendRequest(
                 method: $method,
                 params: ['ids' => $chunk, ...$extra],
             );
             if ($response === false) {
+                $this->logger->warning('Transmission action batch failed', [
+                    'method' => $method,
+                    'batch'  => $chunkIndex + 1,
+                    'count'  => count($chunk),
+                ]);
                 $result = false;
             }
         }
@@ -398,19 +409,19 @@ final class Transmission implements ClientInterface
         $body  = $response->getBody()->getContents();
         $array = json_decode(json: $body, associative: true, flags: JSON_INVALID_UTF8_SUBSTITUTE);
 
-        if ($array === null) {
+        if (!is_array($array)) {
             $this->logger->error('Fail to decode api response', [$body]);
 
             throw new RuntimeException('Unsuccessful api request');
         }
 
-        if ($array['result'] !== 'success') {
+        if (($array['result'] ?? null) !== 'success') {
             $this->logger->error('Unsuccessful api request', $array);
 
             throw new RuntimeException('Unsuccessful api request');
         }
 
-        return (array) $array['arguments'];
+        return (array) ($array['arguments'] ?? []);
     }
 
     /**
