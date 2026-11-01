@@ -40,12 +40,8 @@ trait TopicIdSearch
 
         // Дописываем topic_id в данные раздачи.
         if (count($topics)) {
-            foreach ($topics as $hash => $topic) {
-                if (isset($torrents[$hash]) && is_array($torrents[$hash])) {
-                    $torrents[$hash] = array_merge($torrents[$hash], $topic);
-                } else {
-                    $torrents[$hash] = $topic;
-                }
+            foreach ($topics as $topic) {
+                $torrents[$topic->hash]['topic_id'] = $topic->id;
             }
         }
 
