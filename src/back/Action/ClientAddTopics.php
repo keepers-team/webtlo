@@ -6,7 +6,6 @@ namespace KeepersTeam\Webtlo\Action;
 
 use KeepersTeam\Webtlo\Clients\ClientFactory;
 use KeepersTeam\Webtlo\Clients\ClientInterface;
-use KeepersTeam\Webtlo\Config\SubFolderType;
 use KeepersTeam\Webtlo\Config\SubForum;
 use KeepersTeam\Webtlo\Config\SubForums;
 use KeepersTeam\Webtlo\Config\TorrentClients;
@@ -221,12 +220,13 @@ final class ClientAddTopics
         $addedTorrentHashes = [];
         // Добавление раздач в торрент-клиенты.
         foreach ($topics as $topic) {
-            $topicContentPath = $this->makeTopicContentPath(topic: $topic, subForum: $subForum);
-
             // Добавляем раздачу в торрент-клиент.
             $response = $client->addTorrent(
                 torrentFilePath: $topic->filePath,
-                savePath       : $topicContentPath,
+                savePath       : $subForum->makeContentPath(
+                    topicId  : $topic->topicId,
+                    topicHash: $topic->hash
+                ),
                 label          : $subForum->label
             );
 
@@ -254,37 +254,6 @@ final class ClientAddTopics
 
         // Шаблон пути для сохранения файлов
         return Helper::normalizePathEncoding($localPath . DIRECTORY_SEPARATOR . '[webtlo].h%s.torrent');
-    }
-
-    /**
-     * Создать путь хранения содержимого раздачи на диске в клиенте.
-     * В зависимости от настроек подраздела.
-     */
-    private function makeTopicContentPath(DownloadedTopic $topic, SubForum $subForum): string
-    {
-        // Если путь хранения не указан - используем пустую строку.
-        // Потому что разные клиенты по-разному понимают не абсолютный путь хранения добавляемых раздач.
-        if ($subForum->dataFolder === '') {
-            return '';
-        }
-
-        // Если создание подкаталога не выбрано, используем указанный путь без изменений.
-        if ($subForum->subFolderType === null) {
-            return $subForum->dataFolder;
-        }
-
-        // Подкаталоги для каждой раздачи.
-        $subFolders = match ($subForum->subFolderType) {
-            SubFolderType::Topic         => [(string) $topic->topicId],
-            SubFolderType::ShardTopic256 => [sprintf('%03d', $topic->topicId % 256), (string) $topic->topicId],
-            SubFolderType::Hash          => [$topic->hash],
-            SubFolderType::ShardHash2    => [substr($topic->hash, 0, 2), $topic->hash],
-        };
-
-        // Попытка угадать, тип ФС торрент-клиента по пути хранения.
-        $delimiter = str_contains($subForum->dataFolder, '/') ? '/' : '\\';
-
-        return implode($delimiter, [$subForum->dataFolder, ...$subFolders]);
     }
 
     private function getSubForumOptions(int $subForumId): ?SubForum

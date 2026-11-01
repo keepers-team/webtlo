@@ -31,4 +31,35 @@ final class SubForum
         public readonly bool           $reportExclude = false,
         public readonly int            $controlPeers = TopicControl::EmptyValue,
     ) {}
+
+    /**
+     * Желаемый путь хранения содержимого раздачи
+     * в соответствии с настройками хранимого подраздела.
+     */
+    public function makeContentPath(int $topicId, string $topicHash): string
+    {
+        // Если путь хранения не указан - используем пустую строку.
+        // Потому что разные клиенты по-разному понимают не абсолютный путь хранения добавляемых раздач.
+        if ($this->dataFolder === '') {
+            return '';
+        }
+
+        // Если создание подкаталога не выбрано, используем указанный путь без изменений.
+        if ($this->subFolderType === null) {
+            return $this->dataFolder;
+        }
+
+        // Подкаталоги для каждой раздачи.
+        $subFolders = match ($this->subFolderType) {
+            SubFolderType::Topic         => [(string) $topicId],
+            SubFolderType::ShardTopic256 => [sprintf('%03d', $topicId % 256), (string) $topicId],
+            SubFolderType::Hash          => [$topicHash],
+            SubFolderType::ShardHash2    => [substr($topicHash, 0, 2), $topicHash],
+        };
+
+        // Попытка угадать, тип ФС торрент-клиента по пути хранения.
+        $delimiter = str_contains($this->dataFolder, '/') ? '/' : '\\';
+
+        return implode($delimiter, [$this->dataFolder, ...$subFolders]);
+    }
 }
