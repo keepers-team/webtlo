@@ -171,6 +171,9 @@ $cs = static function(string $section, string $key, int|string $default = '') us
                             <button type="button" class="tor_remove torrent_action" value="remove" title="Удалить выделенные раздачи текущего подраздела из торрент-клиента">
                                 <i class="fa fa-times" aria-hidden="true"></i>
                             </button>
+                            <button type="button" class="tor_recheck torrent_action" value="recheck" title="Проверить целостность хеша выбранных раздач">
+                                <i class="fa fa-file-circle-check" aria-hidden="true"></i>
+                            </button>
                             <button type="button" class="tor_location torrent_action" value="set_location" title="Переместить выбранные раздачи в торрент-клиентах">
                                 <i class="fa fa-file-import" aria-hidden="true"></i>
                             </button>

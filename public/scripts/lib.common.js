@@ -83,7 +83,7 @@ function block_actions() {
         ) {
             $('.tor_add').toggleDisable(true);
         } else {
-            $('.tor_stop, .tor_remove, .tor_label, .tor_start').toggleDisable(true);
+            $('.tor_start, .tor_stop, .tor_remove, .tor_recheck, .tor_label').toggleDisable(true);
         }
 
         $('#main-subsections, #preset_select, .filter-select-menu').selectmenu('enable');

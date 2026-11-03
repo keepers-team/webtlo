@@ -152,6 +152,10 @@ final class ClientApplyAction
                         }
 
                         break;
+                    case ClientAction::Recheck:
+                        $response = $client->recheckTorrents(torrentHashes: $torrentHashes);
+
+                        break;
                 }
 
                 if ($response === false) {
