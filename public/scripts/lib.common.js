@@ -60,12 +60,9 @@ let processStatus = {
 
 let lock_actions = 0;
 function block_actions() {
-    let buttons = $('#topics_control button')
+    const buttons = $('#topics_control button')
         .add('button.send_reports')
         .not('button.disabled-manual');
-
-    // Текущий выбранный "разворот раздач"/ подраздел.
-    const listingType = +$('#main-subsections').val();
 
     if (lock_actions === 0) {
         buttons.toggleDisable(true);
@@ -76,15 +73,6 @@ function block_actions() {
         lock_actions = 1;
     } else {
         buttons.toggleDisable(false);
-
-        if (
-            listingType < 0
-            || !$('input[name=filter_status]').eq(1).prop('checked')
-        ) {
-            $('.tor_add').toggleDisable(true);
-        } else {
-            $('.tor_start, .tor_stop, .tor_remove, .tor_recheck, .tor_label').toggleDisable(true);
-        }
 
         $('#main-subsections, #preset_select, .filter-select-menu').selectmenu('enable');
 
