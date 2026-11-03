@@ -45,7 +45,7 @@ final class SendReport
      *
      * @param array<string, mixed>[] $topicsToReport
      *
-     * @return array<string, mixed>
+     * @return array{forumId: int, topics: int, success: bool, reportComplete?: array<mixed>, reportDownloading?: array<mixed>}
      */
     public function sendForumTopics(
         int               $forumId,
@@ -55,7 +55,7 @@ final class SendReport
         bool              $reportRewrite = false,
     ): array {
         // Устанавливаем статус подраздела.
-        $this->apiReport->setForumStatus(
+        $success = $this->apiReport->setForumStatus(
             forumId   : $forumId,
             status    : $statusRules->subForum,
             appVersion: $this->webtlo->appVersionLine(),
@@ -64,6 +64,7 @@ final class SendReport
         $result = [
             'forumId' => $forumId,
             'topics'  => count($topicsToReport),
+            'success' => $success,
         ];
 
         // Разделяем раздачи на скачанные и качаемые.
@@ -87,6 +88,8 @@ final class SendReport
         );
         if ($completeReport !== null) {
             $result['reportComplete'] = $completeReport;
+        } else {
+            $result['success'] = false;
         }
 
         // Отправляем отчёт о качаемых раздачах.
@@ -99,6 +102,8 @@ final class SendReport
             );
             if ($downloadingReport !== null) {
                 $result['reportDownloading'] = $downloadingReport;
+            } else {
+                $result['success'] = false;
             }
         }
 
@@ -108,7 +113,7 @@ final class SendReport
     /**
      * @param string[] $hashes
      *
-     * @return array<string, mixed>
+     * @return array{topics: int, success: bool, status?: int, result?: array<mixed>}
      */
     public function sendReportHashes(
         array             $hashes,
@@ -117,7 +122,8 @@ final class SendReport
         bool              $reportRewrite = false,
     ): array {
         $result = [
-            'topics' => count($hashes),
+            'topics'  => count($hashes),
+            'success' => true,
         ];
 
         // Отправляем отчёт о скачанных раздачах.
@@ -130,6 +136,8 @@ final class SendReport
         if ($report !== null) {
             $result['status'] = $status;
             $result['result'] = $report;
+        } else {
+            $result['success'] = false;
         }
 
         return $result;
@@ -142,9 +150,9 @@ final class SendReport
      * @param int[] $forumIds
      * @param bool  $unsetOtherForums - снять отметку хранения, если true
      *
-     * @return array<string, mixed>
+     * @return ?array<mixed>
      */
-    public function setForumsStatus(array $forumIds, ReportStatus $statusRules, bool $unsetOtherForums = false): array
+    public function setForumsStatus(array $forumIds, ReportStatus $statusRules, bool $unsetOtherForums = false): ?array
     {
         return $this->apiReport->setForumsStatus(
             forumIds        : $forumIds,
@@ -155,9 +163,9 @@ final class SendReport
     }
 
     /**
-     * @return array<string, mixed>
+     * @return ?array<mixed>
      */
-    public function setForumsStatusAuto(): array
+    public function setForumsStatusAuto(): ?array
     {
         return $this->apiReport->setForumsStatusAuto();
     }
