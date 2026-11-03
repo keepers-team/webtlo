@@ -312,6 +312,12 @@ function blockTopicsFilters(listingType) {
     // Блокируем кнопки загрузки по спискам, если не выбран подраздел.
     $('.tor_download_by_keepers_list').prop('disabled', listingType < 0);
     $('#tor_download_options').selectmenu('refresh');
+
+    // Показывать кнопку перемещения только когда выбрано "храню" и выбран подраздел.
+    const clientStatus = $(`input[name^='filter_client_status']:checked:not(:disabled)`);
+    if (listingType < 0 || clientStatus.length !== 1 || +clientStatus.val() !== 1) {
+        $('.tor_location').toggleDisable(true);
+    }
 }
 
 // получение кол-ва, объёма выделенных раздач

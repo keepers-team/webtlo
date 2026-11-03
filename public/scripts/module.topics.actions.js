@@ -269,6 +269,36 @@ webtlo.register(ModuleNames.TOPICS_ACTIONS,function () {
             return true;
         }
 
+        if (action === 'set_location') {
+            const forumData = $(`#list-forums option[value=${listingType}]`).data();
+
+            const contentPath = `${forumData.savepath}/${$(`#forum-subdirectory`).find(`option[value="${forumData.subdirectory}"]`).text()}`;
+
+            dialog.html(
+                `Выбранные раздачи (${topic_hashes.length} шт.) будут перемещены по пути, `
+                + 'который указан в настройках подраздела, с учётом создания нужных подкаталогов.<br/><br/>'
+                + `Путь: "${contentPath}".<br/><br/>`
+                + `Прогресс перемещения стоит отслеживать в торрент-клиенте.<br/><br/>Продолжить?`
+            );
+            dialog.dialog({
+                buttons  : [
+                    {
+                        text : 'Да, переместить',
+                        click: function() {
+                            dialog.dialog('close');
+
+                            execActionTopics(params);
+                        }
+                    }
+                ],
+                modal    : true,
+                resizable: false,
+            });
+            dialog.dialog("open");
+
+            return true;
+        }
+
         // else (default)
         execActionTopics(params);
 

@@ -6,8 +6,11 @@ namespace KeepersTeam\Webtlo\Module\Action;
 
 enum ClientAction: string
 {
-    case Start    = 'start';
-    case Stop     = 'stop';
-    case Remove   = 'remove';
-    case SetLabel = 'set_label';
+    case Start = 'start';
+    case Stop  = 'stop';
+
+    case Remove = 'remove';
+
+    case SetLabel    = 'set_label';
+    case SetLocation = 'set_location';
 }

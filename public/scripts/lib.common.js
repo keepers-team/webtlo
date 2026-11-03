@@ -64,6 +64,8 @@ function block_actions() {
         .add('button.send_reports')
         .not('button.disabled-manual');
 
+    // Текущий выбранный "разворот раздач"/ подраздел.
+    const listingType = +$('#main-subsections').val();
 
     if (lock_actions === 0) {
         buttons.toggleDisable(true);
@@ -76,13 +78,14 @@ function block_actions() {
         buttons.toggleDisable(false);
 
         if (
-            $('#main-subsections').val() < 1
+            listingType < 0
             || !$('input[name=filter_status]').eq(1).prop('checked')
         ) {
             $('.tor_add').toggleDisable(true);
         } else {
             $('.tor_stop, .tor_remove, .tor_label, .tor_start').toggleDisable(true);
         }
+
         $('#main-subsections, #preset_select, .filter-select-menu').selectmenu('enable');
 
         processStatus.hide();
