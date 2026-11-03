@@ -36,7 +36,7 @@
         "arokettu/torrent-file": "^5.3",
         "caseyamcl/guzzle_retry_middleware": "^2.13",
         "cesargb/php-log-rotation": "^2.7",
-        "guzzlehttp/guzzle": "^7.9",
+        "guzzlehttp/guzzle": "^7.16",
         "league/container": "^5.1",
         "league/csv": "^9.23",
         "monolog/monolog": "^3.5",
