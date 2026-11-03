@@ -15,7 +15,7 @@ final class MigrationRunner
      *
      * Должна совпадать с init.sql и последним файлом миграции.
      */
-    public const DATABASE_VERSION = 15;
+    public const DATABASE_VERSION = 16;
 
     /**
      * @param positive-int $targetVersion
