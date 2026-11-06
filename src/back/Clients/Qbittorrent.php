@@ -28,7 +28,7 @@ use Throwable;
  * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1) qBittorrent 4.1+ WebAPI 2.0+
  * @see https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-5.0) qBittorrent 5.0+ WebAPI 2.9+
  */
-final class Qbittorrent implements ClientInterface
+final class Qbittorrent implements ClientInterface, SavePathLookupInterface
 {
     use Traits\AllowedFunctions;
     use Traits\AuthClient;
@@ -37,7 +37,8 @@ final class Qbittorrent implements ClientInterface
     use Traits\RetryMiddleware;
     use Traits\TopicIdSearch;
 
-    private const ACTION_CHUNK_SIZE = 500;
+    private const ACTION_CHUNK_SIZE    = 500;
+    private const SAVE_PATH_CHUNK_SIZE = 100;
 
     /** Версия webApi. */
     private ?string $apiVersion = null;
@@ -133,6 +134,47 @@ final class Qbittorrent implements ClientInterface
         $this->logger->debug('Done processing', Timers::getStash());
 
         return new Torrents(torrents: $torrents);
+    }
+
+    /**
+     * @param string[] $hashes
+     *
+     * @return array<string, string>
+     */
+    public function getTorrentSavePaths(array $hashes): array
+    {
+        $paths = [];
+        // GET-запрос ограничен длиной URL: 100 хешей занимают около 4 КБ.
+        foreach (array_chunk(array_unique(array_map('strtoupper', $hashes)), self::SAVE_PATH_CHUNK_SIZE) as $chunk) {
+            try {
+                $response = $this->client->get('torrents/info', [
+                    'query' => ['hashes' => self::prepareHashes($chunk)],
+                ]);
+                $torrents = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+                if (!is_array($torrents)) {
+                    $this->logger->warning('Invalid torrent list response from qBittorrent');
+
+                    continue;
+                }
+
+                $requested = array_fill_keys($chunk, true);
+                foreach ($torrents as $torrent) {
+                    if (!is_array($torrent) || !is_string($torrent['hash'] ?? null)
+                        || !is_string($torrent['save_path'] ?? null) || trim($torrent['save_path']) === '') {
+                        continue;
+                    }
+
+                    $hash = strtoupper($torrent['hash']);
+                    if (isset($requested[$hash])) {
+                        $paths[$hash] = $torrent['save_path'];
+                    }
+                }
+            } catch (Throwable $e) {
+                $this->logger->warning('Failed to get qBittorrent save paths', ['code' => $e->getCode()]);
+            }
+        }
+
+        return $paths;
     }
 
     public function addTorrent(string $torrentFilePath, string $savePath = '', string $label = ''): bool

@@ -33,6 +33,7 @@ trait TopicsDetails
     public function getTopicsDetails(
         array           $topics,
         TopicSearchMode $searchMode = TopicSearchMode::HASH,
+        bool            $lookupOldVersions = true,
     ): ApiError|TopicsDetailsResponse {
         // Ищем раздачи в актуальном API.
         $actualTopics = $this->getTopicsDetailsConcurrently(
@@ -56,7 +57,7 @@ trait TopicsDetails
         $oldTopics = [];
 
         // Ищем не найденное в "прошлых релизах".
-        if ($missingTopics !== []) {
+        if ($lookupOldVersions && $missingTopics !== []) {
             $oldTopics = $this->getTopicsDetailsConcurrently(
                 topics            : $missingTopics,
                 searchMode        : $searchMode,
