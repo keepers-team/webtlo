@@ -15,7 +15,7 @@ final class ProbeChecker
     private Client $client;
 
     private const CHECK_URL = [
-        'forum'  => 'https://%s/forum/info.php?show=copyright_holders',
+        'forum'  => 'https://%s/forum/index.php',
         'report' => 'https://%s/krs/api/v1/info/statuses',
     ];
 
