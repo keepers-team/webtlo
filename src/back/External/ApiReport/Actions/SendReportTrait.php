@@ -6,6 +6,7 @@ namespace KeepersTeam\Webtlo\External\ApiReport\Actions;
 
 use DateTimeInterface;
 use GuzzleHttp\Exception\GuzzleException;
+use JsonException;
 
 /**
  * Методы связанные с отправкой отчётов о хранимом в API.
@@ -17,7 +18,7 @@ trait SendReportTrait
      *
      * @param int[] $topicIds
      *
-     * @return ?array<string, int>
+     * @return ?array<mixed>
      */
     public function reportKeptReleases(
         int               $forumId,
@@ -43,9 +44,7 @@ trait SendReportTrait
             return null;
         }
 
-        $body = $response->getBody()->getContents();
-
-        return json_decode($body, true);
+        return $this->decodeReportResponse($response->getBody()->getContents(), $params);
     }
 
     /**
@@ -53,7 +52,7 @@ trait SendReportTrait
      *
      * @param string[] $topicHashes
      *
-     * @return ?array<string, mixed>
+     * @return ?array<mixed>
      */
     public function reportKeptReleasesHashes(
         array             $topicHashes,
@@ -89,9 +88,7 @@ trait SendReportTrait
             return null;
         }
 
-        $body = $response->getBody()->getContents();
-
-        return json_decode($body, true);
+        return $this->decodeReportResponse($response->getBody()->getContents(), $params);
     }
 
     /**
@@ -114,7 +111,7 @@ trait SendReportTrait
             return false;
         }
 
-        $body = json_decode($response->getBody()->getContents(), true);
+        $body = $this->decodeReportResponse($response->getBody()->getContents(), $params);
 
         return (bool) ($body['result'] ?? false);
     }
@@ -124,9 +121,9 @@ trait SendReportTrait
      *
      * @param int[] $forumIds
      *
-     * @return array<string, mixed>
+     * @return ?array<mixed>
      */
-    public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): array
+    public function setForumsStatus(array $forumIds, int $status, string $appVersion, bool $unsetOtherForums): ?array
     {
         $params = [
             'keeper_id'             => $this->auth->userId,
@@ -142,21 +139,19 @@ trait SendReportTrait
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $params);
 
-            return ['result' => $e->getMessage()];
+            return null;
         }
 
-        $body = json_decode($response->getBody()->getContents(), true);
-
-        return $body ?: ['result' => 'unknown'];
+        return $this->decodeReportResponse($response->getBody()->getContents(), $params);
     }
 
     /**
      * Триггер для API отчётов, для автоматического определения статуса хранимых подразделов
      * на основании переданных хешей хранимых раздач.
      *
-     * @return array<string, mixed>
+     * @return ?array<mixed>
      */
-    public function setForumsStatusAuto(): array
+    public function setForumsStatusAuto(): ?array
     {
         $params = [
             'keeper_id'           => $this->auth->userId,
@@ -169,10 +164,14 @@ trait SendReportTrait
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $params);
 
-            return ['result' => $e->getMessage()];
+            return null;
         }
 
-        $body = json_decode($response->getBody()->getContents(), true) ?: ['result' => 'unknown'];
+        $body = $this->decodeReportResponse($response->getBody()->getContents(), $params);
+        if ($body === null) {
+            return null;
+        }
+
         unset($body['dry_run'], $body['details']);
 
         return $body;
@@ -190,5 +189,29 @@ trait SendReportTrait
         } catch (GuzzleException $e) {
             $this->logException($e->getCode(), $e->getMessage(), $data);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return ?array<mixed>
+     */
+    private function decodeReportResponse(string $body, array $params): ?array
+    {
+        try {
+            $result = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            $this->logException(0, $e->getMessage(), $params);
+
+            return null;
+        }
+
+        if (!is_array($result)) {
+            $this->logException(0, 'Некорректный ответ API', $params);
+
+            return null;
+        }
+
+        return $result;
     }
 }
